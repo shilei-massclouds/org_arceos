@@ -2,11 +2,14 @@
 #![cfg_attr(feature = "axstd", no_main)]
 
 #[cfg(feature = "axstd")]
-use axstd::{println, thread};
+use axstd::{println, thread, vm, vec::Vec};
 
 extern crate alloc;
 use alloc::string::String;
 
+use memory_addr::{PAGE_SIZE_4K, align_down_4k, align_up_4k};
+
+const PAGE_SHIFT: usize = 12;
 const PFLASH_START: usize = 0xffff_ffc0_2200_0000;
 
 #[cfg_attr(feature = "axstd", no_mangle)]
@@ -46,8 +49,58 @@ fn parse_literal_hex(pos: usize) -> usize {
     usize::from_str_radix(&hex, 16).expect("NOT hex number.")
 }
 
-fn parse_elf(_code: &[u8]) -> (usize, usize) {
-    unimplemented!("parse_elf");
+fn parse_elf(code: &[u8]) -> (usize, usize) {
+    use elf::abi::PT_LOAD;
+    use elf::endian::AnyEndian;
+    use elf::ElfBytes;
+    use elf::segment::ProgramHeader;
+
+    let file = ElfBytes::<AnyEndian>::minimal_parse(code).unwrap();
+    println!("e_entry: {:#X}", file.ehdr.e_entry);
+
+    let phdrs: Vec<ProgramHeader> = file.segments().unwrap()
+        .iter()
+        .filter(|phdr|{phdr.p_type == PT_LOAD})
+        .collect();
+
+    let mut end = 0;
+
+    println!("There are {} PT_LOAD segments", phdrs.len());
+    for phdr in phdrs {
+        println!("phdr: offset: {:#X}=>{:#X} size: {:#X}=>{:#X}",
+            phdr.p_offset, phdr.p_vaddr, phdr.p_filesz, phdr.p_memsz);
+
+        let fdata = file.segment_data(&phdr).unwrap();
+        println!("fdata: {:#x}", fdata.len());
+
+        let va_end = align_up_4k((phdr.p_vaddr + phdr.p_memsz) as usize);
+        let va = align_down_4k(phdr.p_vaddr as usize);
+        let num_pages = (va_end - va) >> PAGE_SHIFT;
+        let pa = vm::alloc_pages(num_pages, PAGE_SIZE_4K);
+        println!("va: {:#x} pa: {:#x} num {}", va, pa, num_pages);
+        vm::map_region(va, pa, num_pages << PAGE_SHIFT,
+                       vm::READ | vm::WRITE | vm::EXECUTE);
+
+        let mdata = unsafe {
+            core::slice::from_raw_parts_mut(phdr.p_vaddr as *mut u8, phdr.p_filesz as usize)
+        };
+        mdata.copy_from_slice(fdata);
+        println!("mdata: {:#x}", mdata.len());
+
+        if phdr.p_memsz != phdr.p_filesz {
+            let edata = unsafe {
+                core::slice::from_raw_parts_mut((phdr.p_vaddr+phdr.p_filesz) as *mut u8, (phdr.p_memsz - phdr.p_filesz) as usize)
+            };
+            edata.fill(0);
+            println!("edata: {:#x}", edata.len());
+        }
+
+        if end < va_end {
+            end = va_end;
+        }
+    }
+
+    (file.ehdr.e_entry as usize, end)
 }
 
 fn run_app(_entry: usize, _end: usize) {

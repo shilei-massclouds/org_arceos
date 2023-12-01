@@ -8,8 +8,7 @@ use memory_addr::{PhysAddr, VirtAddr};
 use riscv::asm;
 use riscv::register::{satp, sstatus, stvec};
 use core::cell::OnceCell;
-use crate::paging::PageTable;
-use page_table::PagingResult;
+use crate::paging::{PageTable, PagingResult, PagingError};
 use crate::mem::MemRegionFlags;
 
 pub use self::context::{GeneralRegisters, TaskContext, TrapFrame};
@@ -140,7 +139,8 @@ pub fn init_tls_pg_dir() {
 }
 
 #[cfg(feature = "paging")]
-pub fn map_region(va: usize, pa: usize, len: usize, flags: MemRegionFlags) -> PagingResult {
+pub fn map_region(va: usize, pa: usize, len: usize, flags: usize) -> PagingResult {
+    let flags = MemRegionFlags::from_bits(flags).ok_or(PagingError::NoMemory)?;
     unsafe { APP_PG_DIR.get_mut().unwrap().map_region(
         va.into(),
         pa.into(),

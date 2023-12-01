@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 axstd = { path = "../../ulib/axstd", features = ["paging", "alloc", "multitask", "irq", "tls"], optional = true }
+elf = { version = "0.7.3", default-features = false }
+memory_addr = { path = "../../crates/memory_addr" }
