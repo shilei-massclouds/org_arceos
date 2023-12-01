@@ -49,6 +49,24 @@ fn parse_literal_hex(pos: usize) -> usize {
     usize::from_str_radix(&hex, 16).expect("NOT hex number.")
 }
 
+fn elfflags_to_mapflags(flags: usize) -> usize {
+    const PF_X: usize = 1 << 0; // Segment is executable
+    const PF_W: usize =	1 << 1; // Segment is writable
+    const PF_R: usize = 1 << 2; // Segment is readable
+
+    let mut mapflags = 0;
+    if flags & PF_X == PF_X {
+        mapflags |= vm::EXECUTE;
+    }
+    if flags & PF_W == PF_W {
+        mapflags |= vm::WRITE;
+    }
+    if flags & PF_R == PF_R {
+        mapflags |= vm::READ;
+    }
+    mapflags
+}
+
 fn parse_elf(code: &[u8]) -> (usize, usize) {
     use elf::abi::PT_LOAD;
     use elf::endian::AnyEndian;
@@ -67,8 +85,8 @@ fn parse_elf(code: &[u8]) -> (usize, usize) {
 
     println!("There are {} PT_LOAD segments", phdrs.len());
     for phdr in phdrs {
-        println!("phdr: offset: {:#X}=>{:#X} size: {:#X}=>{:#X}",
-            phdr.p_offset, phdr.p_vaddr, phdr.p_filesz, phdr.p_memsz);
+        println!("phdr: offset: {:#X}=>{:#X} size: {:#X}=>{:#X}, flags {:#X}",
+            phdr.p_offset, phdr.p_vaddr, phdr.p_filesz, phdr.p_memsz, phdr.p_flags);
 
         let fdata = file.segment_data(&phdr).unwrap();
         println!("fdata: {:#x}", fdata.len());
@@ -78,8 +96,12 @@ fn parse_elf(code: &[u8]) -> (usize, usize) {
         let num_pages = (va_end - va) >> PAGE_SHIFT;
         let pa = vm::alloc_pages(num_pages, PAGE_SIZE_4K);
         println!("va: {:#x} pa: {:#x} num {}", va, pa, num_pages);
-        vm::map_region(va, pa, num_pages << PAGE_SHIFT,
-            vm::READ | vm::WRITE | vm::EXECUTE);
+
+        let flags = elfflags_to_mapflags(phdr.p_flags as usize);
+        println!("flags: {:#X} => {:#X}", phdr.p_flags, flags);
+        // Whatever we need vm::WRITE for initialize segment.
+        // Fix it in future.
+        vm::map_region(va, pa, num_pages << PAGE_SHIFT, flags|vm::WRITE);
 
         let mdata = unsafe {
             core::slice::from_raw_parts_mut(phdr.p_vaddr as *mut u8, phdr.p_filesz as usize)
@@ -108,8 +130,7 @@ fn run_app(entry: usize, end: usize) {
     let pa = vm::alloc_pages(1, PAGE_SIZE_4K);
     let va = TASK_SIZE - PAGE_SIZE_4K;
     println!("va: {:#x} pa: {:#x}", va, pa);
-    vm::map_region(va, pa, PAGE_SIZE_4K,
-        vm::READ | vm::WRITE | vm::EXECUTE);
+    vm::map_region(va, pa, PAGE_SIZE_4K, vm::READ | vm::WRITE);
     let sp = TASK_SIZE - 32;
     let stack = unsafe {
         core::slice::from_raw_parts_mut(
@@ -125,13 +146,12 @@ fn run_app(entry: usize, end: usize) {
     vm::set_brk(end);
 
     let pa = vm::alloc_pages(4, PAGE_SIZE_4K);
-    vm::map_region(end, pa, 4*PAGE_SIZE_4K,
-        vm::READ | vm::WRITE | vm::EXECUTE);
+    vm::map_region(end, pa, 4*PAGE_SIZE_4K, vm::READ | vm::WRITE);
     println!("### app end: {:#X}; {:#X}", end, vm::get_brk());
 
     setup_zero_page();
 
-    println!("Start app ...");
+    println!("Start app ...\n");
     // execute app
     unsafe { core::arch::asm!("
         jalr    t2
@@ -148,6 +168,5 @@ fn run_app(entry: usize, end: usize) {
 
 fn setup_zero_page() {
     let pa = vm::alloc_pages(1, PAGE_SIZE_4K);
-    vm::map_region(0x0, pa, PAGE_SIZE_4K,
-        vm::READ | vm::WRITE | vm::EXECUTE);
+    vm::map_region(0x0, pa, PAGE_SIZE_4K, vm::READ);
 }

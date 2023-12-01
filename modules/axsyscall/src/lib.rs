@@ -6,10 +6,10 @@ use axhal::arch::TrapFrame;
 #[macro_use]
 extern crate log;
 
-struct Linux_syscall_handler;
+struct LinuxSyscallHandler;
 
 #[crate_interface::impl_interface]
-impl SyscallHandler for Linux_syscall_handler {
+impl SyscallHandler for LinuxSyscallHandler {
     fn handle_syscall(tf: &mut TrapFrame) {
         let eid = tf.regs.a7;
         tf.regs.a0 = match eid {
@@ -75,7 +75,6 @@ struct iovec {
 
 fn linux_syscall_write(tf: &TrapFrame) -> usize {
     extern crate alloc;
-    use alloc::string::String;
     use core::slice;
     debug!("write: {:#x}, {:#x}, {:#x}",
         tf.regs.a0, tf.regs.a1, tf.regs.a2);
@@ -83,13 +82,8 @@ fn linux_syscall_write(tf: &TrapFrame) -> usize {
     let buf = tf.regs.a1 as *const u8;
     let size = tf.regs.a2;
     let bytes = unsafe { slice::from_raw_parts(buf as *const _, size) };
-    /*
-    let s = String::from_utf8(bytes.into());
-    debug!("{}", s.unwrap());
-    */
 
     axhal::console::write_bytes(bytes);
-
     return size;
 }
 
@@ -149,7 +143,7 @@ fn linux_syscall_uname(tf: &TrapFrame) -> usize {
     let ptr = tf.regs.a0;
     debug!("uname: {:#x}", ptr);
 
-    let mut uname = unsafe { (ptr as *mut utsname).as_mut().unwrap() };
+    let uname = unsafe { (ptr as *mut utsname).as_mut().unwrap() };
 
     init_bytes_from_str(&mut uname.sysname[..], "Linux");
     init_bytes_from_str(&mut uname.nodename[..], "host");
@@ -168,27 +162,15 @@ fn init_bytes_from_str(dst: &mut [u8], src: &str) {
     right.fill(0);
 }
 
-fn get_brk() -> usize {
-    let ptr = (axhal::arch::read_thread_pointer() - 8) as *const usize;
-    unsafe { *ptr }
-}
-
-fn set_brk(brk: usize) {
-    let ptr = (axhal::arch::read_thread_pointer() - 8) as *mut usize;
-    unsafe { *ptr = brk; }
-}
-
 fn linux_syscall_brk(tf: &TrapFrame) -> usize {
     let va = tf.regs.a0;
     let brk = unsafe { axhal::arch::get_tls_brk() };
     debug!("brk!!! {:#x}, {:#x}", va, brk);
-    unsafe {
-        if va == 0 {
-            brk
-        } else {
-            unsafe { axhal::arch::set_tls_brk(va) };
-            va
-        }
+    if va == 0 {
+        brk
+    } else {
+        unsafe { axhal::arch::set_tls_brk(va) };
+        va
     }
 }
 
@@ -203,11 +185,9 @@ fn linux_syscall_exit(tf: &TrapFrame) -> usize {
     let ret = tf.regs.a0 as i32;
     debug!("exit ...{}", ret);
     axtask::exit(ret);
-    debug!("exit !");
-    return 0;
 }
 
-fn linux_syscall_exit_group(tf: &TrapFrame) -> usize {
+fn linux_syscall_exit_group(_tf: &TrapFrame) -> usize {
     debug!("exit_group!");
     return 0;
 }
