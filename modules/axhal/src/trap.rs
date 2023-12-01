@@ -1,6 +1,7 @@
 //! Trap handling.
 
 use crate_interface::{call_interface, def_interface};
+use crate::arch::TrapFrame;
 
 /// Trap handler interface.
 ///
@@ -20,4 +21,15 @@ pub trait TrapHandler {
 #[allow(dead_code)]
 pub(crate) fn handle_irq_extern(irq_num: usize) {
     call_interface!(TrapHandler::handle_irq, irq_num);
+}
+
+#[def_interface]
+pub trait SyscallHandler {
+    fn handle_syscall(tf: &mut TrapFrame);
+}
+
+/// Call the syscall handler.
+#[allow(dead_code)]
+pub(crate) fn handle_linux_syscall(tf: &mut TrapFrame) {
+    call_interface!(SyscallHandler::handle_syscall, tf);
 }
