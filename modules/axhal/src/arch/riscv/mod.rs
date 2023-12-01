@@ -7,6 +7,10 @@ mod trap;
 use memory_addr::{PhysAddr, VirtAddr};
 use riscv::asm;
 use riscv::register::{satp, sstatus, stvec};
+use core::cell::OnceCell;
+use crate::paging::PageTable;
+use page_table::PagingResult;
+use crate::mem::MemRegionFlags;
 
 pub use self::context::{GeneralRegisters, TaskContext, TrapFrame};
 
@@ -106,4 +110,42 @@ pub fn read_thread_pointer() -> usize {
 #[inline]
 pub unsafe fn write_thread_pointer(tp: usize) {
     core::arch::asm!("mv tp, {}", in(reg) tp)
+}
+
+#[cfg(feature = "paging")]
+static mut KERNEL_PAGE_TABLE: OnceCell<PageTable> = OnceCell::new();
+
+#[cfg(feature = "paging")]
+pub fn setup_page_table_root(pt: PageTable) {
+    unsafe {
+        let _ = KERNEL_PAGE_TABLE.set(pt);
+        write_page_table_root(KERNEL_PAGE_TABLE.get().unwrap().root_paddr());
+    }
+}
+
+#[cfg(feature = "paging")]
+#[thread_local]
+static mut APP_PG_DIR: OnceCell<PageTable> = OnceCell::new();
+
+#[cfg(feature = "paging")]
+pub fn init_tls_pg_dir() {
+    unsafe {
+        if APP_PG_DIR.get().is_none() {
+            APP_PG_DIR = KERNEL_PAGE_TABLE.clone();
+            debug!("############ APP_PG_DIR clone {:?}",
+                   APP_PG_DIR.get().unwrap().root_paddr());
+        }
+        write_page_table_root(APP_PG_DIR.get().unwrap().root_paddr());
+    }
+}
+
+#[cfg(feature = "paging")]
+pub fn map_region(va: usize, pa: usize, len: usize, flags: MemRegionFlags) -> PagingResult {
+    unsafe { APP_PG_DIR.get_mut().unwrap().map_region(
+        va.into(),
+        pa.into(),
+        len,
+        flags.into(),
+        true,
+    )}
 }

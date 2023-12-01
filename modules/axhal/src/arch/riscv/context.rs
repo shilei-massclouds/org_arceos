@@ -112,6 +112,7 @@ impl TaskContext {
         {
             self.tp = super::read_thread_pointer();
             unsafe { super::write_thread_pointer(next_ctx.tp) };
+            super::init_tls_pg_dir();
         }
         unsafe {
             // TODO: switch FP states

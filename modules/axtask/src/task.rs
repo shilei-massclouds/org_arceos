@@ -361,6 +361,9 @@ impl CurrentTask {
         axhal::arch::write_thread_pointer(init_task.tls.tls_ptr() as usize);
         let ptr = Arc::into_raw(init_task);
         axhal::cpu::set_current_task_ptr(ptr);
+
+        #[cfg(feature = "paging")]
+        axhal::arch::init_tls_pg_dir();
     }
 
     pub(crate) unsafe fn set_current(prev: Self, next: AxTaskRef) {

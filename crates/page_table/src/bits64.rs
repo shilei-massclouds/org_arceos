@@ -36,6 +36,22 @@ pub struct PageTable64<M: PagingMetaData, PTE: GenericPTE, IF: PagingIf> {
     _phantom: PhantomData<(M, PTE, IF)>,
 }
 
+impl<M: PagingMetaData, PTE: GenericPTE, IF: PagingIf> Clone for PageTable64<M, PTE, IF> {
+    fn clone(&self) -> Self {
+        let root_paddr = Self::alloc_table().unwrap();
+        let dst_ptr = IF::phys_to_virt(root_paddr).as_mut_ptr();
+        let src_ptr = IF::phys_to_virt(self.root_paddr).as_ptr();
+        unsafe {
+            core::ptr::copy_nonoverlapping(src_ptr.wrapping_add(PAGE_SIZE_4K/2), dst_ptr.wrapping_add(PAGE_SIZE_4K/2), PAGE_SIZE_4K/2);
+        }
+        Self {
+            root_paddr: root_paddr,
+            intrm_tables: self.intrm_tables.clone(),
+            _phantom: PhantomData,
+        }
+    }
+}
+
 impl<M: PagingMetaData, PTE: GenericPTE, IF: PagingIf> PageTable64<M, PTE, IF> {
     /// Creates a new page table instance or returns the error.
     ///

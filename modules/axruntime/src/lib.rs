@@ -233,9 +233,7 @@ fn init_allocator() {
 fn remap_kernel_memory() -> Result<(), axhal::paging::PagingError> {
     use axhal::mem::{memory_regions, phys_to_virt};
     use axhal::paging::PageTable;
-    use lazy_init::LazyInit;
-
-    static KERNEL_PAGE_TABLE: LazyInit<PageTable> = LazyInit::new();
+    use axhal::arch::setup_page_table_root;
 
     if axhal::cpu::this_cpu_is_bsp() {
         let mut kernel_page_table = PageTable::try_new()?;
@@ -248,10 +246,12 @@ fn remap_kernel_memory() -> Result<(), axhal::paging::PagingError> {
                 true,
             )?;
         }
-        KERNEL_PAGE_TABLE.init_by(kernel_page_table);
+
+        setup_page_table_root(kernel_page_table);
+    } else {
+        unimplemented!("Handle it for SMP specifically!");
     }
 
-    unsafe { axhal::arch::write_page_table_root(KERNEL_PAGE_TABLE.root_paddr()) };
     Ok(())
 }
 
