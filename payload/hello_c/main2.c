@@ -3,6 +3,6 @@
 
 int main()
 {
-    printf("Hello, World!\n");
+    printf("Second Linux App: Hello, World!\n");
     return 0;
 }

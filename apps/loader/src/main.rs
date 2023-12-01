@@ -19,23 +19,25 @@ fn main() {
     assert_eq!(app_num, 2);
     pos += 8;
 
-    let size = parse_literal_hex(pos);
-    println!("app size: {}", size);
-    pos += 8;
+    for _ in 0..app_num {
+        let size = parse_literal_hex(pos);
+        println!("app size: {}", size);
+        pos += 8;
 
-    let code = unsafe {
-        core::slice::from_raw_parts(pos as *const u8, size)
-    };
-    pos += size;
-    println!("app pos: {:#X}", pos);
+        let code = unsafe {
+            core::slice::from_raw_parts(pos as *const u8, size)
+        };
+        pos += size;
+        println!("app pos: {:#X}", pos);
 
-    thread::spawn(move || {
-        let (entry, end) = parse_elf(code);
-        println!("elf entry: {:#X}", entry);
+        thread::spawn(move || {
+            println!("\n==============");
+            let (entry, end) = parse_elf(code);
+            println!("App: entry: {:#X}", entry);
 
-        println!("App {:?}", thread::current().id());
-        run_app(entry, end);
-    });
+            run_app(entry, end);
+        });
+    }
 
     loop {
         thread::yield_now();
