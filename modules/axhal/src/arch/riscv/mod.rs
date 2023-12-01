@@ -149,3 +149,14 @@ pub fn map_region(va: usize, pa: usize, len: usize, flags: usize) -> PagingResul
         true,
     )}
 }
+
+#[thread_local]
+static mut BRK: usize = 0;
+
+pub unsafe fn get_tls_brk() -> usize {
+    BRK
+}
+
+pub unsafe fn set_tls_brk(brk: usize) {
+    BRK = brk;
+}

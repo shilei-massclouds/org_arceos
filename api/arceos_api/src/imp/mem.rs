@@ -21,4 +21,12 @@ cfg_alloc! {
     pub fn map_region(va: usize, pa: usize, len: usize, flags: usize) {
         axhal::arch::map_region(va, pa, len, flags).unwrap()
     }
+
+    pub fn get_brk() -> usize {
+        unsafe { axhal::arch::get_tls_brk() }
+    }
+
+    pub fn set_brk(brk: usize) {
+        unsafe { axhal::arch::set_tls_brk(brk) }
+    }
 }

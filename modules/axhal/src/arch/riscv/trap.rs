@@ -17,6 +17,10 @@ fn handle_breakpoint(sepc: &mut usize) {
 #[no_mangle]
 fn riscv_trap_handler(tf: &mut TrapFrame, _from_user: bool) {
     let scause = scause::read();
+    if scause.code() == 0x9 {
+        panic!("handle_linux_syscall");
+        //return crate::trap::handle_linux_syscall(tf);
+    }
     match scause.cause() {
         Trap::Exception(E::Breakpoint) => handle_breakpoint(&mut tf.sepc),
         Trap::Interrupt(_) => crate::trap::handle_irq_extern(scause.bits()),
