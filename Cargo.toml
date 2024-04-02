@@ -84,6 +84,8 @@ members = [
     "modules/mkboot",
     "modules/fileops",
     "modules/axtrap",
+
+    "modules/arch_boot",
 ]
 
 [profile.release]

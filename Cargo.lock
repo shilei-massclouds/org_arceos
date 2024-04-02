@@ -215,6 +215,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "arch_boot"
+version = "0.1.0"
+dependencies = [
+ "aarch64-cpu",
+ "axconfig",
+ "axhal",
+ "axtrap",
+ "bitflags 2.4.0",
+ "cfg-if",
+ "log",
+ "raw-cpuid 11.0.1",
+ "riscv",
+ "sbi-rt",
+ "static_assertions",
+ "tock-registers",
+ "x2apic",
+ "x86",
+ "x86_64",
+]
+
+[[package]]
 name = "arm_gic"
 version = "0.1.0"
 dependencies = [
@@ -302,6 +323,7 @@ dependencies = [
 name = "axfeat"
 version = "0.1.0"
 dependencies = [
+ "arch_boot",
  "axalloc",
  "axdisplay",
  "axdriver",
@@ -385,6 +407,7 @@ dependencies = [
  "arm_pl011",
  "axalloc",
  "axconfig",
+ "axirq",
  "axlog",
  "bitflags 2.4.0",
  "cfg-if",
@@ -415,6 +438,17 @@ name = "axio"
 version = "0.1.0"
 dependencies = [
  "axerrno",
+]
+
+[[package]]
+name = "axirq"
+version = "0.1.0"
+dependencies = [
+ "cfg-if",
+ "handler_table",
+ "lazy_init",
+ "log",
+ "riscv",
 ]
 
 [[package]]
@@ -558,11 +592,10 @@ dependencies = [
 name = "axtrap"
 version = "0.1.0"
 dependencies = [
- "axconfig",
  "axhal",
+ "axirq",
  "axsyscall",
  "cfg-if",
- "handler_table",
  "kernel_guard",
  "lazy_init",
  "log",
@@ -1401,15 +1434,16 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 name = "mkboot"
 version = "0.1.0"
 dependencies = [
+ "arch_boot",
  "axalloc",
  "axconfig",
  "axdriver",
  "axerrno",
  "axhal",
+ "axirq",
  "axlog",
  "axmount",
  "axsyscall",
- "axtrap",
  "crate_interface",
  "exec",
  "fork",

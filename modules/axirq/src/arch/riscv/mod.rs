@@ -1,7 +1,7 @@
-//! TODO:
-
-use crate::irq::IrqHandler;
+use crate::IrqHandler;
 use lazy_init::LazyInit;
+
+use riscv::register::sie;
 
 /// `Interrupt` bit in `scause`
 pub(super) const INTC_IRQ_BASE: usize = 1 << (usize::BITS - 1);
@@ -15,6 +15,9 @@ pub(super) const S_TIMER: usize = INTC_IRQ_BASE + 5;
 
 /// Supervisor external interrupt in `scause`
 pub(super) const S_EXT: usize = INTC_IRQ_BASE + 9;
+
+/// The timer IRQ number (supervisor timer interrupt in `scause`).
+pub const TIMER_IRQ_NUM: usize = S_TIMER;
 
 static TIMER_HANDLER: LazyInit<IrqHandler> = LazyInit::new();
 
@@ -51,7 +54,7 @@ pub fn register_handler(scause: usize, handler: IrqHandler) -> bool {
         } else {
             false
         },
-        @EXT => crate::irq::register_handler_common(scause & !INTC_IRQ_BASE, handler),
+        @EXT => crate::register_handler_common(scause & !INTC_IRQ_BASE, handler),
     )
 }
 
@@ -67,6 +70,15 @@ pub fn dispatch_irq(scause: usize) {
             trace!("IRQ: timer");
             TIMER_HANDLER();
         },
-        @EXT => crate::irq::dispatch_irq_common(0), // TODO: get IRQ number from PLIC
+        @EXT => crate::dispatch_irq_common(0), // TODO: get IRQ number from PLIC
     );
+}
+
+pub fn init_percpu() {
+    // enable soft interrupts, timer interrupts, and external interrupts
+    unsafe {
+        sie::set_ssoft();
+        sie::set_stimer();
+        sie::set_sext();
+    }
 }

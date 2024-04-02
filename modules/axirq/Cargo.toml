@@ -1,5 +1,5 @@
 [package]
-name = "axtrap"
+name = "axirq"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,12 +8,8 @@ edition = "2021"
 [dependencies]
 log = "0.4"
 cfg-if = "1.0"
-axhal = { path = "../axhal" }
-axsyscall = { path = "../axsyscall" }
-mmap = { path = "../mmap" }
-kernel_guard = { path = "../../crates/kernel_guard" }
+handler_table = { path = "../../crates/handler_table" }
 lazy_init = { path = "../../crates/lazy_init" }
-axirq = { path = "../axirq" }
 
 [target.'cfg(any(target_arch = "riscv32", target_arch = "riscv64"))'.dependencies]
 riscv = "0.10"

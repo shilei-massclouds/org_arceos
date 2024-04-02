@@ -1,4 +1,3 @@
-//! [ArceOS] hardware abstraction layer, provides unified APIs for
 //! platform-specific operations.
 //!
 //! It does the bootstrapping and initialization process for the specified
@@ -19,7 +18,6 @@
 //! - `smp`: Enable SMP (symmetric multiprocessing) support.
 //! - `fp_simd`: Enable floating-point and SIMD support.
 //! - `paging`: Enable page table manipulation.
-//! - `irq`: Enable interrupt handling support.
 //!
 //! [ArceOS]: https://github.com/rcore-os/arceos
 //! [cargo test]: https://doc.rust-lang.org/cargo/guide/tests.html
@@ -44,9 +42,6 @@ pub mod trap;
 
 #[cfg(feature = "tls")]
 pub mod tls;
-
-#[cfg(feature = "irq")]
-pub mod irq;
 
 #[cfg(feature = "paging")]
 pub mod paging;

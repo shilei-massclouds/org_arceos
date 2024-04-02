@@ -5,8 +5,6 @@
 extern crate log;
 
 mod arch;
-mod platform;
-pub mod irq;
 
 pub fn init_trap_vector() {
     arch::set_trap_vector_base(trap_vector_base as usize);

@@ -97,7 +97,7 @@ unsafe fn enable_fp() {
 }
 
 unsafe fn init_boot_page_table() {
-    crate::platform::mem::init_boot_page_table(&mut BOOT_PT_L0, &mut BOOT_PT_L1);
+    axhal::platform::mem::init_boot_page_table(&mut BOOT_PT_L0, &mut BOOT_PT_L1);
 }
 
 /// The earliest entry point for the primary CPU.
@@ -167,7 +167,7 @@ unsafe extern "C" fn _start_secondary() -> ! {
         init_mmu = sym init_mmu,
         enable_fp = sym enable_fp,
         phys_virt_offset = const axconfig::PHYS_VIRT_OFFSET,
-        entry = sym crate::platform::rust_entry_secondary,
+        entry = sym axhal::platform::rust_entry_secondary,
         options(noreturn),
     )
 }

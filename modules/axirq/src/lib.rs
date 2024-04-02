@@ -1,13 +1,20 @@
+
+#![cfg_attr(not(test), no_std)]
 //! Interrupt management.
 
+#[macro_use]
+extern crate log;
+
+mod arch;
+
+pub use arch::{dispatch_irq, register_handler, TIMER_IRQ_NUM, init_percpu};
+
 use handler_table::HandlerTable;
-
-use crate::platform::irq::MAX_IRQ_COUNT;
-
-pub use crate::platform::irq::{dispatch_irq, register_handler, set_enable};
+use arch::MAX_IRQ_COUNT;
+use arch::{set_enable};
 
 /// The type if an IRQ handler.
-pub type IrqHandler = handler_table::Handler;
+pub(crate) type IrqHandler = handler_table::Handler;
 
 static IRQ_HANDLER_TABLE: HandlerTable<MAX_IRQ_COUNT> = HandlerTable::new();
 

@@ -16,10 +16,10 @@ unikernel = ["dep:axruntime"]
 monolithic = ["mkboot", "axalloc", "axhal/paging", "axdriver/virtio-blk"]
 
 # Multicore
-smp = ["axhal/smp", "axruntime/smp", "spinlock/smp"]
+smp = ["axhal/smp", "axruntime/smp", "spinlock/smp", "arch_boot/smp"]
 
 # Floating point/SIMD
-fp_simd = ["axhal/fp_simd"]
+fp_simd = ["axhal/fp_simd", "arch_boot/fp_simd"]
 
 # Interrupts
 irq = ["axhal/irq", "axruntime/irq", "axtask?/irq"]
@@ -67,6 +67,7 @@ log-level-trace = ["axlog/log-level-trace"]
 axruntime = { path = "../../modules/axruntime", optional = true }
 mkboot = { path = "../../modules/mkboot", optional = true }
 axhal = { path = "../../modules/axhal" }
+arch_boot = { path = "../../modules/arch_boot" }
 axlog = { path = "../../modules/axlog" }
 axalloc = { path = "../../modules/axalloc", optional = true }
 axdriver = { path = "../../modules/axdriver", optional = true }

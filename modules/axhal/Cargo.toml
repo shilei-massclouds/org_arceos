@@ -14,7 +14,7 @@ smp = []
 alloc = []
 fp_simd = []
 paging = ["axalloc", "page_table"]
-irq = []
+irq = ["axirq"]
 tls = ["alloc"]
 monolithic = []
 default = []
@@ -26,6 +26,7 @@ bitflags = "2.2"
 static_assertions = "1.1.0"
 axlog = { path = "../axlog" }
 axconfig = { path = "../axconfig" }
+axirq = { path = "../axirq", optional = true}
 axalloc = { path = "../axalloc", optional = true }
 kernel_guard = { path = "../../crates/kernel_guard" }
 spinlock = { path = "../../crates/spinlock" }

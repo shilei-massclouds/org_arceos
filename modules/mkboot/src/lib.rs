@@ -77,14 +77,14 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         option_env!("AX_MODE").unwrap_or(""),
         option_env!("AX_LOG").unwrap_or(""),
     );
+    
+    // Empty func, hack for rust link arch_boot
+    arch_boot::hack_link();
 
     axlog::init();
     axlog::set_max_level(option_env!("AX_LOG").unwrap_or("")); // no effect if set `log-level-*` features
     info!("Logging is enabled.");
     info!("MacroKernel is starting: Primary CPU {} started, dtb = {:#x}.", cpu_id, dtb);
-
-    info!("Initialize trap|irq|syscall vector...");
-    axtrap::init_trap_vector();
 
     info!("Found physcial memory regions:");
     for r in axhal::mem::memory_regions() {
@@ -208,7 +208,7 @@ fn init_interrupt() {
         axhal::time::set_oneshot_timer(deadline);
     }
 
-    axtrap::irq::register_handler(TIMER_IRQ_NUM, || {
+    axirq::register_handler(TIMER_IRQ_NUM, || {
         update_timer();
         run_queue::on_timer_tick();
     });

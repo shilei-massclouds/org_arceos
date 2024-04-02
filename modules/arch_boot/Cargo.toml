@@ -1,0 +1,41 @@
+[package]
+name = "arch_boot"
+version = "0.1.0"
+edition = "2021"
+authors = ["Yuekai Jia <equation618@gmail.com>"]
+description = "ArceOS hardware boot crate"
+license = "GPL-3.0-or-later OR Apache-2.0"
+homepage = "https://github.com/rcore-os/arceos"
+repository = "https://github.com/rcore-os/arceos/tree/main/modules/axhal"
+documentation = "https://rcore-os.github.io/arceos/axhal/index.html"
+
+[features]
+smp = []
+fp_simd = []
+default = []
+
+[dependencies]
+log = "0.4"
+cfg-if = "1.0"
+bitflags = "2.2"
+static_assertions = "1.1.0"
+axhal = { path = "../axhal" }
+axtrap = { path = "../axtrap" }
+axconfig = { path = "../axconfig" }
+
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+x86 = "0.52"
+x86_64 = "0.14"
+x2apic = "0.4"
+raw-cpuid = "11.0"
+
+[target.'cfg(any(target_arch = "riscv32", target_arch = "riscv64"))'.dependencies]
+riscv = "0.10"
+sbi-rt = { version = "0.0.2", features = ["legacy"] }
+
+[target.'cfg(target_arch = "aarch64")'.dependencies]
+aarch64-cpu = "9.3"
+tock-registers = "0.8"
+
+[build-dependencies]
+axconfig = { path = "../axconfig" }
