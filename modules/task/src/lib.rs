@@ -5,7 +5,6 @@ use core::ops::Deref;
 use core::mem::ManuallyDrop;
 use core::sync::atomic::{AtomicUsize, Ordering};
 use core::{alloc::Layout, cell::UnsafeCell, ptr::NonNull};
-use waitqueue::Waiter;
 
 #[macro_use]
 extern crate log;
@@ -132,24 +131,6 @@ impl TaskStruct {
     #[inline]
     pub const unsafe fn ctx_mut_ptr(&self) -> *mut ThreadStruct {
         self.thread.get()
-    }
-}
-
-impl Waiter for TaskStruct {
-    fn wid(&self) -> u64 {
-        self.get_task_pid() as u64
-    }
-
-    fn block(&self) {
-        unimplemented!("");
-    }
-
-    fn unblock(&self, _resched: bool) {
-        unimplemented!("");
-    }
-
-    fn on_waked(&self) {
-        unimplemented!("");
     }
 }
 

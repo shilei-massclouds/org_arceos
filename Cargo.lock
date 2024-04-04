@@ -1116,6 +1116,7 @@ dependencies = [
  "axhal",
  "log",
  "mutex",
+ "mutex_helper",
  "spinlock",
  "task",
 ]
@@ -1478,6 +1479,14 @@ name = "mutex"
 version = "0.1.0"
 dependencies = [
  "log",
+ "task",
+ "waitqueue",
+]
+
+[[package]]
+name = "mutex_helper"
+version = "0.1.0"
+dependencies = [
  "task",
  "waitqueue",
 ]
@@ -2039,7 +2048,6 @@ dependencies = [
  "memory_addr",
  "mm",
  "spinlock",
- "waitqueue",
 ]
 
 [[package]]

@@ -13,4 +13,3 @@ fstree = { path = "../fstree" }
 filetable = { path = "../filetable" }
 spinlock = { path = "../../crates/spinlock" }
 memory_addr = { path = "../../crates/memory_addr" }
-waitqueue = { path = "../waitqueue" }

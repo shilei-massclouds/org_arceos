@@ -11,6 +11,7 @@ use axerrno::LinuxError;
 use axfile::fops::File;
 use axfile::fops::OpenOptions;
 use spinlock::SpinNoIrq;
+use mutex_helper::MutexHelper;
 
 /////////////////////////
 
@@ -54,8 +55,9 @@ pub fn openat(_dtd: usize, filename: &str, _flags: usize, _mode: usize) -> usize
     ////////////////////////////////
 
     {
-    let duck = DUCK.lock(current.as_task_ref().clone());
-    duck.eat();
+        let helper = MutexHelper::new();
+        let duck = DUCK.lock(helper);
+        duck.eat();
     }
 
     error!("Duck fd {}", fd);

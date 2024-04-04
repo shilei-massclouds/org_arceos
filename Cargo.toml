@@ -87,6 +87,7 @@ members = [
     "modules/arch_boot",
     "modules/mutex",
     "modules/waitqueue",
+    "modules/mutex_helper",
 ]
 
 [profile.release]
