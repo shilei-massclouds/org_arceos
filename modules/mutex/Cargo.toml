@@ -1,0 +1,12 @@
+[package]
+name = "mutex"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = []
+
+[dependencies]
+log = "0.4"
+task = { path = "../task" }
+waitqueue = { path = "../waitqueue" }
