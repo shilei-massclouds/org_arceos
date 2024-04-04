@@ -12,3 +12,4 @@ axfile = { path = "../axfile" }
 axerrno = { path = "../../crates/axerrno" }
 spinlock = { path = "../../crates/spinlock" }
 axhal = { path = "../axhal" }
+mutex = { path = "../mutex" }

@@ -12,6 +12,30 @@ use axfile::fops::File;
 use axfile::fops::OpenOptions;
 use spinlock::SpinNoIrq;
 
+/////////////////////////
+
+struct Duck {
+    state: usize,
+}
+
+impl Duck {
+    pub const fn new() -> Self {
+        Self {
+            state: 0,
+        }
+    }
+
+    pub fn eat(&self) {
+        error!("eat: {}", self.state);
+    }
+}
+
+use mutex::AxMutex;
+
+static DUCK: AxMutex<Duck> = AxMutex::new(Duck::new());
+
+////////////////////////
+
 pub fn openat(_dtd: usize, filename: &str, _flags: usize, _mode: usize) -> usize {
     let mut opts = OpenOptions::new();
     opts.read(true);
@@ -26,6 +50,17 @@ pub fn openat(_dtd: usize, filename: &str, _flags: usize, _mode: usize) -> usize
     };
     let fd = current.filetable.lock().insert(Arc::new(SpinNoIrq::new(file)));
     error!("openat fd {}", fd);
+
+    ////////////////////////////////
+
+    {
+    let duck = DUCK.lock(current.as_task_ref().clone());
+    duck.eat();
+    }
+
+    error!("Duck fd {}", fd);
+    ////////////////////////////////
+
     fd
 }
 

@@ -47,13 +47,13 @@ pub fn riscv_trap_handler(tf: &mut TrapFrame, _from_user: bool) {
 
 /// Call page fault handler.
 fn handle_page_fault(badaddr: usize, _cause: usize) {
-    error!("handle_page_fault...");
+    debug!("handle_page_fault...");
     mmap::faultin_page(badaddr);
 }
 
 /// Call the external IRQ handler.
 fn handle_irq_extern(irq_num: usize) {
-    error!("handle_irq_extern irq: {:#X} ...", irq_num);
+    debug!("handle_irq_extern irq: {:#X} ...", irq_num);
     let guard = kernel_guard::NoPreempt::new();
     crate::platform::irq::dispatch_irq(irq_num);
     drop(guard); // rescheduling may occur when preemption is re-enabled.
@@ -65,7 +65,7 @@ fn handle_breakpoint(sepc: &mut usize) {
 }
 
 fn handle_linux_syscall(tf: &mut TrapFrame) {
-    error!("handle_linux_syscall");
+    debug!("handle_linux_syscall");
     syscall(tf, axsyscall::do_syscall);
 }
 
@@ -80,7 +80,7 @@ fn syscall<F>(tf: &mut TrapFrame, do_syscall: F)
 where
     F: FnOnce(SyscallArgs, usize) -> usize
 {
-    error!("Syscall: {:#x}", tf.regs.a7);
+    debug!("Syscall: {:#x}", tf.regs.a7);
     let args = syscall_args(tf);
     tf.regs.a0 = do_syscall(args, tf.regs.a7);
     tf.sepc += 4;

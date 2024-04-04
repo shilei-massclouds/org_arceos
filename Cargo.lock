@@ -1115,6 +1115,7 @@ dependencies = [
  "axfile",
  "axhal",
  "log",
+ "mutex",
  "spinlock",
  "task",
 ]
@@ -1470,6 +1471,15 @@ dependencies = [
  "mm",
  "spinlock",
  "task",
+]
+
+[[package]]
+name = "mutex"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "task",
+ "waitqueue",
 ]
 
 [[package]]
@@ -2029,6 +2039,7 @@ dependencies = [
  "memory_addr",
  "mm",
  "spinlock",
+ "waitqueue",
 ]
 
 [[package]]
@@ -2159,6 +2170,14 @@ name = "volatile"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "442887c63f2c839b346c192d047a7c87e73d0689c9157b00b53dcc27dd5ea793"
+
+[[package]]
+name = "waitqueue"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "spinlock",
+]
 
 [[package]]
 name = "walkdir"

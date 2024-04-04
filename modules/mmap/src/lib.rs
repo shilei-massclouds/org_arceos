@@ -38,14 +38,14 @@ pub fn _mmap(
 ) -> LinuxResult<usize> {
     assert!(is_aligned_4k(va));
     len = align_up_4k(len);
-    error!("mmap va {:#X} offset {:#X}", va, offset);
+    debug!("mmap va {:#X} offset {:#X}", va, offset);
 
     if (flags & MAP_FIXED) == 0 {
         va = get_unmapped_vma(va, len);
-        error!("Get unmapped vma {:#X}", va);
+        debug!("Get unmapped vma {:#X}", va);
     }
 
-    error!("mmap region: {:#X} - {:#X}", va, va + len);
+    debug!("mmap region: {:#X} - {:#X}", va, va + len);
     let vma = VmAreaStruct::new(va, va + len, offset >> PAGE_SHIFT, file, flags);
     let mm = task::current().mm();
     mm.lock().vmas.insert(va, vma);
@@ -58,7 +58,7 @@ pub fn get_unmapped_vma(_va: usize, len: usize) -> usize {
     let locked_mm = mm.lock();
     let mut gap_end = TASK_UNMAPPED_BASE;
     for (_, vma) in locked_mm.vmas.iter().rev() {
-        error!("get_unmapped_vma: {:#X} {:#X} {:#X}",
+        debug!("get_unmapped_vma: {:#X} {:#X} {:#X}",
             vma.vm_start, vma.vm_end, gap_end);
         if vma.vm_end > gap_end {
             continue;
@@ -72,7 +72,7 @@ pub fn get_unmapped_vma(_va: usize, len: usize) -> usize {
 }
 
 pub fn faultin_page(va: usize) -> usize {
-    error!("faultin_page... va {:#X}", va);
+    debug!("faultin_page... va {:#X}", va);
     let mm = task::current().mm();
     let locked_mm = mm.lock();
 
@@ -115,7 +115,7 @@ pub fn set_brk(va: usize) -> usize {
     let brk = mm.lock().brk();
 
     assert!(is_aligned_4k(brk));
-    error!("brk!!! {:#x}, {:#x}", va, brk);
+    debug!("brk!!! {:#x}, {:#x}", va, brk);
 
     if va == 0 {
         brk
