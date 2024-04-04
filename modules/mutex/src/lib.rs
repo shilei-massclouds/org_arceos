@@ -4,10 +4,10 @@
 #[macro_use]
 extern crate log;
 extern crate alloc;
-use alloc::sync::Arc;
+//use alloc::sync::Arc;
 
 use core::cell::UnsafeCell;
-use core::fmt;
+//use core::fmt;
 use core::ops::{Deref, DerefMut};
 use core::sync::atomic::{AtomicU64, Ordering};
 
@@ -134,7 +134,7 @@ impl<T: ?Sized> AxMutex<T> {
     /// thread. However, this can be useful in some instances for exposing
     /// the lock to FFI that doesn’t know how to deal with RAII.
     pub unsafe fn force_unlock(&self) {
-        let owner_id = self.owner_id.swap(0, Ordering::Release);
+        let _ = self.owner_id.swap(0, Ordering::Release);
         self.wq.notify_one(true);
     }
 

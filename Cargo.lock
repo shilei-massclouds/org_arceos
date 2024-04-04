@@ -1491,6 +1491,7 @@ dependencies = [
 name = "mutex_helper"
 version = "0.1.0"
 dependencies = [
+ "run_queue",
  "task",
  "waitqueue",
 ]

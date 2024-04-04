@@ -19,7 +19,6 @@ use elf::ElfBytes;
 use elf::segment::SegmentTable;
 use elf::parse::ParseAt;
 use axio::SeekFrom;
-use spinlock::SpinNoIrq;
 use mmap::FileRef;
 use axhal::arch::start_thread;
 use axhal::arch::{TASK_SIZE, ELF_ET_DYN_BASE};
@@ -28,7 +27,7 @@ use axhal::arch::STACK_SIZE;
 use axhal::arch::{enable_sum, disable_sum};
 use kernel_guard::NoPreempt;
 use mutex::AxMutex;
-use mutex_helper::MutexHelper;
+use mutex_helper::mutex_lock;
 
 const ELF_HEAD_BUF_SIZE: usize = 256;
 
@@ -236,9 +235,8 @@ fn load_elf_binary(file: FileRef, load_bias: usize) -> LinuxResult {
             error!("Interp: phdr: offset: {:#X}=>{:#X} size: {:#X}=>{:#X}",
                 phdr.p_offset, phdr.p_vaddr, phdr.p_filesz, phdr.p_memsz);
             let mut path: [u8; 256] = [0; 256];
-            let helper = MutexHelper::new();
-            let _ = file.lock(helper.clone()).seek(SeekFrom::Start(phdr.p_offset as u64));
-            let ret = file.lock(helper.clone()).read(&mut path).unwrap();
+            let _ = mutex_lock!(file).seek(SeekFrom::Start(phdr.p_offset as u64));
+            let ret = mutex_lock!(file).read(&mut path).unwrap();
             let path = &path[0..phdr.p_filesz as usize];
             let path = from_utf8(&path).expect("Interpreter path isn't valid UTF-8");
             let path = path.trim_matches(char::from(0));
@@ -316,8 +314,7 @@ fn set_brk(elf_bss: usize, elf_brk: usize) {
 }
 
 fn load_elf_phdrs(file: FileRef) -> LinuxResult<(Vec<ProgramHeader>, usize)> {
-    let helper = MutexHelper::new();
-    let mut file = file.lock(helper);
+    let mut file = mutex_lock!(file);
     let mut buf: [u8; ELF_HEAD_BUF_SIZE] = [0; ELF_HEAD_BUF_SIZE];
     file.read(&mut buf)?;
 

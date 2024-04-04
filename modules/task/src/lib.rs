@@ -132,6 +132,12 @@ impl TaskStruct {
     pub const unsafe fn ctx_mut_ptr(&self) -> *mut ThreadStruct {
         self.thread.get()
     }
+
+    #[inline]
+    pub fn set_preempt_pending(&self, pending: bool) {
+        //self.need_resched.store(pending, Ordering::Release)
+        unimplemented!("set_preempt_pending {}", pending);
+    }
 }
 
 /// The reference type of a task.

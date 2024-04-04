@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 task = { path = "../task" }
 waitqueue = { path = "../waitqueue" }
+run_queue = { path = "../run_queue" }

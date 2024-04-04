@@ -6,6 +6,13 @@ use alloc::sync::Arc;
 use task::{TaskRef, current};
 use waitqueue::Waiter;
 
+#[macro_export]
+macro_rules! mutex_lock {
+    ($arg:tt) => {
+        $arg.lock(mutex_helper::MutexHelper::new())
+    }
+}
+
 pub struct MutexHelper {
     task: TaskRef,
 }
@@ -24,11 +31,16 @@ impl Waiter for MutexHelper {
     }
 
     fn block(&self) {
-        unimplemented!("");
+        let rq = run_queue::task_rq(&self.task);
+        rq.lock().resched(false);
     }
 
-    fn unblock(&self, _resched: bool) {
-        unimplemented!("");
+    fn unblock(&self, resched: bool) {
+        let rq = run_queue::task_rq(&self.task);
+        rq.lock().add_task(self.task.clone());
+        if resched {
+            self.task.set_preempt_pending(true);
+        }
     }
 
     fn on_waked(&self) {

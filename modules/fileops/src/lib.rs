@@ -10,9 +10,8 @@ use alloc::string::String;
 use axerrno::LinuxError;
 use axfile::fops::File;
 use axfile::fops::OpenOptions;
-use spinlock::SpinNoIrq;
 use mutex::AxMutex;
-use mutex_helper::MutexHelper;
+use mutex_helper::mutex_lock;
 
 pub fn openat(_dtd: usize, filename: &str, _flags: usize, _mode: usize) -> usize {
     let mut opts = OpenOptions::new();
@@ -39,8 +38,7 @@ pub fn read(fd: usize, ubuf: &mut [u8]) -> usize {
     assert!(count < 1024);
     let mut kbuf: [u8; 1024] = [0; 1024];
     while pos < count {
-        let helper = MutexHelper::new();
-        let ret = file.lock(helper).read(&mut kbuf[pos..]).unwrap();
+        let ret = mutex_lock!(file).read(&mut kbuf[pos..]).unwrap();
         if ret == 0 {
             break;
         }
@@ -112,8 +110,7 @@ pub fn fstatat(dirfd: usize, _path: &str, statbuf_ptr: usize, _flags: usize) -> 
             return (-2isize) as usize;
         },
     };
-    let helper = MutexHelper::new();
-    let metadata = file.lock(helper).get_attr().unwrap();
+    let metadata = mutex_lock!(file).get_attr().unwrap();
     let ty = metadata.file_type() as u8;
     let perm = metadata.perm().bits() as u32;
     let st_mode = ((ty as u32) << 12) | perm;
