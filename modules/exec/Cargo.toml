@@ -8,6 +8,8 @@ edition = "2021"
 [dependencies]
 log = "0.4"
 mmap = { path = "../mmap" }
+mutex = { path = "../mutex" }
+mutex_helper = { path = "../mutex_helper" }
 task = { path = "../task" }
 axhal = { path = "../axhal" }
 axfile = { path = "../axfile" }

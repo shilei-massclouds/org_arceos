@@ -11,31 +11,8 @@ use axerrno::LinuxError;
 use axfile::fops::File;
 use axfile::fops::OpenOptions;
 use spinlock::SpinNoIrq;
-use mutex_helper::MutexHelper;
-
-/////////////////////////
-
-struct Duck {
-    state: usize,
-}
-
-impl Duck {
-    pub const fn new() -> Self {
-        Self {
-            state: 0,
-        }
-    }
-
-    pub fn eat(&self) {
-        error!("eat: {}", self.state);
-    }
-}
-
 use mutex::AxMutex;
-
-static DUCK: AxMutex<Duck> = AxMutex::new(Duck::new());
-
-////////////////////////
+use mutex_helper::MutexHelper;
 
 pub fn openat(_dtd: usize, filename: &str, _flags: usize, _mode: usize) -> usize {
     let mut opts = OpenOptions::new();
@@ -49,20 +26,8 @@ pub fn openat(_dtd: usize, filename: &str, _flags: usize, _mode: usize) -> usize
             return (-LinuxError::from(e).code()) as usize;
         },
     };
-    let fd = current.filetable.lock().insert(Arc::new(SpinNoIrq::new(file)));
+    let fd = current.filetable.lock().insert(Arc::new(AxMutex::new(file)));
     error!("openat fd {}", fd);
-
-    ////////////////////////////////
-
-    {
-        let helper = MutexHelper::new();
-        let duck = DUCK.lock(helper);
-        duck.eat();
-    }
-
-    error!("Duck fd {}", fd);
-    ////////////////////////////////
-
     fd
 }
 
@@ -74,7 +39,8 @@ pub fn read(fd: usize, ubuf: &mut [u8]) -> usize {
     assert!(count < 1024);
     let mut kbuf: [u8; 1024] = [0; 1024];
     while pos < count {
-        let ret = file.lock().read(&mut kbuf[pos..]).unwrap();
+        let helper = MutexHelper::new();
+        let ret = file.lock(helper).read(&mut kbuf[pos..]).unwrap();
         if ret == 0 {
             break;
         }
@@ -146,7 +112,8 @@ pub fn fstatat(dirfd: usize, _path: &str, statbuf_ptr: usize, _flags: usize) -> 
             return (-2isize) as usize;
         },
     };
-    let metadata = file.lock().get_attr().unwrap();
+    let helper = MutexHelper::new();
+    let metadata = file.lock(helper).get_attr().unwrap();
     let ty = metadata.file_type() as u8;
     let perm = metadata.perm().bits() as u32;
     let st_mode = ((ty as u32) << 12) | perm;

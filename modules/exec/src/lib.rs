@@ -27,6 +27,8 @@ use mmap::{MAP_FIXED, MAP_ANONYMOUS};
 use axhal::arch::STACK_SIZE;
 use axhal::arch::{enable_sum, disable_sum};
 use kernel_guard::NoPreempt;
+use mutex::AxMutex;
+use mutex_helper::MutexHelper;
 
 const ELF_HEAD_BUF_SIZE: usize = 256;
 
@@ -177,7 +179,7 @@ fn do_open_execat(filename: &str, _flags: usize) -> LinuxResult<FileRef> {
     let current = task::current();
     let fs = current.fs.lock();
     let file = File::open(filename, &opts, &fs)?;
-    Ok(Arc::new(SpinNoIrq::new(file)))
+    Ok(Arc::new(AxMutex::new(file)))
 }
 
 fn exec_binprm(file: FileRef, load_bias: usize) -> LinuxResult {
@@ -234,8 +236,9 @@ fn load_elf_binary(file: FileRef, load_bias: usize) -> LinuxResult {
             error!("Interp: phdr: offset: {:#X}=>{:#X} size: {:#X}=>{:#X}",
                 phdr.p_offset, phdr.p_vaddr, phdr.p_filesz, phdr.p_memsz);
             let mut path: [u8; 256] = [0; 256];
-            let _ = file.lock().seek(SeekFrom::Start(phdr.p_offset as u64));
-            let ret = file.lock().read(&mut path).unwrap();
+            let helper = MutexHelper::new();
+            let _ = file.lock(helper.clone()).seek(SeekFrom::Start(phdr.p_offset as u64));
+            let ret = file.lock(helper.clone()).read(&mut path).unwrap();
             let path = &path[0..phdr.p_filesz as usize];
             let path = from_utf8(&path).expect("Interpreter path isn't valid UTF-8");
             let path = path.trim_matches(char::from(0));
@@ -313,7 +316,8 @@ fn set_brk(elf_bss: usize, elf_brk: usize) {
 }
 
 fn load_elf_phdrs(file: FileRef) -> LinuxResult<(Vec<ProgramHeader>, usize)> {
-    let mut file = file.lock();
+    let helper = MutexHelper::new();
+    let mut file = file.lock(helper);
     let mut buf: [u8; ELF_HEAD_BUF_SIZE] = [0; ELF_HEAD_BUF_SIZE];
     file.read(&mut buf)?;
 

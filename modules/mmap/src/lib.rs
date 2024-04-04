@@ -12,6 +12,7 @@ use core::ops::Bound;
 use axhal::mem::{phys_to_virt, virt_to_phys};
 use axhal::arch::TASK_UNMAPPED_BASE;
 pub use mm::FileRef;
+use mutex_helper::MutexHelper;
 
 /// Interpret addr exactly.
 pub const MAP_FIXED: usize = 0x10;
@@ -101,8 +102,9 @@ pub fn faultin_page(va: usize) -> usize {
     let pa = virt_to_phys(direct_va.into()).into();
 
     if vma.vm_file.get().is_some() {
+        let helper = MutexHelper::new();
         let f = vma.vm_file.get().unwrap().clone();
-        locked_mm.fill_cache(pa, PAGE_SIZE_4K, &mut f.lock(), offset);
+        locked_mm.fill_cache(pa, PAGE_SIZE_4K, &mut f.lock(helper), offset);
     }
     let _ = locked_mm.map_region(va, pa, PAGE_SIZE_4K, 1);
     phys_to_virt(pa.into()).into()

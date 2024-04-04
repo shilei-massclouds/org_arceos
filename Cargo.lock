@@ -1094,6 +1094,8 @@ dependencies = [
  "log",
  "memory_addr",
  "mmap",
+ "mutex",
+ "mutex_helper",
  "spinlock",
  "task",
 ]
@@ -1126,6 +1128,7 @@ name = "filetable"
 version = "0.1.0"
 dependencies = [
  "axfile",
+ "mutex",
  "spinlock",
 ]
 
@@ -1456,6 +1459,7 @@ dependencies = [
  "axio",
  "log",
  "memory_addr",
+ "mutex",
  "spinlock",
 ]
 
@@ -1470,6 +1474,7 @@ dependencies = [
  "log",
  "memory_addr",
  "mm",
+ "mutex_helper",
  "spinlock",
  "task",
 ]
@@ -1479,7 +1484,6 @@ name = "mutex"
 version = "0.1.0"
 dependencies = [
  "log",
- "task",
  "waitqueue",
 ]
 

@@ -4,7 +4,7 @@ extern crate alloc;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 use axfile::fops::File;
-use spinlock::{SpinNoIrq as Mutex};
+use mutex::AxMutex;
 
 pub struct FileTable {
     table: SlotVec<FileTableEntry>,
@@ -17,24 +17,24 @@ impl FileTable {
         }
     }
 
-    pub fn get_file(&self, fd: usize) -> Option<Arc<Mutex<File>>> {
+    pub fn get_file(&self, fd: usize) -> Option<Arc<AxMutex<File>>> {
         self.table
             .get(fd-3)
             .map(|entry| entry.file.clone())
     }
 
-    pub fn insert(&mut self, item: Arc<Mutex<File>>) -> usize {
+    pub fn insert(&mut self, item: Arc<AxMutex<File>>) -> usize {
         let entry = FileTableEntry::new(item);
         self.table.put(entry) + 3
     }
 }
 
 pub struct FileTableEntry {
-    file: Arc<Mutex<File>>,
+    file: Arc<AxMutex<File>>,
 }
 
 impl FileTableEntry {
-    pub fn new(file: Arc<Mutex<File>>) -> Self {
+    pub fn new(file: Arc<AxMutex<File>>) -> Self {
         Self {
             file,
         }

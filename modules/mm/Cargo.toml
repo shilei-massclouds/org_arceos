@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 log = "0.4"
 axhal = { path = "../axhal" }
+mutex = { path = "../mutex" }
 axalloc = { path = "../axalloc" }
 axfile = { path = "../axfile" }
 axio = { path = "../../crates/axio" }

@@ -8,5 +8,4 @@ default = []
 
 [dependencies]
 log = "0.4"
-task = { path = "../task" }
 waitqueue = { path = "../waitqueue" }
