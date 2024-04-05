@@ -1094,6 +1094,8 @@ dependencies = [
  "log",
  "memory_addr",
  "mmap",
+ "mutex_base",
+ "mutex_ops",
  "spinlock",
  "task",
 ]
@@ -1115,6 +1117,8 @@ dependencies = [
  "axfile",
  "axhal",
  "log",
+ "mutex_base",
+ "mutex_ops",
  "spinlock",
  "task",
 ]
@@ -1124,7 +1128,7 @@ name = "filetable"
 version = "0.1.0"
 dependencies = [
  "axfile",
- "spinlock",
+ "mutex_base",
 ]
 
 [[package]]
@@ -1155,6 +1159,7 @@ dependencies = [
  "run_queue",
  "spinlock",
  "task",
+ "tid_map",
 ]
 
 [[package]]
@@ -1454,6 +1459,7 @@ dependencies = [
  "axio",
  "log",
  "memory_addr",
+ "mutex_base",
  "spinlock",
 ]
 
@@ -1468,8 +1474,26 @@ dependencies = [
  "log",
  "memory_addr",
  "mm",
+ "mutex_ops",
  "spinlock",
  "task",
+]
+
+[[package]]
+name = "mutex_base"
+version = "0.1.0"
+dependencies = [
+ "wait_queue",
+]
+
+[[package]]
+name = "mutex_ops"
+version = "0.1.0"
+dependencies = [
+ "mutex_base",
+ "run_queue",
+ "task",
+ "tid_map",
 ]
 
 [[package]]
@@ -2052,6 +2076,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "tid_map"
+version = "0.1.0"
+dependencies = [
+ "spinlock",
+ "task",
+]
+
+[[package]]
 name = "time"
 version = "0.1.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2159,6 +2191,13 @@ name = "volatile"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "442887c63f2c839b346c192d047a7c87e73d0689c9157b00b53dcc27dd5ea793"
+
+[[package]]
+name = "wait_queue"
+version = "0.1.0"
+dependencies = [
+ "spinlock",
+]
 
 [[package]]
 name = "walkdir"

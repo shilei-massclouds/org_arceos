@@ -12,6 +12,7 @@ use core::ops::Bound;
 use axhal::mem::{phys_to_virt, virt_to_phys};
 use axhal::arch::TASK_UNMAPPED_BASE;
 pub use mm::FileRef;
+use mutex_ops::MutexTrait;
 
 /// Interpret addr exactly.
 pub const MAP_FIXED: usize = 0x10;

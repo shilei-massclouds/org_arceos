@@ -10,6 +10,7 @@ log = "0.4"
 bitflags = "2.2"
 task = { path = "../task" }
 axhal = { path = "../axhal" }
+tid_map = { path = "../tid_map" }
 run_queue = { path = "../run_queue", features = ["sched_cfs"] }
 axerrno = { path = "../../crates/axerrno" }
 memory_addr = { path = "../../crates/memory_addr" }

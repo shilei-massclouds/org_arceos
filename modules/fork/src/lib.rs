@@ -83,12 +83,14 @@ impl KernelCloneArgs {
         debug!("copy_process...");
         assert!(!trace);
         let mut task = current().dup_task_struct();
+        // Todo: alloc pid and register it to tid_map
         //copy_files();
         self.copy_fs(&mut task)?;
         //copy_sighand();
         //copy_signal();
         //copy_mm();
         self.copy_thread(&mut task);
+        tid_map::register_task(task.pid(), task.clone());
         Ok(task)
     }
 
@@ -109,7 +111,7 @@ impl KernelCloneArgs {
 
     fn copy_thread(&self, task: &mut TaskRef) {
         error!("copy_thread ...");
-        let task = Arc::get_mut(task).expect("userd by other threads!");
+        let task = Arc::get_mut(task).expect("used by other threads!");
         assert!(self.entry.is_some());
         task.entry = self.entry;
         let kstack = TaskStack::alloc(align_up_4k(task::THREAD_SIZE));

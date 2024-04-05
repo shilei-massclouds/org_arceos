@@ -21,8 +21,9 @@ use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering;
 use memory_addr::align_down_4k;
 use spinlock::SpinNoIrq;
+use mutex_base::Mutex;
 
-pub type FileRef = Arc<SpinNoIrq<File>>;
+pub type FileRef = Arc<Mutex<File>>;
 
 static MM_UNIQUE_ID: AtomicUsize = AtomicUsize::new(1);
 
@@ -30,7 +31,7 @@ pub struct VmAreaStruct {
     pub vm_start: usize,
     pub vm_end: usize,
     pub vm_pgoff: usize,
-    pub vm_file: OnceCell<Arc<SpinNoIrq<File>>>,
+    pub vm_file: OnceCell<FileRef>,
     pub vm_flags: usize,
 }
 

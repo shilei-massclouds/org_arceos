@@ -19,7 +19,6 @@ use elf::ElfBytes;
 use elf::segment::SegmentTable;
 use elf::parse::ParseAt;
 use axio::SeekFrom;
-use spinlock::SpinNoIrq;
 use mmap::FileRef;
 use axhal::arch::start_thread;
 use axhal::arch::{TASK_SIZE, ELF_ET_DYN_BASE};
@@ -27,6 +26,8 @@ use mmap::{MAP_FIXED, MAP_ANONYMOUS};
 use axhal::arch::STACK_SIZE;
 use axhal::arch::{enable_sum, disable_sum};
 use kernel_guard::NoPreempt;
+use mutex_base::Mutex;
+use mutex_ops::MutexTrait;
 
 const ELF_HEAD_BUF_SIZE: usize = 256;
 
@@ -177,7 +178,7 @@ fn do_open_execat(filename: &str, _flags: usize) -> LinuxResult<FileRef> {
     let current = task::current();
     let fs = current.fs.lock();
     let file = File::open(filename, &opts, &fs)?;
-    Ok(Arc::new(SpinNoIrq::new(file)))
+    Ok(Arc::new(Mutex::new(file)))
 }
 
 fn exec_binprm(file: FileRef, load_bias: usize) -> LinuxResult {

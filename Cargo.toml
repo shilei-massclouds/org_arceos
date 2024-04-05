@@ -83,8 +83,12 @@ members = [
     "modules/filetable",
     "modules/mkboot",
     "modules/fileops",
-    "modules/axtrap", 
+    "modules/axtrap",
     "modules/arch_boot",
+    "modules/mutex_base",
+    "modules/mutex_ops",
+    "modules/wait_queue",
+    "modules/tid_map",
 ]
 
 [profile.release]

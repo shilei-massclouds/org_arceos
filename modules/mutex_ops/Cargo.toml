@@ -1,16 +1,12 @@
 [package]
-name = "fileops"
+name = "mutex_ops"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-log = "0.4"
 task = { path = "../task" }
-axfile = { path = "../axfile" }
+run_queue = { path = "../run_queue" }
 mutex_base = { path = "../mutex_base" }
-mutex_ops = { path = "../mutex_ops" }
-axerrno = { path = "../../crates/axerrno" }
-spinlock = { path = "../../crates/spinlock" }
-axhal = { path = "../axhal" }
+tid_map = { path = "../tid_map" }

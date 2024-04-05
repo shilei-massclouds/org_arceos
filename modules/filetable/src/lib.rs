@@ -4,7 +4,7 @@ extern crate alloc;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 use axfile::fops::File;
-use spinlock::{SpinNoIrq as Mutex};
+use mutex_base::Mutex;
 
 pub struct FileTable {
     table: SlotVec<FileTableEntry>,
