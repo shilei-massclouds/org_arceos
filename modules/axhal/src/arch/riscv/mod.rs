@@ -4,6 +4,7 @@ mod macros;
 mod context;
 mod trap;
 pub use trap::ret_from_fork;
+pub mod sysno;
 
 #[cfg(feature = "paging")]
 use crate::mem::PAGE_SIZE_4K;

@@ -26,10 +26,11 @@ define build_linux_image
   @mkdir -p ./mnt
   @sudo mount $(1) ./mnt
   @sudo mkdir -p ./mnt/lib
+  @sudo mkdir -p ./mnt/lib64
   @sudo mkdir -p ./mnt/sbin
   @sudo mkdir -p ./mnt/testcases
-  @sudo cp ./payload/ld-linux-riscv64-lp64d.so.1 ./mnt/lib/
-  @sudo cp ./payload/libc.so.6 ./mnt/lib/
+  @sudo cp ./payload/$(AX_ARCH)/* ./mnt/lib/
+  @sudo cp ./payload/$(AX_ARCH)/* ./mnt/lib64/
   @sudo cp ./payload/init ./mnt/sbin/init
   -@sudo cp ./payload/testcases/* ./mnt/testcases/
   ls -l ./mnt/lib

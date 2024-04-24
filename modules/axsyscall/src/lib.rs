@@ -5,6 +5,7 @@ extern crate alloc;
 use fileops::get_user_str;
 use fileops::iovec;
 use memory_addr::{align_up_4k, is_aligned_4k};
+use axhal::arch::sysno::*;
 
 #[macro_use]
 extern crate log;
@@ -52,46 +53,6 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         _ => panic!("Unsupported syscall: {}", sysno),
     }
 }
-
-//
-// Linux syscall
-//
-const LINUX_SYSCALL_GETCWD: usize = 0x11;
-const LINUX_SYSCALL_IOCTL: usize = 0x1d;
-const LINUX_SYSCALL_MKDIRAT: usize = 0x22;
-const LINUX_SYSCALL_UNLINKAT: usize = 0x23;
-const LINUX_SYSCALL_FACCESSAT: usize = 0x30;
-const LINUX_SYSCALL_CHDIR: usize = 0x31;
-const LINUX_SYSCALL_CHMODAT: usize = 0x35;
-const LINUX_SYSCALL_CHOWNAT: usize = 0x36;
-const LINUX_SYSCALL_OPENAT: usize = 0x38;
-const LINUX_SYSCALL_CLOSE: usize = 0x39;
-const LINUX_SYSCALL_GETDENTS64: usize = 0x3d;
-const LINUX_SYSCALL_READ: usize = 0x3f;
-const LINUX_SYSCALL_WRITE: usize = 0x40;
-const LINUX_SYSCALL_WRITEV: usize = 0x42;
-const LINUX_SYSCALL_READLINKAT: usize = 0x4e;
-const LINUX_SYSCALL_FSTATAT: usize = 0x4f;
-const LINUX_SYSCALL_EXIT: usize = 0x5d;
-const LINUX_SYSCALL_EXIT_GROUP: usize = 0x5e;
-const LINUX_SYSCALL_TGKILL: usize = 0x83;
-const LINUX_SYSCALL_UNAME: usize = 0xa0;
-const LINUX_SYSCALL_GETPID: usize = 0xac;
-const LINUX_SYSCALL_GETGID: usize = 0xb0;
-const LINUX_SYSCALL_GETTID: usize = 0xb2;
-const LINUX_SYSCALL_BRK: usize = 0xd6;
-const LINUX_SYSCALL_MUNMAP: usize = 0xd7;
-const LINUX_SYSCALL_MMAP: usize = 0xde;
-const LINUX_SYSCALL_MPROTECT: usize = 0xe2;
-const LINUX_SYSCALL_MSYNC: usize = 0xe3;
-const LINUX_SYSCALL_PRLIMIT64: usize = 0x105;
-const LINUX_SYSCALL_GETRANDOM: usize = 0x116;
-
-const LINUX_SYSCALL_SET_TID_ADDRESS: usize = 0x60;
-const LINUX_SYSCALL_SET_ROBUST_LIST: usize = 0x63;
-const LINUX_SYSCALL_CLOCK_GETTIME: usize = 0x71;
-const LINUX_SYSCALL_RT_SIGACTION: usize = 0x86;
-const LINUX_SYSCALL_RT_SIGPROCMASK: usize = 0x87;
 
 fn linux_syscall_faccessat(args: SyscallArgs) -> usize {
     let [dfd, filename, mode, ..] = args;

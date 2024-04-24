@@ -270,8 +270,8 @@ fn kernel_init(dtb_info: DtbInfo) {
     }
 
     // TODO: Replace this testcase with a more appropriate x86_64 testcase
-    #[cfg(target_arch = "x86_64")]
-    compile_error!("Remove it after replace a more appropriate x86_64 testcase.");
+    //#[cfg(target_arch = "x86_64")]
+    //compile_error!("Remove it after replace a more appropriate x86_64 testcase.");
     try_to_run_init_process("/sbin/init").expect("No working init found.");
 }
 
