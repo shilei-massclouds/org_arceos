@@ -48,10 +48,10 @@ pub fn _mmap(
 ) -> LinuxResult<usize> {
     assert!(is_aligned_4k(va));
     len = align_up_4k(len);
-    debug!("mmap va {:#X} offset {:#X}", va, offset);
+    info!("mmap va {:#X} offset {:#X}", va, offset);
     if (flags & MAP_FIXED) == 0 {
         va = get_unmapped_vma(va, len);
-        debug!("Get unmapped vma {:#X}", va);
+        info!("Get unmapped vma {:#X}", va);
     }
 
     let mm = task::current().mm();
@@ -92,7 +92,7 @@ pub fn _mmap(
 }
 
 fn find_overlap(va: usize, len: usize, flags: usize) -> Option<VmAreaStruct> {
-    info!(
+    debug!(
         "find_overlap: va {:#X} len {:#X}, flags {:#X}",
         va, len, flags
     );
@@ -146,7 +146,7 @@ pub fn get_unmapped_vma(_va: usize, len: usize) -> usize {
 }
 
 pub fn faultin_page(va: usize) -> usize {
-    debug!("faultin_page... va {:#X}", va);
+    info!("faultin_page... va {:#X}", va);
     let mm = task::current().mm();
     let locked_mm = mm.lock();
 

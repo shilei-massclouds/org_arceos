@@ -1,6 +1,8 @@
 mod context;
 mod gdt;
 
+pub mod sysno;
+
 mod trap;
 #[cfg(feature = "paging")]
 use crate::mem::PAGE_SIZE_4K;

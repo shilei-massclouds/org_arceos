@@ -32,6 +32,7 @@ fn x86_trap_handler(tf: &mut TrapFrame) {
             // +---+--  --+---+-----+---+--  --+---+----+----+---+---+---+---+---+
             // |   Reserved   | SGX |   Reserved   | SS | PK | I | R | U | W | P |
             // +---+--  --+---+-----+---+--  --+---+----+----+---+---+---+---+---+
+            /*
             log::debug!("error_code: {:?}", tf.error_code);
             if tf.error_code & (1 << 1) != 0 {
                 handle_page_fault(badaddr, 2);
@@ -45,6 +46,8 @@ fn x86_trap_handler(tf: &mut TrapFrame) {
             if tf.error_code & (1 << 4) != 0 {
                 handle_page_fault(badaddr, 0);
             }
+            */
+            handle_page_fault(badaddr, 0);
             // } else {
             //     panic!(
             //         "Kernel #PF @ {:#x}, fault_vaddr={:#x}, error_code={:#x}:\n{:#x?}",
