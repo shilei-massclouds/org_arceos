@@ -24,34 +24,45 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_CHOWNAT => linux_syscall_fchownat(args),
         LINUX_SYSCALL_MKDIRAT => linux_syscall_mkdirat(args),
         LINUX_SYSCALL_UNLINKAT => linux_syscall_unlinkat(args),
+        */
         LINUX_SYSCALL_OPENAT => linux_syscall_openat(args),
         LINUX_SYSCALL_CLOSE => linux_syscall_close(args),
         LINUX_SYSCALL_READ => linux_syscall_read(args),
-        LINUX_SYSCALL_GETDENTS64 => linux_syscall_getdents64(args),
         LINUX_SYSCALL_WRITE => linux_syscall_write(args),
+        /*
+        LINUX_SYSCALL_GETDENTS64 => linux_syscall_getdents64(args),
         LINUX_SYSCALL_WRITEV => linux_syscall_writev(args),
         LINUX_SYSCALL_READLINKAT => usize::MAX,
+        */
         LINUX_SYSCALL_FSTATAT => linux_syscall_fstatat(args),
+        LINUX_SYSCALL_ACCESS => linux_syscall_access(args),
         LINUX_SYSCALL_UNAME => linux_syscall_uname(args),
         LINUX_SYSCALL_BRK => linux_syscall_brk(args),
+        LINUX_SYSCALL_RSEQ => linux_syscall_rseq(args),
+        /*
         LINUX_SYSCALL_MUNMAP => linux_syscall_munmap(args),
+        */
         LINUX_SYSCALL_MMAP => linux_syscall_mmap(args),
+        /*
         LINUX_SYSCALL_MSYNC => linux_syscall_msync(args),
+        */
         LINUX_SYSCALL_MPROTECT => linux_syscall_mprotect(args),
         LINUX_SYSCALL_SET_TID_ADDRESS => linux_syscall_set_tid_address(args),
         LINUX_SYSCALL_SET_ROBUST_LIST => linux_syscall_set_robust_list(args),
         LINUX_SYSCALL_PRLIMIT64 => linux_syscall_prlimit64(args),
         LINUX_SYSCALL_GETRANDOM => linux_syscall_getrandom(args),
         LINUX_SYSCALL_CLOCK_GETTIME => linux_syscall_clock_gettime(args),
+        /*
         LINUX_SYSCALL_RT_SIGPROCMASK => linux_syscall_rt_sigprocmask(args),
         LINUX_SYSCALL_RT_SIGACTION => linux_syscall_rt_sigaction(args),
         LINUX_SYSCALL_GETTID => linux_syscall_gettid(args),
         LINUX_SYSCALL_GETPID => linux_syscall_getpid(args),
         LINUX_SYSCALL_GETGID => linux_syscall_getgid(args),
         LINUX_SYSCALL_TGKILL => linux_syscall_tgkill(args),
+        */
         LINUX_SYSCALL_EXIT => linux_syscall_exit(args),
         LINUX_SYSCALL_EXIT_GROUP => linux_syscall_exit_group(args),
-        */
+        LINUX_SYSCALL_ARCH_PRCTL => linux_syscall_arch_prctl(args),
         _ => panic!("Unsupported syscall: {}, {:#x}", sysno, sysno),
     }
 }
@@ -149,6 +160,11 @@ fn linux_syscall_writev(args: SyscallArgs) -> usize {
 fn linux_syscall_fstatat(args: SyscallArgs) -> usize {
     let [dfd, path, statbuf, flags, ..] = args;
     fileops::fstatat(dfd, path, statbuf, flags)
+}
+
+fn linux_syscall_access(args: SyscallArgs) -> usize {
+    warn!("impl linux_syscall_access");
+    0
 }
 
 fn linux_syscall_mmap(args: SyscallArgs) -> usize {
@@ -250,6 +266,12 @@ fn linux_syscall_tgkill(_args: SyscallArgs) -> usize {
     0
 }
 
+const ARCH_SET_FS: usize = 0x1002;
+fn linux_syscall_arch_prctl(args: SyscallArgs) -> usize {
+    let [code, addr, ..] = args;
+    sys::arch_prctl(code, addr)
+}
+
 const UTS_LEN: usize = 64;
 
 #[repr(C)]
@@ -291,6 +313,11 @@ fn init_bytes_from_str(dst: &mut [u8], src: &str) {
 fn linux_syscall_brk(args: SyscallArgs) -> usize {
     let va = align_up_4k(args[0]);
     mmap::set_brk(va)
+}
+
+fn linux_syscall_rseq(args: SyscallArgs) -> usize {
+    warn!("impl linux_syscall_rseq");
+    0
 }
 
 fn linux_syscall_munmap(args: SyscallArgs) -> usize {

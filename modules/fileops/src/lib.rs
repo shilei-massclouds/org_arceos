@@ -318,7 +318,6 @@ pub fn chdir(path: &str) -> usize {
 
 pub fn get_user_str(ptr: usize) -> String {
     let ptr = ptr as *const u8;
-    unsafe { riscv::register::sstatus::set_sum() };
     let ptr = raw_ptr_to_ref_str(ptr);
     let s = String::from(ptr);
     s

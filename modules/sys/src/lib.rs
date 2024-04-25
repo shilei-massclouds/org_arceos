@@ -1,7 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 
 use taskctx::Pid;
-//use axerrno::LinuxError;
+use axerrno::LinuxError;
 use axconfig::TASK_STACK_SIZE;
 
 #[macro_use]
@@ -55,6 +55,25 @@ pub fn prlimit64(pid: Pid, resource: usize, new_rlim: usize, old_rlim: usize) ->
         }
         _ => {
             unimplemented!("Resource Type: {}", resource);
+        }
+    }
+}
+
+const ARCH_SET_FS: usize = 0x1002;
+
+pub fn arch_prctl(code: usize, addr: usize) -> usize {
+    let ctx = taskctx::current_ctx();
+    match code {
+        ARCH_SET_FS => {
+            use axhal::arch::write_thread_pointer;
+            warn!("=========== arch_prctl ARCH_SET_FS {:#X}", addr);
+            unsafe { write_thread_pointer(addr) };
+            unsafe { (*ctx.ctx_mut_ptr()).fs_base = addr; }
+            0
+        },
+        _ =>  {
+            error!("=========== arch_prctl code {:#X}", code);
+            return LinuxError::EPERM.code() as usize;
         }
     }
 }

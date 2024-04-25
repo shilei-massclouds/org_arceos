@@ -9,4 +9,5 @@ edition = "2021"
 log = "0.4"
 taskctx = { path = "../taskctx" }
 axconfig = { path = "../axconfig" }
+axerrno = { path = "../../crates/axerrno" }
 axhal = { path = "../axhal" }
