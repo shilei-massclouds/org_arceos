@@ -23,27 +23,26 @@ pub const LINUX_SYSCALL_PRLIMIT64: usize = 0x12e;
 pub const LINUX_SYSCALL_GETRANDOM: usize = 0x13e;
 pub const LINUX_SYSCALL_RSEQ: usize = 0x14e;
 
-/*
-pub const LINUX_SYSCALL_GETCWD: usize = 0x11;
-pub const LINUX_SYSCALL_IOCTL: usize = 0x1d;
-pub const LINUX_SYSCALL_MKDIRAT: usize = 0x22;
-pub const LINUX_SYSCALL_UNLINKAT: usize = 0x23;
-pub const LINUX_SYSCALL_FACCESSAT: usize = 0x30;
-pub const LINUX_SYSCALL_CHDIR: usize = 0x31;
-pub const LINUX_SYSCALL_CHMODAT: usize = 0x35;
-pub const LINUX_SYSCALL_CHOWNAT: usize = 0x36;
-pub const LINUX_SYSCALL_GETDENTS64: usize = 0x3d;
-pub const LINUX_SYSCALL_WRITEV: usize = 0x42;
-pub const LINUX_SYSCALL_READLINKAT: usize = 0x4e;
-pub const LINUX_SYSCALL_TGKILL: usize = 0x83;
-pub const LINUX_SYSCALL_GETPID: usize = 0xac;
-pub const LINUX_SYSCALL_GETGID: usize = 0xb0;
-pub const LINUX_SYSCALL_GETTID: usize = 0xb2;
-pub const LINUX_SYSCALL_MUNMAP: usize = 0xd7;
-pub const LINUX_SYSCALL_MSYNC: usize = 0xe3;
-*/
+pub const LINUX_SYSCALL_IOCTL: usize = 16;
+pub const LINUX_SYSCALL_GETCWD: usize = 79;
+pub const LINUX_SYSCALL_CHDIR: usize = 80;
+pub const LINUX_SYSCALL_FACCESSAT: usize = 269;
+pub const LINUX_SYSCALL_TGKILL: usize = 234;
+pub const LINUX_SYSCALL_GETPID: usize = 39;
+pub const LINUX_SYSCALL_GETGID: usize = 104;
+pub const LINUX_SYSCALL_GETTID: usize = 186;
 
+pub const LINUX_SYSCALL_FCHMODAT: usize = 268;
+pub const LINUX_SYSCALL_FCHOWNAT: usize = 260;
 /*
-pub const LINUX_SYSCALL_RT_SIGACTION: usize = 0x86;
-pub const LINUX_SYSCALL_RT_SIGPROCMASK: usize = 0x87;
+pub const LINUX_SYSCALL_GETDENTS64: usize = 0x3d;
 */
+pub const LINUX_SYSCALL_MKDIRAT: usize = 258;
+pub const LINUX_SYSCALL_UNLINKAT: usize = 263;
+pub const LINUX_SYSCALL_WRITEV: usize = 20;
+pub const LINUX_SYSCALL_READLINKAT: usize = 267;
+pub const LINUX_SYSCALL_MUNMAP: usize = 11;
+pub const LINUX_SYSCALL_MSYNC: usize = 26;
+
+pub const LINUX_SYSCALL_RT_SIGACTION: usize = 13;
+pub const LINUX_SYSCALL_RT_SIGPROCMASK: usize = 14;

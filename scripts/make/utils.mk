@@ -31,8 +31,9 @@ define build_linux_image
   @sudo mkdir -p ./mnt/testcases
   @sudo cp ./payload/$(AX_ARCH)/* ./mnt/lib/
   @sudo cp ./payload/$(AX_ARCH)/* ./mnt/lib64/
-  @sudo cp ./payload/init ./mnt/sbin/init
+  @sudo cp ./payload/$(AX_ARCH)/init ./mnt/sbin/init
   -@sudo cp ./payload/testcases/* ./mnt/testcases/
+  ls -l ./mnt/sbin
   ls -l ./mnt/lib
   ls -l ./mnt/testcases
   @sudo umount ./mnt
