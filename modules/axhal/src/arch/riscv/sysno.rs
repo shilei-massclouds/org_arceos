@@ -32,6 +32,7 @@ pub const LINUX_SYSCALL_MPROTECT: usize = 0xe2;
 pub const LINUX_SYSCALL_MSYNC: usize = 0xe3;
 pub const LINUX_SYSCALL_PRLIMIT64: usize = 0x105;
 pub const LINUX_SYSCALL_GETRANDOM: usize = 0x116;
+pub const LINUX_SYSCALL_RSEQ: usize = 0x125;
 
 pub const LINUX_SYSCALL_SET_TID_ADDRESS: usize = 0x60;
 pub const LINUX_SYSCALL_SET_ROBUST_LIST: usize = 0x63;

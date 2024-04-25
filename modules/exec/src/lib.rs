@@ -40,12 +40,6 @@ pub fn kernel_execve(filename: &str) -> LinuxResult {
 
     // TODO: Move it into kernel_init().
     setup_zero_page()?;
-    /*
-    #[cfg(target_arch = "x86_64")]
-    return bprm_execve(filename, 0, 0x400_0000);
-
-    #[cfg(not(target_arch = "x86_64"))]
-    */
     bprm_execve(filename, 0, 0)
 }
 

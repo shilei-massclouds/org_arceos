@@ -13,6 +13,7 @@ extern crate log;
 const MAX_SYSCALL_ARGS: usize = 6;
 pub type SyscallArgs = [usize; MAX_SYSCALL_ARGS];
 
+#[allow(unreachable_patterns)]
 pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
     match sysno {
         /*
@@ -35,7 +36,6 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_READLINKAT => usize::MAX,
         */
         LINUX_SYSCALL_FSTATAT => linux_syscall_fstatat(args),
-        LINUX_SYSCALL_ACCESS => linux_syscall_access(args),
         LINUX_SYSCALL_UNAME => linux_syscall_uname(args),
         LINUX_SYSCALL_BRK => linux_syscall_brk(args),
         LINUX_SYSCALL_RSEQ => linux_syscall_rseq(args),
@@ -62,11 +62,15 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         */
         LINUX_SYSCALL_EXIT => linux_syscall_exit(args),
         LINUX_SYSCALL_EXIT_GROUP => linux_syscall_exit_group(args),
+        #[cfg(target_arch = "x86_64")]
+        LINUX_SYSCALL_ACCESS => linux_syscall_access(args),
+        #[cfg(target_arch = "x86_64")]
         LINUX_SYSCALL_ARCH_PRCTL => linux_syscall_arch_prctl(args),
         _ => panic!("Unsupported syscall: {}, {:#x}", sysno, sysno),
     }
 }
 
+#[allow(dead_code)]
 fn linux_syscall_faccessat(args: SyscallArgs) -> usize {
     let [dfd, filename, mode, ..] = args;
     info!(
@@ -78,6 +82,7 @@ fn linux_syscall_faccessat(args: SyscallArgs) -> usize {
     0
 }
 
+#[allow(dead_code)]
 fn linux_syscall_fchownat(args: SyscallArgs) -> usize {
     let [dfd, pathname, owner, group, flags, ..] = args;
     let pathname = get_user_str(pathname);
@@ -88,6 +93,7 @@ fn linux_syscall_fchownat(args: SyscallArgs) -> usize {
     0
 }
 
+#[allow(dead_code)]
 fn linux_syscall_fchmodat(args: SyscallArgs) -> usize {
     let [dfd, pathname, mode, flags, ..] = args;
     let pathname = get_user_str(pathname);
@@ -98,12 +104,14 @@ fn linux_syscall_fchmodat(args: SyscallArgs) -> usize {
     0
 }
 
+#[allow(dead_code)]
 fn linux_syscall_mkdirat(args: SyscallArgs) -> usize {
     let [dfd, pathname, mode, ..] = args;
     let pathname = get_user_str(pathname);
     fileops::mkdirat(dfd, &pathname, mode)
 }
 
+#[allow(dead_code)]
 fn linux_syscall_unlinkat(args: SyscallArgs) -> usize {
     let [dfd, path, flags, ..] = args;
     let path = get_user_str(path);
@@ -135,6 +143,7 @@ fn linux_syscall_read(args: SyscallArgs) -> usize {
     fileops::read(fd, ubuf)
 }
 
+#[allow(dead_code)]
 fn linux_syscall_getdents64(args: SyscallArgs) -> usize {
     let [fd, _dirp, count, ..] = args;
     warn!("impl linux_syscall_getdents64 fd {}, count {}", fd, count);
@@ -149,6 +158,7 @@ fn linux_syscall_write(args: SyscallArgs) -> usize {
     fileops::write(fd, ubuf)
 }
 
+#[allow(dead_code)]
 fn linux_syscall_writev(args: SyscallArgs) -> usize {
     let [fd, array, size, ..] = args;
     info!("writev: {:#x}, {:#x}, {:#x}", fd, array, size);
@@ -162,7 +172,8 @@ fn linux_syscall_fstatat(args: SyscallArgs) -> usize {
     fileops::fstatat(dfd, path, statbuf, flags)
 }
 
-fn linux_syscall_access(args: SyscallArgs) -> usize {
+#[cfg(target_arch = "x86_64")]
+fn linux_syscall_access(_args: SyscallArgs) -> usize {
     warn!("impl linux_syscall_access");
     0
 }
@@ -178,16 +189,19 @@ fn linux_syscall_mmap(args: SyscallArgs) -> usize {
     mmap::mmap(va, len, prot, flags, fd, offset).unwrap()
 }
 
+#[allow(dead_code)]
 fn linux_syscall_msync(args: SyscallArgs) -> usize {
     let [va, len, flags, ..] = args;
     mmap::msync(va, len, flags)
 }
 
+#[allow(dead_code)]
 fn linux_syscall_ioctl(args: SyscallArgs) -> usize {
     let [fd, request, udata, ..] = args;
     fileops::ioctl(fd, request, udata)
 }
 
+#[allow(dead_code)]
 fn linux_syscall_getcwd(args: SyscallArgs) -> usize {
     let [buf, size, ..] = args;
 
@@ -195,6 +209,7 @@ fn linux_syscall_getcwd(args: SyscallArgs) -> usize {
     fileops::getcwd(ubuf)
 }
 
+#[allow(dead_code)]
 fn linux_syscall_chdir(args: SyscallArgs) -> usize {
     let [pathname, ..] = args;
     let pathname = get_user_str(pathname);
@@ -235,6 +250,7 @@ fn linux_syscall_clock_gettime(_args: SyscallArgs) -> usize {
     0
 }
 
+#[allow(dead_code)]
 fn linux_syscall_rt_sigprocmask(args: SyscallArgs) -> usize {
     let [how, set, oldset, sigsetsize, ..] = args;
     warn!(
@@ -244,29 +260,34 @@ fn linux_syscall_rt_sigprocmask(args: SyscallArgs) -> usize {
     0
 }
 
+#[allow(dead_code)]
 fn linux_syscall_rt_sigaction(_args: SyscallArgs) -> usize {
     warn!("impl linux_syscall_rt_sigaction");
     0
 }
 
+#[allow(dead_code)]
 fn linux_syscall_gettid(_args: SyscallArgs) -> usize {
     sys::gettid()
 }
 
+#[allow(dead_code)]
 fn linux_syscall_getpid(_args: SyscallArgs) -> usize {
     sys::getpid()
 }
 
+#[allow(dead_code)]
 fn linux_syscall_getgid(_args: SyscallArgs) -> usize {
     sys::getgid()
 }
 
+#[allow(dead_code)]
 fn linux_syscall_tgkill(_args: SyscallArgs) -> usize {
     warn!("impl linux_syscall_tgkill");
     0
 }
 
-const ARCH_SET_FS: usize = 0x1002;
+#[cfg(target_arch = "x86_64")]
 fn linux_syscall_arch_prctl(args: SyscallArgs) -> usize {
     let [code, addr, ..] = args;
     sys::arch_prctl(code, addr)
@@ -315,11 +336,12 @@ fn linux_syscall_brk(args: SyscallArgs) -> usize {
     mmap::set_brk(va)
 }
 
-fn linux_syscall_rseq(args: SyscallArgs) -> usize {
+fn linux_syscall_rseq(_args: SyscallArgs) -> usize {
     warn!("impl linux_syscall_rseq");
     0
 }
 
+#[allow(dead_code)]
 fn linux_syscall_munmap(args: SyscallArgs) -> usize {
     let [va, len, ..] = args;
     debug!("munmap!!! {:#x} {:#x}", va, len);

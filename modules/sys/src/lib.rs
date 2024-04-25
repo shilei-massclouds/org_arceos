@@ -1,11 +1,13 @@
 #![cfg_attr(not(test), no_std)]
 
 use taskctx::Pid;
-use axerrno::LinuxError;
 use axconfig::TASK_STACK_SIZE;
 
 #[macro_use]
 extern crate log;
+
+#[cfg(target_arch = "x86_64")]
+const ARCH_SET_FS: usize = 0x1002;
 
 const RLIMIT_STACK: usize = 3; /* max stack size */
 //const RLIM_NLIMITS: usize = 16;
@@ -59,21 +61,22 @@ pub fn prlimit64(pid: Pid, resource: usize, new_rlim: usize, old_rlim: usize) ->
     }
 }
 
-const ARCH_SET_FS: usize = 0x1002;
-
+#[cfg(target_arch = "x86_64")]
 pub fn arch_prctl(code: usize, addr: usize) -> usize {
     let ctx = taskctx::current_ctx();
     match code {
         ARCH_SET_FS => {
             use axhal::arch::write_thread_pointer;
             warn!("=========== arch_prctl ARCH_SET_FS {:#X}", addr);
-            unsafe { write_thread_pointer(addr) };
-            unsafe { (*ctx.ctx_mut_ptr()).fs_base = addr; }
+            unsafe {
+                write_thread_pointer(addr);
+                (*ctx.ctx_mut_ptr()).fs_base = addr;
+            }
             0
         },
         _ =>  {
             error!("=========== arch_prctl code {:#X}", code);
-            return LinuxError::EPERM.code() as usize;
+            axerrno::LinuxError::EPERM.code() as usize
         }
     }
 }
