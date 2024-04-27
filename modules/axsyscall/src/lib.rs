@@ -31,6 +31,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_UNAME => linux_syscall_uname(args),
         LINUX_SYSCALL_BRK => linux_syscall_brk(args),
         LINUX_SYSCALL_RSEQ => linux_syscall_rseq(args),
+        LINUX_SYSCALL_CLONE => linux_syscall_clone(args),
         LINUX_SYSCALL_MUNMAP => linux_syscall_munmap(args),
         LINUX_SYSCALL_MMAP => linux_syscall_mmap(args),
         LINUX_SYSCALL_MSYNC => linux_syscall_msync(args),
@@ -318,8 +319,12 @@ fn linux_syscall_rseq(_args: SyscallArgs) -> usize {
 fn linux_syscall_munmap(args: SyscallArgs) -> usize {
     let [va, len, ..] = args;
     debug!("munmap!!! {:#x} {:#x}", va, len);
-    unimplemented!();
-    //return 0;
+    unimplemented!("impl munmap");
+}
+
+fn linux_syscall_clone(args: SyscallArgs) -> usize {
+    let [flags, newsp, ptid, tls, ctid, ..] = args;
+    fork::sys_clone(flags, newsp, tls, ptid, ctid)
 }
 
 fn linux_syscall_exit(args: SyscallArgs) -> usize {

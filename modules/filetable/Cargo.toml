@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 axfile = { path = "../axfile" }
 mutex = { path = "../mutex" }
+spinpreempt = { path = "../../crates/spinpreempt" }

@@ -5,12 +5,15 @@ extern crate log;
 extern crate alloc;
 use alloc::boxed::Box;
 use alloc::string::String;
+use alloc::sync::Arc;
 
 use axerrno::{LinuxError, LinuxResult};
-use task::{current, Pid, TaskRef};
+use task::{current, Tid, TaskRef, TaskStruct};
+use taskctx::SchedInfo;
 
 bitflags::bitflags! {
     /// clone flags
+    #[derive(Debug, Copy, Clone)]
     pub struct CloneFlags: usize {
         /// signal mask to be sent at exit
         const CSIGNAL       = 0x000000ff;
@@ -22,6 +25,8 @@ bitflags::bitflags! {
         const CLONE_FILES   = 0x00000400;
         /// set if signal handlers and blocked signals shared
         const CLONE_SIGHAND = 0x00000800;
+        /// set if the parent wants the child to wake it up on mm_release
+        const CLONE_VFORK   = 0x00004000;
         /// set if the tracing process can't force CLONE_PTRACE on this clone
         const CLONE_UNTRACED= 0x00800000;
     }
@@ -31,6 +36,7 @@ struct KernelCloneArgs {
     flags: CloneFlags,
     _name: String,
     _exit_signal: u32,
+    stack: Option<usize>,
     entry: Option<*mut dyn FnOnce()>,
 }
 
@@ -39,11 +45,13 @@ impl KernelCloneArgs {
         flags: CloneFlags,
         name: &str,
         exit_signal: u32,
+        stack: Option<usize>,
         entry: Option<*mut dyn FnOnce()>,
     ) -> Self {
         Self {
             flags,
             _name: String::from(name),
+            stack,
             _exit_signal: exit_signal,
             entry,
         }
@@ -55,21 +63,20 @@ impl KernelCloneArgs {
     /// waits for it to finish using the VM if required.
     /// The arg *exit_signal* is expected to be checked for sanity
     /// by the caller.
-    fn perform(&self) -> LinuxResult<Pid> {
+    fn perform(&self) -> LinuxResult<Tid> {
+        // Todo: handle ptrace in future.
         let trace = !self.flags.contains(CloneFlags::CLONE_UNTRACED);
-        // Todo: ptrace
-        assert!(!trace);
 
         let task = self.copy_process(None, trace)?;
         debug!(
-            "sched task fork: pid[{}] -> pid[{}].",
-            task::current().pid(),
-            task.pid()
+            "sched task fork: tid[{}] -> tid[{}].",
+            task::current().tid(),
+            task.tid()
         );
 
-        let pid = task.pid();
+        let tid = task.tid();
         self.wake_up_new_task(task);
-        Ok(pid)
+        Ok(tid)
     }
 
     /// Wake up a newly created task for the first time.
@@ -80,23 +87,36 @@ impl KernelCloneArgs {
     fn wake_up_new_task(&self, task: TaskRef) {
         let rq = run_queue::task_rq(&task.sched_info);
         rq.lock().activate_task(task.sched_info.clone());
-        debug!("wakeup the new task[{}].", task.pid());
+        debug!("wakeup the new task[{}].", task.tid());
     }
 
-    fn copy_process(&self, _pid: Option<Pid>, trace: bool) -> LinuxResult<TaskRef> {
+    fn copy_process(&self, mut tid: Option<Tid>, _trace: bool) -> LinuxResult<TaskRef> {
         info!("copy_process...");
-        assert!(!trace);
+        //assert!(!trace);
+        if tid.is_none() {
+            tid = Some(task::alloc_tid());
+        }
+
         let mut task = current().dup_task_struct();
         //copy_files();
         self.copy_fs(&mut task)?;
         //copy_sighand();
         //copy_signal();
-        //copy_mm();
-        self.copy_thread(task.clone());
-        Ok(task)
+        self.copy_mm(&mut task)?;
+        self.copy_thread(&mut task, tid.unwrap())?;
+
+        let arc_task = Arc::new(task);
+        task::register_task(arc_task.clone());
+        Ok(arc_task)
     }
 
-    fn copy_fs(&self, task: &mut TaskRef) -> LinuxResult {
+    fn copy_mm(&self, task: &mut TaskStruct) -> LinuxResult {
+        assert!(self.flags.contains(CloneFlags::CLONE_VM));
+        task.mm = current().mm.clone();
+        Ok(())
+    }
+
+    fn copy_fs(&self, task: &mut TaskStruct) -> LinuxResult {
         if self.flags.contains(CloneFlags::CLONE_FS) {
             /* task.fs is already what we want */
             let fs = task::current().fs.clone();
@@ -111,17 +131,20 @@ impl KernelCloneArgs {
         Ok(())
     }
 
-    fn copy_thread(&self, task: TaskRef) {
+    fn copy_thread(&self, task: &mut TaskStruct, tid: Tid) -> LinuxResult {
         info!("copy_thread ...");
-        assert!(self.entry.is_some());
-        use alloc::sync::Arc;
-        let task = task::as_task_mut(task);
-        Arc::get_mut(&mut task.sched_info).unwrap().reset(
+        //assert!(self.entry.is_some());
+        let mut sched_info = SchedInfo::new();
+        sched_info.init_tid(tid);
+        sched_info.init_tgid(tid);
+        sched_info.reset(
             self.entry,
             task_entry as usize,
             0.into(),
         );
+        task.sched_info = Arc::new(sched_info);
         error!("copy_thread!");
+        Ok(())
     }
 }
 
@@ -146,18 +169,45 @@ extern "C" fn task_entry() -> ! {
 /// Create a user mode thread.
 ///
 /// Invoke `f` to do some preparations before entering userland.
-pub fn user_mode_thread<F>(f: F, flags: CloneFlags) -> Pid
+pub fn user_mode_thread<F>(f: F, flags: CloneFlags) -> Tid
 where
     F: FnOnce() + 'static,
 {
     info!("create a user mode thread ...");
-    assert!((flags.bits() & CloneFlags::CSIGNAL.bits()) == 0);
+    assert_eq!(flags.intersection(CloneFlags::CSIGNAL).bits(), 0);
+    //assert!((flags.bits() & CloneFlags::CSIGNAL.bits()) == 0);
     let f = Box::into_raw(Box::new(f));
     let args = KernelCloneArgs::new(
         flags | CloneFlags::CLONE_VM | CloneFlags::CLONE_UNTRACED,
         "",
         0,
+        None,
         Some(f),
     );
     args.perform().expect("kernel_clone failed.")
+}
+
+///
+/// Clone thread according to SysCall requirements
+///
+pub fn sys_clone(
+    flags: usize, stack: usize, tls: usize, ptid: usize, ctid: usize
+) -> usize {
+    assert_eq!(tls, 0);
+    assert_eq!(ptid, 0);
+    assert_eq!(ctid, 0);
+
+    let flags = CloneFlags::from_bits_truncate(flags);
+    let exit_signal = flags.intersection(CloneFlags::CSIGNAL).bits() as u32;
+    let flags = flags.difference(CloneFlags::CSIGNAL);
+    let stack = if stack == 0 {
+        None
+    } else {
+        Some(stack)
+    };
+    let args = KernelCloneArgs::new(flags, "", exit_signal, stack, None);
+    warn!("impl clone: flags {:#X} sig {:#X} stack {:#X} ptid {:#X} tls {:#X} ctid {:#X}",
+                   flags.bits(), exit_signal,
+                   stack.unwrap_or(0), ptid, tls, ctid);
+    args.perform().unwrap_or(usize::MAX)
 }

@@ -200,6 +200,7 @@ impl RootDirectory {
     }
 
     pub fn mount(&mut self, path: &'static str, fs: Arc<dyn VfsOps>) -> AxResult {
+        info!("============== mount ...");
         if path == "/" {
             return ax_err!(InvalidInput, "cannot mount root filesystem");
         }
@@ -295,4 +296,8 @@ impl VfsNodeOps for RootDirectory {
             }
         })
     }
+}
+
+pub fn init_fs() -> Arc<SpinLock<FsStruct>> {
+    Arc::new(SpinLock::new(FsStruct::new()))
 }

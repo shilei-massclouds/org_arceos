@@ -1,14 +1,15 @@
 use alloc::collections::BTreeMap;
 use spinpreempt::SpinLock;
 use crate::TaskRef;
-use crate::Pid;
+use crate::Tid;
 
-static TID_MAP: SpinLock<BTreeMap<Pid, TaskRef>> = SpinLock::new(BTreeMap::new());
+static TID_MAP: SpinLock<BTreeMap<Tid, TaskRef>> = SpinLock::new(BTreeMap::new());
 
-pub fn get_task(pid: Pid) -> Option<TaskRef> {
-    TID_MAP.lock().get(&pid).cloned()
+pub fn get_task(tid: Tid) -> Option<TaskRef> {
+    TID_MAP.lock().get(&tid).cloned()
 }
 
-pub fn register_task(pid: Pid, task: TaskRef) {
-    TID_MAP.lock().insert(pid, task);
+pub fn register_task(task: TaskRef) {
+    let tid = task.tid();
+    TID_MAP.lock().insert(tid, task);
 }

@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(get_mut_unchecked)]
 
 #[macro_use]
 extern crate log;
@@ -19,7 +20,7 @@ use axhal::paging::PageTable;
 
 pub const THREAD_SIZE: usize = 32 * PAGE_SIZE_4K;
 
-pub type Pid = usize;
+pub type Tid = usize;
 
 pub struct TaskStack {
     ptr: NonNull<u8>,
@@ -70,10 +71,10 @@ impl From<u8> for TaskState {
 }
 
 pub struct SchedInfo {
-    pid:    Pid,
-    tgid:   Pid,
+    tid:    Tid,
+    tgid:   Tid,
 
-    pgd: Option<Arc<SpinNoIrq<PageTable>>>,
+    pub pgd: Option<Arc<SpinNoIrq<PageTable>>>,
     pub mm_id: AtomicUsize,
     pub active_mm_id: AtomicUsize,
 
@@ -93,10 +94,10 @@ unsafe impl Send for SchedInfo {}
 unsafe impl Sync for SchedInfo {}
 
 impl SchedInfo {
-    pub fn new(pid: Pid) -> Self {
+    pub fn new() -> Self {
         Self {
-            pid,
-            tgid: pid,
+            tid: 0,
+            tgid: 0,
 
             pgd: None,
             mm_id: AtomicUsize::new(0),
@@ -113,8 +114,16 @@ impl SchedInfo {
         }
     }
 
-    pub fn pid(&self) -> Pid {
-        self.pid
+    pub fn init_tid(&mut self, tid: Tid) {
+        self.tid = tid;
+    }
+
+    pub fn init_tgid(&mut self, tgid: Tid) {
+        self.tgid = tgid;
+    }
+
+    pub fn tid(&self) -> Tid {
+        self.tid
     }
 
     pub fn tgid(&self) -> usize {
@@ -150,9 +159,11 @@ impl SchedInfo {
         self.pgd.as_ref().and_then(|pgd| Some(pgd.clone()))
     }
 
-    pub fn dup_sched_info(&self, pid: Pid) -> Arc<Self> {
+    pub fn dup_sched_info(&self, tid: Tid) -> Arc<Self> {
         info!("dup_sched_info...");
-        let mut info = SchedInfo::new(pid);
+        let mut info = SchedInfo::new();
+        info.tid = tid;
+        info.tgid = tid;
         info.kstack = Some(TaskStack::alloc(align_up_4k(THREAD_SIZE)));
         info.pgd = self.pgd.clone();
         info.mm_id = AtomicUsize::new(0);
@@ -227,8 +238,14 @@ impl CurrentCtx {
     }
 
     /// Converts [`CurrentTask`] to [`TaskRef`].
-    pub fn as_task_ref(&self) -> &CtxRef {
+    pub fn as_ctx_ref(&self) -> &CtxRef {
         &self.0
+    }
+
+    pub fn as_ctx_mut(&mut self) -> &mut SchedInfo {
+        unsafe {
+            Arc::get_mut_unchecked(&mut self.0)
+        }
     }
 
     pub unsafe fn set_current(prev: Self, next: CtxRef) {
@@ -264,4 +281,8 @@ pub fn switch_mm(prev_mm_id: usize, next_mm_id: usize, next_pgd: Arc<SpinNoIrq<P
     unsafe {
         write_page_table_root0(next_pgd.lock().root_paddr().into());
     }
+}
+
+pub fn init_sched_info() -> Arc<SchedInfo> {
+    Arc::new(SchedInfo::new())
 }

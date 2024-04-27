@@ -228,13 +228,13 @@ fn init_interrupt() {
 
 fn rest_init(dtb_info: DtbInfo) {
     error!("rest_init ...");
-    let pid = user_mode_thread(
+    let tid = user_mode_thread(
         move || {
             kernel_init(dtb_info);
         },
         CloneFlags::CLONE_FS,
     );
-    assert_eq!(pid, 1);
+    assert_eq!(tid, 1);
 
     /*
      * The boot idle thread must execute schedule()

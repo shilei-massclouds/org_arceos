@@ -9,6 +9,7 @@ edition = "2021"
 log = "0.4"
 axhal = { path = "../axhal" }
 task = { path = "../task" }
+fork = { path = "../fork" }
 sys = { path = "../sys" }
 mmap = { path = "../mmap" }
 fileops = { path = "../fileops" }

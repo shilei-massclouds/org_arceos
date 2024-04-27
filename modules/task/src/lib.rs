@@ -5,7 +5,7 @@
 
 use core::ops::Deref;
 use core::mem::ManuallyDrop;
-use core::sync::atomic::{AtomicUsize, Ordering};
+use core::sync::atomic::Ordering;
 
 #[macro_use]
 extern crate log;
@@ -21,20 +21,19 @@ use spinbase::SpinNoIrq;
 use spinpreempt::SpinLock;
 use fstree::FsStruct;
 use filetable::FileTable;
-use crate::tid_map::{register_task, get_task};
-pub use taskctx::Pid;
+pub use crate::tid_map::{register_task, get_task};
+pub use taskctx::Tid;
 pub use taskctx::current_ctx;
 pub use taskctx::{TaskStack, THREAD_SIZE};
+pub use tid::alloc_tid;
 
+mod tid;
 mod tid_map;
 
-static NEXT_PID: AtomicUsize = AtomicUsize::new(0);
-
 pub struct TaskStruct {
-    mm: Option<Arc<SpinNoIrq<MmStruct>>>,
+    pub mm: Option<Arc<SpinNoIrq<MmStruct>>>,
     pub fs: Arc<SpinLock<FsStruct>>,
     pub filetable: Arc<SpinLock<FileTable>>,
-
     pub sched_info: Arc<SchedInfo>,
 }
 
@@ -42,22 +41,17 @@ unsafe impl Send for TaskStruct {}
 unsafe impl Sync for TaskStruct {}
 
 impl TaskStruct {
-    pub fn new() -> Arc<Self> {
-        let pid = NEXT_PID.fetch_add(1, Ordering::Relaxed);
-        warn!("\n++++++++++++++++++++++++++++++++++++++ TaskStruct::new pid {}\n", pid);
-        let arc = Arc::new(Self {
+    pub fn new() -> Self {
+        Self {
             mm: None,
-            fs: Arc::new(SpinLock::new(FsStruct::new())),
-            filetable: Arc::new(SpinLock::new(FileTable::new())),
-
-            sched_info: Arc::new(SchedInfo::new(pid)),
-        });
-        register_task(pid, arc.clone());
-        arc
+            fs: fstree::init_fs(),
+            filetable: filetable::init_files(),
+            sched_info: taskctx::init_sched_info(),
+        }
     }
 
-    pub fn pid(&self) -> Pid {
-        self.sched_info.pid()
+    pub fn tid(&self) -> Tid {
+        self.sched_info.tid()
     }
 
     pub fn tgid(&self) -> usize {
@@ -76,6 +70,7 @@ impl TaskStruct {
         self.mm.as_ref().expect("NOT a user process.").clone()
     }
 
+    // Safety: makesure to be under NoPreempt
     pub fn alloc_mm(&mut self) {
         error!("alloc_mm...");
         assert!(self.mm.is_none());
@@ -83,24 +78,18 @@ impl TaskStruct {
         let mm_id = mm.id();
         self.mm.replace(Arc::new(SpinNoIrq::new(mm)));
         info!("================== mmid {}", mm_id);
-        self.sched_info.mm_id.store(mm_id, Ordering::Relaxed);
+        let mut ctx = taskctx::current_ctx();
+        ctx.mm_id.store(mm_id, Ordering::Relaxed);
+        ctx.as_ctx_mut().pgd = Some(self.mm().lock().pgd().clone());
         switch_mm(0, mm_id, self.mm().lock().pgd());
     }
 
-    pub fn dup_task_struct(&self) -> Arc<Self> {
+    pub fn dup_task_struct(&self) -> Self {
         info!("dup_task_struct ...");
-        ///////////////////////
-        // Todo: mm && mm_id should be dup!!!
-        let pid = NEXT_PID.fetch_add(1, Ordering::Relaxed);
-        let task = Arc::new(Self {
-            mm: None,
-            fs: self.fs.clone(),
-            filetable: Arc::new(SpinLock::new(FileTable::new())),
-
-            sched_info: self.sched_info.dup_sched_info(pid),
-        });
-        register_task(pid, task.clone());
-        ///////////////////////
+        let tid = alloc_tid();
+        let mut task = Self::new();
+        task.fs = self.fs.clone();
+        task.sched_info = self.sched_info.dup_sched_info(tid);
         task
     }
 
@@ -134,8 +123,8 @@ pub struct CurrentTask(ManuallyDrop<TaskRef>);
 impl CurrentTask {
     pub(crate) fn try_get() -> Option<Self> {
         if let Some(ctx) = taskctx::try_current_ctx() {
-            let pid = ctx.pid();
-            let task = get_task(pid).expect("try_get None");
+            let tid = ctx.tid();
+            let task = get_task(tid).expect("try_get None");
             Some(Self(ManuallyDrop::new(task)))
         } else {
             None
@@ -207,5 +196,9 @@ pub fn init() {
     error!("task::init ...");
     let init_task = TaskStruct::new();
     init_task.set_state(TaskState::Running);
+    let init_task = Arc::new(init_task);
+    let tid = alloc_tid();
+    assert_eq!(tid, 0);
+    register_task(init_task.clone());
     unsafe { CurrentTask::init_current(init_task) }
 }

@@ -43,7 +43,7 @@ impl AxRunQueue {
     }
 
     pub fn add_task(&mut self, task: CtxRef) {
-        debug!("task spawn: {}", task.pid());
+        debug!("task spawn: {}", task.tid());
         //assert!(task.is_ready());
         let item = Arc::new(SchedItem::new(task.clone()));
         self.scheduler.add_task(item);
@@ -53,7 +53,7 @@ impl AxRunQueue {
         let curr = taskctx::current_ctx();
         if self
             .scheduler
-            .task_tick(&Arc::new(SchedItem::new(curr.as_task_ref().clone())))
+            .task_tick(&Arc::new(SchedItem::new(curr.as_ctx_ref().clone())))
         {
             curr.set_preempt_pending(true);
         }
@@ -86,7 +86,7 @@ impl AxRunQueue {
 
         debug!(
             "current task is to be preempted: {}, allow={}",
-            curr.pid(),
+            curr.tid(),
             can_preempt
         );
         if can_preempt {
@@ -121,7 +121,7 @@ impl AxRunQueue {
         F: FnOnce(CtxRef),
     {
         let curr = taskctx::current_ctx();
-        info!("task block: {}", curr.pid());
+        info!("task block: {}", curr.tid());
         /*
         assert!(curr.is_running());
         assert!(!curr.is_idle());
@@ -136,7 +136,7 @@ impl AxRunQueue {
     }
 
     pub fn unblock_task(&mut self, task: CtxRef, resched: bool) {
-        info!("task unblock: {}", task.pid());
+        info!("task unblock: {}", task.tid());
         if task.is_blocked() {
             //task.set_state(TaskState::Ready);
             self.scheduler.add_task(Arc::new(SchedItem::new(task))); // TODO: priority
@@ -176,7 +176,7 @@ impl AxRunQueue {
     }
 
     fn switch_to(&mut self, prev_task: CurrentCtx, next_task: CtxRef) {
-        info!("context switch: {} -> {}", prev_task.pid(), next_task.pid());
+        info!("context switch: {} -> {}", prev_task.tid(), next_task.tid());
         next_task.set_preempt_pending(false);
         next_task.set_state(TaskState::Running);
         if prev_task.ptr_eq(&next_task) {

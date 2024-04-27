@@ -1,6 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 
-use taskctx::Pid;
+use taskctx::Tid;
 use axconfig::TASK_STACK_SIZE;
 
 #[macro_use]
@@ -25,7 +25,7 @@ impl RLimit64 {
 }
 
 pub fn gettid() -> usize {
-    taskctx::current_ctx().pid()
+    taskctx::current_ctx().tid()
 }
 
 pub fn getpid() -> usize {
@@ -37,13 +37,13 @@ pub fn getgid() -> usize {
     0
 }
 
-pub fn prlimit64(pid: Pid, resource: usize, new_rlim: usize, old_rlim: usize) -> usize {
+pub fn prlimit64(tid: Tid, resource: usize, new_rlim: usize, old_rlim: usize) -> usize {
     warn!(
-        "linux_syscall_prlimit64: pid {}, resource: {}, {:?} {:?}",
-        pid, resource, new_rlim, old_rlim
+        "linux_syscall_prlimit64: tid {}, resource: {}, {:?} {:?}",
+        tid, resource, new_rlim, old_rlim
     );
 
-    assert!(pid == 0);
+    assert!(tid == 0);
 
     let old_rlim = old_rlim as *mut RLimit64;
 

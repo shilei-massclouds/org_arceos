@@ -70,7 +70,7 @@ impl<T: ?Sized> Mutex<T> {
     /// The returned value may be dereferenced for data access
     /// and the lock will be dropped when the guard falls out of scope.
     pub fn lock(&self) -> MutexGuard<T> {
-        let current_id = current_ctx().pid() as u64;
+        let current_id = current_ctx().tid() as u64;
         loop {
             // Can fail to lock even if the spinlock is not locked. May be more efficient than `try_lock`
             // when called in a loop.
@@ -86,7 +86,7 @@ impl<T: ?Sized> Mutex<T> {
                         owner_id,
                         current_id,
                         "{} tried to acquire mutex it already owns.",
-                        current_ctx().pid()
+                        current_ctx().tid()
                     );
                     // Wait until the lock looks unlocked before retrying
                     self.wq.wait_until(|| !self.is_locked());
@@ -102,7 +102,7 @@ impl<T: ?Sized> Mutex<T> {
     /// Try to lock this [`Mutex`], returning a lock guard if successful.
     #[inline(always)]
     pub fn try_lock(&self) -> Option<MutexGuard<T>> {
-        let current_id = current_ctx().pid() as u64;
+        let current_id = current_ctx().tid() as u64;
         // The reason for using a strong compare_exchange is explained here:
         // https://github.com/Amanieu/parking_lot/pull/207#issuecomment-575869107
         if self
@@ -130,9 +130,9 @@ impl<T: ?Sized> Mutex<T> {
         let owner_id = self.owner_id.swap(0, Ordering::Release);
         assert_eq!(
             owner_id,
-            current_ctx().pid() as u64,
+            current_ctx().tid() as u64,
             "{} tried to release mutex it doesn't own",
-            current_ctx().pid()
+            current_ctx().tid()
         );
         self.wq.notify_one(true);
     }

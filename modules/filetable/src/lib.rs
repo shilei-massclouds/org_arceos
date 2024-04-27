@@ -5,6 +5,7 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 use axfile::fops::File;
 use mutex::Mutex;
+use spinpreempt::SpinLock;
 
 pub struct FileTable {
     table: SlotVec<FileTableEntry>,
@@ -79,4 +80,8 @@ impl<T> SlotVec<T> {
         self.num_occupied += 1;
         idx
     }
+}
+
+pub fn init_files() -> Arc<SpinLock<FileTable>> {
+    Arc::new(SpinLock::new(FileTable::new()))
 }
