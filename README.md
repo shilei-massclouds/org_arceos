@@ -42,13 +42,13 @@ WSL2: [ Ubuntu 22.04.1 LTS (GNU/Linux 4.19.128-microsoft-standard x86_64) ]
 
 4. Construct linux image (fat32)
 
-For riscv64:
+   For riscv64:
 
    ```sh
    make linux_img
    ```
 
-For x86_64:
+   For x86_64:
 
    ```sh
    make linux_img ARCH=x86_64
@@ -58,13 +58,13 @@ For x86_64:
 
 5. Run it
 
-For riscv64:
+   For riscv64:
 
    ```sh
    make run
    ```
 
-For x86_64:
+   For x86_64:
 
    ```sh
    make run ARCH=x86_64
