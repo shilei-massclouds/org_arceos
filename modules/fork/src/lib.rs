@@ -6,10 +6,13 @@ extern crate alloc;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::sync::Arc;
+use core::mem;
 
 use axerrno::{LinuxError, LinuxResult};
 use task::{current, Tid, TaskRef, TaskStruct};
 use taskctx::SchedInfo;
+use axhal::arch::gp_in_global;
+use axhal::arch::{SR_SPP, SR_SPIE};
 
 bitflags::bitflags! {
     /// clone flags
@@ -133,17 +136,34 @@ impl KernelCloneArgs {
 
     fn copy_thread(&self, task: &mut TaskStruct, tid: Tid) -> LinuxResult {
         info!("copy_thread ...");
-        //assert!(self.entry.is_some());
+
         let mut sched_info = SchedInfo::new();
+        sched_info.init(self.entry, task_entry as usize, 0.into());
         sched_info.init_tid(tid);
         sched_info.init_tgid(tid);
-        sched_info.reset(
-            self.entry,
-            task_entry as usize,
-            0.into(),
-        );
+
+        let pt_regs = sched_info.pt_regs();
+        if self.entry.is_some() {
+            *pt_regs = unsafe { mem::zeroed() };
+            pt_regs.regs.gp = gp_in_global();
+            // Supervisor/Machine, irqs on:
+            pt_regs.sstatus = SR_SPP | SR_SPIE;
+        } else {
+            let ctx = taskctx::current_ctx();
+            *pt_regs = ctx.pt_regs().clone();
+            if let Some(sp) = self.stack {
+                pt_regs.regs.sp = sp; // User fork
+            }
+            /*
+            if (self.flags.contains(CLONE_SETTLS))
+                pt_regs.regs.tp = tls;
+                */
+            pt_regs.regs.a0 = 0; // Return value of fork()
+        }
+
         task.sched_info = Arc::new(sched_info);
-        error!("copy_thread!");
+
+        info!("copy_thread!");
         Ok(())
     }
 }
@@ -161,7 +181,7 @@ extern "C" fn task_entry() -> ! {
         unsafe { Box::from_raw(entry)() };
     }
 
-    let sp = task::current().pt_regs();
+    let sp = task::current().pt_regs_addr();
     axhal::arch::ret_from_fork(sp);
     unimplemented!("task_entry!");
 }

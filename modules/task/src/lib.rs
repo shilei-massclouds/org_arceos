@@ -58,8 +58,8 @@ impl TaskStruct {
         self.sched_info.tgid()
     }
 
-    pub fn pt_regs(&self) -> usize {
-        self.sched_info.pt_regs()
+    pub fn pt_regs_addr(&self) -> usize {
+        self.sched_info.pt_regs_addr()
     }
 
     pub fn try_mm(&self) -> Option<Arc<SpinNoIrq<MmStruct>>> {

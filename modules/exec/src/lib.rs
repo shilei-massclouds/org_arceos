@@ -225,7 +225,7 @@ fn load_elf_interp(
     padzero(elf_bss);
 
     error!("start thread...");
-    start_thread(task::current().pt_regs(), entry, sp);
+    start_thread(task::current().pt_regs_addr(), entry, sp);
     Ok(())
 }
 
@@ -296,7 +296,7 @@ fn load_elf_binary(file: FileRef, load_bias: usize, filename: &str) -> LinuxResu
     padzero(elf_bss);
 
     error!("start thread...");
-    start_thread(task::current().pt_regs(), entry, sp);
+    start_thread(task::current().pt_regs_addr(), entry, sp);
     Ok(())
 }
 

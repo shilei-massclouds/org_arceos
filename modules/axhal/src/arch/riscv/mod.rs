@@ -35,7 +35,8 @@ pub const ELF_ET_DYN_BASE: usize = (TASK_SIZE / 3) * 2;
 pub const TASK_UNMAPPED_BASE: usize = (TASK_SIZE / 3) & !(PAGE_SIZE_4K - 1);
 
 /// Status register flags
-pub const SR_SPIE: usize = 0x00000020; /* Previous Supervisor IE */
+pub const SR_SPIE:  usize = 0x00000020; /* Previous Supervisor IE */
+pub const SR_SPP:   usize = 0x00000100; /* Previously Supervisor */
 pub const SR_FS_INITIAL: usize = 0x00002000;
 pub const SR_UXL_64: usize = 0x200000000; /* XLEN = 64 for U-mode */
 pub const SR_SUM: usize = 0x00040000; /* Supervisor User Memory access */
@@ -144,4 +145,12 @@ pub fn read_thread_pointer() -> usize {
 #[inline]
 pub unsafe fn write_thread_pointer(tp: usize) {
     core::arch::asm!("mv tp, {}", in(reg) tp)
+}
+
+/// Get gp register value.
+#[inline]
+pub fn gp_in_global() -> usize {
+    let gp;
+    unsafe { core::arch::asm!("mv {}, gp", out(reg) gp) };
+    gp
 }

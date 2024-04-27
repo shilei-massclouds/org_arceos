@@ -11,6 +11,7 @@ use core::mem::ManuallyDrop;
 use core::{alloc::Layout, cell::UnsafeCell, ptr::NonNull};
 use core::sync::atomic::{AtomicUsize, AtomicU8, AtomicBool, Ordering};
 use axhal::arch::TaskContext as ThreadStruct;
+use axhal::arch::TrapFrame;
 use axhal::mem::VirtAddr;
 use axhal::trap::{TRAPFRAME_SIZE, STACK_ALIGN};
 use memory_addr::{align_up_4k, align_down, PAGE_SIZE_4K};
@@ -171,8 +172,12 @@ impl SchedInfo {
         Arc::new(info)
     }
 
-    pub fn pt_regs(&self) -> usize {
+    pub fn pt_regs_addr(&self) -> usize {
         self.kstack.as_ref().unwrap().top() - align_down(TRAPFRAME_SIZE, STACK_ALIGN)
+    }
+
+    pub fn pt_regs(&self) -> &mut TrapFrame {
+        unsafe { &mut (*(self.pt_regs_addr() as *mut TrapFrame)) }
     }
 
     #[inline]
@@ -180,10 +185,10 @@ impl SchedInfo {
         self.thread.get()
     }
 
-    pub fn reset(&mut self, entry: Option<*mut dyn FnOnce()>, entry_func: usize, tls: VirtAddr) {
+    pub fn init(&mut self, entry: Option<*mut dyn FnOnce()>, entry_func: usize, tls: VirtAddr) {
         self.entry = entry;
         self.kstack = Some(TaskStack::alloc(align_up_4k(THREAD_SIZE)));
-        let sp = self.pt_regs();
+        let sp = self.pt_regs_addr();
         self.thread.get_mut().init(entry_func, sp.into(), tls);
     }
 
