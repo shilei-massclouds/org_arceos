@@ -21,6 +21,8 @@ use spinbase::SpinNoIrq;
 use spinpreempt::SpinLock;
 use fstree::FsStruct;
 use filetable::FileTable;
+use wait_queue::WaitQueue;
+
 pub use crate::tid_map::{register_task, get_task};
 pub use taskctx::Tid;
 pub use taskctx::current_ctx;
@@ -35,6 +37,8 @@ pub struct TaskStruct {
     pub fs: Arc<SpinLock<FsStruct>>,
     pub filetable: Arc<SpinLock<FileTable>>,
     pub sched_info: Arc<SchedInfo>,
+
+    pub vfork_done: Option<WaitQueue>,
 }
 
 unsafe impl Send for TaskStruct {}
@@ -47,6 +51,8 @@ impl TaskStruct {
             fs: fstree::init_fs(),
             filetable: filetable::init_files(),
             sched_info: taskctx::init_sched_info(),
+
+            vfork_done: None,
         }
     }
 
@@ -101,6 +107,19 @@ impl TaskStruct {
     #[inline]
     pub fn set_state(&self, state: TaskState) {
         self.sched_info.set_state(state)
+    }
+
+    pub fn init_vfork_done(&mut self) {
+        self.vfork_done = Some(WaitQueue::new());
+    }
+
+    pub fn wait_for_vfork_done(&self) {
+        match self.vfork_done {
+            Some(ref done) => {
+                done.wait();
+            },
+            None => panic!("vfork_done hasn't been inited yet!"),
+        }
     }
 }
 

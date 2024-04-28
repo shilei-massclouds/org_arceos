@@ -9,7 +9,10 @@ edition = "2021"
 log = "0.4"
 bitflags = "2.2"
 task = { path = "../task" }
+mm = { path = "../mm" }
 taskctx = { path = "../taskctx" }
 run_queue = { path = "../run_queue", features = ["sched_cfs"] }
 axerrno = { path = "../../crates/axerrno" }
+memory_addr = { path = "../../crates/memory_addr" }
+spinbase = { path = "../../crates/spinbase" }
 axhal = { path = "../../modules/axhal" }

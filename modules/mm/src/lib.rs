@@ -69,6 +69,15 @@ impl MmStruct {
         }
     }
 
+    pub fn dup(&self) -> Self {
+        Self {
+            id: MM_UNIQUE_ID.fetch_add(1, Ordering::SeqCst),
+            vmas: self.vmas.clone(),
+            pgd: self.pgd.clone(),
+            brk: self.brk,
+        }
+    }
+
     pub fn pgd(&self) -> Arc<SpinNoIrq<PageTable>> {
         self.pgd.clone()
     }
@@ -95,5 +104,9 @@ impl MmStruct {
         self.pgd
             .lock()
             .map_region(va.into(), pa.into(), len, flags, true)
+    }
+
+    pub fn unmap_region(&self, va: usize, len: usize) -> PagingResult {
+        self.pgd.lock().unmap_region(va.into(), len)
     }
 }

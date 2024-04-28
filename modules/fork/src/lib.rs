@@ -11,8 +11,12 @@ use core::mem;
 use axerrno::{LinuxError, LinuxResult};
 use task::{current, Tid, TaskRef, TaskStruct};
 use taskctx::SchedInfo;
+use taskctx::THREAD_SIZE;
+use taskctx::TaskStack;
+use spinbase::SpinNoIrq;
 use axhal::arch::gp_in_global;
 use axhal::arch::{SR_SPP, SR_SPIE};
+use memory_addr::align_up_4k;
 
 bitflags::bitflags! {
     /// clone flags
@@ -78,7 +82,12 @@ impl KernelCloneArgs {
         );
 
         let tid = task.tid();
-        self.wake_up_new_task(task);
+        self.wake_up_new_task(task.clone());
+
+        if self.flags.contains(CloneFlags::CLONE_VFORK) {
+            task.wait_for_vfork_done();
+        }
+
         Ok(tid)
     }
 
@@ -90,7 +99,7 @@ impl KernelCloneArgs {
     fn wake_up_new_task(&self, task: TaskRef) {
         let rq = run_queue::task_rq(&task.sched_info);
         rq.lock().activate_task(task.sched_info.clone());
-        debug!("wakeup the new task[{}].", task.tid());
+        info!("wakeup the new task[{}].", task.tid());
     }
 
     fn copy_process(&self, mut tid: Option<Tid>, _trace: bool) -> LinuxResult<TaskRef> {
@@ -108,14 +117,23 @@ impl KernelCloneArgs {
         self.copy_mm(&mut task)?;
         self.copy_thread(&mut task, tid.unwrap())?;
 
+        if self.flags.contains(CloneFlags::CLONE_VFORK) {
+            task.init_vfork_done();
+        }
+
         let arc_task = Arc::new(task);
         task::register_task(arc_task.clone());
+        info!("copy_process tid: {} -> {}", current().tid(), arc_task.tid());
         Ok(arc_task)
     }
 
     fn copy_mm(&self, task: &mut TaskStruct) -> LinuxResult {
-        assert!(self.flags.contains(CloneFlags::CLONE_VM));
-        task.mm = current().mm.clone();
+        if self.flags.contains(CloneFlags::CLONE_VM) {
+            task.mm = current().mm.clone();
+        } else {
+            let mm = current().mm().lock().dup();
+            task.mm = Some(Arc::new(SpinNoIrq::new(mm)));
+        }
         Ok(())
     }
 
@@ -138,9 +156,17 @@ impl KernelCloneArgs {
         info!("copy_thread ...");
 
         let mut sched_info = SchedInfo::new();
-        sched_info.init(self.entry, task_entry as usize, 0.into());
+        //sched_info.init(self.entry, task_entry as usize, 0.into());
+        /////////////////////
+        sched_info.entry = self.entry;
+        sched_info.kstack = Some(TaskStack::alloc(align_up_4k(THREAD_SIZE)));
+        /////////////////////
         sched_info.init_tid(tid);
         sched_info.init_tgid(tid);
+        if let Some(mm) = task.try_mm() {
+            let locked_mm = mm.lock();
+            sched_info.set_mm(locked_mm.id(), locked_mm.pgd());
+        }
 
         let pt_regs = sched_info.pt_regs();
         if self.entry.is_some() {
@@ -161,6 +187,8 @@ impl KernelCloneArgs {
             pt_regs.regs.a0 = 0; // Return value of fork()
         }
 
+        let sp = sched_info.pt_regs_addr();
+        sched_info.thread.get_mut().init(task_entry as usize, sp.into(), 0.into());
         task.sched_info = Arc::new(sched_info);
 
         info!("copy_thread!");
@@ -172,6 +200,7 @@ impl KernelCloneArgs {
 // Now schedule_tail: 'run_queue::force_unlock();` hinders us.
 // Consider to move it to sched first!
 extern "C" fn task_entry() -> ! {
+    info!("################ task_entry ...");
     // schedule_tail
     // unlock runqueue for freshly created task
     run_queue::force_unlock();

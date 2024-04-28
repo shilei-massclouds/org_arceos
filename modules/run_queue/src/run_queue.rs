@@ -43,7 +43,8 @@ impl AxRunQueue {
     }
 
     pub fn add_task(&mut self, task: CtxRef) {
-        debug!("task spawn: {}", task.tid());
+        info!("task spawn: {}", task.tid());
+        assert!(task.tid() != 0);
         //assert!(task.is_ready());
         let item = Arc::new(SchedItem::new(task.clone()));
         self.scheduler.add_task(item);
@@ -121,6 +122,7 @@ impl AxRunQueue {
         F: FnOnce(CtxRef),
     {
         let curr = taskctx::current_ctx();
+        assert!(curr.tid() != 0);
         info!("task block: {}", curr.tid());
         /*
         assert!(curr.is_running());
@@ -137,6 +139,7 @@ impl AxRunQueue {
 
     pub fn unblock_task(&mut self, task: CtxRef, resched: bool) {
         info!("task unblock: {}", task.tid());
+        assert!(task.tid() != 0);
         if task.is_blocked() {
             //task.set_state(TaskState::Ready);
             self.scheduler.add_task(Arc::new(SchedItem::new(task))); // TODO: priority
@@ -169,8 +172,11 @@ impl AxRunQueue {
     /// slice, otherwise reset it.
     pub fn resched(&mut self, preempt: bool) {
         let prev = taskctx::current_ctx();
-        self.scheduler
-            .put_prev_task(Arc::new(SchedItem::new(prev.clone())), preempt);
+        // Todo: imitate linux kernel to deal with idle task(tid == 0)
+        if prev.tid() != 0 {
+            self.scheduler
+                .put_prev_task(Arc::new(SchedItem::new(prev.clone())), preempt);
+        }
         let next = self.scheduler.pick_next_task().unwrap();
         self.switch_to(prev, next.inner().clone());
     }

@@ -1188,7 +1188,10 @@ dependencies = [
  "axhal",
  "bitflags 2.4.0",
  "log",
+ "memory_addr",
+ "mm",
  "run_queue",
+ "spinbase",
  "task",
  "taskctx",
 ]
@@ -2132,6 +2135,7 @@ dependencies = [
  "spinbase",
  "spinpreempt",
  "taskctx",
+ "wait_queue",
 ]
 
 [[package]]

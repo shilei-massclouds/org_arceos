@@ -55,7 +55,7 @@ pub fn _mmap(
     }
 
     let mm = task::current().mm();
-    if let Some(mut overlap) = find_overlap(va, len, flags) {
+    if let Some(mut overlap) = find_overlap(va, len) {
         info!("find overlap {:#X}-{:#X}", overlap.vm_start, overlap.vm_end);
         assert!(
             va >= overlap.vm_start && va + len <= overlap.vm_end,
@@ -91,11 +91,8 @@ pub fn _mmap(
     Ok(va)
 }
 
-fn find_overlap(va: usize, len: usize, flags: usize) -> Option<VmAreaStruct> {
-    debug!(
-        "find_overlap: va {:#X} len {:#X}, flags {:#X}",
-        va, len, flags
-    );
+fn find_overlap(va: usize, len: usize) -> Option<VmAreaStruct> {
+    debug!("find_overlap: va {:#X} len {:#X}", va, len);
 
     let mm = task::current().mm();
     let locked_mm = mm.lock();
@@ -271,4 +268,27 @@ fn sync_file(va: usize, len: usize, file: &mut File, offset: usize) {
         pos += ret;
     }
     info!("msync: ok!");
+}
+
+pub fn munmap(va: usize, len: usize) -> usize {
+    warn!("munmap {:#X} - {:#X}", va, va + len);
+
+    let overlap = match find_overlap(va, len) {
+        Some(overlap) => overlap,
+        None => panic!("munmap: cannot find overlap for {:#X} {:#X}", va, len),
+    };
+
+    assert_eq!(va, overlap.vm_start);
+    assert_eq!(va+len, overlap.vm_end);
+    assert!(overlap.vm_file.get().is_none());
+
+    let mm = task::current().mm();
+    let locked_mm = mm.lock();
+    match locked_mm.unmap_region(va, len) {
+        Ok(_) => 0,
+        Err(e) => {
+            warn!("unmap region err: {:#?}", e);
+            0
+        },
+    }
 }

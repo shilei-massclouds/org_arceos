@@ -67,17 +67,17 @@ impl WaitQueue {
     }
     */
 
-    /*
     /// Blocks the current task and put it into the wait queue, until other task
     /// notifies it.
     pub fn wait(&self) {
-        RUN_QUEUE.lock().block_current(|task| {
+        let curr = taskctx::current_ctx();
+        let mut rq = run_queue::task_rq(&curr).lock();
+        rq.block_current(|task| {
             task.set_in_wait_queue(true);
             self.queue.lock().push_back(task)
         });
-        self.cancel_events(crate::current());
+        //self.cancel_events(crate::current());
     }
-    */
 
     /// Blocks the current task and put it into the wait queue, until the given
     /// `condition` becomes true.

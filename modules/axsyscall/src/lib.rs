@@ -174,6 +174,12 @@ fn linux_syscall_mmap(args: SyscallArgs) -> usize {
     mmap::mmap(va, len, prot, flags, fd, offset).unwrap()
 }
 
+fn linux_syscall_munmap(args: SyscallArgs) -> usize {
+    let [va, len, ..] = args;
+    warn!("munmap!!! {:#x} {:#x}", va, len);
+    mmap::munmap(va, len)
+}
+
 fn linux_syscall_msync(args: SyscallArgs) -> usize {
     let [va, len, flags, ..] = args;
     mmap::msync(va, len, flags)
@@ -234,8 +240,8 @@ fn linux_syscall_clock_gettime(_args: SyscallArgs) -> usize {
 fn linux_syscall_rt_sigprocmask(args: SyscallArgs) -> usize {
     let [how, set, oldset, sigsetsize, ..] = args;
     warn!(
-        "impl linux_syscall_rt_sigprocmask how {} set {:#X} oldset {:#X} size {}",
-        how, set, oldset, sigsetsize
+        "impl linux_syscall_rt_sigprocmask how {} set {:#X} oldset {:#X} size {} tid {}",
+        how, set, oldset, sigsetsize, task::current().tid(),
     );
     0
 }
@@ -314,12 +320,6 @@ fn linux_syscall_brk(args: SyscallArgs) -> usize {
 fn linux_syscall_rseq(_args: SyscallArgs) -> usize {
     warn!("impl linux_syscall_rseq");
     0
-}
-
-fn linux_syscall_munmap(args: SyscallArgs) -> usize {
-    let [va, len, ..] = args;
-    debug!("munmap!!! {:#x} {:#x}", va, len);
-    unimplemented!("impl munmap");
 }
 
 fn linux_syscall_clone(args: SyscallArgs) -> usize {

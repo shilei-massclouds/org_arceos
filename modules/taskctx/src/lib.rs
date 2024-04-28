@@ -165,11 +165,20 @@ impl SchedInfo {
         let mut info = SchedInfo::new();
         info.tid = tid;
         info.tgid = tid;
+        //assert!(self.kstack.is_some());
         info.kstack = Some(TaskStack::alloc(align_up_4k(THREAD_SIZE)));
+        //info.kstack = self.kstack;
         info.pgd = self.pgd.clone();
         info.mm_id = AtomicUsize::new(0);
         info.active_mm_id = AtomicUsize::new(0);
         Arc::new(info)
+    }
+
+    pub fn set_mm(&mut self, mm_id: usize, pgd: Arc<SpinNoIrq<PageTable>>) {
+        assert!(mm_id != 0);
+        self.mm_id = AtomicUsize::new(mm_id);
+        self.active_mm_id = AtomicUsize::new(mm_id);
+        self.pgd = Some(pgd.clone());
     }
 
     pub fn pt_regs_addr(&self) -> usize {
