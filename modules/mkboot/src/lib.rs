@@ -269,6 +269,16 @@ fn kernel_init(dtb_info: DtbInfo) {
         return;
     }
 
+    // Todo: for x86_64, we don't know how to get cmdline
+    // from qemu arg '-append="XX"'.
+    // Just use environment.
+    let init_cmd = env!("AX_INIT_CMD");
+    if init_cmd.len() > 0 {
+        info!("init_cmd: {}", init_cmd);
+        run_init_process(init_cmd).unwrap_or_else(|_| panic!("Requested init {} failed.", init_cmd));
+        return;
+    }
+
     // TODO: Replace this testcase with a more appropriate x86_64 testcase
     //#[cfg(target_arch = "x86_64")]
     //compile_error!("Remove it after replace a more appropriate x86_64 testcase.");

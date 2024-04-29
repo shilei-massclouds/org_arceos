@@ -116,6 +116,7 @@ export AX_LOG=$(LOG)
 export AX_TARGET=$(TARGET)
 export AX_IP=$(IP)
 export AX_GW=$(GW)
+export AX_INIT_CMD=$(INIT_CMD)
 
 # Binutils
 CROSS_COMPILE ?= $(ARCH)-linux-musl-
