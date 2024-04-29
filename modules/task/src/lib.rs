@@ -79,14 +79,14 @@ impl TaskStruct {
     // Safety: makesure to be under NoPreempt
     pub fn alloc_mm(&mut self) {
         error!("alloc_mm...");
-        assert!(self.mm.is_none());
+        //assert!(self.mm.is_none());
         let mm = MmStruct::new();
         let mm_id = mm.id();
         self.mm.replace(Arc::new(SpinNoIrq::new(mm)));
         info!("================== mmid {}", mm_id);
-        let mut ctx = taskctx::current_ctx();
+        let ctx = taskctx::current_ctx();
         ctx.mm_id.store(mm_id, Ordering::Relaxed);
-        ctx.as_ctx_mut().pgd = Some(self.mm().lock().pgd().clone());
+        //ctx.as_ctx_mut().pgd = Some(self.mm().lock().pgd().clone());
         switch_mm(0, mm_id, self.mm().lock().pgd());
     }
 

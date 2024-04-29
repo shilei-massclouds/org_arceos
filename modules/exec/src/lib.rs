@@ -188,6 +188,7 @@ fn load_elf_interp(
     let mut elf_bss: usize = 0;
     let mut elf_brk: usize = 0;
 
+    error!("interp: args: {:?}", args);
     error!("There are {} PT_LOAD segments", phdrs.len());
     for phdr in &phdrs {
         error!(
@@ -367,6 +368,12 @@ pub fn execve(path: &str, argv: usize, envp: usize) -> usize {
     info!("execve: {}", path);
 
     let args = get_user_str_vec(argv);
+    /*
+    let mut args = get_user_str_vec(argv);
+    assert_eq!(args[0], "sh");
+    args[0] = String::from("/bin/sh");
+    args[2] = String::from("/bin/grep");
+    */
     for arg in &args {
         info!("arg: {}", arg);
     }
@@ -375,6 +382,15 @@ pub fn execve(path: &str, argv: usize, envp: usize) -> usize {
         info!("env: {}", env);
     }
     assert_eq!(envp.len(), 0);
+
+    let mut task = task::current();
+    {
+        let _ = NoPreempt::new();
+        task.as_task_mut().alloc_mm();
+    }
+
+    // TODO: Move it into kernel_init().
+    let _ = setup_zero_page();
 
     match bprm_execve(path, 0, 0, args) {
         Ok(_) => info!("bprm_execve ok!"),
