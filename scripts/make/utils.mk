@@ -29,10 +29,10 @@ define build_linux_image
   @sudo mkdir -p ./mnt/lib64
   @sudo mkdir -p ./mnt/sbin
   @sudo mkdir -p ./mnt/testcases
-  @sudo cp ./payload/$(AX_ARCH)/* ./mnt/lib/
-  @sudo cp ./payload/$(AX_ARCH)/* ./mnt/lib64/
+  @sudo cp ./payload/$(AX_ARCH)/*.so.* ./mnt/lib/
+  @sudo cp ./payload/$(AX_ARCH)/*.so.* ./mnt/lib64/
   @sudo cp ./payload/$(AX_ARCH)/init ./mnt/sbin/init
-  -@sudo cp ./payload/testcases/* ./mnt/testcases/
+  -@sudo cp ./payload/$(AX_ARCH)/testcases/* ./mnt/testcases/
   ls -l ./mnt/sbin
   ls -l ./mnt/lib
   ls -l ./mnt/testcases
