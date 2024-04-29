@@ -178,7 +178,8 @@ pub fn faultin_page(va: usize) -> usize {
         let f = vma.vm_file.get().unwrap().clone();
         fill_cache(pa, PAGE_SIZE_4K, &mut f.lock(), offset);
     }
-    let _ = locked_mm.map_region(va, pa, PAGE_SIZE_4K, 1);
+    locked_mm.map_region(va, pa, PAGE_SIZE_4K, 1)
+        .unwrap_or_else(|e| { panic!("{:?}", e) });
     phys_to_virt(pa.into()).into()
 }
 
@@ -280,7 +281,7 @@ pub fn munmap(va: usize, len: usize) -> usize {
 
     assert_eq!(va, overlap.vm_start);
     assert_eq!(va+len, overlap.vm_end);
-    assert!(overlap.vm_file.get().is_none());
+    //assert!(overlap.vm_file.get().is_none());
 
     let mm = task::current().mm();
     let locked_mm = mm.lock();
