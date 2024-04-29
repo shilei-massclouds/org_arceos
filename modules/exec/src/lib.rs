@@ -160,7 +160,7 @@ fn bprm_execve(
 ) -> LinuxResult {
     info!("bprm_execve: {}", filename);
     let file = do_open_execat(filename, flags)?;
-    exec_binprm(file, load_bias, filename, args)
+    exec_binprm(file, load_bias, args)
 }
 
 fn do_open_execat(filename: &str, _flags: usize) -> LinuxResult<FileRef> {
@@ -173,8 +173,8 @@ fn do_open_execat(filename: &str, _flags: usize) -> LinuxResult<FileRef> {
     Ok(Arc::new(Mutex::new(file)))
 }
 
-fn exec_binprm(file: FileRef, load_bias: usize, filename: &str, args: Vec<String>) -> LinuxResult {
-    load_elf_binary(file, load_bias, filename, args)
+fn exec_binprm(file: FileRef, load_bias: usize, args: Vec<String>) -> LinuxResult {
+    load_elf_binary(file, load_bias, args)
 }
 
 fn load_elf_interp(
@@ -234,7 +234,7 @@ fn load_elf_interp(
 }
 
 fn load_elf_binary(
-    file: FileRef, load_bias: usize, filename: &str, mut args: Vec<String>
+    file: FileRef, load_bias: usize, mut args: Vec<String>
 ) -> LinuxResult {
     let (phdrs, entry) = load_elf_phdrs(file.clone())?;
 

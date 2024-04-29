@@ -1,21 +1,16 @@
 #![no_std]
 
+mod arch;
+
 #[macro_use]
 extern crate log;
 extern crate alloc;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::sync::Arc;
-use core::mem;
 
 use axerrno::{LinuxError, LinuxResult};
 use task::{current, Tid, TaskRef, TaskStruct};
-use taskctx::SchedInfo;
-use taskctx::THREAD_SIZE;
-use taskctx::TaskStack;
-use axhal::arch::gp_in_global;
-use axhal::arch::{SR_SPP, SR_SPIE};
-use memory_addr::align_up_4k;
 
 bitflags::bitflags! {
     /// clone flags
@@ -114,7 +109,7 @@ impl KernelCloneArgs {
         //copy_sighand();
         //copy_signal();
         self.copy_mm(&mut task)?;
-        self.copy_thread(&mut task, tid.unwrap())?;
+        arch::copy_thread(&mut task, self.entry, self.stack, tid.unwrap())?;
 
         if self.flags.contains(CloneFlags::CLONE_VFORK) {
             task.init_vfork_done();
@@ -149,49 +144,6 @@ impl KernelCloneArgs {
             return Ok(());
         }
         task.fs.lock().copy_fs_struct(task::current().fs.clone());
-        Ok(())
-    }
-
-    fn copy_thread(&self, task: &mut TaskStruct, tid: Tid) -> LinuxResult {
-        info!("copy_thread ...");
-
-        let mut sched_info = SchedInfo::new();
-        //sched_info.init(self.entry, task_entry as usize, 0.into());
-        /////////////////////
-        sched_info.entry = self.entry;
-        sched_info.kstack = Some(TaskStack::alloc(align_up_4k(THREAD_SIZE)));
-        /////////////////////
-        sched_info.init_tid(tid);
-        sched_info.init_tgid(tid);
-        if let Some(mm) = task.try_mm() {
-            let locked_mm = mm.lock();
-            sched_info.set_mm(locked_mm.id(), locked_mm.pgd());
-        }
-
-        let pt_regs = sched_info.pt_regs();
-        if self.entry.is_some() {
-            *pt_regs = unsafe { mem::zeroed() };
-            pt_regs.regs.gp = gp_in_global();
-            // Supervisor/Machine, irqs on:
-            pt_regs.sstatus = SR_SPP | SR_SPIE;
-        } else {
-            let ctx = taskctx::current_ctx();
-            *pt_regs = ctx.pt_regs().clone();
-            if let Some(sp) = self.stack {
-                pt_regs.regs.sp = sp; // User fork
-            }
-            /*
-            if (self.flags.contains(CLONE_SETTLS))
-                pt_regs.regs.tp = tls;
-                */
-            pt_regs.regs.a0 = 0; // Return value of fork()
-        }
-
-        let sp = sched_info.pt_regs_addr();
-        sched_info.thread.get_mut().init(task_entry as usize, sp.into(), 0.into());
-        task.sched_info = Arc::new(sched_info);
-
-        info!("copy_thread!");
         Ok(())
     }
 }

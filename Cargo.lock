@@ -1188,9 +1188,10 @@ version = "0.1.0"
 dependencies = [
  "axerrno",
  "axhal",
+ "axtype",
  "bitflags 2.4.0",
+ "cfg-if",
  "log",
- "memory_addr",
  "mm",
  "run_queue",
  "spinbase",
