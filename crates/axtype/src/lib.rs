@@ -2,6 +2,7 @@
 
 extern crate alloc;
 use alloc::string::String;
+use alloc::vec::Vec;
 
 pub const PAGE_SIZE: usize  = 0x1000;
 pub const PAGE_SHIFT: usize = 12;
@@ -84,4 +85,50 @@ impl DtbInfo {
     pub fn get_init_cmd(&self) -> Option<&str> {
         self.init_cmd.as_deref()
     }
+}
+
+pub fn get_user_str(ptr: usize) -> String {
+    let ptr = ptr as *const u8;
+    String::from(raw_ptr_to_ref_str(ptr))
+}
+
+/// # Safety
+///
+/// The caller must ensure that the pointer is valid and
+/// points to a valid C string.
+pub fn raw_ptr_to_ref_str(ptr: *const u8) -> &'static str {
+    let len = unsafe { get_str_len(ptr) };
+    let slice = unsafe { core::slice::from_raw_parts(ptr, len) };
+    match core::str::from_utf8(slice) {
+        Ok(s) => s,
+        Err(e) => panic!("not utf8 slice: {:?}", e),
+    }
+}
+
+/// # Safety
+///
+/// The caller must ensure that the pointer is valid and
+/// points to a valid C string.
+/// The string must be null-terminated.
+pub unsafe fn get_str_len(ptr: *const u8) -> usize {
+    let mut cur = ptr as usize;
+    while *(cur as *const u8) != 0 {
+        cur += 1;
+    }
+    cur - ptr as usize
+}
+
+pub fn get_user_str_vec(addr: usize) -> Vec<String> {
+    let mut vec = Vec::new();
+    let ptr = addr as *const usize;
+    let mut index = 0;
+    loop {
+        let ptr_str = unsafe { ptr.add(index).read() };
+        if ptr_str == 0 {
+            break;
+        }
+        vec.push(get_user_str(ptr_str));
+        index += 1;
+    }
+    vec
 }

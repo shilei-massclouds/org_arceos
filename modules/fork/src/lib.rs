@@ -13,7 +13,6 @@ use task::{current, Tid, TaskRef, TaskStruct};
 use taskctx::SchedInfo;
 use taskctx::THREAD_SIZE;
 use taskctx::TaskStack;
-use spinbase::SpinNoIrq;
 use axhal::arch::gp_in_global;
 use axhal::arch::{SR_SPP, SR_SPIE};
 use memory_addr::align_up_4k;
@@ -131,8 +130,9 @@ impl KernelCloneArgs {
         if self.flags.contains(CloneFlags::CLONE_VM) {
             task.mm = current().mm.clone();
         } else {
-            let mm = current().mm().lock().dup();
-            task.mm = Some(Arc::new(SpinNoIrq::new(mm)));
+            panic!("NO CLONE_VM!");
+            //let mm = current().mm().lock().dup();
+            //task.mm = Some(Arc::new(SpinNoIrq::new(mm)));
         }
         Ok(())
     }

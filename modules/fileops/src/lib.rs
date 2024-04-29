@@ -13,6 +13,7 @@ use axfile::api::create_dir;
 use axfile::fops::File;
 use axfile::fops::OpenOptions;
 use mutex::Mutex;
+use axtype::get_user_str;
 
 // Special value used to indicate openat should use
 // the current working directory.
@@ -314,38 +315,4 @@ pub fn chdir(path: &str) -> usize {
         Ok(()) => 0,
         Err(e) => (-LinuxError::from(e).code()) as usize,
     }
-}
-
-pub fn get_user_str(ptr: usize) -> String {
-    let ptr = ptr as *const u8;
-    let ptr = raw_ptr_to_ref_str(ptr);
-    let s = String::from(ptr);
-    s
-}
-
-/// # Safety
-///
-/// The caller must ensure that the pointer is valid and
-/// points to a valid C string.
-pub fn raw_ptr_to_ref_str(ptr: *const u8) -> &'static str {
-    let len = unsafe { get_str_len(ptr) };
-    let slice = unsafe { core::slice::from_raw_parts(ptr, len) };
-    if let Ok(s) = core::str::from_utf8(slice) {
-        s
-    } else {
-        panic!("not utf8 slice");
-    }
-}
-
-/// # Safety
-///
-/// The caller must ensure that the pointer is valid and
-/// points to a valid C string.
-/// The string must be null-terminated.
-pub unsafe fn get_str_len(ptr: *const u8) -> usize {
-    let mut cur = ptr as usize;
-    while *(cur as *const u8) != 0 {
-        cur += 1;
-    }
-    cur - ptr as usize
 }

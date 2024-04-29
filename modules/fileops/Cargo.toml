@@ -11,6 +11,7 @@ task = { path = "../task" }
 axfile = { path = "../axfile" }
 mutex = { path = "../mutex" }
 axerrno = { path = "../../crates/axerrno" }
+axtype = { path = "../../crates/axtype" }
 axhal = { path = "../axhal" }
 early_console = { path = "../../crates/early_console" }
 riscv = "0.10"

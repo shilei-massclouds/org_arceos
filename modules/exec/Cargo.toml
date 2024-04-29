@@ -13,7 +13,7 @@ axhal = { path = "../axhal" }
 axfile = { path = "../axfile" }
 mutex = { path = "../mutex" }
 axerrno = { path = "../../crates/axerrno" }
-memory_addr = { path = "../../crates/memory_addr" }
+axtype = { path = "../../crates/axtype" }
 elf = { path = "../../crates/elf" }
 axio = { path = "../../crates/axio" }
 kernel_guard = { path = "../../crates/kernel_guard" }

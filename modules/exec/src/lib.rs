@@ -22,10 +22,11 @@ use elf::segment::ProgramHeader;
 use elf::segment::SegmentTable;
 use elf::ElfBytes;
 use kernel_guard::NoPreempt;
-use memory_addr::{align_down_4k, align_up_4k, PAGE_SIZE_4K};
+use axtype::{align_down_4k, align_up_4k, PAGE_SIZE};
 use mmap::FileRef;
 use mmap::{MAP_ANONYMOUS, MAP_FIXED};
 use mutex::Mutex;
+use axtype::get_user_str_vec;
 
 const ELF_HEAD_BUF_SIZE: usize = 256;
 
@@ -46,7 +47,7 @@ pub fn kernel_execve(filename: &str) -> LinuxResult {
 #[allow(unused)]
 fn setup_zero_page() -> LinuxResult {
     error!("setup_zero_page ...");
-    mmap::_mmap(0x0, PAGE_SIZE_4K, 0, MAP_FIXED | MAP_ANONYMOUS, None, 0)?;
+    mmap::_mmap(0x0, PAGE_SIZE, 0, MAP_FIXED | MAP_ANONYMOUS, None, 0)?;
     Ok(())
 }
 
@@ -108,7 +109,7 @@ pub fn get_auxv_vector(
     map.insert(AT_PHNUM, 2);
     map.insert(AT_ENTRY, entry);
     map.insert(AT_RANDOM, 0);
-    map.insert(AT_PAGESZ, PAGE_SIZE_4K);
+    map.insert(AT_PAGESZ, PAGE_SIZE);
     map
 }
 */
@@ -118,8 +119,8 @@ fn get_arg_page(_entry: usize, args: &[&str]) -> LinuxResult<usize> {
 
     let va = TASK_SIZE - STACK_SIZE;
     mmap::_mmap(va, STACK_SIZE, 0, MAP_FIXED | MAP_ANONYMOUS, None, 0)?;
-    let direct_va = mmap::faultin_page(TASK_SIZE - PAGE_SIZE_4K);
-    let mut stack = UserStack::new(TASK_SIZE, direct_va + PAGE_SIZE_4K);
+    let direct_va = mmap::faultin_page(TASK_SIZE - PAGE_SIZE);
+    let mut stack = UserStack::new(TASK_SIZE, direct_va + PAGE_SIZE);
     stack.push(&[null::<u64>()]);
 
     let random_str: &[usize; 2] = &[3703830112808742751usize, 7081108068768079778usize];
@@ -301,10 +302,10 @@ fn load_elf_binary(file: FileRef, load_bias: usize, filename: &str) -> LinuxResu
 }
 
 fn padzero(elf_bss: usize) {
-    let nbyte = elf_bss & (PAGE_SIZE_4K - 1);
+    let nbyte = elf_bss & (PAGE_SIZE - 1);
     error!("padzero nbyte: {:#X} ...", elf_bss);
     if nbyte != 0 {
-        let nbyte = PAGE_SIZE_4K - nbyte;
+        let nbyte = PAGE_SIZE - nbyte;
         unsafe { core::slice::from_raw_parts_mut(elf_bss as *mut u8, nbyte) }.fill(0);
         error!("padzero nbyte: {:#X} {:#X}", elf_bss, nbyte);
     }
@@ -341,9 +342,9 @@ fn load_elf_phdrs(file: FileRef) -> LinuxResult<(Vec<ProgramHeader>, usize)> {
     // Validate phentsize before trying to read the table so that we can error early for corrupted files
     let entsize = ProgramHeader::validate_entsize(ehdr.class, ehdr.e_phentsize as usize).unwrap();
     let size = entsize.checked_mul(phnum).unwrap();
-    assert!(size > 0 && size <= PAGE_SIZE_4K);
+    assert!(size > 0 && size <= PAGE_SIZE);
     let phoff = ehdr.e_phoff;
-    //let mut buf: [u8; PAGE_SIZE_4K] = [0; PAGE_SIZE_4K];
+    //let mut buf: [u8; PAGE_SIZE] = [0; PAGE_SIZE];
     let mut buf: [u8; 2 * 1024] = [0; 2 * 1024];
     error!("phoff: {:#X}", ehdr.e_phoff);
     let _ = file.seek(SeekFrom::Start(phoff));
@@ -355,4 +356,18 @@ fn load_elf_phdrs(file: FileRef) -> LinuxResult<(Vec<ProgramHeader>, usize)> {
         .filter(|phdr| phdr.p_type == PT_LOAD || phdr.p_type == PT_INTERP)
         .collect();
     Ok((phdrs, ehdr.e_entry as usize))
+}
+
+pub fn execve(path: &str, argv: usize, envp: usize) -> usize {
+    let argv = get_user_str_vec(argv);
+    for arg in &argv {
+        info!("arg: {}", arg);
+    }
+    let envp = get_user_str_vec(envp);
+    for env in &envp {
+        info!("env: {}", env);
+    }
+    assert_eq!(envp.len(), 0);
+    unimplemented!("execve: path {} argv.len {} envp.len {}",
+                   path, argv.len(), envp.len());
 }

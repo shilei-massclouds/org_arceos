@@ -2,9 +2,9 @@
 
 extern crate alloc;
 
-use fileops::get_user_str;
+use axtype::get_user_str;
 use fileops::iovec;
-use memory_addr::{align_up_4k, is_aligned_4k};
+use axtype::{align_up_4k, is_aligned_4k};
 use axhal::arch::sysno::*;
 
 #[macro_use]
@@ -32,6 +32,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_BRK => linux_syscall_brk(args),
         LINUX_SYSCALL_RSEQ => linux_syscall_rseq(args),
         LINUX_SYSCALL_CLONE => linux_syscall_clone(args),
+        LINUX_SYSCALL_EXECVE => linux_syscall_execve(args),
         LINUX_SYSCALL_MUNMAP => linux_syscall_munmap(args),
         LINUX_SYSCALL_MMAP => linux_syscall_mmap(args),
         LINUX_SYSCALL_MSYNC => linux_syscall_msync(args),
@@ -325,6 +326,12 @@ fn linux_syscall_rseq(_args: SyscallArgs) -> usize {
 fn linux_syscall_clone(args: SyscallArgs) -> usize {
     let [flags, newsp, ptid, tls, ctid, ..] = args;
     fork::sys_clone(flags, newsp, tls, ptid, ctid)
+}
+
+fn linux_syscall_execve(args: SyscallArgs) -> usize {
+    let [path, argv, envp, ..] = args;
+    let path = get_user_str(path);
+    exec::execve(&path, argv, envp)
 }
 
 fn linux_syscall_exit(args: SyscallArgs) -> usize {
