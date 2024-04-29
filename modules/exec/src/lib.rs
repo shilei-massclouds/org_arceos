@@ -4,7 +4,8 @@
 extern crate log;
 extern crate alloc;
 use alloc::sync::Arc;
-use alloc::vec::Vec;
+use alloc::{vec, vec::Vec};
+use alloc::string::String;
 use core::str::from_utf8;
 use core::{mem::align_of, mem::size_of_val, ptr::null};
 
@@ -41,7 +42,8 @@ pub fn kernel_execve(filename: &str) -> LinuxResult {
 
     // TODO: Move it into kernel_init().
     setup_zero_page()?;
-    bprm_execve(filename, 0, 0)
+    let args = vec![filename.into()];
+    bprm_execve(filename, 0, 0, args)
 }
 
 #[allow(unused)]
@@ -114,7 +116,7 @@ pub fn get_auxv_vector(
 }
 */
 
-fn get_arg_page(_entry: usize, args: &[&str]) -> LinuxResult<usize> {
+fn get_arg_page(_entry: usize, args: Vec<String>) -> LinuxResult<usize> {
     //let auxv = get_auxv_vector(entry);
 
     let va = TASK_SIZE - STACK_SIZE;
@@ -153,9 +155,12 @@ fn get_arg_page(_entry: usize, args: &[&str]) -> LinuxResult<usize> {
 }
 
 /// sys_execve() executes a new program.
-fn bprm_execve(filename: &str, flags: usize, load_bias: usize) -> LinuxResult {
+fn bprm_execve(
+    filename: &str, flags: usize, load_bias: usize, args: Vec<String>
+) -> LinuxResult {
+    info!("bprm_execve: {}", filename);
     let file = do_open_execat(filename, flags)?;
-    exec_binprm(file, load_bias, filename)
+    exec_binprm(file, load_bias, filename, args)
 }
 
 fn do_open_execat(filename: &str, _flags: usize) -> LinuxResult<FileRef> {
@@ -168,16 +173,15 @@ fn do_open_execat(filename: &str, _flags: usize) -> LinuxResult<FileRef> {
     Ok(Arc::new(Mutex::new(file)))
 }
 
-fn exec_binprm(file: FileRef, load_bias: usize, filename: &str) -> LinuxResult {
-    load_elf_binary(file, load_bias, filename)
+fn exec_binprm(file: FileRef, load_bias: usize, filename: &str, args: Vec<String>) -> LinuxResult {
+    load_elf_binary(file, load_bias, filename, args)
 }
 
 fn load_elf_interp(
     file: FileRef,
     load_bias: usize,
     app_entry: usize,
-    interp_name: &str,
-    bin_name: &str,
+    args: Vec<String>,
 ) -> LinuxResult {
     let (phdrs, entry) = load_elf_phdrs(file.clone())?;
 
@@ -216,8 +220,7 @@ fn load_elf_interp(
     elf_bss += load_bias;
     elf_brk += load_bias;
 
-    let args = [interp_name, bin_name];
-    let sp = get_arg_page(app_entry, &args)?;
+    let sp = get_arg_page(app_entry, args)?;
 
     error!("set brk...");
     set_brk(elf_bss, elf_brk);
@@ -230,7 +233,9 @@ fn load_elf_interp(
     Ok(())
 }
 
-fn load_elf_binary(file: FileRef, load_bias: usize, filename: &str) -> LinuxResult {
+fn load_elf_binary(
+    file: FileRef, load_bias: usize, filename: &str, mut args: Vec<String>
+) -> LinuxResult {
     let (phdrs, entry) = load_elf_phdrs(file.clone())?;
 
     for phdr in &phdrs {
@@ -249,7 +254,8 @@ fn load_elf_binary(file: FileRef, load_bias: usize, filename: &str) -> LinuxResu
             // Todo: check elf_ex->e_type == ET_DYN
             let load_bias = align_down_4k(ELF_ET_DYN_BASE);
             let file = do_open_execat(path, 0)?;
-            return load_elf_interp(file, load_bias, entry, path, filename);
+            args.insert(0, path.into());
+            return load_elf_interp(file, load_bias, entry, args);
         }
     }
 
@@ -288,8 +294,7 @@ fn load_elf_binary(file: FileRef, load_bias: usize, filename: &str) -> LinuxResu
     elf_bss += load_bias;
     elf_brk += load_bias;
 
-    let args = [filename];
-    let sp = get_arg_page(entry, &args)?;
+    let sp = get_arg_page(entry, args)?;
 
     error!("set brk...");
     set_brk(elf_bss, elf_brk);
@@ -359,8 +364,10 @@ fn load_elf_phdrs(file: FileRef) -> LinuxResult<(Vec<ProgramHeader>, usize)> {
 }
 
 pub fn execve(path: &str, argv: usize, envp: usize) -> usize {
-    let argv = get_user_str_vec(argv);
-    for arg in &argv {
+    info!("execve: {}", path);
+
+    let args = get_user_str_vec(argv);
+    for arg in &args {
         info!("arg: {}", arg);
     }
     let envp = get_user_str_vec(envp);
@@ -368,6 +375,10 @@ pub fn execve(path: &str, argv: usize, envp: usize) -> usize {
         info!("env: {}", env);
     }
     assert_eq!(envp.len(), 0);
-    unimplemented!("execve: path {} argv.len {} envp.len {}",
-                   path, argv.len(), envp.len());
+
+    match bprm_execve(path, 0, 0, args) {
+        Ok(_) => info!("bprm_execve ok!"),
+        Err(e) => panic!("bprm_execve: {:?}", e),
+    }
+    0
 }
