@@ -53,3 +53,4 @@ pub const LINUX_SYSCALL_CLONE: usize = 56;
 pub const LINUX_SYSCALL_EXECVE: usize = 59;
 pub const LINUX_SYSCALL_SCHED_GETAFFINITY: usize = 204;
 pub const LINUX_SYSCALL_SETITIMER: usize = 38;
+pub const LINUX_SYSCALL_WAIT4: usize = 61;

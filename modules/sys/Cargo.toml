@@ -8,6 +8,8 @@ edition = "2021"
 [dependencies]
 log = "0.4"
 taskctx = { path = "../taskctx" }
+task = { path = "../task" }
+run_queue = { path = "../run_queue" }
 axconfig = { path = "../axconfig" }
 axerrno = { path = "../../crates/axerrno" }
 axhal = { path = "../axhal" }

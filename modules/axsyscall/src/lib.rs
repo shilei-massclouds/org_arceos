@@ -41,6 +41,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_MPROTECT => linux_syscall_mprotect(args),
         LINUX_SYSCALL_SET_TID_ADDRESS => linux_syscall_set_tid_address(args),
         LINUX_SYSCALL_SET_ROBUST_LIST => linux_syscall_set_robust_list(args),
+        LINUX_SYSCALL_WAIT4 => linux_syscall_wait4(args),
         LINUX_SYSCALL_PRLIMIT64 => linux_syscall_prlimit64(args),
         LINUX_SYSCALL_GETRANDOM => linux_syscall_getrandom(args),
         LINUX_SYSCALL_CLOCK_GETTIME => linux_syscall_clock_gettime(args),
@@ -255,6 +256,11 @@ fn linux_syscall_set_robust_list(_args: SyscallArgs) -> usize {
 fn linux_syscall_prlimit64(args: SyscallArgs) -> usize {
     let [pid, resource, new_rlim, old_rlim, ..] = args;
     sys::prlimit64(pid, resource, new_rlim, old_rlim)
+}
+
+fn linux_syscall_wait4(args: SyscallArgs) -> usize {
+    let [pid, wstatus, options, rusage, ..] = args;
+    sys::wait4(pid, wstatus, options, rusage)
 }
 
 fn linux_syscall_getrandom(args: SyscallArgs) -> usize {

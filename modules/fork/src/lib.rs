@@ -11,6 +11,7 @@ use alloc::sync::Arc;
 
 use axerrno::{LinuxError, LinuxResult};
 use task::{current, Tid, TaskRef, TaskStruct};
+use spinbase::SpinNoIrq;
 
 bitflags::bitflags! {
     /// clone flags
@@ -28,8 +29,13 @@ bitflags::bitflags! {
         const CLONE_SIGHAND = 0x00000800;
         /// set if the parent wants the child to wake it up on mm_release
         const CLONE_VFORK   = 0x00004000;
+
+        /// clear the TID in the child
+        const CLONE_CHILD_CLEARTID  = 0x00200000;
         /// set if the tracing process can't force CLONE_PTRACE on this clone
-        const CLONE_UNTRACED= 0x00800000;
+        const CLONE_UNTRACED        = 0x00800000;
+        /// set the TID in the child
+        const CLONE_CHILD_SETTID    = 0x01000000;
     }
 }
 
@@ -125,9 +131,8 @@ impl KernelCloneArgs {
         if self.flags.contains(CloneFlags::CLONE_VM) {
             task.mm = current().mm.clone();
         } else {
-            panic!("NO CLONE_VM!");
-            //let mm = current().mm().lock().dup();
-            //task.mm = Some(Arc::new(SpinNoIrq::new(mm)));
+            let mm = current().mm().lock().dup();
+            task.mm = Some(Arc::new(SpinNoIrq::new(mm)));
         }
         Ok(())
     }
@@ -196,9 +201,18 @@ pub fn sys_clone(
 ) -> usize {
     assert_eq!(tls, 0);
     assert_eq!(ptid, 0);
-    assert_eq!(ctid, 0);
 
     let flags = CloneFlags::from_bits_truncate(flags);
+    warn!("clone: flags {:#X} stack {:#X} ptid {:#X} tls {:#X} ctid {:#X}",
+        flags.bits(), stack, ptid, tls, ctid);
+
+    if ctid != 0 {
+        // Todo: notify task when CLONE_CHILD_CLEARTID is set.
+        // Todo: in schedule_tail, set CLONE_CHILD_SETTID.
+        assert!(flags.contains(CloneFlags::CLONE_CHILD_CLEARTID) &&
+                flags.contains(CloneFlags::CLONE_CHILD_SETTID));
+    }
+
     let exit_signal = flags.intersection(CloneFlags::CSIGNAL).bits() as u32;
     let flags = flags.difference(CloneFlags::CSIGNAL);
     let stack = if stack == 0 {

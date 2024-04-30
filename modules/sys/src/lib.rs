@@ -82,3 +82,17 @@ pub fn arch_prctl(code: usize, addr: usize) -> usize {
         }
     }
 }
+
+pub fn wait4(pid: usize, wstatus: usize, options: usize, rusage: usize) -> usize {
+    assert_eq!(options, 0);
+    assert_eq!(rusage, 0);
+    assert!(pid > 0);
+
+    let task = task::current();
+    let rq = run_queue::task_rq(&task.sched_info);
+    rq.lock().resched(false);
+
+    // Todo: handle wstatus and options
+    panic!("pid {} wstatus {:#X} options {:#X} rusage {:#X}",
+           pid, wstatus, options, rusage);
+}
