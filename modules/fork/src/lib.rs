@@ -208,7 +208,6 @@ pub fn sys_clone(
     };
     let args = KernelCloneArgs::new(flags, "", exit_signal, stack, None);
     warn!("impl clone: flags {:#X} sig {:#X} stack {:#X} ptid {:#X} tls {:#X} ctid {:#X}",
-                   flags.bits(), exit_signal,
-                   stack.unwrap_or(0), ptid, tls, ctid);
+        flags.bits(), exit_signal, stack.unwrap_or(0), ptid, tls, ctid);
     args.perform().unwrap_or(usize::MAX)
 }

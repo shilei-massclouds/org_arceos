@@ -25,6 +25,7 @@ pub const LINUX_SYSCALL_GETRANDOM: usize = 0x13e;
 pub const LINUX_SYSCALL_RSEQ: usize = 0x14e;
 
 pub const LINUX_SYSCALL_IOCTL: usize = 16;
+pub const LINUX_SYSCALL_FTRUNCATE: usize = 77;
 pub const LINUX_SYSCALL_GETCWD: usize = 79;
 pub const LINUX_SYSCALL_CHDIR: usize = 80;
 pub const LINUX_SYSCALL_FACCESSAT: usize = 269;
@@ -35,9 +36,10 @@ pub const LINUX_SYSCALL_GETTID: usize = 186;
 
 pub const LINUX_SYSCALL_FCHMODAT: usize = 268;
 pub const LINUX_SYSCALL_FCHOWNAT: usize = 260;
-/*
-pub const LINUX_SYSCALL_GETDENTS64: usize = 0x3d;
-*/
+
+pub const LINUX_SYSCALL_CAPGET: usize = 125;
+
+//pub const LINUX_SYSCALL_GETDENTS64: usize = 0x3d;
 pub const LINUX_SYSCALL_MKDIRAT: usize = 258;
 pub const LINUX_SYSCALL_UNLINKAT: usize = 263;
 pub const LINUX_SYSCALL_WRITEV: usize = 20;
@@ -50,3 +52,4 @@ pub const LINUX_SYSCALL_RT_SIGPROCMASK: usize = 14;
 pub const LINUX_SYSCALL_CLONE: usize = 56;
 pub const LINUX_SYSCALL_EXECVE: usize = 59;
 pub const LINUX_SYSCALL_SCHED_GETAFFINITY: usize = 204;
+pub const LINUX_SYSCALL_SETITIMER: usize = 38;

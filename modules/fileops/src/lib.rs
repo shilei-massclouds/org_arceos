@@ -341,3 +341,14 @@ pub fn lseek(fd: usize, offset: usize, whence: usize) -> usize {
         linux_err!(EINVAL)
     }
 }
+
+pub fn ftruncate(fd: usize, length: usize) -> usize {
+    info!("ftruncate: fd: {} length: {}", fd, length);
+
+    let current = task::current();
+    let file = current.filetable.lock().get_file(fd).unwrap();
+    file.lock().truncate(length as u64).unwrap_or_else(|e| {
+        panic!("ftruncate err: {:?}", e);
+    });
+    0
+}

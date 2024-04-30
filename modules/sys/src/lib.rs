@@ -2,6 +2,7 @@
 
 use taskctx::Tid;
 use axconfig::TASK_STACK_SIZE;
+#[cfg(target_arch = "x86_64")]
 use axerrno::{LinuxError, linux_err};
 
 #[macro_use]

@@ -28,6 +28,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_WRITE => linux_syscall_write(args),
         LINUX_SYSCALL_WRITEV => linux_syscall_writev(args),
         LINUX_SYSCALL_READLINKAT => usize::MAX,
+        LINUX_SYSCALL_FTRUNCATE => linux_syscall_ftruncate(args),
         LINUX_SYSCALL_FSTATAT => linux_syscall_fstatat(args),
         LINUX_SYSCALL_UNAME => linux_syscall_uname(args),
         LINUX_SYSCALL_BRK => linux_syscall_brk(args),
@@ -54,6 +55,8 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_FCHMODAT => linux_syscall_fchmodat(args),
         LINUX_SYSCALL_FCHOWNAT => linux_syscall_fchownat(args),
         LINUX_SYSCALL_SCHED_GETAFFINITY => linux_syscall_sched_getaffinity(args),
+        LINUX_SYSCALL_CAPGET => linux_syscall_capget(args),
+        LINUX_SYSCALL_SETITIMER => linux_syscall_setitimer(args),
         #[cfg(target_arch = "riscv64")]
         LINUX_SYSCALL_GETDENTS64 => linux_syscall_getdents64(args),
         #[cfg(target_arch = "x86_64")]
@@ -79,6 +82,18 @@ fn linux_syscall_sched_getaffinity(args: SyscallArgs) -> usize {
     let [pid, cpu_set_size, mask, ..] = args;
     warn!("impl sched_getaffinity pid {} cpu_set_size {} mask {:#X}",
           pid, cpu_set_size, mask);
+    0
+}
+
+fn linux_syscall_capget(args: SyscallArgs) -> usize {
+    let [hdrp, datap, ..] = args;
+    warn!("impl capget hdrp {} datap {}", hdrp, datap);
+    0
+}
+
+fn linux_syscall_setitimer(args: SyscallArgs) -> usize {
+    let [which, newval, oldval, ..] = args;
+    warn!("impl setitimer which {} newval {} oldval {}", which, newval, oldval);
     0
 }
 
@@ -169,6 +184,11 @@ fn linux_syscall_writev(args: SyscallArgs) -> usize {
 fn linux_syscall_fstatat(args: SyscallArgs) -> usize {
     let [dfd, path, statbuf, flags, ..] = args;
     fileops::fstatat(dfd, path, statbuf, flags)
+}
+
+fn linux_syscall_ftruncate(args: SyscallArgs) -> usize {
+    let [fd, length, ..] = args;
+    fileops::ftruncate(fd, length)
 }
 
 #[cfg(target_arch = "x86_64")]
