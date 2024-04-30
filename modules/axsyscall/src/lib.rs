@@ -23,6 +23,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_UNLINKAT => linux_syscall_unlinkat(args),
         LINUX_SYSCALL_OPENAT => linux_syscall_openat(args),
         LINUX_SYSCALL_CLOSE => linux_syscall_close(args),
+        LINUX_SYSCALL_LSEEK => linux_syscall_lseek(args),
         LINUX_SYSCALL_READ => linux_syscall_read(args),
         LINUX_SYSCALL_WRITE => linux_syscall_write(args),
         LINUX_SYSCALL_WRITEV => linux_syscall_writev(args),
@@ -122,11 +123,15 @@ fn linux_syscall_close(_args: SyscallArgs) -> usize {
     0
 }
 
+fn linux_syscall_lseek(args: SyscallArgs) -> usize {
+    let [fd, offset, whence, ..] = args;
+    fileops::lseek(fd, offset, whence)
+}
+
 fn linux_syscall_read(args: SyscallArgs) -> usize {
     let [fd, buf, count, ..] = args;
 
     let ubuf = unsafe { core::slice::from_raw_parts_mut(buf as *mut u8, count) };
-
     fileops::read(fd, ubuf)
 }
 

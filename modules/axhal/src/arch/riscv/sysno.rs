@@ -13,6 +13,7 @@ pub const LINUX_SYSCALL_FCHOWNAT: usize = 0x36;
 pub const LINUX_SYSCALL_OPENAT: usize = 0x38;
 pub const LINUX_SYSCALL_CLOSE: usize = 0x39;
 pub const LINUX_SYSCALL_GETDENTS64: usize = 0x3d;
+pub const LINUX_SYSCALL_LSEEK: usize = 0x3e;
 pub const LINUX_SYSCALL_READ: usize = 0x3f;
 pub const LINUX_SYSCALL_WRITE: usize = 0x40;
 pub const LINUX_SYSCALL_WRITEV: usize = 0x42;

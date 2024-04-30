@@ -76,7 +76,7 @@ pub fn arch_prctl(code: usize, addr: usize) -> usize {
         },
         _ =>  {
             error!("=========== arch_prctl code {:#X}", code);
-            axerrno::LinuxError::EPERM.code() as usize
+            axerrno::linux_err(EPERM)
         }
     }
 }

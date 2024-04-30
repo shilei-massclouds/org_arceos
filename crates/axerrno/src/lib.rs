@@ -93,6 +93,20 @@ pub type AxResult<T = ()> = Result<T, AxError>;
 /// A specialized [`Result`] type with [`LinuxError`] as the error type.
 pub type LinuxResult<T = ()> = Result<T, LinuxError>;
 
+#[macro_export]
+macro_rules! linux_err {
+    ($err: ident) => {{
+        (-(LinuxError::$err as isize)) as usize
+    }};
+}
+
+#[macro_export]
+macro_rules! linux_err_from {
+    ($err: ident) => {{
+        (-LinuxError::from($err).code()) as usize
+    }};
+}
+
 /// Convenience method to construct an [`AxError`] type while printing a warning
 /// message.
 ///

@@ -8,12 +8,13 @@ use alloc::string::String;
 use alloc::sync::Arc;
 
 use axerrno::AxResult;
-use axerrno::LinuxError;
+use axerrno::{LinuxError, linux_err, linux_err_from};
 use axfile::api::create_dir;
 use axfile::fops::File;
 use axfile::fops::OpenOptions;
 use mutex::Mutex;
 use axtype::get_user_str;
+use axio::SeekFrom;
 
 // Special value used to indicate openat should use
 // the current working directory.
@@ -48,7 +49,7 @@ pub fn register_file(file: AxResult<File>) -> usize {
     let file = match file {
         Ok(f) => f,
         Err(e) => {
-            return (-LinuxError::from(e).code()) as usize;
+            return linux_err_from!(e);
         }
     };
     let current = task::current();
@@ -175,7 +176,7 @@ pub fn fstatat(dfd: usize, path: usize, statbuf_ptr: usize, flags: usize) -> usi
         match openat(dfd, &path, flags, 0) {
             Ok(file) => file.get_attr().unwrap(),
             Err(e) => {
-                return (-LinuxError::from(e).code()) as usize;
+                return linux_err_from!(e);
             }
         }
     } else {
@@ -288,7 +289,7 @@ pub fn mkdirat(dfd: usize, pathname: &str, mode: usize) -> usize {
     let fs = current.fs.lock();
     match create_dir(pathname, &fs) {
         Ok(()) => 0,
-        Err(e) => (-LinuxError::from(e).code()) as usize,
+        Err(e) => linux_err_from!(e),
     }
 }
 
@@ -313,6 +314,30 @@ pub fn chdir(path: &str) -> usize {
     let mut fs = current.fs.lock();
     match fs.set_current_dir(path) {
         Ok(()) => 0,
-        Err(e) => (-LinuxError::from(e).code()) as usize,
+        Err(e) => linux_err_from!(e),
+    }
+}
+
+const SEEK_SET: usize = 0;
+const SEEK_CUR: usize = 1;
+const SEEK_END: usize = 2;
+
+pub fn lseek(fd: usize, offset: usize, whence: usize) -> usize {
+    info!("lseek: fd: {} offset: {} whence: {}", fd, offset, whence);
+
+    let current = task::current();
+    let file = current.filetable.lock().get_file(fd).unwrap();
+
+    let pos = match whence {
+        SEEK_SET => file.lock().seek(SeekFrom::Start(offset as u64)),
+        SEEK_CUR => file.lock().seek(SeekFrom::Current(offset as i64)),
+        SEEK_END => file.lock().seek(SeekFrom::End(offset as i64)),
+        _ => return linux_err!(EINVAL),
+    };
+
+    if let Ok(pos) = pos {
+        pos as usize
+    } else {
+        linux_err!(EINVAL)
     }
 }

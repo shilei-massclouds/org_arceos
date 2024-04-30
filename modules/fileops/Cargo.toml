@@ -11,6 +11,7 @@ task = { path = "../task" }
 axfile = { path = "../axfile" }
 mutex = { path = "../mutex" }
 axerrno = { path = "../../crates/axerrno" }
+axio = { path = "../../crates/axio" }
 axtype = { path = "../../crates/axtype" }
 axhal = { path = "../axhal" }
 early_console = { path = "../../crates/early_console" }
