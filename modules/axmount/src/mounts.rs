@@ -13,6 +13,7 @@ pub(crate) fn devfs() -> Arc<fs::devfs::DeviceFileSystem> {
     devfs.add("null", Arc::new(null));
     devfs.add("zero", Arc::new(zero));
     foo_dir.add("bar", Arc::new(bar));
+    devfs.mkdir("shm");
     Arc::new(devfs)
 }
 
@@ -43,6 +44,11 @@ pub(crate) fn procfs() -> VfsResult<Arc<fs::ramfs::RamFileSystem>> {
     // Create /proc/self/stat
     proc_root.create("self", VfsNodeType::Dir)?;
     proc_root.create("self/stat", VfsNodeType::File)?;
+
+    // Create /proc/meminfo
+    proc_root.create("meminfo", VfsNodeType::File)?;
+    let file_meminfo = proc_root.clone().lookup("./meminfo")?;
+    file_meminfo.write_at(0, b"MemAvailable: 100000 kB\nSwapFree: 100000 kB\n")?;
 
     Ok(Arc::new(procfs))
 }

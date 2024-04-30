@@ -40,5 +40,6 @@ pub const LINUX_SYSCALL_RSEQ: usize = 0x125;
 pub const LINUX_SYSCALL_SET_TID_ADDRESS: usize = 0x60;
 pub const LINUX_SYSCALL_SET_ROBUST_LIST: usize = 0x63;
 pub const LINUX_SYSCALL_CLOCK_GETTIME: usize = 0x71;
+pub const LINUX_SYSCALL_SCHED_GETAFFINITY: usize = 0x7b;
 pub const LINUX_SYSCALL_RT_SIGACTION: usize = 0x86;
 pub const LINUX_SYSCALL_RT_SIGPROCMASK: usize = 0x87;

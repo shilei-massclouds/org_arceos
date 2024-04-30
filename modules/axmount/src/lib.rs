@@ -53,6 +53,10 @@ pub fn init_rootfs(main_fs: Arc<dyn VfsOps>) -> Arc<RootDirectory> {
         .mount("/dev", mounts::devfs())
         .expect("failed to mount devfs at /dev");
 
+    root_dir
+        .mount("/dev/shm", mounts::ramfs())
+        .expect("failed to mount ramfs at /dev/shm");
+
     #[cfg(feature = "ramfs")]
     root_dir
         .mount("/tmp", mounts::ramfs())

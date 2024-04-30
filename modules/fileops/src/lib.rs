@@ -256,7 +256,7 @@ pub fn ioctl(fd: usize, request: usize, udata: usize) -> usize {
         fd, request, udata
     );
 
-    assert_eq!(fd, 1);
+    assert!(fd == 1 || fd == 2);
     assert_eq!(request, TCGETS);
 
     let cc: [u8; NCCS] = [

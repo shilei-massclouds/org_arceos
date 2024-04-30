@@ -2,6 +2,7 @@
 
 use taskctx::Tid;
 use axconfig::TASK_STACK_SIZE;
+use axerrno::{LinuxError, linux_err};
 
 #[macro_use]
 extern crate log;
@@ -76,7 +77,7 @@ pub fn arch_prctl(code: usize, addr: usize) -> usize {
         },
         _ =>  {
             error!("=========== arch_prctl code {:#X}", code);
-            axerrno::linux_err(EPERM)
+            linux_err!(EPERM)
         }
     }
 }

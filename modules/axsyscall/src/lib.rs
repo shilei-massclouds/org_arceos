@@ -53,6 +53,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_EXIT_GROUP => linux_syscall_exit_group(args),
         LINUX_SYSCALL_FCHMODAT => linux_syscall_fchmodat(args),
         LINUX_SYSCALL_FCHOWNAT => linux_syscall_fchownat(args),
+        LINUX_SYSCALL_SCHED_GETAFFINITY => linux_syscall_sched_getaffinity(args),
         #[cfg(target_arch = "riscv64")]
         LINUX_SYSCALL_GETDENTS64 => linux_syscall_getdents64(args),
         #[cfg(target_arch = "x86_64")]
@@ -71,6 +72,13 @@ fn linux_syscall_faccessat(args: SyscallArgs) -> usize {
     );
     let filename = get_user_str(filename);
     warn!("filename: {}", filename);
+    0
+}
+
+fn linux_syscall_sched_getaffinity(args: SyscallArgs) -> usize {
+    let [pid, cpu_set_size, mask, ..] = args;
+    warn!("impl sched_getaffinity pid {} cpu_set_size {} mask {:#X}",
+          pid, cpu_set_size, mask);
     0
 }
 

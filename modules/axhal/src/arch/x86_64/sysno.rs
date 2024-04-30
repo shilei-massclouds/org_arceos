@@ -49,3 +49,4 @@ pub const LINUX_SYSCALL_RT_SIGACTION: usize = 13;
 pub const LINUX_SYSCALL_RT_SIGPROCMASK: usize = 14;
 pub const LINUX_SYSCALL_CLONE: usize = 56;
 pub const LINUX_SYSCALL_EXECVE: usize = 59;
+pub const LINUX_SYSCALL_SCHED_GETAFFINITY: usize = 204;
