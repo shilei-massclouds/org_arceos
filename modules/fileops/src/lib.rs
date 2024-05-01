@@ -6,6 +6,7 @@ extern crate log;
 extern crate alloc;
 use alloc::string::String;
 use alloc::sync::Arc;
+use alloc::vec;
 
 use axerrno::AxResult;
 use axerrno::{LinuxError, linux_err, linux_err_from};
@@ -74,9 +75,9 @@ pub fn read(fd: usize, ubuf: &mut [u8]) -> usize {
     let count = ubuf.len();
     let current = task::current();
     let file = current.filetable.lock().get_file(fd).unwrap();
+
+    let mut kbuf = vec![0u8; count];
     let mut pos = 0;
-    assert!(count < 1024);
-    let mut kbuf: [u8; 1024] = [0; 1024];
     while pos < count {
         let ret = file.lock().read(&mut kbuf[pos..]).unwrap();
         if ret == 0 {
@@ -90,7 +91,7 @@ pub fn read(fd: usize, ubuf: &mut [u8]) -> usize {
         fd, count, pos
     );
 
-    ubuf.copy_from_slice(&kbuf[..count]);
+    ubuf.copy_from_slice(&kbuf);
     pos
 }
 
@@ -102,9 +103,13 @@ pub fn write(fd: usize, ubuf: &[u8]) -> usize {
     let count = ubuf.len();
     let current = task::current();
     let file = current.filetable.lock().get_file(fd).unwrap();
+
+    let mut kbuf = vec![0u8; count];
+    kbuf.copy_from_slice(ubuf);
+
     let mut pos = 0;
     while pos < count {
-        let ret = file.lock().write(&ubuf[pos..]).unwrap();
+        let ret = file.lock().write(&kbuf[pos..]).unwrap();
         if ret == 0 {
             break;
         }
