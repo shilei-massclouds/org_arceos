@@ -22,6 +22,10 @@ use axio::SeekFrom;
 pub const AT_FDCWD: usize = -100isize as usize;
 pub const AT_EMPTY_PATH: usize = 0x1000;
 
+const SEEK_SET: usize = 0;
+const SEEK_CUR: usize = 1;
+const SEEK_END: usize = 2;
+
 const O_CREAT: usize = 0o100;
 
 pub fn openat(dfd: usize, filename: &str, flags: usize, mode: usize) -> AxResult<File> {
@@ -93,6 +97,13 @@ pub fn read(fd: usize, ubuf: &mut [u8]) -> usize {
 
     ubuf.copy_from_slice(&kbuf);
     pos
+}
+
+pub fn pread64(fd: usize, ubuf: &mut [u8], offset: usize) -> usize {
+    info!("pread64: fd {} len {} offset {}", fd, ubuf.len(), offset);
+    let pos = lseek(fd, offset, SEEK_SET);
+    assert_eq!(pos, offset);
+    read(fd, ubuf)
 }
 
 pub fn write(fd: usize, ubuf: &[u8]) -> usize {
@@ -321,10 +332,6 @@ pub fn chdir(path: &str) -> usize {
         Err(e) => linux_err_from!(e),
     }
 }
-
-const SEEK_SET: usize = 0;
-const SEEK_CUR: usize = 1;
-const SEEK_END: usize = 2;
 
 pub fn lseek(fd: usize, offset: usize, whence: usize) -> usize {
     info!("lseek: fd: {} offset: {} whence: {}", fd, offset, whence);

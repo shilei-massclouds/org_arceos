@@ -25,6 +25,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_CLOSE => linux_syscall_close(args),
         LINUX_SYSCALL_LSEEK => linux_syscall_lseek(args),
         LINUX_SYSCALL_READ => linux_syscall_read(args),
+        LINUX_SYSCALL_PREAD64 => linux_syscall_pread64(args),
         LINUX_SYSCALL_WRITE => linux_syscall_write(args),
         LINUX_SYSCALL_WRITEV => linux_syscall_writev(args),
         LINUX_SYSCALL_READLINKAT => usize::MAX,
@@ -167,6 +168,13 @@ fn linux_syscall_read(args: SyscallArgs) -> usize {
 
     let ubuf = unsafe { core::slice::from_raw_parts_mut(buf as *mut u8, count) };
     fileops::read(fd, ubuf)
+}
+
+fn linux_syscall_pread64(args: SyscallArgs) -> usize {
+    let [fd, buf, count, offset, ..] = args;
+
+    let ubuf = unsafe { core::slice::from_raw_parts_mut(buf as *mut u8, count) };
+    fileops::pread64(fd, ubuf, offset)
 }
 
 #[cfg(target_arch = "riscv64")]
