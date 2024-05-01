@@ -84,15 +84,15 @@ impl TaskStruct {
         let mm_id = mm.id();
         self.mm.replace(Arc::new(SpinNoIrq::new(mm)));
         info!("================== mmid {}", mm_id);
-        let ctx = taskctx::current_ctx();
+        let mut ctx = taskctx::current_ctx();
         ctx.mm_id.store(mm_id, Ordering::Relaxed);
-        //ctx.as_ctx_mut().pgd = Some(self.mm().lock().pgd().clone());
+        ctx.active_mm_id.store(mm_id, Ordering::Relaxed);
+        ctx.as_ctx_mut().pgd = Some(self.mm().lock().pgd().clone());
         switch_mm(0, mm_id, self.mm().lock().pgd());
     }
 
-    pub fn dup_task_struct(&self) -> Self {
+    pub fn dup_task_struct(&self, tid: usize) -> Self {
         info!("dup_task_struct ...");
-        let tid = alloc_tid();
         let mut task = Self::new();
         task.fs = self.fs.clone();
         task.sched_info = self.sched_info.dup_sched_info(tid);

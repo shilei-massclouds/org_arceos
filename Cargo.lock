@@ -1497,8 +1497,10 @@ dependencies = [
 name = "mm"
 version = "0.1.0"
 dependencies = [
+ "axalloc",
  "axfile",
  "axhal",
+ "axtype",
  "log",
  "mutex",
  "spinbase",

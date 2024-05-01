@@ -9,5 +9,7 @@ edition = "2021"
 log = "0.4"
 axhal = { path = "../axhal" }
 axfile = { path = "../axfile" }
+axalloc = { path = "../axalloc" }
 mutex = { path = "../mutex" }
 spinbase = { path = "../../crates/spinbase" }
+axtype = { path = "../../crates/axtype" }

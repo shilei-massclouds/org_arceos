@@ -102,20 +102,21 @@ impl KernelCloneArgs {
         info!("wakeup the new task[{}].", task.tid());
     }
 
-    fn copy_process(&self, mut tid: Option<Tid>, _trace: bool) -> LinuxResult<TaskRef> {
+    fn copy_process(&self, tid: Option<Tid>, _trace: bool) -> LinuxResult<TaskRef> {
         info!("copy_process...");
         //assert!(!trace);
-        if tid.is_none() {
-            tid = Some(task::alloc_tid());
-        }
+        let tid = match tid {
+            Some(tid) => tid,
+            None => task::alloc_tid(),
+        };
 
-        let mut task = current().dup_task_struct();
+        let mut task = current().dup_task_struct(tid);
         //copy_files();
         self.copy_fs(&mut task)?;
         //copy_sighand();
         //copy_signal();
         self.copy_mm(&mut task)?;
-        arch::copy_thread(&mut task, self.entry, self.stack, tid.unwrap())?;
+        arch::copy_thread(&mut task, self.entry, self.stack, tid)?;
 
         if self.flags.contains(CloneFlags::CLONE_VFORK) {
             task.init_vfork_done();
@@ -131,7 +132,7 @@ impl KernelCloneArgs {
         if self.flags.contains(CloneFlags::CLONE_VM) {
             task.mm = current().mm.clone();
         } else {
-            let mm = current().mm().lock().dup();
+            let mm = current().mm().lock().deep_dup();
             task.mm = Some(Arc::new(SpinNoIrq::new(mm)));
         }
         Ok(())

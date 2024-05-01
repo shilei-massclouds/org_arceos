@@ -1,17 +1,21 @@
 #![no_std]
 #![feature(btree_cursors)]
 
+#[macro_use]
 extern crate log;
 extern crate alloc;
 
 use alloc::collections::BTreeMap;
 use alloc::sync::Arc;
+use alloc::vec::Vec;
 use core::cell::OnceCell;
 use axfile::fops::File;
 use axhal::paging::pgd_alloc;
 use axhal::paging::MappingFlags;
 use axhal::paging::PageTable;
 use axhal::paging::PagingResult;
+use axhal::mem::virt_to_phys;
+use axtype::PAGE_SIZE;
 use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering;
 use spinbase::SpinNoIrq;
@@ -57,6 +61,9 @@ pub struct MmStruct {
     pub vmas: BTreeMap<usize, VmAreaStruct>,
     pgd: Arc<SpinNoIrq<PageTable>>,
     brk: usize,
+
+    // Todo: temprarily record mapped (va, pa)
+    pub mapped: Vec<(usize, usize)>,
 }
 
 impl MmStruct {
@@ -66,15 +73,52 @@ impl MmStruct {
             vmas: BTreeMap::new(),
             pgd: Arc::new(SpinNoIrq::new(pgd_alloc())),
             brk: 0,
+
+            // Todo: temprarily record mapped (va, pa)
+            mapped: Vec::new(),
         }
     }
 
-    pub fn dup(&self) -> Self {
+    pub fn deep_dup(&self) -> Self {
+        let mut pgd = pgd_alloc();
+
+        let mut vmas = BTreeMap::new();
+        for vma in self.vmas.values() {
+            info!("vma: {:#X} - {:#X}, {:#X}", vma.vm_start, vma.vm_end, vma.vm_pgoff);
+            let new_vma = vma.clone();
+            vmas.insert(vma.vm_start, new_vma);
+        }
+
+        let mut mapped = Vec::<(usize, usize)>::new();
+        for (va, dva) in &self.mapped {
+            let va = *va;
+            let old_page = *dva;
+            info!("mapped: {:#X} -> {:#X}", va, old_page);
+            let new_page: usize = axalloc::global_allocator()
+                .alloc_pages(1, PAGE_SIZE) .unwrap();
+
+            unsafe {
+                core::ptr::copy_nonoverlapping(
+                    old_page as *const u8,
+                    new_page as *mut u8,
+                    PAGE_SIZE
+                );
+            }
+
+            let pa = virt_to_phys(new_page.into());
+
+            let flags = MappingFlags::READ | MappingFlags::WRITE |
+                MappingFlags::EXECUTE | MappingFlags::USER;
+            pgd.map_region(va.into(), pa.into(), PAGE_SIZE, flags, true).unwrap();
+            mapped.push((va, new_page));
+        }
         Self {
             id: MM_UNIQUE_ID.fetch_add(1, Ordering::SeqCst),
-            vmas: self.vmas.clone(),
-            pgd: self.pgd.clone(),
+            vmas,
+            pgd: Arc::new(SpinNoIrq::new(pgd)),
             brk: self.brk,
+
+            mapped,
         }
     }
 

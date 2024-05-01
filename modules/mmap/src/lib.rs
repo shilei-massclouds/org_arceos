@@ -145,7 +145,7 @@ pub fn get_unmapped_vma(_va: usize, len: usize) -> usize {
 pub fn faultin_page(va: usize) -> usize {
     info!("faultin_page... va {:#X}", va);
     let mm = task::current().mm();
-    let locked_mm = mm.lock();
+    let mut locked_mm = mm.lock();
 
     let vma = locked_mm
         .vmas
@@ -180,6 +180,10 @@ pub fn faultin_page(va: usize) -> usize {
     }
     locked_mm.map_region(va, pa, PAGE_SIZE_4K, 1)
         .unwrap_or_else(|e| { panic!("{:?}", e) });
+
+    // Todo: temporarily record mapped va->pa(direct_va)
+    locked_mm.mapped.push((va, direct_va));
+
     phys_to_virt(pa.into()).into()
 }
 
