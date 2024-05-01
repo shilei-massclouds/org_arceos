@@ -34,8 +34,18 @@ pub fn getpid() -> usize {
     taskctx::current_ctx().tgid()
 }
 
+pub fn getppid() -> usize {
+    warn!("impl getppid");
+    0
+}
+
 pub fn getgid() -> usize {
     warn!("impl getgid");
+    0
+}
+
+pub fn setpgid() -> usize {
+    warn!("impl setpgid");
     0
 }
 

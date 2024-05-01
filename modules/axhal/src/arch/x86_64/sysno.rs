@@ -31,9 +31,11 @@ pub const LINUX_SYSCALL_CHDIR: usize = 80;
 pub const LINUX_SYSCALL_FACCESSAT: usize = 269;
 pub const LINUX_SYSCALL_TGKILL: usize = 234;
 pub const LINUX_SYSCALL_GETPID: usize = 39;
+pub const LINUX_SYSCALL_GETPPID: usize = 110;
 pub const LINUX_SYSCALL_GETGID: usize = 104;
 pub const LINUX_SYSCALL_GETTID: usize = 186;
 
+pub const LINUX_SYSCALL_FCHMOD: usize = 91;
 pub const LINUX_SYSCALL_FCHMODAT: usize = 268;
 pub const LINUX_SYSCALL_FCHOWNAT: usize = 260;
 
@@ -54,3 +56,5 @@ pub const LINUX_SYSCALL_EXECVE: usize = 59;
 pub const LINUX_SYSCALL_SCHED_GETAFFINITY: usize = 204;
 pub const LINUX_SYSCALL_SETITIMER: usize = 38;
 pub const LINUX_SYSCALL_WAIT4: usize = 61;
+pub const LINUX_SYSCALL_KILL: usize = 62;
+pub const LINUX_SYSCALL_SETPGID: usize = 109;

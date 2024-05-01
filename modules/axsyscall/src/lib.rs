@@ -49,10 +49,14 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_RT_SIGACTION => linux_syscall_rt_sigaction(args),
         LINUX_SYSCALL_GETTID => linux_syscall_gettid(args),
         LINUX_SYSCALL_GETPID => linux_syscall_getpid(args),
+        LINUX_SYSCALL_GETPPID => linux_syscall_getppid(args),
         LINUX_SYSCALL_GETGID => linux_syscall_getgid(args),
+        LINUX_SYSCALL_SETPGID => linux_syscall_setpgid(args),
+        LINUX_SYSCALL_KILL => linux_syscall_kill(args),
         LINUX_SYSCALL_TGKILL => linux_syscall_tgkill(args),
         LINUX_SYSCALL_EXIT => linux_syscall_exit(args),
         LINUX_SYSCALL_EXIT_GROUP => linux_syscall_exit_group(args),
+        LINUX_SYSCALL_FCHMOD => linux_syscall_fchmod(args),
         LINUX_SYSCALL_FCHMODAT => linux_syscall_fchmodat(args),
         LINUX_SYSCALL_FCHOWNAT => linux_syscall_fchownat(args),
         LINUX_SYSCALL_SCHED_GETAFFINITY => linux_syscall_sched_getaffinity(args),
@@ -105,6 +109,12 @@ fn linux_syscall_fchownat(args: SyscallArgs) -> usize {
         "impl fchownat dfd {:#X} path {} owner:group {}:{} flags {:#X}",
         dfd, pathname, owner, group, flags
     );
+    0
+}
+
+fn linux_syscall_fchmod(args: SyscallArgs) -> usize {
+    let [fd, mode, ..] = args;
+    warn!("impl fchmod fd {} mode {:#o}", fd, mode);
     0
 }
 
@@ -299,12 +309,26 @@ fn linux_syscall_getpid(_args: SyscallArgs) -> usize {
     sys::getpid()
 }
 
+fn linux_syscall_getppid(_args: SyscallArgs) -> usize {
+    sys::getppid()
+}
+
 fn linux_syscall_getgid(_args: SyscallArgs) -> usize {
     sys::getgid()
 }
 
+fn linux_syscall_setpgid(_args: SyscallArgs) -> usize {
+    sys::setpgid()
+}
+
 fn linux_syscall_tgkill(_args: SyscallArgs) -> usize {
     warn!("impl linux_syscall_tgkill");
+    0
+}
+
+fn linux_syscall_kill(args: SyscallArgs) -> usize {
+    let [pid, sig, ..] = args;
+    warn!("impl linux_syscall_kill pid {} sig {}", pid, sig);
     0
 }
 

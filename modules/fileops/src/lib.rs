@@ -103,7 +103,6 @@ pub fn write(fd: usize, ubuf: &[u8]) -> usize {
     let current = task::current();
     let file = current.filetable.lock().get_file(fd).unwrap();
     let mut pos = 0;
-    assert!(count < 1024);
     while pos < count {
         let ret = file.lock().write(&ubuf[pos..]).unwrap();
         if ret == 0 {
