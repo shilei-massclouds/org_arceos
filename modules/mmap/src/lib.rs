@@ -17,12 +17,56 @@ use mm::VmAreaStruct;
 use axerrno::LinuxError;
 use axhal::arch::TASK_SIZE;
 
+/// Share changes
+const MAP_SHARED: usize = 0x01;
+/// Changes are private
+const MAP_PRIVATE: usize = 0x02;
+/// share + validate extension flags
+const MAP_SHARED_VALIDATE: usize = 0x03;
+
 /// Interpret addr exactly.
 pub const MAP_FIXED: usize = 0x10;
 /// Don't use a file.
 pub const MAP_ANONYMOUS: usize = 0x20;
+
+/// stack-like segment
+const MAP_GROWSDOWN: usize = 0x0100;
+/// ETXTBSY
+const MAP_DENYWRITE: usize = 0x0800;
+/// mark it as an executable */
+const MAP_EXECUTABLE: usize= 0x1000;
+/// pages are locked */
+const MAP_LOCKED: usize    = 0x2000;
+/// don't check for reservations */
+const MAP_NORESERVE: usize = 0x4000;
+
+const MAP_32BIT: usize = 0;
+const MAP_HUGE_2MB: usize = 0;
+const MAP_HUGE_1GB: usize = 0;
+
+/* 0x0100 - 0x4000 flags are defined in asm-generic/mman.h */
+/// populate (prefault) pagetables
+const MAP_POPULATE: usize = 0x008000;
+/// do not block on IO
+const MAP_NONBLOCK: usize = 0x010000;
+/// give out an address that is best suited for process/thread stacks
+const MAP_STACK: usize =    0x020000;
+/// create a huge page mapping
+const MAP_HUGETLB: usize =  0x040000;
+/// perform synchronous page faults for the mapping
+//const MAP_SYNC: usize =     0x080000;
+
 /// MAP_FIXED which doesn't unmap underlying mapping
 pub const MAP_FIXED_NOREPLACE: usize = 0x100000;
+
+/// For anonymous mmap, memory could be uninitialized
+const MAP_UNINITIALIZED: usize = 0x4000000;
+
+const LEGACY_MAP_MASK: usize =
+    MAP_SHARED | MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS | MAP_DENYWRITE |
+    MAP_EXECUTABLE | MAP_UNINITIALIZED | MAP_GROWSDOWN | MAP_LOCKED | MAP_NORESERVE |
+    MAP_POPULATE | MAP_NONBLOCK | MAP_STACK | MAP_HUGETLB | MAP_32BIT |
+    MAP_HUGE_2MB | MAP_HUGE_1GB;
 
 pub fn mmap(
     va: usize,
@@ -39,6 +83,13 @@ pub fn mmap(
     } else {
         if fd == usize::MAX {
             return Err(LinuxError::EBADF);
+        }
+        if (flags & MAP_SHARED_VALIDATE) == MAP_SHARED_VALIDATE {
+            // Todo: flags_mask also includes file->f_op->mmap_supported_flags
+            let flags_mask = LEGACY_MAP_MASK;
+            if (flags & !flags_mask) != 0 {
+                return Err(LinuxError::EOPNOTSUPP);
+            }
         }
         filetable.get_file(fd)
     };
