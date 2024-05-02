@@ -15,6 +15,7 @@ use memory_addr::{align_down_4k, is_aligned_4k, PAGE_SHIFT, PAGE_SIZE_4K};
 pub use mm::FileRef;
 use mm::VmAreaStruct;
 use axerrno::LinuxError;
+use axhal::arch::TASK_SIZE;
 
 /// Interpret addr exactly.
 pub const MAP_FIXED: usize = 0x10;
@@ -59,6 +60,10 @@ pub fn _mmap(
     if (flags & MAP_FIXED) == 0 {
         va = get_unmapped_vma(va, len);
         info!("Get unmapped vma {:#X}", va);
+    }
+
+    if va > TASK_SIZE - len {
+        return Err(LinuxError::ENOMEM);
     }
 
     let mm = task::current().mm();
