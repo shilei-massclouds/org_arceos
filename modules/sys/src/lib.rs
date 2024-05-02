@@ -94,7 +94,7 @@ pub fn arch_prctl(code: usize, addr: usize) -> usize {
 }
 
 pub fn wait4(pid: usize, wstatus: usize, options: usize, rusage: usize) -> usize {
-    warn!("impl wait4 pid {} wstatus {:#X} options {:#X} rusage {:#X}",
+    warn!("impl wait4 pid {:#X} wstatus {:#X} options {:#X} rusage {:#X}",
            pid, wstatus, options, rusage);
 
     assert_eq!(options, 0);

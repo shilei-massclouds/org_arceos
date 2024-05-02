@@ -284,12 +284,14 @@ pub fn munmap(va: usize, len: usize) -> usize {
     };
 
     assert_eq!(va, overlap.vm_start);
-    assert_eq!(va+len, overlap.vm_end);
-    //assert!(overlap.vm_file.get().is_none());
+    assert!((va+len) < overlap.vm_end, "{:#X} {:#X}", va+len, overlap.vm_end);
+
+    let overlap_len = overlap.vm_end - overlap.vm_start;
+    assert!(is_aligned_4k(overlap_len));
 
     let mm = task::current().mm();
     let locked_mm = mm.lock();
-    match locked_mm.unmap_region(va, len) {
+    match locked_mm.unmap_region(overlap.vm_start, overlap_len) {
         Ok(_) => 0,
         Err(e) => {
             warn!("unmap region err: {:#?}", e);
