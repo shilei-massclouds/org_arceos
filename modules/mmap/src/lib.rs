@@ -21,6 +21,8 @@ use axhal::arch::TASK_SIZE;
 pub const MAP_FIXED: usize = 0x10;
 /// Don't use a file.
 pub const MAP_ANONYMOUS: usize = 0x20;
+/// MAP_FIXED which doesn't unmap underlying mapping
+pub const MAP_FIXED_NOREPLACE: usize = 0x100000;
 
 pub fn mmap(
     va: usize,
@@ -50,13 +52,19 @@ pub fn _mmap(
     mut va: usize,
     mut len: usize,
     _prot: usize,
-    flags: usize,
+    mut flags: usize,
     file: Option<FileRef>,
     offset: usize,
 ) -> LinuxResult<usize> {
     assert!(is_aligned_4k(va));
     len = align_up_4k(len);
     info!("mmap va {:#X} offset {:#X}", va, offset);
+
+    /* force arch specific MAP_FIXED handling in get_unmapped_area */
+    if (flags & MAP_FIXED_NOREPLACE) != 0 {
+        flags |= MAP_FIXED;
+    }
+
     if (flags & MAP_FIXED) == 0 {
         va = get_unmapped_vma(va, len);
         info!("Get unmapped vma {:#X}", va);
@@ -77,6 +85,10 @@ pub fn _mmap(
             overlap.vm_start,
             overlap.vm_end
         );
+
+        if (flags & MAP_FIXED_NOREPLACE) != 0 {
+            return Err(LinuxError::EEXIST);
+        }
 
         if va + len < overlap.vm_end {
             let bias = (va + len - overlap.vm_start) >> PAGE_SHIFT;
