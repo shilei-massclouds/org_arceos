@@ -64,6 +64,11 @@ pub fn register_file(file: AxResult<File>) -> usize {
 }
 
 fn handle_path(dfd: usize, filename: &str) -> String {
+    // Absolute pathname -- fetch the root (LOOKUP_IN_ROOT uses nd->dfd).
+    if filename.starts_with("/") {
+        return String::from(filename);
+    }
+
     if dfd == AT_FDCWD {
         let cwd = _getcwd();
         if cwd == "/" {
@@ -326,6 +331,7 @@ fn _getcwd() -> String {
 
 pub fn chdir(path: &str) -> usize {
     let current = task::current();
+    info!("===========> chdir: {}", path);
     let mut fs = current.fs.lock();
     match fs.set_current_dir(path) {
         Ok(()) => 0,
