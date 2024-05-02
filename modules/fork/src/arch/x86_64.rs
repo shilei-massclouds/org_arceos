@@ -7,11 +7,14 @@ use taskctx::TaskStack;
 use taskctx::THREAD_SIZE;
 use taskctx::SchedInfo;
 use axtype::align_up_4k;
+use crate::CloneFlags;
 
 pub fn copy_thread(
     task: &mut TaskStruct,
     entry: Option<*mut dyn FnOnce()>,
     stack: Option<usize>,
+    tls: usize,
+    flags: CloneFlags,
     tid: Tid
 ) -> LinuxResult {
     info!("copy_thread ...");
@@ -41,11 +44,11 @@ pub fn copy_thread(
         if let Some(sp) = stack {
             pt_regs.rsp = sp as u64; // User fork
         }
-        /*
-        if (self.flags.contains(CLONE_SETTLS))
-            pt_regs.regs.tp = tls;
-            */
         pt_regs.rax = 0; // Return value of fork()
+    }
+
+    if flags.contains(CloneFlags::CLONE_SETTLS) {
+        set_new_tls(tls);
     }
 
     let sp = sched_info.pt_regs_addr();
@@ -54,4 +57,10 @@ pub fn copy_thread(
 
     info!("copy_thread!");
     Ok(())
+}
+
+fn set_new_tls(tls: usize) {
+    // Todo: modules/sys/src/lib.rs: arch_prctl ARCH_SET_FS
+    // We need to differentiate current_ctx and common taskctx.
+    unimplemented!("impl set_new_tls! tls {:#X}", tls);
 }

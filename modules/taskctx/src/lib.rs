@@ -75,6 +75,9 @@ pub struct SchedInfo {
     tid:    Tid,
     tgid:   Tid,
 
+    pub set_child_tid: usize,
+    pub clear_child_tid: usize,
+
     pub pgd: Option<Arc<SpinNoIrq<PageTable>>>,
     pub mm_id: AtomicUsize,
     pub active_mm_id: AtomicUsize,
@@ -99,6 +102,9 @@ impl SchedInfo {
         Self {
             tid: 0,
             tgid: 0,
+
+            set_child_tid: 0,
+            clear_child_tid: 0,
 
             pgd: None,
             mm_id: AtomicUsize::new(0),
@@ -160,11 +166,15 @@ impl SchedInfo {
         self.pgd.as_ref().and_then(|pgd| Some(pgd.clone()))
     }
 
-    pub fn dup_sched_info(&self, tid: Tid) -> Arc<Self> {
+    pub fn dup_sched_info(
+        &self, tid: Tid, set_child_tid: usize, clear_child_tid: usize,
+    ) -> Arc<Self> {
         info!("dup_sched_info...");
         let mut info = SchedInfo::new();
         info.tid = tid;
         info.tgid = tid;
+        info.set_child_tid = set_child_tid;
+        info.clear_child_tid = clear_child_tid;
         //assert!(self.kstack.is_some());
         info.kstack = Some(TaskStack::alloc(align_up_4k(THREAD_SIZE)));
         //info.kstack = self.kstack;

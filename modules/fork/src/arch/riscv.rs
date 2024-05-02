@@ -9,11 +9,14 @@ use axerrno::LinuxResult;
 use taskctx::SchedInfo;
 use taskctx::THREAD_SIZE;
 use taskctx::TaskStack;
+use crate::CloneFlags;
 
 pub fn copy_thread(
     task: &mut TaskStruct,
     entry: Option<*mut dyn FnOnce()>,
     stack: Option<usize>,
+    tls: usize,
+    flags: CloneFlags,
     tid: Tid
 ) -> LinuxResult {
     info!("copy_thread ...");
@@ -43,10 +46,9 @@ pub fn copy_thread(
         if let Some(sp) = stack {
             pt_regs.regs.sp = sp; // User fork
         }
-        /*
-        if (self.flags.contains(CLONE_SETTLS))
+        if flags.contains(CloneFlags::CLONE_SETTLS) {
             pt_regs.regs.tp = tls;
-            */
+        }
         pt_regs.regs.a0 = 0; // Return value of fork()
     }
 

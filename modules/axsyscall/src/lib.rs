@@ -266,9 +266,9 @@ fn linux_syscall_mprotect(_args: SyscallArgs) -> usize {
     0
 }
 
-fn linux_syscall_set_tid_address(_args: SyscallArgs) -> usize {
-    warn!("impl linux_syscall_set_tid_address");
-    0
+fn linux_syscall_set_tid_address(args: SyscallArgs) -> usize {
+    let [tidptr, ..] = args;
+    fork::set_tid_address(tidptr)
 }
 
 fn linux_syscall_set_robust_list(_args: SyscallArgs) -> usize {

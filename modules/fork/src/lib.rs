@@ -29,7 +29,11 @@ bitflags::bitflags! {
         const CLONE_SIGHAND = 0x00000800;
         /// set if the parent wants the child to wake it up on mm_release
         const CLONE_VFORK   = 0x00004000;
+        /// create a new TLS for the child
+        const CLONE_SETTLS  = 0x00080000;
 
+        /// set the TID in the parent
+        const CLONE_PARENT_SETTID   = 0x00100000;
         /// clear the TID in the child
         const CLONE_CHILD_CLEARTID  = 0x00200000;
         /// set if the tracing process can't force CLONE_PTRACE on this clone
@@ -43,6 +47,9 @@ struct KernelCloneArgs {
     flags: CloneFlags,
     _name: String,
     _exit_signal: u32,
+    tls: usize,
+    parent_tid: usize,
+    child_tid: usize,
     stack: Option<usize>,
     entry: Option<*mut dyn FnOnce()>,
 }
@@ -52,12 +59,18 @@ impl KernelCloneArgs {
         flags: CloneFlags,
         name: &str,
         exit_signal: u32,
+        tls: usize,
+        parent_tid: usize,
+        child_tid: usize,
         stack: Option<usize>,
         entry: Option<*mut dyn FnOnce()>,
     ) -> Self {
         Self {
             flags,
             _name: String::from(name),
+            tls,
+            parent_tid,
+            child_tid,
             stack,
             _exit_signal: exit_signal,
             entry,
@@ -82,6 +95,11 @@ impl KernelCloneArgs {
         );
 
         let tid = task.tid();
+        if self.flags.contains(CloneFlags::CLONE_PARENT_SETTID) {
+            let ptid_ptr = self.parent_tid as *mut usize;
+            unsafe { (*ptid_ptr) = tid; }
+        }
+
         self.wake_up_new_task(task.clone());
 
         if self.flags.contains(CloneFlags::CLONE_VFORK) {
@@ -110,13 +128,38 @@ impl KernelCloneArgs {
             None => task::alloc_tid(),
         };
 
-        let mut task = current().dup_task_struct(tid);
+        // Todo: in exit_mm_release && exec_mm_release, handle clear_child_tid.
+        /*
+         * This _must_ happen before we call free_task(), i.e. before we jump
+         * to any of the bad_fork_* labels. This is to avoid freeing
+         * p->set_child_tid which is (ab)used as a kthread's data pointer for
+         * kernel threads (PF_KTHREAD).
+         */
+        let set_child_tid =
+            if self.flags.contains(CloneFlags::CLONE_CHILD_SETTID) {
+                self.child_tid
+            } else {
+                0
+            };
+
+        /*
+         * Clear TID on mm_release()?
+         */
+        let clear_child_tid =
+            if self.flags.contains(CloneFlags::CLONE_CHILD_CLEARTID) {
+                self.child_tid
+            } else {
+                0
+            };
+
+        let mut task = current().dup_task_struct(tid, set_child_tid, clear_child_tid);
+
         //copy_files();
         self.copy_fs(&mut task)?;
         //copy_sighand();
         //copy_signal();
         self.copy_mm(&mut task)?;
-        arch::copy_thread(&mut task, self.entry, self.stack, tid)?;
+        arch::copy_thread(&mut task, self.entry, self.stack, self.tls, self.flags, tid)?;
 
         if self.flags.contains(CloneFlags::CLONE_VFORK) {
             task.init_vfork_done();
@@ -164,6 +207,11 @@ extern "C" fn task_entry() -> ! {
     run_queue::force_unlock();
 
     let task = crate::current();
+    if task.sched_info.set_child_tid != 0 {
+        let ctid_ptr = task.sched_info.set_child_tid as *mut usize;
+        unsafe { (*ctid_ptr) = task.sched_info.tid(); }
+    }
+
     if let Some(entry) = task.sched_info.entry {
         unsafe { Box::from_raw(entry)() };
     }
@@ -188,6 +236,9 @@ where
         flags | CloneFlags::CLONE_VM | CloneFlags::CLONE_UNTRACED,
         "",
         0,
+        0,
+        0,
+        0,
         None,
         Some(f),
     );
@@ -200,19 +251,9 @@ where
 pub fn sys_clone(
     flags: usize, stack: usize, tls: usize, ptid: usize, ctid: usize
 ) -> usize {
-    assert_eq!(tls, 0);
-    assert_eq!(ptid, 0);
-
     let flags = CloneFlags::from_bits_truncate(flags);
     warn!("clone: flags {:#X} stack {:#X} ptid {:#X} tls {:#X} ctid {:#X}",
         flags.bits(), stack, ptid, tls, ctid);
-
-    if ctid != 0 {
-        // Todo: notify task when CLONE_CHILD_CLEARTID is set.
-        // Todo: in schedule_tail, set CLONE_CHILD_SETTID.
-        assert!(flags.contains(CloneFlags::CLONE_CHILD_CLEARTID) &&
-                flags.contains(CloneFlags::CLONE_CHILD_SETTID));
-    }
 
     let exit_signal = flags.intersection(CloneFlags::CSIGNAL).bits() as u32;
     let flags = flags.difference(CloneFlags::CSIGNAL);
@@ -221,8 +262,15 @@ pub fn sys_clone(
     } else {
         Some(stack)
     };
-    let args = KernelCloneArgs::new(flags, "", exit_signal, stack, None);
+    let args = KernelCloneArgs::new(flags, "", exit_signal, tls, ptid, ctid, stack, None);
     warn!("impl clone: flags {:#X} sig {:#X} stack {:#X} ptid {:#X} tls {:#X} ctid {:#X}",
         flags.bits(), exit_signal, stack.unwrap_or(0), ptid, tls, ctid);
     args.perform().unwrap_or(usize::MAX)
+}
+
+pub fn set_tid_address(tidptr: usize) -> usize {
+    info!("set_tid_address: tidptr {:#X}", tidptr);
+    let mut ctx = taskctx::current_ctx();
+    ctx.as_ctx_mut().clear_child_tid = tidptr;
+    0
 }
