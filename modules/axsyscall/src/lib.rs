@@ -54,6 +54,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_GETPPID => linux_syscall_getppid(args),
         LINUX_SYSCALL_GETGID => linux_syscall_getgid(args),
         LINUX_SYSCALL_SETPGID => linux_syscall_setpgid(args),
+        LINUX_SYSCALL_GETEUID => linux_syscall_geteuid(args),
         LINUX_SYSCALL_KILL => linux_syscall_kill(args),
         LINUX_SYSCALL_TGKILL => linux_syscall_tgkill(args),
         LINUX_SYSCALL_EXIT => linux_syscall_exit(args),
@@ -327,6 +328,11 @@ fn linux_syscall_getppid(_args: SyscallArgs) -> usize {
 
 fn linux_syscall_getgid(_args: SyscallArgs) -> usize {
     sys::getgid()
+}
+
+fn linux_syscall_geteuid(_args: SyscallArgs) -> usize {
+    warn!("impl linux_syscall_geteuid");
+    0
 }
 
 fn linux_syscall_setpgid(_args: SyscallArgs) -> usize {

@@ -34,6 +34,7 @@ pub const LINUX_SYSCALL_TGKILL: usize = 234;
 pub const LINUX_SYSCALL_GETPID: usize = 39;
 pub const LINUX_SYSCALL_GETPPID: usize = 110;
 pub const LINUX_SYSCALL_GETGID: usize = 104;
+pub const LINUX_SYSCALL_GETEUID: usize = 107;
 pub const LINUX_SYSCALL_GETTID: usize = 186;
 
 pub const LINUX_SYSCALL_FCHMOD: usize = 91;

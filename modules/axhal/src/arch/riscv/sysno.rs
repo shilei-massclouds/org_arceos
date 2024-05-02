@@ -31,6 +31,7 @@ pub const LINUX_SYSCALL_SETPGID: usize = 0x9a;
 pub const LINUX_SYSCALL_UNAME: usize = 0xa0;
 pub const LINUX_SYSCALL_GETPID: usize = 0xac;
 pub const LINUX_SYSCALL_GETPPID: usize = 0xad;
+pub const LINUX_SYSCALL_GETEUID: usize = 0xaf;
 pub const LINUX_SYSCALL_GETGID: usize = 0xb0;
 pub const LINUX_SYSCALL_GETTID: usize = 0xb2;
 pub const LINUX_SYSCALL_BRK: usize = 0xd6;

@@ -292,7 +292,7 @@ pub fn munmap(va: usize, len: usize) -> usize {
 
     info!("munmap overlap {:#X} - {:#X}", overlap.vm_start, overlap.vm_end);
     assert_eq!(va, overlap.vm_start);
-    assert!((va+len) < overlap.vm_end, "{:#X} {:#X}", va+len, overlap.vm_end);
+    assert!((va+len) <= overlap.vm_end, "{:#X} {:#X}", va+len, overlap.vm_end);
 
     let overlap_len = overlap.vm_end - overlap.vm_start;
     assert!(is_aligned_4k(overlap_len));
