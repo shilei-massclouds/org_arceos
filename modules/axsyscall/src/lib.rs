@@ -6,6 +6,7 @@ use axtype::get_user_str;
 use fileops::iovec;
 use axtype::{align_up_4k, is_aligned_4k};
 use axhal::arch::sysno::*;
+use axerrno::{linux_err_from, LinuxError};
 
 #[macro_use]
 extern crate log;
@@ -219,12 +220,15 @@ fn linux_syscall_access(_args: SyscallArgs) -> usize {
 fn linux_syscall_mmap(args: SyscallArgs) -> usize {
     let [va, len, prot, flags, fd, offset] = args;
     assert!(is_aligned_4k(va));
-    debug!(
+    info!(
         "###### mmap!!! {:#x} {:#x} {:#x} {:#x} {:#x} {:#x}",
         va, len, prot, flags, fd, offset
     );
 
-    mmap::mmap(va, len, prot, flags, fd, offset).unwrap()
+    mmap::mmap(va, len, prot, flags, fd, offset)
+        .unwrap_or_else(|e| {
+            linux_err_from!(e)
+        })
 }
 
 fn linux_syscall_munmap(args: SyscallArgs) -> usize {

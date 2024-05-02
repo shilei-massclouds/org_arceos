@@ -562,6 +562,7 @@ dependencies = [
 name = "axsyscall"
 version = "0.1.0"
 dependencies = [
+ "axerrno",
  "axhal",
  "axtype",
  "exec",

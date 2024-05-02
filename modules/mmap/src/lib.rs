@@ -14,6 +14,7 @@ use memory_addr::align_up_4k;
 use memory_addr::{align_down_4k, is_aligned_4k, PAGE_SHIFT, PAGE_SIZE_4K};
 pub use mm::FileRef;
 use mm::VmAreaStruct;
+use axerrno::LinuxError;
 
 /// Interpret addr exactly.
 pub const MAP_FIXED: usize = 0x10;
@@ -33,8 +34,14 @@ pub fn mmap(
     let file = if (flags & MAP_ANONYMOUS) != 0 {
         None
     } else {
+        if fd == usize::MAX {
+            return Err(LinuxError::EBADF);
+        }
         filetable.get_file(fd)
     };
+    if len == 0 {
+        return Err(LinuxError::EINVAL);
+    }
     _mmap(va, len, prot, flags, file, offset)
 }
 
@@ -283,6 +290,7 @@ pub fn munmap(va: usize, len: usize) -> usize {
         None => panic!("munmap: cannot find overlap for {:#X} {:#X}", va, len),
     };
 
+    info!("munmap overlap {:#X} - {:#X}", overlap.vm_start, overlap.vm_end);
     assert_eq!(va, overlap.vm_start);
     assert!((va+len) < overlap.vm_end, "{:#X} {:#X}", va+len, overlap.vm_end);
 
