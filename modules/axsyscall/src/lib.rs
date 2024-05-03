@@ -416,13 +416,14 @@ fn linux_syscall_execve(args: SyscallArgs) -> usize {
 }
 
 fn linux_syscall_exit(args: SyscallArgs) -> usize {
-    let ret = args[0] as i32;
-    warn!("impl exit ...{}", ret);
-    task::exit(ret);
+    let [status, ..] = args;
+    warn!("impl exit ...{}", status);
+    task::exit(status as i32);
 }
 
-fn linux_syscall_exit_group(_tf: SyscallArgs) -> usize {
-    warn!("impl exit_group!");
+fn linux_syscall_exit_group(args: SyscallArgs) -> usize {
+    let [status, ..] = args;
+    warn!("impl exit_group ...{}", status);
     return 0;
 }
 

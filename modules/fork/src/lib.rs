@@ -29,6 +29,8 @@ bitflags::bitflags! {
         const CLONE_SIGHAND = 0x00000800;
         /// set if the parent wants the child to wake it up on mm_release
         const CLONE_VFORK   = 0x00004000;
+        /// Same thread group?
+        const CLONE_THREAD  = 0x00010000;
         /// create a new TLS for the child
         const CLONE_SETTLS  = 0x00080000;
 
@@ -128,6 +130,37 @@ impl KernelCloneArgs {
             None => task::alloc_tid(),
         };
 
+        let mut task = current().dup_task_struct();
+
+        //copy_files();
+        self.copy_fs(&mut task)?;
+        //copy_sighand();
+        //copy_signal();
+        self.copy_mm(&mut task)?;
+        self.copy_thread(&mut task, tid)?;
+
+        if self.flags.contains(CloneFlags::CLONE_VFORK) {
+            task.init_vfork_done();
+        }
+
+        let arc_task = Arc::new(task);
+        task::register_task(arc_task.clone());
+        info!("copy_process tid: {} -> {}", current().tid(), arc_task.tid());
+        Ok(arc_task)
+    }
+
+    fn copy_thread(&self, task: &mut TaskStruct, tid: Tid) -> LinuxResult {
+        // Todo: set group_leader
+        // p->group_leader = current->group_leader;
+        // p->group_leader = p;
+
+        let tgid =
+            if self.flags.contains(CloneFlags::CLONE_THREAD) {
+                taskctx::current_ctx().tgid()
+            } else {
+                tid
+            };
+
         // Todo: in exit_mm_release && exec_mm_release, handle clear_child_tid.
         /*
          * This _must_ happen before we call free_task(), i.e. before we jump
@@ -152,23 +185,7 @@ impl KernelCloneArgs {
                 0
             };
 
-        let mut task = current().dup_task_struct(tid, set_child_tid, clear_child_tid);
-
-        //copy_files();
-        self.copy_fs(&mut task)?;
-        //copy_sighand();
-        //copy_signal();
-        self.copy_mm(&mut task)?;
-        arch::copy_thread(&mut task, self.entry, self.stack, self.tls, self.flags, tid)?;
-
-        if self.flags.contains(CloneFlags::CLONE_VFORK) {
-            task.init_vfork_done();
-        }
-
-        let arc_task = Arc::new(task);
-        task::register_task(arc_task.clone());
-        info!("copy_process tid: {} -> {}", current().tid(), arc_task.tid());
-        Ok(arc_task)
+        arch::copy_thread(task, self, tid, tgid, set_child_tid, clear_child_tid)
     }
 
     fn copy_mm(&self, task: &mut TaskStruct) -> LinuxResult {

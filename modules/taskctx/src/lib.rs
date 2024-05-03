@@ -166,6 +166,7 @@ impl SchedInfo {
         self.pgd.as_ref().and_then(|pgd| Some(pgd.clone()))
     }
 
+    /*
     pub fn dup_sched_info(
         &self, tid: Tid, set_child_tid: usize, clear_child_tid: usize,
     ) -> Arc<Self> {
@@ -183,6 +184,7 @@ impl SchedInfo {
         info.active_mm_id = AtomicUsize::new(0);
         Arc::new(info)
     }
+    */
 
     pub fn set_mm(&mut self, mm_id: usize, pgd: Arc<SpinNoIrq<PageTable>>) {
         assert!(mm_id != 0);

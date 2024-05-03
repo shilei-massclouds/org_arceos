@@ -91,13 +91,10 @@ impl TaskStruct {
         switch_mm(0, mm_id, self.mm().lock().pgd());
     }
 
-    pub fn dup_task_struct(
-        &self, tid: Tid, set_child_tid: usize, clear_child_tid: usize,
-    ) -> Self {
+    pub fn dup_task_struct(&self) -> Self {
         info!("dup_task_struct ...");
         let mut task = Self::new();
         task.fs = self.fs.clone();
-        task.sched_info = self.sched_info.dup_sched_info(tid, set_child_tid, clear_child_tid);
         task
     }
 
