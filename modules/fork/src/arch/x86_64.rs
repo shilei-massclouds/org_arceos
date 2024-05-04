@@ -17,6 +17,8 @@ pub fn copy_thread(
     tgid: Tid,
     set_child_tid: usize,
     clear_child_tid: usize,
+    real_parent: Option<Arc<SchedInfo>>,
+    group_leader: Option<Arc<SchedInfo>>,
 ) -> LinuxResult {
     info!("copy_thread ...");
 
@@ -28,6 +30,8 @@ pub fn copy_thread(
     /////////////////////
     sched_info.init_tid(tid);
     sched_info.init_tgid(tgid);
+    sched_info.real_parent = real_parent;
+    sched_info.group_leader = group_leader;
     sched_info.set_child_tid = set_child_tid;
     sched_info.clear_child_tid = clear_child_tid;
     if let Some(mm) = task.try_mm() {

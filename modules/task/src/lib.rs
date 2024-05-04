@@ -5,7 +5,7 @@
 
 use core::ops::Deref;
 use core::mem::ManuallyDrop;
-use core::sync::atomic::Ordering;
+use core::sync::atomic::{Ordering, AtomicUsize, AtomicU32};
 
 #[macro_use]
 extern crate log;
@@ -23,7 +23,7 @@ use fstree::FsStruct;
 use filetable::FileTable;
 use wait_queue::WaitQueue;
 
-pub use crate::tid_map::{register_task, get_task};
+pub use crate::tid_map::{register_task, unregister_task, get_task};
 pub use taskctx::Tid;
 pub use taskctx::current_ctx;
 pub use taskctx::{TaskStack, THREAD_SIZE};
@@ -38,6 +38,8 @@ pub struct TaskStruct {
     pub filetable: Arc<SpinLock<FileTable>>,
     pub sched_info: Arc<SchedInfo>,
 
+    pub exit_state: AtomicUsize,
+    pub exit_code: AtomicU32,
     pub vfork_done: Option<WaitQueue>,
 }
 
@@ -52,6 +54,8 @@ impl TaskStruct {
             filetable: filetable::init_files(),
             sched_info: taskctx::init_sched_info(),
 
+            exit_state: AtomicUsize::new(0),
+            exit_code: AtomicU32::new(0),
             vfork_done: None,
         }
     }
@@ -203,11 +207,6 @@ pub fn current() -> CurrentTask {
 /// ready task.
 pub fn yield_now() {
     unimplemented!("yield_now");
-}
-
-/// Exits the current task.
-pub fn exit(exit_code: i32) -> ! {
-    unimplemented!("exit {}", exit_code);
 }
 
 pub fn init() {

@@ -1,12 +1,23 @@
 #![cfg_attr(not(test), no_std)]
 
+use core::sync::atomic::Ordering;
 use taskctx::Tid;
 use axconfig::TASK_STACK_SIZE;
 #[cfg(target_arch = "x86_64")]
-use axerrno::{LinuxError, linux_err};
+use axerrno::linux_err;
+use axerrno::{LinuxResult, LinuxError, linux_err_from};
+use taskctx::TaskState;
 
 #[macro_use]
 extern crate log;
+
+const WEXITED: usize = 0x00000004;
+
+// Used in tsk->exit_state:
+const EXIT_DEAD: usize = 0x0010;
+const EXIT_ZOMBIE: usize = 0x0020;
+#[allow(dead_code)]
+const EXIT_TRACE: usize = EXIT_ZOMBIE | EXIT_DEAD;
 
 #[cfg(target_arch = "x86_64")]
 const ARCH_SET_FS: usize = 0x1002;
@@ -26,6 +37,16 @@ impl RLimit64 {
     }
 }
 
+#[allow(dead_code)]
+#[derive(Debug, PartialEq)]
+enum PidType {
+    PID,
+    TGID,
+    PGID,
+    SID,
+    MAX,
+}
+
 pub fn gettid() -> usize {
     taskctx::current_ctx().tid()
 }
@@ -35,8 +56,9 @@ pub fn getpid() -> usize {
 }
 
 pub fn getppid() -> usize {
-    warn!("impl getppid");
-    0
+    let ppid = taskctx::current_ctx().real_parent.as_ref().unwrap().tid();
+    info!("getppid: {}", ppid);
+    ppid
 }
 
 pub fn getgid() -> usize {
@@ -94,18 +116,161 @@ pub fn arch_prctl(code: usize, addr: usize) -> usize {
 }
 
 pub fn wait4(pid: usize, wstatus: usize, options: usize, rusage: usize) -> usize {
-    warn!("impl wait4 pid {:#X} wstatus {:#X} options {:#X} rusage {:#X}",
+    let pid = pid as isize;
+    info!("wait4: pid {:#X} wstatus {:#X} options {:#X} rusage {:#X}",
            pid, wstatus, options, rusage);
 
+    if rusage != 0 {
+        // Todo: deal with rusage in future.
+        warn!("+++ Handle rusage in wait4 +++");
+    }
     assert_eq!(options, 0);
-    assert_eq!(rusage, 0);
-    assert!(pid > 0);
 
+    let pid_type =
+        if pid == -1 {
+            PidType::MAX
+        } else if pid < 0 {
+            //pid = find_get_pid(-pid);
+            PidType::PGID
+        } else if pid == 0 {
+            //pid = get_task_pid(current, PIDTYPE_PGID);
+            PidType::PGID
+        } else /* pid > 0 */ {
+            PidType::PID
+        };
+
+    let mut status = 0u32;
+    let tid = match do_wait(pid_type, pid as usize, options|WEXITED, &mut status) {
+        Ok(tid) => tid,
+        Err(e) => linux_err_from!(e),
+        //Err(e) => panic!("do_wait err: {:?}", e),
+    };
+
+    let wstatus = wstatus as *mut u32;
+    unsafe {
+        (*wstatus) = status;
+    }
+    tid
+}
+
+fn do_wait(
+    pid_type: PidType, tid: Tid, options: usize, status: &mut u32
+) -> LinuxResult<Tid> {
+    info!("do_wait: pidtype {:?} pid {:#X} options {:#X}; curr {}",
+          pid_type, tid, options, taskctx::current_ctx().tid());
+
+    // Todo: sleep with intr
+    //set_current_state(TASK_INTERRUPTIBLE);
+
+    loop {
+        if pid_type == PidType::PID {
+            if let Some(tid) = wait_pid(tid, status) {
+                return Ok(tid);
+            }
+        } else {
+            if let Some(tid) = wait_children(status) {
+                return Ok(tid);
+            }
+            if children_count() == 0 {
+                return Err(LinuxError::ECHILD);
+            }
+
+            let ctx = taskctx::current_ctx();
+            for sibling in ctx.siblings.lock().iter() {
+                panic!("sibling[{}]", sibling);
+                // Todo: query tid_map to get sibling reference.
+                /*
+                for child in sibling.children.lock().iter() {
+                    info!("Current[{}]: has child[{}]",
+                          sibling.tid(), child);
+                }
+                */
+            }
+        }
+
+        // Todo: wait on Exit_WaitQueue of child and resched.
+        let task = task::current();
+        let rq = run_queue::task_rq(&task.sched_info);
+        rq.lock().resched(false);
+    }
+}
+
+fn wait_pid(tid: Tid, status: &mut u32) -> Option<Tid> {
+    let tid = wait_task_zombie(tid, status)?;
+
+    let ctx = taskctx::current_ctx();
+    ctx.children.lock().retain(|&cid| cid != tid);
+    return Some(tid);
+}
+
+fn children_count() -> usize {
+    taskctx::current_ctx().children.lock().len()
+}
+
+fn wait_children(status: &mut u32) -> Option<Tid> {
+    let ctx = taskctx::current_ctx();
+    for (index, child) in ctx.children.lock().iter().enumerate() {
+        info!("Current[{}]: has child[{}]", ctx.tid(), child);
+        if let Some(tid) = wait_task_zombie(*child, status) {
+            ctx.children.lock().remove(index);
+            return Some(tid);
+        }
+    }
+    None
+}
+
+fn wait_task_zombie(tid: Tid, status: &mut u32) -> Option<Tid> {
+    info!("wait_task_zombie tid {}", tid);
+    let target = task::get_task(tid).unwrap();
+    let exit_state = target.exit_state.compare_exchange(
+        EXIT_ZOMBIE, EXIT_DEAD,
+        Ordering::Relaxed, Ordering::Relaxed
+    );
+    if exit_state != Ok(EXIT_ZOMBIE) {
+        return None;
+    }
+
+    task::unregister_task(tid);
+    *status = target.exit_code.load(Ordering::Relaxed);
+    Some(tid)
+}
+
+/// Exits the current task.
+pub fn exit(exit_code: u32) -> ! {
+    do_exit(exit_code)
+}
+
+/// Exits the current task group.
+pub fn exit_group(exit_code: u32) -> ! {
+    info!("exit_group ... [{}]", exit_code);
+    do_exit(exit_code)
+}
+
+fn do_exit(exit_code: u32) -> ! {
+    exit_notify(exit_code);
+    do_task_dead()
+}
+
+fn exit_notify(exit_code: u32) {
     let task = task::current();
-    let rq = run_queue::task_rq(&task.sched_info);
-    rq.lock().resched(false);
+    task.exit_code.store(exit_code, Ordering::Relaxed);
+    task.exit_state.store(EXIT_ZOMBIE, Ordering::Relaxed);
+    // Todo: wakeup parent
+}
 
-    // Todo: handle wstatus and options
-    panic!("pid {} wstatus {:#X} options {:#X} rusage {:#X}",
-           pid, wstatus, options, rusage);
+fn do_task_dead() -> ! {
+    let task = task::current();
+    info!("do_task_dead ... tid {}", task.tid());
+
+    // Causes final put_task_struct in finish_task_switch():
+    task.set_state(TaskState::Dead);
+
+    if task.tid() == 1 {
+        info!("InitTask[1] exits normally ...");
+        axhal::misc::terminate()
+    } else {
+        let rq = run_queue::task_rq(&task.sched_info);
+        rq.lock().resched(false);
+        unreachable!()
+    }
 }

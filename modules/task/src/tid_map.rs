@@ -13,3 +13,7 @@ pub fn register_task(task: TaskRef) {
     let tid = task.tid();
     TID_MAP.lock().insert(tid, task);
 }
+
+pub fn unregister_task(tid: Tid) {
+    TID_MAP.lock().remove(&tid);
+}

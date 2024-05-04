@@ -84,7 +84,7 @@ impl MmStruct {
 
         let mut vmas = BTreeMap::new();
         for vma in self.vmas.values() {
-            info!("vma: {:#X} - {:#X}, {:#X}", vma.vm_start, vma.vm_end, vma.vm_pgoff);
+            debug!("vma: {:#X} - {:#X}, {:#X}", vma.vm_start, vma.vm_end, vma.vm_pgoff);
             let new_vma = vma.clone();
             vmas.insert(vma.vm_start, new_vma);
         }
@@ -93,7 +93,7 @@ impl MmStruct {
         for (va, dva) in &self.mapped {
             let va = *va;
             let old_page = *dva;
-            info!("mapped: {:#X} -> {:#X}", va, old_page);
+            debug!("mapped: {:#X} -> {:#X}", va, old_page);
             let new_page: usize = axalloc::global_allocator()
                 .alloc_pages(1, PAGE_SIZE) .unwrap();
 

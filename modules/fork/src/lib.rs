@@ -13,6 +13,8 @@ use axerrno::{LinuxError, LinuxResult};
 use task::{current, Tid, TaskRef, TaskStruct};
 use spinbase::SpinNoIrq;
 
+const SIGCHLD: i32 = 17;
+
 bitflags::bitflags! {
     /// clone flags
     #[derive(Debug, Copy, Clone)]
@@ -29,6 +31,8 @@ bitflags::bitflags! {
         const CLONE_SIGHAND = 0x00000800;
         /// set if the parent wants the child to wake it up on mm_release
         const CLONE_VFORK   = 0x00004000;
+        /// set if we want to have the same parent as the cloner
+        const CLONE_PARENT  = 0x00008000;
         /// Same thread group?
         const CLONE_THREAD  = 0x00010000;
         /// create a new TLS for the child
@@ -48,7 +52,7 @@ bitflags::bitflags! {
 struct KernelCloneArgs {
     flags: CloneFlags,
     _name: String,
-    _exit_signal: u32,
+    exit_signal: i32,
     tls: usize,
     parent_tid: usize,
     child_tid: usize,
@@ -60,7 +64,7 @@ impl KernelCloneArgs {
     fn new(
         flags: CloneFlags,
         name: &str,
-        exit_signal: u32,
+        exit_signal: i32,
         tls: usize,
         parent_tid: usize,
         child_tid: usize,
@@ -70,11 +74,11 @@ impl KernelCloneArgs {
         Self {
             flags,
             _name: String::from(name),
+            exit_signal,
             tls,
             parent_tid,
             child_tid,
             stack,
-            _exit_signal: exit_signal,
             entry,
         }
     }
@@ -150,16 +154,42 @@ impl KernelCloneArgs {
     }
 
     fn copy_thread(&self, task: &mut TaskStruct, tid: Tid) -> LinuxResult {
-        // Todo: set group_leader
-        // p->group_leader = current->group_leader;
-        // p->group_leader = p;
+        let current_ctx = taskctx::current_ctx();
+        let group_leader;
+        let tgid;
+        if self.flags.contains(CloneFlags::CLONE_THREAD) {
+            group_leader = current_ctx.group_leader.clone();
+            assert!(group_leader.is_some());
+            tgid = current_ctx.tgid();
+        } else {
+            group_leader = None;
+            tgid = tid;
+        }
 
-        let tgid =
+        // CLONE_PARENT re-uses the old parent
+        let real_parent;
+        let exit_signal: i32;
+        if self.flags.contains(CloneFlags::CLONE_PARENT) ||
+            self.flags.contains(CloneFlags::CLONE_THREAD) {
+            real_parent = current_ctx.real_parent.clone();
             if self.flags.contains(CloneFlags::CLONE_THREAD) {
-                taskctx::current_ctx().tgid()
+                exit_signal = -1;
             } else {
-                tid
-            };
+                // Todo: add exit_signal in taskctx
+                //exit_signal = current_ctx.group_leader.exit_signal;
+                exit_signal = SIGCHLD;
+            }
+        } else {
+            real_parent = Some(current_ctx.as_ctx_ref().clone());
+            exit_signal = self.exit_signal;
+        }
+
+        // Todo: thread_group_leader
+        if group_leader.is_none() {
+            real_parent.clone().unwrap().children.lock().push(tid);
+        } else {
+            group_leader.clone().unwrap().siblings.lock().push(tid);
+        }
 
         // Todo: in exit_mm_release && exec_mm_release, handle clear_child_tid.
         /*
@@ -185,7 +215,8 @@ impl KernelCloneArgs {
                 0
             };
 
-        arch::copy_thread(task, self, tid, tgid, set_child_tid, clear_child_tid)
+        warn!("Todo: handle exit_signal {}", exit_signal);
+        arch::copy_thread(task, self, tid, tgid, set_child_tid, clear_child_tid, real_parent, group_leader)
     }
 
     fn copy_mm(&self, task: &mut TaskStruct) -> LinuxResult {
@@ -272,7 +303,7 @@ pub fn sys_clone(
     warn!("clone: flags {:#X} stack {:#X} ptid {:#X} tls {:#X} ctid {:#X}",
         flags.bits(), stack, ptid, tls, ctid);
 
-    let exit_signal = flags.intersection(CloneFlags::CSIGNAL).bits() as u32;
+    let exit_signal = flags.intersection(CloneFlags::CSIGNAL).bits() as i32;
     let flags = flags.difference(CloneFlags::CSIGNAL);
     let stack = if stack == 0 {
         None

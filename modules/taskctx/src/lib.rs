@@ -5,6 +5,7 @@
 extern crate log;
 extern crate alloc;
 use alloc::sync::Arc;
+use alloc::vec::Vec;
 
 use core::ops::Deref;
 use core::mem::ManuallyDrop;
@@ -55,7 +56,7 @@ pub enum TaskState {
     Running = 1,
     Ready = 2,
     Blocked = 3,
-    Exited = 4,
+    Dead = 4,
 }
 
 impl From<u8> for TaskState {
@@ -65,7 +66,7 @@ impl From<u8> for TaskState {
             1 => Self::Running,
             2 => Self::Ready,
             3 => Self::Blocked,
-            4 => Self::Exited,
+            4 => Self::Dead,
             _ => unreachable!(),
         }
     }
@@ -74,6 +75,12 @@ impl From<u8> for TaskState {
 pub struct SchedInfo {
     tid:    Tid,
     tgid:   Tid,
+
+    pub real_parent:   Option<Arc<SchedInfo>>,
+    pub group_leader:  Option<Arc<SchedInfo>>,
+
+    pub children: SpinNoIrq<Vec<Tid>>,
+    pub siblings: SpinNoIrq<Vec<Tid>>,
 
     pub set_child_tid: usize,
     pub clear_child_tid: usize,
@@ -102,6 +109,12 @@ impl SchedInfo {
         Self {
             tid: 0,
             tgid: 0,
+
+            real_parent: None,
+            group_leader: None,
+
+            children: SpinNoIrq::new(Vec::new()),
+            siblings: SpinNoIrq::new(Vec::new()),
 
             set_child_tid: 0,
             clear_child_tid: 0,
@@ -150,6 +163,11 @@ impl SchedInfo {
     #[inline]
     pub fn is_running(&self) -> bool {
         matches!(self.state(), TaskState::Running)
+    }
+
+    #[inline]
+    pub fn is_ready(&self) -> bool {
+        matches!(self.state(), TaskState::Ready)
     }
 
     #[inline]
