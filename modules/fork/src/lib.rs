@@ -158,7 +158,13 @@ impl KernelCloneArgs {
         let group_leader;
         let tgid;
         if self.flags.contains(CloneFlags::CLONE_THREAD) {
-            group_leader = current_ctx.group_leader.clone();
+            group_leader =
+            match &current_ctx.group_leader {
+                Some(leader) => Some(leader.clone()),
+                None => {
+                    Some(current_ctx.as_ctx_ref().clone())
+                },
+            };
             assert!(group_leader.is_some());
             tgid = current_ctx.tgid();
         } else {

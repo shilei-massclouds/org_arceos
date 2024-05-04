@@ -11,6 +11,7 @@ use taskctx::TaskState;
 #[macro_use]
 extern crate log;
 
+const WNOHANG: usize = 0x00000001;
 const WEXITED: usize = 0x00000004;
 
 // Used in tsk->exit_state:
@@ -124,7 +125,11 @@ pub fn wait4(pid: usize, wstatus: usize, options: usize, rusage: usize) -> usize
         // Todo: deal with rusage in future.
         warn!("+++ Handle rusage in wait4 +++");
     }
-    assert_eq!(options, 0);
+    if options != 0 {
+        // Todo: deal with options in future.
+        warn!("+++ Handle options in wait4 +++");
+    }
+    assert!((options & WNOHANG) == 0);
 
     let pid_type =
         if pid == -1 {

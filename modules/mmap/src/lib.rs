@@ -10,8 +10,7 @@ use axhal::arch::TASK_UNMAPPED_BASE;
 use axhal::mem::{phys_to_virt, virt_to_phys};
 use axio::SeekFrom;
 use core::ops::Bound;
-use memory_addr::align_up_4k;
-use memory_addr::{align_down_4k, is_aligned_4k, PAGE_SHIFT, PAGE_SIZE_4K};
+use memory_addr::{align_up_4k, align_down_4k, is_aligned_4k, PAGE_SHIFT, PAGE_SIZE_4K};
 pub use mm::FileRef;
 use mm::VmAreaStruct;
 use axerrno::LinuxError;
@@ -129,7 +128,7 @@ pub fn _mmap(
     if let Some(mut overlap) = find_overlap(va, len) {
         info!("find overlap {:#X}-{:#X}", overlap.vm_start, overlap.vm_end);
         assert!(
-            va >= overlap.vm_start && va + len <= overlap.vm_end,
+            overlap.vm_start <= va && va + len <= overlap.vm_end,
             "{:#X}-{:#X}; overlap {:#X}-{:#X}",
             va,
             va + len,
@@ -350,24 +349,40 @@ fn sync_file(va: usize, len: usize, file: &mut File, offset: usize) {
     info!("msync: ok!");
 }
 
-pub fn munmap(va: usize, len: usize) -> usize {
-    warn!("munmap {:#X} - {:#X}", va, va + len);
+pub fn munmap(va: usize, mut len: usize) -> usize {
+    assert!(is_aligned_4k(va));
+    len = align_up_4k(len);
+    info!("munmap {:#X} - {:#X}", va, va + len);
 
-    let overlap = match find_overlap(va, len) {
-        Some(overlap) => overlap,
-        None => panic!("munmap: cannot find overlap for {:#X} {:#X}", va, len),
-    };
+    if let Some(mut overlap) = find_overlap(va, len) {
+        info!("find overlap {:#X}-{:#X}", overlap.vm_start, overlap.vm_end);
+        assert!(
+            overlap.vm_start <= va && va + len <= overlap.vm_end,
+            "{:#X}-{:#X}; overlap {:#X}-{:#X}",
+            va,
+            va + len,
+            overlap.vm_start,
+            overlap.vm_end
+        );
 
-    info!("munmap overlap {:#X} - {:#X}", overlap.vm_start, overlap.vm_end);
-    assert_eq!(va, overlap.vm_start);
-    assert!((va+len) <= overlap.vm_end, "{:#X} {:#X}", va+len, overlap.vm_end);
-
-    let overlap_len = overlap.vm_end - overlap.vm_start;
-    assert!(is_aligned_4k(overlap_len));
+        if va + len < overlap.vm_end {
+            let bias = (va + len - overlap.vm_start) >> PAGE_SHIFT;
+            let mut new = overlap.clone();
+            new.vm_start = va + len;
+            new.vm_pgoff += bias;
+            let mm = task::current().mm();
+            mm.lock().vmas.insert(va + len, new);
+        }
+        if va > overlap.vm_start {
+            overlap.vm_end = va;
+            let mm = task::current().mm();
+            mm.lock().vmas.insert(overlap.vm_start, overlap);
+        }
+    }
 
     let mm = task::current().mm();
     let locked_mm = mm.lock();
-    match locked_mm.unmap_region(overlap.vm_start, overlap_len) {
+    match locked_mm.unmap_region(va, len) {
         Ok(_) => 0,
         Err(e) => {
             warn!("unmap region err: {:#?}", e);
