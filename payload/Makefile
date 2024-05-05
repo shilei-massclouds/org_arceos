@@ -1,16 +1,13 @@
+TARGETS := init vfork
+
 CC := $(AX_ARCH)-linux-gnu-gcc
 STRIP := $(AX_ARCH)-linux-gnu-strip
-INIT := $(AX_ARCH)/init
-INIT_STATIC := $(AX_ARCH)/init_static
+DST_DIR := $(AX_ARCH)/sbin
+PREFIX_TARGETS := $(addprefix $(DST_DIR)/,$(TARGETS))
 
-all: $(INIT) $(INIT_STATIC)
+all: $(PREFIX_TARGETS)
 
-$(INIT): init.c
+$(DST_DIR)/%: %.c
+	@mkdir -p $(DST_DIR)
 	$(CC) $< -o $@
 	$(STRIP) $@
-
-$(INIT_STATIC): init.c
-	$(CC) -static $< -o $@
-	$(STRIP) $@
-
-#riscv64-linux-gnu-gcc -static ./main1.c -o hello1 -L/home/cloud/study/glibc-2.36-riscv/build/

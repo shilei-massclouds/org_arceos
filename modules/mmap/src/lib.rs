@@ -207,11 +207,16 @@ pub fn get_unmapped_vma(_va: usize, len: usize) -> usize {
         if gap_end - vma.vm_end >= len {
             info!(
                 "get_unmapped_vma: {:#X} {:#X} {:#X}",
-                vma.vm_start, vma.vm_end, gap_end
+                vma.vm_start, vma.vm_end, gap_end - len
             );
             return gap_end - len;
         }
         gap_end = vma.vm_start;
+    }
+
+    if gap_end >= len {
+        info!("get_unmapped_vma: {:#X}", gap_end - len);
+        return gap_end - len;
     }
     unimplemented!("NO available unmapped vma!");
 }
