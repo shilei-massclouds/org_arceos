@@ -25,11 +25,13 @@ endef
 define build_linux_image
   @mkdir -p ./mnt
   @sudo mount $(1) ./mnt
+  @sudo mkdir -p ./mnt/opt
   @sudo mkdir -p ./mnt/lib
   @sudo mkdir -p ./mnt/lib64
   @sudo mkdir -p ./mnt/sbin
   @sudo mkdir -p ./mnt/bin
   @sudo mkdir -p ./mnt/testcases
+  @sudo cp ./payload/syscalls ./mnt/opt/
   @sudo cp ./payload/$(AX_ARCH)/*.so.* ./mnt/lib/
   @sudo cp ./payload/$(AX_ARCH)/*.so.* ./mnt/lib64/
   @sudo cp ./payload/$(AX_ARCH)/sbin/* ./mnt/sbin/
