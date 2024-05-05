@@ -71,6 +71,8 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_ACCESS => linux_syscall_access(args),
         #[cfg(target_arch = "x86_64")]
         LINUX_SYSCALL_ARCH_PRCTL => linux_syscall_arch_prctl(args),
+        #[cfg(target_arch = "x86_64")]
+        LINUX_SYSCALL_VFORK => linux_syscall_vfork(args),
         _ => panic!("Unsupported syscall: {}, {:#x}", sysno, sysno),
     }
 }
@@ -423,6 +425,11 @@ fn linux_syscall_exit(args: SyscallArgs) -> usize {
 fn linux_syscall_exit_group(args: SyscallArgs) -> usize {
     let [exit_code, ..] = args;
     sys::exit_group(exit_code as u32)
+}
+
+#[cfg(target_arch = "x86_64")]
+fn linux_syscall_vfork(_args: SyscallArgs) -> usize {
+    fork::sys_vfork()
 }
 
 pub fn init() {}

@@ -60,3 +60,4 @@ pub const LINUX_SYSCALL_SETITIMER: usize = 38;
 pub const LINUX_SYSCALL_WAIT4: usize = 61;
 pub const LINUX_SYSCALL_KILL: usize = 62;
 pub const LINUX_SYSCALL_SETPGID: usize = 109;
+pub const LINUX_SYSCALL_VFORK: usize = 58;

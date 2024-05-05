@@ -322,6 +322,13 @@ pub fn sys_clone(
     args.perform().unwrap_or(usize::MAX)
 }
 
+#[cfg(target_arch = "x86_64")]
+pub fn sys_vfork() -> usize {
+    let flags = CloneFlags::CLONE_VFORK | CloneFlags::CLONE_VM;
+    let args = KernelCloneArgs::new(flags, "", SIGCHLD, 0, 0, 0, None, None);
+    args.perform().unwrap_or(usize::MAX)
+}
+
 pub fn set_tid_address(tidptr: usize) -> usize {
     info!("set_tid_address: tidptr {:#X}", tidptr);
     let mut ctx = taskctx::current_ctx();
