@@ -1,4 +1,4 @@
-TARGETS := init vfork
+TARGETS := init vfork execl
 
 CC := $(AX_ARCH)-linux-gnu-gcc
 STRIP := $(AX_ARCH)-linux-gnu-strip

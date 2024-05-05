@@ -367,13 +367,9 @@ fn load_elf_phdrs(file: FileRef) -> LinuxResult<(Vec<ProgramHeader>, usize)> {
 pub fn execve(path: &str, argv: usize, envp: usize) -> usize {
     info!("execve: {}", path);
 
-    let args = get_user_str_vec(argv);
-    /*
     let mut args = get_user_str_vec(argv);
-    assert_eq!(args[0], "sh");
-    args[0] = String::from("/bin/sh");
-    args[2] = String::from("/bin/grep");
-    */
+    assert!(args.len() > 0);
+    args[0] = String::from(path);
     for arg in &args {
         info!("arg: {}", arg);
     }
