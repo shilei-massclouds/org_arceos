@@ -40,6 +40,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_MUNMAP => linux_syscall_munmap(args),
         LINUX_SYSCALL_MMAP => linux_syscall_mmap(args),
         LINUX_SYSCALL_MSYNC => linux_syscall_msync(args),
+        LINUX_SYSCALL_MADVISE => linux_syscall_madvise(args),
         LINUX_SYSCALL_MPROTECT => linux_syscall_mprotect(args),
         LINUX_SYSCALL_SET_TID_ADDRESS => linux_syscall_set_tid_address(args),
         LINUX_SYSCALL_SET_ROBUST_LIST => linux_syscall_set_robust_list(args),
@@ -47,6 +48,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_PRLIMIT64 => linux_syscall_prlimit64(args),
         LINUX_SYSCALL_GETRANDOM => linux_syscall_getrandom(args),
         LINUX_SYSCALL_CLOCK_GETTIME => linux_syscall_clock_gettime(args),
+        LINUX_SYSCALL_CLOCK_NANOSLEEP => linux_syscall_clock_nanosleep(args),
         LINUX_SYSCALL_RT_SIGPROCMASK => linux_syscall_rt_sigprocmask(args),
         LINUX_SYSCALL_RT_SIGACTION => linux_syscall_rt_sigaction(args),
         LINUX_SYSCALL_GETTID => linux_syscall_gettid(args),
@@ -245,6 +247,11 @@ fn linux_syscall_msync(args: SyscallArgs) -> usize {
     mmap::msync(va, len, flags)
 }
 
+fn linux_syscall_madvise(_args: SyscallArgs) -> usize {
+    warn!("impl linux_syscall_madvise");
+    0
+}
+
 fn linux_syscall_ioctl(args: SyscallArgs) -> usize {
     let [fd, request, udata, ..] = args;
     fileops::ioctl(fd, request, udata)
@@ -301,6 +308,12 @@ fn linux_syscall_clock_gettime(_args: SyscallArgs) -> usize {
     warn!("impl linux_syscall_clock_gettime");
     0
 }
+
+fn linux_syscall_clock_nanosleep(_args: SyscallArgs) -> usize {
+    warn!("impl linux_syscall_clock_nanosleep");
+    0
+}
+
 
 fn linux_syscall_rt_sigprocmask(args: SyscallArgs) -> usize {
     let [how, set, oldset, sigsetsize, ..] = args;

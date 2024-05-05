@@ -50,6 +50,7 @@ pub const LINUX_SYSCALL_WRITEV: usize = 20;
 pub const LINUX_SYSCALL_READLINKAT: usize = 267;
 pub const LINUX_SYSCALL_MUNMAP: usize = 11;
 pub const LINUX_SYSCALL_MSYNC: usize = 26;
+pub const LINUX_SYSCALL_MADVISE: usize = 28;
 
 pub const LINUX_SYSCALL_RT_SIGACTION: usize = 13;
 pub const LINUX_SYSCALL_RT_SIGPROCMASK: usize = 14;
@@ -61,3 +62,4 @@ pub const LINUX_SYSCALL_WAIT4: usize = 61;
 pub const LINUX_SYSCALL_KILL: usize = 62;
 pub const LINUX_SYSCALL_SETPGID: usize = 109;
 pub const LINUX_SYSCALL_VFORK: usize = 58;
+pub const LINUX_SYSCALL_CLOCK_NANOSLEEP: usize = 230;
