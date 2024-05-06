@@ -38,6 +38,7 @@ define build_linux_image
   -@sudo cp ./payload/$(AX_ARCH)/busybox ./mnt/bin/sh
   -@sudo cp ./payload/$(AX_ARCH)/busybox ./mnt/bin/grep
   -@sudo cp ./payload/$(AX_ARCH)/testcases/* ./mnt/testcases/
+  @sudo cp ./payload/$(AX_ARCH)/sbin/init ./mnt/testcases/
   ls -l ./mnt/sbin
   ls -l ./mnt/lib
   ls -l ./mnt/testcases
