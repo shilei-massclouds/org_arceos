@@ -159,8 +159,10 @@ fn linux_syscall_openat(args: SyscallArgs) -> usize {
     fileops::register_file(fileops::openat(dfd, &filename, flags, mode))
 }
 
-fn linux_syscall_close(_args: SyscallArgs) -> usize {
-    info!("Todo: linux_syscall_close");
+fn linux_syscall_close(args: SyscallArgs) -> usize {
+    let [fd, ..] = args;
+    info!("linux_syscall_close [{}] ...", fd);
+    fileops::unregister_file(fd);
     0
 }
 

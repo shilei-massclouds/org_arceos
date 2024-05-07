@@ -63,6 +63,11 @@ pub fn register_file(file: AxResult<File>) -> usize {
     fd
 }
 
+pub fn unregister_file(fd: usize) {
+    let current = task::current();
+    current.filetable.lock().remove(fd);
+}
+
 fn handle_path(dfd: usize, filename: &str) -> String {
     // Absolute pathname -- fetch the root (LOOKUP_IN_ROOT uses nd->dfd).
     if filename.starts_with("/") {

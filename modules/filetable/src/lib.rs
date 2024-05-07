@@ -28,6 +28,10 @@ impl FileTable {
         let entry = FileTableEntry::new(item);
         self.table.put(entry) + 3
     }
+
+    pub fn remove(&mut self, fd: usize) {
+        self.table.remove(fd-3);
+    }
 }
 
 pub struct FileTableEntry {
@@ -79,6 +83,22 @@ impl<T> SlotVec<T> {
         };
         self.num_occupied += 1;
         idx
+    }
+
+    /// Remove and return the item at position `idx`.
+    ///
+    /// Return `None` if `idx` is out of bounds or the item has been removed.
+    pub fn remove(&mut self, idx: usize) -> Option<T> {
+        if idx >= self.slots.len() {
+            return None;
+        }
+        let mut del_item = None;
+        core::mem::swap(&mut del_item, &mut self.slots[idx]);
+        if del_item.is_some() {
+            debug_assert!(self.num_occupied > 0);
+            self.num_occupied -= 1;
+        }
+        del_item
     }
 }
 

@@ -2,6 +2,7 @@
 
 use core::sync::atomic::Ordering;
 use taskctx::Tid;
+use axtype::PAGE_SIZE;
 use axconfig::TASK_STACK_SIZE;
 #[cfg(target_arch = "x86_64")]
 use axerrno::linux_err;
@@ -173,23 +174,28 @@ fn do_wait(
                 return Ok(tid);
             }
         } else {
-            if let Some(tid) = wait_children(status) {
-                return Ok(tid);
-            }
-            if children_count() == 0 {
-                return Err(LinuxError::ECHILD);
+            if children_count() > 0 {
+                if let Some(tid) = wait_children(status) {
+                    return Ok(tid);
+                }
             }
 
-            let ctx = taskctx::current_ctx();
-            for sibling in ctx.siblings.lock().iter() {
-                panic!("sibling[{}]", sibling);
-                // Todo: query tid_map to get sibling reference.
-                /*
-                for child in sibling.children.lock().iter() {
-                    info!("Current[{}]: has child[{}]",
-                          sibling.tid(), child);
+            if siblings_count() > 0 {
+                let ctx = taskctx::current_ctx();
+                for sibling in ctx.siblings.lock().iter() {
+                    panic!("sibling[{}]", sibling);
+                    // Todo: query tid_map to get sibling reference.
+                    /*
+                    for child in sibling.children.lock().iter() {
+                        info!("Current[{}]: has child[{}]",
+                              sibling.tid(), child);
+                    }
+                    */
                 }
-                */
+            }
+
+            if children_count() == 0 && siblings_count() == 0 {
+                return Err(LinuxError::ECHILD);
             }
         }
 
@@ -210,6 +216,10 @@ fn wait_pid(tid: Tid, status: &mut u32) -> Option<Tid> {
 
 fn children_count() -> usize {
     taskctx::current_ctx().children.lock().len()
+}
+
+fn siblings_count() -> usize {
+    taskctx::current_ctx().siblings.lock().len()
 }
 
 fn wait_children(status: &mut u32) -> Option<Tid> {
@@ -252,8 +262,23 @@ pub fn exit_group(exit_code: u32) -> ! {
 }
 
 fn do_exit(exit_code: u32) -> ! {
+    exit_mm();
     exit_notify(exit_code);
     do_task_dead()
+}
+
+fn exit_mm() {
+    let task = task::current();
+    let mm = task.mm();
+    let mut locked_mm = mm.lock();
+    loop {
+        if let Some((va, dva)) = &locked_mm.mapped.pop() {
+            let _ = locked_mm.unmap_region((*va).into(), PAGE_SIZE);
+            axalloc::global_allocator().dealloc_pages(*dva, 1);
+        } else {
+            break;
+        }
+    }
 }
 
 fn exit_notify(exit_code: u32) {

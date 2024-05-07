@@ -108,7 +108,7 @@ pub fn _mmap(
 ) -> LinuxResult<usize> {
     assert!(is_aligned_4k(va));
     len = align_up_4k(len);
-    info!("mmap va {:#X} offset {:#X}", va, offset);
+    debug!("mmap va {:#X} offset {:#X}", va, offset);
 
     /* force arch specific MAP_FIXED handling in get_unmapped_area */
     if (flags & MAP_FIXED_NOREPLACE) != 0 {
@@ -117,7 +117,7 @@ pub fn _mmap(
 
     if (flags & MAP_FIXED) == 0 {
         va = get_unmapped_vma(va, len);
-        info!("Get unmapped vma {:#X}", va);
+        debug!("Get unmapped vma {:#X}", va);
     }
 
     if va > TASK_SIZE - len {
@@ -126,7 +126,7 @@ pub fn _mmap(
 
     let mm = task::current().mm();
     if let Some(mut overlap) = find_overlap(va, len) {
-        info!("find overlap {:#X}-{:#X}", overlap.vm_start, overlap.vm_end);
+        debug!("find overlap {:#X}-{:#X}", overlap.vm_start, overlap.vm_end);
         assert!(
             overlap.vm_start <= va && va + len <= overlap.vm_end,
             "{:#X}-{:#X}; overlap {:#X}-{:#X}",
@@ -153,7 +153,7 @@ pub fn _mmap(
         }
     }
 
-    info!(
+    debug!(
         "mmap region: {:#X} - {:#X}, flags: {:#X}",
         va,
         va + len,
@@ -205,7 +205,7 @@ pub fn get_unmapped_vma(_va: usize, len: usize) -> usize {
             continue;
         }
         if gap_end - vma.vm_end >= len {
-            info!(
+            debug!(
                 "get_unmapped_vma: {:#X} {:#X} {:#X}",
                 vma.vm_start, vma.vm_end, gap_end - len
             );
@@ -215,14 +215,14 @@ pub fn get_unmapped_vma(_va: usize, len: usize) -> usize {
     }
 
     if gap_end >= len {
-        info!("get_unmapped_vma: {:#X}", gap_end - len);
+        debug!("get_unmapped_vma: {:#X}", gap_end - len);
         return gap_end - len;
     }
     unimplemented!("NO available unmapped vma!");
 }
 
 pub fn faultin_page(va: usize) -> usize {
-    info!("faultin_page... va {:#X}", va);
+    debug!("faultin_page... va {:#X}", va);
     let mm = task::current().mm();
     let mut locked_mm = mm.lock();
 
@@ -272,7 +272,7 @@ fn fill_cache(pa: usize, len: usize, file: &mut File, offset: usize) {
 
     let buf = unsafe { core::slice::from_raw_parts_mut(va as *mut u8, len) };
 
-    info!("offset {:#X} len {:#X}", offset, len);
+    debug!("offset {:#X} len {:#X}", offset, len);
     let _ = file.seek(SeekFrom::Start(offset as u64));
 
     let mut pos = 0;
@@ -309,7 +309,7 @@ pub fn set_brk(va: usize) -> usize {
 }
 
 pub fn msync(va: usize, len: usize, flags: usize) -> usize {
-    info!("msync: va {:#X} len {:#X} flags {:#X}", va, len, flags);
+    debug!("msync: va {:#X} len {:#X} flags {:#X}", va, len, flags);
 
     let mm = task::current().mm();
     let locked_mm = mm.lock();
@@ -326,7 +326,7 @@ pub fn msync(va: usize, len: usize, flags: usize) -> usize {
         vma.vm_start,
         vma.vm_end
     );
-    info!("msync: {:#X} - {:#X}", va, va + len);
+    debug!("msync: {:#X} - {:#X}", va, va + len);
 
     let delta = va - vma.vm_start;
     let offset = (vma.vm_pgoff << PAGE_SHIFT) + delta;
@@ -351,16 +351,16 @@ fn sync_file(va: usize, len: usize, file: &mut File, offset: usize) {
         }
         pos += ret;
     }
-    info!("msync: ok!");
+    debug!("msync: ok!");
 }
 
 pub fn munmap(va: usize, mut len: usize) -> usize {
     assert!(is_aligned_4k(va));
     len = align_up_4k(len);
-    info!("munmap {:#X} - {:#X}", va, va + len);
+    debug!("munmap {:#X} - {:#X}", va, va + len);
 
     if let Some(mut overlap) = find_overlap(va, len) {
-        info!("find overlap {:#X}-{:#X}", overlap.vm_start, overlap.vm_end);
+        debug!("find overlap {:#X}-{:#X}", overlap.vm_start, overlap.vm_end);
         assert!(
             overlap.vm_start <= va && va + len <= overlap.vm_end,
             "{:#X}-{:#X}; overlap {:#X}-{:#X}",
@@ -386,6 +386,11 @@ pub fn munmap(va: usize, mut len: usize) -> usize {
     }
 
     let mm = task::current().mm();
+    /*
+    // Todo: handle temporary mmaped.
+    let mut locked_mm = mm.lock();
+    locked_mm.mapped.retain(|(addr, _)| *addr != va);
+    */
     let locked_mm = mm.lock();
     match locked_mm.unmap_region(va, len) {
         Ok(_) => 0,

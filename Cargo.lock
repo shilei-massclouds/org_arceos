@@ -2123,9 +2123,11 @@ dependencies = [
 name = "sys"
 version = "0.1.0"
 dependencies = [
+ "axalloc",
  "axconfig",
  "axerrno",
  "axhal",
+ "axtype",
  "log",
  "run_queue",
  "task",
