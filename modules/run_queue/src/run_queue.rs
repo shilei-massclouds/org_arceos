@@ -52,10 +52,7 @@ impl AxRunQueue {
 
     pub fn scheduler_timer_tick(&mut self) {
         let curr = taskctx::current_ctx();
-        if self
-            .scheduler
-            .task_tick(&Arc::new(SchedItem::new(curr.as_ctx_ref().clone())))
-        {
+        if self.scheduler.task_tick(&Arc::new(SchedItem::new(curr.as_ctx_ref().clone()))) {
             curr.set_preempt_pending(true);
         }
     }
@@ -76,6 +73,9 @@ impl AxRunQueue {
 
     pub fn preempt_resched(&mut self) {
         let curr = taskctx::current_ctx();
+        if curr.tid() == 0 {
+            return;
+        }
         assert!(curr.is_running());
 
         // When we get the mutable reference of the run queue, we must
@@ -83,7 +83,7 @@ impl AxRunQueue {
         // disabled. So we need to set `current_disable_count` to 1 in
         // `can_preempt()` to obtain the preemption permission before
         //  locking the run queue.
-        let can_preempt = curr.can_preempt(1);
+        let can_preempt = curr.can_preempt(0);
 
         debug!(
             "current task is to be preempted: {}, allow={}",
@@ -185,7 +185,7 @@ impl AxRunQueue {
     }
 
     fn switch_to(&mut self, prev_task: CurrentCtx, next_task: CtxRef) {
-        error!("============ context switch: {} -> {}", prev_task.tid(), next_task.tid());
+        debug!("============ context switch: {} -> {}", prev_task.tid(), next_task.tid());
         next_task.set_preempt_pending(false);
         next_task.set_state(TaskState::Running);
         if prev_task.ptr_eq(&next_task) {

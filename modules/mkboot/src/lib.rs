@@ -219,6 +219,7 @@ fn init_interrupt() {
 
     axtrap::irq::register_handler(TIMER_IRQ_NUM, || {
         update_timer();
+        let _ = NoPreempt::new();
         run_queue::on_timer_tick();
     });
 
