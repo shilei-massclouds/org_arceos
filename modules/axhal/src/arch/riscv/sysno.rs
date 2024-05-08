@@ -27,6 +27,7 @@ pub const LINUX_SYSCALL_EXIT: usize = 0x5d;
 pub const LINUX_SYSCALL_EXIT_GROUP: usize = 0x5e;
 pub const LINUX_SYSCALL_SETITIMER: usize = 0x67;
 pub const LINUX_SYSCALL_TGKILL: usize = 0x83;
+pub const LINUX_SYSCALL_RT_SIGRETURN: usize = 0x8b;
 pub const LINUX_SYSCALL_SETPGID: usize = 0x9a;
 pub const LINUX_SYSCALL_UNAME: usize = 0xa0;
 pub const LINUX_SYSCALL_GETPID: usize = 0xac;

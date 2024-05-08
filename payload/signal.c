@@ -27,6 +27,7 @@ int main()
     if (pid == 0) {
         printf("Child is running ...\n");
         while (!child_exit) {}
+        printf("Child is exiting ...\n");
     } else {
         kill(pid, SIGINT);
         printf("Parent sends sig!\n");

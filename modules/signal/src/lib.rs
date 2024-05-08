@@ -16,9 +16,27 @@ use axtype::align_down;
 // sent by kill, sigsend, raise
 const SI_USER: usize = 0;
 
+#[derive(Clone)]
+struct UContext {
+    _flags: usize,
+    _stack: usize,
+    _sigmask: usize,
+    mcontext: TrapFrame,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+struct RTSigFrame {
+    info: SigInfo,
+    uc: UContext,
+    sigreturn_code: usize,
+}
+
+pub const SIGFRAME_SIZE: usize = core::mem::size_of::<RTSigFrame>();
+
 struct KSignal {
     action: SigAction,
-    info: SigInfo,
+    _info: SigInfo,
     signo: usize,
 }
 
@@ -125,38 +143,27 @@ pub fn do_signal(tf: &mut TrapFrame) {
 
 fn get_signal() -> Option<KSignal> {
     let task = task::current();
-    let info = task.sigpending.lock().list.pop()?;
-    let signo = info.signo as usize;
+    let _info = task.sigpending.lock().list.pop()?;
+    let signo = _info.signo as usize;
 
     let action = task.sighand.lock().action[signo - 1];
     assert!(action.handler != 0);
     info!("get_signal signo {} handler {:#X}", signo, action.handler);
-    Some(KSignal {action, info, signo})
+    Some(KSignal {action, _info, signo})
 }
-
-#[derive(Clone)]
-struct UContext {
-    uc_flags: usize,
-    uc_stack: usize,
-    uc_sigmask: usize,
-    uc_mcontext: TrapFrame,
-}
-
-#[repr(C)]
-#[derive(Clone)]
-struct RTSigFrame {
-    info: SigInfo,
-    uc: UContext,
-    sigreturn_code: usize,
-}
-
-pub const SIGFRAME_SIZE: usize = core::mem::size_of::<RTSigFrame>();
 
 fn handle_signal(ksig: &KSignal, tf: &mut TrapFrame) {
+    extern "C" {
+        fn __user_rt_sigreturn();
+    }
+
     let frame_addr = get_sigframe(tf);
     let frame = unsafe { &mut(*(frame_addr as *mut RTSigFrame)) };
-    // Todo: store origin sigframe into frame.
+    setup_sigcontext(frame, tf);
 
+    // Note: Now we store user_rt_sigreturn code into user stack,
+    // but it's unsafe to execute code on stack.
+    // Consider to implement vdso and put that code in vdso page.
     let user_rt_sigreturn = __user_rt_sigreturn as usize as *const usize;
     frame.sigreturn_code = unsafe { *user_rt_sigreturn };
 
@@ -184,6 +191,34 @@ fn get_sigframe(tf: &TrapFrame) -> usize {
     align_down(sp, 16)
 }
 
-extern "C" {
-    fn __user_rt_sigreturn();
+pub fn rt_sigreturn() -> usize {
+    info!("sigreturn ...");
+
+    let ctx = taskctx::current_ctx();
+    let tf = ctx.pt_regs();
+
+    let frame_addr = tf.regs.sp;
+    let frame = unsafe { &mut(*(frame_addr as *mut RTSigFrame)) };
+
+    // Validation: sigreturn_code must be 'li a7, 139; scall'.
+    // For riscv64, NR_sigreturn == 139.
+    assert_eq!(frame.sigreturn_code, 0x7308B00893);
+
+    //__copy_from_user(&set, &frame->uc.uc_sigmask, sizeof(set))
+    //set_current_blocked(&set);
+
+    restore_sigcontext(tf, frame);
+
+    // Todo: restore_altstack
+    return tf.regs.a0;
+}
+
+fn restore_sigcontext(tf: &mut TrapFrame, frame: &RTSigFrame) {
+    *tf = frame.uc.mcontext.clone();
+    // Todo: Restore the floating-point state. */
+}
+
+fn setup_sigcontext(frame: &mut RTSigFrame, tf: &TrapFrame) {
+    frame.uc.mcontext = tf.clone();
+    // Todo: Save the floating-point state.
 }

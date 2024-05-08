@@ -51,6 +51,7 @@ pub fn do_syscall(args: SyscallArgs, sysno: usize) -> usize {
         LINUX_SYSCALL_CLOCK_NANOSLEEP => linux_syscall_clock_nanosleep(args),
         LINUX_SYSCALL_RT_SIGPROCMASK => linux_syscall_rt_sigprocmask(args),
         LINUX_SYSCALL_RT_SIGACTION => linux_syscall_rt_sigaction(args),
+        LINUX_SYSCALL_RT_SIGRETURN => linux_syscall_rt_sigreturn(args),
         LINUX_SYSCALL_GETTID => linux_syscall_gettid(args),
         LINUX_SYSCALL_GETPID => linux_syscall_getpid(args),
         LINUX_SYSCALL_GETPPID => linux_syscall_getppid(args),
@@ -316,7 +317,6 @@ fn linux_syscall_clock_nanosleep(_args: SyscallArgs) -> usize {
     0
 }
 
-
 fn linux_syscall_rt_sigprocmask(args: SyscallArgs) -> usize {
     let [how, set, oldset, sigsetsize, ..] = args;
     warn!(
@@ -329,6 +329,10 @@ fn linux_syscall_rt_sigprocmask(args: SyscallArgs) -> usize {
 fn linux_syscall_rt_sigaction(args: SyscallArgs) -> usize {
     let [sig, act, oact, sigsetsize, ..] = args;
     signal::rt_sigaction(sig, act, oact, sigsetsize)
+}
+
+fn linux_syscall_rt_sigreturn(_args: SyscallArgs) -> usize {
+    signal::rt_sigreturn()
 }
 
 fn linux_syscall_gettid(_args: SyscallArgs) -> usize {
