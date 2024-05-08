@@ -333,7 +333,7 @@ pub fn sys_clone(
 #[cfg(target_arch = "x86_64")]
 pub fn sys_vfork() -> usize {
     let flags = CloneFlags::CLONE_VFORK | CloneFlags::CLONE_VM;
-    let args = KernelCloneArgs::new(flags, "", SIGCHLD, 0, 0, 0, None, None);
+    let args = KernelCloneArgs::new(flags, "", SIGCHLD as i32, 0, 0, 0, None, None);
     args.perform().unwrap_or(usize::MAX)
 }
 

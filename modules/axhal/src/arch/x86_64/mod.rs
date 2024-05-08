@@ -126,3 +126,8 @@ pub unsafe fn write_thread_pointer(fs_base: usize) {
 pub unsafe fn write_page_table_root0(root_paddr: PhysAddr) {
     write_page_table_root(root_paddr)
 }
+
+#[inline]
+pub fn local_flush_icache_all() {
+    unimplemented!("local_flush_icache_all");
+}

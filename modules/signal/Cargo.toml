@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 log = "0.4"
+cfg-if = "1.0"
 taskctx = { path = "../taskctx" }
 task = { path = "../task" }
 axhal = { path = "../axhal" }
