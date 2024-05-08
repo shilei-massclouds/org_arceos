@@ -272,7 +272,7 @@ fn exit_mm() {
     let mm = task.mm();
     let mut locked_mm = mm.lock();
     loop {
-        if let Some((va, dva)) = &locked_mm.mapped.pop() {
+        if let Some((va, dva)) = &locked_mm.mapped.pop_first() {
             let _ = locked_mm.unmap_region((*va).into(), PAGE_SIZE);
             axalloc::global_allocator().dealloc_pages(*dva, 1);
         } else {

@@ -222,9 +222,14 @@ pub fn get_unmapped_vma(_va: usize, len: usize) -> usize {
 }
 
 pub fn faultin_page(va: usize) -> usize {
+    let va = align_down_4k(va);
     debug!("faultin_page... va {:#X}", va);
     let mm = task::current().mm();
     let mut locked_mm = mm.lock();
+    if locked_mm.mapped.get(&va).is_some() {
+        warn!("============== find page {:#X} already exists!", va);
+        return 0;
+    }
 
     let vma = locked_mm
         .vmas
@@ -238,7 +243,6 @@ pub fn faultin_page(va: usize) -> usize {
         vma.vm_start,
         vma.vm_end
     );
-    let va = align_down_4k(va);
     let delta = va - vma.vm_start;
     //let flags = vma.vm_flags;
     let offset = (vma.vm_pgoff << PAGE_SHIFT) + delta;
@@ -261,7 +265,7 @@ pub fn faultin_page(va: usize) -> usize {
         .unwrap_or_else(|e| { panic!("{:?}", e) });
 
     // Todo: temporarily record mapped va->pa(direct_va)
-    locked_mm.mapped.push((va, direct_va));
+    locked_mm.mapped.insert(va, direct_va);
 
     phys_to_virt(pa.into()).into()
 }
@@ -272,7 +276,7 @@ fn fill_cache(pa: usize, len: usize, file: &mut File, offset: usize) {
 
     let buf = unsafe { core::slice::from_raw_parts_mut(va as *mut u8, len) };
 
-    debug!("offset {:#X} len {:#X}", offset, len);
+    debug!("fill_cache: offset {:#X} len {:#X}", offset, len);
     let _ = file.seek(SeekFrom::Start(offset as u64));
 
     let mut pos = 0;
@@ -386,12 +390,9 @@ pub fn munmap(va: usize, mut len: usize) -> usize {
     }
 
     let mm = task::current().mm();
-    /*
-    // Todo: handle temporary mmaped.
     let mut locked_mm = mm.lock();
-    locked_mm.mapped.retain(|(addr, _)| *addr != va);
-    */
-    let locked_mm = mm.lock();
+    // Todo: handle temporary mmaped.
+    locked_mm.mapped.remove(&va);
     match locked_mm.unmap_region(va, len) {
         Ok(_) => 0,
         Err(e) => {

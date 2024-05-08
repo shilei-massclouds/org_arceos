@@ -7,7 +7,6 @@ extern crate alloc;
 
 use alloc::collections::BTreeMap;
 use alloc::sync::Arc;
-use alloc::vec::Vec;
 use core::cell::OnceCell;
 use axfile::fops::File;
 use axhal::paging::pgd_alloc;
@@ -63,7 +62,7 @@ pub struct MmStruct {
     brk: usize,
 
     // Todo: temprarily record mapped (va, pa)
-    pub mapped: Vec<(usize, usize)>,
+    pub mapped: BTreeMap<usize, usize>,
 }
 
 impl MmStruct {
@@ -75,7 +74,7 @@ impl MmStruct {
             brk: 0,
 
             // Todo: temprarily record mapped (va, pa)
-            mapped: Vec::new(),
+            mapped: BTreeMap::new(),
         }
     }
 
@@ -89,7 +88,7 @@ impl MmStruct {
             vmas.insert(vma.vm_start, new_vma);
         }
 
-        let mut mapped = Vec::<(usize, usize)>::new();
+        let mut mapped = BTreeMap::<usize, usize>::new();
         for (va, dva) in &self.mapped {
             let va = *va;
             let old_page = *dva;
@@ -110,7 +109,7 @@ impl MmStruct {
             let flags = MappingFlags::READ | MappingFlags::WRITE |
                 MappingFlags::EXECUTE | MappingFlags::USER;
             pgd.map_region(va.into(), pa.into(), PAGE_SIZE, flags, true).unwrap();
-            mapped.push((va, new_page));
+            mapped.insert(va, new_page);
         }
         Self {
             id: MM_UNIQUE_ID.fetch_add(1, Ordering::SeqCst),

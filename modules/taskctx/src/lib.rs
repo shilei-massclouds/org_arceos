@@ -293,7 +293,7 @@ impl CurrentCtx {
     }
 
     pub unsafe fn set_current(prev: Self, next: CtxRef) {
-        info!("CurrentCtx::set_current...");
+        info!("CurrentCtx::set_current {} -> {}...", prev.tid(), next.tid());
         let Self(arc) = prev;
         ManuallyDrop::into_inner(arc); // `call Arc::drop()` to decrease prev task reference count.
         let ptr = Arc::into_raw(next.clone());

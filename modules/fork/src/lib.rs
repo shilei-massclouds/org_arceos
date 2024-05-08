@@ -154,10 +154,10 @@ impl KernelCloneArgs {
 
     fn copy_sighand(&self, task: &mut TaskStruct) -> LinuxResult {
         if self.flags.contains(CloneFlags::CLONE_SIGHAND) {
-            panic!("impl CLONE_SIGHAND!");
+            task.sighand = task::current().sighand.clone();
+        } else {
+            task.sighand.lock().action = task::current().sighand.lock().action;
         }
-
-        task.sighand.lock().action = task::current().sighand.lock().action;
         Ok(())
     }
 
@@ -235,8 +235,10 @@ impl KernelCloneArgs {
 
     fn copy_mm(&self, task: &mut TaskStruct) -> LinuxResult {
         if self.flags.contains(CloneFlags::CLONE_VM) {
+            info!("copy_mm: CLONE_VM");
             task.mm = current().mm.clone();
         } else {
+            info!("copy_mm: NO CLONE_VM");
             let mm = current().mm().lock().deep_dup();
             task.mm = Some(Arc::new(SpinNoIrq::new(mm)));
         }

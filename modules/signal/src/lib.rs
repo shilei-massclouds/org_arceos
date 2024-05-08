@@ -108,7 +108,6 @@ pub fn rt_sigaction(sig: usize, act: usize, oact: usize, sigsetsize: usize) -> u
     assert_eq!(sigsetsize, 8);
     info!("rt_sigaction: sig {} act {:#X} oact {:#X}", sig, act, oact);
     assert!(act != 0);
-    assert!(oact != 0);
 
     let task = task::current();
 
