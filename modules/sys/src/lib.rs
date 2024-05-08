@@ -269,6 +269,11 @@ fn do_exit(exit_code: u32) -> ! {
 
 fn exit_mm() {
     let task = task::current();
+    if task.sched_info.group_leader.is_some() {
+        // Todo: dont release mm for threads.
+        // It's just a temp solution. Implement page refcount.
+        return;
+    }
     let mm = task.mm();
     let mut locked_mm = mm.lock();
     loop {

@@ -320,7 +320,7 @@ pub fn switch_mm(prev_mm_id: usize, next_mm_id: usize, next_pgd: Arc<SpinNoIrq<P
     if prev_mm_id == next_mm_id {
         return;
     }
-    error!("###### switch_mm prev {} next {}; paddr {:#X}",
+    debug!("###### switch_mm prev {} next {}; paddr {:#X}",
         prev_mm_id, next_mm_id, next_pgd.lock().root_paddr());
     unsafe {
         write_page_table_root0(next_pgd.lock().root_paddr().into());
