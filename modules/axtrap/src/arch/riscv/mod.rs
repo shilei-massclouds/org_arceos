@@ -70,6 +70,7 @@ fn handle_breakpoint(sepc: &mut usize) {
 fn handle_linux_syscall(tf: &mut TrapFrame) {
     debug!("handle_linux_syscall");
     syscall(tf, axsyscall::do_syscall);
+    signal::do_signal(tf);
 }
 
 fn syscall_args(tf: &TrapFrame) -> SyscallArgs {

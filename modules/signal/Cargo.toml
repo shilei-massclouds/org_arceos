@@ -1,5 +1,5 @@
 [package]
-name = "axsyscall"
+name = "signal"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,13 +7,8 @@ edition = "2021"
 
 [dependencies]
 log = "0.4"
-axhal = { path = "../axhal" }
-signal = { path = "../signal" }
+taskctx = { path = "../taskctx" }
 task = { path = "../task" }
-fork = { path = "../fork" }
-exec = { path = "../exec" }
-sys = { path = "../sys" }
-mmap = { path = "../mmap" }
-fileops = { path = "../fileops" }
+axhal = { path = "../axhal" }
 axtype = { path = "../../crates/axtype" }
 axerrno = { path = "../../crates/axerrno" }

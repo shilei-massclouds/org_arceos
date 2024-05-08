@@ -15,3 +15,14 @@ pub fn ret_from_fork(kstack_sp: usize) {
         );
     };
 }
+
+core::arch::global_asm!(
+    r"
+    .section .text
+    .balign 4
+    .global __user_rt_sigreturn
+    __user_rt_sigreturn:
+    li a7, 139 // __NR_rt_sigreturn
+    scall
+    "
+);

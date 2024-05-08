@@ -11,6 +11,7 @@ use core::sync::atomic::{Ordering, AtomicUsize, AtomicU32};
 extern crate log;
 extern crate alloc;
 use alloc::sync::Arc;
+use alloc::vec::Vec;
 
 use axhal::arch::TaskContext as ThreadStruct;
 use mm::MmStruct;
@@ -32,10 +33,65 @@ pub use tid::alloc_tid;
 mod tid;
 mod tid_map;
 
+const NSIG: usize = 64;
+
+pub const SIGINT : usize = 2;
+pub const SIGKILL: usize = 9;
+pub const SIGCHLD: usize = 17;
+pub const SIGSTOP: usize = 19;
+
+#[derive(Clone)]
+pub struct SigInfo {
+    pub signo: i32,
+    pub errno: i32,
+    pub code: i32,
+    pub tid: Tid,
+}
+
+/// signal action flags
+pub const SA_RESTORER:  usize = 0x4000000;
+pub const SA_RESTART:   usize = 0x10000000;
+
+// Note: No restorer in sigaction for riscv64.
+#[derive(Copy, Clone, Default)]
+pub struct SigAction {
+    pub handler: usize,
+    pub flags: usize,
+    pub mask: usize,
+}
+
+pub struct SigPending {
+    pub list: Vec<SigInfo>,
+    pub signal: usize,
+}
+
+impl SigPending {
+    pub fn new() -> Self {
+        Self {
+            list: Vec::new(),
+            signal: 0,
+        }
+    }
+}
+
+pub struct SigHand {
+    pub action: [SigAction; NSIG],
+}
+
+impl SigHand {
+    pub fn new() -> Self {
+        Self {
+            action: [SigAction::default(); NSIG],
+        }
+    }
+}
+
 pub struct TaskStruct {
     pub mm: Option<Arc<SpinNoIrq<MmStruct>>>,
     pub fs: Arc<SpinLock<FsStruct>>,
     pub filetable: Arc<SpinLock<FileTable>>,
+    pub sigpending: SpinLock<SigPending>,
+    pub sighand: Arc<SpinLock<SigHand>>,
     pub sched_info: Arc<SchedInfo>,
 
     pub exit_state: AtomicUsize,
@@ -52,6 +108,8 @@ impl TaskStruct {
             mm: None,
             fs: fstree::init_fs(),
             filetable: filetable::init_files(),
+            sigpending: SpinLock::new(SigPending::new()),
+            sighand: Arc::new(SpinLock::new(SigHand::new())),
             sched_info: taskctx::init_sched_info(),
 
             exit_state: AtomicUsize::new(0),

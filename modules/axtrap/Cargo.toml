@@ -14,11 +14,11 @@ log = "0.4"
 cfg-if = "1.0"
 axhal = { path = "../axhal" }
 axsyscall = { path = "../axsyscall" }
+signal = { path = "../signal" }
 mmap = { path = "../mmap" }
 kernel_guard = { path = "../../crates/kernel_guard" }
 handler_table = { path = "../../crates/handler_table" }
 lazy_init = { path = "../../crates/lazy_init" }
-
 
 [target.'cfg(any(target_arch = "riscv32", target_arch = "riscv64"))'.dependencies]
 riscv = "0.10"

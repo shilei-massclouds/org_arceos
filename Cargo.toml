@@ -100,6 +100,7 @@ members = [
     "crates/percpu_macros2",
     "crates/early_console",
     "modules/axlog2",
+    "modules/signal",
 ]
 
 [profile.release]

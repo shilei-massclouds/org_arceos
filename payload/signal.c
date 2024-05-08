@@ -4,11 +4,13 @@
 #include <signal.h>
 #include <unistd.h>
 
+static int child_exit = 0;
+
 void sig_handler(int signo)
 {
     if (signo == SIGINT) {
         printf("received SIGINT!\n");
-        exit(0);
+        child_exit = 1;
     }
 }
 
@@ -16,11 +18,15 @@ int main()
 {
     printf("Hello, signal!\n");
 
+    if (signal(SIGINT, sig_handler) == SIG_ERR) {
+        printf("Cant catch SIGINT\n");
+        exit(-1);
+    }
+
     pid_t pid = fork();
     if (pid == 0) {
         printf("Child is running ...\n");
-        while (1) {
-        }
+        while (!child_exit) {}
     } else {
         kill(pid, SIGINT);
         printf("Parent sends sig!\n");

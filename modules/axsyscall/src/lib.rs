@@ -326,9 +326,9 @@ fn linux_syscall_rt_sigprocmask(args: SyscallArgs) -> usize {
     0
 }
 
-fn linux_syscall_rt_sigaction(_args: SyscallArgs) -> usize {
-    warn!("impl linux_syscall_rt_sigaction");
-    0
+fn linux_syscall_rt_sigaction(args: SyscallArgs) -> usize {
+    let [sig, act, oact, sigsetsize, ..] = args;
+    signal::rt_sigaction(sig, act, oact, sigsetsize)
 }
 
 fn linux_syscall_gettid(_args: SyscallArgs) -> usize {
@@ -363,8 +363,7 @@ fn linux_syscall_tgkill(_args: SyscallArgs) -> usize {
 
 fn linux_syscall_kill(args: SyscallArgs) -> usize {
     let [pid, sig, ..] = args;
-    warn!("impl linux_syscall_kill pid {} sig {}", pid, sig);
-    0
+    signal::kill(pid, sig)
 }
 
 #[cfg(target_arch = "x86_64")]

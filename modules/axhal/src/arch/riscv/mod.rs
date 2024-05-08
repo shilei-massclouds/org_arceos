@@ -119,6 +119,11 @@ pub fn flush_tlb(vaddr: Option<VirtAddr>) {
     }
 }
 
+#[inline]
+pub fn local_flush_icache_all() {
+    unsafe { core::arch::asm!("fence.i") };
+}
+
 /// Writes Supervisor Trap Vector Base Address Register (`stvec`).
 #[inline]
 pub fn set_trap_vector_base(stvec: usize) {

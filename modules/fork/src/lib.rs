@@ -12,8 +12,7 @@ use alloc::sync::Arc;
 use axerrno::{LinuxError, LinuxResult};
 use task::{current, Tid, TaskRef, TaskStruct};
 use spinbase::SpinNoIrq;
-
-const SIGCHLD: i32 = 17;
+use task::SIGCHLD;
 
 bitflags::bitflags! {
     /// clone flags
@@ -138,7 +137,7 @@ impl KernelCloneArgs {
 
         //copy_files();
         self.copy_fs(&mut task)?;
-        //copy_sighand();
+        self.copy_sighand(&mut task)?;
         //copy_signal();
         self.copy_mm(&mut task)?;
         self.copy_thread(&mut task, tid)?;
@@ -151,6 +150,15 @@ impl KernelCloneArgs {
         task::register_task(arc_task.clone());
         info!("copy_process tid: {} -> {}", current().tid(), arc_task.tid());
         Ok(arc_task)
+    }
+
+    fn copy_sighand(&self, task: &mut TaskStruct) -> LinuxResult {
+        if self.flags.contains(CloneFlags::CLONE_SIGHAND) {
+            panic!("impl CLONE_SIGHAND!");
+        }
+
+        task.sighand.lock().action = task::current().sighand.lock().action;
+        Ok(())
     }
 
     fn copy_thread(&self, task: &mut TaskStruct, tid: Tid) -> LinuxResult {
@@ -183,7 +191,7 @@ impl KernelCloneArgs {
             } else {
                 // Todo: add exit_signal in taskctx
                 //exit_signal = current_ctx.group_leader.exit_signal;
-                exit_signal = SIGCHLD;
+                exit_signal = SIGCHLD as i32;
             }
         } else {
             real_parent = Some(current_ctx.as_ctx_ref().clone());
