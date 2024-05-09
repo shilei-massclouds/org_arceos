@@ -229,7 +229,7 @@ fn linux_syscall_mmap(args: SyscallArgs) -> usize {
     let [va, len, prot, flags, fd, offset] = args;
     assert!(is_aligned_4k(va));
     info!(
-        "###### mmap!!! {:#x} {:#x} {:#x} {:#x} {:#x} {:#x}",
+        "###### mmap!!! {:#x} {:#x} prot {:#x} flags {:#x} {:#x} {:#x}",
         va, len, prot, flags, fd, offset
     );
 
@@ -273,9 +273,9 @@ fn linux_syscall_chdir(args: SyscallArgs) -> usize {
     fileops::chdir(&pathname)
 }
 
-fn linux_syscall_mprotect(_args: SyscallArgs) -> usize {
-    warn!("impl linux_syscall_mprotect");
-    0
+fn linux_syscall_mprotect(args: SyscallArgs) -> usize {
+    let [va, len, prot, ..] = args;
+    mmap::mprotect(va, len, prot)
 }
 
 fn linux_syscall_set_tid_address(args: SyscallArgs) -> usize {

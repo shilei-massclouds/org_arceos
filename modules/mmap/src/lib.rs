@@ -481,3 +481,55 @@ pub fn munmap(va: usize, mut len: usize) -> usize {
         },
     }
 }
+
+pub fn mprotect(va: usize, len: usize, prot: usize) -> usize {
+    info!("mprotect: va {:#X} len {:#X} prot {:#X}", va, len, prot);
+    assert!(is_aligned_4k(va));
+
+    let mut vma;
+    let mm = task::current().mm();
+    if let Some(mut overlap) = find_overlap(va, len) {
+        debug!("find overlap {:#X}-{:#X}", overlap.vm_start, overlap.vm_end);
+        assert!(
+            overlap.vm_start <= va && va + len <= overlap.vm_end,
+            "{:#X}-{:#X}; overlap {:#X}-{:#X} vm_flags {:#X} vm_offset {:#X}",
+            va,
+            va + len,
+            overlap.vm_start,
+            overlap.vm_end,
+            overlap.vm_flags,
+            overlap.vm_pgoff,
+        );
+        vma = overlap.clone();
+        vma.vm_start = va;
+        vma.vm_end = va + len;
+        vma.vm_pgoff += (va - overlap.vm_start) >> PAGE_SHIFT;
+
+        if va + len < overlap.vm_end {
+            let bias = (va + len - overlap.vm_start) >> PAGE_SHIFT;
+            let mut new = overlap.clone();
+            new.vm_start = va + len;
+            new.vm_pgoff += bias;
+            mm.lock().vmas.insert(va + len, new);
+        }
+        if va > overlap.vm_start {
+            overlap.vm_end = va;
+            mm.lock().vmas.insert(overlap.vm_start, overlap);
+        }
+    } else {
+        panic!("No such vma!");
+    }
+
+    /*
+     * Each mprotect() call explicitly passes r/w/x permissions.
+     * If a permission is not passed to mprotect(), it must be
+     * cleared from the VMA.
+     */
+    let mask_off = VM_READ | VM_WRITE | VM_EXEC;
+    let newflags = calc_vm_prot_bits(prot) | (vma.vm_flags & !mask_off);
+
+    vma.vm_flags = newflags;
+    mm.lock().vmas.insert(va, vma);
+    info!("mprotect: newflags {:#X}", newflags);
+    0
+}
