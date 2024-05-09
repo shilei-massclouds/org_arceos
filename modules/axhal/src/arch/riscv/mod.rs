@@ -159,3 +159,7 @@ pub fn gp_in_global() -> usize {
     unsafe { core::arch::asm!("mv {}, gp", out(reg) gp) };
     gp
 }
+
+pub const EXC_INST_PAGE_FAULT: usize = 12;
+pub const EXC_LOAD_PAGE_FAULT: usize = 13;
+pub const EXC_STORE_PAGE_FAULT: usize = 15;

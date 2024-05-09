@@ -26,7 +26,9 @@ int main()
     pid_t pid = fork();
     if (pid == 0) {
         printf("Child is running ...\n");
-        while (!child_exit) {}
+        while (!child_exit) {
+            sleep(1);
+        }
         printf("Child is exiting ...\n");
     } else {
         kill(pid, SIGINT);

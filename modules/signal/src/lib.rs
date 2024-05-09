@@ -86,6 +86,7 @@ fn do_send_sig_info(sig: usize, info: SigInfo, tid: Tid) -> LinuxResult {
     let mut pending = task.sigpending.lock();
     pending.list.push(info);
     sigaddset(&mut pending.signal, sig);
+    info!("do_send_sig_info tid {} sig {} ok!", tid, sig);
     Ok(())
 }
 
@@ -133,6 +134,7 @@ pub fn rt_sigaction(sig: usize, act: usize, oact: usize, sigsetsize: usize) -> u
 }
 
 pub fn do_signal(tf: &mut TrapFrame) {
+    info!("do_signal ...");
     if let Some(ksig) = get_signal() {
         /* Actually deliver the signal */
         arch::handle_signal(&ksig, tf);
@@ -161,4 +163,17 @@ fn restore_sigcontext(tf: &mut TrapFrame, frame: &RTSigFrame) {
 fn setup_sigcontext(frame: &mut RTSigFrame, tf: &TrapFrame) {
     frame.uc.mcontext = tf.clone();
     // Todo: Save the floating-point state.
+}
+
+pub fn force_sig_fault(signo: usize, code: usize, _addr: usize) {
+    let tid = taskctx::current_ctx().tid();
+    let info = SigInfo {
+        signo: signo as i32,
+        errno: 0,
+        code: code as i32,
+        tid: tid,
+    };
+
+    info!("force tid {} sig {}", tid, signo);
+    do_send_sig_info(signo, info, tid).unwrap();
 }

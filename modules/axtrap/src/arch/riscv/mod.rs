@@ -4,6 +4,7 @@ use axsyscall::SyscallArgs;
 use riscv::register::scause::{self, Exception as E, Trap};
 use riscv::register::stval;
 use riscv::register::stvec;
+use preempt_guard::NoPreempt;
 
 axhal::include_asm_marcos!();
 
@@ -28,15 +29,15 @@ pub fn riscv_trap_handler(tf: &mut TrapFrame, _from_user: bool) {
         Trap::Exception(E::Breakpoint) => handle_breakpoint(&mut tf.sepc),
         Trap::Exception(E::UserEnvCall) => handle_linux_syscall(tf),
         Trap::Exception(E::InstructionPageFault) => {
-            handle_page_fault(stval::read(), 0);
+            handle_page_fault(stval::read(), scause.code(), tf);
         }
         Trap::Exception(E::LoadPageFault) => {
-            handle_page_fault(stval::read(), 1);
+            handle_page_fault(stval::read(), scause.code(), tf);
         }
         Trap::Exception(E::StorePageFault) => {
-            handle_page_fault(stval::read(), 2);
+            handle_page_fault(stval::read(), scause.code(), tf);
         }
-        Trap::Interrupt(_) => handle_irq_extern(scause.bits()),
+        Trap::Interrupt(_) => handle_irq_extern(scause.bits(), tf),
         _ => {
             panic!(
                 "Unhandled trap {:?} @ {:#x}:\n{:#x?}",
@@ -49,17 +50,18 @@ pub fn riscv_trap_handler(tf: &mut TrapFrame, _from_user: bool) {
 }
 
 /// Call page fault handler.
-fn handle_page_fault(badaddr: usize, _cause: usize) {
-    debug!("handle_page_fault...");
-    mmap::faultin_page(badaddr);
+fn handle_page_fault(badaddr: usize, cause: usize, tf: &mut TrapFrame) {
+    debug!("handle_page_fault... cause {}", cause);
+    mmap::faultin_page(badaddr, cause);
+    signal::do_signal(tf);
 }
 
 /// Call the external IRQ handler.
-fn handle_irq_extern(irq_num: usize) {
-    debug!("handle_irq_extern irq: {:#X} ...", irq_num);
-    let guard = kernel_guard::NoPreempt::new();
+fn handle_irq_extern(irq_num: usize, _tf: &mut TrapFrame) {
+    let _ = NoPreempt::new();
     crate::platform::irq::dispatch_irq(irq_num);
-    drop(guard); // rescheduling may occur when preemption is re-enabled.
+    // Todo: why we cannot do_signal here (irq context -> userland).
+    //drop(guard); // rescheduling may occur when preemption is re-enabled.
 }
 
 fn handle_breakpoint(sepc: &mut usize) {

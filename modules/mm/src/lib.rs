@@ -24,6 +24,16 @@ pub type FileRef = Arc<Mutex<File>>;
 
 static MM_UNIQUE_ID: AtomicUsize = AtomicUsize::new(1);
 
+/*
+ * vm_flags in vm_area_struct, see mm_types.h.
+ * When changing, update also include/trace/events/mmflags.h
+ */
+pub const VM_NONE: usize =   0x00000000;
+pub const VM_READ: usize =   0x00000001;
+pub const VM_WRITE: usize =  0x00000002;
+pub const VM_EXEC: usize =   0x00000004;
+pub const VM_SHARED: usize = 0x00000008;
+
 #[derive(Clone)]
 pub struct VmAreaStruct {
     pub vm_start: usize,

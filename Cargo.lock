@@ -604,10 +604,10 @@ dependencies = [
  "axsyscall",
  "cfg-if",
  "handler_table",
- "kernel_guard",
  "lazy_init",
  "log",
  "mmap",
+ "preempt_guard",
  "riscv",
  "signal",
  "x86",
@@ -1521,6 +1521,7 @@ dependencies = [
  "log",
  "memory_addr",
  "mm",
+ "signal",
  "task",
 ]
 

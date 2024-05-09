@@ -10,6 +10,7 @@ log = "0.4"
 axhal = { path = "../axhal" }
 axfile = { path = "../axfile" }
 task = { path = "../task" }
+signal = { path = "../signal" }
 mm = { path = "../mm" }
 axerrno = { path = "../../crates/axerrno" }
 axio = { path = "../../crates/axio" }

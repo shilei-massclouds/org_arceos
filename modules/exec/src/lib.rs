@@ -28,6 +28,8 @@ use mmap::FileRef;
 use mmap::{MAP_ANONYMOUS, MAP_FIXED};
 use mutex::Mutex;
 use axtype::get_user_str_vec;
+use elf::abi::{PF_R, PF_W, PF_X};
+use mmap::{PROT_READ, PROT_WRITE, PROT_EXEC};
 
 const ELF_HEAD_BUF_SIZE: usize = 256;
 
@@ -49,7 +51,7 @@ pub fn kernel_execve(filename: &str) -> LinuxResult {
 #[allow(unused)]
 fn setup_zero_page() -> LinuxResult {
     error!("setup_zero_page ...");
-    mmap::_mmap(0x0, PAGE_SIZE, 0, MAP_FIXED | MAP_ANONYMOUS, None, 0)?;
+    mmap::_mmap(0x0, PAGE_SIZE, PROT_READ, MAP_FIXED | MAP_ANONYMOUS, None, 0)?;
     Ok(())
 }
 
@@ -120,8 +122,9 @@ fn get_arg_page(_entry: usize, args: Vec<String>) -> LinuxResult<usize> {
     //let auxv = get_auxv_vector(entry);
 
     let va = TASK_SIZE - STACK_SIZE;
-    mmap::_mmap(va, STACK_SIZE, 0, MAP_FIXED | MAP_ANONYMOUS, None, 0)?;
-    let direct_va = mmap::faultin_page(TASK_SIZE - PAGE_SIZE);
+    mmap::_mmap(va, STACK_SIZE, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_ANONYMOUS, None, 0)?;
+    // Todo: set proper cause for faultin_page.
+    let direct_va = mmap::faultin_page(TASK_SIZE - PAGE_SIZE, 0);
     let mut stack = UserStack::new(TASK_SIZE, direct_va + PAGE_SIZE);
     stack.push(&[null::<u64>()]);
 
@@ -201,7 +204,7 @@ fn load_elf_interp(
         mmap::_mmap(
             va + load_bias,
             va_end - va,
-            0,
+            make_prot(phdr.p_flags),
             MAP_FIXED,
             Some(file.clone()),
             phdr.p_offset as usize,
@@ -275,7 +278,7 @@ fn load_elf_binary(
         mmap::_mmap(
             va + load_bias,
             va_end - va,
-            0,
+            make_prot(phdr.p_flags),
             MAP_FIXED,
             Some(file.clone()),
             phdr.p_offset as usize,
@@ -325,7 +328,7 @@ fn set_brk(elf_bss: usize, elf_brk: usize) {
         mmap::_mmap(
             elf_bss,
             elf_brk - elf_bss,
-            0,
+            PROT_READ | PROT_WRITE,
             MAP_FIXED | MAP_ANONYMOUS,
             None,
             0,
@@ -393,4 +396,21 @@ pub fn execve(path: &str, argv: usize, envp: usize) -> usize {
         Err(e) => panic!("bprm_execve: {:?}", e),
     }
     0
+}
+
+#[inline]
+fn make_prot(pflags: u32) -> usize {
+    let mut prot = 0;
+
+    if (pflags & PF_R) != 0 {
+        prot |= PROT_READ;
+    }
+    if (pflags & PF_W) != 0 {
+        prot |= PROT_WRITE;
+    }
+    if (pflags & PF_X) != 0 {
+        prot |= PROT_EXEC;
+    }
+
+    prot
 }

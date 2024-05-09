@@ -37,6 +37,7 @@ const NSIG: usize = 64;
 
 pub const SIGINT : usize = 2;
 pub const SIGKILL: usize = 9;
+pub const SIGSEGV: usize = 11;
 pub const SIGCHLD: usize = 17;
 pub const SIGSTOP: usize = 19;
 

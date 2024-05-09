@@ -2,6 +2,7 @@ mod idt;
 pub use self::idt::IdtStruct;
 mod syscall;
 use x86::{controlregs::cr2, irq::*};
+use preempt_guard::NoPreempt;
 
 use axhal::arch::TrapFrame;
 
@@ -47,7 +48,8 @@ fn x86_trap_handler(tf: &mut TrapFrame) {
                 handle_page_fault(badaddr, 0);
             }
             */
-            handle_page_fault(badaddr, 0);
+            // Todo: set proper cause for handle_page_fault.
+            handle_page_fault(badaddr, 0 /* cause */);
             // } else {
             //     panic!(
             //         "Kernel #PF @ {:#x}, fault_vaddr={:#x}, error_code={:#x}:\n{:#x?}",
@@ -79,15 +81,15 @@ fn x86_trap_handler(tf: &mut TrapFrame) {
     }
 }
 /// Call page fault handler.
-fn handle_page_fault(badaddr: usize, _cause: usize) {
+fn handle_page_fault(badaddr: usize, cause: usize) {
     debug!("handle_page_fault...");
-    mmap::faultin_page(badaddr);
+    mmap::faultin_page(badaddr, cause);
 }
 
 /// Call the external IRQ handler.
 fn handle_irq_extern(irq_num: usize) {
     debug!("handle_irq_extern irq: {:#X} ...", irq_num);
-    let guard = kernel_guard::NoPreempt::new();
+    let _ = NoPreempt::new();
     crate::platform::irq::dispatch_irq(irq_num);
-    drop(guard); // rescheduling may occur when preemption is re-enabled.
+    //drop(guard); // rescheduling may occur when preemption is re-enabled.
 }

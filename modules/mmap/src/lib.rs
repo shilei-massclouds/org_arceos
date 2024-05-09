@@ -15,6 +15,19 @@ pub use mm::FileRef;
 use mm::VmAreaStruct;
 use axerrno::LinuxError;
 use axhal::arch::TASK_SIZE;
+use mm::{VM_READ, VM_WRITE, VM_EXEC};
+#[cfg(target_arch = "riscv64")]
+use axhal::arch::{EXC_INST_PAGE_FAULT, EXC_LOAD_PAGE_FAULT, EXC_STORE_PAGE_FAULT};
+use task::SIGSEGV;
+use signal::force_sig_fault;
+
+pub const PROT_READ: usize = 0x1;
+pub const PROT_WRITE: usize = 0x2;
+pub const PROT_EXEC: usize = 0x4;
+pub const PROT_SEM: usize = 0x8;
+pub const PROT_NONE: usize = 0x0;
+pub const PROT_GROWSDOWN: usize = 0x01000000;
+pub const PROT_GROWSUP: usize = 0x02000000;
 
 /// Share changes
 const MAP_SHARED: usize = 0x01;
@@ -101,14 +114,14 @@ pub fn mmap(
 pub fn _mmap(
     mut va: usize,
     mut len: usize,
-    _prot: usize,
+    prot: usize,
     mut flags: usize,
     file: Option<FileRef>,
     offset: usize,
 ) -> LinuxResult<usize> {
     assert!(is_aligned_4k(va));
     len = align_up_4k(len);
-    debug!("mmap va {:#X} offset {:#X}", va, offset);
+    info!("mmap va {:#X} offset {:#X} flags {:#X} prot {:#X}", va, offset, flags, prot);
 
     /* force arch specific MAP_FIXED handling in get_unmapped_area */
     if (flags & MAP_FIXED_NOREPLACE) != 0 {
@@ -153,16 +166,35 @@ pub fn _mmap(
         }
     }
 
-    debug!(
-        "mmap region: {:#X} - {:#X}, flags: {:#X}",
+    let vm_flags = calc_vm_prot_bits(prot);
+    info!(
+        "mmap region: {:#X} - {:#X}, vm_flags: {:#X}, prot {:#X}",
         va,
         va + len,
-        flags
+        vm_flags,
+        prot
     );
-    let vma = VmAreaStruct::new(va, va + len, offset >> PAGE_SHIFT, file, flags);
+    let vma = VmAreaStruct::new(va, va + len, offset >> PAGE_SHIFT, file, vm_flags);
     mm.lock().vmas.insert(va, vma);
 
     Ok(va)
+}
+
+/*
+ * Combine the mmap "prot" argument into "vm_flags" used internally.
+ */
+fn calc_vm_prot_bits(prot: usize) -> usize {
+    let mut flags = 0;
+    if (prot & PROT_READ) != 0 {
+        flags |= VM_READ;
+    }
+    if (prot & PROT_WRITE) != 0 {
+        flags |= VM_WRITE;
+    }
+    if (prot & PROT_EXEC) != 0 {
+        flags |= VM_EXEC;
+    }
+    flags
 }
 
 fn find_overlap(va: usize, len: usize) -> Option<VmAreaStruct> {
@@ -221,9 +253,12 @@ pub fn get_unmapped_vma(_va: usize, len: usize) -> usize {
     unimplemented!("NO available unmapped vma!");
 }
 
-pub fn faultin_page(va: usize) -> usize {
+// invalid permissions for mapped object
+const SEGV_ACCERR: usize = 2;
+
+pub fn faultin_page(va: usize, cause: usize) -> usize {
     let va = align_down_4k(va);
-    debug!("faultin_page... va {:#X}", va);
+    info!("--------- faultin_page... va {:#X} cause {}", va, cause);
     let mm = task::current().mm();
     let mut locked_mm = mm.lock();
     if locked_mm.mapped.get(&va).is_some() {
@@ -243,8 +278,16 @@ pub fn faultin_page(va: usize) -> usize {
         vma.vm_start,
         vma.vm_end
     );
+
+    #[cfg(target_arch = "riscv64")]
+    {
+        if access_error(cause, vma) {
+            bad_area(SEGV_ACCERR, va);
+            return usize::MAX;
+        }
+    }
+
     let delta = va - vma.vm_start;
-    //let flags = vma.vm_flags;
     let offset = (vma.vm_pgoff << PAGE_SHIFT) + delta;
 
     let direct_va: usize = axalloc::global_allocator()
@@ -268,6 +311,42 @@ pub fn faultin_page(va: usize) -> usize {
     locked_mm.mapped.insert(va, direct_va);
 
     phys_to_virt(pa.into()).into()
+}
+
+#[cfg(target_arch = "riscv64")]
+fn access_error(cause: usize, vma: &VmAreaStruct) -> bool {
+    // Todo: consider that the cause can be ZERO?!
+    if cause == 0 {
+        return false;
+    }
+    info!("cause {} flags {:#X}", cause, vma.vm_flags);
+    match cause {
+        EXC_INST_PAGE_FAULT => {
+            (vma.vm_flags & VM_EXEC) == 0
+        },
+        EXC_LOAD_PAGE_FAULT => {
+            // Write implies read
+            (vma.vm_flags & (VM_READ | VM_WRITE)) == 0
+        },
+        EXC_STORE_PAGE_FAULT => {
+            (vma.vm_flags & VM_WRITE) == 0
+        },
+        _ => {
+            panic!("Unhandled cause {}", cause);
+        }
+    }
+}
+
+fn bad_area(code: usize, addr: usize) {
+    // User mode accesses just cause a SIGSEGV
+    // Todo: makesure now we are in userland.
+    // #define user_mode(regs) (((regs)->status & SR_PP) == 0)
+    error!("code {} addr {:#X}", code, addr);
+    do_trap(SIGSEGV, code, addr);
+}
+
+fn do_trap(signo: usize, code: usize, addr: usize) {
+    force_sig_fault(signo, code, addr);
 }
 
 fn fill_cache(pa: usize, len: usize, file: &mut File, offset: usize) {
@@ -305,8 +384,9 @@ pub fn set_brk(va: usize) -> usize {
         assert!(va > brk);
         let offset = va - brk;
         assert!(is_aligned_4k(offset));
-        _mmap(brk, offset, 0, MAP_FIXED | MAP_ANONYMOUS, None, 0).unwrap();
-        let _ = faultin_page(brk);
+        _mmap(brk, offset, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_ANONYMOUS, None, 0).unwrap();
+        // Todo: set proper cause for faultin_page.
+        let _ = faultin_page(brk, 0 /* cause */);
         mm.lock().set_brk(va);
         va
     }
