@@ -22,7 +22,7 @@ use elf::parse::ParseAt;
 use elf::segment::ProgramHeader;
 use elf::segment::SegmentTable;
 use elf::ElfBytes;
-use kernel_guard::NoPreempt;
+use preempt_guard::NoPreempt;
 use axtype::{align_down_4k, align_up_4k, PAGE_SIZE};
 use mmap::FileRef;
 use mmap::{MAP_ANONYMOUS, MAP_FIXED};
@@ -30,6 +30,7 @@ use mutex::Mutex;
 use axtype::get_user_str_vec;
 use elf::abi::{PF_R, PF_W, PF_X};
 use mmap::{PROT_READ, PROT_WRITE, PROT_EXEC};
+use axtype::is_aligned;
 
 const ELF_HEAD_BUF_SIZE: usize = 256;
 
@@ -146,6 +147,18 @@ fn get_arg_page(_entry: usize, args: Vec<String>) -> LinuxResult<usize> {
     }
     */
 
+    // Todo: refine the code.
+    // We can study from Linux's code just like:
+    //   'items = (argc + 1) + (envc + 1) + 1;'
+    //   'sp = STACK_ROUND(sp, items);'
+    // And then, store argc, pointers of argv&envs.
+    {
+        if !is_aligned(stack.get_sp(), 16) {
+            stack.push(&[null::<u8>()]);
+        }
+    }
+
+    // pointers to envs
     stack.push(&[null::<u8>()]);
     stack.push(&[null::<u8>()]);
     // pointers to argv
@@ -154,7 +167,14 @@ fn get_arg_page(_entry: usize, args: Vec<String>) -> LinuxResult<usize> {
     // argc
     stack.push(&[args.len()]);
 
-    Ok(stack.get_sp())
+    let sp = stack.get_sp();
+
+    // For X86_64, Stack must be aligned to 16-bytes.
+    // E.g., there're some SSE instructions like 'movaps %xmm0,-0x70(%rbp)'.
+    // When we call these, X86_64 requires that memory-alignment aligned to 16-bytes.
+    // Or mmu causes #GP.
+    assert!(is_aligned(sp, 16));
+    Ok(sp)
 }
 
 /// sys_execve() executes a new program.

@@ -16,4 +16,4 @@ axerrno = { path = "../../crates/axerrno" }
 axtype = { path = "../../crates/axtype" }
 elf = { path = "../../crates/elf" }
 axio = { path = "../../crates/axio" }
-kernel_guard = { path = "../../crates/kernel_guard" }
+preempt_guard = { path = "../../crates/preempt_guard" }

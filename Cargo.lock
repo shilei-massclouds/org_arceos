@@ -1129,10 +1129,10 @@ dependencies = [
  "axio",
  "axtype",
  "elf",
- "kernel_guard",
  "log",
  "mmap",
  "mutex",
+ "preempt_guard",
  "task",
 ]
 
