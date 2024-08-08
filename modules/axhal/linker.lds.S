@@ -83,6 +83,8 @@ SECTIONS
 }
 
 SECTIONS {
+    task_resource : ALIGN(64) { *(task_resource) }
+
     linkme_IRQ : { *(linkme_IRQ) }
     linkm2_IRQ : { *(linkm2_IRQ) }
     linkme_PAGE_FAULT : { *(linkme_PAGE_FAULT) }
