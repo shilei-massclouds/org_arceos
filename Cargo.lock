@@ -47,37 +47,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arceos-helloworld"
-version = "0.1.0"
-dependencies = [
- "axstd",
-]
-
-[[package]]
-name = "arceos-httpclient"
-version = "0.1.0"
-dependencies = [
- "axstd",
-]
-
-[[package]]
-name = "arceos-httpserver"
-version = "0.1.0"
-dependencies = [
- "axstd",
-]
-
-[[package]]
-name = "arceos-shell"
-version = "0.1.0"
-dependencies = [
- "axfs_ramfs",
- "axfs_vfs",
- "axstd",
- "crate_interface",
-]
-
-[[package]]
 name = "arceos_api"
 version = "0.1.0"
 dependencies = [
@@ -1482,6 +1451,13 @@ dependencies = [
  "indexmap",
  "toml_datetime",
  "winnow",
+]
+
+[[package]]
+name = "u_1_0"
+version = "0.1.0"
+dependencies = [
+ "axstd",
 ]
 
 [[package]]
