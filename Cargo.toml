@@ -23,8 +23,8 @@ members = [
     "ulib/axstd",
     "ulib/axlibc",
 
-    "experiments/u_1_0",
-    "experiments/u_2_0",
+    "tour/u_1_0",
+    "tour/u_2_0",
 ]
 
 [workspace.package]
