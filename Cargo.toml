@@ -24,6 +24,7 @@ members = [
     "ulib/axlibc",
 
     "experiments/u_1_0",
+    "experiments/u_2_0",
 ]
 
 [workspace.package]
