@@ -8,15 +8,15 @@ extern crate axstd as std;
 use std::thread;
 use std::collections::VecDeque;
 use std::sync::Arc;
-use std::os::arceos::modules::axsync::spin::SpinNoIrq;
+use std::os::arceos::modules::axsync::Mutex;
 
-const LOOP_NUM: usize = 1024;
+const LOOP_NUM: usize = 256;
 
 #[cfg_attr(feature = "axstd", no_mangle)]
 fn main() {
     println!("Multi-task(Preemptible) is starting ...");
 
-    let q1 = Arc::new(SpinNoIrq::new(VecDeque::new()));
+    let q1 = Arc::new(Mutex::new(VecDeque::new()));
     let q2 = q1.clone();
 
     let worker1 = thread::spawn(move || {
