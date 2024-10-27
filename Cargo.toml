@@ -23,8 +23,11 @@ members = [
     "ulib/axstd",
     "ulib/axlibc",
 
+    "payload/origin",
+
     "tour/u_1_0",
     "tour/u_2_0",
+    "tour/u_3_0",
 ]
 
 [workspace.package]

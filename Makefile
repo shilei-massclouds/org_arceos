@@ -46,6 +46,8 @@ BLK ?= n
 NET ?= n
 GRAPHIC ?= n
 BUS ?= pci
+PFLASH ?= y
+PFLASH_IMG ?= pflash.img
 
 DISK_IMG ?= disk.img
 QEMU_LOG ?= n
@@ -215,6 +217,10 @@ else
 	$(call make_disk_image,fat32,$(DISK_IMG))
 endif
 
+pflash_img:
+	@rm -f $(PFLASH_IMG)
+	$(call mk_pflash,$(PFLASH_IMG))
+
 clean: clean_c
 	rm -rf $(APP)/*.bin $(APP)/*.elf
 	cargo clean
@@ -223,4 +229,4 @@ clean_c::
 	rm -rf ulib/axlibc/build_*
 	rm -rf $(app-objs)
 
-.PHONY: all build disasm run justrun debug clippy fmt fmt_c test test_no_fail_fast clean clean_c doc disk_image
+.PHONY: all build disasm run justrun debug clippy fmt fmt_c test test_no_fail_fast clean clean_c doc disk_image pflash_img
