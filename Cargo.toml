@@ -30,6 +30,7 @@ members = [
     "tour/u_3_0",
     "tour/u_4_0",
     "tour/u_5_0",
+    "tour/u_6_0",
 ]
 
 [workspace.package]
