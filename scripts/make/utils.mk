@@ -32,3 +32,18 @@ define mk_pflash
   @dd if=/tmp/head.bin of=./$(1) conv=notrunc
   @dd if=/tmp/origin.bin of=./$(1) seek=16 obs=1 conv=notrunc
 endef
+
+define setup_disk
+  $(call build_origin)
+  @mkdir -p ./mnt
+  @sudo mount $(1) ./mnt
+  @sudo mkdir -p ./mnt/sbin
+  @sudo cp /tmp/origin.bin ./mnt/sbin
+  @sudo umount ./mnt
+  @rm -rf mnt
+endef
+
+define build_origin
+  @RUSTFLAGS="" cargo build -p origin  --target riscv64gc-unknown-none-elf --release
+  @rust-objcopy --binary-architecture=riscv64 --strip-all -O binary ./target/riscv64gc-unknown-none-elf/release/origin /tmp/origin.bin
+endef

@@ -215,6 +215,7 @@ ifneq ($(wildcard $(DISK_IMG)),)
 	@printf "$(YELLOW_C)warning$(END_C): disk image \"$(DISK_IMG)\" already exists!\n"
 else
 	$(call make_disk_image,fat32,$(DISK_IMG))
+	$(call setup_disk,$(DISK_IMG))
 endif
 
 pflash_img:
@@ -229,4 +230,4 @@ clean_c::
 	rm -rf ulib/axlibc/build_*
 	rm -rf $(app-objs)
 
-.PHONY: all build disasm run justrun debug clippy fmt fmt_c test test_no_fail_fast clean clean_c doc disk_image pflash_img
+.PHONY: all build disasm run justrun debug clippy fmt fmt_c test test_no_fail_fast clean clean_c doc disk_img pflash_img
