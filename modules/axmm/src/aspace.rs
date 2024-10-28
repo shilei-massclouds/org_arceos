@@ -8,12 +8,15 @@ use axhal::{
 use memory_addr::{
     is_aligned_4k, pa, MemoryAddr, PageIter4K, PhysAddr, VirtAddr, VirtAddrRange, PAGE_SIZE_4K,
 };
-
+use memory_set::{MemoryArea, MemorySet};
+use crate::backend::Backend;
 use crate::paging_err_to_ax_err;
+use crate::mapping_err_to_ax_err;
 
 /// The virtual memory address space.
 pub struct AddrSpace {
     va_range: VirtAddrRange,
+    areas: MemorySet<Backend>,
     pt: PageTable,
 }
 
@@ -53,8 +56,38 @@ impl AddrSpace {
     pub(crate) fn new_empty(base: VirtAddr, size: usize) -> AxResult<Self> {
         Ok(Self {
             va_range: VirtAddrRange::from_start_size(base, size),
+            areas: MemorySet::new(),
             pt: PageTable::try_new().map_err(|_| AxError::NoMemory)?,
         })
+    }
+
+    /// Copies page table mappings from another address space.
+    ///
+    /// It copies the page table entries only rather than the memory regions,
+    /// usually used to copy a portion of the kernel space mapping to the
+    /// user space.
+    ///
+    /// Returns an error if the two address spaces overlap.
+    pub fn copy_mappings_from(&mut self, other: &AddrSpace) -> AxResult {
+        if self.va_range.overlaps(other.va_range) {
+            return ax_err!(InvalidInput, "address space overlap");
+        }
+        self.pt.copy_from(&other.pt, other.base(), other.size());
+        Ok(())
+    }
+
+    /// Finds a free area that can accommodate the given size.
+    ///
+    /// The search starts from the given hint address, and the area should be within the given limit range.
+    ///
+    /// Returns the start address of the free area. Returns None if no such area is found.
+    pub fn find_free_area(
+        &self,
+        hint: VirtAddr,
+        size: usize,
+        limit: VirtAddrRange,
+    ) -> Option<VirtAddr> {
+        self.areas.find_free_area(hint, size, limit)
     }
 
     /// Add a new linear mapping.
@@ -92,6 +125,35 @@ impl AddrSpace {
             )
             .map_err(paging_err_to_ax_err)?
             .flush_all();
+        Ok(())
+    }
+
+    /// Add a new allocation mapping.
+    ///
+    /// See [`Backend`] for more details about the mapping backends.
+    ///
+    /// The `flags` parameter indicates the mapping permissions and attributes.
+    ///
+    /// Returns an error if the address range is out of the address space or not
+    /// aligned.
+    pub fn map_alloc(
+        &mut self,
+        start: VirtAddr,
+        size: usize,
+        flags: MappingFlags,
+        populate: bool,
+    ) -> AxResult {
+        if !self.contains_range(start, size) {
+            return ax_err!(InvalidInput, "address out of range");
+        }
+        if !start.is_aligned_4k() || !is_aligned_4k(size) {
+            return ax_err!(InvalidInput, "address not aligned");
+        }
+
+        let area = MemoryArea::new(start, size, flags, Backend::new_alloc(populate));
+        self.areas
+            .map(area, &mut self.pt, false)
+            .map_err(mapping_err_to_ax_err)?;
         Ok(())
     }
 
