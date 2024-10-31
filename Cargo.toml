@@ -24,6 +24,7 @@ members = [
     "ulib/axlibc",
 
     "payload/origin",
+    "payload/skernel",
 
     "tour/u_1_0",
     "tour/u_2_0",
@@ -35,6 +36,7 @@ members = [
     "tour/u_8_0",
     "tour/m_1_0",
     "tour/m_2_0",
+    "tour/h_1_0",
 ]
 
 [workspace.package]

@@ -1,5 +1,7 @@
 use core::arch::asm;
-use memory_addr::{PhysAddr, VirtAddr};
+use memory_addr::VirtAddr;
+#[cfg(feature = "uspace")]
+use memory_addr::PhysAddr;
 
 include_asm_marcos!();
 
