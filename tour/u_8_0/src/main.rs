@@ -11,7 +11,7 @@ use std::fs::File;
 
 #[cfg_attr(feature = "axstd", no_mangle)]
 fn main() {
-    println!("Load app from disk ...");
+    println!("Load app from fat-fs ...");
 
     let mut buf = [0u8; 64];
     if let Err(e) = load_app("/sbin/origin.bin", &mut buf) {

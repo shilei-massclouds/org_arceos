@@ -6,51 +6,38 @@
 extern crate axstd as std;
 
 use std::thread;
-use std::collections::VecDeque;
-use std::sync::Arc;
-use std::time::Duration;
-use std::os::arceos::modules::axsync::Mutex;
-use std::os::arceos::modules::axtask::WaitQueue;
+use axdriver::prelude::{DeviceType, BaseDriverOps, BlockDriverOps};
 
-const LOOP_NUM: usize = 256;
-static WQ: WaitQueue = WaitQueue::new();
+const DISK_SIZE:    usize = 0x400_0000; // 64M
+const BLOCK_SIZE:   usize = 0x200;      // 512-bytes in default
 
 #[cfg_attr(feature = "axstd", no_mangle)]
 fn main() {
-    println!("WaitQ is starting ...");
+    println!("Load app from disk ...");
 
-    let q1 = Arc::new(Mutex::new(VecDeque::new()));
-    let q2 = q1.clone();
+    let mut alldevs = axdriver::init_drivers();
+    let mut disk = alldevs.block.take_one().expect("No block dev!");
+
+    assert_eq!(disk.device_type(), DeviceType::Block);
+    assert_eq!(disk.device_name(), "virtio-blk");
+    assert_eq!(disk.block_size(), BLOCK_SIZE);
+    assert_eq!(disk.num_blocks() as usize, DISK_SIZE/BLOCK_SIZE);
+
+    let mut buf = vec![0u8; BLOCK_SIZE];
+    assert!(disk.read_block(0, &mut buf).is_ok());
 
     let worker1 = thread::spawn(move || {
-        println!("worker1 ...");
-        for i in 0..=LOOP_NUM {
-            println!("worker1 [{i}]");
-            q1.lock().push_back(i);
-            WQ.notify_one(true);
-        }
-        println!("worker1 ok!");
-    });
-
-    let worker2 = thread::spawn(move || {
-        println!("worker2 ...");
-        loop {
-            if let Some(num) = q2.lock().pop_front() {
-                println!("worker2 [{num}]");
-                if num == LOOP_NUM {
-                    break;
-                }
-            } else {
-                println!("worker2: nothing to do!");
-                WQ.wait_timeout(Duration::new(0, 5000));
-            }
-        }
-        println!("worker2 ok!");
+        println!("worker1 checks head:");
+        let head = core::str::from_utf8(&buf[3..11])
+            .unwrap_or_else(|e| {
+                panic!("bad disk head: {:?}. err {:?}", &buf[0..16], e);
+            });
+        println!("[{}]", head);
+        println!("\nworker1 ok!");
     });
 
     println!("Wait for workers to exit ...");
     let _ = worker1.join();
-    let _ = worker2.join();
 
-    println!("WaitQ ok!");
+    println!("Load app from disk ok!");
 }
