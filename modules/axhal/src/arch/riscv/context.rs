@@ -197,12 +197,11 @@ impl UspaceContext {
 
     /// Creates a new context with the given entry point, user stack pointer,
     /// and the argument.
-    pub fn new(entry: usize, ustack_top: VirtAddr, arg0: usize) -> Self {
+    pub fn new(entry: usize, ustack_top: VirtAddr) -> Self {
         const SPIE: usize = 1 << 5;
         const SUM: usize = 1 << 18;
         Self(TrapFrame {
             regs: GeneralRegisters {
-                a0: arg0,
                 sp: ustack_top.as_usize(),
                 ..Default::default()
             },

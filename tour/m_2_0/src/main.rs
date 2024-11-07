@@ -65,7 +65,7 @@ fn main() {
 
     let user_task = task::spawn_user_task(
         Arc::new(Mutex::new(uspace)),
-        UspaceContext::new(entry.into(), ustack_top, 2333),
+        UspaceContext::new(entry.into(), ustack_top),
     );
     let exit_code = user_task.join();
 
