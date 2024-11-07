@@ -1634,6 +1634,7 @@ dependencies = [
 name = "u_6_0"
 version = "0.1.0"
 dependencies = [
+ "axlog",
  "axstd",
 ]
 
@@ -1641,6 +1642,7 @@ dependencies = [
 name = "u_6_1"
 version = "0.1.0"
 dependencies = [
+ "axlog",
  "axstd",
 ]
 
