@@ -6,11 +6,11 @@ use axstd::println;
 
 #[cfg_attr(feature = "axstd", unsafe(no_mangle))]
 fn main() {
-    let ret = unsafe { say_hello() };
-    println!("C ret {}", ret);
+    let ret = unsafe { clinux_start() };
+    println!("cLinux ret [{}].", ret);
 }
 
-#[link(name = "hello", kind = "static")]
+#[link(name = "clinux", kind = "static")]
 unsafe extern "C" {
-    fn say_hello() -> i32;
+    fn clinux_start() -> i32;
 }

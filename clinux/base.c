@@ -10,12 +10,11 @@ unsigned long pfn_base;
 unsigned long va_pa_offset;
 int kmalloc_caches[1];
 
-int say_hello()
+int clinux_start()
 {
-    sbi_console_putchar('D');
+    sbi_puts("cLinux base is starting ...\n");
     cl_virtio_blk_init();
-    sbi_console_putchar('\n');
-    booter_panic("ok!");
+    sbi_puts("cLinux base started!\n");
     return 303;
 }
 

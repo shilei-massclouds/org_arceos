@@ -4,8 +4,8 @@ CFLAGS := -isystem -nostdinc -fno-PIE -mabi=lp64d -march=rv64imafdc \
     -O2 -Wno-stringop-overflow -Wno-format-truncation -Wno-format-security \
     -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration
 
-TARGET = libhello.a
-OBJS := hello.o mine.o
+TARGET = libclinux.a
+OBJS := base.o mine.o
 OBJS += origin/sbi.o
 OBJS += origin/virtio_blk.ko
 
@@ -22,4 +22,4 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o libhello.a
+	rm -f *.o libclinux.a
