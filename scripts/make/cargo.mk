@@ -18,7 +18,10 @@ build_args := \
   $(verbose)
 
 RUSTFLAGS_WITHOUT_LINK_ARG := -A unsafe_op_in_unsafe_fn
-RUSTFLAGS_WITH_LINK_ARG := $(RUSTFLAGS_WITHOUT_LINK_ARG) -C link-arg=-T$(LD_SCRIPT) -C link-arg=-no-pie -C link-arg=-znostart-stop-gc
+RUSTFLAGS_WITH_LINK_ARG := \
+	$(RUSTFLAGS_WITHOUT_LINK_ARG) -C link-arg=-T$(LD_SCRIPT) -C link-arg=-no-pie -C link-arg=-znostart-stop-gc \
+	-C link-arg=-L -Clink-arg=./clinux/
+
 RUSTDOCFLAGS := -Z unstable-options --enable-index-page -D rustdoc::broken_intra_doc_links
 
 ifeq ($(MAKECMDGOALS), doc_check_missing)

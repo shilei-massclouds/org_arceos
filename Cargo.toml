@@ -28,6 +28,8 @@ members = [
     "examples/httpserver",
     "examples/httpserver",
     "examples/shell",
+
+    "examples/linux_virtblk",
 ]
 
 [workspace.package]
