@@ -1,7 +1,8 @@
 #include "booter.h"
 
 void sbi_console_putchar(int ch);
-void cl_virtio_blk_init();
+//void cl_virtio_blk_init();
+void virtio_init();
 
 // NOTE: Don't expose these global vars.
 //struct page *mem_map;
@@ -13,7 +14,8 @@ int kmalloc_caches[1];
 int clinux_start()
 {
     sbi_puts("cLinux base is starting ...\n");
-    cl_virtio_blk_init();
+    //cl_virtio_blk_init();
+    virtio_init();
     sbi_puts("cLinux base started!\n");
     return 303;
 }
@@ -90,6 +92,11 @@ int dec_to_str(unsigned long n, char *str, size_t len)
 }
 
 int snprintf(char *buf, size_t size, const char *fmt, ...)
+{
+    booter_panic("No impl.\n");
+}
+
+int sprintf(char *buf, const char *fmt, ...)
 {
     booter_panic("No impl.\n");
 }

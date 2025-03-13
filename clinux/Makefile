@@ -7,7 +7,8 @@ CFLAGS := -isystem -nostdinc -fno-PIE -mabi=lp64d -march=rv64imafdc \
 TARGET = libclinux.a
 OBJS := base.o mine.o
 OBJS += origin/sbi.o
-OBJS += origin/virtio_blk.ko
+#OBJS += origin/virtio_blk.ko
+OBJS += origin/virtio.ko
 
 CROSS_ = riscv64-linux-gnu-
 CC = $(CROSS_)gcc
