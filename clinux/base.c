@@ -11,15 +11,15 @@ const char hex_asc_upper[] = "0123456789ABCDEF";
 
 void sbi_console_putchar(int ch);
 //void cl_virtio_blk_init();
-//void virtio_init();
+void cl_virtio_init();
 void cl_virtio_mmio_init();
 
 int clinux_start()
 {
     sbi_puts("cLinux base is starting ...\n");
     //cl_virtio_blk_init();
-    //virtio_init();
     sbi_puts("for virtio_mmio ...\n");
+    cl_virtio_init();
     cl_virtio_mmio_init();
     sbi_puts("cLinux base started!\n");
     return 303;

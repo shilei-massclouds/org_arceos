@@ -5,6 +5,7 @@
 use axstd::println;
 
 use alloc::alloc::{alloc, Layout};
+use axstd::os::arceos::modules::axconfig;
 
 extern crate alloc;
 
@@ -18,6 +19,10 @@ fn main() {
 unsafe extern "C" {
     fn clinux_start() -> i32;
 }
+
+//unsigned long va_pa_offset;
+#[unsafe(no_mangle)]
+static va_pa_offset: usize = axconfig::PHYS_VIRT_OFFSET;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_rust_alloc(size: usize, align: usize) -> usize {
