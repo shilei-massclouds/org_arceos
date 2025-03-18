@@ -14,3 +14,8 @@ fn main() {
 unsafe extern "C" {
     fn clinux_start() -> i32;
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn foo() {
+    println!("Hello, foo!");
+}

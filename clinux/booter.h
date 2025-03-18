@@ -4,6 +4,7 @@
 #define _BOOTER_H_
 
 typedef unsigned long size_t;
+typedef _Bool bool;
 
 extern void sbi_puts(const char *s);
 extern void sbi_put_u64(unsigned long n);

@@ -1,21 +1,25 @@
+#include <stdarg.h>
+#include <linux/printk.h>
+#include <linux/ctype.h>
 #include "booter.h"
+
+extern int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
+
+const char hex_asc[] = "0123456789abcdef";
+const char hex_asc_upper[] = "0123456789ABCDEF";
 
 void sbi_console_putchar(int ch);
 //void cl_virtio_blk_init();
-void virtio_init();
-
-// NOTE: Don't expose these global vars.
-//struct page *mem_map;
-void *mem_map = 0;
-unsigned long pfn_base;
-unsigned long va_pa_offset;
-int kmalloc_caches[1];
+//void virtio_init();
+void cl_virtio_mmio_init();
 
 int clinux_start()
 {
     sbi_puts("cLinux base is starting ...\n");
     //cl_virtio_blk_init();
-    virtio_init();
+    //virtio_init();
+    sbi_puts("for virtio_mmio ...\n");
+    cl_virtio_mmio_init();
     sbi_puts("cLinux base started!\n");
     return 303;
 }
@@ -27,6 +31,33 @@ void sbi_puts(const char *s)
             sbi_console_putchar('\r');
         sbi_console_putchar(*s);
     }
+}
+
+int vprintk(const char *fmt, va_list args)
+{
+    int n;
+    char buf[512];
+    char *msg;
+
+    n = vscnprintf(buf, sizeof(buf), fmt, args);
+    if (printk_get_level(buf)) {
+        msg = buf + 2;
+        n -= 2;
+    } else {
+        msg = buf;
+    }
+    sbi_puts(msg);
+    //early_console->write(early_console, msg, n);
+}
+
+int printk(const char *fmt, ...)
+{
+    int ret;
+    va_list args;
+    va_start(args, fmt);
+    ret = vprintk(printk_skip_level(fmt), args);
+    va_end(args);
+    return ret;
 }
 
 void sbi_put_u64(unsigned long n)
@@ -91,12 +122,23 @@ int dec_to_str(unsigned long n, char *str, size_t len)
     return 0;
 }
 
-int snprintf(char *buf, size_t size, const char *fmt, ...)
+/**
+ * skip_spaces - Removes leading whitespace from @str.
+ * @str: The string to be stripped.
+ *
+ * Returns a pointer to the first non-whitespace character in @str.
+ */
+char *skip_spaces(const char *str)
 {
-    booter_panic("No impl.\n");
+    while (isspace(*str))
+        ++str;
+    return (char *)str;
 }
 
-int sprintf(char *buf, const char *fmt, ...)
+__weak void __warn_printk(const char *fmt, ...)
 {
-    booter_panic("No impl.\n");
+    sbi_puts("[RAW_WARN_PRINTK] ");
+    sbi_puts(fmt);
+    sbi_puts("\n");
+    sbi_shutdown();
 }
