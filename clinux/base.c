@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <linux/printk.h>
 #include <linux/ctype.h>
+#include <linux/device.h>
 #include "booter.h"
 
 extern int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
@@ -58,6 +59,14 @@ int printk(const char *fmt, ...)
     ret = vprintk(printk_skip_level(fmt), args);
     va_end(args);
     return ret;
+}
+
+void _dev_warn(const struct device *dev, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vprintk(printk_skip_level(fmt), args);
+    va_end(args);
 }
 
 void sbi_put_u64(unsigned long n)

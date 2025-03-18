@@ -2,12 +2,11 @@
 #include <linux/device.h>
 #include "booter.h"
 
-extern void foo(void);
+extern void *cl_rust_alloc(unsigned long size, unsigned long align);
 
 void *devm_kmalloc(struct device *dev, size_t size, gfp_t gfp)
 {
-    sbi_puts("devm_kmalloc ..\n");
-    foo();
-    sbi_puts("devm_kmalloc ok\n");
-    return NULL;
+    int i;
+    printk("devm_kmalloc ..\n");
+    return cl_rust_alloc(size, 8);
 }

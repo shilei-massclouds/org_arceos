@@ -10,7 +10,7 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
     -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration
 
 TARGET = libclinux.a
-OBJS := base.o mine.o of_platform.o driver_base.o vsprintf.o ctype.o kstrtox.o
+OBJS := base.o mine.o of_platform.o driver_base.o vsprintf.o ctype.o kstrtox.o locking.o
 OBJS += origin/sbi.o
 #OBJS += origin/virtio_blk.ko
 #OBJS += origin/virtio.ko
