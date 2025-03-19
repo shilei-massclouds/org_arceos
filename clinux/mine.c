@@ -8,8 +8,6 @@ CL_MINE(kfree)
 CL_MINE(platform_driver_unregister)
 CL_MINE(platform_get_irq)
 CL_MINE(put_device)
-CL_MINE(_raw_spin_lock_irqsave)
-CL_MINE(_raw_spin_unlock_irqrestore)
 CL_MINE(request_threaded_irq)
 
 CL_MINE(add_uevent_var)

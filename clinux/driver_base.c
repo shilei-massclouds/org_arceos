@@ -58,10 +58,68 @@ int dev_set_name(struct device *dev, const char *fmt, ...)
     return 0;
 }
 
+/**
+ * bus_add_device - add device to bus
+ * @dev: device being added
+ *
+ * - Add device's bus attributes.
+ * - Create links to device's bus.
+ * - Add the device to its bus's list of devices.
+ */
+int bus_add_device(struct device *dev)
+{
+    struct bus_type *bus = dev->bus;
+    if (bus) {
+        printk("bus: '%s': add device %s\n", bus->name, dev_name(dev));
+        klist_add_tail(&dev->p->knode_bus, &bus->p->klist_devices);
+        printk("step2\n");
+    }
+    return 0;
+}
+
+static int device_private_init(struct device *dev)
+{
+    dev->p = kzalloc(sizeof(*dev->p), GFP_KERNEL);
+    if (!dev->p)
+        return -ENOMEM;
+    dev->p->device = dev;
+    //klist_init(&dev->p->klist_children, klist_children_get, klist_children_put);
+    klist_init(&dev->p->klist_children, NULL, NULL);
+    INIT_LIST_HEAD(&dev->p->deferred_probe);
+    return 0;
+}
+
 int device_add(struct device *dev)
 {
+    int error;
     printk("%s: \n", __func__);
+
+    if (!dev->p) {
+        error = device_private_init(dev);
+        if (error) {
+            booter_panic("device_private_init error!");
+        }
+    }
+
+    error = bus_add_device(dev);
+    if (error) {
+        booter_panic("device_add error!");
+    }
+
     return 0;
+}
+
+static struct device *next_device(struct klist_iter *i)
+{
+    struct klist_node *n = klist_next(i);
+    struct device *dev = NULL;
+    struct device_private *dev_prv;
+
+    if (n) {
+        dev_prv = to_device_private_bus(n);
+        dev = dev_prv->device;
+    }
+    return dev;
 }
 
 int bus_for_each_dev(struct bus_type *bus, struct device *start,
@@ -71,20 +129,16 @@ int bus_for_each_dev(struct bus_type *bus, struct device *start,
     struct device *dev;
     int error = 0;
 
-    printk("%s: step1\n", __func__);
     if (!bus || !bus->p)
         return -EINVAL;
 
-    printk("%s: step2\n", __func__);
-    /*
     klist_iter_init_node(&bus->p->klist_devices, &i,
                  (start ? &start->p->knode_bus : NULL));
     while (!error && (dev = next_device(&i)))
         error = fn(dev, data);
+
     klist_iter_exit(&i);
     return error;
-    */
-    booter_panic("END!");
 }
 
 static int __driver_attach(struct device *dev, void *data)
