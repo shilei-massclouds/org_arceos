@@ -69,6 +69,14 @@ void _dev_warn(const struct device *dev, const char *fmt, ...)
     va_end(args);
 }
 
+void _dev_notice(const struct device *dev, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vprintk(printk_skip_level(fmt), args);
+    va_end(args);
+}
+
 void sbi_put_u64(unsigned long n)
 {
     char buf[UL_STR_SIZE];
@@ -150,4 +158,12 @@ __weak void __warn_printk(const char *fmt, ...)
     sbi_puts(fmt);
     sbi_puts("\n");
     sbi_shutdown();
+}
+
+char *strchr(const char *s, int c)
+{
+    for (; *s != (char)c; ++s)
+        if (*s == '\0')
+            return NULL;
+    return (char *)s;
 }

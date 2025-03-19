@@ -175,7 +175,7 @@ int driver_probe_device(struct device_driver *drv, struct device *dev)
         }
     }
 
-    booter_panic("END!");
+    return 0;
 }
 
 /**
