@@ -7,6 +7,8 @@ typedef unsigned long size_t;
 typedef _Bool bool;
 
 extern void *cl_rust_alloc(unsigned long size, unsigned long align);
+extern void cl_rust_dealloc(const void *addr);
+extern void *cl_alloc_pages(unsigned long size, unsigned long align);
 
 extern void sbi_puts(const char *s);
 extern void sbi_put_u64(unsigned long n);
