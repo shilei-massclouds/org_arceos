@@ -12,9 +12,9 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
 TARGET = libclinux.a
 OBJS := base.o mine.o of_platform.o driver_base.o vsprintf.o ctype.o kstrtox.o locking.o sched.o
 OBJS += origin/sbi.o
-#OBJS += origin/virtio_blk.ko
 OBJS += origin/virtio.ko
 OBJS += origin/virtio_mmio.ko
+OBJS += origin/virtio_blk.ko
 
 CROSS_ = riscv64-linux-gnu-
 CC = $(CROSS_)gcc
