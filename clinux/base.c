@@ -36,6 +36,8 @@ static struct bio *cl_bio_alloc(unsigned int nr_iovecs)
 
     bio = kmalloc(struct_size(bio, bi_inline_vecs, nr_iovecs), 0);
     bio_init(bio, NULL, 0);
+    bio->bi_max_vecs = nr_iovecs;
+    bio->bi_io_vec = bio->bi_inline_vecs;
     return bio;
 }
 
@@ -61,9 +63,14 @@ int clinux_start()
 
     struct request rq;
     rq.nr_phys_segments = 1;
+    rq.__sector = 0x20;
+    rq.ioprio = 0;
+
     rq.bio = cl_bio_alloc(1);
-    rq.bio->bi_iter.bi_size = 4096;
-    rq.bio->bi_iter.bi_sector = 0x20;
+    rq.bio->bi_iter.bi_sector = rq.__sector;
+
+    void *buf = alloc_pages_exact(4096, 0);
+    __bio_add_page(rq.bio, buf, 4096, 0);
 
     struct blk_mq_queue_data data;
     data.rq = &rq;
@@ -220,14 +227,14 @@ char *strchr(const char *s, int c)
 
 unsigned long page_to_pfn(const struct page *page)
 {
-    unsigned long ret = (unsigned long)page;
-    printk("%s: page(%lx)\n", __func__, ret);
-    return ret >> 12;
+    unsigned long ret = virt_to_pfn(page);
+    printk("%s: pfn(%lx)\n", __func__, ret);
+    return ret;
 }
 
 struct page *pfn_to_page(unsigned long pfn)
 {
-    struct page *ret = (struct page *)(pfn << 12);
-    printk("%s: pfn(%lx)\n", __func__, pfn);
+    struct page *ret = pfn_to_virt(pfn);
+    printk("%s: page(%lx)\n", __func__, (unsigned long)ret);
     return ret;
 }

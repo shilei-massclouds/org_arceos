@@ -6,6 +6,7 @@ CL_MINE(devm_kfree)
 CL_MINE(free_irq)
 CL_MINE(platform_driver_unregister)
 CL_MINE(put_device)
+CL_MINE(dump_page)
 
 CL_MINE(add_uevent_var)
 CL_MINE(bus_unregister)

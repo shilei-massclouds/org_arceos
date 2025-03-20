@@ -349,16 +349,20 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
 {
     int nsegs = 0;
     struct bio_vec bvec;
+    struct bvec_iter iter;
 
-    printk("%s: set bv_page ...\n", __func__);
-    bvec.bv_page = 0;
-    bvec.bv_len = 4096;
-    bvec.bv_offset = 0;
+    for_each_bio(bio) {
+        printk("%s: bio \n", __func__);
+        bio_for_each_bvec(bvec, bio, iter) {
+            printk("%s: bvec (0x%lx) len(%u) offset(%u)\n",
+                   __func__, bvec.bv_page, bvec.bv_len, bvec.bv_offset);
+        }
 
-    if (bvec.bv_offset + bvec.bv_len <= PAGE_SIZE)
-        nsegs += __blk_bvec_map_sg(bvec, sglist, sg);
-    else
-        nsegs += blk_bvec_map_sg(q, &bvec, sglist, sg);
+        if (bvec.bv_offset + bvec.bv_len <= PAGE_SIZE)
+            nsegs += __blk_bvec_map_sg(bvec, sglist, sg);
+        else
+            nsegs += blk_bvec_map_sg(q, &bvec, sglist, sg);
+    }
 
     return nsegs;
 }
@@ -395,4 +399,24 @@ int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
     WARN_ON(nsegs > blk_rq_nr_phys_segments(rq));
 
     return nsegs;
+}
+
+void __bio_add_page(struct bio *bio, struct page *page,
+        unsigned int len, unsigned int off)
+{
+    struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt];
+
+    printk("%s: (%lx) len(%u) off(%u)\n", __func__, (unsigned long)page, len, off);
+    WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
+    WARN_ON_ONCE(bio_full(bio, len));
+
+    bv->bv_page = page;
+    bv->bv_offset = off;
+    bv->bv_len = len;
+
+    bio->bi_iter.bi_size += len;
+    bio->bi_vcnt++;
+
+    if (!bio_flagged(bio, BIO_WORKINGSET) && unlikely(PageWorkingset(page)))
+        bio_set_flag(bio, BIO_WORKINGSET);
 }
