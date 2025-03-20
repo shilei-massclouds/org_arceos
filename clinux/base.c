@@ -2,6 +2,9 @@
 #include <linux/printk.h>
 #include <linux/ctype.h>
 #include <linux/device.h>
+#include <linux/blk-mq.h>
+#include <linux/blk_types.h>
+
 #include "booter.h"
 
 extern int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
@@ -14,6 +17,28 @@ void cl_virtio_init();
 void cl_virtio_mmio_init();
 void cl_virtio_blk_init();
 
+extern struct gendisk *cl_disk;
+
+void bio_init(struct bio *bio, struct bio_vec *table,
+          unsigned short max_vecs)
+{
+    memset(bio, 0, sizeof(*bio));
+    atomic_set(&bio->__bi_remaining, 1);
+    atomic_set(&bio->__bi_cnt, 1);
+
+    bio->bi_io_vec = table;
+    bio->bi_max_vecs = max_vecs;
+}
+
+static struct bio *cl_bio_alloc(unsigned int nr_iovecs)
+{
+    struct bio *bio;
+
+    bio = kmalloc(struct_size(bio, bi_inline_vecs, nr_iovecs), 0);
+    bio_init(bio, NULL, 0);
+    return bio;
+}
+
 int clinux_start()
 {
     sbi_puts("cLinux base is starting ...\n");
@@ -21,8 +46,33 @@ int clinux_start()
     cl_virtio_init();
     cl_virtio_mmio_init();
     cl_virtio_blk_init();
+
+    /* Test virtio_blk disk. */
+    if (cl_disk == NULL || cl_disk->queue == NULL) {
+        booter_panic("cl_disk or its rq is NULL! check device_add_disk.");
+    }
+    const struct blk_mq_ops *mq_ops = cl_disk->queue->mq_ops;
+    if (mq_ops == NULL) {
+        booter_panic("mq_ops is NULL!");
+    }
+
+    struct blk_mq_hw_ctx hw_ctx;
+    hw_ctx.queue = cl_disk->queue;
+
+    struct request rq;
+    rq.nr_phys_segments = 1;
+    rq.bio = cl_bio_alloc(1);
+    rq.bio->bi_iter.bi_size = 4096;
+    rq.bio->bi_iter.bi_sector = 0x20;
+
+    struct blk_mq_queue_data data;
+    data.rq = &rq;
+
+    printk("mq_ops->queue_rq ...\n");
+    blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
+    printk("mq_ops->queue_rq status (%d)\n", status);
     sbi_puts("cLinux base started!\n");
-    return 303;
+    return 0;
 }
 
 void sbi_puts(const char *s)
@@ -166,4 +216,18 @@ char *strchr(const char *s, int c)
         if (*s == '\0')
             return NULL;
     return (char *)s;
+}
+
+unsigned long page_to_pfn(const struct page *page)
+{
+    unsigned long ret = (unsigned long)page;
+    printk("%s: page(%lx)\n", __func__, ret);
+    return ret >> 12;
+}
+
+struct page *pfn_to_page(unsigned long pfn)
+{
+    struct page *ret = (struct page *)(pfn << 12);
+    printk("%s: pfn(%lx)\n", __func__, pfn);
+    return ret;
 }

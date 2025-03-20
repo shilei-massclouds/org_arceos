@@ -8,12 +8,17 @@ use alloc::alloc::{alloc, Layout};
 use axstd::os::arceos::modules::axconfig;
 use axstd::os::arceos::modules::axalloc::global_allocator;
 use axstd::os::arceos::modules::axhal::mem::PAGE_SIZE_4K;
+use axstd::os::arceos::modules::axhal::time::busy_wait;
 
 extern crate alloc;
 
 #[cfg_attr(feature = "axstd", unsafe(no_mangle))]
 fn main() {
+    use core::time::Duration;
+
     let ret = unsafe { clinux_start() };
+    busy_wait(Duration::from_secs(3));
+    //axhal::arch::wait_for_irqs();
     println!("cLinux ret [{}].", ret);
 }
 
