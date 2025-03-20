@@ -74,6 +74,7 @@ int clinux_start()
 
     struct blk_mq_queue_data data;
     data.rq = &rq;
+    data.last = true;
 
     printk("mq_ops->queue_rq ...\n");
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
