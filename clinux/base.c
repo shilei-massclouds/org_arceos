@@ -70,6 +70,10 @@ int clinux_start()
     rq.bio->bi_iter.bi_sector = rq.__sector;
 
     void *buf = alloc_pages_exact(4096, 0);
+    {
+        char*p = (char *)buf;
+        printk("Block: %x, %x, %x, %x\n", p[0], p[1], p[2], p[3]);
+    }
     __bio_add_page(rq.bio, buf, 4096, 0);
 
     struct blk_mq_queue_data data;
@@ -80,6 +84,10 @@ int clinux_start()
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
     printk("mq_ops->queue_rq status (%d)\n", status);
     sbi_puts("cLinux base started!\n");
+    {
+        char*p = (char *)buf;
+        printk("Block: %x, %x, %x, %x\n", p[0], p[1], p[2], p[3]);
+    }
     return 0;
 }
 
