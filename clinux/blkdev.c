@@ -355,7 +355,7 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
         printk("%s: bio \n", __func__);
         bio_for_each_bvec(bvec, bio, iter) {
             printk("%s: bvec (0x%lx) len(%u) offset(%u)\n",
-                   __func__, bvec.bv_page, bvec.bv_len, bvec.bv_offset);
+                   __func__, (unsigned long)bvec.bv_page, bvec.bv_len, bvec.bv_offset);
         }
 
         if (bvec.bv_offset + bvec.bv_len <= PAGE_SIZE)

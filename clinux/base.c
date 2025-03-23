@@ -4,20 +4,29 @@
 #include <linux/device.h>
 #include <linux/blk-mq.h>
 #include <linux/blk_types.h>
+#include <linux/of.h>
+#include <linux/irqdomain.h>
 
 #include "booter.h"
 
 extern int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
 
+extern const struct irq_domain_ops *irq_domain_ops;
+
 const char hex_asc[] = "0123456789abcdef";
 const char hex_asc_upper[] = "0123456789ABCDEF";
+
+extern struct irq_chip *plic_chip;
 
 void sbi_console_putchar(int ch);
 void cl_virtio_init();
 void cl_virtio_mmio_init();
 void cl_virtio_blk_init();
+int plic_init(struct device_node *node, struct device_node *parent);
 
 extern struct gendisk *cl_disk;
+
+unsigned long boot_cpu_hartid;
 
 void bio_init(struct bio *bio, struct bio_vec *table,
           unsigned short max_vecs)
@@ -44,10 +53,34 @@ static struct bio *cl_bio_alloc(unsigned int nr_iovecs)
 int clinux_start()
 {
     sbi_puts("cLinux base is starting ...\n");
+
+    struct device_node plic_node;
+    plic_node.name = "plic";
+    sbi_puts("plic_init ...\n");
+    plic_init(&plic_node, NULL);
+    sbi_puts("plic_init ok!\n");
+
+    if (irq_domain_ops == NULL) {
+        booter_panic("irq_domain_ops is NULL!");
+    }
+
+    struct irq_fwspec fwspec;
+    fwspec.param_count = 1;
+    fwspec.param[0] = 8;
+
+    struct irq_domain root_irq_domain;
+    irq_domain_ops->alloc(&root_irq_domain, 1, 1, &fwspec);
+
     sbi_puts("for virtio_mmio ...\n");
     cl_virtio_init();
     cl_virtio_mmio_init();
     cl_virtio_blk_init();
+
+    /* For virtio_blk, enable irq */
+    struct irq_data irq_data;
+    irq_data.irq = 3;
+    irq_data.hwirq = 8;
+    plic_chip->irq_unmask(&irq_data);
 
     /* Test virtio_blk disk. */
     if (cl_disk == NULL || cl_disk->queue == NULL) {
@@ -246,4 +279,19 @@ struct page *pfn_to_page(unsigned long pfn)
     struct page *ret = pfn_to_virt(pfn);
     printk("%s: page(%lx)\n", __func__, (unsigned long)ret);
     return ret;
+}
+
+int strcmp(const char *cs, const char *ct)
+{
+    unsigned char c1, c2;
+
+    while (1) {
+        c1 = *cs++;
+        c2 = *ct++;
+        if (c1 != c2)
+            return c1 < c2 ? -1 : 1;
+        if (!c1)
+            break;
+    }
+    return 0;
 }

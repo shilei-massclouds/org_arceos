@@ -17,6 +17,7 @@ OBJS += origin/sbi.o
 OBJS += origin/virtio.ko
 OBJS += origin/virtio_mmio.ko
 OBJS += origin/virtio_blk.ko
+OBJS += origin/irq_sifive_plic.ko
 
 CROSS_ = riscv64-linux-gnu-
 CC = $(CROSS_)gcc
