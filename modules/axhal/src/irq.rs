@@ -12,14 +12,19 @@ pub type IrqHandler = handler_table::Handler;
 
 static IRQ_HANDLER_TABLE: HandlerTable<MAX_IRQ_COUNT> = HandlerTable::new();
 
+unsafe extern "C" {
+    fn plic_handle_irq();
+}
+
 /// Platform-independent IRQ dispatching.
 #[allow(dead_code)]
 pub(crate) fn dispatch_irq_common(irq_num: usize) {
     trace!("IRQ {}", irq_num);
     if !IRQ_HANDLER_TABLE.handle(irq_num) {
-        warn!("Get irq from Plic! Claim and complete!");
-        use riscv::register::sie;
-        unsafe { sie::clear_sext() };
+        info!("Get irq from Plic! Claim and complete!");
+        unsafe { plic_handle_irq() };
+        //use riscv::register::sie;
+        //unsafe { sie::clear_sext() };
     }
 }
 
