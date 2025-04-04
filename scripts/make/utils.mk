@@ -16,6 +16,12 @@ define make_disk_image_fat32
   @printf "    $(GREEN_C)Creating$(END_C) FAT32 disk image \"$(1)\" ...\n"
   @dd if=/dev/zero of=$(1) bs=1M count=64
   @mkfs.fat -F 32 $(1)
+  @mkdir -p ./mnt
+  @sudo mount $(1) ./mnt
+  @sudo mkdir -p ./mnt/lib
+  @sudo touch ./mnt/a.txt
+  @sudo umount ./mnt
+  @rm -rf mnt
 endef
 
 define make_disk_image

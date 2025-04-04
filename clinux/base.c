@@ -50,11 +50,15 @@ static struct bio *cl_bio_alloc(unsigned int nr_iovecs)
     return bio;
 }
 
-int clinux_start()
+struct device_node plic_node;
+struct irq_fwspec fwspec;
+struct irq_domain root_irq_domain;
+struct irq_data irq_data;
+
+int clinux_init()
 {
     sbi_puts("cLinux base is starting ...\n");
 
-    struct device_node plic_node;
     plic_node.name = "plic";
     sbi_puts("plic_init ...\n");
     plic_init(&plic_node, NULL);
@@ -64,11 +68,9 @@ int clinux_start()
         booter_panic("irq_domain_ops is NULL!");
     }
 
-    struct irq_fwspec fwspec;
     fwspec.param_count = 1;
     fwspec.param[0] = 8;
 
-    struct irq_domain root_irq_domain;
     irq_domain_ops->alloc(&root_irq_domain, 1, 1, &fwspec);
 
     sbi_puts("for virtio_mmio ...\n");
@@ -77,10 +79,16 @@ int clinux_start()
     cl_virtio_blk_init();
 
     /* For virtio_blk, enable irq */
-    struct irq_data irq_data;
     irq_data.irq = 3;
     irq_data.hwirq = 8;
     plic_chip->irq_unmask(&irq_data);
+
+    return 0;
+}
+
+int cl_read_block(int blk_nr, void *rbuf, int count)
+{
+    printk("read_block id[%d] count[%d] ...\n", blk_nr, count);
 
     /* Test virtio_blk disk. */
     if (cl_disk == NULL || cl_disk->queue == NULL) {
@@ -92,12 +100,16 @@ int clinux_start()
     }
 
     struct blk_mq_hw_ctx hw_ctx;
+    memset(&hw_ctx, 0, sizeof(hw_ctx));
     hw_ctx.queue = cl_disk->queue;
+    hw_ctx.queue_num = 0;
 
     struct request rq;
+    memset(&rq, 0, sizeof(rq));
     rq.nr_phys_segments = 1;
-    rq.__sector = 0x20;
+    rq.__sector = blk_nr;
     rq.ioprio = 0;
+    rq.cmd_flags = REQ_OP_READ;
 
     rq.bio = cl_bio_alloc(1);
     rq.bio->bi_iter.bi_sector = rq.__sector;
@@ -110,6 +122,7 @@ int clinux_start()
     __bio_add_page(rq.bio, buf, 4096, 0);
 
     struct blk_mq_queue_data data;
+    memset(&data, 0, sizeof(data));
     data.rq = &rq;
     data.last = true;
 
@@ -120,6 +133,7 @@ int clinux_start()
     {
         char*p = (char *)buf;
         printk("Block: %x, %x, %x, %x\n", p[0], p[1], p[2], p[3]);
+        memcpy(rbuf, p, count);
     }
     return 0;
 }

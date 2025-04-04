@@ -144,8 +144,10 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     #[cfg(feature = "alloc")]
     init_allocator();
 
+    /*
     #[cfg(feature = "paging")]
     axmm::init_memory_management();
+    */
 
     info!("Initialize platform devices...");
     axhal::platform_init();
@@ -153,6 +155,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     #[cfg(feature = "multitask")]
     axtask::init_scheduler();
 
+    /*
     #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
     {
         #[allow(unused_variables)]
@@ -167,6 +170,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         #[cfg(feature = "display")]
         axdisplay::init_display(all_devices.display);
     }
+    */
 
     #[cfg(feature = "smp")]
     self::mp::start_secondary_cpus(cpu_id);

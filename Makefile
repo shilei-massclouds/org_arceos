@@ -152,7 +152,10 @@ LD_SCRIPT := $(TARGET_DIR)/$(TARGET)/$(MODE)/linker_$(PLATFORM_NAME).lds
 OUT_ELF := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).elf
 OUT_BIN := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).bin
 
-all: build
+all: prepare build
+
+prepare:
+	make -C clinux
 
 include scripts/make/utils.mk
 include scripts/make/build.mk
@@ -223,4 +226,4 @@ clean_c::
 	rm -rf ulib/axlibc/build_*
 	rm -rf $(app-objs)
 
-.PHONY: all build disasm run justrun debug clippy fmt fmt_c test test_no_fail_fast clean clean_c doc disk_image
+.PHONY: all build disasm run justrun debug clippy fmt fmt_c test test_no_fail_fast clean clean_c doc disk_img prepare

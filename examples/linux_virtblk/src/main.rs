@@ -5,10 +5,13 @@
 use axstd::println;
 
 use alloc::alloc::{alloc, Layout};
+use alloc::vec::Vec;
+use alloc::string::String;
 use axstd::os::arceos::modules::axconfig;
 use axstd::os::arceos::modules::axalloc::global_allocator;
 use axstd::os::arceos::modules::axhal::mem::PAGE_SIZE_4K;
 use axstd::os::arceos::modules::axhal::time::busy_wait;
+use axstd::os::arceos::modules::axfs::init_filesystems_clinux;
 
 extern crate alloc;
 
@@ -16,15 +19,41 @@ extern crate alloc;
 fn main() {
     use core::time::Duration;
 
-    let ret = unsafe { clinux_start() };
-    busy_wait(Duration::from_secs(3));
-    //axhal::arch::wait_for_irqs();
-    println!("cLinux ret [{}].", ret);
+    let ret = unsafe { clinux_init() };
+    //busy_wait(Duration::from_secs(3));
+    println!("cLinux init [{}].", ret);
+
+    init_filesystems_clinux();
+
+    let pwd = axstd::env::current_dir().unwrap();
+    println!("{}", &pwd);
+
+    let is_dir = axstd::fs::metadata(&pwd).unwrap().is_dir();
+    if !is_dir {
+        panic!("is file!");
+        //return show_entry_info(pwd, pwd);
+    }
+
+    let mut entries = axstd::fs::read_dir(&pwd).unwrap()
+        .filter_map(|e| e.ok())
+        .map(|e| e.file_name())
+        .collect::<Vec<_>>();
+    entries.sort();
+
+    for entry in &entries {
+        println!("{}", &entry);
+    }
+
+    println!("'ls' fat32 Ok. entrys[{}]", entries.len());
+
+    //let ret = unsafe { cl_read_block(0) };
+    //println!("cLinux read_block [{}].", ret);
 }
 
 #[link(name = "clinux", kind = "static")]
 unsafe extern "C" {
-    fn clinux_start() -> i32;
+    fn clinux_init() -> i32;
+    //fn cl_read_block(blk_nr: i32) -> i32;
 }
 
 #[unsafe(no_mangle)]

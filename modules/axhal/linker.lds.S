@@ -12,6 +12,7 @@ SECTIONS
         _stext = .;
         *(.text.boot)
         *(.text .text.*)
+        *(*.text)
         . = ALIGN(4K);
         _etext = .;
     }

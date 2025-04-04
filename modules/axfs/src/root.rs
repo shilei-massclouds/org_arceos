@@ -157,6 +157,7 @@ pub(crate) fn init_rootfs(disk: crate::dev::Disk) {
 
     let mut root_dir = RootDirectory::new(main_fs);
 
+    /*
     #[cfg(feature = "devfs")]
     root_dir
         .mount("/dev", mounts::devfs())
@@ -178,6 +179,7 @@ pub(crate) fn init_rootfs(disk: crate::dev::Disk) {
     root_dir // should not fail
         .mount("/sys", mounts::sysfs().unwrap())
         .expect("fail to mount sysfs at /sys");
+        */
 
     ROOT_DIR.init_once(Arc::new(root_dir));
     CURRENT_DIR.init_once(Mutex::new(ROOT_DIR.clone()));
