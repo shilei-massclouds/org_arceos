@@ -35,7 +35,7 @@ LOG ?= warn
 V ?=
 
 # App options
-A ?= examples/linux_virtblk
+A ?= examples/linux_ext2
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=

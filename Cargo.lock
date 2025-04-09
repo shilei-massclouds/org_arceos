@@ -69,6 +69,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-linux-ext2"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
 name = "arceos-linux-virtblk"
 version = "0.1.0"
 dependencies = [

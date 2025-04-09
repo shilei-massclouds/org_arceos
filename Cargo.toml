@@ -30,6 +30,7 @@ members = [
     "examples/shell",
 
     "examples/linux_virtblk",
+    "examples/linux_ext2",
 ]
 
 [workspace.package]
