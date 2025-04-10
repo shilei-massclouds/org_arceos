@@ -20,9 +20,9 @@ fn main() {
     use core::time::Duration;
 
     let ret = unsafe { clinux_init() };
-    //busy_wait(Duration::from_secs(3));
     println!("cLinux init [{}].", ret);
 
+    /*&
     init_filesystems_clinux();
 
     let pwd = axstd::env::current_dir().unwrap();
@@ -45,6 +45,7 @@ fn main() {
     }
 
     println!("'ls' fat32 Ok. entrys[{}]", entries.len());
+    */
 
     //let ret = unsafe { cl_read_block(0) };
     //println!("cLinux read_block [{}].", ret);

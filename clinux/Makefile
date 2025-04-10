@@ -10,14 +10,16 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
     -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration
 
 TARGET = libclinux.a
-OBJS := base.o mine.o of_platform.o driver_base.o vsprintf.o ctype.o kstrtox.o locking.o \
+OBJS := base.o mine.o ctype.o
+#OBJS := base.o mine.o of_platform.o driver_base.o vsprintf.o ctype.o kstrtox.o locking.o \
 		sched.o workqueue.o alloc.o blkdev.o klist.o irq.o backing_dev.o string_helpers.o \
 		scatterlist.o
 OBJS += origin/sbi.o
-OBJS += origin/virtio.ko
-OBJS += origin/virtio_mmio.ko
-OBJS += origin/virtio_blk.ko
-OBJS += origin/irq_sifive_plic.ko
+#OBJS += origin/virtio.ko
+#OBJS += origin/virtio_mmio.ko
+#OBJS += origin/virtio_blk.ko
+#OBJS += origin/irq_sifive_plic.ko
+OBJS += origin/ext2.ko
 
 CROSS_ = riscv64-linux-gnu-
 CC = $(CROSS_)gcc

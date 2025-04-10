@@ -6,19 +6,27 @@
 #include <linux/blk_types.h>
 #include <linux/of.h>
 #include <linux/irqdomain.h>
+#include <linux/user_namespace.h>
 
 #include "booter.h"
 
-extern int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
+int fs_overflowuid = DEFAULT_FS_OVERFLOWUID;
+int fs_overflowgid = DEFAULT_FS_OVERFLOWGID;
+
+//extern int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
 
 extern const struct irq_domain_ops *irq_domain_ops;
 
 const char hex_asc[] = "0123456789abcdef";
 const char hex_asc_upper[] = "0123456789ABCDEF";
 
+struct user_namespace init_user_ns;
+struct super_block *blockdev_superblock = NULL;
+
 extern struct irq_chip *plic_chip;
 
-void sbi_console_putchar(int ch);
+//void sbi_console_putchar(int ch);
+void cl_ext2_init();
 void cl_virtio_init();
 void cl_virtio_mmio_init();
 void cl_virtio_blk_init();
@@ -59,6 +67,9 @@ int clinux_init()
 {
     sbi_puts("cLinux base is starting ...\n");
 
+    cl_ext2_init();
+
+    /*
     plic_node.name = "plic";
     sbi_puts("plic_init ...\n");
     plic_init(&plic_node, NULL);
@@ -78,10 +89,11 @@ int clinux_init()
     cl_virtio_mmio_init();
     cl_virtio_blk_init();
 
-    /* For virtio_blk, enable irq */
+    // For virtio_blk, enable irq
     irq_data.irq = 3;
     irq_data.hwirq = 8;
     plic_chip->irq_unmask(&irq_data);
+    */
 
     return 0;
 }
@@ -164,6 +176,7 @@ int vprintk(const char *fmt, va_list args)
     //early_console->write(early_console, msg, n);
 }
 
+/*
 int printk(const char *fmt, ...)
 {
     int ret;
@@ -173,6 +186,7 @@ int printk(const char *fmt, ...)
     va_end(args);
     return ret;
 }
+*/
 
 void _dev_warn(const struct device *dev, const char *fmt, ...)
 {
@@ -281,6 +295,7 @@ char *strchr(const char *s, int c)
     return (char *)s;
 }
 
+/*
 unsigned long page_to_pfn(const struct page *page)
 {
     unsigned long ret = virt_to_pfn(page);
@@ -294,6 +309,7 @@ struct page *pfn_to_page(unsigned long pfn)
     printk("%s: page(%lx)\n", __func__, (unsigned long)ret);
     return ret;
 }
+*/
 
 int strcmp(const char *cs, const char *ct)
 {
