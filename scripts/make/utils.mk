@@ -19,11 +19,24 @@ define make_disk_image_fat32
   @mkdir -p ./mnt
   @sudo mount $(1) ./mnt
   @sudo mkdir -p ./mnt/lib
-  @sudo touch ./mnt/a.txt
+  @sudo touch ./mnt/fat32.txt
+  @sudo umount ./mnt
+  @rm -rf mnt
+endef
+
+define make_disk_image_ext2
+  @printf "    $(GREEN_C)Creating$(END_C) Ext2 disk image \"$(1)\" ...\n"
+  @dd if=/dev/zero of=$(1) bs=1M count=64
+  @mkfs.ext2 $(1)
+  @mkdir -p ./mnt
+  @sudo mount $(1) ./mnt
+  @sudo mkdir -p ./mnt/lib
+  @sudo touch ./mnt/ext2.txt
   @sudo umount ./mnt
   @rm -rf mnt
 endef
 
 define make_disk_image
   $(if $(filter $(1),fat32), $(call make_disk_image_fat32,$(2)))
+  $(if $(filter $(1),ext2), $(call make_disk_image_ext2,$(2)))
 endef

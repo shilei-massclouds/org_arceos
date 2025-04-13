@@ -215,7 +215,8 @@ disk_img:
 ifneq ($(wildcard $(DISK_IMG)),)
 	@printf "$(YELLOW_C)warning$(END_C): disk image \"$(DISK_IMG)\" already exists!\n"
 else
-	$(call make_disk_image,fat32,$(DISK_IMG))
+#$(call make_disk_image,fat32,$(DISK_IMG))
+	$(call make_disk_image,ext2,$(DISK_IMG))
 endif
 
 clean: clean_c

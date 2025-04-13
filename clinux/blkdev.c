@@ -3,9 +3,14 @@
 #include <linux/genhd.h>
 #include <linux/blk-mq.h>
 #include <linux/backing-dev.h>
+#include <linux/buffer_head.h>
 
 #include "booter.h"
 #include "blk-wbt.h"
+
+#define BLOCK_SIZE 1024
+
+extern int cl_read_block(int blk_nr, void *rbuf, int count);
 
 int register_blkdev(unsigned int major, const char *name)
 {
@@ -301,7 +306,7 @@ void device_add_disk(struct device *parent, struct gendisk *disk,
 
 void blk_mq_start_request(struct request *rq)
 {
-    printk("%s: No impl.\n", __func__);
+    //printk("%s: No impl.\n", __func__);
 }
 
 static inline struct scatterlist *blk_next_sg(struct scatterlist **sg,
@@ -352,10 +357,12 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
     struct bvec_iter iter;
 
     for_each_bio(bio) {
-        printk("%s: bio \n", __func__);
+        //printk("%s: bio \n", __func__);
         bio_for_each_bvec(bvec, bio, iter) {
+            /*
             printk("%s: bvec (0x%lx) len(%u) offset(%u)\n",
                    __func__, (unsigned long)bvec.bv_page, bvec.bv_len, bvec.bv_offset);
+                   */
         }
 
         if (bvec.bv_offset + bvec.bv_len <= PAGE_SIZE)
@@ -376,20 +383,22 @@ int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
 {
     int nsegs = 0;
 
-    printk("%s: ...\n", __func__);
+    //printk("%s: ...\n", __func__);
     if (rq->rq_flags & RQF_SPECIAL_PAYLOAD)
         nsegs = __blk_bvec_map_sg(rq->special_vec, sglist, last_sg);
     else if (rq->bio && bio_op(rq->bio) == REQ_OP_WRITE_SAME)
         nsegs = __blk_bvec_map_sg(bio_iovec(rq->bio), sglist, last_sg);
     else if (rq->bio) {
         nsegs = __blk_bios_map_sg(q, rq->bio, sglist, last_sg);
-        printk("%s: nsegs(%d)\n", __func__, nsegs);
+        //printk("%s: nsegs(%d)\n", __func__, nsegs);
     }
 
     if (*last_sg) {
         sg_mark_end(*last_sg);
+        /*
         printk("%s: last_sg blk_rq_nr_phys_segments(%d)\n",
                __func__, blk_rq_nr_phys_segments(rq));
+               */
     }
 
     /*
@@ -406,7 +415,7 @@ void __bio_add_page(struct bio *bio, struct page *page,
 {
     struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt];
 
-    printk("%s: (%lx) len(%u) off(%u)\n", __func__, (unsigned long)page, len, off);
+    //printk("%s: (%lx) len(%u) off(%u)\n", __func__, (unsigned long)page, len, off);
     WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
     WARN_ON_ONCE(bio_full(bio, len));
 
@@ -419,4 +428,53 @@ void __bio_add_page(struct bio *bio, struct page *page,
 
     if (!bio_flagged(bio, BIO_WORKINGSET) && unlikely(PageWorkingset(page)))
         bio_set_flag(bio, BIO_WORKINGSET);
+}
+
+int sb_min_blocksize(struct super_block *sb, int size)
+{
+    return BLOCK_SIZE;
+}
+
+int sb_set_blocksize(struct super_block *sb, int size)
+{
+    /* If we get here, we know size is power of two
+     * and it's value is between 512 and PAGE_SIZE */
+    sb->s_blocksize = size;
+    sb->s_blocksize_bits = blksize_bits(size);
+    return sb->s_blocksize;
+}
+
+struct buffer_head *
+__bread_gfp(struct block_device *bdev, sector_t block,
+           unsigned size, gfp_t gfp)
+{
+    printk("%s: blknr(%llu) size(%u)\n", __func__, block, size);
+
+    int blkid;
+    int offset;
+    if (size == 4096) {
+        blkid = block * 8;
+        offset = 0;
+    } else {
+        blkid = block * 2;
+        offset = 0;
+    }
+
+    void *buf = alloc_pages_exact(4096, 0);
+    cl_read_block(blkid, buf, 4096);
+
+    struct buffer_head *bh = kmalloc(sizeof(struct buffer_head), 0);
+    bh->b_data = buf + offset;
+    bh->b_size = 4096;
+    return bh;
+}
+
+void __brelse(struct buffer_head * buf)
+{
+    printk("%s: impl it.\n", __func__);
+}
+
+void rb_insert_color(struct rb_node *node, struct rb_root *root)
+{
+    printk("%s: impl it.\n", __func__);
 }

@@ -7,13 +7,14 @@
 #include <linux/of.h>
 #include <linux/irqdomain.h>
 #include <linux/user_namespace.h>
+#include <linux/uidgid.h>
 
 #include "booter.h"
 
 int fs_overflowuid = DEFAULT_FS_OVERFLOWUID;
 int fs_overflowgid = DEFAULT_FS_OVERFLOWGID;
 
-//extern int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
+extern int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
 
 extern const struct irq_domain_ops *irq_domain_ops;
 
@@ -63,13 +64,12 @@ struct irq_fwspec fwspec;
 struct irq_domain root_irq_domain;
 struct irq_data irq_data;
 
+extern struct dentry *call_ext2_mount(void);
+
 int clinux_init()
 {
     sbi_puts("cLinux base is starting ...\n");
 
-    cl_ext2_init();
-
-    /*
     plic_node.name = "plic";
     sbi_puts("plic_init ...\n");
     plic_init(&plic_node, NULL);
@@ -93,7 +93,13 @@ int clinux_init()
     irq_data.irq = 3;
     irq_data.hwirq = 8;
     plic_chip->irq_unmask(&irq_data);
-    */
+
+    cl_ext2_init();
+
+    struct dentry *root = call_ext2_mount();
+    if (root == NULL) {
+        booter_panic("ext2 mount error!");
+    }
 
     return 0;
 }
@@ -127,10 +133,12 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     rq.bio->bi_iter.bi_sector = rq.__sector;
 
     void *buf = alloc_pages_exact(4096, 0);
+    /*
     {
         char*p = (char *)buf;
         printk("Block: %x, %x, %x, %x\n", p[0], p[1], p[2], p[3]);
     }
+    */
     __bio_add_page(rq.bio, buf, 4096, 0);
 
     struct blk_mq_queue_data data;
@@ -138,10 +146,10 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     data.rq = &rq;
     data.last = true;
 
-    printk("mq_ops->queue_rq ...\n");
+    //printk("mq_ops->queue_rq ...\n");
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
-    printk("mq_ops->queue_rq status (%d)\n", status);
-    sbi_puts("cLinux base started!\n");
+    //printk("mq_ops->queue_rq status (%d)\n", status);
+    //sbi_puts("cLinux base started!\n");
     {
         char*p = (char *)buf;
         printk("Block: %x, %x, %x, %x\n", p[0], p[1], p[2], p[3]);
@@ -176,7 +184,6 @@ int vprintk(const char *fmt, va_list args)
     //early_console->write(early_console, msg, n);
 }
 
-/*
 int printk(const char *fmt, ...)
 {
     int ret;
@@ -186,7 +193,6 @@ int printk(const char *fmt, ...)
     va_end(args);
     return ret;
 }
-*/
 
 void _dev_warn(const struct device *dev, const char *fmt, ...)
 {
@@ -295,7 +301,6 @@ char *strchr(const char *s, int c)
     return (char *)s;
 }
 
-/*
 unsigned long page_to_pfn(const struct page *page)
 {
     unsigned long ret = virt_to_pfn(page);
@@ -309,7 +314,6 @@ struct page *pfn_to_page(unsigned long pfn)
     printk("%s: page(%lx)\n", __func__, (unsigned long)ret);
     return ret;
 }
-*/
 
 int strcmp(const char *cs, const char *ct)
 {
@@ -324,4 +328,19 @@ int strcmp(const char *cs, const char *ct)
             break;
     }
     return 0;
+}
+
+kuid_t make_kuid(struct user_namespace *ns, uid_t uid)
+{
+    return KUIDT_INIT(0);
+}
+
+kgid_t make_kgid(struct user_namespace *ns, gid_t gid)
+{
+    return KGIDT_INIT(0);
+}
+
+void get_random_bytes(void *buf, int nbytes)
+{
+    memset(buf, 1, nbytes);
 }
