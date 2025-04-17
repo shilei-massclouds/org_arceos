@@ -97,8 +97,30 @@ int clinux_init()
     cl_ext2_init();
 
     struct dentry *root = call_ext2_mount();
-    if (root == NULL) {
+    if (root == NULL || root->d_inode == NULL) {
         booter_panic("ext2 mount error!");
+    }
+
+    struct inode *root_inode = root->d_inode;
+    if (!S_ISDIR(root_inode->i_mode)) {
+        booter_panic("ext2 root inode is NOT DIR!");
+    }
+
+    struct file_operations *fop = root_inode->i_fop;
+    if (fop == NULL) {
+        booter_panic("ext2 root inode has no fop!");
+    }
+    printk("root.inode fops (%lx)\n", fop->iterate_shared);
+
+    struct file root_dir;
+    memset(&root_dir, 0, sizeof(root_dir));
+    root_dir.f_inode = root_inode;
+
+    struct dir_context ctx;
+    memset(&ctx, 0, sizeof(ctx));
+
+    if ((*fop->iterate_shared)(&root_dir, &ctx) != 0) {
+        booter_panic("ext2 root iterate error!");
     }
 
     return 0;

@@ -13,7 +13,7 @@ TARGET = libclinux.a
 OBJS := base.o mine.o of_platform.o driver_base.o vsprintf.o ctype.o kstrtox.o locking.o \
 		sched.o workqueue.o alloc.o blkdev.o klist.o irq.o backing_dev.o string_helpers.o \
 		scatterlist.o \
-		filesystems.o inode.o
+		filesystems.o inode.o dcache.o
 OBJS += origin/sbi.o
 OBJS += origin/virtio.ko
 OBJS += origin/virtio_mmio.ko

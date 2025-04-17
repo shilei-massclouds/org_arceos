@@ -1,6 +1,8 @@
 #include <linux/fs.h>
 #include "booter.h"
 
+extern int cl_read_block(int blk_nr, void *rbuf, int count);
+
 void *kmalloc(size_t size, gfp_t flags);
 
 struct dentry *mount_bdev(struct file_system_type *fs_type,
@@ -71,4 +73,36 @@ void clear_nlink(struct inode *inode)
         inode->__i_nlink = 0;
         atomic_long_inc(&inode->i_sb->s_remove_count);
     }
+}
+
+struct ext2_dir_entry {
+    int     inode;          /* Inode number */
+    short   rec_len;        /* Directory entry length */
+    short   name_len;       /* Name length */
+    char    name[];         /* File name, up to EXT2_NAME_LEN */
+};
+
+struct page *read_cache_page(struct address_space *mapping,
+                pgoff_t index,
+                int (*filler)(void *, struct page *),
+                void *data)
+{
+    printk("%s: mapping (%lx) index(%d) data(%x)\n",
+                 __func__, mapping, index, data);
+
+    // Root inode -> block at sector[8248]
+    /*
+    void *buf = kmalloc(256, 0);
+    cl_read_block(8248, buf, 256);
+    return buf;
+    */
+
+    char buf[256];
+    cl_read_block(8248, buf, sizeof(buf));
+
+    struct ext2_dir_entry *dentry = (struct ext2_dir_entry *)buf;
+
+    printk("Got root dentries: dentry name(%s), inr(%u), rec_len(%u), name_len(%u)\n",
+           dentry->name, dentry->inode, dentry->rec_len, dentry->name_len);
+    booter_panic("");
 }
