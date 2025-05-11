@@ -23,6 +23,10 @@ fn enable_cfg(key: &str, value: &str) {
 }
 
 fn main() {
+    if has_feature("linux-adaptor") {
+        println!("cargo:rustc-cfg=linux_adaptor");
+    }
+
     if has_feature("bus-mmio") {
         enable_cfg("bus", "mmio");
     } else {
@@ -56,6 +60,9 @@ fn main() {
         }
     }
 
+    println!(
+        "cargo::rustc-check-cfg=cfg(linux_adaptor)"
+    );
     println!(
         "cargo::rustc-check-cfg=cfg(bus, values({}))",
         make_cfg_values(&["pci", "mmio"])

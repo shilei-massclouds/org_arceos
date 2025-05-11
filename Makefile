@@ -53,7 +53,7 @@ APP_FEATURES ?=
 BLK ?= y
 NET ?= n
 GRAPHIC ?= n
-BUS ?= pci
+BUS ?= mmio
 MEM ?= 128M
 ACCEL ?=
 

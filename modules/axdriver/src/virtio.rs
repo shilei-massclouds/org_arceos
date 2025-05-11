@@ -77,7 +77,12 @@ cfg_if! {
 pub struct VirtIoDriver<D: VirtIoDevMeta + ?Sized>(PhantomData<D>);
 
 impl<D: VirtIoDevMeta> DriverProbe for VirtIoDriver<D> {
-    #[cfg(bus = "mmio")]
+    #[cfg(all(bus = "mmio", linux_adaptor))]
+    fn probe_mmio(mmio_base: usize, mmio_size: usize) -> Option<AxDeviceEnum> {
+        unimplemented!("mmio base {:#x} size {:#x}", mmio_base, mmio_size);
+    }
+
+    #[cfg(all(bus = "mmio", not(linux_adaptor)))]
     fn probe_mmio(mmio_base: usize, mmio_size: usize) -> Option<AxDeviceEnum> {
         let base_vaddr = phys_to_virt(mmio_base.into());
         if let Some((ty, transport)) =
