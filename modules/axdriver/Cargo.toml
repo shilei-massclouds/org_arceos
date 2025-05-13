@@ -13,7 +13,7 @@ documentation = "https://arceos-org.github.io/arceos/axdriver/index.html"
 dyn = []
 bus-mmio = []
 bus-pci = ["dep:axdriver_pci", "dep:axhal", "dep:axconfig"]
-linux-adaptor= []
+linux-adaptor= ["dep:linux_adaptor"]
 net = ["axdriver_net"]
 block = ["axdriver_block"]
 display = ["axdriver_display"]
@@ -47,3 +47,4 @@ axalloc = { workspace = true, optional = true }
 axhal = { workspace = true, optional = true }
 axconfig = { workspace = true, optional = true }
 axdma = { workspace = true, optional = true }
+linux_adaptor = { workspace = true, optional = true }

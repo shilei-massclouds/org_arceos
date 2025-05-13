@@ -130,6 +130,9 @@ impl AllDevices {
             }
         });
 
+        #[cfg(linux_adaptor)]
+        linux_adaptor::init_linux_modules();
+
         self.probe_bus_devices();
     }
 

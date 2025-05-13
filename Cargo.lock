@@ -309,6 +309,7 @@ dependencies = [
  "axhal",
  "cfg-if",
  "crate_interface",
+ "linux_adaptor",
  "log",
 ]
 
@@ -1215,6 +1216,13 @@ name = "linux-raw-sys"
 version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d26c52dbd32dccf2d10cac7725f8eae5296885fb5703b261f7d0a0739ec807ab"
+
+[[package]]
+name = "linux_adaptor"
+version = "0.1.0"
+dependencies = [
+ "axlog",
+]
 
 [[package]]
 name = "lock_api"
