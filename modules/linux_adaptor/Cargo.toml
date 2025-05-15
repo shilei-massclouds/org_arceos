@@ -12,3 +12,4 @@ categories.workspace = true
 
 [dependencies]
 axlog = { workspace = true }
+axconfig = { workspace = true }

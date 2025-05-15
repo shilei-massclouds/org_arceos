@@ -4,7 +4,11 @@ use std::process::Command;
 fn main() {
     let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let cwd = root_dir + "/kernel_modules";
-    Command::new("make").current_dir(&cwd).output().expect("Make error.");
+    let output = Command::new("make").current_dir(&cwd).output().expect("Make error.");
+    if !output.status.success() {
+        let err = String::from_utf8(output.stderr).unwrap();
+        panic!("{}", err);
+    }
 
     println!("cargo::rustc-link-search=native={}", cwd);
     println!("cargo::rustc-link-lib=static=clinux");

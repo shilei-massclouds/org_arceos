@@ -12,3 +12,5 @@ rusty-tags.vi
 /.axconfig.*
 *.swp
 tags
+*.a
+*.ko
