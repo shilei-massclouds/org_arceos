@@ -53,3 +53,11 @@ char *skip_spaces(const char *str)
         ++str;
     return (char *)str;
 }
+
+void _dev_notice(const struct device *dev, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vprintk(printk_skip_level(fmt), args);
+    va_end(args);
+}

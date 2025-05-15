@@ -13,15 +13,15 @@ TARGET = libclinux.a
 
 # Original linux modules
 OBJS := container/virtio_blk.ko
-#OBJS += origin/virtio_mmio.ko
-#OBJS += origin/virtio.ko
+OBJS += container/virtio_mmio.ko
+OBJS += container/virtio.ko
 
-OBJS += main.o mine.o sbi.o printk.o vsprintf.o ctype.o kstrtox.o
+OBJS += main.o mine.o sbi.o printk.o vsprintf.o ctype.o kstrtox.o \
+		workqueue.o alloc.o genhd.o bus.o klist.o locking.o \
+		of_platform.o string.o device.o ida.o sched.o driver.o irq.o \
+		blk_mq.o string_helpers.o
 
-#OBJS := base.o mine.o of_platform.o driver_base.o vsprintf.o ctype.o kstrtox.o locking.o \
-#		sched.o workqueue.o alloc.o blkdev.o klist.o irq.o backing_dev.o string_helpers.o \
-#		scatterlist.o
-#OBJS += origin/sbi.o
+#OBJS := driver_base.o blkdev.o backing_dev.o string_helpers.o scatterlist.o
 #OBJS += origin/virtio.ko
 #OBJS += origin/virtio_mmio.ko
 #OBJS += origin/virtio_blk.ko

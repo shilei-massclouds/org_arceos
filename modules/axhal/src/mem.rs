@@ -85,7 +85,8 @@ fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
         MemRegion {
             paddr: virt_to_phys((_srodata as usize).into()),
             size: _erodata as usize - _srodata as usize,
-            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ,
+            // For linux_adaptor, some text code is in rodata.
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE,
             name: ".rodata",
         },
         MemRegion {
