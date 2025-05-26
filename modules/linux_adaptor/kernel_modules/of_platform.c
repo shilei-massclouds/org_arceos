@@ -15,8 +15,8 @@ int __platform_driver_register(struct platform_driver *drv,
     struct platform_device dev;
     struct resource r;
 
-    r.start =   0x10008000;
-    r.end   =   0x10008fff;
+    r.start =   0xffffffc010008000;
+    r.end   =   0xffffffc010008fff;
     r.flags =   IORESOURCE_MEM;
     r.name  =   dev_name;
 

@@ -144,9 +144,8 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     #[cfg(feature = "alloc")]
     init_allocator();
 
-    // For 'linux_adaptor', disable paging temporarily.
-    //#[cfg(feature = "paging")]
-    //axmm::init_memory_management();
+    #[cfg(feature = "paging")]
+    axmm::init_memory_management();
 
     info!("Initialize platform devices...");
     axhal::platform_init();
