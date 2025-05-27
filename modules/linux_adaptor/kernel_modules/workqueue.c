@@ -15,15 +15,13 @@ alloc_workqueue(const char *fmt,
     struct workqueue_struct *wq;
 
     printk("%s: ...\n", __func__);
-    return NULL;
 
-    /*
     wq = kzalloc(sizeof(*wq), GFP_KERNEL);
     if (!wq)
         return NULL;
 
+    printk("%s: ok!\n", __func__);
     return wq;
-    */
 }
 
 /**

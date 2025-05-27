@@ -18,7 +18,9 @@ OBJS := virtio_blk.o
 
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o sbi.o workqueue.o \
-		printk.o vsprintf.o ctype.o kstrtox.o 
+		printk.o vsprintf.o ctype.o kstrtox.o \
+		alloc.o genhd.o
+
 #OBJS += main.o mine.o sbi.o printk.o vsprintf.o ctype.o kstrtox.o \
 #		workqueue.o alloc.o genhd.o bus.o klist.o locking.o \
 #		of_platform.o string.o device.o ida.o sched.o driver.o irq.o \
