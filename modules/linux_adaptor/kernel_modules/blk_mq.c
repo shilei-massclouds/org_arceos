@@ -7,6 +7,13 @@
 #include "booter.h"
 #include "blk-wbt.h"
 
+static unsigned blk_bvec_map_sg(struct request_queue *q,
+        struct bio_vec *bvec, struct scatterlist *sglist,
+        struct scatterlist **sg)
+{
+    booter_panic("No impl.");
+}
+
 int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
 {
     printk("%s: NOTE: ---> Impl it.\n", __func__);
@@ -277,4 +284,88 @@ void set_capacity_revalidate_and_notify(struct gendisk *disk, sector_t size,
         booter_panic("No impl for 'kobject_uevent_env'.");
         //kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
     }
+}
+
+void blk_mq_start_request(struct request *rq)
+{
+    printk("%s: No impl.\n", __func__);
+}
+
+static inline struct scatterlist *blk_next_sg(struct scatterlist **sg,
+        struct scatterlist *sglist)
+{
+    if (!*sg)
+        return sglist;
+
+    /*
+     * If the driver previously mapped a shorter list, we could see a
+     * termination bit prematurely unless it fully inits the sg table
+     * on each mapping. We KNOW that there must be more entries here
+     * or the driver would be buggy, so force clear the termination bit
+     * to avoid doing a full sg_init_table() in drivers for each command.
+     */
+    sg_unmark_end(*sg);
+    return sg_next(*sg);
+}
+
+static inline int __blk_bvec_map_sg(struct bio_vec bv,
+        struct scatterlist *sglist, struct scatterlist **sg)
+{
+    *sg = blk_next_sg(sg, sglist);
+    sg_set_page(*sg, bv.bv_page, bv.bv_len, bv.bv_offset);
+    return 1;
+}
+
+static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
+                 struct scatterlist *sglist,
+                 struct scatterlist **sg)
+{
+    int nsegs = 0;
+    struct bio_vec bvec;
+    struct bvec_iter iter;
+
+    for_each_bio(bio) {
+        printk("%s: bio \n", __func__);
+        bio_for_each_bvec(bvec, bio, iter) {
+            printk("%s: bvec (0x%lx) len(%u) offset(%u)\n",
+                   __func__, (unsigned long)bvec.bv_page, bvec.bv_len, bvec.bv_offset);
+        }
+
+        if (bvec.bv_offset + bvec.bv_len <= PAGE_SIZE)
+            nsegs += __blk_bvec_map_sg(bvec, sglist, sg);
+        else
+            nsegs += blk_bvec_map_sg(q, &bvec, sglist, sg);
+    }
+
+    return nsegs;
+}
+
+int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
+        struct scatterlist *sglist, struct scatterlist **last_sg)
+{
+    int nsegs = 0;
+
+    printk("%s: ...\n", __func__);
+    if (rq->rq_flags & RQF_SPECIAL_PAYLOAD)
+        nsegs = __blk_bvec_map_sg(rq->special_vec, sglist, last_sg);
+    else if (rq->bio && bio_op(rq->bio) == REQ_OP_WRITE_SAME)
+        nsegs = __blk_bvec_map_sg(bio_iovec(rq->bio), sglist, last_sg);
+    else if (rq->bio) {
+        nsegs = __blk_bios_map_sg(q, rq->bio, sglist, last_sg);
+        printk("%s: nsegs(%d)\n", __func__, nsegs);
+    }
+
+    if (*last_sg) {
+        sg_mark_end(*last_sg);
+        printk("%s: last_sg blk_rq_nr_phys_segments(%d)\n",
+               __func__, blk_rq_nr_phys_segments(rq));
+    }
+
+    /*
+     * Something must have been wrong if the figured number of
+     * segment is bigger than number of req's physical segments
+     */
+    WARN_ON(nsegs > blk_rq_nr_phys_segments(rq));
+
+    return nsegs;
 }

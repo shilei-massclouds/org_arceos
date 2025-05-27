@@ -19,9 +19,10 @@ OBJS += container/virtio.ko
 OBJS += main.o mine.o sbi.o printk.o vsprintf.o ctype.o kstrtox.o \
 		workqueue.o alloc.o genhd.o bus.o klist.o locking.o \
 		of_platform.o string.o device.o ida.o sched.o driver.o irq.o \
-		blk_mq.o string_helpers.o
+		blk_mq.o string_helpers.o block_ops.o bio.o scatterlist.o \
+		paging.o
 
-#OBJS := driver_base.o blkdev.o backing_dev.o string_helpers.o scatterlist.o
+#OBJS := driver_base.o blkdev.o backing_dev.o
 #OBJS += origin/virtio.ko
 #OBJS += origin/virtio_mmio.ko
 #OBJS += origin/virtio_blk.ko
