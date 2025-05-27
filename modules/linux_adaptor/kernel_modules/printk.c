@@ -20,7 +20,6 @@ int vprintk(const char *fmt, va_list args)
         msg = buf;
     }
     sbi_puts(msg);
-    //early_console->write(early_console, msg, n);
 }
 
 int printk(const char *fmt, ...)

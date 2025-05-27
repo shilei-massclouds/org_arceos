@@ -12,21 +12,18 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
 TARGET = libclinux.a
 
 # Original linux modules
-OBJS := container/virtio_blk.ko
-OBJS += container/virtio_mmio.ko
-OBJS += container/virtio.ko
+OBJS := virtio_blk.o
+#OBJS += container/virtio_mmio.ko
+#OBJS += container/virtio.ko
 
-OBJS += main.o mine.o sbi.o printk.o vsprintf.o ctype.o kstrtox.o \
-		workqueue.o alloc.o genhd.o bus.o klist.o locking.o \
-		of_platform.o string.o device.o ida.o sched.o driver.o irq.o \
-		blk_mq.o string_helpers.o block_ops.o bio.o scatterlist.o \
-		paging.o
-
-#OBJS := driver_base.o blkdev.o backing_dev.o
-#OBJS += origin/virtio.ko
-#OBJS += origin/virtio_mmio.ko
-#OBJS += origin/virtio_blk.ko
-#OBJS += origin/irq_sifive_plic.ko
+# Adaptor files, we will re-write them in Rust in future.
+OBJS += cl_mine.o main.o sbi.o workqueue.o \
+		printk.o vsprintf.o ctype.o kstrtox.o 
+#OBJS += main.o mine.o sbi.o printk.o vsprintf.o ctype.o kstrtox.o \
+#		workqueue.o alloc.o genhd.o bus.o klist.o locking.o \
+#		of_platform.o string.o device.o ida.o sched.o driver.o irq.o \
+#		blk_mq.o string_helpers.o block_ops.o bio.o scatterlist.o \
+#		paging.o
 
 CROSS_ = riscv64-linux-gnu-
 CC = $(CROSS_)gcc
