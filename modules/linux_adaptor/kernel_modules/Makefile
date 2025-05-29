@@ -20,9 +20,8 @@ OBJS += cl_mine.o main.o sbi.o workqueue.o \
 		alloc.o genhd.o bus.o klist.o locking.o \
 		driver.o of_platform.o dma.o string.o \
 		device.o ida.o sched.o irq.o blk_mq.o \
-		string_helpers.o
-
-#OBJS += block_ops.o bio.o scatterlist.o paging.o
+		string_helpers.o block_ops.o bio.o \
+		scatterlist.o paging.o
 
 CROSS_ = riscv64-linux-gnu-
 CC = $(CROSS_)gcc

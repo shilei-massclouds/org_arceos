@@ -16,11 +16,10 @@ int clinux_init()
     cl_virtio_blk_init();
 
     /* Test for reading block */
-    /*
     char buf[16];
     memset(buf, 0, sizeof(buf));
     cl_read_block(0, buf, sizeof(buf));
-    */
+
     booter_panic("Reach here!\n");
     return 0;
 }
