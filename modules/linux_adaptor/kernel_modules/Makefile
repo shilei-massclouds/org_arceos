@@ -12,21 +12,17 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
 TARGET = libclinux.a
 
 # Original linux modules
-OBJS := virtio_blk.o virtio.o
-#OBJS += container/virtio_mmio.ko
-#OBJS += container/virtio.ko
+OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o sbi.o workqueue.o \
 		printk.o vsprintf.o ctype.o kstrtox.o \
 		alloc.o genhd.o bus.o klist.o locking.o \
-		driver.o
+		driver.o of_platform.o dma.o string.o \
+		device.o ida.o sched.o irq.o blk_mq.o \
+		string_helpers.o
 
-#OBJS += main.o mine.o sbi.o printk.o vsprintf.o ctype.o kstrtox.o \
-#		workqueue.o alloc.o genhd.o bus.o klist.o \
-#		of_platform.o string.o device.o ida.o sched.o driver.o irq.o \
-#		blk_mq.o string_helpers.o block_ops.o bio.o scatterlist.o \
-#		paging.o
+#OBJS += block_ops.o bio.o scatterlist.o paging.o
 
 CROSS_ = riscv64-linux-gnu-
 CC = $(CROSS_)gcc

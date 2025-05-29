@@ -12,7 +12,7 @@ int clinux_init()
     sbi_puts("cLinux base is starting ...\n");
 
     cl_virtio_init();
-    //cl_virtio_mmio_init();
+    cl_virtio_mmio_init();
     cl_virtio_blk_init();
 
     /* Test for reading block */

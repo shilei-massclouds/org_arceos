@@ -116,7 +116,6 @@ struct irq_domain *__irq_domain_add(struct fwnode_handle *fwnode, int size,
     return domain;
 }
 
-
 int platform_get_irq(struct platform_device *dev, unsigned int num)
 {
     int irq = 3;

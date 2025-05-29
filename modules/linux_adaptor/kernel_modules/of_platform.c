@@ -55,28 +55,6 @@ void __iomem *devm_platform_ioremap_resource(struct platform_device *pdev,
     return NULL;
 }
 
-int dma_set_mask(struct device *dev, u64 mask)
-{
-    /*
-     * Truncate the mask to the actually supported dma_addr_t width to
-     * avoid generating unsupportable addresses.
-     */
-    mask = (dma_addr_t)mask;
-    *dev->dma_mask = mask;
-    return 0;
-}
-
-int dma_set_coherent_mask(struct device *dev, u64 mask)
-{
-    /*
-     * Truncate the mask to the actually supported dma_addr_t width to
-     * avoid generating unsupportable addresses.
-     */
-    mask = (dma_addr_t)mask;
-    dev->coherent_dma_mask = mask;
-    return 0;
-}
-
 int of_property_read_variable_u32_array(const struct device_node *np,
                    const char *propname, u32 *out_values,
                    size_t sz_min, size_t sz_max)
