@@ -39,7 +39,7 @@ macro_rules! for_each_drivers {
             type $drv_type = <virtio::VirtIoNet as VirtIoDevMeta>::Driver;
             $code
         }
-        #[cfg(block_dev = "virtio-blk")]
+        #[cfg(all(block_dev = "virtio-blk", not(linux_adaptor)))]
         {
             type $drv_type = <virtio::VirtIoBlk as VirtIoDevMeta>::Driver;
             $code
@@ -47,6 +47,11 @@ macro_rules! for_each_drivers {
         #[cfg(display_dev = "virtio-gpu")]
         {
             type $drv_type = <virtio::VirtIoGpu as VirtIoDevMeta>::Driver;
+            $code
+        }
+        #[cfg(linux_adaptor)]
+        {
+            type $drv_type = crate::drivers::LinuxVirtIOBlkDrv;
             $code
         }
         #[cfg(block_dev = "ramdisk")]

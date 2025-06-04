@@ -67,7 +67,9 @@ extern crate alloc;
 #[macro_use]
 mod macros;
 
+#[cfg(not(linux_adaptor))]
 mod bus;
+
 mod drivers;
 mod dummy;
 mod structs;
@@ -130,9 +132,7 @@ impl AllDevices {
             }
         });
 
-        #[cfg(linux_adaptor)]
-        linux_adaptor::init_linux_modules();
-
+        #[cfg(not(linux_adaptor))]
         self.probe_bus_devices();
     }
 
@@ -152,6 +152,9 @@ impl AllDevices {
 
 /// Probes and initializes all device drivers, returns the [`AllDevices`] struct.
 pub fn init_drivers() -> AllDevices {
+    #[cfg(linux_adaptor)]
+    linux_adaptor::init_linux_modules();
+
     info!("Initialize device drivers...");
     info!("  device model: {}", AllDevices::device_model());
 

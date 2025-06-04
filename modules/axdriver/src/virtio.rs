@@ -44,7 +44,7 @@ cfg_if! {
 }
 
 cfg_if! {
-    if #[cfg(block_dev = "virtio-blk")] {
+    if #[cfg(all(block_dev = "virtio-blk", not(linux_adaptor)))] {
         pub struct VirtIoBlk;
 
         impl VirtIoDevMeta for VirtIoBlk {

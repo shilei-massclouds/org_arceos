@@ -20,7 +20,7 @@ pub fn init_linux_modules() {
     info!("Initialize Linux modules...");
     let ret = unsafe { clinux_init() };
     info!("cLinux init [{}].", ret);
-    unimplemented!();
+    //unimplemented!();
 }
 
 #[link(name = "clinux", kind = "static")]

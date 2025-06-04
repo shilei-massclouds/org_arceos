@@ -39,7 +39,7 @@ register_net_driver!(
     <virtio::VirtIoNet as VirtIoDevMeta>::Device
 );
 
-#[cfg(block_dev = "virtio-blk")]
+#[cfg(all(block_dev = "virtio-blk", not(linux_adaptor)))]
 register_block_driver!(
     <virtio::VirtIoBlk as VirtIoDevMeta>::Driver,
     <virtio::VirtIoBlk as VirtIoDevMeta>::Device
@@ -50,6 +50,99 @@ register_display_driver!(
     <virtio::VirtIoGpu as VirtIoDevMeta>::Driver,
     <virtio::VirtIoGpu as VirtIoDevMeta>::Device
 );
+
+cfg_if::cfg_if! {
+    if #[cfg(linux_adaptor)] {
+        use crate::BaseDriverOps;
+        use crate::BlockDriverOps;
+        use crate::DevResult;
+        use crate::DevError;
+        pub struct LinuxVirtIOBlkDrv;
+        pub struct LinuxVirtIOBlkDev {
+            size: usize,
+        }
+        const BLOCK_SIZE: usize = 512;
+        register_block_driver!(LinuxVirtIOBlkDrv, LinuxVirtIOBlkDev);
+
+        impl DriverProbe for LinuxVirtIOBlkDrv {
+            fn probe_global() -> Option<AxDeviceEnum> {
+                info!("****probe");
+                Some(AxDeviceEnum::from_block(
+                    LinuxVirtIOBlkDev {
+                        size: 131072 * 512,
+                    }
+                ))
+            }
+        }
+
+        impl BaseDriverOps for LinuxVirtIOBlkDev {
+            fn device_type(&self) -> DeviceType {
+                DeviceType::Block
+            }
+            fn device_name(&self) -> &str {
+                "linux_virtio_blk"
+            }
+        }
+
+        impl BlockDriverOps for LinuxVirtIOBlkDev {
+            #[inline]
+            fn num_blocks(&self) -> u64 {
+                (self.size / BLOCK_SIZE) as u64
+            }
+
+            #[inline]
+            fn block_size(&self) -> usize {
+                BLOCK_SIZE
+            }
+
+            fn read_block(&mut self, block_id: u64, buf: &mut [u8]) -> DevResult {
+                let block_id = block_id as usize;
+                info!("Read block: id [{}] size {}", block_id, buf.len());
+
+                if buf.len() % BLOCK_SIZE != 0 {
+                    return Err(DevError::InvalidParam);
+                }
+                if block_id * BLOCK_SIZE + buf.len() > self.size {
+                    return Err(DevError::Io);
+                }
+
+                let block_nr = block_id / 8;
+                let offset_in_block = (block_id % 8) * BLOCK_SIZE;
+
+                let mut rbuf = [0u8; 4096];
+                let ret = unsafe {
+                    cl_read_block(block_nr,
+                        rbuf.as_mut_ptr(), rbuf.len())
+                };
+                info!("ret {}, buf: {}, {}, {}, {}",
+                      ret, rbuf[0], rbuf[1], rbuf[2], rbuf[3]);
+
+                buf.copy_from_slice(&rbuf[offset_in_block..offset_in_block + buf.len()]);
+                Ok(())
+            }
+
+            fn write_block(&mut self, block_id: u64, buf: &[u8]) -> DevResult {
+                /*
+                let offset = block_id as usize * BLOCK_SIZE;
+                if offset + buf.len() > self.size {
+                    return Err(DevError::Io);
+                }
+                if buf.len() % BLOCK_SIZE != 0 {
+                    return Err(DevError::InvalidParam);
+                }
+                self.data[offset..offset + buf.len()].copy_from_slice(buf);
+                Ok(())
+                */
+                unimplemented!();
+            }
+
+            fn flush(&mut self) -> DevResult {
+                //Ok(())
+                unimplemented!();
+            }
+        }
+    }
+}
 
 cfg_if::cfg_if! {
     if #[cfg(block_dev = "ramdisk")] {
@@ -173,4 +266,8 @@ cfg_if::cfg_if! {
             }
         }
     }
+}
+
+unsafe extern "C" {
+    fn cl_read_block(blk_nr: usize, rbuf: *mut u8, count: usize) -> i32;
 }
