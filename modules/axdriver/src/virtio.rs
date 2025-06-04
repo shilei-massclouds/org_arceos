@@ -14,6 +14,7 @@ cfg_if! {
         use axdriver_pci::{PciRoot, DeviceFunction, DeviceFunctionInfo};
         type VirtIoTransport = axdriver_virtio::PciTransport;
     } else if #[cfg(bus =  "mmio")] {
+        #[allow(dead_code)]
         type VirtIoTransport = axdriver_virtio::MmioTransport;
     }
 }
@@ -25,6 +26,7 @@ pub trait VirtIoDevMeta {
     type Device: BaseDriverOps;
     type Driver = VirtIoDriver<Self>;
 
+    #[allow(dead_code)]
     fn try_new(transport: VirtIoTransport) -> DevResult<AxDeviceEnum>;
 }
 
@@ -142,6 +144,7 @@ impl<D: VirtIoDevMeta> DriverProbe for VirtIoDriver<D> {
     }
 }
 
+#[allow(dead_code)]
 pub struct VirtIoHalImpl;
 
 unsafe impl VirtIoHal for VirtIoHalImpl {

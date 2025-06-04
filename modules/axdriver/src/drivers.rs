@@ -121,7 +121,7 @@ cfg_if::cfg_if! {
                 Ok(())
             }
 
-            fn write_block(&mut self, block_id: u64, buf: &[u8]) -> DevResult {
+            fn write_block(&mut self, _block_id: u64, _buf: &[u8]) -> DevResult {
                 /*
                 let offset = block_id as usize * BLOCK_SIZE;
                 if offset + buf.len() > self.size {
