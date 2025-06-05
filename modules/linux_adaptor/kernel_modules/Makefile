@@ -13,6 +13,7 @@ TARGET = libclinux.a
 
 # Original linux modules
 OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
+OBJS += irq-sifive-plic.o
 
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o sbi.o workqueue.o \

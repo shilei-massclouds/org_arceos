@@ -17,7 +17,7 @@ static IRQ_HANDLER_TABLE: HandlerTable<MAX_IRQ_COUNT> = HandlerTable::new();
 pub(crate) fn dispatch_irq_common(irq_num: usize) {
     trace!("IRQ {}", irq_num);
     if !IRQ_HANDLER_TABLE.handle(irq_num) {
-        warn!("Unhandled IRQ {}", irq_num);
+        panic!("Unhandled IRQ {}", irq_num);
     }
 }
 

@@ -18,9 +18,25 @@ use axalloc::global_allocator;
 /// Initialize Linux modules.
 pub fn init_linux_modules() {
     info!("Initialize Linux modules...");
+
+    /* Prepare handler for plic */
+    prepare_ext_interrupt();
+
     let ret = unsafe { clinux_init() };
     info!("cLinux init [{}].", ret);
-    //unimplemented!();
+}
+
+#[cfg(target_arch = "riscv64")]
+fn prepare_ext_interrupt() {
+    // NOTE: Define EXT_IRQ_NUM for various arch in axhal.
+    // `Interrupt` bit in `scause`
+    const INTC_IRQ_BASE: usize = 1 << (usize::BITS - 1);
+    const EXT_IRQ_NUM: usize = INTC_IRQ_BASE + 9;
+
+    axhal::irq::register_handler(EXT_IRQ_NUM, || {
+        error!("Handle ext interrupt ...");
+        unsafe { plic_handle_irq() };
+    });
 }
 
 #[link(name = "clinux", kind = "static")]
@@ -59,4 +75,8 @@ pub extern "C" fn cl_alloc_pages(size: usize, align: usize) -> usize {
     assert_eq!(align % PAGE_SIZE_4K, 0);
     let count = size >> 12;
     global_allocator().alloc_pages(count, align).unwrap()
+}
+
+unsafe extern "C" {
+    fn plic_handle_irq();
 }

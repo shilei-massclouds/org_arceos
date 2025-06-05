@@ -7,6 +7,9 @@
 
 #define PLIC_REG_START 0xc000000
 
+extern int cl_plic_init(struct device_node *node,
+                        struct device_node *parent);
+
 struct plic_priv {
     struct cpumask lmask;
     struct irq_domain *irqdomain;
@@ -14,10 +17,12 @@ struct plic_priv {
 };
 
 const struct irq_domain_ops *irq_domain_ops;
-
 struct irq_chip *plic_chip;
-
 irq_flow_handler_t fn_plic_handle_irq;
+struct device_node plic_node;
+struct irq_domain root_irq_domain;
+struct irq_fwspec fwspec;
+struct irq_data irq_data;
 
 void plic_handle_irq(void)
 {
@@ -124,14 +129,22 @@ int platform_get_irq(struct platform_device *dev, unsigned int num)
     return irq;
 }
 
+static irq_handler_t fn_vm_interrupt;
+static struct virtio_mmio_device *vm_dev;
+
 int request_threaded_irq(unsigned int irq, irq_handler_t handler,
              irq_handler_t thread_fn, unsigned long irqflags,
              const char *devname, void *dev_id)
 {
     // The arg handler maybe be 'vm_interrupt'.
     printk("---------> %s: Note impl it.\n", __func__);
-    printk("irq(%u) handler(%lx) thread_fn(%lx) irqflags(%lx) devname(%s)\n",
-           irq, (unsigned long)handler, (unsigned long)thread_fn, irqflags, devname);
+    printk("irq(%u) handler(%lx) thread_fn(%lx) irqflags(%lx) devname(%s) dev_id(%lx)\n",
+           irq, (unsigned long)handler, (unsigned long)thread_fn, irqflags, devname, dev_id);
+    if (irq != 3) {
+        booter_panic("IRQ must be 3.\n");
+    }
+    fn_vm_interrupt = handler;
+    vm_dev = dev_id;
     return 0;
 }
 
@@ -197,4 +210,40 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
 int generic_handle_irq(unsigned int irq)
 {
     printk("%s: irq(%u)\n", __func__, irq);
+    if (irq != 3) {
+        booter_panic("bad irq.");
+    }
+    if (fn_vm_interrupt == NULL) {
+        booter_panic("no vm_interrupt.");
+    }
+    fn_vm_interrupt(irq, vm_dev);
+    return 0;
+}
+
+int cl_irq_init(void)
+{
+    plic_node.name = "plic";
+    sbi_puts("--- plic_init ...\n\n");
+    cl_plic_init(&plic_node, NULL);
+
+    if (irq_domain_ops == NULL) {
+        booter_panic("irq_domain_ops is NULL!");
+    }
+
+    fwspec.param_count = 1;
+    fwspec.param[0] = 8;
+
+    irq_domain_ops->alloc(&root_irq_domain, 1, 1, &fwspec);
+
+    sbi_puts("--- plic_init ok!\n\n");
+    return 0;
+}
+
+int cl_enable_irq(void)
+{
+    /* For virtio_blk, enable irq */
+    irq_data.irq = 3;
+    irq_data.hwirq = 8;
+    plic_chip->irq_unmask(&irq_data);
+    return 0;
 }

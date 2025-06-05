@@ -369,3 +369,13 @@ int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
 
     return nsegs;
 }
+
+void blk_mq_complete_request(struct request *rq)
+{
+    printk("%s: No impl.\n", __func__);
+}
+
+void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async)
+{
+    printk("%s: No impl.\n", __func__);
+}
