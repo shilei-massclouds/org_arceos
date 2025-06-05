@@ -56,7 +56,13 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
     printk("mq_ops->queue_rq status (%d)\n", status);
 
-    //mq_ops->complete(&rq);
+    /* Sync mode */
+    /* Consider to move it out to implement async mode. */
+    printk("%s: rq.state(%d)\n", __func__, rq.state);
+    while (READ_ONCE(rq.state) != MQ_RQ_COMPLETE) {
+        /* Wait for request completed. */
+        //printk("Wait: rq.state(%d)\n", rq.state);
+    }
 
     memcpy(rbuf, buf, count);
     return 0;
@@ -104,6 +110,13 @@ int cl_write_block(int blk_nr, const void *wbuf, int count)
     printk("mq_ops->queue_rq ...\n");
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
     printk("mq_ops->queue_rq status (%d)\n", status);
+
+    /* Sync mode */
+    /* Consider to move it out to implement async mode. */
+    printk("%s: rq.state(%d)\n", __func__, rq.state);
+    while (READ_ONCE(rq.state) != MQ_RQ_COMPLETE) {
+        /* Wait for request completed. */
+    }
 
     printk("write_block id[%d] count[%d] ok!\n\n", blk_nr, count);
 

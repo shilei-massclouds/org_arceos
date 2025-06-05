@@ -4,7 +4,6 @@
 CL_MINE(blk_cleanup_queue)
 CL_MINE(blk_execute_rq)
 CL_MINE(blk_get_request)
-CL_MINE(blk_mq_end_request)
 CL_MINE(blk_mq_free_tag_set)
 CL_MINE(blk_mq_stop_hw_queue)
 CL_MINE(blk_mq_virtio_map_queues)

@@ -7,6 +7,8 @@
 #include "booter.h"
 #include "blk-wbt.h"
 
+extern struct gendisk *cl_disk;
+
 static unsigned blk_bvec_map_sg(struct request_queue *q,
         struct bio_vec *bvec, struct scatterlist *sglist,
         struct scatterlist **sg)
@@ -372,10 +374,27 @@ int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
 
 void blk_mq_complete_request(struct request *rq)
 {
-    printk("%s: No impl.\n", __func__);
+    printk("%s: ...\n", __func__);
+
+    /* From blk_mq_complete_request_remote */
+    WRITE_ONCE(rq->state, MQ_RQ_COMPLETE);
+
+    const struct blk_mq_ops *mq_ops = cl_disk->queue->mq_ops;
+    if (mq_ops == NULL) {
+        booter_panic("mq_ops is NULL!");
+    }
+    mq_ops->complete(rq);
 }
 
 void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async)
 {
     printk("%s: No impl.\n", __func__);
+}
+
+void blk_mq_end_request(struct request *rq, blk_status_t error)
+{
+    printk("%s: blk_status_t(%d)\n", __func__, error);
+    if (error != 0) {
+        booter_panic("bad request!");
+    }
 }

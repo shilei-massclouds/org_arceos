@@ -36,7 +36,7 @@ int clinux_init()
 
 int clinux_test_block_driver(void)
 {
-#if 1
+#if 0
     test_read_blocks();
     booter_panic("Reach here!\n");
 #endif
@@ -71,7 +71,6 @@ static int test_read_blocks()
 {
     read_a_block(0);
     read_a_block(1);
-    while (1) {}
 }
 
 /* Test for writing block */
