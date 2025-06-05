@@ -8,6 +8,7 @@
 #include "blk-wbt.h"
 
 extern struct gendisk *cl_disk;
+extern bool completed;
 
 static unsigned blk_bvec_map_sg(struct request_queue *q,
         struct bio_vec *bvec, struct scatterlist *sglist,
@@ -378,6 +379,9 @@ void blk_mq_complete_request(struct request *rq)
 
     /* From blk_mq_complete_request_remote */
     WRITE_ONCE(rq->state, MQ_RQ_COMPLETE);
+    completed = 1;
+    printk("%s: ### SET MQ_RQ_COMPLETE rq(%lx) completed(%d)\n",
+           __func__, rq, completed);
 
     const struct blk_mq_ops *mq_ops = cl_disk->queue->mq_ops;
     if (mq_ops == NULL) {

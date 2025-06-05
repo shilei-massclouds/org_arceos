@@ -121,19 +121,29 @@ cfg_if::cfg_if! {
                 Ok(())
             }
 
-            fn write_block(&mut self, _block_id: u64, _buf: &[u8]) -> DevResult {
-                /*
-                let offset = block_id as usize * BLOCK_SIZE;
-                if offset + buf.len() > self.size {
-                    return Err(DevError::Io);
-                }
+            fn write_block(&mut self, block_id: u64, buf: &[u8]) -> DevResult {
+                let block_id = block_id as usize;
+                info!("Write block: id [{}] size {}", block_id, buf.len());
+
                 if buf.len() % BLOCK_SIZE != 0 {
                     return Err(DevError::InvalidParam);
                 }
-                self.data[offset..offset + buf.len()].copy_from_slice(buf);
+                if block_id * BLOCK_SIZE + buf.len() > self.size {
+                    return Err(DevError::Io);
+                }
+
+                let block_nr = block_id / 8;
+                let offset_in_block = (block_id % 8) * BLOCK_SIZE;
+
+                let mut rbuf = [0u8; 4096];
+                unsafe {
+                    cl_read_block(block_nr, rbuf.as_mut_ptr(), rbuf.len());
+                }
+                rbuf[offset_in_block..offset_in_block + buf.len()].copy_from_slice(buf);
+                unsafe {
+                    cl_write_block(block_nr, rbuf.as_ptr(), rbuf.len());
+                }
                 Ok(())
-                */
-                unimplemented!();
             }
 
             fn flush(&mut self) -> DevResult {
@@ -270,4 +280,5 @@ cfg_if::cfg_if! {
 
 unsafe extern "C" {
     fn cl_read_block(blk_nr: usize, rbuf: *mut u8, count: usize) -> i32;
+    fn cl_write_block(blk_nr: usize, wbuf: *const u8, count: usize) -> i32;
 }

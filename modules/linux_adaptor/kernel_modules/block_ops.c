@@ -9,10 +9,14 @@
 extern struct bio *cl_bio_alloc(unsigned int nr_iovecs);
 
 extern struct gendisk *cl_disk;
+bool completed = 0;
 
 int cl_read_block(int blk_nr, void *rbuf, int count)
 {
     printk("read_block id[%d] count[%d] ...\n", blk_nr, count);
+    if (blk_nr == 4) {
+        booter_panic("!!!!!!! Block == 4\n");
+    }
 
     /* Test virtio_blk disk. */
     if (cl_disk == NULL || cl_disk->queue == NULL) {
@@ -52,16 +56,22 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     data.rq = &rq;
     data.last = true;
 
-    printk("mq_ops->queue_rq ...\n");
+    completed = 0;
+    printk("%s: ----------------> mq_ops->queue_rq ...\n", __func__);
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
     printk("mq_ops->queue_rq status (%d)\n", status);
 
     /* Sync mode */
     /* Consider to move it out to implement async mode. */
-    printk("%s: rq.state(%d)\n", __func__, rq.state);
+    printk("%s: rq.state(%d) rq(%lx)\n", __func__, rq.state, &rq);
     while (READ_ONCE(rq.state) != MQ_RQ_COMPLETE) {
         /* Wait for request completed. */
-        //printk("Wait: rq.state(%d)\n", rq.state);
+        static int _count = 0;
+        if (_count % 1000 == 0) {
+            printk("%s: Wait: rq.state(%d) rq(%lx) completed(%d)\n",
+                   __func__, rq.state, &rq, completed);
+        }
+        _count++;
     }
 
     memcpy(rbuf, buf, count);
@@ -107,7 +117,7 @@ int cl_write_block(int blk_nr, const void *wbuf, int count)
     data.rq = &rq;
     data.last = true;
 
-    printk("mq_ops->queue_rq ...\n");
+    printk("%s: mq_ops->queue_rq ...\n", __func__);
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
     printk("mq_ops->queue_rq status (%d)\n", status);
 
@@ -116,6 +126,7 @@ int cl_write_block(int blk_nr, const void *wbuf, int count)
     printk("%s: rq.state(%d)\n", __func__, rq.state);
     while (READ_ONCE(rq.state) != MQ_RQ_COMPLETE) {
         /* Wait for request completed. */
+        printk("%s: Wait: rq.state(%d)\n", __func__, rq.state);
     }
 
     printk("write_block id[%d] count[%d] ok!\n\n", blk_nr, count);
