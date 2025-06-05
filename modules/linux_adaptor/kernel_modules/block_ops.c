@@ -13,10 +13,7 @@ bool completed = 0;
 
 int cl_read_block(int blk_nr, void *rbuf, int count)
 {
-    printk("read_block id[%d] count[%d] ...\n", blk_nr, count);
-    if (blk_nr == 4) {
-        booter_panic("!!!!!!! Block == 4\n");
-    }
+    printk("------------> read_block id[%d] count[%d] ...\n", blk_nr, count);
 
     /* Test virtio_blk disk. */
     if (cl_disk == NULL || cl_disk->queue == NULL) {
@@ -80,7 +77,7 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
 
 int cl_write_block(int blk_nr, const void *wbuf, int count)
 {
-    printk("\nwrite_block id[%d] count[%d] ...\n", blk_nr, count);
+    printk("-------> write_block id[%d] count[%d] ...\n", blk_nr, count);
 
     /* Test virtio_blk disk. */
     if (cl_disk == NULL || cl_disk->queue == NULL) {
