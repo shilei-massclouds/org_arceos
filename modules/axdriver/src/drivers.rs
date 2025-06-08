@@ -96,8 +96,10 @@ cfg_if::cfg_if! {
             }
 
             fn read_block(&mut self, block_id: u64, buf: &mut [u8]) -> DevResult {
+                use axhal::arch::{irqs_enabled, enable_irqs};
                 let block_id = block_id as usize;
-                info!("Read block: id [{}] size {}", block_id, buf.len());
+                enable_irqs();
+                error!("Read block: id [{}] size {} irq {}", block_id, buf.len(), irqs_enabled());
 
                 if buf.len() % BLOCK_SIZE != 0 {
                     return Err(DevError::InvalidParam);
@@ -106,18 +108,11 @@ cfg_if::cfg_if! {
                     return Err(DevError::Io);
                 }
 
-                let block_nr = block_id / 8;
-                let offset_in_block = (block_id % 8) * BLOCK_SIZE;
-
-                let mut rbuf = [0u8; 4096];
                 let ret = unsafe {
-                    cl_read_block(block_nr,
-                        rbuf.as_mut_ptr(), rbuf.len())
+                    cl_read_block(block_id,
+                        buf.as_mut_ptr(), buf.len())
                 };
-                info!("ret {}, buf: {}, {}, {}, {}",
-                      ret, rbuf[0], rbuf[1], rbuf[2], rbuf[3]);
-
-                buf.copy_from_slice(&rbuf[offset_in_block..offset_in_block + buf.len()]);
+                error!("Read block: OK irq {}", irqs_enabled());
                 Ok(())
             }
 
@@ -132,16 +127,8 @@ cfg_if::cfg_if! {
                     return Err(DevError::Io);
                 }
 
-                let block_nr = block_id / 8;
-                let offset_in_block = (block_id % 8) * BLOCK_SIZE;
-
-                let mut rbuf = [0u8; 4096];
                 unsafe {
-                    cl_read_block(block_nr, rbuf.as_mut_ptr(), rbuf.len());
-                }
-                rbuf[offset_in_block..offset_in_block + buf.len()].copy_from_slice(buf);
-                unsafe {
-                    cl_write_block(block_nr, rbuf.as_ptr(), rbuf.len());
+                    cl_write_block(block_id, buf.as_ptr(), buf.len());
                 }
                 Ok(())
             }

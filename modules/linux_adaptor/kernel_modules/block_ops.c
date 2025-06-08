@@ -13,7 +13,8 @@ bool completed = 0;
 
 int cl_read_block(int blk_nr, void *rbuf, int count)
 {
-    printk("------------> read_block id[%d] count[%d] ...\n", blk_nr, count);
+    printk("------------> read_block id[%d] count[%d] ... sie(%x)\n",
+           blk_nr, count, csr_read(CSR_SSTATUS));
 
     /* Test virtio_blk disk. */
     if (cl_disk == NULL || cl_disk->queue == NULL) {
@@ -40,13 +41,7 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     rq.bio->bi_iter.bi_sector = rq.__sector;
 
     void *buf = alloc_pages_exact(4096, 0);
-    /*
-    {
-        char*p = (char *)buf;
-        printk("Block: %x, %x, %x, %x\n", p[0], p[1], p[2], p[3]);
-    }
-    */
-    __bio_add_page(rq.bio, buf, 4096, 0);
+    __bio_add_page(rq.bio, buf, 512, 0);
 
     struct blk_mq_queue_data data;
     memset(&data, 0, sizeof(data));
@@ -54,24 +49,26 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     data.last = true;
 
     completed = 0;
-    printk("%s: ----------------> mq_ops->queue_rq ...\n", __func__);
+    printk("%s: ----------------> mq_ops->queue_rq sie(%x) ...\n", __func__, csr_read(CSR_SSTATUS));
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
     printk("mq_ops->queue_rq status (%d)\n", status);
 
     /* Sync mode */
     /* Consider to move it out to implement async mode. */
-    printk("%s: rq.state(%d) rq(%lx)\n", __func__, rq.state, &rq);
+    printk("%s: rq.state(%d) rq(%lx) sie(%x)\n", __func__, rq.state, &rq, csr_read(CSR_SSTATUS));
     while (READ_ONCE(rq.state) != MQ_RQ_COMPLETE) {
         /* Wait for request completed. */
+        printk("%s: Wait: rq.state(%d) rq(%lx) completed(%d)\n",
+               __func__, rq.state, &rq, completed);
         static int _count = 0;
-        if (_count % 1000 == 0) {
-            printk("%s: Wait: rq.state(%d) rq(%lx) completed(%d)\n",
-                   __func__, rq.state, &rq, completed);
+        if (_count > 10000) {
+            booter_panic("Too many waits!\n");
         }
         _count++;
     }
 
     memcpy(rbuf, buf, count);
+    printk("%s: OK sie(%x)\n", __func__, csr_read(CSR_SSTATUS));
     return 0;
 }
 
@@ -105,7 +102,7 @@ int cl_write_block(int blk_nr, const void *wbuf, int count)
     rq.bio->bi_iter.bi_sector = rq.__sector;
 
     void *buf = alloc_pages_exact(4096, 0);
-    __bio_add_page(rq.bio, buf, 4096, 0);
+    __bio_add_page(rq.bio, buf, 512, 0);
 
     memcpy(buf, wbuf, count);
 

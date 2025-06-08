@@ -40,6 +40,14 @@ fn print_prompt() {
 
 #[cfg_attr(feature = "axstd", unsafe(no_mangle))]
 fn main() {
+    /*
+    use std::fs::File;
+    let mut file = File::create("a.log").unwrap();
+    let text = "abc";
+    file.write_all(text.as_bytes()).unwrap();
+    return;
+    */
+
     let mut stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
 

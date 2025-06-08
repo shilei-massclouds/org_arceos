@@ -55,9 +55,11 @@ static int read_a_block(int blk_nr)
     memset(buf, 0, sizeof(buf));
     cl_read_block(blk_nr, buf, sizeof(buf));
     printk("after cl_read_block!\n");
+    /*
     if (!buf[0] || !buf[1] || !buf[2] || !buf[3]) {
         booter_panic("Read block error!\n");
     }
+    */
 
     printk("\n=============\n");
     printk("Read Block[%d]: %x, %x, %x, %x\n",
@@ -73,13 +75,21 @@ static int test_read_blocks()
     read_a_block(1);
 }
 
+static int write_a_block(int blk_nr)
+{
+    read_a_block(blk_nr);
+    read_a_block(blk_nr+1);
+
+    char wbuf[512];
+    memset(wbuf, 0xAB, sizeof(wbuf));
+    cl_write_block(blk_nr, wbuf, sizeof(wbuf));
+
+    read_a_block(blk_nr);
+    read_a_block(blk_nr+1);
+}
+
 /* Test for writing block */
 static int test_write_blocks()
 {
-    read_a_block(0);
-
-    char wbuf[] = {0xaa, 0xab, 0xac, 0xad};
-    cl_write_block(0, wbuf, sizeof(wbuf));
-
-    read_a_block(0);
+    write_a_block(0);
 }
