@@ -4,6 +4,7 @@
 
 use crate::AxDeviceEnum;
 use axdriver_base::DeviceType;
+use axhal::arch::{irqs_enabled, enable_irqs};
 
 #[cfg(feature = "virtio")]
 use crate::virtio::{self, VirtIoDevMeta};
@@ -96,9 +97,11 @@ cfg_if::cfg_if! {
             }
 
             fn read_block(&mut self, block_id: u64, buf: &mut [u8]) -> DevResult {
-                use axhal::arch::{irqs_enabled, enable_irqs};
                 let block_id = block_id as usize;
-                enable_irqs();
+                if !irqs_enabled() {
+                    error!("Irq hasn't been enabled in read_block!");
+                    enable_irqs();
+                }
                 error!("Read block: id [{}] size {} irq {}", block_id, buf.len(), irqs_enabled());
 
                 if buf.len() % BLOCK_SIZE != 0 {
@@ -108,9 +111,8 @@ cfg_if::cfg_if! {
                     return Err(DevError::Io);
                 }
 
-                let ret = unsafe {
-                    cl_read_block(block_id,
-                        buf.as_mut_ptr(), buf.len())
+                unsafe {
+                    cl_read_block(block_id, buf.as_mut_ptr(), buf.len())
                 };
                 error!("Read block: OK irq {}", irqs_enabled());
                 Ok(())
@@ -119,6 +121,10 @@ cfg_if::cfg_if! {
             fn write_block(&mut self, block_id: u64, buf: &[u8]) -> DevResult {
                 let block_id = block_id as usize;
                 info!("Write block: id [{}] size {}", block_id, buf.len());
+                if !irqs_enabled() {
+                    error!("Irq hasn't been enabled in write_block!");
+                    enable_irqs();
+                }
 
                 if buf.len() % BLOCK_SIZE != 0 {
                     return Err(DevError::InvalidParam);
