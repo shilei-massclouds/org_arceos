@@ -4,7 +4,7 @@
 
 use crate::AxDeviceEnum;
 use axdriver_base::DeviceType;
-use axhal::arch::{irqs_enabled, enable_irqs};
+use axhal::arch::irqs_enabled;
 
 #[cfg(feature = "virtio")]
 use crate::virtio::{self, VirtIoDevMeta};
@@ -99,8 +99,7 @@ cfg_if::cfg_if! {
             fn read_block(&mut self, block_id: u64, buf: &mut [u8]) -> DevResult {
                 let block_id = block_id as usize;
                 if !irqs_enabled() {
-                    error!("Irq hasn't been enabled in read_block!");
-                    enable_irqs();
+                    panic!("Irq hasn't been enabled in read_block!");
                 }
                 error!("Read block: id [{}] size {} irq {}", block_id, buf.len(), irqs_enabled());
 
@@ -122,8 +121,7 @@ cfg_if::cfg_if! {
                 let block_id = block_id as usize;
                 info!("Write block: id [{}] size {}", block_id, buf.len());
                 if !irqs_enabled() {
-                    error!("Irq hasn't been enabled in write_block!");
-                    enable_irqs();
+                    panic!("Irq hasn't been enabled in write_block!");
                 }
 
                 if buf.len() % BLOCK_SIZE != 0 {

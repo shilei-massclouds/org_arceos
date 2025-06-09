@@ -14,4 +14,4 @@ default = []
 axfs_vfs = { version = "0.1", optional = true }
 axfs_ramfs = { version = "0.1", optional = true }
 crate_interface = { version = "0.1", optional = true }
-axstd = { workspace = true, features = ["alloc", "fs", "irq", "linux-adaptor"], optional = true }
+axstd = { workspace = true, features = ["alloc", "fs", "irq", "multitask", "linux-adaptor"], optional = true }
