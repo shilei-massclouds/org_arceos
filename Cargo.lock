@@ -107,6 +107,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-fstest"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
 name = "arceos-helloworld"
 version = "0.1.0"
 dependencies = [
