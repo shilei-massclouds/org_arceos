@@ -6,7 +6,13 @@
 const char hex_asc[] = "0123456789abcdef";
 const char hex_asc_upper[] = "0123456789ABCDEF";
 
-int vprintk(const char *fmt, va_list args)
+enum print_usage {
+    PRINTK_USAGE = 0,
+    DEBUG_USAGE,
+    ERROR_USAGE,
+};
+
+static int cl_vprintk(enum print_usage usage, const char *fmt, va_list args)
 {
     int n;
     char buf[512];
@@ -19,7 +25,20 @@ int vprintk(const char *fmt, va_list args)
     } else {
         msg = buf;
     }
-    sbi_puts(msg);
+
+    switch (usage) {
+    case PRINTK_USAGE:
+        cl_printk(msg);
+        break;
+    case DEBUG_USAGE:
+        cl_log_debug(msg);
+        break;
+    case ERROR_USAGE:
+        cl_log_error(msg);
+        break;
+    default:
+        cl_printk(msg);
+    }
 }
 
 int printk(const char *fmt, ...)
@@ -27,7 +46,27 @@ int printk(const char *fmt, ...)
     int ret;
     va_list args;
     va_start(args, fmt);
-    ret = vprintk(printk_skip_level(fmt), args);
+    ret = cl_vprintk(PRINTK_USAGE, printk_skip_level(fmt), args);
+    va_end(args);
+    return ret;
+}
+
+int log_debug(const char *fmt, ...)
+{
+    int ret;
+    va_list args;
+    va_start(args, fmt);
+    ret = cl_vprintk(DEBUG_USAGE, printk_skip_level(fmt), args);
+    va_end(args);
+    return ret;
+}
+
+int log_error(const char *fmt, ...)
+{
+    int ret;
+    va_list args;
+    va_start(args, fmt);
+    ret = cl_vprintk(ERROR_USAGE, printk_skip_level(fmt), args);
     va_end(args);
     return ret;
 }
@@ -57,6 +96,6 @@ void _dev_notice(const struct device *dev, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    vprintk(printk_skip_level(fmt), args);
+    cl_vprintk(PRINTK_USAGE, printk_skip_level(fmt), args);
     va_end(args);
 }

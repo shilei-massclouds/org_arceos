@@ -348,19 +348,19 @@ int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
 {
     int nsegs = 0;
 
-    printk("%s: ...\n", __func__);
+    log_debug("%s: ...", __func__);
     if (rq->rq_flags & RQF_SPECIAL_PAYLOAD)
         nsegs = __blk_bvec_map_sg(rq->special_vec, sglist, last_sg);
     else if (rq->bio && bio_op(rq->bio) == REQ_OP_WRITE_SAME)
         nsegs = __blk_bvec_map_sg(bio_iovec(rq->bio), sglist, last_sg);
     else if (rq->bio) {
         nsegs = __blk_bios_map_sg(q, rq->bio, sglist, last_sg);
-        printk("%s: nsegs(%d)\n", __func__, nsegs);
+        log_debug("%s: nsegs(%d)", __func__, nsegs);
     }
 
     if (*last_sg) {
         sg_mark_end(*last_sg);
-        printk("%s: last_sg blk_rq_nr_phys_segments(%d)\n",
+        log_debug("%s: last_sg blk_rq_nr_phys_segments(%d)",
                __func__, blk_rq_nr_phys_segments(rq));
     }
 
@@ -375,12 +375,12 @@ int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
 
 void blk_mq_complete_request(struct request *rq)
 {
-    printk("%s: ...\n", __func__);
+    log_debug("%s: ...", __func__);
 
     /* From blk_mq_complete_request_remote */
     WRITE_ONCE(rq->state, MQ_RQ_COMPLETE);
     completed = 1;
-    printk("%s: ### SET MQ_RQ_COMPLETE rq(%lx) completed(%d)\n",
+    log_debug("%s: ### SET MQ_RQ_COMPLETE rq(%lx) completed(%d)",
            __func__, rq, completed);
 
     const struct blk_mq_ops *mq_ops = cl_disk->queue->mq_ops;
@@ -397,7 +397,7 @@ void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async)
 
 void blk_mq_end_request(struct request *rq, blk_status_t error)
 {
-    printk("%s: blk_status_t(%d)\n", __func__, error);
+    log_debug("%s: blk_status_t(%d)", __func__, error);
     if (error != 0) {
         booter_panic("bad request!");
     }

@@ -15,6 +15,13 @@ extern void sbi_put_u64(unsigned long n);
 extern void sbi_put_dec(unsigned long n);
 extern void sbi_console_putchar(int ch);
 
+extern void cl_printk(const char *s);
+extern void cl_log_debug(const char *s);
+extern void cl_log_error(const char *s);
+
+extern int log_debug(const char *fmt, ...);
+extern int log_error(const char *fmt, ...);
+
 typedef int (*init_module_t)(void);
 typedef void (*exit_module_t)(void);
 

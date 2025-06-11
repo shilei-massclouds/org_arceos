@@ -164,7 +164,6 @@ static void plic_irq_eoi(struct irq_data *d)
 	struct plic_handler *handler = this_cpu_ptr(&plic_handlers);
 
 	writel(d->hwirq, handler->hart_base + CONTEXT_CLAIM);
-    printk("%s: !\n", __func__);
 }
 
 static struct irq_chip plic_chip = {

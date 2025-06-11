@@ -13,8 +13,8 @@ bool completed = 0;
 
 int cl_read_block(int blk_nr, void *rbuf, int count)
 {
-    printk("------------> read_block id[%d] count[%d] ... sie(%x)\n",
-           blk_nr, count, csr_read(CSR_SSTATUS));
+    log_debug("%s: id[%d] count[%d] ... sie(%x)\n",
+           __func__, blk_nr, count, csr_read(CSR_SSTATUS));
 
     /* Test virtio_blk disk. */
     if (cl_disk == NULL || cl_disk->queue == NULL) {
@@ -49,32 +49,34 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     data.last = true;
 
     completed = 0;
-    printk("%s: ----------------> mq_ops->queue_rq sie(%x) ...\n", __func__, csr_read(CSR_SSTATUS));
+    log_debug("%s: ----------------> mq_ops->queue_rq sie(%x) ...\n", __func__, csr_read(CSR_SSTATUS));
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
-    printk("mq_ops->queue_rq status (%d)\n", status);
+    log_debug("mq_ops->queue_rq status (%d)\n", status);
 
     /* Sync mode */
     /* Consider to move it out to implement async mode. */
-    printk("%s: rq.state(%d) rq(%lx) sie(%x)\n", __func__, rq.state, &rq, csr_read(CSR_SSTATUS));
+    log_debug("%s: rq.state(%d) rq(%lx) sie(%x)\n", __func__, rq.state, &rq, csr_read(CSR_SSTATUS));
     while (READ_ONCE(rq.state) != MQ_RQ_COMPLETE) {
         /* Wait for request completed. */
-        printk("%s: Wait: rq.state(%d) rq(%lx) completed(%d)\n",
+        log_debug("%s: Wait: rq.state(%d) rq(%lx) completed(%d)\n",
                __func__, rq.state, &rq, completed);
+        /*
         static int _count = 0;
         if (_count > 10000) {
             booter_panic("Too many waits!\n");
         }
         _count++;
+        */
     }
 
     memcpy(rbuf, buf, count);
-    printk("%s: OK sie(%x)\n", __func__, csr_read(CSR_SSTATUS));
+    log_debug("%s: OK sie(%x)\n", __func__, csr_read(CSR_SSTATUS));
     return 0;
 }
 
 int cl_write_block(int blk_nr, const void *wbuf, int count)
 {
-    printk("-------> write_block id[%d] count[%d] ...\n", blk_nr, count);
+    log_debug("%s: id[%d] count[%d] ...", __func__, blk_nr, count);
 
     /* Test virtio_blk disk. */
     if (cl_disk == NULL || cl_disk->queue == NULL) {
@@ -111,19 +113,18 @@ int cl_write_block(int blk_nr, const void *wbuf, int count)
     data.rq = &rq;
     data.last = true;
 
-    printk("%s: mq_ops->queue_rq ...\n", __func__);
+    log_debug("%s: mq_ops->queue_rq ...\n", __func__);
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
-    printk("mq_ops->queue_rq status (%d)\n", status);
+    log_debug("mq_ops->queue_rq status (%d)\n", status);
 
     /* Sync mode */
     /* Consider to move it out to implement async mode. */
-    printk("%s: rq.state(%d)\n", __func__, rq.state);
+    log_debug("%s: rq.state(%d)", __func__, rq.state);
     while (READ_ONCE(rq.state) != MQ_RQ_COMPLETE) {
         /* Wait for request completed. */
-        printk("%s: Wait: rq.state(%d)\n", __func__, rq.state);
+        log_debug("%s: Wait: rq.state(%d)", __func__, rq.state);
     }
 
-    printk("write_block id[%d] count[%d] ok!\n\n", blk_nr, count);
-
+    log_debug("%s: id[%d] count[%d] ok!", __func__, blk_nr, count);
     return 0;
 }
