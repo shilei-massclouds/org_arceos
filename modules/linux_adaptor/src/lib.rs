@@ -77,6 +77,7 @@ pub extern "C" fn cl_alloc_pages(size: usize, align: usize) -> usize {
     global_allocator().alloc_pages(count, align).unwrap()
 }
 
+#[cfg(target_arch = "riscv64")]
 unsafe extern "C" {
     fn plic_handle_irq();
 }

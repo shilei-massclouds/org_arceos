@@ -52,16 +52,17 @@ fn do_file_test(path: &str) {
     let buf1 = [0xA1; BUF1_SIZE];
     let buf2 = [0xB1; BUF2_SIZE];
 
-    let mut filesize1 = write_file(&mut f1, &buf1);
-    filesize1 = write_file(&mut f1, &buf2);
-    assert_eq!(filesize1, buf1.len() + buf2.len());
+    let ret = write_file(&mut f1, &buf1);
+    assert_eq!(ret, buf1.len());
+    let ret = write_file(&mut f1, &buf2);
+    assert_eq!(ret, buf2.len());
     drop(f1);
 
     // Reopen the file and verify its content.
     let mut rbuf = [0x0; BUF1_SIZE+BUF2_SIZE];
     let mut f1 = open_file(path);
-    let filesize1 = read_file(&mut f1, &mut rbuf);
-    assert_eq!(filesize1, rbuf.len());
+    let ret = read_file(&mut f1, &mut rbuf);
+    assert_eq!(ret, rbuf.len());
     assert_eq!(rbuf[0], 0xA1);
     assert_eq!(rbuf[BUF1_SIZE - 1], 0xA1);
     assert_eq!(rbuf[BUF1_SIZE], 0xB1);
