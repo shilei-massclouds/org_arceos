@@ -215,6 +215,9 @@ clean: clean_c
 	rm -rf $(APP)/*.bin $(APP)/*.elf $(OUT_CONFIG)
 	cargo clean
 
+clean_dist: clean
+	make -C modules/linux_adaptor/kernel_modules clean
+
 clean_c::
 	rm -rf ulib/axlibc/build_*
 	rm -rf $(app-objs)
@@ -222,4 +225,4 @@ clean_c::
 .PHONY: all defconfig oldconfig \
 	build disasm run justrun debug \
 	clippy doc doc_check_missing fmt fmt_c unittest unittest_no_fail_fast \
-	disk_img clean clean_c
+	disk_img clean clean_c clean_dist
