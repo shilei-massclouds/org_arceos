@@ -50,5 +50,5 @@ void sg_init_one(struct scatterlist *sg, const void *buf, unsigned int buflen)
 {
     sg_init_table(sg, 1);
     _sg_set_buf(sg, buf, buflen);
-    printk("%s: ===========> \n", __func__);
+    log_debug("%s: ===========> \n", __func__);
 }

@@ -26,7 +26,7 @@ struct irq_data irq_data;
 
 void plic_handle_irq(void)
 {
-    printk("%s: ...\n", __func__);
+    log_debug("%s: ...\n", __func__);
     if (fn_plic_handle_irq == NULL) {
         booter_panic("No plic_handle_irq.");
     }
@@ -163,7 +163,7 @@ struct irq_domain *irq_find_matching_fwspec(struct irq_fwspec *fwspec,
                         enum irq_domain_bus_token bus_token)
 {
     struct irq_domain *domain = kmalloc(sizeof(struct irq_domain), 0);
-    printk("%s: fill irq_domain\n", __func__);
+    log_debug("%s: fill irq_domain\n", __func__);
     return domain;
 }
 
@@ -200,7 +200,7 @@ void enable_percpu_irq(unsigned int irq, unsigned int type)
 unsigned int irq_find_mapping(struct irq_domain *domain,
                               irq_hw_number_t hwirq)
 {
-    printk("%s: hwirq(%lu)\n", __func__, hwirq);
+    log_debug("%s: hwirq(%lu)\n", __func__, hwirq);
     if (hwirq != 8) {
         booter_panic("bad irq.");
     }
@@ -209,7 +209,7 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
 
 int generic_handle_irq(unsigned int irq)
 {
-    printk("%s: irq(%u)\n", __func__, irq);
+    log_debug("%s: irq(%u)\n", __func__, irq);
     if (irq != 3) {
         booter_panic("bad irq.");
     }

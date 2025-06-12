@@ -291,7 +291,7 @@ void set_capacity_revalidate_and_notify(struct gendisk *disk, sector_t size,
 
 void blk_mq_start_request(struct request *rq)
 {
-    printk("%s: No impl.\n", __func__);
+    log_debug("%s: No impl.\n", __func__);
 }
 
 static inline struct scatterlist *blk_next_sg(struct scatterlist **sg,
@@ -328,9 +328,8 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
     struct bvec_iter iter;
 
     for_each_bio(bio) {
-        printk("%s: bio \n", __func__);
         bio_for_each_bvec(bvec, bio, iter) {
-            printk("%s: bvec (0x%lx) len(%u) offset(%u)\n",
+            log_debug("%s: bvec (0x%lx) len(%u) offset(%u)\n",
                    __func__, (unsigned long)bvec.bv_page, bvec.bv_len, bvec.bv_offset);
         }
 
@@ -392,7 +391,7 @@ void blk_mq_complete_request(struct request *rq)
 
 void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async)
 {
-    printk("%s: No impl.\n", __func__);
+    log_debug("%s: No impl.\n", __func__);
 }
 
 void blk_mq_end_request(struct request *rq, blk_status_t error)

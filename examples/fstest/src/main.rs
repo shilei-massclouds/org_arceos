@@ -24,7 +24,7 @@ use cmd::{
 
 #[cfg_attr(feature = "axstd", unsafe(no_mangle))]
 fn main() {
-    print!("fstest ..");
+    println!("fstest ..");
 
     // List all at root directory.
     show_dir("");
@@ -40,8 +40,7 @@ fn main() {
     // Remove the directory.
     remove_dir("dir1");
 
-    print!("fstest ok!");
-    panic!();
+    println!("fstest ok!");
 }
 
 fn do_file_test(path: &str) {
@@ -57,6 +56,7 @@ fn do_file_test(path: &str) {
     let ret = write_file(&mut f1, &buf2);
     assert_eq!(ret, buf2.len());
     drop(f1);
+    println!("Write '{}' ok!", path);
 
     // Reopen the file and verify its content.
     let mut rbuf = [0x0; BUF1_SIZE+BUF2_SIZE];
@@ -67,7 +67,9 @@ fn do_file_test(path: &str) {
     assert_eq!(rbuf[BUF1_SIZE - 1], 0xA1);
     assert_eq!(rbuf[BUF1_SIZE], 0xB1);
     assert_eq!(rbuf[rbuf.len() - 1], 0xB1);
+    println!("Read and verify '{}' ok!", path);
 
     // Remove the file.
     remove_file(path);
+    println!("Remove '{}' ok!", path);
 }

@@ -101,7 +101,7 @@ cfg_if::cfg_if! {
                 if !irqs_enabled() {
                     panic!("Irq hasn't been enabled in read_block!");
                 }
-                error!("Read block: id [{}] size {} irq {}", block_id, buf.len(), irqs_enabled());
+                info!("Read block: id [{}] size {} irq {}", block_id, buf.len(), irqs_enabled());
 
                 if buf.len() % BLOCK_SIZE != 0 {
                     return Err(DevError::InvalidParam);
@@ -113,7 +113,7 @@ cfg_if::cfg_if! {
                 unsafe {
                     cl_read_block(block_id, buf.as_mut_ptr(), buf.len())
                 };
-                error!("Read block: OK irq {}", irqs_enabled());
+                info!("Read block: OK irq {}", irqs_enabled());
                 Ok(())
             }
 

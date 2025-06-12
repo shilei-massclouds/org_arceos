@@ -1,4 +1,5 @@
 #include <linux/bio.h>
+#include "booter.h"
 
 void bio_init(struct bio *bio, struct bio_vec *table,
           unsigned short max_vecs)
@@ -27,7 +28,7 @@ void __bio_add_page(struct bio *bio, struct page *page,
 {
     struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt];
 
-    printk("%s: (%lx) len(%u) off(%u)\n", __func__, (unsigned long)page, len, off);
+    log_debug("%s: (%lx) len(%u) off(%u)\n", __func__, (unsigned long)page, len, off);
     WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
     WARN_ON_ONCE(bio_full(bio, len));
 

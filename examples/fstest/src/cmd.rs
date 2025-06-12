@@ -70,6 +70,7 @@ pub fn open_file(path: &str) -> File {
 }
 
 pub fn show_dir(args: &str) {
+    println!("Show directory '{}'", args);
     let current_dir = std::env::current_dir().unwrap();
     let args = if args.is_empty() {
         path_to_str(&current_dir)

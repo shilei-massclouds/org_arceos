@@ -22,12 +22,12 @@ void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
 
 unsigned long __lockfunc _raw_spin_lock_irqsave(raw_spinlock_t *lock)
 {
-    log_error("%s: ===> WARN: impl it. (%lx)\n", __func__, (unsigned long)lock);
+    log_debug("%s: ===> WARN: impl it. (%lx)\n", __func__, (unsigned long)lock);
 }
 
 void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 {
-    log_error("%s: ===> WARN: impl it. (%lx)\n", __func__, (unsigned long)lock);
+    log_debug("%s: ===> WARN: impl it. (%lx)\n", __func__, (unsigned long)lock);
 }
 
 void __lockfunc _raw_spin_lock_irq(raw_spinlock_t *lock)
