@@ -1,4 +1,4 @@
-#include "clinux.h"
+#include "booter.h"
 
 // virtio_blk
 CL_MINE(blk_cleanup_queue)
@@ -66,6 +66,6 @@ CL_MINE(kstrdup)
 // plic
 CL_MINE(disable_percpu_irq)
 CL_MINE(handle_fasteoi_irq)
-CL_MINE(___ratelimit)
 CL_MINE(iounmap)
 CL_MINE(irq_domain_free_irqs_top)
+CL_MINE(___ratelimit)

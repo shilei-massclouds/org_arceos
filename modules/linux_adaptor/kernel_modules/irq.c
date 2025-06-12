@@ -223,7 +223,7 @@ int generic_handle_irq(unsigned int irq)
 int cl_irq_init(void)
 {
     plic_node.name = "plic";
-    sbi_puts("--- plic_init ...\n\n");
+    printk("--- plic_init ...\n\n");
     cl_plic_init(&plic_node, NULL);
 
     if (irq_domain_ops == NULL) {
@@ -235,7 +235,7 @@ int cl_irq_init(void)
 
     irq_domain_ops->alloc(&root_irq_domain, 1, 1, &fwspec);
 
-    sbi_puts("--- plic_init ok!\n\n");
+    printk("--- plic_init ok!\n\n");
     return 0;
 }
 

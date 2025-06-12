@@ -43,6 +43,12 @@ pub extern "C" fn cl_printk(ptr: *const c_char) {
     ax_print!("{}", rust_str);
 }
 
+/// Terminate
+#[unsafe(no_mangle)]
+pub extern "C" fn cl_terminate() {
+    axhal::misc::terminate()
+}
+
 /// Debug log.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_log_debug(ptr: *const c_char) {

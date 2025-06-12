@@ -74,10 +74,8 @@ int log_error(const char *fmt, ...)
 
 __weak void __warn_printk(const char *fmt, ...)
 {
-    sbi_puts("[RAW_WARN_PRINTK] ");
-    sbi_puts(fmt);
-    sbi_puts("\n");
-    sbi_shutdown();
+    printk("[RAW_WARN_PRINTK] %s\n", fmt);
+    cl_terminate();
 }
 
 /**

@@ -16,7 +16,7 @@ OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 OBJS += irq-sifive-plic.o
 
 # Adaptor files, we will re-write them in Rust in future.
-OBJS += cl_mine.o main.o sbi.o workqueue.o \
+OBJS += cl_mine.o main.o workqueue.o \
 		printk.o vsprintf.o ctype.o kstrtox.o \
 		alloc.o genhd.o bus.o klist.o locking.o \
 		driver.o of_platform.o dma.o string.o \

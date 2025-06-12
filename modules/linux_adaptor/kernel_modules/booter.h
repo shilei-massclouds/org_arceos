@@ -10,14 +10,11 @@ extern void *cl_rust_alloc(unsigned long size, unsigned long align);
 extern void cl_rust_dealloc(const void *addr);
 extern void *cl_alloc_pages(unsigned long size, unsigned long align);
 
-extern void sbi_puts(const char *s);
-extern void sbi_put_u64(unsigned long n);
-extern void sbi_put_dec(unsigned long n);
-extern void sbi_console_putchar(int ch);
-
 extern void cl_printk(const char *s);
 extern void cl_log_debug(const char *s);
 extern void cl_log_error(const char *s);
+
+extern void cl_terminate(void);
 
 extern int log_debug(const char *fmt, ...);
 extern int log_error(const char *fmt, ...);
@@ -28,22 +25,20 @@ typedef void (*exit_module_t)(void);
 extern int hex_to_str(unsigned long n, char *str, size_t len);
 extern int dec_to_str(unsigned long n, char *str, size_t len);
 
-extern void sbi_shutdown(void);
+extern int printk(const char *fmt, ...);
+
+/* For Block */
+extern int cl_read_block(int blk_nr, void *rbuf, int count);
+extern int cl_write_block(int blk_nr, const void *rbuf, int count);
 
 #define UL_STR_SIZE 19  /* prefix with '0x' and end with '\0' */
 
 #define booter_panic(args...) \
 do { \
-    sbi_puts("\n########################\n"); \
-    sbi_puts("PANIC: "); \
-    sbi_puts(__FUNCTION__); \
-    sbi_puts(" ("); \
-    sbi_puts(__FILE__); \
-    sbi_puts(":"); \
-    sbi_put_dec(__LINE__); \
-    sbi_puts(")\n" args ""); \
-    sbi_puts("\n########################\n"); \
-    sbi_shutdown(); \
+    printk("\n########################\n"); \
+    printk("PANIC: %s(%s:%d) %s\n", __FUNCTION__, __FILE__, __LINE__, args); \
+    printk("\n########################\n"); \
+    cl_terminate(); \
 } while (0);
 
 //

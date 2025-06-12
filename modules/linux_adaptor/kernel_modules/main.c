@@ -1,5 +1,4 @@
 #include "booter.h"
-#include "clinux.h"
 #include <linux/string.h>
 #include <linux/printk.h>
 
@@ -19,7 +18,7 @@ extern int clinux_test_block_driver(void);
 
 int clinux_init()
 {
-    sbi_puts("cLinux base is starting ...\n");
+    printk("cLinux base is starting ...\n");
 
     cl_irq_init();
 

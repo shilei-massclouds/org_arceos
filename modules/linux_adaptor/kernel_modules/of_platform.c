@@ -26,9 +26,9 @@ int __platform_driver_register(struct platform_driver *drv,
     dev.platform_dma_mask = DMA_BIT_MASK(32);
     dev.dev.dma_mask = & dev.platform_dma_mask;
 
-    sbi_puts("\n__platform_driver_register ...\n");
+    printk("\n__platform_driver_register ...\n");
     ret = drv->probe(&dev);
-    sbi_puts("\n__platform_driver_register ok!\n");
+    printk("\n__platform_driver_register ok!\n");
     return 0;
 }
 

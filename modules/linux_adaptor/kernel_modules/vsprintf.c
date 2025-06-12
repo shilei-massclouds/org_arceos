@@ -2304,10 +2304,7 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
 	}
 
     /*
-    sbi_puts("booter:vsprintf: unimplemented pointer.\n");
-    sbi_puts(fmt);
-    sbi_puts("\n");
-    sbi_shutdown();
+    printk("booter:vsprintf: unimplemented pointer.\n");
     */
 
 	/* default is to _not_ leak addresses, hash before printing */
@@ -3400,8 +3397,8 @@ int vsscanf(const char *buf, const char *fmt, va_list args)
 			++fmt;
 
 			if (negate) {
-                sbi_puts("[vsscanf]: unimplemented bitmap_complement.\n");
-                sbi_shutdown();
+                printk("[vsscanf]: unimplemented bitmap_complement.\n");
+                cl_terminate();
 				//bitmap_complement(set, set, 256);
 				///* exclude null '\0' byte */
 				//clear_bit(0, set);

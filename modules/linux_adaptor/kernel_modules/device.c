@@ -11,8 +11,7 @@ void device_initialize(struct device *dev)
 
 int dev_set_name(struct device *dev, const char *fmt, ...)
 {
-    sbi_puts(fmt);
-    sbi_puts("\n");
+    printk("%s: fmt %s\n", __func__, fmt);
     return 0;
 }
 
