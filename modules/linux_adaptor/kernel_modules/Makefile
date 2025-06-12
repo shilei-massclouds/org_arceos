@@ -24,7 +24,8 @@ OBJS += cl_mine.o main.o sbi.o workqueue.o \
 		string_helpers.o block_ops.o bio.o \
 		scatterlist.o paging.o
 
-CROSS_ = riscv64-linux-gnu-
+#CROSS_ = riscv64-linux-gnu-
+CROSS_ = riscv64-linux-musl-
 CC = $(CROSS_)gcc
 AR = $(CROSS_)ar
 
