@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <linux/kernel.h>
 #include <linux/ctype.h>
+#include <linux/device.h>
 #include "booter.h"
 
 const char hex_asc[] = "0123456789abcdef";

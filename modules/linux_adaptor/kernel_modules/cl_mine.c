@@ -59,7 +59,6 @@ CL_MINE(__warn_printk)
 
 // string_helpers
 CL_MINE(hex_to_bin)
-CL_MINE(strchr)
 CL_MINE(get_cmdline)
 CL_MINE(file_path)
 CL_MINE(kstrdup)

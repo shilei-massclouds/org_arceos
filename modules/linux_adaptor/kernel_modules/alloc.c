@@ -1,5 +1,6 @@
 #include <linux/types.h>
 #include <linux/printk.h>
+#include <linux/device.h>
 #include "booter.h"
 
 void* __kmalloc(size_t size, gfp_t flags)
