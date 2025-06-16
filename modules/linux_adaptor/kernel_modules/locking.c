@@ -40,18 +40,18 @@ void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long 
 
 void __lockfunc _raw_spin_lock_irq(raw_spinlock_t *lock)
 {
-    log_error("%s: ===> WARN: impl it. (%lx)\n",
+    log_debug("%s: ===> WARN: impl it. (%lx)\n",
            __func__, (unsigned long)lock);
 }
 
 void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)
 {
-    log_error("%s: ===> WARN: impl it. (%lx)\n",
+    log_debug("%s: ===> WARN: impl it. (%lx)\n",
            __func__, (unsigned long)lock);
 }
 
 void
 __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
 {
-    log_error("%s: ===> WARN: impl it. (%lx) (%s)\n", __func__, (unsigned long)lock, name);
+    log_debug("%s: ===> WARN: impl it. (%lx) (%s)\n", __func__, (unsigned long)lock, name);
 }
