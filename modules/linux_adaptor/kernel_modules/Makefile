@@ -12,7 +12,7 @@ OBJS += cl_mine.o main.o workqueue.o \
 		driver.o of_platform.o dma.o string.o \
 		device.o ida.o sched.o blk_mq.o \
 		string_helpers.o block_ops.o bio.o \
-		scatterlist.o paging.o
+		scatterlist.o paging.o irq.o
 
 include scripts/$(AX_ARCH).make
 

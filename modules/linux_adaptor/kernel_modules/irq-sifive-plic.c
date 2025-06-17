@@ -392,7 +392,7 @@ out_free_priv:
 	return error;
 }
 
-int cl_plic_init(struct device_node *node, struct device_node *parent)
+int cl_irqchip_init(struct device_node *node, struct device_node *parent)
 {
     return plic_init(node, parent);
 }

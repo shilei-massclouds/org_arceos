@@ -7,7 +7,7 @@
 
 #define PLIC_REG_START 0xc000000
 
-extern int cl_plic_init(struct device_node *node,
+extern int cl_irqchip_init(struct device_node *node,
                         struct device_node *parent);
 
 struct plic_priv {
@@ -224,7 +224,7 @@ int cl_irq_init(void)
 {
     plic_node.name = "plic";
     printk("--- plic_init ...\n\n");
-    cl_plic_init(&plic_node, NULL);
+    cl_irqchip_init(&plic_node, NULL);
 
     if (irq_domain_ops == NULL) {
         booter_panic("irq_domain_ops is NULL!");
@@ -246,4 +246,10 @@ int cl_enable_irq(void)
     irq_data.hwirq = 8;
     plic_chip->irq_unmask(&irq_data);
     return 0;
+}
+
+__weak int cl_irqchip_init(struct device_node *node,
+                           struct device_node *parent)
+{
+    booter_panic("No impl.");
 }

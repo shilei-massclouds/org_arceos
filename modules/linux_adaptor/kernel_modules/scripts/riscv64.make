@@ -11,4 +11,4 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
     -O2 -Wno-stringop-overflow -Wno-format-truncation -Wno-format-security \
     -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration -DARCH_RISCV64
 
-OBJS += irq-sifive-plic.o irq.o
+OBJS += irq-sifive-plic.o
