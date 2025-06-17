@@ -92,3 +92,8 @@ static int test_write_blocks()
 {
     write_a_block(0);
 }
+
+__weak int cl_irq_init(void)
+{
+    printk("No impl for %s\n", __func__);
+}

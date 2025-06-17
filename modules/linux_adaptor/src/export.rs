@@ -64,3 +64,25 @@ pub extern "C" fn cl_log_error(ptr: *const c_char) {
     let rust_str = c_str.to_str().expect("Bad encoding");
     error!("{}", rust_str);
 }
+
+/// the offset between the kernel virtual and physical mappings
+#[cfg(target_arch = "aarch64")]
+#[unsafe(no_mangle)]
+static kimage_voffset: u64 = 0;
+
+#[cfg(target_arch = "aarch64")]
+#[unsafe(no_mangle)]
+static vabits_actual: u64 = 0;
+
+#[cfg(target_arch = "aarch64")]
+#[unsafe(no_mangle)]
+static physvirt_offset: i64 = 0;
+
+#[cfg(target_arch = "aarch64")]
+#[unsafe(no_mangle)]
+static nr_cpu_ids: u32 = 0;
+
+#[cfg(target_arch = "aarch64")]
+#[unsafe(no_mangle)]
+static xen_domain_type: u32 = 0;
+

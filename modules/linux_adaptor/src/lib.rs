@@ -36,6 +36,11 @@ fn prepare_ext_interrupt() {
     });
 }
 
+#[cfg(target_arch = "aarch64")]
+fn prepare_ext_interrupt() {
+    warn!("No impl.");
+}
+
 #[link(name = "clinux", kind = "static")]
 unsafe extern "C" {
     fn clinux_init() -> i32;

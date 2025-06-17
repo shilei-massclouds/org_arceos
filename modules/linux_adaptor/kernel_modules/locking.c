@@ -7,9 +7,11 @@ void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
               struct lock_class_key *key, short inner)
 {
     lock->raw_lock = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;
+#ifdef CONFIG_DEBUG_SPINLOCK
     lock->magic = SPINLOCK_MAGIC;
     lock->owner = SPINLOCK_OWNER_INIT;
     lock->owner_cpu = -1;
+#endif
 }
 
 void __lockfunc _raw_spin_lock(raw_spinlock_t *lock)

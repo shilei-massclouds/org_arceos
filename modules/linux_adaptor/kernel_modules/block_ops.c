@@ -13,8 +13,7 @@ bool completed = 0;
 
 int cl_read_block(int blk_nr, void *rbuf, int count)
 {
-    log_debug("%s: id[%d] count[%d] ... sie(%x)\n",
-           __func__, blk_nr, count, csr_read(CSR_SSTATUS));
+    log_debug("%s: id[%d] count[%d] ...\n", __func__, blk_nr, count);
 
     /* Test virtio_blk disk. */
     if (cl_disk == NULL || cl_disk->queue == NULL) {
@@ -49,13 +48,13 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     data.last = true;
 
     completed = 0;
-    log_debug("%s: ----------------> mq_ops->queue_rq sie(%x) ...\n", __func__, csr_read(CSR_SSTATUS));
+    log_debug("%s: ----------------> mq_ops->queue_rq ...\n", __func__);
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
     log_debug("mq_ops->queue_rq status (%d)\n", status);
 
     /* Sync mode */
     /* Consider to move it out to implement async mode. */
-    log_debug("%s: rq.state(%d) rq(%lx) sie(%x)\n", __func__, rq.state, &rq, csr_read(CSR_SSTATUS));
+    log_debug("%s: rq.state(%d) rq(%lx)\n", __func__, rq.state, &rq);
     while (READ_ONCE(rq.state) != MQ_RQ_COMPLETE) {
         /* Wait for request completed. */
         log_debug("%s: Wait: rq.state(%d) rq(%lx) completed(%d)\n",
@@ -70,7 +69,7 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     }
 
     memcpy(rbuf, buf, count);
-    log_debug("%s: OK sie(%x)\n", __func__, csr_read(CSR_SSTATUS));
+    log_debug("%s: OK\n", __func__);
     return 0;
 }
 

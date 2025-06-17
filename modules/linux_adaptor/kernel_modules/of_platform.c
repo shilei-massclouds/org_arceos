@@ -15,8 +15,16 @@ int __platform_driver_register(struct platform_driver *drv,
     struct platform_device dev;
     struct resource r;
 
+#ifdef ARCH_AARCH64
+    r.start =   0xffff00000a003e00;
+    r.end   =   0xffff00000a003fff;
+#endif
+
+#ifdef ARCH_RISCV64
     r.start =   0xffffffc010008000;
     r.end   =   0xffffffc010008fff;
+#endif
+
     r.flags =   IORESOURCE_MEM;
     r.name  =   dev_name;
 
@@ -69,6 +77,7 @@ int of_property_read_variable_u32_array(const struct device_node *np,
     }
     printk("%s: name(%s)\n", __func__, propname);
     booter_panic("bad prop.");
+    return 0;
 }
 
 int riscv_of_parent_hartid(struct device_node *node)

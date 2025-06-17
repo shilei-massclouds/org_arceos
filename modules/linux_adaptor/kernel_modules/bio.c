@@ -1,4 +1,5 @@
 #include <linux/bio.h>
+#include <linux/slab.h>
 #include "booter.h"
 
 void bio_init(struct bio *bio, struct bio_vec *table,
