@@ -30,24 +30,46 @@ void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
 
 unsigned long __lockfunc _raw_spin_lock_irqsave(raw_spinlock_t *lock)
 {
-    log_debug("%s: ===> WARN: impl it. (%lx)\n", __func__, (unsigned long)lock);
+    unsigned long flags;
+
+    local_irq_save(flags);
+
+    /* For simplicity, ignore kernel-preemption. */
+    // preempt_disable();
+
+    arch_spin_lock(&lock->raw_lock);
+
+    return flags;
 }
 
 void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 {
-    log_debug("%s: ===> WARN: impl it. (%lx)\n", __func__, (unsigned long)lock);
+    arch_spin_unlock(&lock->raw_lock);
+
+    local_irq_restore(flags);
+
+    /* For simplicity, ignore kernel-preemption. */
+    // preempt_enable();
 }
 
 void __lockfunc _raw_spin_lock_irq(raw_spinlock_t *lock)
 {
-    log_debug("%s: ===> WARN: impl it. (%lx)\n",
-           __func__, (unsigned long)lock);
+    local_irq_disable();
+
+    /* For simplicity, ignore kernel-preemption. */
+    // preempt_disable();
+
+    arch_spin_lock(&lock->raw_lock);
 }
 
 void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)
 {
-    log_debug("%s: ===> WARN: impl it. (%lx)\n",
-           __func__, (unsigned long)lock);
+    arch_spin_unlock(&lock->raw_lock);
+
+    local_irq_enable();
+
+    /* For simplicity, ignore kernel-preemption. */
+    // preempt_enable();
 }
 
 void
