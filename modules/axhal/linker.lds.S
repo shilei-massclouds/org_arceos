@@ -41,6 +41,11 @@ SECTIONS
         *(.got .got.*)
     }
 
+    .init.data : ALIGN(4K) {
+        KEEP(*(__irqchip_of_table))
+        . = ALIGN(4K);
+    }
+
     .tdata : ALIGN(0x10) {
         _stdata = .;
         *(.tdata .tdata.*)

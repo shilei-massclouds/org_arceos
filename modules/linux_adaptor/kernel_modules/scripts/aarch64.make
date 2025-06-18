@@ -21,3 +21,5 @@ CFLAGS := -nostdinc -isystem /usr/lib/gcc-cross/aarch64-linux-gnu/11/include \
           -mstack-protector-guard-reg=sp_el0 -mstack-protector-guard-offset=1136 -Idrivers/block -DARCH_AARCH64
 
 OBJS += cl_mine_aarch64.o
+OBJS += irq-gic.o
+OBJS += irq-gic-common.o

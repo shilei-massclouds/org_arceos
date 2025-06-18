@@ -39,6 +39,7 @@ bool queue_work_on(int cpu, struct workqueue_struct *wq,
            struct work_struct *work)
 {
     booter_panic("No impl.\n");
+    return false;
 }
 
 /**
@@ -55,6 +56,7 @@ bool queue_work_on(int cpu, struct workqueue_struct *wq,
 bool flush_work(struct work_struct *work)
 {
     booter_panic("No impl.\n");
+    return false;
 }
 
 /**

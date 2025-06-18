@@ -247,11 +247,3 @@ int cl_enable_irq(void)
     plic_chip->irq_unmask(&irq_data);
     return 0;
 }
-
-#ifdef ARCH_AARCH64
-__weak int cl_irqchip_init(struct device_node *node,
-                           struct device_node *parent)
-{
-    booter_panic("No impl.");
-}
-#endif

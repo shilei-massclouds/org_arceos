@@ -72,6 +72,7 @@ static int test_read_blocks()
 {
     read_a_block(0);
     read_a_block(1);
+    return 0;
 }
 
 static int write_a_block(int blk_nr)
@@ -85,6 +86,7 @@ static int write_a_block(int blk_nr)
 
     read_a_block(blk_nr);
     read_a_block(blk_nr+1);
+    return 0;
 }
 
 /* Test for writing block */

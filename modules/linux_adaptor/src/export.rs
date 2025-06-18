@@ -86,3 +86,10 @@ static nr_cpu_ids: u32 = 0;
 #[unsafe(no_mangle)]
 static xen_domain_type: u32 = 0;
 
+#[cfg(target_arch = "aarch64")]
+#[unsafe(no_mangle)]
+static __boot_cpu_mode: u32 = 0;
+
+#[cfg(target_arch = "aarch64")]
+#[unsafe(no_mangle)]
+static arm64_use_ng_mappings: bool = false;
