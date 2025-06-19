@@ -17,6 +17,8 @@
 #include <linux/numa.h>
 #include <uapi/linux/virtio_ring.h>
 
+#include "booter.h"
+
 #define PART_BITS 4
 #define VQ_NAME_LEN 16
 #define MAX_DISCARD_SEGMENTS 256u
@@ -525,11 +527,14 @@ static int init_vq(struct virtio_blk *vblk)
 		names[i] = vblk->vqs[i].name;
 	}
 
+    log_debug("%s: step1\n", __func__);
 	/* Discover virtqueues and write information to configuration.  */
 	err = virtio_find_vqs(vdev, num_vqs, vqs, callbacks, names, &desc);
 	if (err)
 		goto out;
+    log_debug("%s: step2\n", __func__);
 
+    log_debug("%s: num_vqs(%d)", __func__, num_vqs);
 	for (i = 0; i < num_vqs; i++) {
 		spin_lock_init(&vblk->vqs[i].lock);
 		vblk->vqs[i].vq = vqs[i];

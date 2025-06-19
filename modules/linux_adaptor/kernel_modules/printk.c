@@ -98,3 +98,11 @@ void _dev_notice(const struct device *dev, const char *fmt, ...)
     cl_vprintk(PRINTK_USAGE, printk_skip_level(fmt), args);
     va_end(args);
 }
+
+void _dev_err(const struct device *dev, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    cl_vprintk(ERROR_USAGE, printk_skip_level(fmt), args);
+    va_end(args);
+}

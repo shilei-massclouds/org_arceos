@@ -9,9 +9,6 @@ extern void cl_virtio_init();
 extern void cl_virtio_mmio_init();
 extern void cl_virtio_blk_init();
 
-/* Stuff needed by irq-sifive-plic */
-unsigned long boot_cpu_hartid;
-
 static int test_read_blocks();
 static int test_write_blocks();
 extern int clinux_test_block_driver(void);

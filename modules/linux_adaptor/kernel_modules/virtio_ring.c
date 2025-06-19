@@ -13,6 +13,8 @@
 #include <linux/dma-mapping.h>
 #include <xen/xen.h>
 
+#include "booter.h"
+
 #ifdef DEBUG
 /* For development, we want to crash whenever the ring is screwed. */
 #define BAD_RING(_vq, fmt, args...)				\
@@ -281,6 +283,11 @@ static void *vring_alloc_queue(struct virtio_device *vdev, size_t size,
 		if (queue) {
 			phys_addr_t phys_addr = virt_to_phys(queue);
 			*dma_handle = (dma_addr_t)phys_addr;
+
+            log_error("physvirt_offset: %lx, %lx",
+                      physvirt_offset, __is_lm_address(queue));
+    log_error("%s: step1 queue(%lx) phys(%lx)",
+              __func__, queue, phys_addr);
 
 			/*
 			 * Sanity check: make sure we dind't truncate
@@ -2289,6 +2296,9 @@ dma_addr_t virtqueue_get_desc_addr(struct virtqueue *_vq)
 
 	if (vq->packed_ring)
 		return vq->packed.ring_dma_addr;
+
+    log_debug("%s: step1 queue_dma_addr(%lx)\n",
+              __func__, vq->split.queue_dma_addr);
 
 	return vq->split.queue_dma_addr;
 }

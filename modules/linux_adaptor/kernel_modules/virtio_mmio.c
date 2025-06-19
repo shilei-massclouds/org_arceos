@@ -431,6 +431,7 @@ static struct virtqueue *vm_setup_vq(struct virtio_device *vdev, unsigned index,
 
 		writel(1, vm_dev->base + VIRTIO_MMIO_QUEUE_READY);
 	}
+    log_debug("%s: step4 num(%u)\n", __func__, num);
 
 	vq->priv = info;
 	info->vq = vq;
@@ -548,7 +549,6 @@ static int virtio_mmio_probe(struct platform_device *pdev)
 	if (IS_ERR(vm_dev->base))
 		return PTR_ERR(vm_dev->base);
 
-    log_debug("step1 %lx", vm_dev->base);
 	/* Check magic value */
 	magic = readl(vm_dev->base + VIRTIO_MMIO_MAGIC_VALUE);
 	if (magic != ('v' | 'i' << 8 | 'r' << 16 | 't' << 24)) {
@@ -564,7 +564,6 @@ static int virtio_mmio_probe(struct platform_device *pdev)
 		return -ENXIO;
 	}
 
-    log_debug("step2");
 	vm_dev->vdev.id.device = readl(vm_dev->base + VIRTIO_MMIO_DEVICE_ID);
 	if (vm_dev->vdev.id.device == 0) {
 		/*
@@ -594,7 +593,6 @@ static int virtio_mmio_probe(struct platform_device *pdev)
 	if (rc)
 		dev_warn(&pdev->dev, "Failed to enable 64-bit or 32-bit DMA.  Trying to continue, but this might not work.\n");
 
-    log_debug("step3");
 	platform_set_drvdata(pdev, vm_dev);
 
 	rc = register_virtio_device(&vm_dev->vdev);

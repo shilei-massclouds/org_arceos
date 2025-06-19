@@ -220,6 +220,7 @@ int generic_handle_irq(unsigned int irq)
     return 0;
 }
 
+#ifdef ARCH_RISCV64
 int cl_irq_init(void)
 {
     plic_node.name = "plic";
@@ -238,7 +239,16 @@ int cl_irq_init(void)
     printk("--- plic_init ok!\n\n");
     return 0;
 }
+#endif
 
+#ifdef ARCH_AARCH64
+int cl_irq_init(void)
+{
+    return 0;
+}
+#endif
+
+#ifdef ARCH_RISCV64
 int cl_enable_irq(void)
 {
     /* For virtio_blk, enable irq */
@@ -247,3 +257,11 @@ int cl_enable_irq(void)
     plic_chip->irq_unmask(&irq_data);
     return 0;
 }
+#endif
+
+#ifdef ARCH_AARCH64
+int cl_enable_irq(void)
+{
+    return 0;
+}
+#endif

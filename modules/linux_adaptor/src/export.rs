@@ -10,6 +10,10 @@ use axhal::mem::PAGE_SIZE_4K;
 #[unsafe(no_mangle)]
 static va_pa_offset: usize = PHYS_VIRT_OFFSET;
 
+#[cfg(target_arch = "aarch64")]
+#[unsafe(no_mangle)]
+static physvirt_offset: isize = -(PHYS_VIRT_OFFSET as isize);
+
 /// Alloc bytes.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_rust_alloc(size: usize, align: usize) -> usize {
@@ -65,6 +69,11 @@ pub extern "C" fn cl_log_error(ptr: *const c_char) {
     error!("{}", rust_str);
 }
 
+/// Stuff needed by irq-sifive-plic
+#[cfg(target_arch = "riscv64")]
+#[unsafe(no_mangle)]
+static boot_cpu_hartid: u64 = 0;
+
 /// the offset between the kernel virtual and physical mappings
 #[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
@@ -72,15 +81,12 @@ static kimage_voffset: u64 = 0;
 
 #[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
-static vabits_actual: u64 = 0;
+static vabits_actual: u64 = 48;
 
+// NOTE: fix nr_cpu_ids according to real kernel config.
 #[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
-static physvirt_offset: i64 = 0;
-
-#[cfg(target_arch = "aarch64")]
-#[unsafe(no_mangle)]
-static nr_cpu_ids: u32 = 0;
+static nr_cpu_ids: u32 = 1;
 
 #[cfg(target_arch = "aarch64")]
 #[unsafe(no_mangle)]
