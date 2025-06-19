@@ -67,6 +67,12 @@ int of_property_read_variable_u32_array(const struct device_node *np,
                    const char *propname, u32 *out_values,
                    size_t sz_min, size_t sz_max)
 {
+    log_debug("%s: node %s; propname %s",
+              __func__, np->name, propname);
+    if (strcmp(propname, "cpu-offset") == 0) {
+        return -EINVAL;
+    }
+
     if (strcmp(np->name, "plic") != 0) {
         booter_panic("bad plic_node.");
     }
@@ -91,6 +97,31 @@ int __cpuhp_setup_state(enum cpuhp_state state,
             int (*teardown)(unsigned int cpu),
             bool multi_instance)
 {
+    log_debug("%s: ...", __func__);
+#ifdef ARCH_RISCV64
     startup(0);
+#endif
+    log_debug("%s: ok!", __func__);
+    return 0;
+}
+
+/**
+ * of_address_to_resource - Translate device tree address and return as resource
+ *
+ * Note that if your address is a PIO address, the conversion will fail if
+ * the physical address can't be internally converted to an IO token with
+ * pci_address_to_pio(), that is because it's either called too early or it
+ * can't be matched to any host bridge IO space
+ */
+int of_address_to_resource(struct device_node *dev, int index,
+               struct resource *r)
+{
+    log_debug("%s: name %s, index %d", __func__, dev->name, index);
+    memset(r, 0, sizeof(struct resource));
+
+    r->start =  0xa003e00;
+    r->end =    0xa003fff;
+    r->flags =  0x200;
+    r->name =   "virtio_mmio@a003e00";
     return 0;
 }

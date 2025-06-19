@@ -1,3 +1,4 @@
+#include <linux/gfp.h>
 #include "booter.h"
 
 int strcmp(const char *cs, const char *ct)
@@ -13,4 +14,10 @@ int strcmp(const char *cs, const char *ct)
             break;
     }
     return 0;
+}
+
+char *kasprintf(gfp_t gfp, const char *fmt, ...)
+{
+    log_error("No impl.\n");
+    return "";
 }

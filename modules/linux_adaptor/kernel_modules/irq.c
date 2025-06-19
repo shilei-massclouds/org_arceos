@@ -6,6 +6,7 @@
 #include "booter.h"
 
 #define PLIC_REG_START 0xc000000
+#define GIC_REG_START 0x8000000
 
 extern int cl_irqchip_init(struct device_node *node,
                         struct device_node *parent);
@@ -19,7 +20,7 @@ struct plic_priv {
 const struct irq_domain_ops *irq_domain_ops;
 struct irq_chip *plic_chip;
 irq_flow_handler_t fn_plic_handle_irq;
-struct device_node plic_node;
+struct device_node irqchip_node;
 struct irq_domain root_irq_domain;
 struct irq_fwspec fwspec;
 struct irq_data irq_data;
@@ -43,10 +44,14 @@ void plic_handle_irq(void)
 void __iomem *of_iomap(struct device_node *np, int index)
 {
     void *ret;
-    if (strcmp(np->name, "plic") != 0) {
-        booter_panic("bad plic_node.");
+    if (strcmp(np->name, "plic") == 0) {
+        ret = __va(PLIC_REG_START);
+    } else if (strcmp(np->name, "intc") == 0) {
+        ret = __va(GIC_REG_START);
+    } else {
+        log_error("%s: name %s", __func__, np->name);
+        booter_panic("bad irqchip_node. bad name.");
     }
-    ret = __va(PLIC_REG_START);
     printk("%s: (0x%lx)\n", __func__, (unsigned long)ret);
     return ret;
 }
@@ -54,7 +59,7 @@ void __iomem *of_iomap(struct device_node *np, int index)
 int of_irq_count(struct device_node *dev)
 {
     if (strcmp(dev->name, "plic") != 0) {
-        booter_panic("bad plic_node.");
+        booter_panic("bad irqchip_node.");
     }
     return 2;
 }
@@ -95,7 +100,7 @@ int of_irq_parse_one(struct device_node *device, int index,
                      struct of_phandle_args *out_irq)
 {
     if (strcmp(device->name, "plic") != 0) {
-        booter_panic("bad plic_node.");
+        booter_panic("bad irqchip_node.");
     }
     out_irq->args_count = 1;
     if (index == 1) {
@@ -223,9 +228,9 @@ int generic_handle_irq(unsigned int irq)
 #ifdef ARCH_RISCV64
 int cl_irq_init(void)
 {
-    plic_node.name = "plic";
+    irqchip_node.name = "plic";
     printk("--- plic_init ...\n\n");
-    cl_irqchip_init(&plic_node, NULL);
+    cl_irqchip_init(&irqchip_node, NULL);
 
     if (irq_domain_ops == NULL) {
         booter_panic("irq_domain_ops is NULL!");
@@ -244,6 +249,8 @@ int cl_irq_init(void)
 #ifdef ARCH_AARCH64
 int cl_irq_init(void)
 {
+    irqchip_node.name = "intc";
+    cl_irqchip_init(&irqchip_node, NULL);
     return 0;
 }
 #endif
@@ -262,6 +269,21 @@ int cl_enable_irq(void)
 #ifdef ARCH_AARCH64
 int cl_enable_irq(void)
 {
+    return 0;
+}
+#endif
+
+#ifdef CONFIG_GENERIC_IRQ_MULTI_HANDLER
+void (*handle_arch_irq)(struct pt_regs *) __ro_after_init;
+#endif
+
+#ifdef CONFIG_GENERIC_IRQ_MULTI_HANDLER
+int __init set_handle_irq(void (*handle_irq)(struct pt_regs *))
+{
+    if (handle_arch_irq)
+        return -EBUSY;
+
+    handle_arch_irq = handle_irq;
     return 0;
 }
 #endif

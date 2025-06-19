@@ -12,7 +12,6 @@ CL_MINE(of_device_is_compatible)
 // irq
 CL_MINE(__handle_domain_irq)
 CL_MINE(handle_IPI)
-CL_MINE(set_handle_irq)
 CL_MINE(irq_set_chained_handler_and_data)
 CL_MINE(irq_domain_add_legacy)
 
@@ -21,9 +20,6 @@ CL_MINE(__cpu_online_mask)
 CL_MINE(cpumask_next_and)
 CL_MINE(cpu_bit_bitmap)
 CL_MINE(__cpu_possible_mask)
-
-// smp
-CL_MINE(set_smp_cross_call)
 
 // bitmap
 CL_MINE(find_next_bit)
@@ -57,7 +53,6 @@ CL_MINE(irq_domain_free_fwnode)
 CL_MINE(irq_set_percpu_devid)
 CL_MINE(irq_to_desc)
 CL_MINE(is_of_node)
-CL_MINE(kasprintf)
 CL_MINE(numa_node)
-CL_MINE(of_address_to_resource)
 CL_MINE(this_cpu_has_cap)
+CL_MINE(static_key_initialized)

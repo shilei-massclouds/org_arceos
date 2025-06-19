@@ -90,9 +90,22 @@ static int write_a_block(int blk_nr)
 static int test_write_blocks()
 {
     write_a_block(0);
+    return 0;
 }
 
 __weak int cl_irq_init(void)
 {
     printk("No impl for %s\n", __func__);
+    return 0;
+}
+
+#include <linux/cpumask.h>
+
+// Temporarily
+void (*__smp_cross_call)(const struct cpumask *, unsigned int);
+
+void __init set_smp_cross_call(void (*fn)(const struct cpumask *, unsigned int))
+{
+    __smp_cross_call = fn;
+    printk("%s: ok\n", __func__);
 }

@@ -46,6 +46,7 @@
 #include <asm/virt.h>
 
 #include "irq-gic-common.h"
+#include "booter.h"
 
 #ifdef CONFIG_ARM64
 #include <asm/cpufeature.h>
@@ -1210,6 +1211,7 @@ static int __init __gic_init_bases(struct gic_chip_data *gic,
 			pr_info("GIC: Using split EOI/Deactivate mode\n");
 	}
 
+    log_debug("%s: 1\n", __func__);
 	if (static_branch_likely(&supports_deactivate_key) && gic == &gic_data[0]) {
 		name = kasprintf(GFP_KERNEL, "GICv2");
 		gic_init_chip(gic, NULL, name, true);
@@ -1218,6 +1220,7 @@ static int __init __gic_init_bases(struct gic_chip_data *gic,
 		gic_init_chip(gic, NULL, name, false);
 	}
 
+    log_debug("%s: 2\n", __func__);
 	ret = gic_init_bases(gic, handle);
 	if (ret)
 		kfree(name);
@@ -1442,12 +1445,14 @@ gic_of_init(struct device_node *node, struct device_node *parent)
 	if (gic_cnt == 0 && !gic_check_eoimode(node, &gic->raw_cpu_base))
 		static_branch_disable(&supports_deactivate_key);
 
+    log_debug("%s: 1\n", __func__);
 	ret = __gic_init_bases(gic, &node->fwnode);
 	if (ret) {
 		gic_teardown(gic);
 		return ret;
 	}
 
+    log_debug("%s: 2\n", __func__);
 	if (!gic_cnt) {
 		gic_init_physaddr(node);
 		gic_of_setup_kvm_info(node);
