@@ -8,6 +8,7 @@ extern int cl_enable_irq(void);
 extern void cl_virtio_init();
 extern void cl_virtio_mmio_init();
 extern void cl_virtio_blk_init();
+extern int cl_ext2_fs_init(void);
 
 /* Stuff needed by irq-sifive-plic */
 unsigned long boot_cpu_hartid;
@@ -29,6 +30,8 @@ int clinux_init()
     cl_enable_irq();
 
     clinux_test_block_driver();
+
+    cl_ext2_fs_init();
 
     return 0;
 }

@@ -33,3 +33,26 @@ void *devm_kmalloc(struct device *dev, size_t size, gfp_t gfp)
     printk("devm_kmalloc ..\n");
     return cl_rust_alloc(size, 8);
 }
+
+/*
+ * kmem cache
+ */
+
+struct kmem_cache {
+	unsigned int size;  /* The size of an object including metadata */
+	unsigned int align; /* Alignment */
+};
+
+struct kmem_cache *
+kmem_cache_create_usercopy(const char *name,
+          unsigned int size, unsigned int align,
+          slab_flags_t flags,
+          unsigned int useroffset, unsigned int usersize,
+          void (*ctor)(void *))
+{
+    struct kmem_cache *cache = kmalloc(sizeof(struct kmem_cache), 0);
+    memset(cache, 0, sizeof(struct kmem_cache));
+    cache->size = size;
+    cache->align = align;
+    return cache;
+}

@@ -14,6 +14,13 @@ TARGET = libclinux.a
 # Original linux modules
 OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 OBJS += irq-sifive-plic.o
+OBJS += irq-sifive-plic.o
+
+OBJS += filesystems.o
+# ext2 fs
+OBJS += ext2/super.o ext2/balloc.o ext2/dir.o ext2/file.o
+OBJS += ext2/ialloc.o ext2/inode.o
+OBJS += ext2/ioctl.o ext2/namei.o ext2/super.o ext2/symlink.o
 
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o workqueue.o \
@@ -34,6 +41,9 @@ $(TARGET): $(OBJS)
 	$(AR) r $@ $(OBJS)
 
 %.o: %.c
+	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
+
+%/%.o: %/%.c
 	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
 clean:
