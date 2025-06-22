@@ -21,6 +21,7 @@
 #     - `BUS`: Device bus type: mmio, pci
 #     - `MEM`: Memory size (default is 128M)
 #     - `DISK_IMG`: Path to the virtual disk image
+#     - `FS_TYPE`: Type of filesystem type on virtual disk image
 #     - `ACCEL`: Enable hardware acceleration (KVM on linux)
 #     - `QEMU_LOG`: Enable QEMU logging (log file is "qemu.log")
 #     - `NET_DUMP`: Enable network packet dump (log file is "netdump.pcap")
@@ -58,6 +59,8 @@ MEM ?= 128M
 ACCEL ?=
 
 DISK_IMG ?= disk.img
+# Filesystem type: fat32, ext2
+FS_TYPE ?= ext2
 QEMU_LOG ?= n
 NET_DUMP ?= n
 NET_DEV ?= user
@@ -208,7 +211,7 @@ disk_img:
 ifneq ($(wildcard $(DISK_IMG)),)
 	@printf "$(YELLOW_C)warning$(END_C): disk image \"$(DISK_IMG)\" already exists!\n"
 else
-	$(call make_disk_image,fat32,$(DISK_IMG))
+	$(call make_disk_image,$(FS_TYPE),$(DISK_IMG))
 endif
 
 clean: clean_c
