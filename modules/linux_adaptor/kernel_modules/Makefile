@@ -16,7 +16,7 @@ OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 OBJS += irq-sifive-plic.o
 OBJS += irq-sifive-plic.o
 
-OBJS += filesystems.o
+OBJS += filesystems.o super.o blkdev.o
 # ext2 fs
 OBJS += ext2/super.o ext2/balloc.o ext2/dir.o ext2/file.o
 OBJS += ext2/ialloc.o ext2/inode.o

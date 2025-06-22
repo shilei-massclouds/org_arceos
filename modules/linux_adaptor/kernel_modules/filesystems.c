@@ -25,3 +25,14 @@ int register_filesystem(struct file_system_type * fs)
     printk("register fs [%s]\n", fs->name);
     return 0;
 }
+
+struct dentry *call_ext2_mount(void)
+{
+    struct file_system_type **fs;
+    fs = find_filesystem("ext2", strlen("ext2"));
+    if (fs == NULL || *fs == NULL) {
+        booter_panic("No ext2!");
+    }
+
+    return (*fs)->mount(*fs, 0, "", NULL);
+}

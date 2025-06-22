@@ -1,6 +1,7 @@
 #include "booter.h"
 #include <linux/string.h>
 #include <linux/printk.h>
+#include <linux/dcache.h>
 
 extern int cl_irq_init(void);
 extern int cl_enable_irq(void);
@@ -16,6 +17,7 @@ unsigned long boot_cpu_hartid;
 static int test_read_blocks();
 static int test_write_blocks();
 extern int clinux_test_block_driver(void);
+extern struct dentry *call_ext2_mount(void);
 
 int clinux_init()
 {
@@ -33,6 +35,12 @@ int clinux_init()
 
     cl_ext2_fs_init();
 
+    struct dentry *root = call_ext2_mount();
+    if (root == NULL || root->d_inode == NULL) {
+        booter_panic("ext2 mount error!");
+    }
+
+    booter_panic("Reach here!\n");
     return 0;
 }
 
