@@ -2,6 +2,7 @@
 #include <linux/string.h>
 #include <linux/printk.h>
 #include <linux/dcache.h>
+#include <linux/fs.h>
 
 extern int cl_irq_init(void);
 extern int cl_enable_irq(void);
@@ -33,11 +34,37 @@ int clinux_init()
 
     clinux_test_block_driver();
 
+    /*
+     * Ext2 mount and test
+     */
     cl_ext2_fs_init();
 
     struct dentry *root = call_ext2_mount();
     if (root == NULL || root->d_inode == NULL) {
         booter_panic("ext2 mount error!");
+    }
+
+    struct inode *root_inode = root->d_inode;
+    if (!S_ISDIR(root_inode->i_mode)) {
+        booter_panic("ext2 root inode is NOT DIR!");
+    }
+
+    struct file_operations *dop = root_inode->i_fop;
+    if (dop == NULL) {
+        booter_panic("ext2 root inode has no fop!");
+    }
+    printk("root.inode (%lx) dop(%lx)\n", root_inode, dop);
+    printk("root.inode iterate_shared(%lx)\n", dop->iterate_shared);
+
+    struct file root_dir;
+    memset(&root_dir, 0, sizeof(root_dir));
+    root_dir.f_inode = root_inode;
+
+    struct dir_context ctx;
+    memset(&ctx, 0, sizeof(ctx));
+
+    if ((*dop->iterate_shared)(&root_dir, &ctx) != 0) {
+        booter_panic("ext2 root iterate error!");
     }
 
     booter_panic("Reach here!\n");

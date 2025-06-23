@@ -56,3 +56,11 @@ kmem_cache_create_usercopy(const char *name,
     cache->align = align;
     return cache;
 }
+
+void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
+{
+    if (s->size == 0) {
+        booter_panic("bad kmem cache alloc!");
+    }
+    return kmalloc(s->size, gfpflags);
+}
