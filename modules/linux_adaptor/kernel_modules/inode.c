@@ -10,9 +10,12 @@ struct inode *iget_locked(struct super_block *sb, unsigned long ino)
         booter_panic("no ext2 alloc_inode!");
     }
     inode = ops->alloc_inode(sb);
+
+    // inode_init_always
     inode->i_ino = ino;
     inode->i_state = I_NEW;
     inode->i_sb = sb;
+    inode->i_blkbits = sb->s_blocksize_bits;
 
     struct address_space *const mapping = &inode->i_data;
     mapping->host = inode;

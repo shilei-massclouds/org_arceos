@@ -1,4 +1,5 @@
 #include <linux/fs.h>
+#include <linux/buffer_head.h>
 
 #include "ext2/ext2.h"
 #include "booter.h"
@@ -11,16 +12,23 @@ struct page *read_cache_page(struct address_space *mapping,
     printk("%s: mapping (%lx) index(%d) data(%x)\n",
                  __func__, mapping, index, data);
 
-    // Root inode -> block at sector[8248]
-    /*
-    void *buf = kmalloc(256, 0);
-    cl_read_block(8248, buf, 256);
-    return buf;
-    */
-    log_error("%s: Get real blknr for 8248. \n", __func__);
+    struct buffer_head bh_result;
+    memset(&bh_result, 0, sizeof(struct buffer_head));
+    bh_result.b_size = 4096;
+
+    sector_t iblock = 0;
+    int ret = ext2_get_block(mapping->host, iblock, &bh_result, 0);
+    if (ret < 0) {
+        booter_panic("ext2_get_block error!");
+    }
+
+    // 4096 -> 512
+    sector_t blknr = bh_result.b_blocknr * 8;
+    log_error("%s: blknr(%u -> %u)\n",
+              __func__, bh_result.b_blocknr, blknr);
 
     char buf[256];
-    cl_read_block(8248, buf, sizeof(buf));
+    cl_read_block(blknr, buf, sizeof(buf));
 
     struct ext2_dir_entry *dentry = (struct ext2_dir_entry *)buf;
 

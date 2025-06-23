@@ -11,3 +11,8 @@ int sync_dirty_buffer(struct buffer_head *bh, int op_flags)
 {
     log_error("%s: No impl.\n", __func__);
 }
+
+void __lock_buffer(struct buffer_head *bh)
+{
+    log_error("%s: No impl.\n", __func__);
+}
