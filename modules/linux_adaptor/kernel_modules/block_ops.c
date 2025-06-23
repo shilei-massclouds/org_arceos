@@ -41,7 +41,7 @@ int cl_read_block(int blk_nr, void *rbuf, int count)
     rq.bio->bi_iter.bi_sector = rq.__sector;
 
     void *buf = alloc_pages_exact(4096, 0);
-    __bio_add_page(rq.bio, buf, 512, 0);
+    __bio_add_page(rq.bio, buf, 4096, 0);
 
     struct blk_mq_queue_data data;
     memset(&data, 0, sizeof(data));

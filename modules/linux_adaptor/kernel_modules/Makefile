@@ -16,7 +16,7 @@ OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 OBJS += irq-sifive-plic.o
 OBJS += irq-sifive-plic.o
 
-OBJS += filesystems.o super.o blkdev.o
+OBJS += filesystems.o super.o blkdev.o user_namespace.o
 # ext2 fs
 OBJS += ext2/super.o ext2/balloc.o ext2/dir.o ext2/file.o
 OBJS += ext2/ialloc.o ext2/inode.o
@@ -38,6 +38,7 @@ AR = $(CROSS_)ar
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
+	rm -f $@
 	$(AR) r $@ $(OBJS)
 
 %.o: %.c
@@ -47,4 +48,6 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
 clean:
-	rm -f *.o libclinux.a
+	rm -f *.o */*.o libclinux.a
+
+.PHONY: all clean

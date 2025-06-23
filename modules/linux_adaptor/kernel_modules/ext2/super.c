@@ -864,6 +864,9 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
 		logic_sb_block = sb_block;
 	}
 
+    printk("======> %s: 1.0 %u %u, offset %u, blockid %u\n",
+           __func__, sb->s_blocksize, blocksize, offset, logic_sb_block);
+
 	if (!(bh = sb_bread(sb, logic_sb_block))) {
 		ext2_msg(sb, KERN_ERR, "error: unable to read superblock");
 		goto failed_sbi;
@@ -968,7 +971,11 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
 
 		logic_sb_block = (sb_block*BLOCK_SIZE) / blocksize;
 		offset = (sb_block*BLOCK_SIZE) % blocksize;
+
 		bh = sb_bread(sb, logic_sb_block);
+
+    printk("======> %s: 1.1 %u %u, offset %u, blockid %u\n",
+           __func__, sb->s_blocksize, blocksize, offset, logic_sb_block);
 		if(!bh) {
 			ext2_msg(sb, KERN_ERR, "error: couldn't read"
 				"superblock on 2nd try");
@@ -976,11 +983,13 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
 		}
 		es = (struct ext2_super_block *) (((char *)bh->b_data) + offset);
 		sbi->s_es = es;
+    printk("======> %s: (%x)\n", __func__, es->s_magic);
 		if (es->s_magic != cpu_to_le16(EXT2_SUPER_MAGIC)) {
 			ext2_msg(sb, KERN_ERR, "error: magic mismatch");
 			goto failed_mount;
 		}
 	}
+    printk("======> %s: 2\n", __func__);
 
 	sb->s_maxbytes = ext2_max_size(sb->s_blocksize_bits);
 	sb->s_max_links = EXT2_LINK_MAX;

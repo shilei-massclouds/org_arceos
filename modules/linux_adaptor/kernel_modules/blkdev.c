@@ -1,5 +1,6 @@
 #include <linux/fs.h>
 #include <linux/buffer_head.h>
+#include <linux/blkdev.h>
 
 #include "booter.h"
 
@@ -38,5 +39,15 @@ __bread_gfp(struct block_device *bdev, sector_t block,
 
 void __brelse(struct buffer_head * buf)
 {
-    log_error("%s: impl it.\n", __func__);
+    log_debug("%s: impl it.\n", __func__);
+}
+
+int sb_set_blocksize(struct super_block *sb, int size)
+{
+    /* If we get here, we know size is power of two
+     * and it's value is between 512 and PAGE_SIZE */
+    sb->s_blocksize = size;
+    sb->s_blocksize_bits = blksize_bits(size);
+    log_error("%s: size(%d) NOTE!\n", __func__, size);
+    return sb->s_blocksize;
 }
