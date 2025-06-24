@@ -22,6 +22,11 @@ static int test_write_blocks();
 extern int clinux_test_block_driver(void);
 extern struct dentry *call_ext2_mount(void);
 
+static int fillonedir(struct dir_context *ctx,
+                      const char *name, int namlen,
+                      loff_t offset, u64 ino,
+                      unsigned int d_type);
+
 int clinux_init()
 {
     printk("cLinux base is starting ...\n");
@@ -65,6 +70,7 @@ int clinux_init()
 
     struct dir_context ctx;
     memset(&ctx, 0, sizeof(ctx));
+    ctx.actor = fillonedir;
 
     if ((*dop->iterate_shared)(&root_dir, &ctx) != 0) {
         booter_panic("ext2 root iterate error!");
@@ -74,6 +80,17 @@ int clinux_init()
 #endif
     return 0;
 }
+
+static int fillonedir(struct dir_context *ctx,
+                      const char *name, int namlen,
+                      loff_t offset, u64 ino,
+                      unsigned int d_type)
+{
+    printk("%s: name %s(%d) offset(%lx) ino %u dtype %u\n",
+           __func__, name, namlen, offset, ino, d_type);
+    return 0;
+}
+
 
 int clinux_test_block_driver(void)
 {

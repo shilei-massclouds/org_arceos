@@ -28,6 +28,8 @@
 #include <linux/swap.h>
 #include <linux/iversion.h>
 
+#include "../booter.h"
+
 typedef struct ext2_dir_entry_2 ext2_dirent;
 
 /*
@@ -326,6 +328,7 @@ ext2_readdir(struct file *file, struct dir_context *ctx)
 		}
 		ext2_put_page(page);
 	}
+                log_error("%s: stepn\n", __func__);
 	return 0;
 }
 

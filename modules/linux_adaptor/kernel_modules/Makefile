@@ -16,7 +16,7 @@ OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 OBJS += irq-sifive-plic.o
 OBJS += irq-sifive-plic.o
 
-OBJS += filesystems.o blkdev.o
+OBJS += filesystems.o blkdev.o fs_types.o
 OBJS += super.o inode.o dcache.o buffer.o filemap.o
 OBJS += user_namespace.o utils.o
 # ext2 fs

@@ -27,12 +27,21 @@ struct page *read_cache_page(struct address_space *mapping,
     log_error("%s: blknr(%u -> %u)\n",
               __func__, bh_result.b_blocknr, blknr);
 
-    char buf[256];
-    cl_read_block(blknr, buf, sizeof(buf));
+    void *buf = alloc_pages_exact(PAGE_SIZE, 0);
+    if (cl_read_block(blknr, buf, PAGE_SIZE) < 0) {
+        booter_panic("read block error!");
+    }
 
+    /*
     struct ext2_dir_entry *dentry = (struct ext2_dir_entry *)buf;
 
     printk("Got root dentries: dentry name(%s), inr(%u), rec_len(%u), name_len(%u)\n",
            dentry->name, dentry->inode, dentry->rec_len, dentry->name_len);
     booter_panic("");
+    */
+
+    struct page *page = virt_to_page(buf);
+    page->mapping = mapping;
+    page->index = index;
+    return page;
 }

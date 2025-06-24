@@ -214,5 +214,4 @@ CL_MINE(__block_write_begin)
 // ext2/symlink
 CL_MINE(simple_get_link)
 CL_MINE(page_get_link)
-CL_MINE(fs_ftype_to_dtype)
 
