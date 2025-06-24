@@ -1,6 +1,7 @@
 #include <linux/types.h>
 #include <linux/printk.h>
 #include <linux/device.h>
+#include <linux/mm.h>
 #include "booter.h"
 
 void* __kmalloc(size_t size, gfp_t flags)
@@ -63,4 +64,28 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
         booter_panic("bad kmem cache alloc!");
     }
     return kmalloc(s->size, gfpflags);
+}
+
+/*
+ * mem_map
+ */
+
+struct page *mem_map;
+unsigned long pfn_base;
+unsigned long max_mapnr;
+
+int init_mem_map(unsigned long pa_start, unsigned long pa_end)
+{
+    if (pa_start >= pa_end) {
+        booter_panic("bad range for 'mem_map'!");
+    }
+    pa_start >>= PAGE_SHIFT;
+    pa_end >>= PAGE_SHIFT;
+
+    unsigned int size = (pa_end - pa_start) * sizeof(struct page);
+    mem_map = alloc_pages_exact(PAGE_ALIGN(size), 0);
+    pfn_base = pa_start;
+    max_mapnr = pa_end - pa_start;
+    log_debug("%s: pfn_base %lx, max_mapnr %lx", __func__, pfn_base, max_mapnr);
+    return 0;
 }

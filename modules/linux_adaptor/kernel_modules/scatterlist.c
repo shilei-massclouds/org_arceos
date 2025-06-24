@@ -20,35 +20,10 @@ struct scatterlist *sg_next(struct scatterlist *sg)
     return sg;
 }
 
-static inline void _sg_assign_page(struct scatterlist *sg, const void *buf)
-{
-    unsigned long page_link = sg->page_link & (SG_CHAIN | SG_END);
-
-    /*
-     * In order for the low bit stealing approach to work, pages
-     * must be aligned at a 32-bit boundary as a minimum.
-     */
-    BUG_ON((unsigned long) buf & (SG_CHAIN | SG_END));
-    sg->page_link = page_link | (unsigned long) buf;
-}
-
-static inline void _sg_set_page(struct scatterlist *sg, const void *buf,
-                   unsigned int len, unsigned int offset)
-{
-    _sg_assign_page(sg, buf);
-    sg->offset = offset;
-    sg->length = len;
-}
-
-static inline void _sg_set_buf(struct scatterlist *sg, const void *buf,
-                  unsigned int buflen)
-{
-    _sg_set_page(sg, buf, buflen, offset_in_page(buf));
-}
-
 void sg_init_one(struct scatterlist *sg, const void *buf, unsigned int buflen)
 {
     sg_init_table(sg, 1);
-    _sg_set_buf(sg, buf, buflen);
-    log_debug("%s: ===========> \n", __func__);
+    log_debug("=====> %s: buf (%lx) -> (%lx)", __func__, buf, virt_to_pfn(buf));
+    BUG_ON(!virt_addr_valid(buf));
+    sg_set_buf(sg, buf, buflen);
 }

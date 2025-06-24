@@ -1232,6 +1232,7 @@ dependencies = [
  "axconfig",
  "axhal",
  "axlog",
+ "memory_addr",
 ]
 
 [[package]]

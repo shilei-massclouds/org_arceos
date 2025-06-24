@@ -4,6 +4,8 @@
 #include <linux/dcache.h>
 #include <linux/fs.h>
 
+#define TEST_EXT2
+
 extern int cl_irq_init(void);
 extern int cl_enable_irq(void);
 
@@ -34,6 +36,7 @@ int clinux_init()
 
     clinux_test_block_driver();
 
+#ifdef TEST_EXT2
     /*
      * Ext2 mount and test
      */
@@ -49,7 +52,7 @@ int clinux_init()
         booter_panic("ext2 root inode is NOT DIR!");
     }
 
-    struct file_operations *dop = root_inode->i_fop;
+    const struct file_operations *dop = root_inode->i_fop;
     if (dop == NULL) {
         booter_panic("ext2 root inode has no fop!");
     }
@@ -68,6 +71,7 @@ int clinux_init()
     }
 
     booter_panic("Reach here!\n");
+#endif
     return 0;
 }
 
