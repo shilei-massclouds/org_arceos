@@ -9,7 +9,7 @@ struct lookup_callback {
     u64 *ret_ino;
 };
 
-static int lookup(struct dir_context *ctx,
+static int filter(struct dir_context *ctx,
                    const char *name, int namlen,
                    loff_t offset, u64 ino,
                    unsigned int d_type)
@@ -26,10 +26,10 @@ static int lookup(struct dir_context *ctx,
     return 0;
 }
 
-int readdir(struct file *dir, const char *target, u64 *ret_ino)
+int lookup(struct file *dir, const char *target, u64 *ret_ino)
 {
     struct lookup_callback buf = {
-        .ctx.actor = lookup,
+        .ctx.actor = filter,
         .target = target,
         .ret_ino = ret_ino
     };

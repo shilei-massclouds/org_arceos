@@ -1,10 +1,10 @@
-#include "booter.h"
 #include <linux/string.h>
 #include <linux/printk.h>
 #include <linux/dcache.h>
 #include <linux/fs.h>
 #include <linux/buffer_head.h>
 
+#include "booter.h"
 #include "ext2/ext2.h"
 
 #define TEST_EXT2
@@ -24,7 +24,7 @@ static int test_read_blocks();
 static int test_write_blocks();
 extern int clinux_test_block_driver(void);
 extern struct dentry *call_ext2_mount(void);
-extern int readdir(struct file *dir, const char *target, u64 *ret_ino);
+extern int lookup(struct file *dir, const char *target, u64 *ret_ino);
 
 int clinux_init()
 {
@@ -63,33 +63,25 @@ int clinux_init()
     memset(&root_dir, 0, sizeof(root_dir));
     root_dir.f_inode = root_inode;
 
-    // Just for listing all items under root dir.
+    // Lookup ino of 'ext2.txt'
     u64 t_ino = 0;
-    readdir(&root_dir, "ext2.txt", &t_ino);
+    lookup(&root_dir, "ext2.txt", &t_ino);
     printk("ext2.txt ino: %u\n", t_ino);
 
-    // Try to read content from 'ext2.txt'
-    {
-        int ret;
-        struct inode *t_inode = ext2_iget(root_inode->i_sb, t_ino);
-        if (t_inode == NULL || t_inode->i_mapping == NULL) {
-            booter_panic("bad inode.");
-        }
-
-        struct address_space_operations *a_ops = t_inode->i_mapping->a_ops;
-        if (a_ops == NULL) {
-            booter_panic("bad addrspace ops.");
-        }
-
-        void *buf = alloc_pages_exact(PAGE_SIZE, 0);
-        struct page *page = virt_to_page(buf);
-        page->mapping = t_inode->i_mapping;
-        ret = a_ops->readpage(NULL, page);
-        if (ret < 0) {
-            booter_panic("read page error.");
-        }
-        printk("Read 'ext2.txt': %s\n", buf);
+    struct inode *t_inode = ext2_iget(root_inode->i_sb, t_ino);
+    if (t_inode == NULL || t_inode->i_mapping == NULL) {
+        booter_panic("bad inode.");
     }
+
+    // Try to read content from 'ext2.txt'
+    char rbuf[256];
+    memset(rbuf, 0, sizeof(rbuf));
+    loff_t pos = 0;
+    int ret = cl_read(t_inode, rbuf, sizeof(rbuf), &pos);
+    if (ret < 0) {
+        booter_panic("ext2 read error!");
+    }
+    printk("Read 'ext2.txt': [%d]%s\n", ret, rbuf);
 
     booter_panic("Reach here!\n");
 #endif

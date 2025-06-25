@@ -21,6 +21,7 @@ int mpage_readpage(struct page *page, get_block_t get_block)
     memset(&bh_result, 0, sizeof(struct buffer_head));
     bh_result.b_size = PAGE_SIZE;
 
+    // Calculate iblock based on page->index
     sector_t iblock = 0;
     int ret = get_block(inode, iblock, &bh_result, 0);
     if (ret < 0) {

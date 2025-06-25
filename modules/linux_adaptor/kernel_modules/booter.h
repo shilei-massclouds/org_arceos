@@ -16,6 +16,8 @@ extern void cl_log_error(const char *s);
 
 extern void cl_terminate(void);
 
+extern int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos);
+
 extern int log_debug(const char *fmt, ...);
 extern int log_error(const char *fmt, ...);
 
