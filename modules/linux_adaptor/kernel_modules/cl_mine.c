@@ -135,7 +135,6 @@ CL_MINE(ihold)
 CL_MINE(inc_nlink)
 CL_MINE(iput)
 CL_MINE(page_symlink)
-CL_MINE(__put_page)
 
 // ext2/ioctl
 CL_MINE(down_write)
