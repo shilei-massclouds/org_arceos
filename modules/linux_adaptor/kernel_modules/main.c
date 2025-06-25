@@ -17,6 +17,9 @@ extern void cl_virtio_mmio_init();
 extern void cl_virtio_blk_init();
 extern int cl_ext2_fs_init(void);
 
+extern int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos);
+extern int cl_write(struct inode *inode, const void *buf, size_t count, loff_t *pos);
+
 /* Stuff needed by irq-sifive-plic */
 unsigned long boot_cpu_hartid;
 
@@ -82,6 +85,13 @@ int clinux_init()
         booter_panic("ext2 read error!");
     }
     printk("Read 'ext2.txt': [%d]%s\n", ret, rbuf);
+
+    char wbuf[] = "12345";
+    pos = 0;
+    ret = cl_write(t_inode, wbuf, sizeof(wbuf), &pos);
+    if (ret < 0) {
+        booter_panic("ext2 write error!");
+    }
 
     booter_panic("Reach here!\n");
 #endif
