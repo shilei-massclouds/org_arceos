@@ -21,11 +21,7 @@ static int test_read_blocks();
 static int test_write_blocks();
 extern int clinux_test_block_driver(void);
 extern struct dentry *call_ext2_mount(void);
-
-static int fillonedir(struct dir_context *ctx,
-                      const char *name, int namlen,
-                      loff_t offset, u64 ino,
-                      unsigned int d_type);
+extern int readdir(struct file *dir, const char *target, u64 *ret_ino);
 
 int clinux_init()
 {
@@ -57,40 +53,19 @@ int clinux_init()
         booter_panic("ext2 root inode is NOT DIR!");
     }
 
-    const struct file_operations *dop = root_inode->i_fop;
-    if (dop == NULL) {
-        booter_panic("ext2 root inode has no fop!");
-    }
-    printk("root.inode (%lx) dop(%lx)\n", root_inode, dop);
-    printk("root.inode iterate_shared(%lx)\n", dop->iterate_shared);
-
     struct file root_dir;
     memset(&root_dir, 0, sizeof(root_dir));
     root_dir.f_inode = root_inode;
 
-    struct dir_context ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    ctx.actor = fillonedir;
-
-    if ((*dop->iterate_shared)(&root_dir, &ctx) != 0) {
-        booter_panic("ext2 root iterate error!");
-    }
+    // Just for listing all items under root dir.
+    u64 f_ino = 0;
+    readdir(&root_dir, "ext2.txt", &f_ino);
+    printk("ext2.txt ino: %u\n", f_ino);
 
     booter_panic("Reach here!\n");
 #endif
     return 0;
 }
-
-static int fillonedir(struct dir_context *ctx,
-                      const char *name, int namlen,
-                      loff_t offset, u64 ino,
-                      unsigned int d_type)
-{
-    printk("%s: name %s(%d) offset(%lx) ino %u dtype %u\n",
-           __func__, name, namlen, offset, ino, d_type);
-    return 0;
-}
-
 
 int clinux_test_block_driver(void)
 {
