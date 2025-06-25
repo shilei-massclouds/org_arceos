@@ -17,7 +17,7 @@ OBJS += irq-sifive-plic.o
 OBJS += irq-sifive-plic.o
 
 OBJS += filesystems.o blkdev.o fs_types.o
-OBJS += super.o inode.o dcache.o buffer.o filemap.o
+OBJS += super.o inode.o dcache.o buffer.o filemap.o mpage.o
 OBJS += user_namespace.o utils.o
 OBJS += swap.o readdir.o
 # ext2 fs

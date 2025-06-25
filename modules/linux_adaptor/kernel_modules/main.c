@@ -70,29 +70,23 @@ int clinux_init()
 
     // Try to read content from 'ext2.txt'
     {
+        int ret;
         struct inode *t_inode = ext2_iget(root_inode->i_sb, t_ino);
-        printk("ext2.txt inode: %lx\n", t_inode);
-
-        struct buffer_head bh_result;
-        memset(&bh_result, 0, sizeof(struct buffer_head));
-        bh_result.b_size = 4096;
-
-        sector_t iblock = 0;
-        int ret = ext2_get_block(t_inode, iblock, &bh_result, 0);
-        if (ret < 0) {
-            booter_panic("ext2_get_block error!");
+        if (t_inode == NULL || t_inode->i_mapping == NULL) {
+            booter_panic("bad inode.");
         }
-        printk("%s: file len %u\n", __func__, t_inode->i_size);
 
-        sector_t blknr = bh_result.b_blocknr * 8;
-        printk("%s: blknr %u\n", __func__, blknr);
+        struct address_space_operations *a_ops = t_inode->i_mapping->a_ops;
+        if (a_ops == NULL) {
+            booter_panic("bad addrspace ops.");
+        }
 
         void *buf = alloc_pages_exact(PAGE_SIZE, 0);
-        if (cl_read_block(blknr, buf, PAGE_SIZE) < 0) {
-            booter_panic("read block error!");
-        }
-        if (buf == NULL) {
-            booter_panic("no blk buffer!");
+        struct page *page = virt_to_page(buf);
+        page->mapping = t_inode->i_mapping;
+        ret = a_ops->readpage(NULL, page);
+        if (ret < 0) {
+            booter_panic("read page error.");
         }
         printk("Read 'ext2.txt': %s\n", buf);
     }
