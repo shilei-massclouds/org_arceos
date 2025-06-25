@@ -3,6 +3,9 @@
 #include <linux/printk.h>
 #include <linux/dcache.h>
 #include <linux/fs.h>
+#include <linux/buffer_head.h>
+
+#include "ext2/ext2.h"
 
 #define TEST_EXT2
 
@@ -52,15 +55,47 @@ int clinux_init()
     if (!S_ISDIR(root_inode->i_mode)) {
         booter_panic("ext2 root inode is NOT DIR!");
     }
+    if (root_inode->i_sb == NULL) {
+        booter_panic("No ext2 superblock!");
+    }
 
     struct file root_dir;
     memset(&root_dir, 0, sizeof(root_dir));
     root_dir.f_inode = root_inode;
 
     // Just for listing all items under root dir.
-    u64 f_ino = 0;
-    readdir(&root_dir, "ext2.txt", &f_ino);
-    printk("ext2.txt ino: %u\n", f_ino);
+    u64 t_ino = 0;
+    readdir(&root_dir, "ext2.txt", &t_ino);
+    printk("ext2.txt ino: %u\n", t_ino);
+
+    // Try to read content from 'ext2.txt'
+    {
+        struct inode *t_inode = ext2_iget(root_inode->i_sb, t_ino);
+        printk("ext2.txt inode: %lx\n", t_inode);
+
+        struct buffer_head bh_result;
+        memset(&bh_result, 0, sizeof(struct buffer_head));
+        bh_result.b_size = 4096;
+
+        sector_t iblock = 0;
+        int ret = ext2_get_block(t_inode, iblock, &bh_result, 0);
+        if (ret < 0) {
+            booter_panic("ext2_get_block error!");
+        }
+        printk("%s: file len %u\n", __func__, t_inode->i_size);
+
+        sector_t blknr = bh_result.b_blocknr * 8;
+        printk("%s: blknr %u\n", __func__, blknr);
+
+        void *buf = alloc_pages_exact(PAGE_SIZE, 0);
+        if (cl_read_block(blknr, buf, PAGE_SIZE) < 0) {
+            booter_panic("read block error!");
+        }
+        if (buf == NULL) {
+            booter_panic("no blk buffer!");
+        }
+        printk("Read 'ext2.txt': %s\n", buf);
+    }
 
     booter_panic("Reach here!\n");
 #endif
