@@ -58,12 +58,30 @@ kmem_cache_create_usercopy(const char *name,
     return cache;
 }
 
+struct kmem_cache *
+kmem_cache_create(const char *name, unsigned int size, unsigned int align,
+        slab_flags_t flags, void (*ctor)(void *))
+{
+    return kmem_cache_create_usercopy(name, size, align, flags, 0, 0,
+                      ctor);
+}
+
+void kmem_cache_destroy(struct kmem_cache *s)
+{
+    kfree(s);
+}
+
 void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 {
     if (s->size == 0) {
         booter_panic("bad kmem cache alloc!");
     }
     return kmalloc(s->size, gfpflags);
+}
+
+void kmem_cache_free(struct kmem_cache *cachep, void *objp)
+{
+    kfree(objp);
 }
 
 /*

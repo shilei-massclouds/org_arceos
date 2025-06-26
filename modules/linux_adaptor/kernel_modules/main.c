@@ -65,6 +65,8 @@ static void test_ext4(void)
      * Ext4 mount and test
      */
     cl_ext4_fs_init();
+
+    booter_panic("Reach here!\n");
 }
 
 static void test_ext2(void)

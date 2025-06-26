@@ -6463,6 +6463,7 @@ out6:
 out7:
 	ext4_exit_es();
 
+    printk("%s: error!\n", __func__);
 	return err;
 }
 
