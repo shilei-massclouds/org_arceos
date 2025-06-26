@@ -1346,8 +1346,11 @@ static struct ext2_inode *ext2_get_inode(struct super_block *sb, ino_t ino,
 	offset = ((ino - 1) % EXT2_INODES_PER_GROUP(sb)) * EXT2_INODE_SIZE(sb);
 	block = le32_to_cpu(gdp->bg_inode_table) +
 		(offset >> EXT2_BLOCK_SIZE_BITS(sb));
+    printk("%s: blocknr(%u)\n", __func__, block);
 	if (!(bh = sb_bread(sb, block)))
 		goto Eio;
+    printk("%s: blknr(%u) size(%u)\n",
+           __func__, bh->b_blocknr, bh->b_size);
 
 	*p = bh;
 	offset &= (EXT2_BLOCK_SIZE(sb) - 1);
@@ -1417,7 +1420,9 @@ struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
 	ei = EXT2_I(inode);
 	ei->i_block_alloc_info = NULL;
 
+    printk("%s: --------------->\n", __func__);
 	raw_inode = ext2_get_inode(inode->i_sb, ino, &bh);
+    printk("%s: <---------------\n", __func__);
 	if (IS_ERR(raw_inode)) {
 		ret = PTR_ERR(raw_inode);
  		goto bad_inode;

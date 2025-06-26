@@ -10,6 +10,9 @@ void mark_buffer_dirty(struct buffer_head *bh)
 
 int sync_dirty_buffer(struct buffer_head *bh)
 {
+    printk("%s: blknr(%u) b_size(%u)\n",
+           __func__, bh->b_blocknr, bh->b_size);
+
     log_error("%s: No impl.\n", __func__);
 }
 
@@ -53,6 +56,5 @@ int block_write_full_page(struct page *page,
         booter_panic("write block error!");
     }
 
-    booter_panic("block_write_full_page ok!");
     return 0;
 }

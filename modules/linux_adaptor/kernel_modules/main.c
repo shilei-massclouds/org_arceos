@@ -7,7 +7,7 @@
 #include "booter.h"
 #include "ext2/ext2.h"
 
-#define TEST_EXT2
+//#define TEST_EXT2
 
 extern int cl_irq_init(void);
 extern int cl_enable_irq(void);

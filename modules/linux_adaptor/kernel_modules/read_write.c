@@ -51,5 +51,33 @@ int cl_write(struct inode *inode, const void *buf, size_t count, loff_t *pos)
     struct writeback_control wbc;
     memset(&wbc, 0, sizeof(wbc));
 
-    return a_ops->writepage(page, &wbc);
+    ret = a_ops->writepage(page, &wbc);
+    if (ret < 0) {
+        booter_panic("write content error.");
+    }
+
+    if (inode->i_sb == NULL) {
+        booter_panic("No superblock for inode.");
+    }
+
+    const struct super_operations *s_ops = inode->i_sb->s_op;
+    if (s_ops == NULL) {
+        booter_panic("bad superblock ops.");
+    }
+
+    // Note: Write inode when i_size changed.
+    if (*pos + count > inode->i_size) {
+        inode->i_size = *pos + count;
+    }
+    printk("%s: ino %u\n", __func__, inode->i_ino);
+
+    memset(&wbc, 0, sizeof(wbc));
+    wbc.sync_mode = WB_SYNC_ALL;
+    ret = s_ops->write_inode(inode, &wbc);
+    if (ret < 0) {
+        booter_panic("write metadata error.");
+    }
+
+    *pos += count;
+    return ret;
 }
