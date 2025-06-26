@@ -8,6 +8,7 @@
 #include "ext2/ext2.h"
 
 //#define TEST_EXT2
+#define TEST_EXT4
 
 extern int cl_irq_init(void);
 extern int cl_enable_irq(void);
@@ -15,7 +16,9 @@ extern int cl_enable_irq(void);
 extern void cl_virtio_init();
 extern void cl_virtio_mmio_init();
 extern void cl_virtio_blk_init();
+
 extern int cl_ext2_fs_init(void);
+extern int cl_ext4_fs_init(void);
 
 extern int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos);
 extern int cl_write(struct inode *inode, const void *buf, size_t count, loff_t *pos);
@@ -28,6 +31,9 @@ static int test_write_blocks();
 extern int clinux_test_block_driver(void);
 extern struct dentry *call_ext2_mount(void);
 extern int lookup(struct file *dir, const char *target, u64 *ret_ino);
+
+static void test_ext2(void);
+static void test_ext4(void);
 
 int clinux_init()
 {
@@ -44,6 +50,25 @@ int clinux_init()
     clinux_test_block_driver();
 
 #ifdef TEST_EXT2
+    test_ext2();
+#endif
+
+#ifdef TEST_EXT4
+    test_ext4();
+#endif
+    return 0;
+}
+
+static void test_ext4(void)
+{
+    /*
+     * Ext4 mount and test
+     */
+    cl_ext4_fs_init();
+}
+
+static void test_ext2(void)
+{
     /*
      * Ext2 mount and test
      */
@@ -94,8 +119,6 @@ int clinux_init()
     }
 
     booter_panic("Reach here!\n");
-#endif
-    return 0;
 }
 
 int clinux_test_block_driver(void)

@@ -21,10 +21,21 @@ OBJS += super.o inode.o dcache.o buffer.o filemap.o mpage.o
 OBJS += readdir.o read_write.o
 OBJS += user_namespace.o utils.o
 OBJS += swap.o
+
 # ext2 fs
 OBJS += ext2/super.o ext2/balloc.o ext2/dir.o ext2/file.o
 OBJS += ext2/ialloc.o ext2/inode.o
 OBJS += ext2/ioctl.o ext2/namei.o ext2/super.o ext2/symlink.o
+
+# ext4 fs
+OBJS += ext4/super.o ext4/balloc.o ext4/bitmap.o ext4/block_validity.o
+OBJS += ext4/ext4_jbd2.o ext4/extents.o ext4/extents_status.o ext4/file.o ext4/dir.o
+OBJS += ext4/fsmap.o ext4/fsync.o ext4/hash.o ext4/ialloc.o ext4/indirect.o
+OBJS += ext4/inline.o ext4/inode.o ext4/inode-test.o ext4/ioctl.o ext4/mballoc.o
+OBJS += ext4/migrate.o ext4/mmp.o ext4/move_extent.o ext4/namei.o ext4/page-io.o
+OBJS += ext4/readpage.o ext4/resize.o ext4/super.o ext4/symlink.o ext4/sysfs.o
+OBJS += ext4/verity.o ext4/xattr.o ext4/xattr_hurd.o
+OBJS += ext4/xattr_trusted.o ext4/xattr_user.o
 
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o workqueue.o \
