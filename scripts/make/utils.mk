@@ -32,7 +32,22 @@ define make_disk_image_ext2
   @rm -f /tmp/ext2.txt
 endef
 
+define make_disk_image_ext4
+  @printf "    $(GREEN_C)Creating$(END_C) Ext4 disk image \"$(1)\" ...\n"
+  @dd if=/dev/zero of=$(1) bs=1M count=64
+  @mkfs.ext4 $(1)
+  @echo "abc" > /tmp/ext4.txt
+  @mkdir -p ./mnt
+  @sudo mount $(1) ./mnt
+  @sudo mkdir -p ./mnt/lib
+  @sudo cp /tmp/ext4.txt ./mnt/
+  @sudo umount ./mnt
+  @rm -rf mnt
+  @rm -f /tmp/ext4.txt
+endef
+
 define make_disk_image
   $(if $(filter $(1),fat32), $(call make_disk_image_fat32,$(2)))
   $(if $(filter $(1),ext2), $(call make_disk_image_ext2,$(2)))
+  $(if $(filter $(1),ext4), $(call make_disk_image_ext4,$(2)))
 endef

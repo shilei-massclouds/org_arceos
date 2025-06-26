@@ -59,8 +59,8 @@ MEM ?= 128M
 ACCEL ?=
 
 DISK_IMG ?= disk.img
-# Filesystem type: fat32, ext2
-FS_TYPE ?= ext2
+# Filesystem type: fat32, ext2, ext4
+FS_TYPE ?= ext4
 QEMU_LOG ?= n
 NET_DUMP ?= n
 NET_DEV ?= user
