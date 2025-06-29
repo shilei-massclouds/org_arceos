@@ -38,6 +38,14 @@ OBJS += ext4/readpage.o ext4/resize.o ext4/super.o ext4/symlink.o ext4/sysfs.o
 OBJS += ext4/verity.o ext4/xattr.o ext4/xattr_hurd.o
 OBJS += ext4/xattr_trusted.o ext4/xattr_user.o
 
+# jbd2
+OBJS += jbd2/checkpoint.o
+OBJS += jbd2/commit.o
+OBJS += jbd2/journal.o
+OBJS += jbd2/recovery.o
+OBJS += jbd2/revoke.o
+OBJS += jbd2/transaction.o
+
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o workqueue.o \
 		printk.o vsprintf.o ctype.o kstrtox.o \
