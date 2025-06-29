@@ -26,12 +26,12 @@ int register_filesystem(struct file_system_type * fs)
     return 0;
 }
 
-struct dentry *call_ext2_mount(void)
+struct dentry *call_mount(const char *name)
 {
     struct file_system_type **fs;
-    fs = find_filesystem("ext2", strlen("ext2"));
+    fs = find_filesystem(name, strlen(name));
     if (fs == NULL || *fs == NULL) {
-        booter_panic("No ext2!");
+        booter_panic("No filesystem!");
     }
 
     return (*fs)->mount(*fs, 0, "", NULL);

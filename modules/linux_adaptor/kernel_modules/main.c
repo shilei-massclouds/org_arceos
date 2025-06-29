@@ -29,7 +29,7 @@ unsigned long boot_cpu_hartid;
 static int test_read_blocks();
 static int test_write_blocks();
 extern int clinux_test_block_driver(void);
-extern struct dentry *call_ext2_mount(void);
+extern struct dentry *call_mount(const char *name);
 extern int lookup(struct file *dir, const char *target, u64 *ret_ino);
 
 static void test_ext2(void);
@@ -66,6 +66,11 @@ static void test_ext4(void)
      */
     cl_ext4_fs_init();
 
+    struct dentry *root = call_mount("ext4");
+    if (root == NULL || root->d_inode == NULL) {
+        booter_panic("ext4 mount error!");
+    }
+
     booter_panic("Reach here!\n");
 }
 
@@ -76,7 +81,7 @@ static void test_ext2(void)
      */
     cl_ext2_fs_init();
 
-    struct dentry *root = call_ext2_mount();
+    struct dentry *root = call_mount("ext2");
     if (root == NULL || root->d_inode == NULL) {
         booter_panic("ext2 mount error!");
     }

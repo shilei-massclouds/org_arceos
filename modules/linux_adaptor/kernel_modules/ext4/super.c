@@ -3829,6 +3829,9 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 	unsigned int journal_ioprio = DEFAULT_JOURNAL_IOPRIO;
 	ext4_group_t first_not_zeroed;
 
+    printk("\n\n");
+    printk("BEGIN ---------------------------\n");
+
 	if ((data && !orig_data) || !sbi)
 		goto out_free_base;
 
@@ -4404,6 +4407,8 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		goto cantfind_ext4;
 
 	/* check blocks count against device size */
+    // Implement bd_inode
+    /*
 	blocks_count = sb->s_bdev->bd_inode->i_size >> sb->s_blocksize_bits;
 	if (blocks_count && ext4_blocks_count(es) > blocks_count) {
 		ext4_msg(sb, KERN_WARNING, "bad geometry: block count %llu "
@@ -4411,6 +4416,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		       ext4_blocks_count(es), blocks_count);
 		goto failed_mount;
 	}
+    */
 
 	/*
 	 * It makes no sense for the first data block to be beyond the end
@@ -4978,6 +4984,7 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
 {
 	struct inode *journal_inode;
 
+    printk("%s: step1\n", __func__);
 	/*
 	 * Test for the existence of a valid inode on disk.  Bad things
 	 * happen if we iget() an unused inode, as the subsequent iput()
@@ -4988,6 +4995,7 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
 		ext4_msg(sb, KERN_ERR, "no journal found");
 		return NULL;
 	}
+    printk("%s: step2\n", __func__);
 	if (!journal_inode->i_nlink) {
 		make_bad_inode(journal_inode);
 		iput(journal_inode);
@@ -4995,6 +5003,7 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
 		return NULL;
 	}
 
+    printk("%s: step3\n", __func__);
 	jbd_debug(2, "Journal inode found at %p: %lld bytes\n",
 		  journal_inode, journal_inode->i_size);
 	if (!S_ISREG(journal_inode->i_mode)) {
@@ -5002,6 +5011,7 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
 		iput(journal_inode);
 		return NULL;
 	}
+    printk("%s: stepN\n", __func__);
 	return journal_inode;
 }
 
@@ -5018,6 +5028,7 @@ static journal_t *ext4_get_journal(struct super_block *sb,
 	if (!journal_inode)
 		return NULL;
 
+    printk("%s: step2\n", __func__);
 	journal = jbd2_journal_init_inode(journal_inode);
 	if (!journal) {
 		ext4_msg(sb, KERN_ERR, "Could not load journal inode");
@@ -5026,6 +5037,7 @@ static journal_t *ext4_get_journal(struct super_block *sb,
 	}
 	journal->j_private = sb;
 	ext4_init_journal_params(sb, journal);
+    printk("%s: stepN\n", __func__);
 	return journal;
 }
 
@@ -5163,9 +5175,11 @@ static int ext4_load_journal(struct super_block *sb,
 			return -EINVAL;
 	}
 
+    printk("%s: step1\n", __func__);
 	journal_dev_ro = bdev_read_only(journal->j_dev);
 	really_read_only = bdev_read_only(sb->s_bdev) | journal_dev_ro;
 
+    printk("%s: step2\n", __func__);
 	if (journal_dev_ro && !sb_rdonly(sb)) {
 		ext4_msg(sb, KERN_ERR,
 			 "journal device read-only, try mounting with '-o ro'");

@@ -34,6 +34,8 @@ __bread_gfp(struct block_device *bdev, sector_t block,
     struct buffer_head *bh = kmalloc(sizeof(struct buffer_head), 0);
     bh->b_data = buf + offset;
     bh->b_size = 4096;
+    bh->b_blocknr = block;
+    bh->b_page = virt_to_page(buf);
     return bh;
 }
 
@@ -50,4 +52,20 @@ int sb_set_blocksize(struct super_block *sb, int size)
     sb->s_blocksize_bits = blksize_bits(size);
     log_error("%s: size(%d) NOTE!\n", __func__, size);
     return sb->s_blocksize;
+}
+
+void blk_start_plug(struct blk_plug *plug)
+{
+    log_debug("%s: impl it.\n", __func__);
+}
+
+void blk_finish_plug(struct blk_plug *plug)
+{
+    log_debug("%s: impl it.\n", __func__);
+}
+
+int submit_bh(int op, int op_flags, struct buffer_head *bh)
+{
+    log_error("%s: impl it. op(%d) b_blocknr(%u) b_size(%u) b_page(%lx)\n",
+              __func__, op, bh->b_blocknr, bh->b_size, bh->b_page);
 }

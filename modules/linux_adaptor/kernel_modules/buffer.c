@@ -58,3 +58,22 @@ int block_write_full_page(struct page *page,
 
     return 0;
 }
+
+void __breadahead_gfp(struct block_device *bdev, sector_t block, unsigned size,
+              gfp_t gfp)
+{
+    return __bread_gfp(bdev, block, size, gfp);
+}
+
+struct buffer_head *
+__getblk_gfp(struct block_device *bdev, sector_t block,
+         unsigned size, gfp_t gfp)
+{
+    return __bread_gfp(bdev, block, size, gfp);
+}
+
+void __wait_on_buffer(struct buffer_head * bh)
+{
+    log_error("%s: impl it.\n", __func__);
+    set_buffer_uptodate(bh);
+}

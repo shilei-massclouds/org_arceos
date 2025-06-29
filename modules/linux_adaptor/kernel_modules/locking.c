@@ -72,8 +72,19 @@ void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)
     // preempt_enable();
 }
 
+int __lockfunc _raw_spin_trylock(raw_spinlock_t *lock)
+{
+    return arch_spin_trylock(&(lock)->raw_lock);
+}
+
 void
 __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
+{
+    log_debug("%s: ===> WARN: impl it. (%lx) (%s)\n", __func__, (unsigned long)lock, name);
+}
+
+void __rwlock_init(rwlock_t *lock, const char *name,
+           struct lock_class_key *key)
 {
     log_debug("%s: ===> WARN: impl it. (%lx) (%s)\n", __func__, (unsigned long)lock, name);
 }

@@ -4284,6 +4284,7 @@ static int __ext4_get_inode_loc(struct inode *inode,
 	bh = sb_getblk(sb, block);
 	if (unlikely(!bh))
 		return -ENOMEM;
+    printk("++++++ %s: b_blocknr(%u) b_size(%u)\n", __func__, bh->b_blocknr, bh->b_size);
 	if (ext4_simulate_fail(sb, EXT4_SIM_INODE_EIO))
 		goto simulate_eio;
 	if (!buffer_uptodate(bh)) {
@@ -4380,7 +4381,9 @@ make_io:
 		trace_ext4_load_inode(inode);
 		get_bh(bh);
 		bh->b_end_io = end_buffer_read_sync;
+    printk("-------------- %s: step2.1\n", __func__);
 		submit_bh(REQ_OP_READ, REQ_META | REQ_PRIO, bh);
+    printk("-------------- %s: step2.2\n", __func__);
 		blk_finish_plug(&plug);
 		wait_on_buffer(bh);
 		if (!buffer_uptodate(bh)) {
@@ -4612,6 +4615,7 @@ struct inode *__ext4_iget(struct super_block *sb, unsigned long ino,
 					      sizeof(gen));
 	}
 
+    printk("%s: step1\n", __func__);
 	if (!ext4_inode_csum_verify(inode, raw_inode, ei) ||
 	    ext4_simulate_fail(sb, EXT4_SIM_INODE_CRC)) {
 		ext4_error_inode_err(inode, function, line, 0, EFSBADCRC,
@@ -4677,6 +4681,7 @@ struct inode *__ext4_iget(struct super_block *sb, unsigned long ino,
 		ret = -EFSCORRUPTED;
 		goto bad_inode;
 	}
+    printk("%s: step3\n", __func__);
 	/*
 	 * If dir_index is not enabled but there's dir with INDEX flag set,
 	 * we'd normally treat htree data as empty space. But with metadata

@@ -19,6 +19,11 @@ void *kmalloc_node(size_t size, gfp_t flags, int node)
     return __kmalloc(size, flags);
 }
 
+void *kvmalloc_node(size_t size, gfp_t flags, int node)
+{
+    return __kmalloc(size, flags);
+}
+
 void kfree(const void *x)
 {
     cl_rust_dealloc(x);

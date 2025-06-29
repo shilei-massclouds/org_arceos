@@ -55,3 +55,10 @@ void unlock_new_inode(struct inode *inode)
 {
     inode->i_state &= ~I_NEW & ~I_CREATING;
 }
+
+void inode_set_flags(struct inode *inode, unsigned int flags,
+             unsigned int mask)
+{
+    WARN_ON_ONCE(flags & ~mask);
+    set_mask_bits(&inode->i_flags, mask, flags);
+}

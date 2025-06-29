@@ -94,3 +94,19 @@ size_t strnlen(const char *s, size_t count)
         /* nothing */;
     return sc - s;
 }
+
+/**
+ * strreplace - Replace all occurrences of character in string.
+ * @s: The string to operate on.
+ * @old: The character being replaced.
+ * @new: The character @old is replaced with.
+ *
+ * Returns pointer to the nul byte at the end of @s.
+ */
+char *strreplace(char *s, char old, char new)
+{
+    for (; *s; ++s)
+        if (*s == old)
+            *s = new;
+    return s;
+}
