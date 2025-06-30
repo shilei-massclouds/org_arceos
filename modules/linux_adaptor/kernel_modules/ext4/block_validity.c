@@ -267,6 +267,7 @@ int ext4_setup_system_zone(struct super_block *sb)
 		debug_print_tree(sbi);
 	return 0;
 err:
+    printk("%s: err\n", __func__);
 	release_system_zone(system_blks);
 	kfree(system_blks);
 	return ret;

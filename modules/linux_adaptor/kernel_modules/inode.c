@@ -1,4 +1,7 @@
 #include <linux/fs.h>
+#include <linux/prefetch.h>
+#include <linux/slab.h>
+
 #include "booter.h"
 
 struct inode *iget_locked(struct super_block *sb, unsigned long ino)
@@ -28,6 +31,14 @@ struct inode *iget_locked(struct super_block *sb, unsigned long ino)
     inode->i_mapping = mapping;
 
     return inode;
+}
+
+void iput(struct inode *inode)
+{
+    if (!inode)
+        return;
+
+    log_error("%s: No impl.", __func__);
 }
 
 void clear_nlink(struct inode *inode)
@@ -84,4 +95,85 @@ int bmap(struct inode *inode, sector_t *block)
 
     *block = inode->i_mapping->a_ops->bmap(inode->i_mapping, *block);
     return 0;
+}
+
+/**
+ *  new_inode   - obtain an inode
+ *  @sb: superblock
+ *
+ *  Allocates a new inode for given superblock. The default gfp_mask
+ *  for allocations related to inode->i_mapping is GFP_HIGHUSER_MOVABLE.
+ *  If HIGHMEM pages are unsuitable or it is known that pages allocated
+ *  for the page cache are not reclaimable or migratable,
+ *  mapping_set_gfp_mask() must be called with suitable flags on the
+ *  newly created inode's mapping
+ *
+ */
+struct inode *new_inode(struct super_block *sb)
+{
+    struct inode *inode;
+
+    spin_lock_prefetch(&sb->s_inode_list_lock);
+
+    inode = new_inode_pseudo(sb);
+    /*
+    if (inode)
+        inode_sb_list_add(inode);
+        */
+    return inode;
+}
+
+static struct inode *alloc_inode(struct super_block *sb)
+{
+    const struct super_operations *ops = sb->s_op;
+    struct inode *inode;
+
+    /*
+    if (ops->alloc_inode)
+        inode = ops->alloc_inode(sb);
+    else
+        inode = kmem_cache_alloc(inode_cachep, GFP_KERNEL);
+        */
+    inode = kmalloc(sizeof(struct inode), 0);
+
+    if (!inode)
+        return NULL;
+
+    /*
+    if (unlikely(inode_init_always(sb, inode))) {
+        if (ops->destroy_inode) {
+            ops->destroy_inode(inode);
+            if (!ops->free_inode)
+                return NULL;
+        }
+        inode->free_inode = ops->free_inode;
+        i_callback(&inode->i_rcu);
+        return NULL;
+    }
+    */
+
+    return inode;
+}
+
+/**
+ *  new_inode_pseudo    - obtain an inode
+ *  @sb: superblock
+ *
+ *  Allocates a new inode for given superblock.
+ *  Inode wont be chained in superblock s_inodes list
+ *  This means :
+ *  - fs can't be unmount
+ *  - quotas, fsnotify, writeback can't work
+ */
+struct inode *new_inode_pseudo(struct super_block *sb)
+{
+    struct inode *inode = alloc_inode(sb);
+
+    if (inode) {
+        spin_lock(&inode->i_lock);
+        inode->i_state = 0;
+        spin_unlock(&inode->i_lock);
+        INIT_LIST_HEAD(&inode->i_sb_list);
+    }
+    return inode;
 }

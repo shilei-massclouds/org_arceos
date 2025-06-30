@@ -126,3 +126,29 @@ void up_read(struct rw_semaphore *sem)
 {
     log_debug("%s: ===> WARN: impl it.\n", __func__);
 }
+
+void __sched mutex_lock(struct mutex *lock)
+{
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+}
+
+void __sched mutex_unlock(struct mutex *lock)
+{
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+}
+
+/*
+ * Initialize an rwsem:
+ */
+void __init_rwsem(struct rw_semaphore *sem, const char *name,
+          struct lock_class_key *key)
+{
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+}
+
+int __percpu_init_rwsem(struct percpu_rw_semaphore *sem,
+            const char *name, struct lock_class_key *key)
+{
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+}
+

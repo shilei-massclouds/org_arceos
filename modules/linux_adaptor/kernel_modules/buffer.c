@@ -21,6 +21,14 @@ void __lock_buffer(struct buffer_head *bh)
     log_error("%s: No impl.\n", __func__);
 }
 
+void unlock_buffer(struct buffer_head *bh)
+{
+    clear_bit_unlock(BH_Lock, &bh->b_state);
+    smp_mb__after_atomic();
+    log_error("%s: No impl.\n", __func__);
+    //wake_up_bit(&bh->b_state, BH_Lock);
+}
+
 /*
  * The generic ->writepage function for buffer-backed address_spaces
  */
@@ -76,4 +84,15 @@ void __wait_on_buffer(struct buffer_head * bh)
 {
     log_error("%s: impl it.\n", __func__);
     set_buffer_uptodate(bh);
+}
+
+/*
+ * For a data-integrity writeout, we need to wait upon any in-progress I/O
+ * and then start new I/O and then wait upon it.  The caller must have a ref on
+ * the buffer_head.
+ */
+int __sync_dirty_buffer(struct buffer_head *bh, int op_flags)
+{
+    log_error("%s: impl it.\n", __func__);
+    return 0;
 }

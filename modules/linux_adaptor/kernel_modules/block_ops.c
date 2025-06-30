@@ -130,3 +130,9 @@ int cl_write_block(int blk_nr, const void *wbuf, int count)
     log_debug("%s: id[%d] count[%d] ok!", __func__, blk_nr, count);
     return 0;
 }
+
+int set_task_ioprio(struct task_struct *task, int ioprio)
+{
+    log_error("%s: No impl.", __func__);
+    return 0;
+}

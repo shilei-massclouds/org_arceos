@@ -13,3 +13,10 @@ time64_t ktime_get_real_seconds(void)
 {
     return 0;
 }
+
+int ___ratelimit(struct ratelimit_state *rs, const char *func)
+{
+    log_error("%s: No impl.", __func__);
+    return 0;
+}
+

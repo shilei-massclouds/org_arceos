@@ -1157,13 +1157,11 @@ static journal_t *journal_init_common(struct block_device *bdev,
 
 	/* Set up a default-sized revoke table for the new mount. */
 	err = jbd2_journal_init_revoke(journal, JOURNAL_REVOKE_DEFAULT_HASH);
-    printk("%s: 2\n", __func__);
 	if (err)
 		goto err_cleanup;
 
 	spin_lock_init(&journal->j_history_lock);
 
-    printk("%s: 3\n", __func__);
 	lockdep_init_map(&journal->j_trans_commit_map, "jbd2_handle",
 			 &jbd2_trans_commit_key, 0);
 

@@ -4820,9 +4820,14 @@ no_journal:
 	 * used to detect the metadata async write error.
 	 */
 	spin_lock_init(&sbi->s_bdev_wb_lock);
+    /*
+     * Note: impl sb->s_bdev->bd_inode
+     */
+    /*
 	if (!sb_rdonly(sb))
 		errseq_check_and_advance(&sb->s_bdev->bd_inode->i_mapping->wb_err,
 					 &sbi->s_bdev_wb_err);
+                     */
 	sb->s_bdev->bd_super = sb;
 	EXT4_SB(sb)->s_mount_state |= EXT4_ORPHAN_FS;
 	ext4_orphan_cleanup(sb, es);
@@ -4851,6 +4856,7 @@ no_journal:
 				 "the device does not support discard");
 	}
 
+    printk("%s: step1\n", __func__);
 	if (___ratelimit(&ext4_mount_msg_ratelimit, "EXT4-fs mount"))
 		ext4_msg(sb, KERN_INFO, "mounted filesystem with%s. "
 			 "Opts: %.*s%s%s", descr,
@@ -4858,6 +4864,7 @@ no_journal:
 			 sbi->s_es->s_mount_opts,
 			 *sbi->s_es->s_mount_opts ? "; " : "", orig_data);
 
+    printk("%s: step2\n", __func__);
 	if (es->s_error_count)
 		mod_timer(&sbi->s_err_report, jiffies + 300*HZ); /* 5 minutes */
 
@@ -4984,7 +4991,6 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
 {
 	struct inode *journal_inode;
 
-    printk("%s: step1\n", __func__);
 	/*
 	 * Test for the existence of a valid inode on disk.  Bad things
 	 * happen if we iget() an unused inode, as the subsequent iput()
@@ -4995,7 +5001,6 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
 		ext4_msg(sb, KERN_ERR, "no journal found");
 		return NULL;
 	}
-    printk("%s: step2\n", __func__);
 	if (!journal_inode->i_nlink) {
 		make_bad_inode(journal_inode);
 		iput(journal_inode);
@@ -5003,7 +5008,6 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
 		return NULL;
 	}
 
-    printk("%s: step3\n", __func__);
 	jbd_debug(2, "Journal inode found at %p: %lld bytes\n",
 		  journal_inode, journal_inode->i_size);
 	if (!S_ISREG(journal_inode->i_mode)) {
@@ -5011,7 +5015,6 @@ static struct inode *ext4_get_journal_inode(struct super_block *sb,
 		iput(journal_inode);
 		return NULL;
 	}
-    printk("%s: stepN\n", __func__);
 	return journal_inode;
 }
 
@@ -5028,7 +5031,6 @@ static journal_t *ext4_get_journal(struct super_block *sb,
 	if (!journal_inode)
 		return NULL;
 
-    printk("%s: step2\n", __func__);
 	journal = jbd2_journal_init_inode(journal_inode);
 	if (!journal) {
 		ext4_msg(sb, KERN_ERR, "Could not load journal inode");
@@ -5037,7 +5039,6 @@ static journal_t *ext4_get_journal(struct super_block *sb,
 	}
 	journal->j_private = sb;
 	ext4_init_journal_params(sb, journal);
-    printk("%s: stepN\n", __func__);
 	return journal;
 }
 
@@ -5175,11 +5176,9 @@ static int ext4_load_journal(struct super_block *sb,
 			return -EINVAL;
 	}
 
-    printk("%s: step1\n", __func__);
 	journal_dev_ro = bdev_read_only(journal->j_dev);
 	really_read_only = bdev_read_only(sb->s_bdev) | journal_dev_ro;
 
-    printk("%s: step2\n", __func__);
 	if (journal_dev_ro && !sb_rdonly(sb)) {
 		ext4_msg(sb, KERN_ERR,
 			 "journal device read-only, try mounting with '-o ro'");

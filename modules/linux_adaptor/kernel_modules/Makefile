@@ -21,7 +21,7 @@ OBJS += super.o inode.o dcache.o buffer.o filemap.o mpage.o
 OBJS += readdir.o read_write.o libfs.o
 OBJS += user_namespace.o utils.o
 OBJS += swap.o mempool.o shash.o timer.o
-OBJS += wait.o kobject.o proc.o
+OBJS += wait.o swait.o kobject.o proc.o
 
 # ext2 fs
 OBJS += ext2/super.o ext2/balloc.o ext2/dir.o ext2/file.o
@@ -53,7 +53,8 @@ OBJS += cl_mine.o main.o workqueue.o \
 		driver.o of_platform.o dma.o string.o \
 		device.o ida.o sched.o irq.o blk_mq.o \
 		string_helpers.o block_ops.o bio.o \
-		scatterlist.o fiemap.o rbtree.o
+		scatterlist.o fiemap.o rbtree.o mbcache.o \
+		kthread.o percpu.o
 
 CROSS_ = $(ARCH)-linux-musl-
 CC = $(CROSS_)gcc
