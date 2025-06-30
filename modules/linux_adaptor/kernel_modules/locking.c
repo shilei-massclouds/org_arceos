@@ -1,6 +1,8 @@
 #include <linux/printk.h>
 #include <linux/spinlock.h>
 #include <linux/mutex.h>
+#include <linux/sched/debug.h>
+
 #include "booter.h"
 
 void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
@@ -87,4 +89,40 @@ void __rwlock_init(rwlock_t *lock, const char *name,
            struct lock_class_key *key)
 {
     log_debug("%s: ===> WARN: impl it. (%lx) (%s)\n", __func__, (unsigned long)lock, name);
+}
+
+void __lockfunc _raw_read_lock(rwlock_t *lock)
+{
+    log_debug("%s: ===> WARN: impl it.\n", __func__);
+}
+
+void __lockfunc _raw_read_unlock(rwlock_t *lock)
+{
+    log_debug("%s: ===> WARN: impl it.\n", __func__);
+}
+
+/*
+ * lock for reading
+ */
+void __sched down_read(struct rw_semaphore *sem)
+{
+    log_debug("%s: ===> WARN: impl it.\n", __func__);
+}
+
+void __lockfunc _raw_write_lock(rwlock_t *lock)
+{
+    log_debug("%s: ===> WARN: impl it.\n", __func__);
+}
+
+void __lockfunc _raw_write_unlock(rwlock_t *lock)
+{
+    log_debug("%s: ===> WARN: impl it.\n", __func__);
+}
+
+/*
+ * release a read lock
+ */
+void up_read(struct rw_semaphore *sem)
+{
+    log_debug("%s: ===> WARN: impl it.\n", __func__);
 }

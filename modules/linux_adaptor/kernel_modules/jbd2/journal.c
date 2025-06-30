@@ -1157,11 +1157,13 @@ static journal_t *journal_init_common(struct block_device *bdev,
 
 	/* Set up a default-sized revoke table for the new mount. */
 	err = jbd2_journal_init_revoke(journal, JOURNAL_REVOKE_DEFAULT_HASH);
+    printk("%s: 2\n", __func__);
 	if (err)
 		goto err_cleanup;
 
 	spin_lock_init(&journal->j_history_lock);
 
+    printk("%s: 3\n", __func__);
 	lockdep_init_map(&journal->j_trans_commit_map, "jbd2_handle",
 			 &jbd2_trans_commit_key, 0);
 
@@ -1255,6 +1257,7 @@ journal_t *jbd2_journal_init_inode(struct inode *inode)
 	blocknr = 0;
 	err = bmap(inode, &blocknr);
 
+    printk("%s: --------- blocknr(%u)\n", __func__, blocknr);
 	if (err || !blocknr) {
 		pr_err("%s: Cannot locate journal superblock\n",
 			__func__);
@@ -1277,6 +1280,7 @@ journal_t *jbd2_journal_init_inode(struct inode *inode)
 	sprintf(p, "-%lu", journal->j_inode->i_ino);
 	jbd2_stats_proc_init(journal);
 
+    printk("%s: ok!\n", __func__);
 	return journal;
 }
 
@@ -2747,6 +2751,11 @@ static int __init journal_init(void)
 		jbd2_journal_destroy_caches();
 	}
 	return ret;
+}
+
+int cl_journal_init(void)
+{
+    return journal_init();
 }
 
 static void __exit journal_exit(void)

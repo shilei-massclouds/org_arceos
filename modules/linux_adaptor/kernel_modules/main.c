@@ -19,6 +19,7 @@ extern void cl_virtio_blk_init();
 
 extern int cl_ext2_fs_init(void);
 extern int cl_ext4_fs_init(void);
+extern int cl_journal_init(void);
 
 extern int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos);
 extern int cl_write(struct inode *inode, const void *buf, size_t count, loff_t *pos);
@@ -61,6 +62,11 @@ int clinux_init()
 
 static void test_ext4(void)
 {
+    /*
+     * Init Journal first.
+     */
+    cl_journal_init();
+
     /*
      * Ext4 mount and test
      */

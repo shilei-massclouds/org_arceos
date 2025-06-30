@@ -221,7 +221,9 @@ static struct jbd2_revoke_table_s *jbd2_journal_init_revoke_table(int hash_size)
 	int tmp = hash_size;
 	struct jbd2_revoke_table_s *table;
 
+    printk("%s: 0 (%lx)\n", __func__, jbd2_revoke_table_cache);
 	table = kmem_cache_alloc(jbd2_revoke_table_cache, GFP_KERNEL);
+    printk("%s: 1\n", __func__);
 	if (!table)
 		goto out;
 
@@ -265,7 +267,9 @@ int jbd2_journal_init_revoke(journal_t *journal, int hash_size)
 	J_ASSERT(journal->j_revoke_table[0] == NULL);
 	J_ASSERT(is_power_of_2(hash_size));
 
+    printk("%s: 0\n", __func__);
 	journal->j_revoke_table[0] = jbd2_journal_init_revoke_table(hash_size);
+    printk("%s: 1\n", __func__);
 	if (!journal->j_revoke_table[0])
 		goto fail0;
 

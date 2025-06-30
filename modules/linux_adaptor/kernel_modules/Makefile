@@ -53,7 +53,7 @@ OBJS += cl_mine.o main.o workqueue.o \
 		driver.o of_platform.o dma.o string.o \
 		device.o ida.o sched.o irq.o blk_mq.o \
 		string_helpers.o block_ops.o bio.o \
-		scatterlist.o
+		scatterlist.o fiemap.o rbtree.o
 
 CROSS_ = $(ARCH)-linux-musl-
 CC = $(CROSS_)gcc
