@@ -96,13 +96,15 @@ blk_qc_t submit_bio(struct bio *bio)
     log_error("bv_page(%lx) bv_len(%u) bv_offset(%u)\n",
               bv->bv_page, bv->bv_len, bv->bv_offset);
 
-    int blkid;
+    int blkid = bio->bi_iter.bi_sector;
 
+    /*
     if (bv->bv_len == PAGE_SIZE) {
         blkid = bio->bi_iter.bi_sector * 8;
     } else {
         blkid = bio->bi_iter.bi_sector * 2;
     }
+    */
 
     void *buf = page_to_virt(bv->bv_page);
     cl_read_block(blkid, buf, PAGE_SIZE);
