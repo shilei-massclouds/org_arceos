@@ -168,6 +168,7 @@ static inline void virtblk_request_done(struct request *req)
 		      req->special_vec.bv_offset);
 	}
 
+    printk("++++++ %s: %u\n", __func__, virtblk_result(vbr));
 	blk_mq_end_request(req, virtblk_result(vbr));
 }
 

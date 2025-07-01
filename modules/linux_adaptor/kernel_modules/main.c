@@ -5,10 +5,17 @@
 #include <linux/buffer_head.h>
 
 #include "booter.h"
-#include "ext2/ext2.h"
 
 //#define TEST_EXT2
 #define TEST_EXT4
+
+#ifdef TEST_EXT2
+#include "ext2/ext2.h"
+#endif
+
+#ifdef TEST_EXT4
+#include "ext4/ext4.h"
+#endif
 
 extern int cl_irq_init(void);
 extern int cl_enable_irq(void);
@@ -77,9 +84,42 @@ static void test_ext4(void)
         booter_panic("ext4 mount error!");
     }
 
+    struct inode *root_inode = root->d_inode;
+    if (!S_ISDIR(root_inode->i_mode)) {
+        booter_panic("ext4 root inode is NOT DIR!");
+    }
+    if (root_inode->i_sb == NULL) {
+        booter_panic("No ext4 superblock!");
+    }
+
+    struct file root_dir;
+    memset(&root_dir, 0, sizeof(root_dir));
+    root_dir.f_inode = root_inode;
+
+    // Lookup ino of 'ext4.txt'
+    u64 t_ino = 0;
+    lookup(&root_dir, "ext4.txt", &t_ino);
+    printk("ext4.txt ino: %u\n", t_ino);
+
+    struct inode *t_inode = ext4_iget(root_inode->i_sb, t_ino, 0);
+    if (t_inode == NULL || t_inode->i_mapping == NULL) {
+        booter_panic("bad inode.");
+    }
+
+    // Try to read content from 'ext4.txt'
+    char rbuf[256];
+    memset(rbuf, 0, sizeof(rbuf));
+    loff_t pos = 0;
+    int ret = cl_read(t_inode, rbuf, sizeof(rbuf), &pos);
+    if (ret < 0) {
+        booter_panic("ext4 read error!");
+    }
+    printk("Read 'ext4.txt': [%d]%s\n", ret, rbuf);
+
     booter_panic("Reach here!\n");
 }
 
+#ifdef TEST_EXT2
 static void test_ext2(void)
 {
     /*
@@ -133,6 +173,7 @@ static void test_ext2(void)
 
     booter_panic("Reach here!\n");
 }
+#endif
 
 int clinux_test_block_driver(void)
 {
