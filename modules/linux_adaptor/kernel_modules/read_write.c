@@ -2,7 +2,6 @@
 #include <linux/writeback.h>
 
 #include "booter.h"
-//#include "ext2/ext2.h"
 
 int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos)
 {

@@ -6,8 +6,8 @@
 
 #include "booter.h"
 
-//#define TEST_EXT2
-#define TEST_EXT4
+#define TEST_EXT2
+//#define TEST_EXT4
 
 #ifdef TEST_EXT2
 #include "ext2/ext2.h"
@@ -67,6 +67,7 @@ int clinux_init()
     return 0;
 }
 
+#ifdef TEST_EXT4
 static void test_ext4(void)
 {
     /*
@@ -118,6 +119,7 @@ static void test_ext4(void)
 
     booter_panic("Reach here!\n");
 }
+#endif
 
 #ifdef TEST_EXT2
 static void test_ext2(void)
