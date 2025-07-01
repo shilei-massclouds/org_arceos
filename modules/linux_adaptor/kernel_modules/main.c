@@ -6,16 +6,8 @@
 
 #include "booter.h"
 
-#define TEST_EXT2
-//#define TEST_EXT4
-
-#ifdef TEST_EXT2
-#include "ext2/ext2.h"
-#endif
-
-#ifdef TEST_EXT4
-#include "ext4/ext4.h"
-#endif
+//#define TEST_EXT2
+#define TEST_EXT4
 
 extern int cl_irq_init(void);
 extern int cl_enable_irq(void);
@@ -67,6 +59,60 @@ int clinux_init()
     return 0;
 }
 
+static void test_basic(const char *fs_name, const char *fname)
+{
+    struct dentry *root = call_mount(fs_name);
+    if (root == NULL || root->d_inode == NULL) {
+        booter_panic("fs mount error!");
+    }
+
+    struct inode *root_inode = root->d_inode;
+    if (!S_ISDIR(root_inode->i_mode)) {
+        booter_panic("fs root inode is NOT DIR!");
+    }
+    if (root_inode->i_sb == NULL) {
+        booter_panic("No fs superblock!");
+    }
+
+    struct file root_dir;
+    memset(&root_dir, 0, sizeof(root_dir));
+    root_dir.f_inode = root_inode;
+
+    // Lookup inode of filesystem.
+    unsigned int lookup_flags = 0;
+    struct dentry target;
+    memset(&target, 0, sizeof(struct dentry));
+    target.d_name.name = fname;
+    target.d_name.len = strlen(target.d_name.name);
+    target.d_name.hash = 0;
+
+    root_inode->i_op->lookup(root_inode, &target, lookup_flags);
+
+    struct inode *t_inode = target.d_inode;
+    if (t_inode == NULL || t_inode->i_mapping == NULL) {
+        booter_panic("bad inode.");
+    }
+
+    // Try to read content from file.
+    char rbuf[256];
+    memset(rbuf, 0, sizeof(rbuf));
+    loff_t pos = 0;
+    int ret = cl_read(t_inode, rbuf, sizeof(rbuf), &pos);
+    if (ret < 0) {
+        booter_panic("fs read error!");
+    }
+    printk("Read '%s': [%d]%s\n", fs_name, ret, rbuf);
+
+#ifdef TEST_EXT2
+    char wbuf[] = "12345";
+    pos = 0;
+    ret = cl_write(t_inode, wbuf, sizeof(wbuf), &pos);
+    if (ret < 0) {
+        booter_panic("ext2 write error!");
+    }
+#endif
+}
+
 #ifdef TEST_EXT4
 static void test_ext4(void)
 {
@@ -80,42 +126,10 @@ static void test_ext4(void)
      */
     cl_ext4_fs_init();
 
-    struct dentry *root = call_mount("ext4");
-    if (root == NULL || root->d_inode == NULL) {
-        booter_panic("ext4 mount error!");
-    }
-
-    struct inode *root_inode = root->d_inode;
-    if (!S_ISDIR(root_inode->i_mode)) {
-        booter_panic("ext4 root inode is NOT DIR!");
-    }
-    if (root_inode->i_sb == NULL) {
-        booter_panic("No ext4 superblock!");
-    }
-
-    struct file root_dir;
-    memset(&root_dir, 0, sizeof(root_dir));
-    root_dir.f_inode = root_inode;
-
-    // Lookup ino of 'ext4.txt'
-    u64 t_ino = 0;
-    lookup(&root_dir, "ext4.txt", &t_ino);
-    printk("ext4.txt ino: %u\n", t_ino);
-
-    struct inode *t_inode = ext4_iget(root_inode->i_sb, t_ino, 0);
-    if (t_inode == NULL || t_inode->i_mapping == NULL) {
-        booter_panic("bad inode.");
-    }
-
-    // Try to read content from 'ext4.txt'
-    char rbuf[256];
-    memset(rbuf, 0, sizeof(rbuf));
-    loff_t pos = 0;
-    int ret = cl_read(t_inode, rbuf, sizeof(rbuf), &pos);
-    if (ret < 0) {
-        booter_panic("ext4 read error!");
-    }
-    printk("Read 'ext4.txt': [%d]%s\n", ret, rbuf);
+    /*
+     * Test read & write.
+     */
+    test_basic("ext4", "ext4.txt");
 
     booter_panic("Reach here!\n");
 }
@@ -129,49 +143,10 @@ static void test_ext2(void)
      */
     cl_ext2_fs_init();
 
-    struct dentry *root = call_mount("ext2");
-    if (root == NULL || root->d_inode == NULL) {
-        booter_panic("ext2 mount error!");
-    }
-
-    struct inode *root_inode = root->d_inode;
-    if (!S_ISDIR(root_inode->i_mode)) {
-        booter_panic("ext2 root inode is NOT DIR!");
-    }
-    if (root_inode->i_sb == NULL) {
-        booter_panic("No ext2 superblock!");
-    }
-
-    struct file root_dir;
-    memset(&root_dir, 0, sizeof(root_dir));
-    root_dir.f_inode = root_inode;
-
-    // Lookup ino of 'ext2.txt'
-    u64 t_ino = 0;
-    lookup(&root_dir, "ext2.txt", &t_ino);
-    printk("ext2.txt ino: %u\n", t_ino);
-
-    struct inode *t_inode = ext2_iget(root_inode->i_sb, t_ino);
-    if (t_inode == NULL || t_inode->i_mapping == NULL) {
-        booter_panic("bad inode.");
-    }
-
-    // Try to read content from 'ext2.txt'
-    char rbuf[256];
-    memset(rbuf, 0, sizeof(rbuf));
-    loff_t pos = 0;
-    int ret = cl_read(t_inode, rbuf, sizeof(rbuf), &pos);
-    if (ret < 0) {
-        booter_panic("ext2 read error!");
-    }
-    printk("Read 'ext2.txt': [%d]%s\n", ret, rbuf);
-
-    char wbuf[] = "12345";
-    pos = 0;
-    ret = cl_write(t_inode, wbuf, sizeof(wbuf), &pos);
-    if (ret < 0) {
-        booter_panic("ext2 write error!");
-    }
+    /*
+     * Test read & write.
+     */
+    test_basic("ext2", "ext2.txt");
 
     booter_panic("Reach here!\n");
 }
