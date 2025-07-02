@@ -51,9 +51,9 @@ OBJS += cl_mine.o main.o workqueue.o \
 		printk.o vsprintf.o ctype.o kstrtox.o \
 		alloc.o genhd.o bus.o klist.o locking.o \
 		driver.o of_platform.o dma.o string.o \
-		device.o ida.o sched.o irq.o blk_mq.o \
-		string_helpers.o block_ops.o bio.o \
-		scatterlist.o fiemap.o rbtree.o mbcache.o \
+		device.o ida.o sched.o irq.o blk_mq.o xarray.o \
+		string_helpers.o block_ops.o bio.o iov_iter.o \
+		scatterlist.o fiemap.o rbtree.o radix-tree.o mbcache.o \
 		kthread.o percpu.o
 
 CROSS_ = $(ARCH)-linux-musl-

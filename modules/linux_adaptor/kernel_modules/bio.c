@@ -1,6 +1,8 @@
 #include <linux/bio.h>
 #include "booter.h"
 
+extern int cl_submit_bio(struct bio *bio);
+
 void bio_init(struct bio *bio, struct bio_vec *table,
           unsigned short max_vecs)
 {
@@ -89,24 +91,70 @@ blk_qc_t submit_bio(struct bio *bio)
         booter_panic("No support for WRITE!");
     }
 
-    log_error("%s: bi_vcnt(%u) bi_sector(%u)\n",
-              __func__, bio->bi_vcnt, bio->bi_iter.bi_sector);
+    log_error("%s: bi_vcnt(%u) bi_sector(%u) bi_end_io(%lx)\n",
+              __func__, bio->bi_vcnt, bio->bi_iter.bi_sector,
+              bio->bi_end_io);
 
     struct bio_vec *bv = &bio->bi_io_vec[0];
     log_error("bv_page(%lx) bv_len(%u) bv_offset(%u)\n",
               bv->bv_page, bv->bv_len, bv->bv_offset);
 
-    int blkid = bio->bi_iter.bi_sector;
-
-    /*
-    if (bv->bv_len == PAGE_SIZE) {
-        blkid = bio->bi_iter.bi_sector * 8;
-    } else {
-        blkid = bio->bi_iter.bi_sector * 2;
-    }
-    */
-
-    void *buf = page_to_virt(bv->bv_page);
-    cl_read_block(blkid, buf, PAGE_SIZE);
+    //int blkid = bio->bi_iter.bi_sector;
+    //void *buf = page_to_virt(bv->bv_page);
+    //cl_read_block(blkid, buf, PAGE_SIZE);
+    cl_submit_bio(bio);
     return 0;
+}
+
+/**
+ * bio_advance - increment/complete a bio by some number of bytes
+ * @bio:    bio to advance
+ * @bytes:  number of bytes to complete
+ *
+ * This updates bi_sector, bi_size and bi_idx; if the number of bytes to
+ * complete doesn't align with a bvec boundary, then bv_len and bv_offset will
+ * be updated on the last bvec as well.
+ *
+ * @bio will then represent the remaining, uncompleted portion of the io.
+ */
+void bio_advance(struct bio *bio, unsigned bytes)
+{
+    if (bio_integrity(bio))
+        bio_integrity_advance(bio, bytes);
+
+    //bio_crypt_advance(bio, bytes);
+    bio_advance_iter(bio, &bio->bi_iter, bytes);
+}
+
+/**
+ * bio_endio - end I/O on a bio
+ * @bio:    bio
+ *
+ * Description:
+ *   bio_endio() will end I/O on the whole bio. bio_endio() is the preferred
+ *   way to end I/O on a bio. No one should call bi_end_io() directly on a
+ *   bio unless they own it and thus know that it has an end_io function.
+ *
+ *   bio_endio() can be called several times on a bio that has been chained
+ *   using bio_chain().  The ->bi_end_io() function will only be called the
+ *   last time.  At this point the BLK_TA_COMPLETE tracing event will be
+ *   generated if BIO_TRACE_COMPLETION is set.
+ **/
+void bio_endio(struct bio *bio)
+{
+    if (bio->bi_end_io)
+        bio->bi_end_io(bio);
+}
+
+/**
+ * bio_put - release a reference to a bio
+ * @bio:   bio to release reference to
+ *
+ * Description:
+ *   Put a reference to a &struct bio, either one you have gotten with
+ *   bio_alloc, bio_get or bio_clone_*. The last put of a bio will free it.
+ **/
+void bio_put(struct bio *bio)
+{
+    log_error("%s: No impl.", __func__);
 }

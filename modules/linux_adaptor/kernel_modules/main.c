@@ -32,6 +32,8 @@ extern int clinux_test_block_driver(void);
 extern struct dentry *call_mount(const char *name);
 extern int lookup(struct file *dir, const char *target, u64 *ret_ino);
 
+extern ssize_t new_sync_read(struct file *filp, char *buf, size_t len, loff_t *ppos);
+
 static void test_ext2(void);
 static void test_ext4(void);
 
@@ -93,7 +95,28 @@ static void test_basic(const char *fs_name, const char *fname)
         booter_panic("bad inode.");
     }
 
+    // File level read.
+    {
+        ssize_t ret;
+        struct file file;
+        memset(&file, 0, sizeof(struct file));
+        file.f_inode = t_inode;
+        file.f_mapping = t_inode->i_mapping;
+        file.f_op = t_inode->i_fop;
+        if (file.f_op == NULL) {
+            booter_panic("bad file_operations.");
+        }
+
+        loff_t pos = 0;
+        char rbuf[256];
+        memset(rbuf, 0, sizeof(rbuf));
+
+        ret = new_sync_read(&file, rbuf, sizeof(rbuf), &pos);
+        printk("Read '%s': [%d]%s\n", fs_name, ret, rbuf);
+    }
+
     // Try to read content from file.
+    /*
     char rbuf[256];
     memset(rbuf, 0, sizeof(rbuf));
     loff_t pos = 0;
@@ -102,6 +125,7 @@ static void test_basic(const char *fs_name, const char *fname)
         booter_panic("fs read error!");
     }
     printk("Read '%s': [%d]%s\n", fs_name, ret, rbuf);
+    */
 
 #ifdef TEST_EXT2
     char wbuf[] = "12345";

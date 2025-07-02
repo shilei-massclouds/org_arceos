@@ -393,8 +393,68 @@ void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async)
 
 void blk_mq_end_request(struct request *rq, blk_status_t error)
 {
-    log_error("%s: blk_status_t(%d)", __func__, error);
+    printk("%s: blk_status_t(%d)\n", __func__, error);
     if (error != 0) {
         booter_panic("bad request!");
     }
+
+    if (blk_update_request(rq, error, blk_rq_bytes(rq)))
+        BUG();
+    __blk_mq_end_request(rq, error);
+}
+
+static void req_bio_endio(struct request *rq, struct bio *bio,
+              unsigned int nbytes, blk_status_t error)
+{
+    if (error)
+        bio->bi_status = error;
+
+    if (unlikely(rq->rq_flags & RQF_QUIET))
+        bio_set_flag(bio, BIO_QUIET);
+
+    bio_advance(bio, nbytes);
+
+    if (req_op(rq) == REQ_OP_ZONE_APPEND && error == BLK_STS_OK) {
+        /*
+         * Partial zone append completions cannot be supported as the
+         * BIO fragments may end up not being written sequentially.
+         */
+        if (bio->bi_iter.bi_size)
+            bio->bi_status = BLK_STS_IOERR;
+        else
+            bio->bi_iter.bi_sector = rq->__sector;
+    }
+
+    printk("%s: bi_size(%u) rq_flags(%u)\n", __func__, bio->bi_iter.bi_size, rq->rq_flags);
+    /* don't actually finish bio if it's part of flush sequence */
+    if (bio->bi_iter.bi_size == 0 && !(rq->rq_flags & RQF_FLUSH_SEQ))
+        bio_endio(bio);
+}
+
+bool blk_update_request(struct request *req, blk_status_t error,
+        unsigned int nr_bytes)
+{
+    if (req->bio) {
+        struct bio *bio = req->bio;
+        unsigned bio_bytes = min(bio->bi_iter.bi_size, nr_bytes);
+
+    printk("%s: nbytes(%u) error(%d)\n", __func__, nr_bytes, error);
+        req_bio_endio(req, bio, bio_bytes, error);
+    }
+    return true;
+}
+
+inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
+{
+    if (rq->end_io) {
+        //rq_qos_done(rq->q, rq);
+        rq->end_io(rq, error);
+    } else {
+        blk_mq_free_request(rq);
+    }
+}
+
+void blk_mq_free_request(struct request *rq)
+{
+    log_error("%s: No impl.", __func__);
 }

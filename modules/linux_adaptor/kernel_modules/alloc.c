@@ -31,7 +31,19 @@ void kfree(const void *x)
 
 void *alloc_pages_exact(size_t size, gfp_t gfp_mask)
 {
-    return cl_alloc_pages(size, 0x1000);
+    return cl_alloc_pages(size, PAGE_SIZE);
+}
+
+/*
+ * This is the 'heart' of the zoned buddy allocator.
+ */
+struct page *
+__alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+                       int preferred_nid, nodemask_t *nodemask)
+{
+    struct page * page = virt_to_page(cl_alloc_pages(PAGE_SIZE << order, PAGE_SIZE));
+    set_page_count(page, 1);
+    return page;
 }
 
 void *devm_kmalloc(struct device *dev, size_t size, gfp_t gfp)
@@ -78,7 +90,7 @@ void kmem_cache_destroy(struct kmem_cache *s)
 
 void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 {
-    if (s->size == 0) {
+    if (!s || s->size == 0) {
         booter_panic("bad kmem cache alloc!");
     }
     return kmalloc(s->size, gfpflags);

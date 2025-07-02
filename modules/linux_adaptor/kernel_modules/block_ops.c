@@ -13,7 +13,7 @@ bool completed = 0;
 
 int cl_read_block(int blk_nr, void *rbuf, int count)
 {
-    log_debug("%s: id[%d] count[%d] ... sie(%x)\n",
+    log_error("%s: id[%d] count[%d] ... sie(%x)\n",
            __func__, blk_nr, count, csr_read(CSR_SSTATUS));
 
     /* Test virtio_blk disk. */
@@ -99,6 +99,8 @@ int cl_write_block(int blk_nr, const void *wbuf, int count)
     memset(&rq, 0, sizeof(rq));
     rq.nr_phys_segments = 1;
     rq.__sector = blk_nr;
+    rq.__data_len = 4096;
+    printk("%s: __data_len(%u)\n", __func__, rq.__data_len);
     rq.ioprio = 0;
     rq.cmd_flags = REQ_OP_WRITE;
 
@@ -134,5 +136,42 @@ int cl_write_block(int blk_nr, const void *wbuf, int count)
 int set_task_ioprio(struct task_struct *task, int ioprio)
 {
     log_error("%s: No impl.", __func__);
+    return 0;
+}
+
+int cl_submit_bio(struct bio *bio)
+{
+    /* Test virtio_blk disk. */
+    if (cl_disk == NULL || cl_disk->queue == NULL) {
+        booter_panic("cl_disk or its rq is NULL! check device_add_disk.");
+    }
+    const struct blk_mq_ops *mq_ops = cl_disk->queue->mq_ops;
+    if (mq_ops == NULL) {
+        booter_panic("mq_ops is NULL!");
+    }
+
+    struct blk_mq_hw_ctx hw_ctx;
+    memset(&hw_ctx, 0, sizeof(hw_ctx));
+    hw_ctx.queue = cl_disk->queue;
+    hw_ctx.queue_num = 0;
+
+    struct request rq;
+    memset(&rq, 0, sizeof(rq));
+    rq.nr_phys_segments = 1;
+    rq.bio = bio;
+    rq.__sector = bio->bi_iter.bi_sector;
+    rq.__data_len = bio->bi_iter.bi_size;
+    printk("%s: __data_len(%u)\n", __func__, rq.__data_len);
+    rq.ioprio = 0;
+    rq.cmd_flags = REQ_OP_READ;
+
+    struct blk_mq_queue_data data;
+    memset(&data, 0, sizeof(data));
+    data.rq = &rq;
+    data.last = true;
+
+    blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);
+    log_error("mq_ops->queue_rq status (%d)\n", status);
+
     return 0;
 }

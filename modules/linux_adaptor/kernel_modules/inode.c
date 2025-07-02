@@ -177,3 +177,8 @@ struct inode *new_inode_pseudo(struct super_block *sb)
     }
     return inode;
 }
+
+void touch_atime(const struct path *path)
+{
+    log_error("%s: No impl.", __func__);
+}
