@@ -1,4 +1,6 @@
 #include <linux/mm.h>
+#include <linux/writeback.h>
+#include <linux/backing-dev.h>
 
 #include "booter.h"
 
@@ -31,4 +33,23 @@ void wait_for_stable_page(struct page *page)
 void balance_dirty_pages_ratelimited(struct address_space *mapping)
 {
     log_error("%s: No impl.\n", __func__);
+}
+
+int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
+{
+	int ret;
+
+	if (wbc->nr_to_write <= 0)
+		return 0;
+	while (1) {
+		if (mapping->a_ops->writepages)
+			ret = mapping->a_ops->writepages(mapping, wbc);
+		else
+			ret = generic_writepages(mapping, wbc);
+		if ((ret != -ENOMEM) || (wbc->sync_mode != WB_SYNC_ALL))
+			break;
+		cond_resched();
+		congestion_wait(BLK_RW_ASYNC, HZ/50);
+	}
+	return ret;
 }

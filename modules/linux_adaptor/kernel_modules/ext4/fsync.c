@@ -148,7 +148,9 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 		goto out;
 	}
 
+    printk("%s: ... (%u, %u)\n", __func__, start, end);
 	ret = file_write_and_wait_range(file, start, end);
+    printk("%s: step2\n", __func__);
 	if (ret)
 		return ret;
 
@@ -174,6 +176,7 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 		ret = ext4_fsync_journal(inode, datasync, &needs_barrier);
 
 	if (needs_barrier) {
+    printk("%s: step3\n", __func__);
 		err = blkdev_issue_flush(inode->i_sb->s_bdev, GFP_KERNEL);
 		if (!ret)
 			ret = err;

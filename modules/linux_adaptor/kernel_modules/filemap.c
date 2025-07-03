@@ -6,6 +6,8 @@
 #include <linux/mm.h>
 #include <linux/swap.h>
 #include <linux/gfp.h>
+#include <linux/backing-dev.h>
+#include <linux/pagevec.h>
 
 #include "ext2/ext2.h"
 #include "mm/internal.h"
@@ -739,4 +741,244 @@ struct page *grab_cache_page_write_begin(struct address_space *mapping,
         wait_for_stable_page(page);
 
     return page;
+}
+
+/* Returns true if writeback might be needed or already in progress. */
+static bool mapping_needs_writeback(struct address_space *mapping)
+{
+    if (dax_mapping(mapping))
+        return mapping->nrexceptional;
+
+    return mapping->nrpages;
+}
+
+/**
+ * __filemap_fdatawrite_range - start writeback on mapping dirty pages in range
+ * @mapping:    address space structure to write
+ * @start:  offset in bytes where the range starts
+ * @end:    offset in bytes where the range ends (inclusive)
+ * @sync_mode:  enable synchronous operation
+ *
+ * Start writeback against all of a mapping's dirty pages that lie
+ * within the byte offsets <start, end> inclusive.
+ *
+ * If sync_mode is WB_SYNC_ALL then this is a "data integrity" operation, as
+ * opposed to a regular memory cleansing writeback.  The difference between
+ * these two operations is that if a dirty page/buffer is encountered, it must
+ * be waited upon, and not just skipped over.
+ *
+ * Return: %0 on success, negative error code otherwise.
+ */
+int __filemap_fdatawrite_range(struct address_space *mapping, loff_t start,
+                loff_t end, int sync_mode)
+{
+    int ret;
+    struct writeback_control wbc = {
+        .sync_mode = sync_mode,
+        .nr_to_write = LONG_MAX,
+        .range_start = start,
+        .range_end = end,
+    };
+
+    // Note: impl mapping_cap_writeback_dirty(...).
+    /*
+    if (!mapping_cap_writeback_dirty(mapping) ||
+        !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
+        return 0;
+        */
+
+    wbc_attach_fdatawrite_inode(&wbc, mapping->host);
+    ret = do_writepages(mapping, &wbc);
+    wbc_detach_inode(&wbc);
+    return ret;
+}
+
+static void __filemap_fdatawait_range(struct address_space *mapping,
+                     loff_t start_byte, loff_t end_byte)
+{
+    pgoff_t index = start_byte >> PAGE_SHIFT;
+    pgoff_t end = end_byte >> PAGE_SHIFT;
+    struct pagevec pvec;
+    int nr_pages;
+
+    if (end_byte < start_byte)
+        return;
+
+    pagevec_init(&pvec);
+    while (index <= end) {
+        unsigned i;
+
+    printk("%s: step0\n", __func__);
+        nr_pages = pagevec_lookup_range_tag(&pvec, mapping, &index,
+                end, PAGECACHE_TAG_WRITEBACK);
+        if (!nr_pages)
+            break;
+
+    printk("%s: step1\n", __func__);
+        for (i = 0; i < nr_pages; i++) {
+            struct page *page = pvec.pages[i];
+
+            wait_on_page_writeback(page);
+            ClearPageError(page);
+        }
+        pagevec_release(&pvec);
+        cond_resched();
+    }
+}
+
+/**
+ * file_write_and_wait_range - write out & wait on a file range
+ * @file:   file pointing to address_space with pages
+ * @lstart: offset in bytes where the range starts
+ * @lend:   offset in bytes where the range ends (inclusive)
+ *
+ * Write out and wait upon file offsets lstart->lend, inclusive.
+ *
+ * Note that @lend is inclusive (describes the last byte to be written) so
+ * that this function can be used to write to the very end-of-file (end = -1).
+ *
+ * After writing out and waiting on the data, we check and advance the
+ * f_wb_err cursor to the latest value, and return any errors detected there.
+ *
+ * Return: %0 on success, negative error code otherwise.
+ */
+int file_write_and_wait_range(struct file *file, loff_t lstart, loff_t lend)
+{
+    int err = 0, err2;
+    struct address_space *mapping = file->f_mapping;
+
+    if (mapping_needs_writeback(mapping)) {
+        err = __filemap_fdatawrite_range(mapping, lstart, lend,
+                         WB_SYNC_ALL);
+        /* See comment of filemap_write_and_wait() */
+        if (err != -EIO)
+            __filemap_fdatawait_range(mapping, lstart, lend);
+    }
+    err2 = file_check_and_advance_wb_err(file);
+    if (!err)
+        err = err2;
+    return err;
+}
+
+/**
+ * file_check_and_advance_wb_err - report wb error (if any) that was previously
+ *                 and advance wb_err to current one
+ * @file: struct file on which the error is being reported
+ *
+ * When userland calls fsync (or something like nfsd does the equivalent), we
+ * want to report any writeback errors that occurred since the last fsync (or
+ * since the file was opened if there haven't been any).
+ *
+ * Grab the wb_err from the mapping. If it matches what we have in the file,
+ * then just quickly return 0. The file is all caught up.
+ *
+ * If it doesn't match, then take the mapping value, set the "seen" flag in
+ * it and try to swap it into place. If it works, or another task beat us
+ * to it with the new value, then update the f_wb_err and return the error
+ * portion. The error at this point must be reported via proper channels
+ * (a'la fsync, or NFS COMMIT operation, etc.).
+ *
+ * While we handle mapping->wb_err with atomic operations, the f_wb_err
+ * value is protected by the f_lock since we must ensure that it reflects
+ * the latest value swapped in for this file descriptor.
+ *
+ * Return: %0 on success, negative error code otherwise.
+ */
+int file_check_and_advance_wb_err(struct file *file)
+{
+    int err = 0;
+    errseq_t old = READ_ONCE(file->f_wb_err);
+    struct address_space *mapping = file->f_mapping;
+
+    /* Locklessly handle the common case where nothing has changed */
+    if (errseq_check(&mapping->wb_err, old)) {
+        /* Something changed, must use slow path */
+        spin_lock(&file->f_lock);
+        old = file->f_wb_err;
+        err = errseq_check_and_advance(&mapping->wb_err,
+                        &file->f_wb_err);
+        //trace_file_check_and_advance_wb_err(file, old);
+        spin_unlock(&file->f_lock);
+    }
+
+    /*
+     * We're mostly using this function as a drop in replacement for
+     * filemap_check_errors. Clear AS_EIO/AS_ENOSPC to emulate the effect
+     * that the legacy code would have had on these flags.
+     */
+    clear_bit(AS_EIO, &mapping->flags);
+    clear_bit(AS_ENOSPC, &mapping->flags);
+    return err;
+}
+
+/**
+ * find_get_pages_range_tag - find and return pages in given range matching @tag
+ * @mapping:    the address_space to search
+ * @index:  the starting page index
+ * @end:    The final page index (inclusive)
+ * @tag:    the tag index
+ * @nr_pages:   the maximum number of pages
+ * @pages:  where the resulting pages are placed
+ *
+ * Like find_get_pages, except we only return pages which are tagged with
+ * @tag.   We update @index to index the next page for the traversal.
+ *
+ * Return: the number of pages which were found.
+ */
+unsigned find_get_pages_range_tag(struct address_space *mapping, pgoff_t *index,
+            pgoff_t end, xa_mark_t tag, unsigned int nr_pages,
+            struct page **pages)
+{
+    XA_STATE(xas, &mapping->i_pages, *index);
+    struct page *page;
+    unsigned ret = 0;
+
+    if (unlikely(!nr_pages))
+        return 0;
+
+    rcu_read_lock();
+    xas_for_each_marked(&xas, page, end, tag) {
+        if (xas_retry(&xas, page))
+            continue;
+        /*
+         * Shadow entries should never be tagged, but this iteration
+         * is lockless so there is a window for page reclaim to evict
+         * a page we saw tagged.  Skip over it.
+         */
+        if (xa_is_value(page))
+            continue;
+
+        if (!page_cache_get_speculative(page))
+            goto retry;
+
+        /* Has the page moved or been split? */
+        if (unlikely(page != xas_reload(&xas)))
+            goto put_page;
+
+        pages[ret] = find_subpage(page, xas.xa_index);
+        if (++ret == nr_pages) {
+            *index = xas.xa_index + 1;
+            goto out;
+        }
+        continue;
+put_page:
+        put_page(page);
+retry:
+        xas_reset(&xas);
+    }
+
+    /*
+     * We come here when we got to @end. We take care to not overflow the
+     * index @index as it confuses some of the callers. This breaks the
+     * iteration when there is a page at index -1 but that is already
+     * broken anyway.
+     */
+    if (end == (pgoff_t)-1)
+        *index = (pgoff_t)-1;
+    else
+        *index = end + 1;
+out:
+    rcu_read_unlock();
+
+    return ret;
 }

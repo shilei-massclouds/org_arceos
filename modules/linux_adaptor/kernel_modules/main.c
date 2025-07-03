@@ -96,11 +96,14 @@ static void test_write(struct inode *inode, const char *fs_name)
         booter_panic("bad file_operations.");
     }
 
+    // Note: set O_DSYNC for write.
+    file.f_flags |= O_DSYNC;
+
     loff_t pos = 0;
     char wbuf[] = "bcd";
 
     ret = new_sync_write(&file, wbuf, sizeof(wbuf), &pos);
-    printk("Write '%s': ret [%d]\n", fs_name, ret);
+    printk("Write '%s' to '%s': ret [%d]\n", wbuf, fs_name, ret);
 }
 
 static void test_basic(const char *fs_name, const char *fname)

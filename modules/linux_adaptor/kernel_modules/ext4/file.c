@@ -351,16 +351,15 @@ static ssize_t ext4_buffered_write_iter(struct kiocb *iocb,
 	if (ret <= 0)
 		goto out;
 
-    printk("%s: step1\n", __func__);
 	current->backing_dev_info = inode_to_bdi(inode);
 	ret = generic_perform_write(iocb->ki_filp, from, iocb->ki_pos);
 	current->backing_dev_info = NULL;
-    printk("%s: step2\n", __func__);
 
 out:
 	inode_unlock(inode);
 	if (likely(ret > 0)) {
-    printk("%s: step3\n", __func__);
+        printk("%s: ret(%d) dsync(%d)\n", __func__, ret, (iocb->ki_flags & IOCB_DSYNC));
+        
 		iocb->ki_pos += ret;
 		ret = generic_write_sync(iocb, ret);
 	}

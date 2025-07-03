@@ -146,12 +146,6 @@ void __init_rwsem(struct rw_semaphore *sem, const char *name,
     log_error("%s: ===> WARN: impl it.\n", __func__);
 }
 
-int __percpu_init_rwsem(struct percpu_rw_semaphore *sem,
-            const char *name, struct lock_class_key *key)
-{
-    log_error("%s: ===> WARN: impl it.\n", __func__);
-}
-
 /*
  * lock for writing
  */

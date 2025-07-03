@@ -35,3 +35,39 @@ void dump_page(struct page *page, const char *reason)
     log_error("%s: Page(0x%lx): %s\n", __func__, page, reason);
     booter_panic("No impl.");
 }
+
+/**
+ * rcu_sync_init() - Initialize an rcu_sync structure
+ * @rsp: Pointer to rcu_sync structure to be initialized
+ */
+void rcu_sync_init(struct rcu_sync *rsp)
+{
+    memset(rsp, 0, sizeof(*rsp));
+    init_waitqueue_head(&rsp->gp_wait);
+}
+
+/**
+ * errseq_check() - Has an error occurred since a particular sample point?
+ * @eseq: Pointer to errseq_t value to be checked.
+ * @since: Previously-sampled errseq_t from which to check.
+ *
+ * Grab the value that eseq points to, and see if it has changed @since
+ * the given value was sampled. The @since value is not advanced, so there
+ * is no need to mark the value as seen.
+ *
+ * Return: The latest error set in the errseq_t or 0 if it hasn't changed.
+ */
+int errseq_check(errseq_t *eseq, errseq_t since)
+{
+    errseq_t cur = READ_ONCE(*eseq);
+
+    if (likely(cur == since))
+        return 0;
+    return -(cur & MAX_ERRNO);
+}
+EXPORT_SYMBOL(errseq_check);
+
+/*
+ * Zero means infinite timeout - no checking done:
+ */
+unsigned long __read_mostly sysctl_hung_task_timeout_secs = CONFIG_DEFAULT_HUNG_TASK_TIMEOUT;

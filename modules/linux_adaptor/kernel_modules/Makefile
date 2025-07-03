@@ -16,9 +16,9 @@ OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 OBJS += irq-sifive-plic.o
 OBJS += irq-sifive-plic.o
 
-OBJS += filesystems.o blkdev.o fs_types.o
+OBJS += filesystems.o blkdev.o fs_types.o backing-dev.o blk-flush.o
 OBJS += super.o inode.o dcache.o buffer.o filemap.o mpage.o
-OBJS += readdir.o read_write.o libfs.o page-writeback.o
+OBJS += readdir.o read_write.o libfs.o page-writeback.o sync.o
 OBJS += user_namespace.o utils.o
 OBJS += swap.o mempool.o shash.o timer.o
 OBJS += wait.o swait.o kobject.o proc.o
@@ -49,7 +49,7 @@ OBJS += jbd2/transaction.o
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o workqueue.o \
 		printk.o vsprintf.o ctype.o kstrtox.o \
-		alloc.o genhd.o bus.o klist.o locking.o \
+		alloc.o genhd.o bus.o klist.o locking.o percpu-rwsem.o \
 		driver.o of_platform.o dma.o string.o \
 		device.o ida.o sched.o signal.o irq.o blk_mq.o xarray.o \
 		string_helpers.o block_ops.o bio.o iov_iter.o \

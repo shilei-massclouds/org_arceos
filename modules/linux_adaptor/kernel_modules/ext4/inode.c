@@ -2641,6 +2641,7 @@ static int ext4_writepages(struct address_space *mapping,
 	percpu_down_read(&sbi->s_writepages_rwsem);
 	trace_ext4_writepages(inode, wbc);
 
+    printk("%s: step0\n", __func__);
 	/*
 	 * No pages to write? This is mainly a kludge to avoid starting
 	 * a transaction for special inodes like journal inode on last iput()
@@ -2649,11 +2650,13 @@ static int ext4_writepages(struct address_space *mapping,
 	if (!mapping->nrpages || !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
 		goto out_writepages;
 
+    printk("%s: step1\n", __func__);
 	if (ext4_should_journal_data(inode)) {
 		ret = generic_writepages(mapping, wbc);
 		goto out_writepages;
 	}
 
+    printk("%s: step2\n", __func__);
 	/*
 	 * If the filesystem has aborted, it is read-only, so return
 	 * right away instead of dumping stack traces later on that
@@ -2849,6 +2852,7 @@ out_writepages:
 	trace_ext4_writepages_result(inode, wbc, ret,
 				     nr_to_write - wbc->nr_to_write);
 	percpu_up_read(&sbi->s_writepages_rwsem);
+    printk("%s: end ret(%d)\n", __func__, ret);
 	return ret;
 }
 

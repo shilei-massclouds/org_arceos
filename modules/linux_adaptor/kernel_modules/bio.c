@@ -1,4 +1,7 @@
 #include <linux/bio.h>
+#include <linux/blkdev.h>
+#include <linux/sched/sysctl.h>
+
 #include "booter.h"
 
 extern int cl_submit_bio(struct bio *bio);
@@ -99,9 +102,6 @@ blk_qc_t submit_bio(struct bio *bio)
     log_error("bv_page(%lx) bv_len(%u) bv_offset(%u)\n",
               bv->bv_page, bv->bv_len, bv->bv_offset);
 
-    //int blkid = bio->bi_iter.bi_sector;
-    //void *buf = page_to_virt(bv->bv_page);
-    //cl_read_block(blkid, buf, PAGE_SIZE);
     cl_submit_bio(bio);
     return 0;
 }
@@ -157,4 +157,43 @@ void bio_endio(struct bio *bio)
 void bio_put(struct bio *bio)
 {
     log_error("%s: No impl.", __func__);
+}
+
+static void submit_bio_wait_endio(struct bio *bio)
+{
+    log_error("%s: ...", __func__);
+    complete(bio->bi_private);
+}
+
+/**
+ * submit_bio_wait - submit a bio, and wait until it completes
+ * @bio: The &struct bio which describes the I/O
+ *
+ * Simple wrapper around submit_bio(). Returns 0 on success, or the error from
+ * bio_endio() on failure.
+ *
+ * WARNING: Unlike to how submit_bio() is usually used, this function does not
+ * result in bio reference to be consumed. The caller must drop the reference
+ * on his own.
+ */
+int submit_bio_wait(struct bio *bio)
+{
+    DECLARE_COMPLETION_ONSTACK_MAP(done, bio->bi_disk->lockdep_map);
+    unsigned long hang_check;
+
+    bio->bi_private = &done;
+    bio->bi_end_io = submit_bio_wait_endio;
+    bio->bi_opf |= REQ_SYNC;
+    submit_bio(bio);
+
+    /* Prevent hang_check timer from firing at us during very long I/O */
+    hang_check = sysctl_hung_task_timeout_secs;
+    if (hang_check)
+        while (!wait_for_completion_io_timeout(&done,
+                    hang_check * (HZ/2)))
+            ;
+    else
+        wait_for_completion_io(&done);
+
+    return blk_status_to_errno(bio->bi_status);
 }
