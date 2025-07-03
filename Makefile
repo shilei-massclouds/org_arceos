@@ -225,7 +225,10 @@ clean_c::
 	rm -rf ulib/axlibc/build_*
 	rm -rf $(app-objs)
 
+symtab:
+	riscv64-linux-gnu-nm --numeric-sort $(OUT_ELF) > kernel.syms
+
 .PHONY: all defconfig oldconfig \
 	build disasm run justrun debug \
 	clippy doc doc_check_missing fmt fmt_c unittest unittest_no_fail_fast \
-	disk_img clean clean_c clean_dist
+	disk_img clean clean_c clean_dist symtab

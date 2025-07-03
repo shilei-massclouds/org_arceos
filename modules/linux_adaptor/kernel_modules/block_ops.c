@@ -149,25 +149,30 @@ int cl_submit_bio(struct bio *bio)
     if (mq_ops == NULL) {
         booter_panic("mq_ops is NULL!");
     }
+    struct blk_mq_tag_set *tag_set = cl_disk->queue->tag_set;
+    if (tag_set == NULL) {
+        booter_panic("tag_set is NULL!");
+    }
+    printk("%s: tag_set.cmd_size(%d)\n", __func__, tag_set->cmd_size);
 
     struct blk_mq_hw_ctx hw_ctx;
     memset(&hw_ctx, 0, sizeof(hw_ctx));
     hw_ctx.queue = cl_disk->queue;
     hw_ctx.queue_num = 0;
 
-    struct request rq;
-    memset(&rq, 0, sizeof(rq));
-    rq.nr_phys_segments = 1;
-    rq.bio = bio;
-    rq.__sector = bio->bi_iter.bi_sector;
-    rq.__data_len = bio->bi_iter.bi_size;
-    printk("%s: __data_len(%u)\n", __func__, rq.__data_len);
-    rq.ioprio = 0;
-    rq.cmd_flags = bio->bi_opf;
+    struct request *rq = kmalloc(sizeof(struct request) + tag_set->cmd_size, 0);
+    memset(rq, 0, sizeof(struct request));
+    rq->nr_phys_segments = 1;
+    rq->bio = bio;
+    rq->__sector = bio->bi_iter.bi_sector;
+    rq->__data_len = bio->bi_iter.bi_size;
+    printk("%s: __data_len(%u)\n", __func__, rq->__data_len);
+    rq->ioprio = 0;
+    rq->cmd_flags = bio->bi_opf;
 
     struct blk_mq_queue_data data;
     memset(&data, 0, sizeof(data));
-    data.rq = &rq;
+    data.rq = rq;
     data.last = true;
 
     blk_status_t status = mq_ops->queue_rq(&hw_ctx, &data);

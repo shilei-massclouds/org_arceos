@@ -136,6 +136,7 @@ struct request_queue *blk_mq_init_queue_data(struct blk_mq_tag_set *set,
 
     /* mark the queue as mq asap */
     uninit_q->mq_ops = set->ops;
+    uninit_q->tag_set = set;
 
     printk("%s: impl it.\n", __func__);
     return uninit_q;
