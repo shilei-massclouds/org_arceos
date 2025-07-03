@@ -65,7 +65,32 @@ int errseq_check(errseq_t *eseq, errseq_t since)
         return 0;
     return -(cur & MAX_ERRNO);
 }
-EXPORT_SYMBOL(errseq_check);
+
+struct address_space *page_mapping(struct page *page)
+{
+    struct address_space *mapping;
+
+    page = compound_head(page);
+
+    /* This happens if someone calls flush_dcache_page on slab page */
+    if (unlikely(PageSlab(page)))
+        return NULL;
+
+    /*
+    if (unlikely(PageSwapCache(page))) {
+        swp_entry_t entry;
+
+        entry.val = page_private(page);
+        return swap_address_space(entry);
+    }
+    */
+
+    mapping = page->mapping;
+    if ((unsigned long)mapping & PAGE_MAPPING_ANON)
+        return NULL;
+
+    return (void *)((unsigned long)mapping & ~PAGE_MAPPING_FLAGS);
+}
 
 /*
  * Zero means infinite timeout - no checking done:

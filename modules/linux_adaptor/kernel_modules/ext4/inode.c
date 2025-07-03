@@ -2641,7 +2641,6 @@ static int ext4_writepages(struct address_space *mapping,
 	percpu_down_read(&sbi->s_writepages_rwsem);
 	trace_ext4_writepages(inode, wbc);
 
-    printk("%s: step0\n", __func__);
 	/*
 	 * No pages to write? This is mainly a kludge to avoid starting
 	 * a transaction for special inodes like journal inode on last iput()
@@ -2650,13 +2649,11 @@ static int ext4_writepages(struct address_space *mapping,
 	if (!mapping->nrpages || !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
 		goto out_writepages;
 
-    printk("%s: step1\n", __func__);
 	if (ext4_should_journal_data(inode)) {
 		ret = generic_writepages(mapping, wbc);
 		goto out_writepages;
 	}
 
-    printk("%s: step2\n", __func__);
 	/*
 	 * If the filesystem has aborted, it is read-only, so return
 	 * right away instead of dumping stack traces later on that
@@ -2738,13 +2735,17 @@ retry:
 	ret = mpage_prepare_extent_to_map(&mpd);
 	/* Unlock pages we didn't use */
 	mpage_release_unused_pages(&mpd, false);
+    printk("--------- %s: step0\n", __func__);
 	/* Submit prepared bio */
 	ext4_io_submit(&mpd.io_submit);
+    printk("--------- %s: step0.1\n", __func__);
 	ext4_put_io_end_defer(mpd.io_submit.io_end);
 	mpd.io_submit.io_end = NULL;
+    printk("--------- %s: ret(%d)\n", __func__, ret);
 	if (ret < 0)
 		goto unplug;
 
+    printk("%s: step1\n", __func__);
 	while (!mpd.scanned_until_end && wbc->nr_to_write > 0) {
 		/* For each extent of pages we use new io_end */
 		mpd.io_submit.io_end = ext4_init_io_end(inode, GFP_KERNEL);
@@ -2839,6 +2840,7 @@ unplug:
 		mpd.first_page = 0;
 		goto retry;
 	}
+    printk("%s: step2\n", __func__);
 
 	/* Update index */
 	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))

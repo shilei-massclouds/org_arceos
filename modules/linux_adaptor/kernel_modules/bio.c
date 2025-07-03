@@ -138,8 +138,10 @@ void bio_advance(struct bio *bio, unsigned bytes)
  **/
 void bio_endio(struct bio *bio)
 {
+    printk("%s: before\n", __func__);
     if (bio->bi_end_io)
         bio->bi_end_io(bio);
+    printk("%s: after\n", __func__);
 }
 
 /**

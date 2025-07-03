@@ -359,7 +359,7 @@ out:
 	inode_unlock(inode);
 	if (likely(ret > 0)) {
         printk("%s: ret(%d) dsync(%d)\n", __func__, ret, (iocb->ki_flags & IOCB_DSYNC));
-        
+
 		iocb->ki_pos += ret;
 		ret = generic_write_sync(iocb, ret);
 	}

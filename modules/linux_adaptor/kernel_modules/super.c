@@ -1,5 +1,6 @@
 #include <linux/fs.h>
 #include <linux/blk_types.h>
+#include <linux/backing-dev.h>
 
 #include "booter.h"
 
@@ -20,6 +21,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
     s = kmalloc(sizeof(struct super_block), 0);
     s->s_blocksize = 1024;
     s->s_bdev = bdev;
+    s->s_bdi = kmalloc(sizeof(struct backing_dev_info), 0);
     if (fill_super(s, NULL, 0) != 0) {
         booter_panic("ext2 fill_super error!");
     }

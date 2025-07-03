@@ -179,6 +179,7 @@ static int ext4_end_io_end(ext4_io_end_t *io_end)
 	handle_t *handle = io_end->handle;
 	int ret = 0;
 
+    printk("%s: ...\n", __func__);
 	ext4_debug("ext4_end_io_nolock: io_end 0x%p from inode %lu,list->next 0x%p,"
 		   "list->prev 0x%p\n",
 		   io_end, inode->i_ino, io_end->list.next, io_end->list.prev);
@@ -328,6 +329,8 @@ static void ext4_end_bio(struct bio *bio)
 	sector_t bi_sector = bio->bi_iter.bi_sector;
 	char b[BDEVNAME_SIZE];
 
+    printk("%s: step1\n", __func__);
+
 	if (WARN_ONCE(!io_end, "io_end is NULL: %s: sector %Lu len %u err %d\n",
 		      bio_devname(bio, b),
 		      (long long) bio->bi_iter.bi_sector,
@@ -368,6 +371,7 @@ static void ext4_end_bio(struct bio *bio)
 		ext4_finish_bio(bio);
 		bio_put(bio);
 	}
+    printk("%s: end\n", __func__);
 }
 
 void ext4_io_submit(struct ext4_io_submit *io)

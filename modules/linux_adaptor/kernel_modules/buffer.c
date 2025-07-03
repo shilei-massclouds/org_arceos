@@ -275,7 +275,60 @@ int generic_write_end(struct file *file, struct address_space *mapping,
 
 void mark_buffer_dirty(struct buffer_head *bh)
 {
-    log_error("%s: No impl.\n", __func__);
+    WARN_ON_ONCE(!buffer_uptodate(bh));
+
+    //trace_block_dirty_buffer(bh);
+
+    /*
+     * Very *carefully* optimize the it-is-already-dirty case.
+     *
+     * Don't let the final "is it dirty" escape to before we
+     * perhaps modified the buffer.
+     */
+    if (buffer_dirty(bh)) {
+        smp_mb();
+        if (buffer_dirty(bh))
+            return;
+    }
+
+    if (!test_set_buffer_dirty(bh)) {
+        struct page *page = bh->b_page;
+        struct address_space *mapping = NULL;
+
+        lock_page_memcg(page);
+        if (!TestSetPageDirty(page)) {
+            mapping = page_mapping(page);
+            if (mapping)
+                __set_page_dirty(page, mapping, 0);
+        }
+        unlock_page_memcg(page);
+        if (mapping)
+            __mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+    }
+}
+
+/*
+ * Mark the page dirty, and set it dirty in the page cache, and mark the inode
+ * dirty.
+ *
+ * If warn is true, then emit a warning if the page is not uptodate and has
+ * not been truncated.
+ *
+ * The caller must hold lock_page_memcg().
+ */
+void __set_page_dirty(struct page *page, struct address_space *mapping,
+                 int warn)
+{
+    unsigned long flags;
+
+    xa_lock_irqsave(&mapping->i_pages, flags);
+    if (page->mapping) {    /* Race with truncate? */
+        WARN_ON_ONCE(warn && !PageUptodate(page));
+        //account_page_dirtied(page, mapping);
+        __xa_set_mark(&mapping->i_pages, page_index(page),
+                PAGECACHE_TAG_DIRTY);
+    }
+    xa_unlock_irqrestore(&mapping->i_pages, flags);
 }
 
 int sync_dirty_buffer(struct buffer_head *bh)

@@ -35,7 +35,7 @@ static void shrink_readahead_size_eio(struct file_ra_state *ra)
 
 static void wake_up_page_bit(struct page *page, int bit_nr)
 {
-    booter_panic("%s: No impl.", __func__);
+    log_error("%s: No impl.", __func__);
 }
 
 #ifndef clear_bit_unlock_is_negative_byte
@@ -61,6 +61,33 @@ static inline bool clear_bit_unlock_is_negative_byte(long nr, volatile void *mem
 
 #endif
 
+/**
+ * read_cache_page - read into page cache, fill it if needed
+ * @mapping:    the page's address_space
+ * @index:  the page index
+ * @filler: function to perform the read
+ * @data:   first arg to filler(data, page) function, often left as NULL
+ *
+ * Read into the page cache. If a page already exists, and PageUptodate() is
+ * not set, try to fill the page and wait for it to become unlocked.
+ *
+ * If the page does not get brought uptodate, return -EIO.
+ *
+ * Return: up to date page on success, ERR_PTR() on failure.
+ */
+struct page *read_cache_page(struct address_space *mapping,
+                pgoff_t index,
+                int (*filler)(void *, struct page *),
+                void *data)
+{
+    /*
+    return do_read_cache_page(mapping, index, filler, data,
+            mapping_gfp_mask(mapping));
+            */
+    booter_panic("No impl.");
+}
+
+/*
 struct page *read_cache_page(struct address_space *mapping,
                 pgoff_t index,
                 int (*filler)(void *, struct page *),
@@ -95,6 +122,7 @@ struct page *read_cache_page(struct address_space *mapping,
     page->index = index;
     return page;
 }
+*/
 
 /**
  * filemap_write_and_wait_range - write out & wait on a file range
@@ -981,4 +1009,40 @@ out:
     rcu_read_unlock();
 
     return ret;
+}
+
+static void wake_up_page(struct page *page, int bit)
+{
+    if (!PageWaiters(page))
+        return;
+    wake_up_page_bit(page, bit);
+}
+
+/**
+ * end_page_writeback - end writeback against a page
+ * @page: the page
+ */
+void end_page_writeback(struct page *page)
+{
+    /*
+     * TestClearPageReclaim could be used here but it is an atomic
+     * operation and overkill in this particular case. Failing to
+     * shuffle a page marked for immediate reclaim is too mild to
+     * justify taking an atomic operation penalty at the end of
+     * ever page writeback.
+     */
+    printk("%s: step1\n", __func__);
+    if (PageReclaim(page)) {
+        ClearPageReclaim(page);
+        rotate_reclaimable_page(page);
+    }
+
+    printk("%s: step2\n", __func__);
+    if (!test_clear_page_writeback(page))
+        BUG();
+
+    smp_mb__after_atomic();
+    printk("%s: step3\n", __func__);
+    wake_up_page(page, PG_writeback);
+    printk("%s: stepN\n", __func__);
 }

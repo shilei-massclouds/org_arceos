@@ -398,9 +398,15 @@ void blk_mq_end_request(struct request *rq, blk_status_t error)
         booter_panic("bad request!");
     }
 
-    if (blk_update_request(rq, error, blk_rq_bytes(rq)))
-        BUG();
+    printk("%s: step1\n", __func__);
+    if (blk_update_request(rq, error, blk_rq_bytes(rq))) {
+        log_error("%s: update request err!\n", __func__);
+        //booter_panic("update request err!");
+        //BUG();
+    }
+    printk("%s: step2\n", __func__);
     __blk_mq_end_request(rq, error);
+    printk("%s: step3\n", __func__);
 }
 
 static void req_bio_endio(struct request *rq, struct bio *bio,
@@ -447,9 +453,11 @@ bool blk_update_request(struct request *req, blk_status_t error,
 inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
 {
     if (rq->end_io) {
+    printk("%s: step1\n", __func__);
         //rq_qos_done(rq->q, rq);
         rq->end_io(rq, error);
     } else {
+    printk("%s: step2\n", __func__);
         blk_mq_free_request(rq);
     }
 }
