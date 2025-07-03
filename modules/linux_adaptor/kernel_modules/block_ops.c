@@ -163,7 +163,7 @@ int cl_submit_bio(struct bio *bio)
     rq.__data_len = bio->bi_iter.bi_size;
     printk("%s: __data_len(%u)\n", __func__, rq.__data_len);
     rq.ioprio = 0;
-    rq.cmd_flags = REQ_OP_READ;
+    rq.cmd_flags = bio->bi_opf;
 
     struct blk_mq_queue_data data;
     memset(&data, 0, sizeof(data));

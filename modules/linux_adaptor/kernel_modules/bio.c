@@ -86,21 +86,17 @@ int bio_add_page(struct bio *bio, struct page *page,
  */
 blk_qc_t submit_bio(struct bio *bio)
 {
-    if (bio == NULL || bio->bi_vcnt != 1) {
-        booter_panic("bad bio!");
-    }
-
-    if (bio_op(bio) != REQ_OP_READ) {
-        booter_panic("No support for WRITE!");
-    }
-
-    log_error("%s: bi_vcnt(%u) bi_sector(%u) bi_end_io(%lx)\n",
-              __func__, bio->bi_vcnt, bio->bi_iter.bi_sector,
+    log_error("%s: bi_vcnt(%u) bi_sector(%u) bi_size(%u) bi_end_io(%lx)\n",
+              __func__, bio->bi_vcnt,
+              bio->bi_iter.bi_sector,
+              bio->bi_iter.bi_size,
               bio->bi_end_io);
 
-    struct bio_vec *bv = &bio->bi_io_vec[0];
-    log_error("bv_page(%lx) bv_len(%u) bv_offset(%u)\n",
-              bv->bv_page, bv->bv_len, bv->bv_offset);
+    if (bio->bi_vcnt) {
+        struct bio_vec *bv = &bio->bi_io_vec[0];
+        log_error("bv_page(%lx) bv_len(%u) bv_offset(%u)\n",
+                  bv->bv_page, bv->bv_len, bv->bv_offset);
+    }
 
     cl_submit_bio(bio);
     return 0;
