@@ -1,6 +1,10 @@
 #include <linux/printk.h>
 #include <linux/sched.h>
 #include <linux/sched/debug.h>
+#include <linux/sched/signal.h>
+#include <linux/resource.h>
+#include <linux/fs.h>
+#include <linux/mqueue.h>
 
 #include "booter.h"
 
@@ -26,9 +30,14 @@ void ___might_sleep(const char *file, int line, int preempt_offset)
     log_error("%s: No impl.", __func__);
 }
 
+static struct signal_struct signal_dummy = {
+    .rlim = INIT_RLIMITS
+};
+
 static struct task_struct task_dummy;
 struct task_struct *get_current(void)
 {
+    task_dummy.signal = &signal_dummy;
     return &task_dummy;
 }
 

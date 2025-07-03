@@ -2998,6 +2998,7 @@ retry_journal:
 #else
 	ret = __block_write_begin(page, pos, len, ext4_da_get_block_prep);
 #endif
+    printk("%s: step5\n", __func__);
 	if (ret < 0) {
 		unlock_page(page);
 		ext4_journal_stop(handle);
@@ -3018,6 +3019,7 @@ retry_journal:
 	}
 
 	*pagep = page;
+    printk("%s: step6\n", __func__);
 	return ret;
 }
 

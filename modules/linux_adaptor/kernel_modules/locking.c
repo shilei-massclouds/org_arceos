@@ -152,3 +152,18 @@ int __percpu_init_rwsem(struct percpu_rw_semaphore *sem,
     log_error("%s: ===> WARN: impl it.\n", __func__);
 }
 
+/*
+ * lock for writing
+ */
+void __sched down_write(struct rw_semaphore *sem)
+{
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+}
+
+/*
+ * release a write lock
+ */
+void up_write(struct rw_semaphore *sem)
+{
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+}

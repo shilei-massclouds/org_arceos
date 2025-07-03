@@ -554,7 +554,29 @@ int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
 struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
 		int fgp_flags, gfp_t gfp_mask)
 {
-	return find_get_entry(mapping, index);
+	struct page *page = find_get_entry(mapping, index);
+
+    if (fgp_flags & FGP_LOCK) {
+        if (fgp_flags & FGP_NOWAIT) {
+            if (!trylock_page(page)) {
+                put_page(page);
+                return NULL;
+            }
+        } else {
+            lock_page(page);
+        }
+
+        /* Has the page been truncated? */
+        /*
+        if (unlikely(compound_head(page)->mapping != mapping)) {
+            unlock_page(page);
+            put_page(page);
+            goto repeat;
+        }
+        */
+        VM_BUG_ON_PAGE(page->index != index, page);
+    }
+    return page;
 }
 
 /**
@@ -629,4 +651,92 @@ void unlock_page(struct page *page)
     VM_BUG_ON_PAGE(!PageLocked(page), page);
     if (clear_bit_unlock_is_negative_byte(PG_locked, &page->flags))
         wake_up_page_bit(page, PG_locked);
+}
+
+/*
+ * Don't operate on ranges the page cache doesn't support, and don't exceed the
+ * LFS limits.  If pos is under the limit it becomes a short access.  If it
+ * exceeds the limit we return -EFBIG.
+ */
+static int generic_write_check_limits(struct file *file, loff_t pos,
+                      loff_t *count)
+{
+    struct inode *inode = file->f_mapping->host;
+    loff_t max_size = inode->i_sb->s_maxbytes;
+    loff_t limit = rlimit(RLIMIT_FSIZE);
+
+    if (limit != RLIM_INFINITY) {
+        if (pos >= limit) {
+            send_sig(SIGXFSZ, current, 0);
+            return -EFBIG;
+        }
+        *count = min(*count, limit - pos);
+    }
+
+    if (!(file->f_flags & O_LARGEFILE))
+        max_size = MAX_NON_LFS;
+
+    if (unlikely(pos >= max_size))
+        return -EFBIG;
+
+    *count = min(*count, max_size - pos);
+
+    return 0;
+}
+
+/*
+ * Performs necessary checks before doing a write
+ *
+ * Can adjust writing position or amount of bytes to write.
+ * Returns appropriate error code that caller should return or
+ * zero in case that write should be allowed.
+ */
+inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+{
+    struct file *file = iocb->ki_filp;
+    struct inode *inode = file->f_mapping->host;
+    loff_t count;
+    int ret;
+
+    if (IS_SWAPFILE(inode))
+        return -ETXTBSY;
+
+    if (!iov_iter_count(from))
+        return 0;
+
+    /* FIXME: this is for backwards compatibility with 2.4 */
+    if (iocb->ki_flags & IOCB_APPEND)
+        iocb->ki_pos = i_size_read(inode);
+
+    if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
+        return -EINVAL;
+
+    count = iov_iter_count(from);
+    ret = generic_write_check_limits(file, iocb->ki_pos, &count);
+    if (ret)
+        return ret;
+
+    iov_iter_truncate(from, count);
+    return iov_iter_count(from);
+}
+
+/*
+ * Find or create a page at the given pagecache position. Return the locked
+ * page. This function is specifically for buffered writes.
+ */
+struct page *grab_cache_page_write_begin(struct address_space *mapping,
+                    pgoff_t index, unsigned flags)
+{
+    struct page *page;
+    int fgp_flags = FGP_LOCK|FGP_WRITE|FGP_CREAT;
+
+    if (flags & AOP_FLAG_NOFS)
+        fgp_flags |= FGP_NOFS;
+
+    page = pagecache_get_page(mapping, index, fgp_flags,
+            mapping_gfp_mask(mapping));
+    if (page)
+        wait_for_stable_page(page);
+
+    return page;
 }

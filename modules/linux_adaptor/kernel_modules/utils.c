@@ -29,3 +29,9 @@ void __might_fault(const char *file, int line)
 {
     log_error("%s: No impl.", __func__);
 }
+
+void dump_page(struct page *page, const char *reason)
+{
+    log_error("%s: Page(0x%lx): %s\n", __func__, page, reason);
+    booter_panic("No impl.");
+}

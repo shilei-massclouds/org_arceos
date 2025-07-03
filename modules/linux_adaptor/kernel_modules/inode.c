@@ -182,3 +182,10 @@ void touch_atime(const struct path *path)
 {
     log_error("%s: No impl.", __func__);
 }
+
+/* Caller must hold the file's inode lock */
+int file_modified(struct file *file)
+{
+    log_error("%s: No impl.", __func__);
+    return 0;
+}

@@ -33,6 +33,7 @@ extern struct dentry *call_mount(const char *name);
 extern int lookup(struct file *dir, const char *target, u64 *ret_ino);
 
 extern ssize_t new_sync_read(struct file *filp, char *buf, size_t len, loff_t *ppos);
+extern ssize_t new_sync_write(struct file *filp, const char *buf, size_t len, loff_t *ppos);
 
 static void test_ext2(void);
 static void test_ext4(void);
@@ -59,6 +60,47 @@ int clinux_init()
     test_ext4();
 #endif
     return 0;
+}
+
+// File level read.
+static void test_read(struct inode *inode, const char *fs_name)
+{
+    ssize_t ret;
+    struct file file;
+    memset(&file, 0, sizeof(struct file));
+    file.f_inode = inode;
+    file.f_mapping = inode->i_mapping;
+    file.f_op = inode->i_fop;
+    if (file.f_op == NULL) {
+        booter_panic("bad file_operations.");
+    }
+
+    loff_t pos = 0;
+    char rbuf[256];
+    memset(rbuf, 0, sizeof(rbuf));
+
+    ret = new_sync_read(&file, rbuf, sizeof(rbuf), &pos);
+    printk("Read '%s': [%d]%s\n", fs_name, ret, rbuf);
+}
+
+// File level write.
+static void test_write(struct inode *inode, const char *fs_name)
+{
+    ssize_t ret;
+    struct file file;
+    memset(&file, 0, sizeof(struct file));
+    file.f_inode = inode;
+    file.f_mapping = inode->i_mapping;
+    file.f_op = inode->i_fop;
+    if (file.f_op == NULL) {
+        booter_panic("bad file_operations.");
+    }
+
+    loff_t pos = 0;
+    char wbuf[] = "bcd";
+
+    ret = new_sync_write(&file, wbuf, sizeof(wbuf), &pos);
+    printk("Write '%s': ret [%d]\n", fs_name, ret);
 }
 
 static void test_basic(const char *fs_name, const char *fname)
@@ -95,37 +137,9 @@ static void test_basic(const char *fs_name, const char *fname)
         booter_panic("bad inode.");
     }
 
-    // File level read.
-    {
-        ssize_t ret;
-        struct file file;
-        memset(&file, 0, sizeof(struct file));
-        file.f_inode = t_inode;
-        file.f_mapping = t_inode->i_mapping;
-        file.f_op = t_inode->i_fop;
-        if (file.f_op == NULL) {
-            booter_panic("bad file_operations.");
-        }
+    test_read(t_inode, fs_name);
 
-        loff_t pos = 0;
-        char rbuf[256];
-        memset(rbuf, 0, sizeof(rbuf));
-
-        ret = new_sync_read(&file, rbuf, sizeof(rbuf), &pos);
-        printk("Read '%s': [%d]%s\n", fs_name, ret, rbuf);
-    }
-
-    // Try to read content from file.
-    /*
-    char rbuf[256];
-    memset(rbuf, 0, sizeof(rbuf));
-    loff_t pos = 0;
-    int ret = cl_read(t_inode, rbuf, sizeof(rbuf), &pos);
-    if (ret < 0) {
-        booter_panic("fs read error!");
-    }
-    printk("Read '%s': [%d]%s\n", fs_name, ret, rbuf);
-    */
+    test_write(t_inode, fs_name);
 
 #ifdef TEST_EXT2
     char wbuf[] = "12345";
@@ -140,6 +154,9 @@ static void test_basic(const char *fs_name, const char *fname)
 #ifdef TEST_EXT4
 static void test_ext4(void)
 {
+    radix_tree_init();
+    buffer_init();
+
     /*
      * Init Journal first.
      */
