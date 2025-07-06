@@ -37,6 +37,10 @@ SECTIONS
         *(.data.boot_page_table)
         . = ALIGN(4K);
         *(.data .data.*)
+        . = ALIGN(8);
+        __start___bug_table = .;
+        KEEP(*(__bug_table))
+        __stop___bug_table = .;
         *(.sdata .sdata.*)
         *(.got .got.*)
     }

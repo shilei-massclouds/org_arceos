@@ -59,6 +59,7 @@ void *devm_kmalloc(struct device *dev, size_t size, gfp_t gfp)
 struct kmem_cache {
 	unsigned int size;  /* The size of an object including metadata */
 	unsigned int align; /* Alignment */
+    void (*ctor)(void *);
 };
 
 struct kmem_cache *
@@ -72,6 +73,7 @@ kmem_cache_create_usercopy(const char *name,
     memset(cache, 0, sizeof(struct kmem_cache));
     cache->size = size;
     cache->align = align;
+    cache->ctor = ctor;
     return cache;
 }
 

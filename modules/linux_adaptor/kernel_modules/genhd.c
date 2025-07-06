@@ -79,3 +79,16 @@ int bdev_read_only(struct block_device *bdev)
     }
     return bdev->bd_part->policy;
 }
+
+struct hd_struct *__disk_get_part(struct gendisk *disk, int partno)
+{
+    printk("%s: No impl. partno(%d)\n", __func__, partno);
+    return NULL;
+    /*
+    struct disk_part_tbl *ptbl = rcu_dereference(disk->part_tbl);
+
+    if (unlikely(partno < 0 || partno >= ptbl->len))
+        return NULL;
+    return rcu_dereference(ptbl->part[partno]);
+    */
+}

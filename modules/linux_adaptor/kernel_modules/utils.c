@@ -2,6 +2,7 @@
 #include <linux/time64.h>
 #include <linux/rbtree.h>
 #include <linux/fs.h>
+#include <linux/mm.h>
 #include <linux/pipe_fs_i.h>
 
 #include "booter.h"
@@ -90,6 +91,72 @@ struct address_space *page_mapping(struct page *page)
         return NULL;
 
     return (void *)((unsigned long)mapping & ~PAGE_MAPPING_FLAGS);
+}
+
+/**
+ * kvfree() - Free memory.
+ * @addr: Pointer to allocated memory.
+ *
+ * kvfree frees memory allocated by any of vmalloc(), kmalloc() or kvmalloc().
+ * It is slightly more efficient to use kfree() or vfree() if you are certain
+ * that you know which one to use.
+ *
+ * Context: Either preemptible task context or not-NMI interrupt.
+ */
+void kvfree(const void *addr)
+{
+    log_error("%s: No impl.\n", __func__);
+    /*
+    if (is_vmalloc_addr(addr))
+        vfree(addr);
+    else
+        kfree(addr);
+        */
+}
+
+/*
+ * Return true if this page is mapped into pagetables.
+ * For compound page it returns true if any subpage of compound page is mapped.
+ */
+bool page_mapped(struct page *page)
+{
+    int i;
+
+    if (likely(!PageCompound(page)))
+        return atomic_read(&page->_mapcount) >= 0;
+    page = compound_head(page);
+    if (atomic_read(compound_mapcount_ptr(page)) >= 0)
+        return true;
+    if (PageHuge(page))
+        return false;
+    for (i = 0; i < compound_nr(page); i++) {
+        if (atomic_read(&page[i]._mapcount) >= 0)
+            return true;
+    }
+    return false;
+}
+
+/**
+ * unmap_mapping_pages() - Unmap pages from processes.
+ * @mapping: The address space containing pages to be unmapped.
+ * @start: Index of first page to be unmapped.
+ * @nr: Number of pages to be unmapped.  0 to unmap to end of file.
+ * @even_cows: Whether to unmap even private COWed pages.
+ *
+ * Unmap the pages in this address space from any userspace process which
+ * has them mmaped.  Generally, you want to remove COWed pages as well when
+ * a file is being truncated, but not when invalidating pages from the page
+ * cache.
+ */
+void unmap_mapping_pages(struct address_space *mapping, pgoff_t start,
+        pgoff_t nr, bool even_cows)
+{
+    log_error("%s: No impl.", __func__);
+}
+
+void workingset_update_node(struct xa_node *node)
+{
+    log_error("%s: No impl.", __func__);
 }
 
 /*

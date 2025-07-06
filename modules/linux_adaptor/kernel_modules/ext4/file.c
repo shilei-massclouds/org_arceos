@@ -271,7 +271,7 @@ ssize_t generic_perform_write(struct file *file,
         bytes = min_t(unsigned long, PAGE_SIZE - offset,
                         iov_iter_count(i));
 
-    printk("%s: step0 bytes(%u)\n", __func__, bytes);
+    printk("--- %s: ... bytes(%u)\n", __func__, bytes);
 again:
         /*
          * Bring in the user page that we will copy from _first_.
@@ -293,6 +293,7 @@ again:
             break;
         }
 
+    printk("--- %s: step0\n", __func__);
         status = a_ops->write_begin(file, mapping, pos, bytes, flags,
                         &page, &fsdata);
         if (unlikely(status < 0))
@@ -304,8 +305,10 @@ again:
         copied = iov_iter_copy_from_user_atomic(page, i, offset, bytes);
         flush_dcache_page(page);
 
+    printk("--- %s: step1\n", __func__);
         status = a_ops->write_end(file, mapping, pos, bytes, copied,
                         page, fsdata);
+    printk("--- %s: step2 status(%d)\n", __func__, status);
         if (unlikely(status < 0))
             break;
         copied = status;

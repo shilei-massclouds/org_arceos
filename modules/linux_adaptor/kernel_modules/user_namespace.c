@@ -25,3 +25,8 @@ kprojid_t make_kprojid(struct user_namespace *ns, projid_t projid)
 {
     return KPROJIDT_INIT(0);
 }
+
+projid_t from_kprojid(struct user_namespace *targ, kprojid_t kprojid)
+{
+    return kprojid.val;
+}

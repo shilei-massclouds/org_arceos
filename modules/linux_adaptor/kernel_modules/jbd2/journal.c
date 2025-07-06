@@ -2498,14 +2498,19 @@ struct journal_head *jbd2_journal_add_journal_head(struct buffer_head *bh)
 	struct journal_head *jh;
 	struct journal_head *new_jh = NULL;
 
+    printk("%s: ... blknr(%u)\n", __func__, bh->b_blocknr);
 repeat:
-	if (!buffer_jbd(bh))
+	if (!buffer_jbd(bh)) {
 		new_jh = journal_alloc_journal_head();
+    }
 
 	jbd_lock_bh_journal_head(bh);
 	if (buffer_jbd(bh)) {
 		jh = bh2jh(bh);
 	} else {
+        printk("%s: blknr(%u) mapping(%lx)\n",
+               __func__, bh->b_blocknr, bh->b_page->mapping);
+
 		J_ASSERT_BH(bh,
 			(atomic_read(&bh->b_count) > 0) ||
 			(bh->b_page && bh->b_page->mapping));

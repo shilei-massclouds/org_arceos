@@ -1559,8 +1559,10 @@ static inline bool jbd2_journal_has_csum_v2or3_feature(journal_t *j)
 
 static inline int jbd2_journal_has_csum_v2or3(journal_t *journal)
 {
+    /*
 	WARN_ON_ONCE(jbd2_journal_has_csum_v2or3_feature(journal) &&
 		     journal->j_chksum_driver == NULL);
+             */
 
 	return journal->j_chksum_driver != NULL;
 }

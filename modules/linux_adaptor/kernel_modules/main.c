@@ -100,7 +100,7 @@ static void test_write(struct inode *inode, const char *fs_name)
     file.f_flags |= O_DSYNC;
 
     loff_t pos = 0;
-    char wbuf[] = "bcd";
+    char wbuf[] = "bcde";
 
     ret = new_sync_write(&file, wbuf, sizeof(wbuf), &pos);
     printk("Write '%s' to '%s': ret [%d]\n", wbuf, fs_name, ret);
@@ -140,7 +140,11 @@ static void test_basic(const char *fs_name, const char *fname)
         booter_panic("bad inode.");
     }
 
+    printk("\n\n============== READ =============\n\n");
+
     test_read(t_inode, fs_name);
+
+    printk("\n\n============== WRITE =============\n\n");
 
     test_write(t_inode, fs_name);
 

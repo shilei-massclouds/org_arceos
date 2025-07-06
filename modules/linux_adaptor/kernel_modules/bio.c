@@ -2,6 +2,7 @@
 #include <linux/blkdev.h>
 #include <linux/sched/sysctl.h>
 
+#include "block/blk.h"
 #include "booter.h"
 
 extern int cl_submit_bio(struct bio *bio);
@@ -194,4 +195,47 @@ int submit_bio_wait(struct bio *bio)
         wait_for_completion_io(&done);
 
     return blk_status_to_errno(bio->bi_status);
+}
+
+/**
+ * guard_bio_eod - truncate a BIO to fit the block device
+ * @bio:    bio to truncate
+ *
+ * This allows us to do IO even on the odd last sectors of a device, even if the
+ * block size is some multiple of the physical sector size.
+ *
+ * We'll just truncate the bio to the size of the device, and clear the end of
+ * the buffer head manually.  Truly out-of-range accesses will turn into actual
+ * I/O errors, this only handles the "we need to be able to do I/O at the final
+ * sector" case.
+ */
+void guard_bio_eod(struct bio *bio)
+{
+    sector_t maxsector;
+    struct hd_struct *part;
+
+    rcu_read_lock();
+    part = __disk_get_part(bio->bi_disk, bio->bi_partno);
+    if (part)
+        maxsector = part_nr_sects_read(part);
+    else
+        maxsector = get_capacity(bio->bi_disk);
+    rcu_read_unlock();
+
+    if (!maxsector)
+        return;
+
+    /*
+     * If the *whole* IO is past the end of the device,
+     * let it through, and the IO layer will turn it into
+     * an EIO.
+     */
+    if (unlikely(bio->bi_iter.bi_sector >= maxsector))
+        return;
+
+    maxsector -= bio->bi_iter.bi_sector;
+    if (likely((bio->bi_iter.bi_size >> 9) <= maxsector))
+        return;
+
+    bio_truncate(bio, maxsector << 9);
 }

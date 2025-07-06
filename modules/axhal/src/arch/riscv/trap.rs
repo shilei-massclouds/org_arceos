@@ -11,6 +11,60 @@ core::arch::global_asm!(
     trapframe_size = const core::mem::size_of::<TrapFrame>(),
 );
 
+#[cfg(linux_adaptor)]
+fn handle_breakpoint(sepc: &mut usize) {
+    report_bug(*sepc);
+    *sepc += 2
+}
+
+// For linux bug.
+#[repr(C)]
+#[derive(Debug)]
+struct BugEntry {
+    bug_addr_disp:  i32,
+    file_disp:      i32,
+    line:   u16,
+    flags:  u16,
+}
+
+#[cfg(linux_adaptor)]
+fn bug_addr(base: usize, offset: i32) -> usize {
+    (base as isize + offset as isize) as usize
+}
+
+#[cfg(linux_adaptor)]
+fn report_bug(addr: usize) {
+    unsafe extern "C" {
+        fn __start___bug_table();
+        fn __stop___bug_table();
+    }
+    error!("bug_table ({:#x}, {:#x}) entry({})",
+           __start___bug_table as usize, __stop___bug_table as usize,
+           core::mem::size_of::<BugEntry>());
+
+    let bug_table_ptr = __start___bug_table as *const BugEntry;
+    let bug_table_len = __stop___bug_table as usize - __start___bug_table as usize;
+
+    let bugs = unsafe {
+        core::slice::from_raw_parts(bug_table_ptr, bug_table_len)
+    };
+
+    let mut pos = bug_table_ptr as usize;
+    for bug in bugs {
+        if bug_addr(pos, bug.bug_addr_disp) == addr {
+            let fname_ptr = bug_addr(pos, bug.file_disp) as *const u8;
+            let fname = unsafe {
+                core::ffi::CStr::from_ptr(fname_ptr)
+            };
+            panic!("BUG: line {} in {:?}", bug.line, fname);
+        }
+        pos += core::mem::size_of::<BugEntry>() as usize;
+    }
+
+    panic!("For linux_adaptor: let ebreak @ {:#x} cause PANIC!", addr);
+}
+
+#[cfg(not(linux_adaptor))]
 fn handle_breakpoint(sepc: &mut usize) {
     debug!("Exception(Breakpoint) @ {:#x} ", sepc);
     *sepc += 2

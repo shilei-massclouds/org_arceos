@@ -55,3 +55,9 @@ void add_timer(struct timer_list *timer)
     __mod_timer(timer, timer->expires, MOD_TIMER_NOTPENDING);
     */
 }
+
+int mod_timer(struct timer_list *timer, unsigned long expires)
+{
+    log_error("%s: No impl.", __func__);
+    return 0;
+}

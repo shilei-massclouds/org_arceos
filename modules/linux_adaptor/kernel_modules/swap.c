@@ -75,3 +75,37 @@ void __pagevec_release(struct pagevec *pvec)
     release_pages(pvec->pages, pagevec_count(pvec));
     pagevec_reinit(pvec);
 }
+
+/**
+ * pagevec_lookup_entries - gang pagecache lookup
+ * @pvec:   Where the resulting entries are placed
+ * @mapping:    The address_space to search
+ * @start:  The starting entry index
+ * @nr_entries: The maximum number of pages
+ * @indices:    The cache indices corresponding to the entries in @pvec
+ *
+ * pagevec_lookup_entries() will search for and return a group of up
+ * to @nr_pages pages and shadow entries in the mapping.  All
+ * entries are placed in @pvec.  pagevec_lookup_entries() takes a
+ * reference against actual pages in @pvec.
+ *
+ * The search returns a group of mapping-contiguous entries with
+ * ascending indexes.  There may be holes in the indices due to
+ * not-present entries.
+ *
+ * Only one subpage of a Transparent Huge Page is returned in one call:
+ * allowing truncate_inode_pages_range() to evict the whole THP without
+ * cycling through a pagevec of extra references.
+ *
+ * pagevec_lookup_entries() returns the number of entries which were
+ * found.
+ */
+unsigned pagevec_lookup_entries(struct pagevec *pvec,
+                struct address_space *mapping,
+                pgoff_t start, unsigned nr_entries,
+                pgoff_t *indices)
+{
+    pvec->nr = find_get_entries(mapping, start, nr_entries,
+                    pvec->pages, indices);
+    return pagevec_count(pvec);
+}

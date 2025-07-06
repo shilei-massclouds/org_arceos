@@ -8,6 +8,7 @@
 #include <linux/gfp.h>
 #include <linux/backing-dev.h>
 #include <linux/pagevec.h>
+#include <linux/page_idle.h>
 
 #include "ext2/ext2.h"
 #include "mm/internal.h"
@@ -584,7 +585,14 @@ int add_to_page_cache_lru(struct page *page, struct address_space *mapping,
 struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
 		int fgp_flags, gfp_t gfp_mask)
 {
-	struct page *page = find_get_entry(mapping, index);
+    struct page *page;
+
+repeat:
+    page = find_get_entry(mapping, index);
+    if (xa_is_value(page))
+        page = NULL;
+    if (!page)
+        goto no_page;
 
     if (fgp_flags & FGP_LOCK) {
         if (fgp_flags & FGP_NOWAIT) {
@@ -597,15 +605,57 @@ struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
         }
 
         /* Has the page been truncated? */
-        /*
         if (unlikely(compound_head(page)->mapping != mapping)) {
             unlock_page(page);
             put_page(page);
             goto repeat;
         }
-        */
         VM_BUG_ON_PAGE(page->index != index, page);
     }
+
+    if (fgp_flags & FGP_ACCESSED)
+        mark_page_accessed(page);
+    else if (fgp_flags & FGP_WRITE) {
+        /* Clear idle flag for buffer write */
+        if (page_is_idle(page))
+            clear_page_idle(page);
+    }
+
+no_page:
+    if (!page && (fgp_flags & FGP_CREAT)) {
+        int err;
+        if ((fgp_flags & FGP_WRITE) && mapping_cap_account_dirty(mapping))
+            gfp_mask |= __GFP_WRITE;
+        if (fgp_flags & FGP_NOFS)
+            gfp_mask &= ~__GFP_FS;
+
+        page = __page_cache_alloc(gfp_mask);
+        if (!page)
+            return NULL;
+
+        if (WARN_ON_ONCE(!(fgp_flags & (FGP_LOCK | FGP_FOR_MMAP))))
+            fgp_flags |= FGP_LOCK;
+
+        /* Init accessed so avoid atomic mark_page_accessed later */
+        if (fgp_flags & FGP_ACCESSED)
+            __SetPageReferenced(page);
+
+        err = add_to_page_cache_lru(page, mapping, index, gfp_mask);
+        if (unlikely(err)) {
+            put_page(page);
+            page = NULL;
+            if (err == -EEXIST)
+                goto repeat;
+        }
+
+        /*
+         * add_to_page_cache_lru locks the page, and for mmap we expect
+         * an unlocked page.
+         */
+        if (page && (fgp_flags & FGP_FOR_MMAP))
+            unlock_page(page);
+    }
+
     return page;
 }
 
@@ -657,6 +707,86 @@ out:
     rcu_read_unlock();
 
     return page;
+}
+
+/**
+ * find_get_entries - gang pagecache lookup
+ * @mapping:    The address_space to search
+ * @start:  The starting page cache index
+ * @nr_entries: The maximum number of entries
+ * @entries:    Where the resulting entries are placed
+ * @indices:    The cache indices corresponding to the entries in @entries
+ *
+ * find_get_entries() will search for and return a group of up to
+ * @nr_entries entries in the mapping.  The entries are placed at
+ * @entries.  find_get_entries() takes a reference against any actual
+ * pages it returns.
+ *
+ * The search returns a group of mapping-contiguous page cache entries
+ * with ascending indexes.  There may be holes in the indices due to
+ * not-present pages.
+ *
+ * Any shadow entries of evicted pages, or swap entries from
+ * shmem/tmpfs, are included in the returned array.
+ *
+ * If it finds a Transparent Huge Page, head or tail, find_get_entries()
+ * stops at that page: the caller is likely to have a better way to handle
+ * the compound page as a whole, and then skip its extent, than repeatedly
+ * calling find_get_entries() to return all its tails.
+ *
+ * Return: the number of pages and shadow entries which were found.
+ */
+unsigned find_get_entries(struct address_space *mapping,
+              pgoff_t start, unsigned int nr_entries,
+              struct page **entries, pgoff_t *indices)
+{
+    XA_STATE(xas, &mapping->i_pages, start);
+    struct page *page;
+    unsigned int ret = 0;
+
+    if (!nr_entries)
+        return 0;
+
+    rcu_read_lock();
+    xas_for_each(&xas, page, ULONG_MAX) {
+        if (xas_retry(&xas, page))
+            continue;
+        /*
+         * A shadow entry of a recently evicted page, a swap
+         * entry from shmem/tmpfs or a DAX entry.  Return it
+         * without attempting to raise page count.
+         */
+        if (xa_is_value(page))
+            goto export;
+
+        if (!page_cache_get_speculative(page))
+            goto retry;
+
+        /* Has the page moved or been split? */
+        if (unlikely(page != xas_reload(&xas)))
+            goto put_page;
+
+        /*
+         * Terminate early on finding a THP, to allow the caller to
+         * handle it all at once; but continue if this is hugetlbfs.
+         */
+        if (PageTransHuge(page) && !PageHuge(page)) {
+            page = find_subpage(page, xas.xa_index);
+            nr_entries = ret + 1;
+        }
+export:
+        indices[ret] = xas.xa_index;
+        entries[ret] = page;
+        if (++ret == nr_entries)
+            break;
+        continue;
+put_page:
+        put_page(page);
+retry:
+        xas_reset(&xas);
+    }
+    rcu_read_unlock();
+    return ret;
 }
 
 /**
@@ -763,8 +893,10 @@ struct page *grab_cache_page_write_begin(struct address_space *mapping,
     if (flags & AOP_FLAG_NOFS)
         fgp_flags |= FGP_NOFS;
 
+    printk("%s: step1\n", __func__);
     page = pagecache_get_page(mapping, index, fgp_flags,
             mapping_gfp_mask(mapping));
+    printk("%s: step2\n", __func__);
     if (page)
         wait_for_stable_page(page);
 
@@ -1045,4 +1177,140 @@ void end_page_writeback(struct page *page)
     printk("%s: step3\n", __func__);
     wake_up_page(page, PG_writeback);
     printk("%s: stepN\n", __func__);
+}
+
+/**
+ * try_to_release_page() - release old fs-specific metadata on a page
+ *
+ * @page: the page which the kernel is trying to free
+ * @gfp_mask: memory allocation flags (and I/O mode)
+ *
+ * The address_space is to try to release any data against the page
+ * (presumably at page->private).
+ *
+ * This may also be called if PG_fscache is set on a page, indicating that the
+ * page is known to the local caching routines.
+ *
+ * The @gfp_mask argument specifies whether I/O may be performed to release
+ * this page (__GFP_IO), and whether the call may block (__GFP_RECLAIM & __GFP_FS).
+ *
+ * Return: %1 if the release was successful, otherwise return zero.
+ */
+int try_to_release_page(struct page *page, gfp_t gfp_mask)
+{
+    struct address_space * const mapping = page->mapping;
+
+    BUG_ON(!PageLocked(page));
+    if (PageWriteback(page))
+        return 0;
+
+    if (mapping && mapping->a_ops->releasepage)
+        return mapping->a_ops->releasepage(page, gfp_mask);
+    return try_to_free_buffers(page);
+}
+
+/*
+ * page_cache_delete_batch - delete several pages from page cache
+ * @mapping: the mapping to which pages belong
+ * @pvec: pagevec with pages to delete
+ *
+ * The function walks over mapping->i_pages and removes pages passed in @pvec
+ * from the mapping. The function expects @pvec to be sorted by page index
+ * and is optimised for it to be dense.
+ * It tolerates holes in @pvec (mapping entries at those indices are not
+ * modified). The function expects only THP head pages to be present in the
+ * @pvec.
+ *
+ * The function expects the i_pages lock to be held.
+ */
+static void page_cache_delete_batch(struct address_space *mapping,
+                 struct pagevec *pvec)
+{
+    XA_STATE(xas, &mapping->i_pages, pvec->pages[0]->index);
+    int total_pages = 0;
+    int i = 0;
+    struct page *page;
+
+    mapping_set_update(&xas, mapping);
+    xas_for_each(&xas, page, ULONG_MAX) {
+        if (i >= pagevec_count(pvec))
+            break;
+
+        /* A swap/dax/shadow entry got inserted? Skip it. */
+        if (xa_is_value(page))
+            continue;
+        /*
+         * A page got inserted in our range? Skip it. We have our
+         * pages locked so they are protected from being removed.
+         * If we see a page whose index is higher than ours, it
+         * means our page has been removed, which shouldn't be
+         * possible because we're holding the PageLock.
+         */
+        if (page != pvec->pages[i]) {
+            VM_BUG_ON_PAGE(page->index > pvec->pages[i]->index,
+                    page);
+            continue;
+        }
+
+        WARN_ON_ONCE(!PageLocked(page));
+
+        if (page->index == xas.xa_index)
+            page->mapping = NULL;
+        /* Leave page->index set: truncation lookup relies on it */
+
+        /*
+         * Move to the next page in the vector if this is a regular
+         * page or the index is of the last sub-page of this compound
+         * page.
+         */
+        if (page->index + compound_nr(page) - 1 == xas.xa_index)
+            i++;
+        printk("%s: page(%lx)\n", __func__, page);
+        xas_store(&xas, NULL);
+        total_pages++;
+    }
+    mapping->nrpages -= total_pages;
+}
+
+static void page_cache_free_page(struct address_space *mapping,
+                struct page *page)
+{
+    void (*freepage)(struct page *);
+
+    freepage = mapping->a_ops->freepage;
+    if (freepage)
+        freepage(page);
+
+    if (PageTransHuge(page) && !PageHuge(page)) {
+        page_ref_sub(page, HPAGE_PMD_NR);
+        VM_BUG_ON_PAGE(page_count(page) <= 0, page);
+    } else {
+        put_page(page);
+    }
+}
+
+void delete_from_page_cache_batch(struct address_space *mapping,
+                  struct pagevec *pvec)
+{
+    int i;
+    unsigned long flags;
+
+    if (!pagevec_count(pvec))
+        return;
+
+    xa_lock_irqsave(&mapping->i_pages, flags);
+
+    // Note: consider whether or not to remove this.
+    /*
+    for (i = 0; i < pagevec_count(pvec); i++) {
+        trace_mm_filemap_delete_from_page_cache(pvec->pages[i]);
+
+        unaccount_page_cache_page(mapping, pvec->pages[i]);
+    }
+    */
+    page_cache_delete_batch(mapping, pvec);
+    xa_unlock_irqrestore(&mapping->i_pages, flags);
+
+    for (i = 0; i < pagevec_count(pvec); i++)
+        page_cache_free_page(mapping, pvec->pages[i]);
 }

@@ -5,7 +5,8 @@
 #include <linux/backing-dev.h>
 
 #include "booter.h"
-#include "blk-wbt.h"
+#include "block/blk.h"
+#include "block/blk-wbt.h"
 
 extern struct gendisk *cl_disk;
 
@@ -394,16 +395,9 @@ void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async)
 
 void blk_mq_end_request(struct request *rq, blk_status_t error)
 {
-    printk("%s: blk_status_t(%d)\n", __func__, error);
-    if (error != 0) {
-        booter_panic("bad request!");
-    }
-
-    printk("%s: step1\n", __func__);
+    printk("%s: blk_status_t(%d) %u\n", __func__, error, blk_rq_bytes(rq));
     if (blk_update_request(rq, error, blk_rq_bytes(rq))) {
-        log_error("%s: update request err!\n", __func__);
-        //booter_panic("update request err!");
-        //BUG();
+        BUG();
     }
     printk("%s: step2\n", __func__);
     __blk_mq_end_request(rq, error);
@@ -419,6 +413,7 @@ static void req_bio_endio(struct request *rq, struct bio *bio,
     if (unlikely(rq->rq_flags & RQF_QUIET))
         bio_set_flag(bio, BIO_QUIET);
 
+    printk("%s: nbytes(%u)\n", __func__, nbytes);
     bio_advance(bio, nbytes);
 
     if (req_op(rq) == REQ_OP_ZONE_APPEND && error == BLK_STS_OK) {
@@ -438,16 +433,91 @@ static void req_bio_endio(struct request *rq, struct bio *bio,
         bio_endio(bio);
 }
 
+static void print_req_error(struct request *req, blk_status_t status,
+        const char *caller)
+{
+    booter_panic("No impl.");
+}
+
 bool blk_update_request(struct request *req, blk_status_t error,
         unsigned int nr_bytes)
 {
-    if (req->bio) {
+    int total_bytes;
+
+    if (!req->bio)
+        return false;
+
+#ifdef CONFIG_BLK_DEV_INTEGRITY
+    if (blk_integrity_rq(req) && req_op(req) == REQ_OP_READ &&
+        error == BLK_STS_OK)
+        req->q->integrity.profile->complete_fn(req, nr_bytes);
+#endif
+
+    if (unlikely(error && !blk_rq_is_passthrough(req) &&
+             !(req->rq_flags & RQF_QUIET)))
+        print_req_error(req, error, __func__);
+
+    //blk_account_io_completion(req, nr_bytes);
+
+    printk("%s: step1 nr_bytes(%u)\n", __func__, nr_bytes);
+    total_bytes = 0;
+    while (req->bio) {
         struct bio *bio = req->bio;
         unsigned bio_bytes = min(bio->bi_iter.bi_size, nr_bytes);
 
-    printk("%s: nbytes(%u) error(%d)\n", __func__, nr_bytes, error);
+        if (bio_bytes == bio->bi_iter.bi_size)
+            req->bio = bio->bi_next;
+
+        /* Completion has already been traced */
+        bio_clear_flag(bio, BIO_TRACE_COMPLETION);
         req_bio_endio(req, bio, bio_bytes, error);
+
+        total_bytes += bio_bytes;
+        nr_bytes -= bio_bytes;
+
+        if (!nr_bytes)
+            break;
     }
+
+    /*
+     * completely done
+     */
+    if (!req->bio) {
+        /*
+         * Reset counters so that the request stacking driver
+         * can find how many bytes remain in the request
+         * later.
+         */
+        req->__data_len = 0;
+        return false;
+    }
+
+    req->__data_len -= total_bytes;
+
+    /* update sector only for requests with clear definition of sector */
+    if (!blk_rq_is_passthrough(req))
+        req->__sector += total_bytes >> 9;
+
+    /* mixed attributes always follow the first bio */
+    if (req->rq_flags & RQF_MIXED_MERGE) {
+        req->cmd_flags &= ~REQ_FAILFAST_MASK;
+        req->cmd_flags |= req->bio->bi_opf & REQ_FAILFAST_MASK;
+    }
+
+    if (!(req->rq_flags & RQF_SPECIAL_PAYLOAD)) {
+        /*
+         * If total number of sectors is less than the first segment
+         * size, something has gone terribly wrong.
+         */
+        if (blk_rq_bytes(req) < blk_rq_cur_bytes(req)) {
+            blk_dump_rq_flags(req, "request botched");
+            req->__data_len = blk_rq_cur_bytes(req);
+        }
+
+        /* recalculate the number of segments */
+        req->nr_phys_segments = blk_recalc_rq_segments(req);
+    }
+
     return true;
 }
 

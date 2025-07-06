@@ -13,6 +13,7 @@ bool completed = 0;
 
 int cl_read_block(int blk_nr, void *rbuf, int count)
 {
+    booter_panic("cl_read_block Deprecated!");
     log_error("%s: id[%d] count[%d] ... sie(%x)\n",
            __func__, blk_nr, count, csr_read(CSR_SSTATUS));
 

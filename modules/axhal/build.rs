@@ -49,6 +49,13 @@ fn main() {
         "cargo::rustc-check-cfg=cfg(platform_family, values({}))",
         make_cfg_values(BUILTIN_PLATFORM_FAMILIES)
     );
+
+    if has_feature("linux-adaptor") {
+        println!("cargo:rustc-cfg=linux_adaptor");
+    }
+    println!(
+        "cargo::rustc-check-cfg=cfg(linux_adaptor)"
+    );
 }
 
 fn gen_linker_script(arch: &str, platform: &str) -> Result<()> {
@@ -74,4 +81,12 @@ fn gen_linker_script(arch: &str, platform: &str) -> Result<()> {
     let out_path = Path::new(&out_dir).join("../../..").join(fname);
     std::fs::write(out_path, ld_content)?;
     Ok(())
+}
+
+fn has_feature(feature: &str) -> bool {
+    std::env::var(format!(
+        "CARGO_FEATURE_{}",
+        feature.to_uppercase().replace('-', "_")
+    ))
+    .is_ok()
 }

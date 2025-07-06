@@ -1,6 +1,7 @@
 #include <linux/fs.h>
 #include <linux/buffer_head.h>
 #include <linux/blkdev.h>
+#include <linux/writeback.h>
 
 #include "booter.h"
 
@@ -11,42 +12,57 @@ int sb_min_blocksize(struct super_block *sb, int size)
     return BLOCK_SIZE;
 }
 
-struct buffer_head *
-__bread_gfp(struct block_device *bdev, sector_t block,
-           unsigned size, gfp_t gfp)
-{
-    printk("%s: blknr(%llu) size(%u) BLOCK_SIZE(%u)\n",
-           __func__, block, size, BLOCK_SIZE);
-
-    int blkid;
-    int offset;
-    if (size == 4096) {
-        blkid = block * 8;
-        offset = 0;
-    } else {
-        blkid = block * 2;
-        offset = 0;
-    }
-
-    void *buf = alloc_pages_exact(4096, 0);
-    cl_read_block(blkid, buf, 4096);
-
-    struct buffer_head *bh = kmalloc(sizeof(struct buffer_head), 0);
-    bh->b_data = buf + offset;
-    bh->b_size = 4096;
-    bh->b_blocknr = block;
-    bh->b_page = virt_to_page(buf);
-    set_buffer_uptodate(bh);
-    return bh;
-}
-
 void __brelse(struct buffer_head * buf)
 {
     log_debug("%s: impl it.\n", __func__);
 }
 
+/* Kill _all_ buffers and pagecache , dirty or not.. */
+static void kill_bdev(struct block_device *bdev)
+{
+    struct address_space *mapping = bdev->bd_inode->i_mapping;
+
+    if (mapping->nrpages == 0 && mapping->nrexceptional == 0)
+        return;
+
+    invalidate_bh_lrus();
+    truncate_inode_pages(mapping, 0);
+}
+
+int set_blocksize(struct block_device *bdev, int size)
+{
+    /* Size must be a power of two, and between 512 and PAGE_SIZE */
+    if (size > PAGE_SIZE || size < 512 || !is_power_of_2(size))
+        return -EINVAL;
+
+    /* Size cannot be smaller than the size supported by the device */
+    if (size < bdev_logical_block_size(bdev))
+        return -EINVAL;
+
+    /* Don't change the size if it is same as current */
+    if (bdev->bd_inode->i_blkbits != blksize_bits(size)) {
+        sync_blockdev(bdev);
+        bdev->bd_inode->i_blkbits = blksize_bits(size);
+        kill_bdev(bdev);
+    }
+    return 0;
+}
+
+/*
+ * Write out and wait upon all the dirty data associated with a block
+ * device via its mapping.  Does not take the superblock lock.
+ */
+int sync_blockdev(struct block_device *bdev)
+{
+    //return __sync_blockdev(bdev, 1);
+    log_error("%s: No impl!\n", __func__);
+    return 0;
+}
+
 int sb_set_blocksize(struct super_block *sb, int size)
 {
+    if (set_blocksize(sb->s_bdev, size))
+        return 0;
     /* If we get here, we know size is power of two
      * and it's value is between 512 and PAGE_SIZE */
     sb->s_blocksize = size;
@@ -65,13 +81,79 @@ void blk_finish_plug(struct blk_plug *plug)
     log_debug("%s: impl it.\n", __func__);
 }
 
+static void end_bio_bh_io_sync(struct bio *bio)
+{
+    struct buffer_head *bh = bio->bi_private;
+
+    if (unlikely(bio_flagged(bio, BIO_QUIET)))
+        set_bit(BH_Quiet, &bh->b_state);
+
+    bh->b_end_io(bh, !bio->bi_status);
+    bio_put(bio);
+}
+
+static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
+             enum rw_hint write_hint, struct writeback_control *wbc)
+{
+    struct bio *bio;
+
+    BUG_ON(!buffer_locked(bh));
+    BUG_ON(!buffer_mapped(bh));
+    BUG_ON(!bh->b_end_io);
+    BUG_ON(buffer_delay(bh));
+    BUG_ON(buffer_unwritten(bh));
+
+    /*
+     * Only clear out a write error when rewriting
+     */
+    if (test_set_buffer_req(bh) && (op == REQ_OP_WRITE))
+        clear_buffer_write_io_error(bh);
+
+    bio = bio_alloc(GFP_NOIO, 1);
+
+    //fscrypt_set_bio_crypt_ctx_bh(bio, bh, GFP_NOIO);
+
+    bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+    bio_set_dev(bio, bh->b_bdev);
+    bio->bi_write_hint = write_hint;
+
+    bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
+    BUG_ON(bio->bi_iter.bi_size != bh->b_size);
+
+    bio->bi_end_io = end_bio_bh_io_sync;
+    bio->bi_private = bh;
+
+    if (buffer_meta(bh))
+        op_flags |= REQ_META;
+    if (buffer_prio(bh))
+        op_flags |= REQ_PRIO;
+    bio_set_op_attrs(bio, op, op_flags);
+
+    /* Take care of bh's that straddle the end of the device */
+    guard_bio_eod(bio);
+
+    if (wbc) {
+        wbc_init_bio(wbc, bio);
+        wbc_account_cgroup_owner(wbc, bh->b_page, bh->b_size);
+    }
+
+    submit_bio(bio);
+    return 0;
+}
+
+int submit_bh(int op, int op_flags, struct buffer_head *bh)
+{
+    return submit_bh_wbc(op, op_flags, bh, 0, NULL);
+}
+
+/*
 int submit_bh(int op, int op_flags, struct buffer_head *bh)
 {
     int blkid;
     int offset;
 
-    log_debug("%s: impl it. op(%d) b_blocknr(%u) b_size(%u) b_page(%lx)\n",
-              __func__, op, bh->b_blocknr, bh->b_size, bh->b_page);
+    printk("%s: impl it. op(%d) b_blocknr(%u) b_size(%u) b_page(%lx)\n",
+           __func__, op, bh->b_blocknr, bh->b_size, bh->b_page);
 
     if (op != READ) {
         booter_panic("Dont support WRITE!\n");
@@ -90,6 +172,7 @@ int submit_bh(int op, int op_flags, struct buffer_head *bh)
 
     return 0;
 }
+*/
 
 /**
  * ll_rw_block: low-level access to block devices (DEPRECATED)

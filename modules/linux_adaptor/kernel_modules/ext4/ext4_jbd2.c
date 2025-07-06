@@ -201,6 +201,7 @@ static void ext4_check_bdev_write_error(struct super_block *sb)
 	struct ext4_sb_info *sbi = EXT4_SB(sb);
 	int err;
 
+    printk("--- %s: step0 %lx\n", __func__, sbi);
 	/*
 	 * If the block device has write error flag, it may have failed to
 	 * async write out metadata buffers in the background. In this case,

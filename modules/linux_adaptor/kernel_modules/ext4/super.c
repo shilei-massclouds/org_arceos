@@ -2680,6 +2680,7 @@ static int ext4_check_descriptors(struct super_block *sb,
 
 	for (i = 0; i < sbi->s_groups_count; i++) {
 		struct ext4_group_desc *gdp = ext4_get_group_desc(sb, i, NULL);
+    printk("--- %s: i[%d] step0 (%u)(%u)\n", __func__, i, gdp->bg_block_bitmap_lo, gdp->bg_inode_bitmap_lo);
 
 		if (i == sbi->s_groups_count - 1 || flexbg_flag)
 			last_block = ext4_blocks_count(sbi->s_es) - 1;
@@ -2707,12 +2708,14 @@ static int ext4_check_descriptors(struct super_block *sb,
 			if (!sb_rdonly(sb))
 				return 0;
 		}
+    printk("--- %s: step1 block_bitmap(%u) (%u,%u)\n", __func__, block_bitmap, first_block, last_block);
 		if (block_bitmap < first_block || block_bitmap > last_block) {
 			ext4_msg(sb, KERN_ERR, "ext4_check_descriptors: "
 			       "Block bitmap for group %u not in group "
 			       "(block %llu)!", i, block_bitmap);
 			return 0;
 		}
+    printk("--- %s: step2\n", __func__);
 		inode_bitmap = ext4_inode_bitmap(sb, gdp);
 		if (inode_bitmap == sb_block) {
 			ext4_msg(sb, KERN_ERR, "ext4_check_descriptors: "
@@ -2721,6 +2724,7 @@ static int ext4_check_descriptors(struct super_block *sb,
 			if (!sb_rdonly(sb))
 				return 0;
 		}
+    printk("--- %s: step3\n", __func__);
 		if (inode_bitmap >= sb_block + 1 &&
 		    inode_bitmap <= last_bg_block) {
 			ext4_msg(sb, KERN_ERR, "ext4_check_descriptors: "
@@ -4268,7 +4272,9 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		brelse(bh);
 		logical_sb_block = sb_block * EXT4_MIN_BLOCK_SIZE;
 		offset = do_div(logical_sb_block, blocksize);
+        printk("========= %s: 0 s_blocksize(%u)\n", __func__, sb->s_blocksize);
 		bh = sb_bread_unmovable(sb, logical_sb_block);
+        printk("======== %s: 0 bh_size(%u)\n", __func__, bh->b_size);
 		if (!bh) {
 			ext4_msg(sb, KERN_ERR,
 			       "Can't read superblock on 2nd try");
@@ -4407,8 +4413,6 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		goto cantfind_ext4;
 
 	/* check blocks count against device size */
-    // Implement bd_inode
-    /*
 	blocks_count = sb->s_bdev->bd_inode->i_size >> sb->s_blocksize_bits;
 	if (blocks_count && ext4_blocks_count(es) > blocks_count) {
 		ext4_msg(sb, KERN_WARNING, "bad geometry: block count %llu "
@@ -4416,7 +4420,6 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		       ext4_blocks_count(es), blocks_count);
 		goto failed_mount;
 	}
-    */
 
 	/*
 	 * It makes no sense for the first data block to be beyond the end
@@ -4493,7 +4496,9 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		struct buffer_head *bh;
 
 		block = descriptor_loc(sb, logical_sb_block, i);
+        printk("========= %s: s_blocksize(%u)\n", __func__, sb->s_blocksize);
 		bh = sb_bread_unmovable(sb, block);
+        printk("========= %s: bh_size(%u)\n", __func__, bh->b_size);
 		if (!bh) {
 			ext4_msg(sb, KERN_ERR,
 			       "can't read group descriptor %d", i);
@@ -4504,13 +4509,16 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		rcu_dereference(sbi->s_group_desc)[i] = bh;
 		rcu_read_unlock();
 	}
+    printk("--- %s: step1\n", __func__);
 	sbi->s_gdb_count = db_count;
 	if (!ext4_check_descriptors(sb, logical_sb_block, &first_not_zeroed)) {
+    printk("--- %s: err. logical_sb_block(%u)\n", __func__, logical_sb_block);
 		ext4_msg(sb, KERN_ERR, "group descriptors corrupted!");
 		ret = -EFSCORRUPTED;
 		goto failed_mount2;
 	}
 
+    printk("--- %s: step2\n", __func__);
 	timer_setup(&sbi->s_err_report, print_daily_error_info, 0);
 
 	/* Register extent status tree shrinker */
@@ -4520,6 +4528,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 	sbi->s_stripe = ext4_get_stripe_size(sbi);
 	sbi->s_extent_max_zeroout_kb = 32;
 
+    printk("--- %s: step3\n", __func__);
 	/*
 	 * set up enough so that it can read an inode
 	 */
@@ -4612,6 +4621,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		goto failed_mount_wq;
 	}
 
+    printk("--- %s: step5\n", __func__);
 	/* We have now updated the journal if required, so we can
 	 * validate the data journaling mode. */
 	switch (test_opt(sb, DATA_FLAGS)) {
@@ -4730,6 +4740,7 @@ no_journal:
 		sb->s_d_op = &ext4_dentry_ops;
 #endif
 
+    printk("--- %s: step6\n", __func__);
 	sb->s_root = d_make_root(root);
 	if (!sb->s_root) {
 		ext4_msg(sb, KERN_ERR, "get root dentry failed");

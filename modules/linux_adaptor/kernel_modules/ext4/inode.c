@@ -2960,6 +2960,7 @@ static int ext4_da_write_begin(struct file *file, struct address_space *mapping,
 			return 0;
 	}
 
+    printk("%s: step1 index(%u)\n", __func__, index);
 	/*
 	 * grab_cache_page_write_begin() can take a long time if the
 	 * system is thrashing due to memory pressure, or if the page
@@ -2973,6 +2974,7 @@ retry_grab:
 		return -ENOMEM;
 	unlock_page(page);
 
+    printk("%s: step2\n", __func__);
 	/*
 	 * With delayed allocation, we don't log the i_disksize update
 	 * if there is delayed block allocation. But we still need
@@ -3102,7 +3104,9 @@ static int ext4_da_write_end(struct file *file,
 	copied = ret2;
 	if (ret2 < 0)
 		ret = ret2;
+    printk("--- %s: step3 ret(%d)\n", __func__, ret);
 	ret2 = ext4_journal_stop(handle);
+    printk("--- %s: step5\n", __func__);
 	if (unlikely(ret2 && !ret))
 		ret = ret2;
 
@@ -4295,6 +4299,7 @@ static int __ext4_get_inode_loc(struct inode *inode,
     printk("++++++ %s: b_blocknr(%u) b_size(%u)\n", __func__, bh->b_blocknr, bh->b_size);
 	if (ext4_simulate_fail(sb, EXT4_SIM_INODE_EIO))
 		goto simulate_eio;
+    printk("-------------- %s: 1\n", __func__);
 	if (!buffer_uptodate(bh)) {
 		lock_buffer(bh);
 
@@ -4402,6 +4407,7 @@ make_io:
 			return -EIO;
 		}
 	}
+    printk("-------------- %s: 2\n", __func__);
 has_buffer:
 	iloc->bh = bh;
 	return 0;
@@ -5656,7 +5662,9 @@ ext4_reserve_inode_write(handle_t *handle, struct inode *inode,
 	err = ext4_get_inode_loc(inode, iloc);
 	if (!err) {
 		BUFFER_TRACE(iloc->bh, "get_write_access");
+    printk("--- %s: step1\n", __func__);
 		err = ext4_journal_get_write_access(handle, iloc->bh);
+    printk("--- %s: step2\n", __func__);
 		if (err) {
 			brelse(iloc->bh);
 			iloc->bh = NULL;
@@ -5820,7 +5828,9 @@ int __ext4_mark_inode_dirty(handle_t *handle, struct inode *inode,
 
 	might_sleep();
 	trace_ext4_mark_inode_dirty(inode, _RET_IP_);
+    printk("--- %s: step1\n", __func__);
 	err = ext4_reserve_inode_write(handle, inode, &iloc);
+    printk("--- %s: step3\n", __func__);
 	if (err)
 		goto out;
 

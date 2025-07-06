@@ -7,6 +7,15 @@
 #include "booter.h"
 
 /*
+ * Called when truncating a buffer on a page completely.
+ */
+
+/* Bits that are cleared during an invalidate */
+#define BUFFER_FLAGS_DISCARD \
+    (1 << BH_Mapped | 1 << BH_New | 1 << BH_Req | \
+     1 << BH_Delay | 1 << BH_Unwritten)
+
+/*
  * Buffer-head allocation
  */
 static struct kmem_cache *bh_cachep __read_mostly;
@@ -396,11 +405,327 @@ void __breadahead_gfp(struct block_device *bdev, sector_t block, unsigned size,
     log_error("No impl.");
 }
 
+static sector_t blkdev_max_block(struct block_device *bdev, unsigned int size)
+{
+    printk("%s: ...\n", __func__);
+    sector_t retval = ~((sector_t)0);
+    loff_t sz = i_size_read(bdev->bd_inode);
+    printk("%s: sz(%u)\n", __func__, sz);
+
+    if (sz) {
+        unsigned int sizebits = blksize_bits(size);
+        retval = (sz >> sizebits);
+    }
+    return retval;
+}
+
+/*
+ * Initialise the state of a blockdev page's buffers.
+ */
+static sector_t
+init_page_buffers(struct page *page, struct block_device *bdev,
+            sector_t block, int size)
+{
+    printk("%s: ...\n", __func__);
+    struct buffer_head *head = page_buffers(page);
+    struct buffer_head *bh = head;
+    int uptodate = PageUptodate(page);
+    sector_t end_block = blkdev_max_block(I_BDEV(bdev->bd_inode), size);
+
+    printk("%s: end_block(%x)\n", __func__, end_block);
+    do {
+        if (!buffer_mapped(bh)) {
+            bh->b_end_io = NULL;
+            bh->b_private = NULL;
+            bh->b_bdev = bdev;
+            bh->b_blocknr = block;
+            if (uptodate)
+                set_buffer_uptodate(bh);
+            if (block < end_block)
+                set_buffer_mapped(bh);
+        }
+        block++;
+        bh = bh->b_this_page;
+    } while (bh != head);
+
+    /*
+     * Caller needs to validate requested block against end of device.
+     */
+    return end_block;
+}
+
+static inline void
+link_dev_buffers(struct page *page, struct buffer_head *head)
+{
+    struct buffer_head *bh, *tail;
+
+    bh = head;
+    do {
+        tail = bh;
+        bh = bh->b_this_page;
+    } while (bh);
+    tail->b_this_page = head;
+    attach_page_private(page, head);
+}
+
+/*
+ * Create the page-cache page that contains the requested block.
+ *
+ * This is used purely for blockdev mappings.
+ */
+static int
+grow_dev_page(struct block_device *bdev, sector_t block,
+          pgoff_t index, int size, int sizebits, gfp_t gfp)
+{
+    struct inode *inode = bdev->bd_inode;
+    struct page *page;
+    struct buffer_head *bh;
+    sector_t end_block;
+    int ret = 0;
+    gfp_t gfp_mask;
+
+    gfp_mask = mapping_gfp_constraint(inode->i_mapping, ~__GFP_FS) | gfp;
+
+    /*
+     * XXX: __getblk_slow() can not really deal with failure and
+     * will endlessly loop on improvised global reclaim.  Prefer
+     * looping in the allocator rather than here, at least that
+     * code knows what it's doing.
+     */
+    gfp_mask |= __GFP_NOFAIL;
+
+    printk("%s: blknr(%u) index(%u) size(%u) sizebits(%u)\n",
+           __func__, block, index, size, sizebits);
+
+    page = find_or_create_page(inode->i_mapping, index, gfp_mask);
+
+    BUG_ON(!PageLocked(page));
+
+    if (page_has_buffers(page)) {
+        bh = page_buffers(page);
+        if (bh->b_size == size) {
+            end_block = init_page_buffers(page, bdev,
+                        (sector_t)index << sizebits,
+                        size);
+            goto done;
+        }
+        if (!try_to_free_buffers(page))
+            goto failed;
+    }
+
+    /*
+     * Allocate some buffers for this page
+     */
+    bh = alloc_page_buffers(page, size, true);
+
+    /*
+     * Link the page to the buffers and initialise them.  Take the
+     * lock to be atomic wrt __find_get_block(), which does not
+     * run under the page lock.
+     */
+    spin_lock(&inode->i_mapping->private_lock);
+    link_dev_buffers(page, bh);
+    end_block = init_page_buffers(page, bdev, (sector_t)index << sizebits,
+            size);
+    spin_unlock(&inode->i_mapping->private_lock);
+done:
+    ret = (block < end_block) ? 1 : -ENXIO;
+failed:
+    unlock_page(page);
+    put_page(page);
+    return ret;
+}
+
+/*
+ * Create buffers for the specified block device block's page.  If
+ * that page was dirty, the buffers are set dirty also.
+ */
+static int
+grow_buffers(struct block_device *bdev, sector_t block, int size, gfp_t gfp)
+{
+    pgoff_t index;
+    int sizebits;
+
+    sizebits = -1;
+    do {
+        sizebits++;
+    } while ((size << sizebits) < PAGE_SIZE);
+
+    index = block >> sizebits;
+
+    /*
+     * Check for a block which wants to lie outside our maximum possible
+     * pagecache index.  (this comparison is done using sector_t types).
+     */
+    if (unlikely(index != block >> sizebits)) {
+        printk(KERN_ERR "%s: requested out-of-range block %llu for "
+            "device %pg\n",
+            __func__, (unsigned long long)block,
+            bdev);
+        return -EIO;
+    }
+
+    printk("%s: blknr(%u) index(%u)\n", __func__, block, index);
+    /* Create a page with the proper size buffers.. */
+    return grow_dev_page(bdev, block, index, size, sizebits, gfp);
+}
+
+static struct buffer_head *
+__getblk_slow(struct block_device *bdev, sector_t block,
+         unsigned size, gfp_t gfp)
+{
+    printk("%s: blocknr(%lx) size(%u)\n", __func__, block, size);
+
+    /* Size must be multiple of hard sectorsize */
+    if (unlikely(size & (bdev_logical_block_size(bdev)-1) ||
+            (size < 512 || size > PAGE_SIZE))) {
+        printk(KERN_ERR "getblk(): invalid block size %d requested\n",
+                    size);
+        printk(KERN_ERR "logical block size: %d\n",
+                    bdev_logical_block_size(bdev));
+
+        dump_stack();
+        return NULL;
+    }
+
+    for (;;) {
+        struct buffer_head *bh;
+        int ret;
+
+    printk("%s: 2 block(%u) size(%u)\n", __func__, block, size);
+        bh = __find_get_block(bdev, block, size);
+        if (bh)
+            return bh;
+
+    printk("%s: 3 block(%u) size(%u)\n", __func__, block, size);
+        ret = grow_buffers(bdev, block, size, gfp);
+        if (ret < 0)
+            return NULL;
+    }
+}
+
+/*
+ * Look up the bh in this cpu's LRU.  If it's there, move it to the head.
+ */
+static struct buffer_head *
+lookup_bh_lru(struct block_device *bdev, sector_t block, unsigned size)
+{
+    // Note: impl it.
+    return NULL;
+}
+
+/*
+ * Install a buffer_head into this cpu's LRU.  If not already in the LRU, it is
+ * inserted at the front, and the buffer_head at the back if any is evicted.
+ * Or, if already in the LRU it is moved to the front.
+ */
+static void bh_lru_install(struct buffer_head *bh)
+{
+    // Note: impl it.
+}
+
+/*
+ * Various filesystems appear to want __find_get_block to be non-blocking.
+ * But it's the page lock which protects the buffers.  To get around this,
+ * we get exclusion from try_to_free_buffers with the blockdev mapping's
+ * private_lock.
+ *
+ * Hack idea: for the blockdev mapping, private_lock contention
+ * may be quite high.  This code could TryLock the page, and if that
+ * succeeds, there is no need to take private_lock.
+ */
+static struct buffer_head *
+__find_get_block_slow(struct block_device *bdev, sector_t block)
+{
+    printk("%s: ... blknr(%u)\n", __func__, block);
+    struct inode *bd_inode = bdev->bd_inode;
+    struct address_space *bd_mapping = bd_inode->i_mapping;
+    struct buffer_head *ret = NULL;
+    pgoff_t index;
+    struct buffer_head *bh;
+    struct buffer_head *head;
+    struct page *page;
+    int all_mapped = 1;
+    static DEFINE_RATELIMIT_STATE(last_warned, HZ, 1);
+
+    index = block >> (PAGE_SHIFT - bd_inode->i_blkbits);
+    printk("%s: ... index(%u)\n", __func__, index);
+    page = find_get_page_flags(bd_mapping, index, FGP_ACCESSED);
+    if (!page)
+        goto out;
+
+    printk("%s: 2\n", __func__);
+    spin_lock(&bd_mapping->private_lock);
+    if (!page_has_buffers(page))
+        goto out_unlock;
+    head = page_buffers(page);
+    bh = head;
+    do {
+        if (!buffer_mapped(bh))
+            all_mapped = 0;
+        else if (bh->b_blocknr == block) {
+            ret = bh;
+            get_bh(bh);
+    printk("%s: 3 bhsize(%u)\n", __func__, bh->b_size);
+            goto out_unlock;
+        }
+        bh = bh->b_this_page;
+    } while (bh != head);
+
+    booter_panic("No impl.");
+
+out_unlock:
+    spin_unlock(&bd_mapping->private_lock);
+    put_page(page);
+out:
+    printk("%s: End.\n", __func__);
+    return ret;
+}
+
+/*
+ * Perform a pagecache lookup for the matching buffer.  If it's there, refresh
+ * it in the LRU and mark it as accessed.  If it is not present then return
+ * NULL
+ */
+struct buffer_head *
+__find_get_block(struct block_device *bdev, sector_t block, unsigned size)
+{
+    struct buffer_head *bh = lookup_bh_lru(bdev, block, size);
+
+    printk("%s: ... blknr(%u) size(%u)\n", __func__, block, size);
+    if (bh == NULL) {
+        /* __find_get_block_slow will mark the page accessed */
+        bh = __find_get_block_slow(bdev, block);
+        if (bh)
+            bh_lru_install(bh);
+    } else
+        touch_buffer(bh);
+
+    return bh;
+}
+
+/*
+ * __getblk_gfp() will locate (and, if necessary, create) the buffer_head
+ * which corresponds to the passed block_device, block and size. The
+ * returned buffer has its reference count incremented.
+ *
+ * __getblk_gfp() will lock up the machine if grow_dev_page's
+ * try_to_free_buffers() attempt is failing.  FIXME, perhaps?
+ */
 struct buffer_head *
 __getblk_gfp(struct block_device *bdev, sector_t block,
          unsigned size, gfp_t gfp)
 {
-    return __bread_gfp(bdev, block, size, gfp);
+    printk("%s: block(%u) size(%u)\n", __func__, block, size);
+    struct buffer_head *bh = __find_get_block(bdev, block, size);
+    if (bh) {
+        printk("%s: bhsize(%u)\n", __func__, bh->b_size);
+    }
+
+    might_sleep();
+    if (bh == NULL)
+        bh = __getblk_slow(bdev, block, size, gfp);
+    return bh;
 }
 
 void __wait_on_buffer(struct buffer_head * bh)
@@ -564,6 +889,309 @@ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
         get_block_t *get_block)
 {
     return __block_write_begin_int(page, pos, len, get_block, NULL);
+}
+
+/*
+struct buffer_head *
+__bread_gfp(struct block_device *bdev, sector_t block,
+           unsigned size, gfp_t gfp)
+{
+    printk("%s: blknr(%llu) size(%u) BLOCK_SIZE(%u)\n",
+           __func__, block, size, BLOCK_SIZE);
+
+    int blkid;
+    int offset;
+    if (size == 4096) {
+        blkid = block * 8;
+        offset = 0;
+    } else {
+        blkid = block * 2;
+        offset = 0;
+    }
+
+    void *buf = alloc_pages_exact(4096, 0);
+    cl_read_block(blkid, buf, 4096);
+
+    struct buffer_head *bh = kmalloc(sizeof(struct buffer_head), 0);
+    bh->b_data = buf + offset;
+    bh->b_size = 4096;
+    bh->b_blocknr = block;
+    bh->b_page = virt_to_page(buf);
+    bh->b_bdev = bdev;
+    set_buffer_uptodate(bh);
+    return bh;
+}
+*/
+
+static struct buffer_head *__bread_slow(struct buffer_head *bh)
+{
+    lock_buffer(bh);
+    if (buffer_uptodate(bh)) {
+        unlock_buffer(bh);
+        return bh;
+    } else {
+        get_bh(bh);
+        bh->b_end_io = end_buffer_read_sync;
+        submit_bh(REQ_OP_READ, 0, bh);
+        wait_on_buffer(bh);
+        if (buffer_uptodate(bh))
+            return bh;
+    }
+    brelse(bh);
+    return NULL;
+}
+
+/**
+ *  __bread_gfp() - reads a specified block and returns the bh
+ *  @bdev: the block_device to read from
+ *  @block: number of block
+ *  @size: size (in bytes) to read
+ *  @gfp: page allocation flag
+ *
+ *  Reads a specified block, and returns buffer head that contains it.
+ *  The page cache can be allocated from non-movable area
+ *  not to prevent page migration if you set gfp to zero.
+ *  It returns NULL if the block was unreadable.
+ */
+struct buffer_head *
+__bread_gfp(struct block_device *bdev, sector_t block,
+           unsigned size, gfp_t gfp)
+{
+    printk("%s: ... blknr(%u) size(%u)\n", __func__, block, size);
+    struct buffer_head *bh = __getblk_gfp(bdev, block, size, gfp);
+
+    printk("%s: block(%u) size(%u) bh(0x%lx)\n", __func__, block, size, bh);
+    if (likely(bh) && !buffer_uptodate(bh))
+        bh = __bread_slow(bh);
+    return bh;
+}
+
+/*
+ * End-of-IO handler helper function which does not touch the bh after
+ * unlocking it.
+ * Note: unlock_buffer() sort-of does touch the bh after unlocking it, but
+ * a race there is benign: unlock_buffer() only use the bh's address for
+ * hashing after unlocking the buffer, so it doesn't actually touch the bh
+ * itself.
+ */
+static void __end_buffer_read_notouch(struct buffer_head *bh, int uptodate)
+{
+    if (uptodate) {
+        set_buffer_uptodate(bh);
+    } else {
+        /* This happens, due to failed read-ahead attempts. */
+        clear_buffer_uptodate(bh);
+    }
+    unlock_buffer(bh);
+}
+
+/*
+ * Default synchronous end-of-IO handler..  Just mark it up-to-date and
+ * unlock the buffer. This is what ll_rw_block uses too.
+ */
+void end_buffer_read_sync(struct buffer_head *bh, int uptodate)
+{
+    __end_buffer_read_notouch(bh, uptodate);
+    put_bh(bh);
+}
+
+void invalidate_bh_lrus(void)
+{
+    log_error("%s: No impl.\n", __func__);
+    //on_each_cpu_cond(has_bh_in_lru, invalidate_bh_lru, NULL, 1);
+}
+
+static void discard_buffer(struct buffer_head * bh)
+{
+    unsigned long b_state, b_state_old;
+
+    lock_buffer(bh);
+    clear_buffer_dirty(bh);
+    bh->b_bdev = NULL;
+    b_state = bh->b_state;
+    for (;;) {
+        b_state_old = cmpxchg(&bh->b_state, b_state,
+                      (b_state & ~BUFFER_FLAGS_DISCARD));
+        if (b_state_old == b_state)
+            break;
+        b_state = b_state_old;
+    }
+    unlock_buffer(bh);
+}
+
+/**
+ * block_invalidatepage - invalidate part or all of a buffer-backed page
+ *
+ * @page: the page which is affected
+ * @offset: start of the range to invalidate
+ * @length: length of the range to invalidate
+ *
+ * block_invalidatepage() is called when all or part of the page has become
+ * invalidated by a truncate operation.
+ *
+ * block_invalidatepage() does not have to release all buffers, but it must
+ * ensure that no dirty buffer is left outside @offset and that no I/O
+ * is underway against any of the blocks which are outside the truncation
+ * point.  Because the caller is about to free (and possibly reuse) those
+ * blocks on-disk.
+ */
+void block_invalidatepage(struct page *page, unsigned int offset,
+              unsigned int length)
+{
+    struct buffer_head *head, *bh, *next;
+    unsigned int curr_off = 0;
+    unsigned int stop = length + offset;
+
+    BUG_ON(!PageLocked(page));
+    if (!page_has_buffers(page))
+        goto out;
+
+    /*
+     * Check for overflow
+     */
+    BUG_ON(stop > PAGE_SIZE || stop < length);
+
+    head = page_buffers(page);
+    bh = head;
+    do {
+        unsigned int next_off = curr_off + bh->b_size;
+        next = bh->b_this_page;
+
+        /*
+         * Are we still fully in range ?
+         */
+        if (next_off > stop)
+            goto out;
+
+        /*
+         * is this block fully invalidated?
+         */
+        if (offset <= curr_off)
+            discard_buffer(bh);
+        curr_off = next_off;
+        bh = next;
+    } while (bh != head);
+
+    /*
+     * We release buffers only if the entire page is being invalidated.
+     * The get_block cached value has been unconditionally invalidated,
+     * so real IO is not possible anymore.
+     */
+    if (length == PAGE_SIZE)
+        try_to_release_page(page, 0);
+out:
+    return;
+}
+
+/*
+ * The buffer's backing address_space's private_lock must be held
+ */
+static void __remove_assoc_queue(struct buffer_head *bh)
+{
+    list_del_init(&bh->b_assoc_buffers);
+    WARN_ON(!bh->b_assoc_map);
+    bh->b_assoc_map = NULL;
+}
+
+/*
+ * try_to_free_buffers() checks if all the buffers on this particular page
+ * are unused, and releases them if so.
+ *
+ * Exclusion against try_to_free_buffers may be obtained by either
+ * locking the page or by holding its mapping's private_lock.
+ *
+ * If the page is dirty but all the buffers are clean then we need to
+ * be sure to mark the page clean as well.  This is because the page
+ * may be against a block device, and a later reattachment of buffers
+ * to a dirty page will set *all* buffers dirty.  Which would corrupt
+ * filesystem data on the same device.
+ *
+ * The same applies to regular filesystem pages: if all the buffers are
+ * clean then we set the page clean and proceed.  To do that, we require
+ * total exclusion from __set_page_dirty_buffers().  That is obtained with
+ * private_lock.
+ *
+ * try_to_free_buffers() is non-blocking.
+ */
+static inline int buffer_busy(struct buffer_head *bh)
+{
+    return atomic_read(&bh->b_count) |
+        (bh->b_state & ((1 << BH_Dirty) | (1 << BH_Lock)));
+}
+
+static int
+drop_buffers(struct page *page, struct buffer_head **buffers_to_free)
+{
+    struct buffer_head *head = page_buffers(page);
+    struct buffer_head *bh;
+
+    bh = head;
+    do {
+        if (buffer_busy(bh))
+            goto failed;
+        bh = bh->b_this_page;
+    } while (bh != head);
+
+    do {
+        struct buffer_head *next = bh->b_this_page;
+
+        if (bh->b_assoc_map)
+            __remove_assoc_queue(bh);
+        bh = next;
+    } while (bh != head);
+    *buffers_to_free = head;
+    detach_page_private(page);
+    return 1;
+failed:
+    return 0;
+}
+
+int try_to_free_buffers(struct page *page)
+{
+    struct address_space * const mapping = page->mapping;
+    struct buffer_head *buffers_to_free = NULL;
+    int ret = 0;
+
+    BUG_ON(!PageLocked(page));
+    if (PageWriteback(page))
+        return 0;
+
+    if (mapping == NULL) {      /* can this still happen? */
+        ret = drop_buffers(page, &buffers_to_free);
+        goto out;
+    }
+
+    spin_lock(&mapping->private_lock);
+    ret = drop_buffers(page, &buffers_to_free);
+
+    /*
+     * If the filesystem writes its buffers by hand (eg ext3)
+     * then we can have clean buffers against a dirty page.  We
+     * clean the page here; otherwise the VM will never notice
+     * that the filesystem did any IO at all.
+     *
+     * Also, during truncate, discard_buffer will have marked all
+     * the page's buffers clean.  We discover that here and clean
+     * the page also.
+     *
+     * private_lock must be held over this entire operation in order
+     * to synchronise against __set_page_dirty_buffers and prevent the
+     * dirty bit from being lost.
+     */
+    if (ret)
+        cancel_dirty_page(page);
+    spin_unlock(&mapping->private_lock);
+out:
+    if (buffers_to_free) {
+        struct buffer_head *bh = buffers_to_free;
+
+        do {
+            struct buffer_head *next = bh->b_this_page;
+            free_buffer_head(bh);
+            bh = next;
+        } while (bh != buffers_to_free);
+    }
+    return ret;
 }
 
 void __init buffer_init(void)
