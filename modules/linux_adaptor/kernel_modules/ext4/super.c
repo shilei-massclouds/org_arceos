@@ -4621,7 +4621,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		goto failed_mount_wq;
 	}
 
-    printk("--- %s: step5\n", __func__);
+    //printk("--- %s: step5\n", __func__);
 	/* We have now updated the journal if required, so we can
 	 * validate the data journaling mode. */
 	switch (test_opt(sb, DATA_FLAGS)) {
@@ -4740,7 +4740,7 @@ no_journal:
 		sb->s_d_op = &ext4_dentry_ops;
 #endif
 
-    printk("--- %s: step6\n", __func__);
+    //printk("--- %s: step6\n", __func__);
 	sb->s_root = d_make_root(root);
 	if (!sb->s_root) {
 		ext4_msg(sb, KERN_ERR, "get root dentry failed");

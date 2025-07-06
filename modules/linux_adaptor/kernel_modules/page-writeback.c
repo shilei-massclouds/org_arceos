@@ -222,12 +222,135 @@ int set_page_dirty(struct page *page)
 
 int __test_set_page_writeback(struct page *page, bool keep_write)
 {
+    struct address_space *mapping = page_mapping(page);
+    int ret, access_ret;
+
+    lock_page_memcg(page);
+    if (mapping && mapping_use_writeback_tags(mapping)) {
+        XA_STATE(xas, &mapping->i_pages, page_index(page));
+        struct inode *inode = mapping->host;
+        struct backing_dev_info *bdi = inode_to_bdi(inode);
+        unsigned long flags;
+
+        xas_lock_irqsave(&xas, flags);
+        xas_load(&xas);
+        ret = TestSetPageWriteback(page);
+        if (!ret) {
+            bool on_wblist;
+
+            on_wblist = mapping_tagged(mapping,
+                           PAGECACHE_TAG_WRITEBACK);
+
+            xas_set_mark(&xas, PAGECACHE_TAG_WRITEBACK);
+            if (bdi_cap_account_writeback(bdi))
+                inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
+
+            /*
+             * We can come through here when swapping anonymous
+             * pages, so we don't necessarily have an inode to track
+             * for sync.
+             */
+            if (mapping->host && !on_wblist)
+                sb_mark_inode_writeback(mapping->host);
+        }
+        if (!PageDirty(page))
+            xas_clear_mark(&xas, PAGECACHE_TAG_DIRTY);
+        if (!keep_write)
+            xas_clear_mark(&xas, PAGECACHE_TAG_TOWRITE);
+        xas_unlock_irqrestore(&xas, flags);
+    } else {
+        ret = TestSetPageWriteback(page);
+    }
+    /*
+    if (!ret) {
+        inc_lruvec_page_state(page, NR_WRITEBACK);
+        inc_zone_page_state(page, NR_ZONE_WRITE_PENDING);
+    }
+    */
+    unlock_page_memcg(page);
+    access_ret = arch_make_page_accessible(page);
+    /*
+     * If writeback has been triggered on a page that cannot be made
+     * accessible, it is too late to recover here.
+     */
+    VM_BUG_ON_PAGE(access_ret != 0, page);
+
+    return ret;
+}
+
+/*
+ * mark an inode as under writeback on the sb
+ */
+void sb_mark_inode_writeback(struct inode *inode)
+{
     log_error("%s: No impl.\n", __func__);
-    return 0;
+}
+
+/*
+ * Increment @wb's writeout completion count and the global writeout
+ * completion count. Called from test_clear_page_writeback().
+ */
+static inline void __wb_writeout_inc(struct bdi_writeback *wb)
+{
+    log_error("%s: No impl.\n", __func__);
 }
 
 int test_clear_page_writeback(struct page *page)
 {
+    struct address_space *mapping = page_mapping(page);
+    struct mem_cgroup *memcg;
+    struct lruvec *lruvec;
+    int ret;
+
+    memcg = lock_page_memcg(page);
+    lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+    if (mapping && mapping_use_writeback_tags(mapping)) {
+        struct inode *inode = mapping->host;
+        struct backing_dev_info *bdi = inode_to_bdi(inode);
+        unsigned long flags;
+
+        xa_lock_irqsave(&mapping->i_pages, flags);
+        ret = TestClearPageWriteback(page);
+        if (ret) {
+            __xa_clear_mark(&mapping->i_pages, page_index(page),
+                        PAGECACHE_TAG_WRITEBACK);
+            if (bdi_cap_account_writeback(bdi)) {
+                struct bdi_writeback *wb = inode_to_wb(inode);
+
+                dec_wb_stat(wb, WB_WRITEBACK);
+                __wb_writeout_inc(wb);
+            }
+        }
+
+        if (mapping->host && !mapping_tagged(mapping,
+                             PAGECACHE_TAG_WRITEBACK))
+            sb_clear_inode_writeback(mapping->host);
+
+        xa_unlock_irqrestore(&mapping->i_pages, flags);
+    } else {
+        ret = TestClearPageWriteback(page);
+    }
+    /*
+     * NOTE: Page might be free now! Writeback doesn't hold a page
+     * reference on its own, it relies on truncation to wait for
+     * the clearing of PG_writeback. The below can only access
+     * page state that is static across allocation cycles.
+     */
+    /*
+    if (ret) {
+        dec_lruvec_state(lruvec, NR_WRITEBACK);
+        dec_zone_page_state(page, NR_ZONE_WRITE_PENDING);
+        inc_node_page_state(page, NR_WRITTEN);
+    }
+    */
+    __unlock_page_memcg(memcg);
+    return ret;
+}
+
+/*
+ * clear an inode as under writeback on the sb
+ */
+void sb_clear_inode_writeback(struct inode *inode)
+{
     log_error("%s: No impl.\n", __func__);
-    return 0;
 }
