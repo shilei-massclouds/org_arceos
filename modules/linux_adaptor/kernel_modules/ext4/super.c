@@ -4834,11 +4834,10 @@ no_journal:
     /*
      * Note: impl sb->s_bdev->bd_inode
      */
-    /*
 	if (!sb_rdonly(sb))
 		errseq_check_and_advance(&sb->s_bdev->bd_inode->i_mapping->wb_err,
 					 &sbi->s_bdev_wb_err);
-                     */
+
 	sb->s_bdev->bd_super = sb;
 	EXT4_SB(sb)->s_mount_state |= EXT4_ORPHAN_FS;
 	ext4_orphan_cleanup(sb, es);

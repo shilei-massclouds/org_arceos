@@ -150,10 +150,10 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 
     printk("%s: ... (%u, %u)\n", __func__, start, end);
 	ret = file_write_and_wait_range(file, start, end);
-    printk("%s: step2\n", __func__);
 	if (ret)
 		return ret;
 
+    printk("%s: step2 ret(%d) s_journal(%lx)\n", __func__, ret, sbi->s_journal);
 	/*
 	 * data=writeback,ordered:
 	 *  The caller's filemap_fdatawrite()/wait will sync the data.
@@ -174,9 +174,9 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 		ret = ext4_force_commit(inode->i_sb);
 	else
 		ret = ext4_fsync_journal(inode, datasync, &needs_barrier);
+    printk("%s: step3\n", __func__);
 
 	if (needs_barrier) {
-    printk("%s: step3\n", __func__);
 		err = blkdev_issue_flush(inode->i_sb->s_bdev, GFP_KERNEL);
 		if (!ret)
 			ret = err;

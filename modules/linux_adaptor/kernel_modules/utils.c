@@ -33,8 +33,7 @@ void __might_fault(const char *file, int line)
 
 void dump_page(struct page *page, const char *reason)
 {
-    log_error("%s: Page(0x%lx): %s\n", __func__, page, reason);
-    booter_panic("No impl.");
+    printk("%s: Page(0x%lx): %s\n", __func__, page, reason);
 }
 
 /**
@@ -45,26 +44,6 @@ void rcu_sync_init(struct rcu_sync *rsp)
 {
     memset(rsp, 0, sizeof(*rsp));
     init_waitqueue_head(&rsp->gp_wait);
-}
-
-/**
- * errseq_check() - Has an error occurred since a particular sample point?
- * @eseq: Pointer to errseq_t value to be checked.
- * @since: Previously-sampled errseq_t from which to check.
- *
- * Grab the value that eseq points to, and see if it has changed @since
- * the given value was sampled. The @since value is not advanced, so there
- * is no need to mark the value as seen.
- *
- * Return: The latest error set in the errseq_t or 0 if it hasn't changed.
- */
-int errseq_check(errseq_t *eseq, errseq_t since)
-{
-    errseq_t cur = READ_ONCE(*eseq);
-
-    if (likely(cur == since))
-        return 0;
-    return -(cur & MAX_ERRNO);
 }
 
 struct address_space *page_mapping(struct page *page)

@@ -701,10 +701,13 @@ int jbd2_log_wait_commit(journal_t *journal, tid_t tid)
 	while (tid_gt(tid, journal->j_commit_sequence)) {
 		jbd_debug(1, "JBD2: want %u, j_commit_sequence=%u\n",
 				  tid, journal->j_commit_sequence);
+		printk("JBD2: want %u, j_commit_sequence=%u\n", tid, journal->j_commit_sequence);
+
 		read_unlock(&journal->j_state_lock);
 		wake_up(&journal->j_wait_commit);
 		wait_event(journal->j_wait_done_commit,
 				!tid_gt(tid, journal->j_commit_sequence));
+    printk("%s: end\n", __func__);
 		read_lock(&journal->j_state_lock);
 	}
 	read_unlock(&journal->j_state_lock);
@@ -745,6 +748,9 @@ int jbd2_complete_transaction(journal_t *journal, tid_t tid)
 	read_lock(&journal->j_state_lock);
 	if (journal->j_running_transaction &&
 	    journal->j_running_transaction->t_tid == tid) {
+
+        printk("---------- %s: (%u, %u)\n", __func__, journal->j_running_transaction->t_tid, tid);
+
 		if (journal->j_commit_request != tid) {
 			/* transaction not yet started, so request it */
 			read_unlock(&journal->j_state_lock);
