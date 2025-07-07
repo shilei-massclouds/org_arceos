@@ -295,8 +295,6 @@ struct ext4_group_desc * ext4_get_group_desc(struct super_block *sb,
 		return NULL;
 	}
 
-    printk("%s: blknr(%u) size(%u)\n", __func__, bh_p->b_blocknr, bh_p->b_size);
-    printk("%s: off(%u)\n", __func__, offset * EXT4_DESC_SIZE(sb));
 	desc = (struct ext4_group_desc *)(
 		(__u8 *)bh_p->b_data +
 		offset * EXT4_DESC_SIZE(sb));

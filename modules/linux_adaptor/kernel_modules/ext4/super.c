@@ -4556,6 +4556,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 
 	sb->s_root = NULL;
 
+    printk("%s: s_last_orphan(%u) (%u)\n", __func__, es->s_last_orphan, ext4_has_feature_journal_needs_recovery(sb));
 	needs_recovery = (es->s_last_orphan != 0 ||
 			  ext4_has_feature_journal_needs_recovery(sb));
 
@@ -4842,6 +4843,8 @@ no_journal:
 	EXT4_SB(sb)->s_mount_state |= EXT4_ORPHAN_FS;
 	ext4_orphan_cleanup(sb, es);
 	EXT4_SB(sb)->s_mount_state &= ~EXT4_ORPHAN_FS;
+
+    printk("needs_recovery(%u)\n", needs_recovery);
 	if (needs_recovery) {
 		ext4_msg(sb, KERN_INFO, "recovery complete");
 		err = ext4_mark_recovery_complete(sb, es);
@@ -4886,6 +4889,7 @@ no_journal:
 	atomic_set(&sbi->s_msg_count, 0);
 
 	kfree(orig_data);
+    printk("END ---------------------------\n");
 	return 0;
 
 cantfind_ext4:

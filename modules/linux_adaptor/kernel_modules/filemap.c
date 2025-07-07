@@ -14,6 +14,15 @@
 #include "mm/internal.h"
 #include "booter.h"
 
+/* Returns true if writeback might be needed or already in progress. */
+static bool mapping_needs_writeback(struct address_space *mapping)
+{
+    if (dax_mapping(mapping))
+        return mapping->nrexceptional;
+
+    return mapping->nrpages;
+}
+
 /*
  * CD/DVDs are error prone. When a medium error occurs, the driver may fail
  * a _large_ part of the i/o request. Imagine the worst scenario:
@@ -141,8 +150,43 @@ struct page *read_cache_page(struct address_space *mapping,
 int filemap_write_and_wait_range(struct address_space *mapping,
                  loff_t lstart, loff_t lend)
 {
-    log_error("%s: No impl.\n", __func__);
-    return 0;
+    int err = 0;
+
+    if (mapping_needs_writeback(mapping)) {
+        err = __filemap_fdatawrite_range(mapping, lstart, lend,
+                         WB_SYNC_ALL);
+        /*
+         * Even if the above returned error, the pages may be
+         * written partially (e.g. -ENOSPC), so we wait for it.
+         * But the -EIO is special case, it may indicate the worst
+         * thing (e.g. bug) happened, so we avoid waiting for it.
+         */
+        if (err != -EIO) {
+            int err2 = filemap_fdatawait_range(mapping,
+                        lstart, lend);
+            if (!err)
+                err = err2;
+        } else {
+            /* Clear any previously stored errors */
+            filemap_check_errors(mapping);
+        }
+    } else {
+        err = filemap_check_errors(mapping);
+    }
+    return err;
+}
+
+int filemap_check_errors(struct address_space *mapping)
+{
+    int ret = 0;
+    /* Check for outstanding write errors */
+    if (test_bit(AS_ENOSPC, &mapping->flags) &&
+        test_and_clear_bit(AS_ENOSPC, &mapping->flags))
+        ret = -ENOSPC;
+    if (test_bit(AS_EIO, &mapping->flags) &&
+        test_and_clear_bit(AS_EIO, &mapping->flags))
+        ret = -EIO;
+    return ret;
 }
 
 /**
@@ -903,15 +947,6 @@ struct page *grab_cache_page_write_begin(struct address_space *mapping,
     return page;
 }
 
-/* Returns true if writeback might be needed or already in progress. */
-static bool mapping_needs_writeback(struct address_space *mapping)
-{
-    if (dax_mapping(mapping))
-        return mapping->nrexceptional;
-
-    return mapping->nrpages;
-}
-
 /**
  * __filemap_fdatawrite_range - start writeback on mapping dirty pages in range
  * @mapping:    address space structure to write
@@ -984,6 +1019,29 @@ static void __filemap_fdatawait_range(struct address_space *mapping,
         pagevec_release(&pvec);
         cond_resched();
     }
+}
+
+/**
+ * filemap_fdatawait_range - wait for writeback to complete
+ * @mapping:        address space structure to wait for
+ * @start_byte:     offset in bytes where the range starts
+ * @end_byte:       offset in bytes where the range ends (inclusive)
+ *
+ * Walk the list of under-writeback pages of the given address space
+ * in the given range and wait for all of them.  Check error status of
+ * the address space and return it.
+ *
+ * Since the error status of the address space is cleared by this function,
+ * callers are responsible for checking the return value and handling and/or
+ * reporting the error.
+ *
+ * Return: error status of the address space.
+ */
+int filemap_fdatawait_range(struct address_space *mapping, loff_t start_byte,
+                loff_t end_byte)
+{
+    __filemap_fdatawait_range(mapping, start_byte, end_byte);
+    return filemap_check_errors(mapping);
 }
 
 /**

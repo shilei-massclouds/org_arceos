@@ -649,12 +649,10 @@ __find_get_block_slow(struct block_device *bdev, sector_t block)
     static DEFINE_RATELIMIT_STATE(last_warned, HZ, 1);
 
     index = block >> (PAGE_SHIFT - bd_inode->i_blkbits);
-    printk("%s: ... index(%u)\n", __func__, index);
     page = find_get_page_flags(bd_mapping, index, FGP_ACCESSED);
     if (!page)
         goto out;
 
-    printk("%s: 2\n", __func__);
     spin_lock(&bd_mapping->private_lock);
     if (!page_has_buffers(page))
         goto out_unlock;
@@ -666,7 +664,6 @@ __find_get_block_slow(struct block_device *bdev, sector_t block)
         else if (bh->b_blocknr == block) {
             ret = bh;
             get_bh(bh);
-    printk("%s: 3 bhsize(%u)\n", __func__, bh->b_size);
             goto out_unlock;
         }
         bh = bh->b_this_page;
