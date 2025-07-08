@@ -138,6 +138,11 @@ void workingset_update_node(struct xa_node *node)
     log_error("%s: No impl.", __func__);
 }
 
+void ktime_get_coarse_real_ts64(struct timespec64 *ts)
+{
+    log_error("%s: No impl.", __func__);
+}
+
 /*
  * Zero means infinite timeout - no checking done:
  */

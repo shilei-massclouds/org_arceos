@@ -15,5 +15,6 @@ axlog = { workspace = true }
 axconfig = { workspace = true }
 axhal = { workspace = true }
 axalloc = { workspace = true }
+axtask = { workspace = true }
 
 memory_addr = "0.3"

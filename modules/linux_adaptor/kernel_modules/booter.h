@@ -14,6 +14,14 @@ extern void cl_printk(const char *s);
 extern void cl_log_debug(const char *s);
 extern void cl_log_error(const char *s);
 
+extern unsigned long
+cl_kthread_run(unsigned long task_ptr,
+               unsigned long threadfn_ptr,
+               unsigned long arg_ptr);
+
+extern void cl_resched(unsigned long back_to_runq);
+extern void cl_wake_up(unsigned long tid);
+
 extern void cl_terminate(void);
 
 extern int log_debug(const char *fmt, ...);

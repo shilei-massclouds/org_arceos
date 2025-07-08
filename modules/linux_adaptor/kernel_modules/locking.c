@@ -85,6 +85,17 @@ __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
     log_debug("%s: ===> WARN: impl it. (%lx) (%s)\n", __func__, (unsigned long)lock, name);
 }
 
+void __sched mutex_lock_io(struct mutex *lock)
+{
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+}
+
+bool mutex_is_locked(struct mutex *lock)
+{
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+    return true;
+}
+
 void __rwlock_init(rwlock_t *lock, const char *name,
            struct lock_class_key *key)
 {

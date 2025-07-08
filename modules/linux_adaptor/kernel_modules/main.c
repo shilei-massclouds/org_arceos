@@ -2,12 +2,15 @@
 #include <linux/printk.h>
 #include <linux/dcache.h>
 #include <linux/fs.h>
+#include <linux/sched/init.h>
 #include <linux/buffer_head.h>
 
 #include "booter.h"
 
 //#define TEST_EXT2
 #define TEST_EXT4
+
+extern void init_current(unsigned long thread_id);
 
 extern int cl_irq_init(void);
 extern int cl_enable_irq(void);
@@ -38,9 +41,11 @@ extern ssize_t new_sync_write(struct file *filp, const char *buf, size_t len, lo
 static void test_ext2(void);
 static void test_ext4(void);
 
-int clinux_init()
+int clinux_init(void)
 {
-    printk("cLinux base is starting ...\n");
+    printk("cLinux base is starting thread_id: ...\n");
+
+    sched_init();
 
     cl_irq_init();
 

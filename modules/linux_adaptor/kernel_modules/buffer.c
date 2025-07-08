@@ -39,6 +39,14 @@ static inline int block_size_bits(unsigned int blocksize)
     return ilog2(blocksize);
 }
 
+static void buffer_io_error(struct buffer_head *bh, char *msg)
+{
+    if (!test_bit(BH_Quiet, &bh->b_state))
+        printk_ratelimited(KERN_ERR
+            "Buffer I/O error on dev %pg, logical block %llu%s\n",
+            bh->b_bdev, (unsigned long long)bh->b_blocknr, msg);
+}
+
 static struct buffer_head *create_page_buffers(struct page *page, struct inode *inode, unsigned int b_state)
 {
     BUG_ON(!PageLocked(page));
@@ -350,15 +358,14 @@ int sync_dirty_buffer(struct buffer_head *bh)
 
 void __lock_buffer(struct buffer_head *bh)
 {
-    log_error("%s: No impl.\n", __func__);
+    wait_on_bit_lock_io(&bh->b_state, BH_Lock, TASK_UNINTERRUPTIBLE);
 }
 
 void unlock_buffer(struct buffer_head *bh)
 {
     clear_bit_unlock(BH_Lock, &bh->b_state);
     smp_mb__after_atomic();
-    log_error("%s: No impl.\n", __func__);
-    //wake_up_bit(&bh->b_state, BH_Lock);
+    wake_up_bit(&bh->b_state, BH_Lock);
 }
 
 /*
@@ -973,6 +980,7 @@ __bread_gfp(struct block_device *bdev, sector_t block,
  */
 static void __end_buffer_read_notouch(struct buffer_head *bh, int uptodate)
 {
+    printk("%s: ...\n", __func__);
     if (uptodate) {
         set_buffer_uptodate(bh);
     } else {
@@ -988,6 +996,7 @@ static void __end_buffer_read_notouch(struct buffer_head *bh, int uptodate)
  */
 void end_buffer_read_sync(struct buffer_head *bh, int uptodate)
 {
+    printk("%s: ...\n", __func__);
     __end_buffer_read_notouch(bh, uptodate);
     put_bh(bh);
 }
@@ -1189,6 +1198,42 @@ out:
         } while (bh != buffers_to_free);
     }
     return ret;
+}
+
+void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
+{
+    printk("%s: ...\n", __func__);
+    if (uptodate) {
+        set_buffer_uptodate(bh);
+    } else {
+        buffer_io_error(bh, ", lost sync page write");
+        mark_buffer_write_io_error(bh);
+        clear_buffer_uptodate(bh);
+    }
+    unlock_buffer(bh);
+    put_bh(bh);
+}
+
+void mark_buffer_write_io_error(struct buffer_head *bh)
+{
+    struct super_block *sb;
+
+    set_buffer_write_io_error(bh);
+    /* FIXME: do we need to set this in both places? */
+    if (bh->b_page && bh->b_page->mapping)
+        mapping_set_error(bh->b_page->mapping, -EIO);
+    if (bh->b_assoc_map)
+        mapping_set_error(bh->b_assoc_map, -EIO);
+    rcu_read_lock();
+    sb = READ_ONCE(bh->b_bdev->bd_super);
+    if (sb)
+        errseq_set(&sb->s_wb_err, -EIO);
+    rcu_read_unlock();
+}
+
+void free_buffer_head(struct buffer_head *bh)
+{
+    log_error("%s: No impl.\n", __func__);
 }
 
 void __init buffer_init(void)

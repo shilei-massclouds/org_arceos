@@ -32,20 +32,11 @@ struct task_struct *kthread_create_on_node(int (*threadfn)(void *data),
                        const char namefmt[],
                        ...)
 {
-    log_error("%s: No impl.\n", __func__);
-
-    /*
-     * Just for journal.
-     */
-    log_error("Note: this is just for JBD2.");
-    journal_t *journal = data;
-
-    /* Record that the journal thread is running */
-    journal->j_task = current;
-    wake_up(&journal->j_wait_done_commit);
-
-    struct task_struct *dummy = kmalloc(sizeof(struct task_struct), 0);
-    return dummy;
+    struct task_struct *task = kmalloc(sizeof(struct task_struct), 0);
+    unsigned long tid = cl_kthread_run(task, threadfn, data);
+    printk("%s: kthread[%lu]\n", __func__, tid);
+    task->pid = tid;
+    return task;
 }
 
 /**

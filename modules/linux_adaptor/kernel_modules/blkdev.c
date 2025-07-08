@@ -14,7 +14,11 @@ int sb_min_blocksize(struct super_block *sb, int size)
 
 void __brelse(struct buffer_head * buf)
 {
-    log_debug("%s: impl it.\n", __func__);
+    if (atomic_read(&buf->b_count)) {
+        put_bh(buf);
+        return;
+    }
+    WARN(1, KERN_ERR "VFS: brelse: Trying to free free buffer\n");
 }
 
 /* Kill _all_ buffers and pagecache , dirty or not.. */
@@ -88,7 +92,9 @@ static void end_bio_bh_io_sync(struct bio *bio)
     if (unlikely(bio_flagged(bio, BIO_QUIET)))
         set_bit(BH_Quiet, &bh->b_state);
 
+    printk("%s: ...\n", __func__);
     bh->b_end_io(bh, !bio->bi_status);
+    printk("%s: ok!\n", __func__);
     bio_put(bio);
 }
 

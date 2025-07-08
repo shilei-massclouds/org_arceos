@@ -64,3 +64,40 @@ pub extern "C" fn cl_log_error(ptr: *const c_char) {
     let rust_str = c_str.to_str().expect("Bad encoding");
     error!("{}", rust_str);
 }
+
+type LinuxKthreadFunc = extern fn(usize) -> isize;
+
+/// Spawn a task(kthread).
+#[unsafe(no_mangle)]
+pub extern "C" fn cl_kthread_run(
+    task_ptr: u64, threadfn: LinuxKthreadFunc, arg: usize
+) -> u64 {
+    let task = axtask::spawn_raw(
+        move || {
+            error!("linux kthread: fn {:#?} {:#x}", threadfn, arg);
+            threadfn(arg);
+        },
+        "linux kthread".into(),
+        0x1000,
+    );
+    error!("Kthread task pointer({:#x})", task_ptr);
+    task.set_private(task_ptr);
+    task.id().as_u64()
+}
+
+/// Reschedule.
+#[unsafe(no_mangle)]
+pub extern "C" fn cl_resched(back_to_runq: usize) {
+    if back_to_runq != 0 {
+        axtask::yield_now();
+    } else {
+        axtask::__resched();
+    }
+}
+
+/// Reschedule.
+#[unsafe(no_mangle)]
+pub extern "C" fn cl_wake_up(tid: u64) {
+    error!("wake up thread: {}", tid);
+    axtask::__wake_up(tid)
+}

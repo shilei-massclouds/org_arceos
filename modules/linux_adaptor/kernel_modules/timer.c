@@ -61,3 +61,9 @@ int mod_timer(struct timer_list *timer, unsigned long expires)
     log_error("%s: No impl.", __func__);
     return 0;
 }
+
+int del_timer(struct timer_list *timer)
+{
+    log_error("%s: No impl.", __func__);
+    return 0;
+}

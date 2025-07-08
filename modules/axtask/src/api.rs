@@ -182,6 +182,16 @@ pub fn yield_now() {
     current_run_queue::<NoPreemptIrqSave>().yield_current()
 }
 
+/// Current task just gives up the CPU time voluntarily, but NOT back to run-queue.
+pub fn __resched() {
+    current_run_queue::<NoPreemptIrqSave>().__resched()
+}
+
+/// Wake up the task by tid.
+pub fn __wake_up(tid: u64) {
+    current_run_queue::<NoPreemptIrqSave>().__wake_up(tid)
+}
+
 /// Current task is going to sleep for the given duration.
 ///
 /// If the feature `irq` is not enabled, it uses busy-wait instead.

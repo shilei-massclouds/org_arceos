@@ -1,4 +1,4 @@
-use alloc::collections::VecDeque;
+use alloc::collections::{BTreeMap, VecDeque};
 use alloc::sync::Arc;
 use core::mem::MaybeUninit;
 
@@ -52,6 +52,10 @@ static mut RUN_QUEUES: [MaybeUninit<&'static mut AxRunQueue>; axconfig::SMP] =
     [ARRAY_REPEAT_VALUE; axconfig::SMP];
 #[allow(clippy::declare_interior_mutable_const)] // It's ok because it's used only for initialization `RUN_QUEUES`.
 const ARRAY_REPEAT_VALUE: MaybeUninit<&'static mut AxRunQueue> = MaybeUninit::uninit();
+
+/// Maintain all detached tasks by `__resched()`.
+/// Now it's just to maintain all tasks for Linux KThread.
+static DETACHED_TASKS: SpinRaw<BTreeMap<u64, AxTaskRef>> = SpinRaw::new(BTreeMap::new());
 
 /// Returns a reference to the current run queue in [`CurrentRunQueueRef`].
 ///
@@ -291,6 +295,29 @@ impl<G: BaseGuard> CurrentRunQueueRef<'_, G> {
             .put_task_with_state(curr.clone(), TaskState::Running, false);
 
         self.inner.resched();
+    }
+
+    /// Request to reschedule.
+    /// Switch to the next task on this run-queue, but current task will NOT be put back
+    /// to run-queue. `DETACHED_TASKS` will hold its refcount.
+    /// Now only feature [linux adaptor] will use it.
+    pub fn __resched(&mut self) {
+        let curr = &self.current_task;
+        trace!("task resched: {}", curr.id_name());
+        curr.set_state(TaskState::Blocked);
+        DETACHED_TASKS.lock().insert(curr.id().as_u64(), curr.clone());
+
+        self.inner.resched();
+    }
+
+    /// Wake up detached task which is for Linux.
+    pub fn __wake_up(&mut self, tid: u64) {
+        if let Some(task) = DETACHED_TASKS.lock().remove(&tid) {
+            self.inner
+                .put_task_with_state(task, TaskState::Blocked, true);
+        } else {
+            panic!("No detached task which id is {}.", tid);
+        }
     }
 
     /// Migrate the current task to a new run queue matching its CPU affinity and reschedule.

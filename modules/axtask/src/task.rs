@@ -75,6 +75,9 @@ pub struct TaskInner {
 
     #[cfg(feature = "tls")]
     tls: TlsArea,
+
+    /// Private value. Now just for Linux KThread pointer.
+    private: AtomicU64,
 }
 
 impl TaskId {
@@ -239,6 +242,7 @@ impl TaskInner {
             task_ext: AxTaskExt::empty(),
             #[cfg(feature = "tls")]
             tls: TlsArea::alloc(),
+            private: AtomicU64::new(0),
         }
     }
 
@@ -263,6 +267,16 @@ impl TaskInner {
 
     pub(crate) fn into_arc(self) -> AxTaskRef {
         Arc::new(AxTask::new(self))
+    }
+
+    #[inline]
+    pub(crate) fn private(&self) -> u64 {
+        self.private.load(Ordering::Acquire).into()
+    }
+
+    #[inline]
+    pub fn set_private(&self, value: u64) {
+        self.private.store(value, Ordering::Release)
     }
 
     #[inline]
@@ -506,6 +520,10 @@ impl CurrentTask {
     pub(crate) unsafe fn set_current(prev: Self, next: AxTaskRef) {
         let Self(arc) = prev;
         ManuallyDrop::into_inner(arc); // `call Arc::drop()` to decrease prev task reference count.
+
+        // Note: just for linux-adaptor.
+        axhal::arch::write_thread_pointer(next.private() as usize);
+
         let ptr = Arc::into_raw(next);
         unsafe {
             axhal::cpu::set_current_task_ptr(ptr);

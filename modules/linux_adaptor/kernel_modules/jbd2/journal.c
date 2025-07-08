@@ -167,6 +167,7 @@ static void commit_timeout(struct timer_list *t)
 
 static int kjournald2(void *arg)
 {
+    printk("[%s]: arg(%lx)\n", __func__, arg);
 	journal_t *journal = arg;
 	transaction_t *transaction;
 
@@ -230,8 +231,10 @@ loop:
 		DEFINE_WAIT(wait);
 		int should_sleep = 1;
 
+        printk("%s: step2\n", __func__);
 		prepare_to_wait(&journal->j_wait_commit, &wait,
 				TASK_INTERRUPTIBLE);
+        printk("%s: step3\n", __func__);
 		if (journal->j_commit_sequence != journal->j_commit_request)
 			should_sleep = 0;
 		transaction = journal->j_running_transaction;

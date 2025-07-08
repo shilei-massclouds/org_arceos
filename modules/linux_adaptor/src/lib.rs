@@ -28,6 +28,12 @@ pub fn init_linux_modules() {
     let end = pa!(PHYS_MEMORY_BASE + PHYS_MEMORY_SIZE).align_down_4k();
     unsafe { init_mem_map(start.into(), end.into()) };
 
+    let task_ptr = unsafe {
+        init_current(axtask::current().id().as_u64())
+    };
+    axtask::current().set_private(task_ptr);
+    error!("Linux init_tasik pointer({:#x})", task_ptr);
+
     let ret = unsafe { clinux_init() };
     info!("cLinux init [{}].", ret);
 }
@@ -47,6 +53,7 @@ fn prepare_ext_interrupt() {
 
 #[link(name = "clinux", kind = "static")]
 unsafe extern "C" {
+    fn init_current(tid: u64) -> u64;
     fn clinux_init() -> i32;
     fn init_mem_map(pa_start: usize, pa_end: usize) -> i32;
 }

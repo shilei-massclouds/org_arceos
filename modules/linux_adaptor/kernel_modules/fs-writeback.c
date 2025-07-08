@@ -96,6 +96,7 @@ static bool inode_io_list_move_locked(struct inode *inode,
  */
 void __mark_inode_dirty(struct inode *inode, int flags)
 {
+    printk("%s: step0 inode_ptr(%lx)\n", __func__, inode);
     struct super_block *sb = inode->i_sb;
     int dirtytime;
 
