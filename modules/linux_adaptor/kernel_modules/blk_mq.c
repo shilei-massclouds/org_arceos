@@ -148,6 +148,61 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
     return blk_mq_init_queue_data(set, NULL);
 }
 
+/*
+ * Initial write bandwidth: 100 MB/s
+ */
+#define INIT_BW     (100 << (20 - PAGE_SHIFT))
+
+static int wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi,
+           gfp_t gfp)
+{
+    int i, err;
+
+    memset(wb, 0, sizeof(*wb));
+
+    if (wb != &bdi->wb)
+        bdi_get(bdi);
+    wb->bdi = bdi;
+    wb->last_old_flush = jiffies;
+    INIT_LIST_HEAD(&wb->b_dirty);
+    INIT_LIST_HEAD(&wb->b_io);
+    INIT_LIST_HEAD(&wb->b_more_io);
+    INIT_LIST_HEAD(&wb->b_dirty_time);
+    spin_lock_init(&wb->list_lock);
+
+    wb->bw_time_stamp = jiffies;
+    wb->balanced_dirty_ratelimit = INIT_BW;
+    wb->dirty_ratelimit = INIT_BW;
+    wb->write_bandwidth = INIT_BW;
+    wb->avg_write_bandwidth = INIT_BW;
+
+    spin_lock_init(&wb->work_lock);
+    INIT_LIST_HEAD(&wb->work_list);
+    INIT_DELAYED_WORK(&wb->dwork, wb_workfn);
+    wb->dirty_sleep = jiffies;
+
+    err = fprop_local_init_percpu(&wb->completions, gfp);
+    if (err)
+        goto out_put_bdi;
+
+    for (i = 0; i < NR_WB_STAT_ITEMS; i++) {
+        err = percpu_counter_init(&wb->stat[i], 0, gfp);
+        if (err)
+            goto out_destroy_stat;
+    }
+
+    return 0;
+
+out_destroy_stat:
+    while (i--)
+        percpu_counter_destroy(&wb->stat[i]);
+    fprop_local_destroy_percpu(&wb->completions);
+out_put_bdi:
+    if (wb != &bdi->wb)
+        bdi_put(bdi);
+    return err;
+}
+
 /**
  * blk_queue_write_cache - configure queue's write cache
  * @q:      the request queue for the device
@@ -170,6 +225,30 @@ void blk_queue_write_cache(struct request_queue *q, bool wc, bool fua)
     wbt_set_write_cache(q, test_bit(QUEUE_FLAG_WC, &q->queue_flags));
 }
 
+static int cgwb_bdi_init(struct backing_dev_info *bdi)
+{
+    return wb_init(&bdi->wb, bdi, GFP_KERNEL);
+}
+
+static int bdi_init(struct backing_dev_info *bdi)
+{
+    int ret;
+
+    bdi->dev = NULL;
+
+    kref_init(&bdi->refcnt);
+    bdi->min_ratio = 0;
+    bdi->max_ratio = 100;
+    bdi->max_prop_frac = FPROP_FRAC_BASE;
+    INIT_LIST_HEAD(&bdi->bdi_list);
+    INIT_LIST_HEAD(&bdi->wb_list);
+    init_waitqueue_head(&bdi->wb_waitq);
+
+    ret = cgwb_bdi_init(bdi);
+
+    return ret;
+}
+
 struct backing_dev_info *bdi_alloc(int node_id)
 {
     struct backing_dev_info *bdi;
@@ -178,13 +257,10 @@ struct backing_dev_info *bdi_alloc(int node_id)
     if (!bdi)
         return NULL;
 
-    /*
     if (bdi_init(bdi)) {
         kfree(bdi);
         return NULL;
     }
-    */
-    printk("%s: No bdi_init.\n", __func__);
     return bdi;
 }
 

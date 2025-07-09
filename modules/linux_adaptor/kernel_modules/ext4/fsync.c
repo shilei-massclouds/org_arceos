@@ -174,7 +174,8 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 		ret = ext4_force_commit(inode->i_sb);
 	else
 		ret = ext4_fsync_journal(inode, datasync, &needs_barrier);
-    printk("%s: step3\n", __func__);
+    printk("%s: step3 needs_barrier(%d) isize(%d)\n",
+           __func__, needs_barrier, inode->i_size);
 
 	if (needs_barrier) {
 		err = blkdev_issue_flush(inode->i_sb->s_bdev, GFP_KERNEL);

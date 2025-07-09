@@ -67,3 +67,8 @@ void destroy_workqueue(struct workqueue_struct *wq)
 {
     booter_panic("No impl.\n");
 }
+
+void delayed_work_timer_fn(struct timer_list *t)
+{
+    booter_panic("No impl.\n");
+}

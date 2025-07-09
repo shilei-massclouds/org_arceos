@@ -87,7 +87,7 @@ int bio_add_page(struct bio *bio, struct page *page,
  */
 blk_qc_t submit_bio(struct bio *bio)
 {
-    log_error("%s: bi_vcnt(%u) bi_sector(%u) bi_size(%u) bi_end_io(%lx)\n",
+    printk("%s: bi_vcnt(%u) bi_sector(%u) bi_size(%u) bi_end_io(%lx)\n",
               __func__, bio->bi_vcnt,
               bio->bi_iter.bi_sector,
               bio->bi_iter.bi_size,
@@ -95,8 +95,8 @@ blk_qc_t submit_bio(struct bio *bio)
 
     if (bio->bi_vcnt) {
         struct bio_vec *bv = &bio->bi_io_vec[0];
-        log_error("bv_page(%lx) bv_len(%u) bv_offset(%u)\n",
-                  bv->bv_page, bv->bv_len, bv->bv_offset);
+        printk("bv_page(%lx) bv_len(%u) bv_offset(%u)\n",
+               bv->bv_page, bv->bv_len, bv->bv_offset);
     }
 
     cl_submit_bio(bio);

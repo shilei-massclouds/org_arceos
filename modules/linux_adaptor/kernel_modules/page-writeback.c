@@ -6,6 +6,16 @@
 
 #include "booter.h"
 
+/*
+ * The interval between `kupdate'-style writebacks
+ */
+unsigned int dirty_writeback_interval = 5 * 100; /* centiseconds */
+
+/*
+ * The longest time for which data is allowed to remain dirty
+ */
+unsigned int dirty_expire_interval = 30 * 100; /* centiseconds */
+
 /**
  * wait_for_stable_page() - wait for writeback to finish, if necessary.
  * @page:   The page to wait on.
@@ -351,6 +361,26 @@ int test_clear_page_writeback(struct page *page)
  * clear an inode as under writeback on the sb
  */
 void sb_clear_inode_writeback(struct inode *inode)
+{
+    log_error("%s: No impl.\n", __func__);
+}
+
+/**
+ * wb_over_bg_thresh - does @wb need to be written back?
+ * @wb: bdi_writeback of interest
+ *
+ * Determines whether background writeback should keep writing @wb or it's
+ * clean enough.
+ *
+ * Return: %true if writeback should continue.
+ */
+bool wb_over_bg_thresh(struct bdi_writeback *wb)
+{
+    log_error("%s: No impl.\n", __func__);
+    return false;
+}
+
+void wb_update_bandwidth(struct bdi_writeback *wb, unsigned long start_time)
 {
     log_error("%s: No impl.\n", __func__);
 }

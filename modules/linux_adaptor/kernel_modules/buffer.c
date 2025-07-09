@@ -319,10 +319,8 @@ void mark_buffer_dirty(struct buffer_head *bh)
                 __set_page_dirty(page, mapping, 0);
         }
         unlock_page_memcg(page);
-	printk("%s: step1 (%lx)\n", __func__, mapping->host);
         if (mapping)
             __mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-	printk("%s: step2\n", __func__);
     }
 }
 
@@ -401,11 +399,14 @@ int block_write_full_page(struct page *page,
     sector_t blknr = bh_result.b_blocknr * 8;
     printk("%s: blknr %u\n", __func__, blknr);
 
+    booter_panic("");
+#if 0
     if (cl_write_block(blknr, page_to_virt(page), PAGE_SIZE) < 0) {
         booter_panic("write block error!");
     }
 
     return 0;
+#endif
 }
 
 void __breadahead_gfp(struct block_device *bdev, sector_t block, unsigned size,

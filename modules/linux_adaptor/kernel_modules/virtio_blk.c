@@ -230,6 +230,7 @@ static blk_status_t virtio_queue_rq(struct blk_mq_hw_ctx *hctx,
 	bool unmap = false;
 	u32 type;
 
+    printk("++++++++++ %s: request __sector(%u) __data_len(%u)\n", __func__, req->__sector, req->__data_len);
 	BUG_ON(req->nr_phys_segments + 2 > vblk->sg_elems);
 
 	switch (req_op(req)) {

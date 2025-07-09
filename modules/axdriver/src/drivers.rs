@@ -110,9 +110,12 @@ cfg_if::cfg_if! {
                     return Err(DevError::Io);
                 }
 
+                /*
                 unsafe {
                     cl_read_block(block_id, buf.as_mut_ptr(), buf.len())
                 };
+                */
+                panic!("");
                 info!("Read block: OK irq {}", irqs_enabled());
                 Ok(())
             }
@@ -131,9 +134,12 @@ cfg_if::cfg_if! {
                     return Err(DevError::Io);
                 }
 
+                /*
                 unsafe {
                     cl_write_block(block_id, buf.as_ptr(), buf.len());
                 }
+                */
+                panic!("");
                 Ok(())
             }
 
@@ -271,5 +277,5 @@ cfg_if::cfg_if! {
 
 unsafe extern "C" {
     fn cl_read_block(blk_nr: usize, rbuf: *mut u8, count: usize) -> i32;
-    fn cl_write_block(blk_nr: usize, wbuf: *const u8, count: usize) -> i32;
+    //fn cl_write_block(blk_nr: usize, wbuf: *const u8, count: usize) -> i32;
 }

@@ -219,6 +219,10 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
     if (!count)
         goto out; /* skip atime */
 
+    if (iocb->ki_flags & IOCB_DIRECT) {
+        booter_panic("No IOCB_DIRECT.");
+    }
+
     retval = generic_file_buffered_read(iocb, iter, retval);
 out:
     return retval;
@@ -360,6 +364,7 @@ page_ok:
 		 */
 
 		isize = i_size_read(inode);
+        printk("%s: isize(%d)\n", __func__, isize);
 		end_index = (isize - 1) >> PAGE_SHIFT;
 		if (unlikely(!isize || index > end_index)) {
 			put_page(page);
@@ -527,6 +532,7 @@ out:
 
 	*ppos = ((loff_t)index << PAGE_SHIFT) + offset;
 	file_accessed(filp);
+    printk("%s: written(%d) pos(0x%lx)\n", __func__, written, *ppos);
 	return written ? written : error;
 }
 
@@ -976,11 +982,9 @@ int __filemap_fdatawrite_range(struct address_space *mapping, loff_t start,
     };
 
     // Note: impl mapping_cap_writeback_dirty(...).
-    /*
     if (!mapping_cap_writeback_dirty(mapping) ||
         !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
         return 0;
-        */
 
     wbc_attach_fdatawrite_inode(&wbc, mapping->host);
     ret = do_writepages(mapping, &wbc);

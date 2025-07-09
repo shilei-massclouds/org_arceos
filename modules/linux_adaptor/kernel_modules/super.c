@@ -23,10 +23,12 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
     }
 
     struct inode *bd_inode = cl_bdev_alloc_inode();
+    inode_init_once(bd_inode);
     bd_inode->i_data.a_ops = &def_blk_aops;
     bd_inode->i_mapping = &(bd_inode->i_data);
     bd_inode->i_mapping->host = bd_inode;
     bd_inode->i_size = get_capacity(cl_disk) << 9;
+    bd_inode->i_mode = S_IFBLK;
 
     struct block_device *bdev = I_BDEV(bd_inode);
     bdev->bd_disk = cl_disk;
@@ -36,7 +38,8 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
     s = kmalloc(sizeof(struct super_block), 0);
     s->s_blocksize = 1024;
     s->s_bdev = bdev;
-    s->s_bdi = kmalloc(sizeof(struct backing_dev_info), 0);
+    s->s_bdi = bdi_alloc(0);
+    set_bit(WB_registered, &s->s_bdi->wb.state);
     bdev->bd_inode->i_sb = s;
     if (fill_super(s, NULL, 0) != 0) {
         booter_panic("ext-fs fill_super error!");

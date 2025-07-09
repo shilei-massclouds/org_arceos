@@ -52,6 +52,18 @@ int printk(const char *fmt, ...)
     return ret;
 }
 
+void __warn_printk(const char *fmt, ...)
+{
+    printk("[RAW_WARN_PRINTK]:\n");
+
+    int ret;
+    va_list args;
+    va_start(args, fmt);
+    ret = cl_vprintk(PRINTK_USAGE, printk_skip_level(fmt), args);
+    va_end(args);
+    return ret;
+}
+
 int log_debug(const char *fmt, ...)
 {
     int ret;
@@ -70,12 +82,6 @@ int log_error(const char *fmt, ...)
     ret = cl_vprintk(ERROR_USAGE, printk_skip_level(fmt), args);
     va_end(args);
     return ret;
-}
-
-__weak void __warn_printk(const char *fmt, ...)
-{
-    printk("[RAW_WARN_PRINTK] %s\n", fmt);
-    cl_terminate();
 }
 
 /**

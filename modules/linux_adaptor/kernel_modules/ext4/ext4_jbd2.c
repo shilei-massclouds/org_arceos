@@ -324,6 +324,7 @@ int __ext4_handle_dirty_metadata(const char *where, unsigned int line,
 {
 	int err = 0;
 
+    printk("%s: ... bh(%u) b_page(%lx) inode(%lx)\n", __func__, bh->b_blocknr, bh->b_page, inode);
 	might_sleep();
 
 	set_buffer_meta(bh);

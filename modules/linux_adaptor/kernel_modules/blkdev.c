@@ -5,7 +5,7 @@
 
 #include "booter.h"
 
-extern int cl_read_block(int blk_nr, void *rbuf, int count);
+//extern int cl_read_block(int blk_nr, void *rbuf, int count);
 
 int sb_min_blocksize(struct super_block *sb, int size)
 {

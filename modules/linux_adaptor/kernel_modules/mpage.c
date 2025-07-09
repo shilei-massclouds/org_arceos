@@ -31,9 +31,12 @@ int mpage_readpage(struct page *page, get_block_t get_block)
     sector_t blknr = bh_result.b_blocknr * 8;
     printk("%s: blknr %u\n", __func__, blknr);
 
+    booter_panic("");
+#if 0
     if (cl_read_block(blknr, page_to_virt(page), PAGE_SIZE) < 0) {
         booter_panic("read block error!");
     }
 
     return 0;
+#endif
 }

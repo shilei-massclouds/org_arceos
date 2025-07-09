@@ -219,6 +219,7 @@ int clinux_test_block_driver(void)
     return 0;
 }
 
+#if 0
 /* Utilities for testing */
 static int read_a_block(int blk_nr)
 {
@@ -245,7 +246,9 @@ static int test_read_blocks()
     read_a_block(0);
     read_a_block(1);
 }
+#endif
 
+#if 0
 static int write_a_block(int blk_nr)
 {
     read_a_block(blk_nr);
@@ -264,3 +267,4 @@ static int test_write_blocks()
 {
     write_a_block(0);
 }
+#endif

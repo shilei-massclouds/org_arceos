@@ -11,6 +11,7 @@ extern struct bio *cl_bio_alloc(unsigned int nr_iovecs);
 extern struct gendisk *cl_disk;
 bool completed = 0;
 
+#if 0
 int cl_read_block(int blk_nr, void *rbuf, int count)
 {
     booter_panic("cl_read_block Deprecated!");
@@ -133,6 +134,7 @@ int cl_write_block(int blk_nr, const void *wbuf, int count)
     log_debug("%s: id[%d] count[%d] ok!", __func__, blk_nr, count);
     return 0;
 }
+#endif
 
 int set_task_ioprio(struct task_struct *task, int ioprio)
 {

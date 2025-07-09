@@ -3088,6 +3088,8 @@ static int ext4_da_write_end(struct file *file,
 			 * new_i_size is less that inode->i_size
 			 * bu greater than i_disksize.(hint delalloc)
 			 */
+            printk("%s: step2 new_i_size(%u) copied(%u) changed(%u)\n",
+                   __func__, new_i_size, copied, EXT4_I(inode)->i_disksize);
 			ret = ext4_mark_inode_dirty(handle, inode);
 		}
 	}
@@ -5737,6 +5739,7 @@ static int ext4_try_to_expand_extra_isize(struct inode *inode,
 	int no_expand;
 	int error;
 
+    printk("--- %s: step1\n", __func__);
 	if (ext4_test_inode_state(inode, EXT4_STATE_NO_EXPAND))
 		return -EOVERFLOW;
 
@@ -5830,7 +5833,7 @@ int __ext4_mark_inode_dirty(handle_t *handle, struct inode *inode,
 	trace_ext4_mark_inode_dirty(inode, _RET_IP_);
     printk("--- %s: step1\n", __func__);
 	err = ext4_reserve_inode_write(handle, inode, &iloc);
-    printk("--- %s: step3\n", __func__);
+    printk("--- %s: step2\n", __func__);
 	if (err)
 		goto out;
 
@@ -5868,6 +5871,7 @@ void ext4_dirty_inode(struct inode *inode, int flags)
 {
 	handle_t *handle;
 
+    printk("----- %s: ...\n", __func__);
 	if (flags == I_DIRTY_TIME)
 		return;
 	handle = ext4_journal_start(inode, EXT4_HT_INODE, 2);

@@ -20,7 +20,7 @@ OBJS += filesystems.o blkdev.o fs_types.o backing-dev.o blk-flush.o
 OBJS += super.o inode.o dcache.o buffer.o filemap.o mpage.o block_dev.o
 OBJS += readdir.o read_write.o libfs.o page-writeback.o sync.o
 OBJS += user_namespace.o utils.o blk-core.o fs-writeback.o errseq.o
-OBJS += swap.o mempool.o shash.o timer.o
+OBJS += swap.o mempool.o shash.o timer.o time.o
 OBJS += wait.o swait.o wait_bit.o kobject.o proc.o shmem.o
 
 # ext2 fs

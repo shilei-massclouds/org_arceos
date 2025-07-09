@@ -30,6 +30,18 @@ void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
     // preempt_enable();
 }
 
+void __lockfunc _raw_spin_lock_bh(raw_spinlock_t *lock)
+{
+    //__raw_spin_lock_bh(lock);
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+}
+
+void __lockfunc _raw_spin_unlock_bh(raw_spinlock_t *lock)
+{
+    //__raw_spin_unlock_bh(lock);
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+}
+
 unsigned long __lockfunc _raw_spin_lock_irqsave(raw_spinlock_t *lock)
 {
     unsigned long flags;

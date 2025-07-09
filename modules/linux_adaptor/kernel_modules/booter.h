@@ -37,7 +37,6 @@ extern int printk(const char *fmt, ...);
 
 /* For Block */
 extern int cl_read_block(int blk_nr, void *rbuf, int count);
-extern int cl_write_block(int blk_nr, const void *rbuf, int count);
 
 #define UL_STR_SIZE 19  /* prefix with '0x' and end with '\0' */
 
