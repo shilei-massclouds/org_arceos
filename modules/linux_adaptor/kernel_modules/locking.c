@@ -184,3 +184,19 @@ void up_write(struct rw_semaphore *sem)
 {
     log_error("%s: ===> WARN: impl it.\n", __func__);
 }
+
+/*
+ * trylock for reading -- returns 1 if successful, 0 if contention
+ */
+int down_read_trylock(struct rw_semaphore *sem)
+{
+#if 0
+    int ret = __down_read_trylock(sem);
+
+    if (ret == 1)
+        rwsem_acquire_read(&sem->dep_map, 0, 1, _RET_IP_);
+    return ret;
+#endif
+    log_error("%s: ===> WARN: impl it.\n", __func__);
+    return 1;
+}

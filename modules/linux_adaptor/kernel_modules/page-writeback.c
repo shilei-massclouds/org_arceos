@@ -3,6 +3,7 @@
 #include <linux/backing-dev.h>
 #include <linux/rmap.h>
 #include <linux/buffer_head.h>
+#include <linux/pagevec.h>
 
 #include "booter.h"
 
@@ -15,6 +16,8 @@ unsigned int dirty_writeback_interval = 5 * 100; /* centiseconds */
  * The longest time for which data is allowed to remain dirty
  */
 unsigned int dirty_expire_interval = 30 * 100; /* centiseconds */
+
+struct wb_domain global_wb_domain;
 
 /**
  * wait_for_stable_page() - wait for writeback to finish, if necessary.
@@ -383,4 +386,208 @@ bool wb_over_bg_thresh(struct bdi_writeback *wb)
 void wb_update_bandwidth(struct bdi_writeback *wb, unsigned long start_time)
 {
     log_error("%s: No impl.\n", __func__);
+}
+
+/*
+ * Function used by generic_writepages to call the real writepage
+ * function and set the mapping flags on error
+ */
+static int __writepage(struct page *page, struct writeback_control *wbc,
+               void *data)
+{
+    struct address_space *mapping = data;
+    int ret = mapping->a_ops->writepage(page, wbc);
+    mapping_set_error(mapping, ret);
+    return ret;
+}
+
+/**
+ * generic_writepages - walk the list of dirty pages of the given address space and writepage() all of them.
+ * @mapping: address space structure to write
+ * @wbc: subtract the number of written pages from *@wbc->nr_to_write
+ *
+ * This is a library function, which implements the writepages()
+ * address_space_operation.
+ *
+ * Return: %0 on success, negative error code otherwise
+ */
+int generic_writepages(struct address_space *mapping,
+               struct writeback_control *wbc)
+{
+    struct blk_plug plug;
+    int ret;
+
+    /* deal with chardevs and other special file */
+    if (!mapping->a_ops->writepage)
+        return 0;
+
+    blk_start_plug(&plug);
+    ret = write_cache_pages(mapping, wbc, __writepage, mapping);
+    blk_finish_plug(&plug);
+    return ret;
+}
+
+/**
+ * write_cache_pages - walk the list of dirty pages of the given address space and write all of them.
+ * @mapping: address space structure to write
+ * @wbc: subtract the number of written pages from *@wbc->nr_to_write
+ * @writepage: function called for each page
+ * @data: data passed to writepage function
+ *
+ * If a page is already under I/O, write_cache_pages() skips it, even
+ * if it's dirty.  This is desirable behaviour for memory-cleaning writeback,
+ * but it is INCORRECT for data-integrity system calls such as fsync().  fsync()
+ * and msync() need to guarantee that all the data which was dirty at the time
+ * the call was made get new I/O started against them.  If wbc->sync_mode is
+ * WB_SYNC_ALL then we were called for data integrity and we must wait for
+ * existing IO to complete.
+ *
+ * To avoid livelocks (when other process dirties new pages), we first tag
+ * pages which should be written back with TOWRITE tag and only then start
+ * writing them. For data-integrity sync we have to be careful so that we do
+ * not miss some pages (e.g., because some other process has cleared TOWRITE
+ * tag we set). The rule we follow is that TOWRITE tag can be cleared only
+ * by the process clearing the DIRTY tag (and submitting the page for IO).
+ *
+ * To avoid deadlocks between range_cyclic writeback and callers that hold
+ * pages in PageWriteback to aggregate IO until write_cache_pages() returns,
+ * we do not loop back to the start of the file. Doing so causes a page
+ * lock/page writeback access order inversion - we should only ever lock
+ * multiple pages in ascending page->index order, and looping back to the start
+ * of the file violates that rule and causes deadlocks.
+ *
+ * Return: %0 on success, negative error code otherwise
+ */
+int write_cache_pages(struct address_space *mapping,
+              struct writeback_control *wbc, writepage_t writepage,
+              void *data)
+{
+    int ret = 0;
+    int done = 0;
+    int error;
+    struct pagevec pvec;
+    int nr_pages;
+    pgoff_t index;
+    pgoff_t end;        /* Inclusive */
+    pgoff_t done_index;
+    int range_whole = 0;
+    xa_mark_t tag;
+
+    pagevec_init(&pvec);
+    if (wbc->range_cyclic) {
+        index = mapping->writeback_index; /* prev offset */
+        end = -1;
+    } else {
+        index = wbc->range_start >> PAGE_SHIFT;
+        end = wbc->range_end >> PAGE_SHIFT;
+        if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
+            range_whole = 1;
+    }
+    if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages) {
+        tag_pages_for_writeback(mapping, index, end);
+        tag = PAGECACHE_TAG_TOWRITE;
+    } else {
+        tag = PAGECACHE_TAG_DIRTY;
+    }
+    done_index = index;
+    while (!done && (index <= end)) {
+        int i;
+
+        nr_pages = pagevec_lookup_range_tag(&pvec, mapping, &index, end,
+                tag);
+        if (nr_pages == 0)
+            break;
+
+        for (i = 0; i < nr_pages; i++) {
+            struct page *page = pvec.pages[i];
+
+            done_index = page->index;
+
+            lock_page(page);
+
+            /*
+             * Page truncated or invalidated. We can freely skip it
+             * then, even for data integrity operations: the page
+             * has disappeared concurrently, so there could be no
+             * real expectation of this data interity operation
+             * even if there is now a new, dirty page at the same
+             * pagecache address.
+             */
+            if (unlikely(page->mapping != mapping)) {
+continue_unlock:
+                unlock_page(page);
+                continue;
+            }
+
+            if (!PageDirty(page)) {
+                /* someone wrote it for us */
+                goto continue_unlock;
+            }
+
+            if (PageWriteback(page)) {
+                if (wbc->sync_mode != WB_SYNC_NONE)
+                    wait_on_page_writeback(page);
+                else
+                    goto continue_unlock;
+            }
+
+            BUG_ON(PageWriteback(page));
+            if (!clear_page_dirty_for_io(page))
+                goto continue_unlock;
+
+            //trace_wbc_writepage(wbc, inode_to_bdi(mapping->host));
+            error = (*writepage)(page, wbc, data);
+            if (unlikely(error)) {
+                /*
+                 * Handle errors according to the type of
+                 * writeback. There's no need to continue for
+                 * background writeback. Just push done_index
+                 * past this page so media errors won't choke
+                 * writeout for the entire file. For integrity
+                 * writeback, we must process the entire dirty
+                 * set regardless of errors because the fs may
+                 * still have state to clear for each page. In
+                 * that case we continue processing and return
+                 * the first error.
+                 */
+                if (error == AOP_WRITEPAGE_ACTIVATE) {
+                    unlock_page(page);
+                    error = 0;
+                } else if (wbc->sync_mode != WB_SYNC_ALL) {
+                    ret = error;
+                    done_index = page->index + 1;
+                    done = 1;
+                    break;
+                }
+                if (!ret)
+                    ret = error;
+            }
+
+            /*
+             * We stop writing back only if we are not doing
+             * integrity sync. In case of integrity sync we have to
+             * keep going until we have written all the pages
+             * we tagged for writeback prior to entering this loop.
+             */
+            if (--wbc->nr_to_write <= 0 &&
+                wbc->sync_mode == WB_SYNC_NONE) {
+                done = 1;
+                break;
+            }
+        }
+        pagevec_release(&pvec);
+        cond_resched();
+    }
+
+    /*
+     * If we hit the last page and there is more work to be done: wrap
+     * back the index back to the start of the file for the next
+     * time we are called.
+     */
+    if (wbc->range_cyclic && !done)
+        done_index = 0;
+    if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
+        mapping->writeback_index = done_index;
+
+    return ret;
 }
