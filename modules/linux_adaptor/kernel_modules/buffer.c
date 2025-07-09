@@ -319,8 +319,10 @@ void mark_buffer_dirty(struct buffer_head *bh)
                 __set_page_dirty(page, mapping, 0);
         }
         unlock_page_memcg(page);
+	printk("%s: step1 (%lx)\n", __func__, mapping->host);
         if (mapping)
             __mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+	printk("%s: step2\n", __func__);
     }
 }
 

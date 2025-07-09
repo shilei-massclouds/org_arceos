@@ -298,7 +298,6 @@ CL_MINE(wait_for_completion)
 // jbd2
 CL_MINE(__bforget)
 CL_MINE(bit_wait_io)
-CL_MINE(__cond_resched_lock)
 CL_MINE(crc32_be)
 CL_MINE(crypto_destroy_tfm)
 CL_MINE(filemap_fdatawait_range_keep_errors)

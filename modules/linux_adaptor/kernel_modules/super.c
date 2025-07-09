@@ -25,6 +25,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
     struct inode *bd_inode = cl_bdev_alloc_inode();
     bd_inode->i_data.a_ops = &def_blk_aops;
     bd_inode->i_mapping = &(bd_inode->i_data);
+    bd_inode->i_mapping->host = bd_inode;
     bd_inode->i_size = get_capacity(cl_disk) << 9;
 
     struct block_device *bdev = I_BDEV(bd_inode);

@@ -383,6 +383,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 	LIST_HEAD(io_bufs);
 	LIST_HEAD(log_bufs);
 
+    printk("%s: ...\n", __func__);
 	if (jbd2_journal_has_csum_v2or3(journal))
 		csum_size = sizeof(struct jbd2_journal_block_tail);
 
@@ -500,6 +501,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 	spin_unlock(&journal->j_list_lock);
 
 	jbd_debug(3, "JBD2: commit phase 1\n");
+	printk("JBD2: commit phase 1\n");
 
 	/*
 	 * Clear revoked flag to reflect there is no revoked buffers
@@ -533,6 +535,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 	write_unlock(&journal->j_state_lock);
 
 	jbd_debug(3, "JBD2: commit phase 2a\n");
+	printk("JBD2: commit phase 2a\n");
 
 	/*
 	 * Now start flushing things to disk, in the order they appear
@@ -546,6 +549,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 	jbd2_journal_write_revoke_records(commit_transaction, &log_bufs);
 
 	jbd_debug(3, "JBD2: commit phase 2b\n");
+	printk("JBD2: commit phase 2b\n");
 
 	/*
 	 * Way to go: we have now written out all of the data for a
@@ -602,6 +606,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 			J_ASSERT (bufs == 0);
 
 			jbd_debug(4, "JBD2: get descriptor\n");
+			printk("JBD2: get descriptor\n");
 
 			descriptor = jbd2_journal_get_descriptor_buffer(
 							commit_transaction,
@@ -697,6 +702,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 		    space_left < tag_bytes + 16 + csum_size) {
 
 			jbd_debug(4, "JBD2: Submit %d IOs\n", bufs);
+			printk("JBD2: Submit %d IOs\n", bufs);
 
 			/* Write an end-of-descriptor marker before
                            submitting the IOs.  "tag" still points to
@@ -799,6 +805,7 @@ start_journal_io:
 	*/
 
 	jbd_debug(3, "JBD2: commit phase 3\n");
+	printk("JBD2: commit phase 3\n");
 
 	while (!list_empty(&io_bufs)) {
 		struct buffer_head *bh = list_entry(io_bufs.prev,
@@ -842,6 +849,7 @@ start_journal_io:
 	J_ASSERT (commit_transaction->t_shadow_list == NULL);
 
 	jbd_debug(3, "JBD2: commit phase 4\n");
+	printk("JBD2: commit phase 4\n");
 
 	/* Here we wait for the revoke record and descriptor record buffers */
 	while (!list_empty(&log_bufs)) {
@@ -866,6 +874,7 @@ start_journal_io:
 		jbd2_journal_abort(journal, err);
 
 	jbd_debug(3, "JBD2: commit phase 5\n");
+	printk("JBD2: commit phase 5\n");
 	write_lock(&journal->j_state_lock);
 	J_ASSERT(commit_transaction->t_state == T_COMMIT_DFLUSH);
 	commit_transaction->t_state = T_COMMIT_JFLUSH;
@@ -905,6 +914,7 @@ start_journal_io:
            before. */
 
 	jbd_debug(3, "JBD2: commit phase 6\n");
+	printk("JBD2: commit phase 6\n");
 
 	J_ASSERT(list_empty(&commit_transaction->t_inode_list));
 	J_ASSERT(commit_transaction->t_buffers == NULL);
@@ -1031,7 +1041,9 @@ restart_loop:
 				try_to_free = 1;
 		}
 		JBUFFER_TRACE(jh, "refile or unfile buffer");
+	printk("JBD2: commit phase 6.1\n");
 		drop_ref = __jbd2_journal_refile_buffer(jh);
+	printk("JBD2: commit phase 6.2\n");
 		spin_unlock(&jh->b_state_lock);
 		if (drop_ref)
 			jbd2_journal_put_journal_head(jh);
@@ -1082,6 +1094,7 @@ restart_loop:
 	/* Done with this transaction! */
 
 	jbd_debug(3, "JBD2: commit phase 7\n");
+	printk("JBD2: commit phase 7\n");
 
 	J_ASSERT(commit_transaction->t_state == T_COMMIT_JFLUSH);
 
@@ -1123,6 +1136,8 @@ restart_loop:
 	trace_jbd2_end_commit(journal, commit_transaction);
 	jbd_debug(1, "JBD2: commit %d complete, head %d\n",
 		  journal->j_commit_sequence, journal->j_tail_sequence);
+	printk("JBD2: commit %d complete, head %d\n",
+		  journal->j_commit_sequence, journal->j_tail_sequence);
 
 	write_lock(&journal->j_state_lock);
 	spin_lock(&journal->j_list_lock);
@@ -1153,4 +1168,6 @@ restart_loop:
 	journal->j_stats.run.rs_blocks += stats.run.rs_blocks;
 	journal->j_stats.run.rs_blocks_logged += stats.run.rs_blocks_logged;
 	spin_unlock(&journal->j_history_lock);
+
+    printk("%s: ok!\n", __func__);
 }

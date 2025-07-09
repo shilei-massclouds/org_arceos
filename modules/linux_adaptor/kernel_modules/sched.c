@@ -69,6 +69,21 @@ asmlinkage __visible void __sched schedule(void)
 int __sched _cond_resched(void)
 {
     log_error("%s: No impl.", __func__);
+    return 0;
+}
+
+/*
+ * __cond_resched_lock() - if a reschedule is pending, drop the given lock,
+ * call schedule, and on return reacquire the lock.
+ *
+ * This works OK both with and without CONFIG_PREEMPTION. We do strange low-level
+ * operations here to prevent schedule() from being called twice (once via
+ * spin_unlock(), once by hand).
+ */
+int __cond_resched_lock(spinlock_t *lock)
+{
+    log_error("%s: No impl.", __func__);
+    return 0;
 }
 
 void __init sched_init(void)
