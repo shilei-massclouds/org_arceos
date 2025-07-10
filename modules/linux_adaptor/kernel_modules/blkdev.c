@@ -52,15 +52,22 @@ int set_blocksize(struct block_device *bdev, int size)
     return 0;
 }
 
+int __sync_blockdev(struct block_device *bdev, int wait)
+{
+    if (!bdev)
+        return 0;
+    if (!wait)
+        return filemap_flush(bdev->bd_inode->i_mapping);
+    return filemap_write_and_wait(bdev->bd_inode->i_mapping);
+}
+
 /*
  * Write out and wait upon all the dirty data associated with a block
  * device via its mapping.  Does not take the superblock lock.
  */
 int sync_blockdev(struct block_device *bdev)
 {
-    //return __sync_blockdev(bdev, 1);
-    log_error("%s: No impl!\n", __func__);
-    return 0;
+    return __sync_blockdev(bdev, 1);
 }
 
 int sb_set_blocksize(struct super_block *sb, int size)

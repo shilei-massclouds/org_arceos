@@ -166,9 +166,13 @@ int cl_submit_bio(struct bio *bio)
     struct request *rq = kmalloc(sizeof(struct request) + tag_set->cmd_size, 0);
     memset(rq, 0, sizeof(struct request));
     rq->nr_phys_segments = 1;
-    rq->bio = bio;
     rq->__sector = bio->bi_iter.bi_sector;
     rq->__data_len = bio->bi_iter.bi_size;
+    if (rq->__data_len > 0) {
+        rq->bio = bio;
+    } else {
+        rq->bio = NULL;
+    }
     printk("%s: __data_len(%u)\n", __func__, rq->__data_len);
     rq->ioprio = 0;
     rq->cmd_flags = bio->bi_opf;

@@ -5209,6 +5209,7 @@ static int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
 	loff_t new_size, ioffset;
 	int ret;
 
+    printk("%s: step1\n", __func__);
 	/*
 	 * We need to test this early because xfstests assumes that a
 	 * collapse range of (0, 1) will return EOPNOTSUPP if the file

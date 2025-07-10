@@ -738,6 +738,10 @@ __getblk_gfp(struct block_device *bdev, sector_t block,
 void __wait_on_buffer(struct buffer_head * bh)
 {
     log_error("%s: impl it.\n", __func__);
+    //set_buffer_uptodate(bh);
+    while (test_bit(BH_Lock, &bh->b_state)) {
+        //log_error("%s: impl it.\n", __func__);
+    }
     set_buffer_uptodate(bh);
 }
 
@@ -748,8 +752,31 @@ void __wait_on_buffer(struct buffer_head * bh)
  */
 int __sync_dirty_buffer(struct buffer_head *bh, int op_flags)
 {
-    log_error("%s: impl it.\n", __func__);
-    return 0;
+    int ret = 0;
+
+    printk("%s: ... blknr(%u)\n", __func__, bh->b_blocknr);
+    WARN_ON(atomic_read(&bh->b_count) < 1);
+    lock_buffer(bh);
+    if (test_clear_buffer_dirty(bh)) {
+        /*
+         * The bh should be mapped, but it might not be if the
+         * device was hot-removed. Not much we can do but fail the I/O.
+         */
+        if (!buffer_mapped(bh)) {
+            unlock_buffer(bh);
+            return -EIO;
+        }
+
+        get_bh(bh);
+        bh->b_end_io = end_buffer_write_sync;
+        ret = submit_bh(REQ_OP_WRITE, op_flags, bh);
+        wait_on_buffer(bh);
+        if (!ret && !buffer_uptodate(bh))
+            ret = -EIO;
+    } else {
+        unlock_buffer(bh);
+    }
+    return ret;
 }
 
 static void

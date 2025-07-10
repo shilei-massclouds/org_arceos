@@ -523,6 +523,7 @@ impl CurrentTask {
 
         // Note: just for linux-adaptor.
         axhal::arch::write_thread_pointer(next.private() as usize);
+        error!("=================================== kthread({})", next.private());
 
         let ptr = Arc::into_raw(next);
         unsafe {

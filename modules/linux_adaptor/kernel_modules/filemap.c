@@ -152,6 +152,7 @@ int filemap_write_and_wait_range(struct address_space *mapping,
 {
     int err = 0;
 
+    printk("%s: step1\n", __func__);
     if (mapping_needs_writeback(mapping)) {
         err = __filemap_fdatawrite_range(mapping, lstart, lend,
                          WB_SYNC_ALL);
@@ -1007,13 +1008,11 @@ static void __filemap_fdatawait_range(struct address_space *mapping,
     while (index <= end) {
         unsigned i;
 
-    printk("%s: step0\n", __func__);
         nr_pages = pagevec_lookup_range_tag(&pvec, mapping, &index,
                 end, PAGECACHE_TAG_WRITEBACK);
         if (!nr_pages)
             break;
 
-    printk("%s: step1\n", __func__);
         for (i = 0; i < nr_pages; i++) {
             struct page *page = pvec.pages[i];
 
@@ -1074,6 +1073,7 @@ int file_write_and_wait_range(struct file *file, loff_t lstart, loff_t lend)
                          WB_SYNC_ALL);
         /* See comment of filemap_write_and_wait() */
         if (err != -EIO)
+    printk("%s: step1\n", __func__);
             __filemap_fdatawait_range(mapping, lstart, lend);
     }
     err2 = file_check_and_advance_wb_err(file);

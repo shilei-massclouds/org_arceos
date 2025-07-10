@@ -39,6 +39,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
     s->s_blocksize = 1024;
     s->s_bdev = bdev;
     s->s_bdi = bdi_alloc(0);
+    s->s_bdi->dev = kzalloc(sizeof(struct device), GFP_KERNEL);
     set_bit(WB_registered, &s->s_bdi->wb.state);
     bdev->bd_inode->i_sb = s;
     if (fill_super(s, NULL, 0) != 0) {

@@ -1315,6 +1315,7 @@ static int journal_reset(journal_t *journal)
 	journal_superblock_t *sb = journal->j_superblock;
 	unsigned long long first, last;
 
+    printk("%s: ...\n", __func__);
 	first = be32_to_cpu(sb->s_first);
 	last = be32_to_cpu(sb->s_maxlen);
 	if (first + JBD2_MIN_JOURNAL_BLOCKS > last + 1) {
@@ -1405,7 +1406,9 @@ static int jbd2_write_superblock(journal_t *journal, int write_flags)
 		sb->s_checksum = jbd2_superblock_csum(journal, sb);
 	get_bh(bh);
 	bh->b_end_io = end_buffer_write_sync;
+    printk("%s: step1 bh(%u)\n", __func__, bh->b_blocknr);
 	ret = submit_bh(REQ_OP_WRITE, write_flags, bh);
+    printk("%s: step2\n", __func__);
 	wait_on_buffer(bh);
 	if (buffer_write_io_error(bh)) {
 		clear_buffer_write_io_error(bh);
@@ -1439,6 +1442,7 @@ int jbd2_journal_update_sb_log_tail(journal_t *journal, tid_t tail_tid,
 	journal_superblock_t *sb = journal->j_superblock;
 	int ret;
 
+    printk("%s: ...\n", __func__);
 	if (is_journal_aborted(journal))
 		return -EIO;
 
@@ -1477,7 +1481,9 @@ static void jbd2_mark_journal_empty(journal_t *journal, int write_op)
 	journal_superblock_t *sb = journal->j_superblock;
 
 	BUG_ON(!mutex_is_locked(&journal->j_checkpoint_mutex));
+    printk("%s: 1 buffer_locked(%u)\n", __func__, buffer_locked(journal->j_sb_buffer));
 	lock_buffer(journal->j_sb_buffer);
+    printk("%s: 2\n", __func__);
 	if (sb->s_start == 0) {		/* Is it already empty? */
 		unlock_buffer(journal->j_sb_buffer);
 		return;

@@ -4564,12 +4564,15 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		if (ext4_multi_mount_protect(sb, le64_to_cpu(es->s_mmp_block)))
 			goto failed_mount3a;
 
+    printk("--- %s: step4\n", __func__);
 	/*
 	 * The first inode we look at is the journal inode.  Don't try
 	 * root first: it may be modified in the journal!
 	 */
 	if (!test_opt(sb, NOLOAD) && ext4_has_feature_journal(sb)) {
+    printk("--- %s: step4.1\n", __func__);
 		err = ext4_load_journal(sb, es, journal_devnum);
+    printk("--- %s: step4.2 err(%d)\n", __func__, err);
 		if (err)
 			goto failed_mount3a;
 	} else if (test_opt(sb, NOLOAD) && !sb_rdonly(sb) &&
@@ -4609,6 +4612,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		goto no_journal;
 	}
 
+    printk("--- %s: step5\n", __func__);
 	if (ext4_has_feature_64bit(sb) &&
 	    !jbd2_journal_set_features(EXT4_SB(sb)->s_journal, 0, 0,
 				       JBD2_FEATURE_INCOMPAT_64BIT)) {
@@ -4622,7 +4626,6 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 		goto failed_mount_wq;
 	}
 
-    //printk("--- %s: step5\n", __func__);
 	/* We have now updated the journal if required, so we can
 	 * validate the data journaling mode. */
 	switch (test_opt(sb, DATA_FLAGS)) {
@@ -4741,7 +4744,7 @@ no_journal:
 		sb->s_d_op = &ext4_dentry_ops;
 #endif
 
-    //printk("--- %s: step6\n", __func__);
+    printk("--- %s: step6\n", __func__);
 	sb->s_root = d_make_root(root);
 	if (!sb->s_root) {
 		ext4_msg(sb, KERN_ERR, "get root dentry failed");
@@ -4869,7 +4872,7 @@ no_journal:
 				 "the device does not support discard");
 	}
 
-    printk("%s: step1\n", __func__);
+    printk("%s: step9\n", __func__);
 	if (___ratelimit(&ext4_mount_msg_ratelimit, "EXT4-fs mount"))
 		ext4_msg(sb, KERN_INFO, "mounted filesystem with%s. "
 			 "Opts: %.*s%s%s", descr,
@@ -4877,7 +4880,7 @@ no_journal:
 			 sbi->s_es->s_mount_opts,
 			 *sbi->s_es->s_mount_opts ? "; " : "", orig_data);
 
-    printk("%s: step2\n", __func__);
+    printk("%s: step10\n", __func__);
 	if (es->s_error_count)
 		mod_timer(&sbi->s_err_report, jiffies + 300*HZ); /* 5 minutes */
 
@@ -5166,6 +5169,7 @@ static int ext4_load_journal(struct super_block *sb,
 	if (WARN_ON_ONCE(!ext4_has_feature_journal(sb)))
 		return -EFSCORRUPTED;
 
+    printk("%s: ...\n", __func__);
 	if (journal_devnum &&
 	    journal_devnum != le32_to_cpu(es->s_journal_dev)) {
 		ext4_msg(sb, KERN_INFO, "external journal device major/minor "
@@ -5367,6 +5371,7 @@ static int ext4_mark_recovery_complete(struct super_block *sb,
 	}
 out:
 	jbd2_journal_unlock_updates(journal);
+    printk("%s: ret (%d)\n", __func__, err);
 	return err;
 }
 

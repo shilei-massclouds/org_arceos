@@ -1,5 +1,6 @@
 #include <linux/bio.h>
 #include <linux/blkdev.h>
+#include <linux/blk-cgroup.h>
 #include <linux/sched/sysctl.h>
 
 #include "block/blk.h"
@@ -87,8 +88,8 @@ int bio_add_page(struct bio *bio, struct page *page,
  */
 blk_qc_t submit_bio(struct bio *bio)
 {
-    printk("%s: bi_vcnt(%u) bi_sector(%u) bi_size(%u) bi_end_io(%lx)\n",
-              __func__, bio->bi_vcnt,
+    printk("%s: bio_op(%u) bi_vcnt(%u) bi_sector(%u) bi_size(%u) bi_end_io(%lx)\n",
+              __func__, bio_op(bio), bio->bi_vcnt,
               bio->bi_iter.bi_sector,
               bio->bi_iter.bi_size,
               bio->bi_end_io);
@@ -98,6 +99,9 @@ blk_qc_t submit_bio(struct bio *bio)
         printk("bv_page(%lx) bv_len(%u) bv_offset(%u)\n",
                bv->bv_page, bv->bv_len, bv->bv_offset);
     }
+
+    if (blkcg_punt_bio_submit(bio))
+        return BLK_QC_T_NONE;
 
     cl_submit_bio(bio);
     return 0;
