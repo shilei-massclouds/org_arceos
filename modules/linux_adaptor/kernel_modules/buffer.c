@@ -737,12 +737,7 @@ __getblk_gfp(struct block_device *bdev, sector_t block,
 
 void __wait_on_buffer(struct buffer_head * bh)
 {
-    log_error("%s: impl it.\n", __func__);
-    //set_buffer_uptodate(bh);
-    while (test_bit(BH_Lock, &bh->b_state)) {
-        //log_error("%s: impl it.\n", __func__);
-    }
-    set_buffer_uptodate(bh);
+    wait_on_bit_io(&bh->b_state, BH_Lock, TASK_UNINTERRUPTIBLE);
 }
 
 /*

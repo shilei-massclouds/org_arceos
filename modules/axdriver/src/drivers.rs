@@ -110,14 +110,13 @@ cfg_if::cfg_if! {
                     return Err(DevError::Io);
                 }
 
+                panic!("Read block: OK irq {}", irqs_enabled());
                 /*
                 unsafe {
                     cl_read_block(block_id, buf.as_mut_ptr(), buf.len())
                 };
-                */
-                panic!("");
-                info!("Read block: OK irq {}", irqs_enabled());
                 Ok(())
+                */
             }
 
             fn write_block(&mut self, block_id: u64, buf: &[u8]) -> DevResult {
@@ -138,9 +137,9 @@ cfg_if::cfg_if! {
                 unsafe {
                     cl_write_block(block_id, buf.as_ptr(), buf.len());
                 }
-                */
-                panic!("");
                 Ok(())
+                */
+                panic!("No impl.");
             }
 
             fn flush(&mut self) -> DevResult {
