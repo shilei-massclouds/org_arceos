@@ -3,6 +3,7 @@
 #include <linux/iomap.h>
 #include <linux/memcontrol.h>
 #include <linux/sched/mm.h>
+#include <linux/fscrypt.h>
 
 #include "booter.h"
 
@@ -37,6 +38,13 @@ static struct kmem_cache *bh_cachep __read_mostly;
 static inline int block_size_bits(unsigned int blocksize)
 {
     return ilog2(blocksize);
+}
+
+static void mark_buffer_async_write_endio(struct buffer_head *bh,
+                      bh_end_io_t *handler)
+{
+    bh->b_end_io = handler;
+    set_buffer_async_write(bh);
 }
 
 static void buffer_io_error(struct buffer_head *bh, char *msg)
@@ -368,6 +376,7 @@ void unlock_buffer(struct buffer_head *bh)
     wake_up_bit(&bh->b_state, BH_Lock);
 }
 
+#if 0
 /*
  * The generic ->writepage function for buffer-backed address_spaces
  */
@@ -399,14 +408,283 @@ int block_write_full_page(struct page *page,
     sector_t blknr = bh_result.b_blocknr * 8;
     printk("%s: blknr %u\n", __func__, blknr);
 
-    booter_panic("");
-#if 0
     if (cl_write_block(blknr, page_to_virt(page), PAGE_SIZE) < 0) {
         booter_panic("write block error!");
     }
 
     return 0;
+}
 #endif
+
+/*
+ * Completion handler for block_write_full_page() - pages which are unlocked
+ * during I/O, and which have PageWriteback cleared upon I/O completion.
+ */
+void end_buffer_async_write(struct buffer_head *bh, int uptodate)
+{
+    unsigned long flags;
+    struct buffer_head *first;
+    struct buffer_head *tmp;
+    struct page *page;
+
+    BUG_ON(!buffer_async_write(bh));
+
+    page = bh->b_page;
+    if (uptodate) {
+        set_buffer_uptodate(bh);
+    } else {
+        buffer_io_error(bh, ", lost async page write");
+        mark_buffer_write_io_error(bh);
+        clear_buffer_uptodate(bh);
+        SetPageError(page);
+    }
+
+    first = page_buffers(page);
+    spin_lock_irqsave(&first->b_uptodate_lock, flags);
+
+    clear_buffer_async_write(bh);
+    unlock_buffer(bh);
+    tmp = bh->b_this_page;
+    while (tmp != bh) {
+        if (buffer_async_write(tmp)) {
+            BUG_ON(!buffer_locked(tmp));
+            goto still_busy;
+        }
+        tmp = tmp->b_this_page;
+    }
+    spin_unlock_irqrestore(&first->b_uptodate_lock, flags);
+    end_page_writeback(page);
+    return;
+
+still_busy:
+    spin_unlock_irqrestore(&first->b_uptodate_lock, flags);
+    return;
+}
+
+/*
+ * The generic ->writepage function for buffer-backed address_spaces
+ */
+int block_write_full_page(struct page *page, get_block_t *get_block,
+            struct writeback_control *wbc)
+{
+    struct inode * const inode = page->mapping->host;
+    loff_t i_size = i_size_read(inode);
+    const pgoff_t end_index = i_size >> PAGE_SHIFT;
+    unsigned offset;
+
+
+    /* Is the page fully inside i_size? */
+    if (page->index < end_index)
+        return __block_write_full_page(inode, page, get_block, wbc,
+                           end_buffer_async_write);
+
+    booter_panic("No impl.");
+}
+
+static void end_bio_bh_io_sync(struct bio *bio)
+{
+    struct buffer_head *bh = bio->bi_private;
+
+    if (unlikely(bio_flagged(bio, BIO_QUIET)))
+        set_bit(BH_Quiet, &bh->b_state);
+
+    bh->b_end_io(bh, !bio->bi_status);
+    bio_put(bio);
+}
+
+static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
+             enum rw_hint write_hint, struct writeback_control *wbc)
+{
+    struct bio *bio;
+
+    BUG_ON(!buffer_locked(bh));
+    BUG_ON(!buffer_mapped(bh));
+    BUG_ON(!bh->b_end_io);
+    BUG_ON(buffer_delay(bh));
+    BUG_ON(buffer_unwritten(bh));
+
+    /*
+     * Only clear out a write error when rewriting
+     */
+    if (test_set_buffer_req(bh) && (op == REQ_OP_WRITE))
+        clear_buffer_write_io_error(bh);
+
+    bio = bio_alloc(GFP_NOIO, 1);
+
+    fscrypt_set_bio_crypt_ctx_bh(bio, bh, GFP_NOIO);
+
+    bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+    bio_set_dev(bio, bh->b_bdev);
+    bio->bi_write_hint = write_hint;
+
+    printk("%s: blknr(%u, %u) b_page(%lx)\n",
+           __func__, bh->b_blocknr, bio->bi_iter.bi_sector, bh->b_page);
+
+    bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
+    BUG_ON(bio->bi_iter.bi_size != bh->b_size);
+
+    bio->bi_end_io = end_bio_bh_io_sync;
+    bio->bi_private = bh;
+
+    if (buffer_meta(bh))
+        op_flags |= REQ_META;
+    if (buffer_prio(bh))
+        op_flags |= REQ_PRIO;
+    bio_set_op_attrs(bio, op, op_flags);
+
+    /* Take care of bh's that straddle the end of the device */
+    guard_bio_eod(bio);
+
+    if (wbc) {
+        wbc_init_bio(wbc, bio);
+        wbc_account_cgroup_owner(wbc, bh->b_page, bh->b_size);
+    }
+
+    submit_bio(bio);
+    return 0;
+}
+
+/*
+ * While block_write_full_page is writing back the dirty buffers under
+ * the page lock, whoever dirtied the buffers may decide to clean them
+ * again at any time.  We handle that by only looking at the buffer
+ * state inside lock_buffer().
+ *
+ * If block_write_full_page() is called for regular writeback
+ * (wbc->sync_mode == WB_SYNC_NONE) then it will redirty a page which has a
+ * locked buffer.   This only can happen if someone has written the buffer
+ * directly, with submit_bh().  At the address_space level PageWriteback
+ * prevents this contention from occurring.
+ *
+ * If block_write_full_page() is called with wbc->sync_mode ==
+ * WB_SYNC_ALL, the writes are posted using REQ_SYNC; this
+ * causes the writes to be flagged as synchronous writes.
+ */
+int __block_write_full_page(struct inode *inode, struct page *page,
+            get_block_t *get_block, struct writeback_control *wbc,
+            bh_end_io_t *handler)
+{
+    int err;
+    sector_t block;
+    sector_t last_block;
+    struct buffer_head *bh, *head;
+    unsigned int blocksize, bbits;
+    int nr_underway = 0;
+    int write_flags = wbc_to_write_flags(wbc);
+
+    head = create_page_buffers(page, inode,
+                    (1 << BH_Dirty)|(1 << BH_Uptodate));
+
+    /*
+     * Be very careful.  We have no exclusion from __set_page_dirty_buffers
+     * here, and the (potentially unmapped) buffers may become dirty at
+     * any time.  If a buffer becomes dirty here after we've inspected it
+     * then we just miss that fact, and the page stays dirty.
+     *
+     * Buffers outside i_size may be dirtied by __set_page_dirty_buffers;
+     * handle that here by just cleaning them.
+     */
+
+    bh = head;
+    blocksize = bh->b_size;
+    bbits = block_size_bits(blocksize);
+
+    block = (sector_t)page->index << (PAGE_SHIFT - bbits);
+    last_block = (i_size_read(inode) - 1) >> bbits;
+
+    /*
+     * Get all the dirty buffers mapped to disk addresses and
+     * handle any aliases from the underlying blockdev's mapping.
+     */
+    do {
+        if (block > last_block) {
+            /*
+             * mapped buffers outside i_size will occur, because
+             * this page can be outside i_size when there is a
+             * truncate in progress.
+             */
+            /*
+             * The buffer was zeroed by block_write_full_page()
+             */
+            clear_buffer_dirty(bh);
+            set_buffer_uptodate(bh);
+        } else if ((!buffer_mapped(bh) || buffer_delay(bh)) &&
+               buffer_dirty(bh)) {
+            WARN_ON(bh->b_size != blocksize);
+            err = get_block(inode, block, bh, 1);
+            if (err)
+                goto recover;
+            clear_buffer_delay(bh);
+            if (buffer_new(bh)) {
+                /* blockdev mappings never come here */
+                clear_buffer_new(bh);
+                clean_bdev_bh_alias(bh);
+            }
+        }
+        bh = bh->b_this_page;
+        block++;
+    } while (bh != head);
+
+    do {
+        if (!buffer_mapped(bh))
+            continue;
+        /*
+         * If it's a fully non-blocking write attempt and we cannot
+         * lock the buffer then redirty the page.  Note that this can
+         * potentially cause a busy-wait loop from writeback threads
+         * and kswapd activity, but those code paths have their own
+         * higher-level throttling.
+         */
+        if (wbc->sync_mode != WB_SYNC_NONE) {
+            lock_buffer(bh);
+        } else if (!trylock_buffer(bh)) {
+            redirty_page_for_writepage(wbc, page);
+            continue;
+        }
+        if (test_clear_buffer_dirty(bh)) {
+            mark_buffer_async_write_endio(bh, handler);
+        } else {
+            unlock_buffer(bh);
+        }
+    } while ((bh = bh->b_this_page) != head);
+
+    /*
+     * The page and its buffers are protected by PageWriteback(), so we can
+     * drop the bh refcounts early.
+     */
+    BUG_ON(PageWriteback(page));
+    set_page_writeback(page);
+
+    do {
+        struct buffer_head *next = bh->b_this_page;
+        if (buffer_async_write(bh)) {
+            submit_bh_wbc(REQ_OP_WRITE, write_flags, bh,
+                    inode->i_write_hint, wbc);
+            nr_underway++;
+        }
+        bh = next;
+    } while (bh != head);
+    unlock_page(page);
+
+    err = 0;
+done:
+    if (nr_underway == 0) {
+        /*
+         * The page was marked dirty, but the buffers were
+         * clean.  Someone wrote them back by hand with
+         * ll_rw_block/submit_bh.  A rare case.
+         */
+        end_page_writeback(page);
+
+        /*
+         * The page and buffer_heads can be released at any time from
+         * here on.
+         */
+    }
+    return err;
+
+recover:
+    booter_panic("Recover.");
 }
 
 void __breadahead_gfp(struct block_device *bdev, sector_t block, unsigned size,

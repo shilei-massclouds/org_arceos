@@ -417,9 +417,11 @@ int generic_writepages(struct address_space *mapping,
     struct blk_plug plug;
     int ret;
 
+    printk("%s: step1\n", __func__);
     /* deal with chardevs and other special file */
     if (!mapping->a_ops->writepage)
         return 0;
+    printk("%s: step2\n", __func__);
 
     blk_start_plug(&plug);
     ret = write_cache_pages(mapping, wbc, __writepage, mapping);
@@ -589,5 +591,65 @@ continue_unlock:
     if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
         mapping->writeback_index = done_index;
 
+    return ret;
+}
+
+/*
+ * For address_spaces which do not use buffers.  Just tag the page as dirty in
+ * the xarray.
+ *
+ * This is also used when a single buffer is being dirtied: we want to set the
+ * page dirty in that case, but not all the buffers.  This is a "bottom-up"
+ * dirtying, whereas __set_page_dirty_buffers() is a "top-down" dirtying.
+ *
+ * The caller must ensure this doesn't race with truncation.  Most will simply
+ * hold the page lock, but e.g. zap_pte_range() calls with the page mapped and
+ * the pte lock held, which also locks out truncation.
+ */
+int __set_page_dirty_nobuffers(struct page *page)
+{
+    lock_page_memcg(page);
+    if (!TestSetPageDirty(page)) {
+        struct address_space *mapping = page_mapping(page);
+        unsigned long flags;
+
+        if (!mapping) {
+            unlock_page_memcg(page);
+            return 1;
+        }
+
+        xa_lock_irqsave(&mapping->i_pages, flags);
+        BUG_ON(page_mapping(page) != mapping);
+        WARN_ON_ONCE(!PagePrivate(page) && !PageUptodate(page));
+        //account_page_dirtied(page, mapping);
+        printk("%s: set mark PAGECACHE_TAG_DIRTY\n", __func__);
+        __xa_set_mark(&mapping->i_pages, page_index(page),
+                   PAGECACHE_TAG_DIRTY);
+        xa_unlock_irqrestore(&mapping->i_pages, flags);
+        unlock_page_memcg(page);
+
+        if (mapping->host) {
+            /* !PageAnon && !swapper_space */
+            __mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+        }
+        return 1;
+    }
+    unlock_page_memcg(page);
+    booter_panic("No impl.");
+    return 0;
+}
+
+/*
+ * When a writepage implementation decides that it doesn't want to write this
+ * page for some reason, it should redirty the locked page via
+ * redirty_page_for_writepage() and it should then unlock the page and return 0
+ */
+int redirty_page_for_writepage(struct writeback_control *wbc, struct page *page)
+{
+    int ret;
+
+    wbc->pages_skipped++;
+    ret = __set_page_dirty_nobuffers(page);
+    //account_page_redirty(page);
     return ret;
 }

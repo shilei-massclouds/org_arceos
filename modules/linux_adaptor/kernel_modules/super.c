@@ -8,8 +8,7 @@ extern void *kmalloc(size_t size, gfp_t flags);
 extern struct inode *cl_bdev_alloc_inode(void);
 extern struct gendisk *cl_disk;
 
-// Note: impl def_blk_aops.
-static const struct address_space_operations def_blk_aops;
+extern const struct address_space_operations def_blk_aops;
 
 struct dentry *mount_bdev(struct file_system_type *fs_type,
     int flags, const char *dev_name, void *data,
