@@ -32,6 +32,11 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
     return 1;
 }
 
+int wake_up_state(struct task_struct *p, unsigned int state)
+{
+    return try_to_wake_up(p, state, 0);
+}
+
 int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flags,
               void *key)
 {

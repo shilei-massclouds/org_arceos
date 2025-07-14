@@ -126,10 +126,6 @@ static void test_basic(const char *fs_name, const char *fname)
         booter_panic("No fs superblock!");
     }
 
-    struct file root_dir;
-    memset(&root_dir, 0, sizeof(root_dir));
-    root_dir.f_inode = root_inode;
-
     // Lookup inode of filesystem.
     unsigned int lookup_flags = 0;
     struct dentry target;

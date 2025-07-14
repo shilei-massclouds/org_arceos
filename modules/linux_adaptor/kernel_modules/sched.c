@@ -5,6 +5,8 @@
 #include <linux/resource.h>
 #include <linux/fs.h>
 #include <linux/mqueue.h>
+#include <linux/blkdev.h>
+#include <linux/wait.h>
 
 #include "booter.h"
 
@@ -57,7 +59,7 @@ unsigned long init_current(unsigned long thread_id)
         : "memory"
     );
     log_error("%s: %lx\n", __func__, __task);
-    return __task;
+    return (unsigned long)__task;
 }
 
 asmlinkage __visible void __sched schedule(void)
@@ -86,6 +88,30 @@ int __cond_resched_lock(spinlock_t *lock)
 {
     log_error("%s: No impl.", __func__);
     return 0;
+}
+
+int io_schedule_prepare(void)
+{
+    int old_iowait = current->in_iowait;
+
+    current->in_iowait = 1;
+    blk_schedule_flush_plug(current);
+
+    return old_iowait;
+}
+
+void io_schedule_finish(int token)
+{
+    current->in_iowait = token;
+}
+
+void __sched io_schedule(void)
+{
+    int token;
+
+    token = io_schedule_prepare();
+    schedule();
+    io_schedule_finish(token);
 }
 
 void __init sched_init(void)
