@@ -1198,38 +1198,6 @@ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
     return __block_write_begin_int(page, pos, len, get_block, NULL);
 }
 
-/*
-struct buffer_head *
-__bread_gfp(struct block_device *bdev, sector_t block,
-           unsigned size, gfp_t gfp)
-{
-    printk("%s: blknr(%llu) size(%u) BLOCK_SIZE(%u)\n",
-           __func__, block, size, BLOCK_SIZE);
-
-    int blkid;
-    int offset;
-    if (size == 4096) {
-        blkid = block * 8;
-        offset = 0;
-    } else {
-        blkid = block * 2;
-        offset = 0;
-    }
-
-    void *buf = alloc_pages_exact(4096, 0);
-    cl_read_block(blkid, buf, 4096);
-
-    struct buffer_head *bh = kmalloc(sizeof(struct buffer_head), 0);
-    bh->b_data = buf + offset;
-    bh->b_size = 4096;
-    bh->b_blocknr = block;
-    bh->b_page = virt_to_page(buf);
-    bh->b_bdev = bdev;
-    set_buffer_uptodate(bh);
-    return bh;
-}
-*/
-
 static struct buffer_head *__bread_slow(struct buffer_head *bh)
 {
     lock_buffer(bh);

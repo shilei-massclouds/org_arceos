@@ -1635,6 +1635,7 @@ static inline int wait_on_page_bit_common(wait_queue_head_t *q,
     wait_page.page = page;
     wait_page.bit_nr = bit_nr;
 
+    printk("%s: step1\n", __func__);
 repeat:
     wait->flags = 0;
     if (behavior == EXCLUSIVE) {
@@ -1663,6 +1664,7 @@ repeat:
         __add_wait_queue_entry_tail(q, wait);
     spin_unlock_irq(&q->lock);
 
+    printk("%s: step2\n", __func__);
     /*
      * From now on, all the logic will be based on
      * the WQ_FLAG_WOKEN and WQ_FLAG_DONE flag, to
@@ -1683,6 +1685,7 @@ repeat:
     for (;;) {
         unsigned int flags;
 
+    printk("%s: step3\n", __func__);
         set_current_state(state);
 
         /* Loop until we've been woken or interrupted */
@@ -1730,6 +1733,7 @@ repeat:
         psi_memstall_leave(&pflags);
     }
 
+    printk("%s: step5 behavior(%u)\n", __func__, behavior);
     /*
      * NOTE! The wait->flags weren't stable until we've done the
      * 'finish_wait()', and we could have exited the loop above due
@@ -1746,6 +1750,7 @@ repeat:
     if (behavior == EXCLUSIVE)
         return wait->flags & WQ_FLAG_DONE ? 0 : -EINTR;
 
+    printk("%s: step6\n", __func__);
     return wait->flags & WQ_FLAG_WOKEN ? 0 : -EINTR;
 }
 
