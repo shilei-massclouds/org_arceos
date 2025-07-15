@@ -98,7 +98,58 @@ static void shrink_readahead_size_eio(struct file_ra_state *ra)
 
 static void wake_up_page_bit(struct page *page, int bit_nr)
 {
-    log_error("%s: No impl.", __func__);
+    log_error("%s: bit_nr(%d) ...\n", __func__, bit_nr);
+
+    wait_queue_head_t *q = page_waitqueue(page);
+    struct wait_page_key key;
+    unsigned long flags;
+    wait_queue_entry_t bookmark;
+
+    key.page = page;
+    key.bit_nr = bit_nr;
+    key.page_match = 0;
+
+    bookmark.flags = 0;
+    bookmark.private = NULL;
+    bookmark.func = NULL;
+    INIT_LIST_HEAD(&bookmark.entry);
+
+    spin_lock_irqsave(&q->lock, flags);
+    __wake_up_locked_key_bookmark(q, TASK_NORMAL, &key, &bookmark);
+
+    while (bookmark.flags & WQ_FLAG_BOOKMARK) {
+        /*
+         * Take a breather from holding the lock,
+         * allow pages that finish wake up asynchronously
+         * to acquire the lock and remove themselves
+         * from wait queue
+         */
+        spin_unlock_irqrestore(&q->lock, flags);
+        cpu_relax();
+        spin_lock_irqsave(&q->lock, flags);
+        __wake_up_locked_key_bookmark(q, TASK_NORMAL, &key, &bookmark);
+    }
+
+    /*
+     * It is possible for other pages to have collided on the waitqueue
+     * hash, so in that case check for a page match. That prevents a long-
+     * term waiter
+     *
+     * It is still possible to miss a case here, when we woke page waiters
+     * and removed them from the waitqueue, but there are still other
+     * page waiters.
+     */
+    if (!waitqueue_active(q) || !key.page_match) {
+        ClearPageWaiters(page);
+        /*
+         * It's possible to miss clearing Waiters here, when we woke
+         * our page waiters, but the hashed waitqueue has waiters for
+         * other pages on it.
+         *
+         * That's okay, it's a rare case. The next waker will clear it.
+         */
+    }
+    spin_unlock_irqrestore(&q->lock, flags);
 }
 
 #ifndef clear_bit_unlock_is_negative_byte
@@ -1635,7 +1686,7 @@ static inline int wait_on_page_bit_common(wait_queue_head_t *q,
     wait_page.page = page;
     wait_page.bit_nr = bit_nr;
 
-    printk("%s: step1\n", __func__);
+    printk("%s: step1 q(%lx)\n", __func__, q);
 repeat:
     wait->flags = 0;
     if (behavior == EXCLUSIVE) {
@@ -1660,8 +1711,10 @@ repeat:
      */
     spin_lock_irq(&q->lock);
     SetPageWaiters(page);
+    printk("%s: step1.1\n", __func__);
     if (!trylock_page_bit_common(page, bit_nr, wait))
         __add_wait_queue_entry_tail(q, wait);
+    printk("%s: step1.2\n", __func__);
     spin_unlock_irq(&q->lock);
 
     printk("%s: step2\n", __func__);
@@ -1685,7 +1738,6 @@ repeat:
     for (;;) {
         unsigned int flags;
 
-    printk("%s: step3\n", __func__);
         set_current_state(state);
 
         /* Loop until we've been woken or interrupted */
@@ -1733,7 +1785,6 @@ repeat:
         psi_memstall_leave(&pflags);
     }
 
-    printk("%s: step5 behavior(%u)\n", __func__, behavior);
     /*
      * NOTE! The wait->flags weren't stable until we've done the
      * 'finish_wait()', and we could have exited the loop above due
@@ -1750,7 +1801,6 @@ repeat:
     if (behavior == EXCLUSIVE)
         return wait->flags & WQ_FLAG_DONE ? 0 : -EINTR;
 
-    printk("%s: step6\n", __func__);
     return wait->flags & WQ_FLAG_WOKEN ? 0 : -EINTR;
 }
 
@@ -1760,4 +1810,14 @@ int __lock_page_killable(struct page *__page)
     wait_queue_head_t *q = page_waitqueue(page);
     return wait_on_page_bit_common(q, page, PG_locked, TASK_KILLABLE,
                     EXCLUSIVE);
+}
+
+void __init pagecache_init(void)
+{
+    int i;
+
+    for (i = 0; i < PAGE_WAIT_TABLE_SIZE; i++)
+        init_waitqueue_head(&page_wait_table[i]);
+
+    page_writeback_init();
 }

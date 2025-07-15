@@ -45,6 +45,7 @@ int clinux_init(void)
 {
     printk("cLinux base is starting thread_id: ...\n");
 
+    pagecache_init();
     sched_init();
 
     cl_irq_init();

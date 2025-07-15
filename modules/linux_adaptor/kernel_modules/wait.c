@@ -256,3 +256,9 @@ prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_ent
     set_current_state(state);
     spin_unlock_irqrestore(&wq_head->lock, flags);
 }
+
+void __wake_up_locked_key_bookmark(struct wait_queue_head *wq_head,
+        unsigned int mode, void *key, wait_queue_entry_t *bookmark)
+{
+    __wake_up_common(wq_head, mode, 1, 0, key, bookmark);
+}
