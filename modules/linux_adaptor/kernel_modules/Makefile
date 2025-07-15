@@ -14,48 +14,50 @@ TARGET = libclinux.a
 # Original linux modules
 OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 OBJS += irq-sifive-plic.o
-OBJS += irq-sifive-plic.o
 
-OBJS += filesystems.o blkdev.o fs_types.o backing-dev.o blk-flush.o
-OBJS += super.o inode.o dcache.o buffer.o filemap.o mpage.o block_dev.o
-OBJS += readdir.o read_write.o libfs.o page-writeback.o sync.o
-OBJS += user_namespace.o utils.o blk-core.o fs-writeback.o errseq.o
-OBJS += swap.o mempool.o shash.o timer.o time.o
-OBJS += wait.o swait.o wait_bit.o kobject.o proc.o shmem.o
+OBJS += mm/mm_init.o
+OBJS += printk/printk.o
+OBJS += lib/vsprintf.o lib/string.o
+
+#OBJS += filesystems.o fs_types.o backing-dev.o
+#OBJS += mpage.o
+#OBJS += readdir.o libfs.o sync.o
+#OBJS += user_namespace.o
+#OBJS += shash.o time.o
+#OBJS += swait.o proc.o shmem.o
 
 # ext2 fs
-OBJS += ext2/super.o ext2/balloc.o ext2/dir.o ext2/file.o
-OBJS += ext2/ialloc.o ext2/inode.o
-OBJS += ext2/ioctl.o ext2/namei.o ext2/super.o ext2/symlink.o
+#OBJS += ext2/super.o ext2/balloc.o ext2/dir.o ext2/file.o
+#OBJS += ext2/ialloc.o ext2/inode.o
+#OBJS += ext2/ioctl.o ext2/namei.o ext2/super.o ext2/symlink.o
 
 # ext4 fs
-OBJS += ext4/super.o ext4/balloc.o ext4/bitmap.o ext4/block_validity.o
-OBJS += ext4/ext4_jbd2.o ext4/extents.o ext4/extents_status.o ext4/file.o ext4/dir.o
-OBJS += ext4/fsmap.o ext4/fsync.o ext4/hash.o ext4/ialloc.o ext4/indirect.o
-OBJS += ext4/inline.o ext4/inode.o ext4/inode-test.o ext4/ioctl.o ext4/mballoc.o
-OBJS += ext4/migrate.o ext4/mmp.o ext4/move_extent.o ext4/namei.o ext4/page-io.o
-OBJS += ext4/readpage.o ext4/resize.o ext4/super.o ext4/symlink.o ext4/sysfs.o
-OBJS += ext4/verity.o ext4/xattr.o ext4/xattr_hurd.o
-OBJS += ext4/xattr_trusted.o ext4/xattr_user.o
+#OBJS += ext4/super.o ext4/balloc.o ext4/bitmap.o ext4/block_validity.o
+#OBJS += ext4/ext4_jbd2.o ext4/extents.o ext4/extents_status.o ext4/file.o ext4/dir.o
+#OBJS += ext4/fsmap.o ext4/fsync.o ext4/hash.o ext4/ialloc.o ext4/indirect.o
+#OBJS += ext4/inline.o ext4/inode.o ext4/inode-test.o ext4/ioctl.o ext4/mballoc.o
+#OBJS += ext4/migrate.o ext4/mmp.o ext4/move_extent.o ext4/namei.o ext4/page-io.o
+#OBJS += ext4/readpage.o ext4/resize.o ext4/super.o ext4/symlink.o ext4/sysfs.o
+#OBJS += ext4/verity.o ext4/xattr.o ext4/xattr_hurd.o
+#OBJS += ext4/xattr_trusted.o ext4/xattr_user.o
 
 # jbd2
-OBJS += jbd2/checkpoint.o
-OBJS += jbd2/commit.o
-OBJS += jbd2/journal.o
-OBJS += jbd2/recovery.o
-OBJS += jbd2/revoke.o
-OBJS += jbd2/transaction.o
+#OBJS += jbd2/checkpoint.o
+#OBJS += jbd2/commit.o
+#OBJS += jbd2/journal.o
+#OBJS += jbd2/recovery.o
+#OBJS += jbd2/revoke.o
+#OBJS += jbd2/transaction.o
 
 # Adaptor files, we will re-write them in Rust in future.
-OBJS += cl_mine.o main.o workqueue.o \
-		printk.o vsprintf.o ctype.o kstrtox.o \
-		alloc.o genhd.o bus.o klist.o locking.o percpu-rwsem.o \
-		driver.o of_platform.o dma.o string.o \
-		device.o ida.o sched.o signal.o irq.o blk_mq.o xarray.o \
-		completion.o rmap.o truncate.o \
-		string_helpers.o block_ops.o bio.o iov_iter.o \
-		scatterlist.o fiemap.o rbtree.o radix-tree.o mbcache.o \
-		kthread.o percpu.o
+OBJS += cl_mine.o main.o 
+		#workqueue.o \
+		#ctype.o kstrtox.o \
+		#klist.o locking.o percpu-rwsem.o \
+		#dma.o \
+		#signal.o \
+		#completion.o \
+		#scatterlist.o rbtree.o radix-tree.o mbcache.o
 
 CROSS_ = $(ARCH)-linux-musl-
 CC = $(CROSS_)gcc

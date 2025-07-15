@@ -3,7 +3,7 @@
  * This file is provided under a dual BSD/GPLv2 license.  When using or
  * redistributing this file, you may do so under either license.
  *
- * Copyright(c) 2018 Intel Corporation. All rights reserved.
+ * Copyright(c) 2018 Intel Corporation
  */
 
 #ifndef __INCLUDE_SOUND_SOF_INFO_H__
@@ -25,6 +25,7 @@
 #define SOF_IPC_INFO_LOCKS		BIT(1)
 #define SOF_IPC_INFO_LOCKSV		BIT(2)
 #define SOF_IPC_INFO_GDB		BIT(3)
+#define SOF_IPC_INFO_D3_PERSISTENT	BIT(4)
 
 /* extended data types that can be appended onto end of sof_ipc_fw_ready */
 enum sof_ipc_ext_data {
@@ -34,6 +35,10 @@ enum sof_ipc_ext_data {
 	SOF_IPC_EXT_PROBE_INFO		= 3,
 	SOF_IPC_EXT_USER_ABI_INFO	= 4,
 };
+
+/* Build u32 number in format MMmmmppp */
+#define SOF_FW_VER(MAJOR, MINOR, PATCH) ((uint32_t)( \
+	((MAJOR) << 24) | ((MINOR) << 12) | (PATCH)))
 
 /* FW version - SOF_IPC_GLB_VERSION */
 struct sof_ipc_fw_version {
@@ -46,9 +51,11 @@ struct sof_ipc_fw_version {
 	uint8_t time[10];
 	uint8_t tag[6];
 	uint32_t abi_version;
+	/* used to check FW and ldc file compatibility, reproducible value */
+	uint32_t src_hash;
 
 	/* reserved for future use */
-	uint32_t reserved[4];
+	uint32_t reserved[3];
 } __packed;
 
 /* FW ready Message - sent by firmware when boot has completed */
@@ -99,7 +106,7 @@ struct sof_ipc_window_elem {
 struct sof_ipc_window {
 	struct sof_ipc_ext_data_hdr ext_hdr;
 	uint32_t num_windows;
-	struct sof_ipc_window_elem window[];
+	struct sof_ipc_window_elem window[SOF_IPC_MAX_ELEMS];
 }  __packed;
 
 struct sof_ipc_cc_version {

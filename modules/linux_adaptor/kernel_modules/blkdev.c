@@ -5,8 +5,6 @@
 
 #include "booter.h"
 
-//extern int cl_read_block(int blk_nr, void *rbuf, int count);
-
 int sb_min_blocksize(struct super_block *sb, int size)
 {
     return BLOCK_SIZE;
@@ -24,17 +22,21 @@ void __brelse(struct buffer_head * buf)
 /* Kill _all_ buffers and pagecache , dirty or not.. */
 static void kill_bdev(struct block_device *bdev)
 {
-    struct address_space *mapping = bdev->bd_inode->i_mapping;
+#if 0
+    struct address_space *mapping = bdev->bd_mapping;
 
     if (mapping->nrpages == 0 && mapping->nrexceptional == 0)
         return;
 
     invalidate_bh_lrus();
     truncate_inode_pages(mapping, 0);
+#endif
+    booter_panic("No impl.");
 }
 
-int set_blocksize(struct block_device *bdev, int size)
+int set_blocksize(struct file *file, int size)
 {
+#if 0
     /* Size must be a power of two, and between 512 and PAGE_SIZE */
     if (size > PAGE_SIZE || size < 512 || !is_power_of_2(size))
         return -EINVAL;
@@ -50,15 +52,20 @@ int set_blocksize(struct block_device *bdev, int size)
         kill_bdev(bdev);
     }
     return 0;
+#endif
+    booter_panic("No impl.");
 }
 
 int __sync_blockdev(struct block_device *bdev, int wait)
 {
+#if 0
     if (!bdev)
         return 0;
     if (!wait)
         return filemap_flush(bdev->bd_inode->i_mapping);
     return filemap_write_and_wait(bdev->bd_inode->i_mapping);
+#endif
+    booter_panic("No impl.");
 }
 
 /*
@@ -72,6 +79,7 @@ int sync_blockdev(struct block_device *bdev)
 
 int sb_set_blocksize(struct super_block *sb, int size)
 {
+#if 0
     if (set_blocksize(sb->s_bdev, size))
         return 0;
     /* If we get here, we know size is power of two
@@ -80,6 +88,8 @@ int sb_set_blocksize(struct super_block *sb, int size)
     sb->s_blocksize_bits = blksize_bits(size);
     log_error("%s: size(%d) NOTE!\n", __func__, size);
     return sb->s_blocksize;
+#endif
+    booter_panic("No impl.");
 }
 
 void blk_start_plug(struct blk_plug *plug)
@@ -105,9 +115,11 @@ static void end_bio_bh_io_sync(struct bio *bio)
     bio_put(bio);
 }
 
-static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
-             enum rw_hint write_hint, struct writeback_control *wbc)
+static void submit_bh_wbc(blk_opf_t opf, struct buffer_head *bh,
+              enum rw_hint write_hint,
+              struct writeback_control *wbc)
 {
+#if 0
     struct bio *bio;
 
     BUG_ON(!buffer_locked(bh));
@@ -152,40 +164,14 @@ static int submit_bh_wbc(int op, int op_flags, struct buffer_head *bh,
 
     submit_bio(bio);
     return 0;
+#endif
+    booter_panic("No impl.");
 }
 
-int submit_bh(int op, int op_flags, struct buffer_head *bh)
+void submit_bh(blk_opf_t opf, struct buffer_head *bh)
 {
-    return submit_bh_wbc(op, op_flags, bh, 0, NULL);
+    submit_bh_wbc(opf, bh, WRITE_LIFE_NOT_SET, NULL);
 }
-
-/*
-int submit_bh(int op, int op_flags, struct buffer_head *bh)
-{
-    int blkid;
-    int offset;
-
-    printk("%s: impl it. op(%d) b_blocknr(%u) b_size(%u) b_page(%lx)\n",
-           __func__, op, bh->b_blocknr, bh->b_size, bh->b_page);
-
-    if (op != READ) {
-        booter_panic("Dont support WRITE!\n");
-    }
-
-    if (bh->b_size == PAGE_SIZE) {
-        blkid = bh->b_blocknr * 8;
-        offset = 0;
-    } else {
-        blkid = bh->b_blocknr * 2;
-        offset = 0;
-    }
-
-    void *buf = page_to_virt(bh->b_page);
-    cl_read_block(blkid, buf, PAGE_SIZE);
-
-    return 0;
-}
-*/
 
 /**
  * ll_rw_block: low-level access to block devices (DEPRECATED)
@@ -215,6 +201,7 @@ int submit_bh(int op, int op_flags, struct buffer_head *bh)
  */
 void ll_rw_block(int op, int op_flags,  int nr, struct buffer_head *bhs[])
 {
+#if 0
     int i;
 
     for (i = 0; i < nr; i++) {
@@ -239,4 +226,6 @@ void ll_rw_block(int op, int op_flags,  int nr, struct buffer_head *bhs[])
         }
         unlock_buffer(bh);
     }
+#endif
+    booter_panic("No impl.");
 }

@@ -1,0 +1,1 @@
+savedcmd_include/generated/compat_vdso-offsets.h := riscv64-linux-gnu-nm arch/riscv/kernel/compat_vdso/compat_vdso.so.dbg | arch/riscv/kernel/compat_vdso/gen_compat_vdso_offsets.sh | LC_ALL=C sort > include/generated/compat_vdso-offsets.h

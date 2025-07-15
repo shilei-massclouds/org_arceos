@@ -37,32 +37,22 @@ pub extern "C" fn cl_alloc_pages(size: usize, align: usize) -> usize {
 
 /// Printk
 #[unsafe(no_mangle)]
-pub extern "C" fn cl_printk(ptr: *const c_char) {
+pub extern "C" fn cl_printk(level: u8, ptr: *const c_char) {
     let c_str = unsafe { CStr::from_ptr(ptr) };
     let rust_str = c_str.to_str().expect("Bad encoding");
-    ax_print!("{}", rust_str);
+    match level as char {
+        '7' => debug!("{}", rust_str),
+        '6' => info!("{}", rust_str),
+        '4' => warn!("{}", rust_str),
+        '3' => error!("{}", rust_str),
+        _ => ax_print!("{}", rust_str),
+    }
 }
 
 /// Terminate
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_terminate() {
     axhal::misc::terminate()
-}
-
-/// Debug log.
-#[unsafe(no_mangle)]
-pub extern "C" fn cl_log_debug(ptr: *const c_char) {
-    let c_str = unsafe { CStr::from_ptr(ptr) };
-    let rust_str = c_str.to_str().expect("Bad encoding");
-    debug!("{}", rust_str);
-}
-
-/// Error log.
-#[unsafe(no_mangle)]
-pub extern "C" fn cl_log_error(ptr: *const c_char) {
-    let c_str = unsafe { CStr::from_ptr(ptr) };
-    let rust_str = c_str.to_str().expect("Bad encoding");
-    error!("{}", rust_str);
 }
 
 type LinuxKthreadFunc = extern fn(usize) -> isize;

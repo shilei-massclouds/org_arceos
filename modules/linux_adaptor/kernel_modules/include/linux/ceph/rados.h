@@ -424,7 +424,7 @@ enum {
 };
 
 #define EOLDSNAPC    ERESTART  /* ORDERSNAP flag set; writer has old snapc*/
-#define EBLACKLISTED ESHUTDOWN /* blacklisted */
+#define EBLOCKLISTED ESHUTDOWN /* blocklisted */
 
 /* xattr comparison */
 enum {
@@ -523,6 +523,10 @@ struct ceph_osd_op {
 		struct {
 			__le64 cookie;
 		} __attribute__ ((packed)) notify;
+		struct {
+			__le64 unused;
+			__le64 ver;
+		} __attribute__ ((packed)) assert_ver;
 		struct {
 			__le64 offset, length;
 			__le64 src_offset;

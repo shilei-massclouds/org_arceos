@@ -5,11 +5,12 @@
 #include <linux/sched/init.h>
 #include <linux/buffer_head.h>
 
-#include "booter.h"
+//#include "booter.h"
 
 //#define TEST_EXT2
 #define TEST_EXT4
 
+#if 0
 extern void init_current(unsigned long thread_id);
 
 extern int cl_irq_init(void);
@@ -37,14 +38,16 @@ extern int lookup(struct file *dir, const char *target, u64 *ret_ino);
 
 extern ssize_t new_sync_read(struct file *filp, char *buf, size_t len, loff_t *ppos);
 extern ssize_t new_sync_write(struct file *filp, const char *buf, size_t len, loff_t *ppos);
+#endif
 
 static void test_ext2(void);
 static void test_ext4(void);
 
 int clinux_init(void)
 {
-    printk("cLinux base is starting thread_id: ...\n");
+    //printk("cLinux base is starting thread_id: ...\n");
 
+#if 0
     pagecache_init();
     sched_init();
 
@@ -65,9 +68,13 @@ int clinux_init(void)
 #ifdef TEST_EXT4
     test_ext4();
 #endif
+
+#endif
+
     return 0;
 }
 
+#if 0
 // File level read.
 static void test_read(struct inode *inode, const char *fs_name)
 {
@@ -264,4 +271,5 @@ static int test_write_blocks()
 {
     write_a_block(0);
 }
+#endif
 #endif

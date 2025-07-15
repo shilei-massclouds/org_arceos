@@ -57,6 +57,8 @@ enum ib_uverbs_access_flags {
 	IB_UVERBS_ACCESS_ZERO_BASED = 1 << 5,
 	IB_UVERBS_ACCESS_ON_DEMAND = 1 << 6,
 	IB_UVERBS_ACCESS_HUGETLB = 1 << 7,
+	IB_UVERBS_ACCESS_FLUSH_GLOBAL = 1 << 8,
+	IB_UVERBS_ACCESS_FLUSH_PERSISTENT = 1 << 9,
 
 	IB_UVERBS_ACCESS_RELAXED_ORDERING = IB_UVERBS_ACCESS_OPTIONAL_FIRST,
 	IB_UVERBS_ACCESS_OPTIONAL_RANGE =
@@ -208,6 +210,7 @@ enum ib_uverbs_read_counters_flags {
 enum ib_uverbs_advise_mr_advice {
 	IB_UVERBS_ADVISE_MR_ADVICE_PREFETCH,
 	IB_UVERBS_ADVISE_MR_ADVICE_PREFETCH_WRITE,
+	IB_UVERBS_ADVISE_MR_ADVICE_PREFETCH_NO_FAULT,
 };
 
 enum ib_uverbs_advise_mr_flag {
@@ -217,7 +220,8 @@ enum ib_uverbs_advise_mr_flag {
 struct ib_uverbs_query_port_resp_ex {
 	struct ib_uverbs_query_port_resp legacy_resp;
 	__u16 port_cap_flags2;
-	__u8  reserved[6];
+	__u8  reserved[2];
+	__u32 active_speed_ex;
 };
 
 struct ib_uverbs_qp_cap {
@@ -239,6 +243,7 @@ enum rdma_driver_id {
 	RDMA_DRIVER_OCRDMA,
 	RDMA_DRIVER_NES,
 	RDMA_DRIVER_I40IW,
+	RDMA_DRIVER_IRDMA = RDMA_DRIVER_I40IW,
 	RDMA_DRIVER_VMW_PVRDMA,
 	RDMA_DRIVER_QEDR,
 	RDMA_DRIVER_HNS,
@@ -248,6 +253,22 @@ enum rdma_driver_id {
 	RDMA_DRIVER_QIB,
 	RDMA_DRIVER_EFA,
 	RDMA_DRIVER_SIW,
+	RDMA_DRIVER_ERDMA,
+	RDMA_DRIVER_MANA,
+};
+
+enum ib_uverbs_gid_type {
+	IB_UVERBS_GID_TYPE_IB,
+	IB_UVERBS_GID_TYPE_ROCE_V1,
+	IB_UVERBS_GID_TYPE_ROCE_V2,
+};
+
+struct ib_uverbs_gid_entry {
+	__aligned_u64 gid[2];
+	__u32 gid_index;
+	__u32 port_num;
+	__u32 gid_type;
+	__u32 netdev_ifindex; /* It is 0 if there is no netdev associated with it */
 };
 
 #endif

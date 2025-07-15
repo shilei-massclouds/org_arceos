@@ -8,6 +8,7 @@
 struct inet_hashinfo;
 
 struct inet_diag_handler {
+	struct module	*owner;
 	void		(*dump)(struct sk_buff *skb,
 				struct netlink_callback *cb,
 				const struct inet_diag_req_v2 *r);
@@ -75,6 +76,8 @@ static inline size_t inet_diag_msg_attrs_size(void)
 #ifdef CONFIG_SOCK_CGROUP_DATA
 		+ nla_total_size_64bit(sizeof(u64))  /* INET_DIAG_CGROUP_ID */
 #endif
+		+ nla_total_size(sizeof(struct inet_diag_sockopt))
+						     /* INET_DIAG_SOCKOPT */
 		;
 }
 int inet_diag_msg_attrs_fill(struct sock *sk, struct sk_buff *skb,

@@ -4,7 +4,6 @@
 
 #include "booter.h"
 
-extern void *kmalloc(size_t size, gfp_t flags);
 extern struct inode *cl_bdev_alloc_inode(void);
 extern struct gendisk *cl_disk;
 
