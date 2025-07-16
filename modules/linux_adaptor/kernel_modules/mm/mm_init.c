@@ -17,13 +17,11 @@ int init_mem_map(unsigned long pa_start, unsigned long pa_end)
     }
     pa_start >>= PAGE_SHIFT;
     pa_end >>= PAGE_SHIFT;
-#if 0
 
     unsigned int size = (pa_end - pa_start) * sizeof(struct page);
     mem_map = alloc_pages_exact(PAGE_ALIGN(size), 0);
     pfn_base = pa_start;
     max_mapnr = pa_end - pa_start;
-#endif
-    pr_info("%s: pfn_base %lx, max_mapnr %lx", __func__, pfn_base, max_mapnr);
+    pr_info("%s: pfn_base (0x%lx), max_mapnr (%lu)", __func__, pfn_base, max_mapnr);
     return 0;
 }

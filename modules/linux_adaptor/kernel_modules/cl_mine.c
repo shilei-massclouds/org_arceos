@@ -54,7 +54,6 @@ CL_MINE(free_pages_exact)
 CL_MINE(is_vmalloc_addr)
 
 // string_helpers
-CL_MINE(hex_to_bin)
 CL_MINE(get_cmdline)
 CL_MINE(file_path)
 
@@ -339,8 +338,6 @@ CL_MINE(truncate_inode_page)
 CL_MINE(__cancel_dirty_page)
 CL_MINE(blk_flush_plug_list)
 
-CL_MINE(alloc_pages_exact_noprof)
-CL_MINE(init_current)
 CL_MINE(plic_handle_irq)
 
 // vsprintf
@@ -359,8 +356,6 @@ CL_MINE(get_random_bytes)
 CL_MINE(gfpflag_names)
 CL_MINE(guid_index)
 CL_MINE(has_capability_noaudit)
-CL_MINE(hex_asc)
-CL_MINE(hex_asc_upper)
 CL_MINE(of_find_property)
 CL_MINE(of_property_read_string)
 CL_MINE(of_prop_next_string)

@@ -5,7 +5,7 @@
 #include <linux/sched/init.h>
 #include <linux/buffer_head.h>
 
-//#include "booter.h"
+#include "adaptor.h"
 
 //#define TEST_EXT2
 #define TEST_EXT4
@@ -45,7 +45,7 @@ static void test_ext4(void);
 
 int clinux_init(void)
 {
-    //printk("cLinux base is starting thread_id: ...\n");
+    printk("cLinux base is starting ...\n");
 
 #if 0
     pagecache_init();
@@ -70,6 +70,7 @@ int clinux_init(void)
 #endif
 
 #endif
+    PANIC("Reach here!");
 
     return 0;
 }

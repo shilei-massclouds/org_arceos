@@ -6,6 +6,8 @@
 extern void cl_printk(char level, const char *s);
 extern void cl_terminate(void);
 
+extern void *cl_alloc_pages(unsigned long size, unsigned long align);
+
 #define PANIC(args...) \
 do { \
     printk("\n########################\n"); \

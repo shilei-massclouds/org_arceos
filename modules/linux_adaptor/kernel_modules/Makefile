@@ -9,15 +9,20 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
     -O2 -Wno-stringop-overflow -Wno-format-truncation -Wno-format-security \
     -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration
 
+ifeq ("$(LOG)", "debug")
+CFLAGS += -DDEBUG
+endif
+
 TARGET = libclinux.a
 
 # Original linux modules
 OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 OBJS += irq-sifive-plic.o
 
-OBJS += mm/mm_init.o
+OBJS += mm/mm_init.o mm/page_alloc.o
 OBJS += printk/printk.o
-OBJS += lib/vsprintf.o lib/string.o
+OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o
+OBJS += sched/core.o
 
 #OBJS += filesystems.o fs_types.o backing-dev.o
 #OBJS += mpage.o
@@ -50,7 +55,7 @@ OBJS += lib/vsprintf.o lib/string.o
 #OBJS += jbd2/transaction.o
 
 # Adaptor files, we will re-write them in Rust in future.
-OBJS += cl_mine.o main.o 
+OBJS += cl_mine.o main.o
 		#workqueue.o \
 		#ctype.o kstrtox.o \
 		#klist.o locking.o percpu-rwsem.o \

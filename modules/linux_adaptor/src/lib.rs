@@ -32,7 +32,7 @@ pub fn init_linux_modules() {
         init_current(axtask::current().id().as_u64())
     };
     axtask::current().set_private(task_ptr);
-    error!("Linux init_tasik pointer({:#x})", task_ptr);
+    info!("Linux init task set pointer({:#x})", task_ptr);
 
     let ret = unsafe { clinux_init() };
     info!("cLinux init [{}].", ret);
