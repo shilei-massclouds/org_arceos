@@ -728,6 +728,11 @@ static struct platform_driver plic_driver = {
 };
 builtin_platform_driver(plic_driver);
 
+void cl_plic_init(void)
+{
+    plic_driver_init();
+}
+
 static int __init plic_early_probe(struct device_node *node,
 				   struct device_node *parent)
 {

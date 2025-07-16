@@ -30,3 +30,8 @@ unsigned long init_current(unsigned long thread_id)
     pr_debug("%s: init_task(%lu) ptr (0x%lx)\n", __func__, thread_id, tsk);
     return (unsigned long)tsk;
 }
+
+void __init sched_init(void)
+{
+    wait_bit_init();
+}

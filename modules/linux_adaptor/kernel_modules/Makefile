@@ -19,10 +19,12 @@ TARGET = libclinux.a
 OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
 OBJS += irq-sifive-plic.o
 
-OBJS += mm/mm_init.o mm/page_alloc.o
+OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
 OBJS += printk/printk.o
-OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o
-OBJS += sched/core.o
+OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o lib/ratelimit.o
+OBJS += sched/core.o sched/wait.o sched/wait_bit.o
+OBJS += locking/spinlock_debug.o
+OBJS += base/platform.o
 
 #OBJS += filesystems.o fs_types.o backing-dev.o
 #OBJS += mpage.o
@@ -55,7 +57,7 @@ OBJS += sched/core.o
 #OBJS += jbd2/transaction.o
 
 # Adaptor files, we will re-write them in Rust in future.
-OBJS += cl_mine.o main.o
+OBJS += cl_mine.o main.o smp.o
 		#workqueue.o \
 		#ctype.o kstrtox.o \
 		#klist.o locking.o percpu-rwsem.o \

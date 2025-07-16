@@ -10,10 +10,11 @@
 //#define TEST_EXT2
 #define TEST_EXT4
 
+extern int cl_plic_init(void);
+
 #if 0
 extern void init_current(unsigned long thread_id);
 
-extern int cl_irq_init(void);
 extern int cl_enable_irq(void);
 
 extern void cl_virtio_init();
@@ -47,12 +48,12 @@ int clinux_init(void)
 {
     printk("cLinux base is starting ...\n");
 
-#if 0
     pagecache_init();
     sched_init();
 
-    cl_irq_init();
+    cl_plic_init();
 
+#if 0
     cl_virtio_init();
     cl_virtio_mmio_init();
     cl_virtio_blk_init();
