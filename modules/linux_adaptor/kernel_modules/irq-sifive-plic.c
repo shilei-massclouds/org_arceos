@@ -513,6 +513,12 @@ static int plic_parse_context_parent(struct fwnode_handle *fwnode, u32 context,
 	return 0;
 }
 
+struct fwnode_handle *riscv_get_intc_hwnode(void)
+{
+    pr_err("%s: No impl. (arch/riscv/kernel/irq.c)", __func__);
+    return NULL;
+}
+
 static int plic_probe(struct fwnode_handle *fwnode)
 {
 	int error = 0, nr_contexts, nr_handlers = 0, cpu, i;
@@ -558,14 +564,12 @@ static int plic_probe(struct fwnode_handle *fwnode)
 	priv->gsi_base = gsi_base;
 	priv->acpi_plic_id = id;
 
-    printk("%s: 1 regs(%lx)\n", __func__, regs);
 	priv->prio_save = bitmap_zalloc(nr_irqs, GFP_KERNEL);
 	if (!priv->prio_save) {
 		error = -ENOMEM;
 		goto fail_free_priv;
 	}
 
-    printk("%s: 2 regs(%lx)\n", __func__, regs);
 	for (i = 0; i < nr_contexts; i++) {
 		error = plic_parse_context_parent(fwnode, i, &parent_hwirq, &cpu,
 						  priv->acpi_plic_id);
@@ -641,7 +645,6 @@ done:
 		}
 		nr_handlers++;
 	}
-    printk("%s: 3 regs(%lx)\n", __func__, regs);
 
 	priv->irqdomain = irq_domain_create_linear(fwnode, nr_irqs + 1,
 						   &plic_irqdomain_ops, priv);
@@ -670,10 +673,13 @@ done:
 		if (global_setup) {
 			/* Find parent domain and register chained handler */
 			domain = irq_find_matching_fwnode(riscv_get_intc_hwnode(), DOMAIN_BUS_ANY);
+    printk("%s: 1\n", __func__);
 			if (domain)
 				plic_parent_irq = irq_create_mapping(domain, RV_IRQ_EXT);
+    printk("%s: 2\n", __func__);
 			if (plic_parent_irq)
 				irq_set_chained_handler(plic_parent_irq, plic_handle_irq);
+    printk("%s: 3\n", __func__);
 
 			cpuhp_setup_state(CPUHP_AP_IRQ_SIFIVE_PLIC_STARTING,
 					  "irqchip/sifive/plic:starting",

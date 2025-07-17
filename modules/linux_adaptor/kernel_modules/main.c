@@ -48,6 +48,7 @@ int clinux_init(void)
 {
     printk("cLinux base is starting ...\n");
 
+    setup_per_cpu_areas();
     pagecache_init();
     sched_init();
 

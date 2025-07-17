@@ -5,3 +5,9 @@
 unsigned int nr_cpu_ids __read_mostly = NR_CPUS;
 EXPORT_SYMBOL(nr_cpu_ids);
 #endif
+
+int riscv_hartid_to_cpuid(unsigned long hartid)
+{
+    pr_err("%s: No impl. hartid(%lu)", __func__, hartid);
+    return 0;
+}
