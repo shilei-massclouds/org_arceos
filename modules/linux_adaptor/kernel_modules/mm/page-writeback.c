@@ -29,5 +29,5 @@ void __init page_writeback_init(void)
     register_sysctl_init("vm", vm_page_writeback_sysctls);
 #endif
 #endif
-    pr_err("No impl.");
+    pr_err("%s: No impl.", __func__);
 }

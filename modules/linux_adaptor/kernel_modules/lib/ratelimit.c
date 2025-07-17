@@ -26,7 +26,7 @@
  */
 int ___ratelimit(struct ratelimit_state *rs, const char *func)
 {
-    pr_err("No impl.");
+    pr_err("%s: No impl.", __func__);
     return 0;
 #if 0
 	/* Paired with WRITE_ONCE() in .proc_handler().

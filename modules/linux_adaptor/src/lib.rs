@@ -14,11 +14,14 @@ mod export;
 
 use axhal::mem::virt_to_phys;
 use memory_addr::{pa, MemoryAddr};
-use axconfig::plat::{PHYS_MEMORY_BASE, PHYS_MEMORY_SIZE};
+use axconfig::plat::{PHYS_MEMORY_BASE, PHYS_MEMORY_SIZE, PHYS_VIRT_OFFSET};
 
 /// Initialize Linux modules.
 pub fn init_linux_modules() {
     info!("Initialize Linux modules...");
+
+    /* Offset between VirtAddr and PhysAddr in kernel aspace. */
+    unsafe { setup_paging(PHYS_VIRT_OFFSET) };
 
     /* Prepare handler for plic */
     prepare_ext_interrupt();
@@ -61,6 +64,7 @@ unsafe extern "C" {
 #[cfg(target_arch = "riscv64")]
 unsafe extern "C" {
     fn plic_handle_irq();
+    fn setup_paging(va_pa_offset: usize);
 }
 
 unsafe extern "C" {

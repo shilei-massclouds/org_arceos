@@ -3,12 +3,7 @@
 use core::ffi::{c_char, CStr};
 use alloc::alloc::{alloc, Layout};
 use axalloc::global_allocator;
-use axconfig::plat::PHYS_VIRT_OFFSET;
 use axhal::mem::PAGE_SIZE_4K;
-
-/// Offset between VirtAddr and PhysAddr in kernel aspace.
-#[unsafe(no_mangle)]
-static va_pa_offset: usize = PHYS_VIRT_OFFSET;
 
 /// Alloc bytes.
 #[unsafe(no_mangle)]

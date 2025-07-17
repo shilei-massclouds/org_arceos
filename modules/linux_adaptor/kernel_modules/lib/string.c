@@ -116,3 +116,79 @@ char *strchr(const char *s, int c)
 }
 EXPORT_SYMBOL(strchr);
 #endif
+
+/**
+ * strcmp - Compare two strings
+ * @cs: One string
+ * @ct: Another string
+ */
+int strcmp(const char *cs, const char *ct)
+{
+    unsigned char c1, c2;
+
+    while (1) {
+        c1 = *cs++;
+        c2 = *ct++;
+        if (c1 != c2)
+            return c1 < c2 ? -1 : 1;
+        if (!c1)
+            break;
+    }
+    return 0;
+}
+EXPORT_SYMBOL(strcmp);
+
+#ifndef __HAVE_ARCH_STRRCHR
+/**
+ * strrchr - Find the last occurrence of a character in a string
+ * @s: The string to be searched
+ * @c: The character to search for
+ */
+char *strrchr(const char *s, int c)
+{
+    const char *last = NULL;
+    do {
+        if (*s == (char)c)
+            last = s;
+    } while (*s++);
+    return (char *)last;
+}
+EXPORT_SYMBOL(strrchr);
+#endif
+
+/**
+ * strncmp - Compare two length-limited strings
+ * @cs: One string
+ * @ct: Another string
+ * @count: The maximum number of bytes to compare
+ */
+int strncmp(const char *cs, const char *ct, size_t count)
+{
+    unsigned char c1, c2;
+
+    while (count) {
+        c1 = *cs++;
+        c2 = *ct++;
+        if (c1 != c2)
+            return c1 < c2 ? -1 : 1;
+        if (!c1)
+            break;
+        count--;
+    }
+    return 0;
+}
+EXPORT_SYMBOL(strncmp);
+
+#ifndef __HAVE_ARCH_STRCASECMP
+int strcasecmp(const char *s1, const char *s2)
+{
+    int c1, c2;
+
+    do {
+        c1 = tolower(*s1++);
+        c2 = tolower(*s2++);
+    } while (c1 == c2 && c1 != 0);
+    return c1 - c2;
+}
+EXPORT_SYMBOL(strcasecmp);
+#endif

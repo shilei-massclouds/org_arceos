@@ -40,17 +40,6 @@ void plic_handle_irq(void)
     (*fn_plic_handle_irq)(&desc);
 }
 
-void __iomem *of_iomap(struct device_node *np, int index)
-{
-    void *ret;
-    if (strcmp(np->name, "plic") != 0) {
-        booter_panic("bad plic_node.");
-    }
-    ret = __va(PLIC_REG_START);
-    printk("%s: (0x%lx)\n", __func__, (unsigned long)ret);
-    return ret;
-}
-
 int of_irq_count(struct device_node *dev)
 {
     if (strcmp(dev->name, "plic") != 0) {
