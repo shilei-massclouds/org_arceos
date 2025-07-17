@@ -3,7 +3,7 @@
 
 #include "../adaptor.h"
 
-static int _vprintk(const char *fmt, va_list args)
+int _vprintk(const char *fmt, va_list args)
 {
     int n;
     char buf[512];

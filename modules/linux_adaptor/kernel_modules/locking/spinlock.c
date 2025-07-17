@@ -33,3 +33,19 @@ noinline void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsig
     /* For simplicity, ignore kernel-preemption. */
     // preempt_enable();
 }
+
+noinline void __lockfunc _raw_spin_lock(raw_spinlock_t *lock)
+{
+    /* For simplicity, ignore kernel-preemption. */
+    // preempt_disable();
+
+    arch_spin_lock(&lock->raw_lock);
+}
+
+noinline void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
+{
+    arch_spin_unlock(&lock->raw_lock);
+
+    /* For simplicity, ignore kernel-preemption. */
+    // preempt_enable();
+}

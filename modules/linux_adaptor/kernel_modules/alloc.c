@@ -90,14 +90,6 @@ void kmem_cache_destroy(struct kmem_cache *s)
     kfree(s);
 }
 
-void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
-{
-    if (!s || s->size == 0) {
-        booter_panic("bad kmem cache alloc!");
-    }
-    return kmalloc(s->size, gfpflags);
-}
-
 void kmem_cache_free(struct kmem_cache *cachep, void *objp)
 {
     kfree(objp);

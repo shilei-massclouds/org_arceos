@@ -11,6 +11,8 @@ extern void cl_rust_dealloc(const void *addr);
 
 extern void *cl_alloc_pages(unsigned long size, unsigned long align);
 
+extern int _vprintk(const char *fmt, va_list args);
+
 #define PANIC(args...) \
 do { \
     printk("\n########################\n"); \

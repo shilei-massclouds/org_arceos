@@ -109,7 +109,6 @@ static int alloc_fwnode_name(struct irq_domain *domain, const struct fwnode_hand
      */
     domain->name = strreplace(name, '/', ':');
     domain->flags |= IRQ_DOMAIN_NAME_ALLOCATED;
-    printk("%s: 2\n", __func__);
     return 0;
 }
 
@@ -136,7 +135,6 @@ static int irq_domain_set_name(struct irq_domain *domain, const struct irq_domai
 
     printk("%s: 1\n", __func__);
     if (is_fwnode_irqchip(fwnode)) {
-    printk("%s: 1.1\n", __func__);
         struct irqchip_fwid *fwid = container_of(fwnode, struct irqchip_fwid, fwnode);
 
         /*
@@ -161,7 +159,6 @@ static int irq_domain_set_name(struct irq_domain *domain, const struct irq_domai
         }
 
     } else if (is_of_node(fwnode) || is_acpi_device_node(fwnode) || is_software_node(fwnode)) {
-    printk("%s: 1.2\n", __func__);
         return alloc_fwnode_name(domain, fwnode, bus_token, info->name_suffix);
     }
     printk("%s: 2\n", __func__);
@@ -189,9 +186,7 @@ static struct irq_domain *__irq_domain_create(const struct irq_domain_info *info
     if (!domain)
         return ERR_PTR(-ENOMEM);
 
-    printk("%s: 1\n", __func__);
     err = irq_domain_set_name(domain, info);
-    printk("%s: 2\n", __func__);
     if (err) {
         kfree(domain);
         return ERR_PTR(err);
@@ -288,6 +283,19 @@ err_domain_free:
 static int irq_domain_associate_locked(struct irq_domain *domain, unsigned int virq,
                        irq_hw_number_t hwirq)
 {
+    printk("%s: step0\n", __func__);
+    struct irq_data *irq_data = irq_get_irq_data(virq);
+    int ret;
+
+    printk("%s: step1\n", __func__);
+    if (WARN(hwirq >= domain->hwirq_max,
+         "error: hwirq 0x%x is too large for %s\n", (int)hwirq, domain->name))
+        return -EINVAL;
+    if (WARN(!irq_data, "error: virq%i is not allocated", virq))
+        return -EINVAL;
+    if (WARN(irq_data->domain, "error: virq%i is already associated", virq))
+        return -EINVAL;
+
     PANIC("");
 }
 
@@ -384,7 +392,6 @@ unsigned int irq_create_mapping_affinity(struct irq_domain *domain,
                      irq_hw_number_t hwirq,
                      const struct irq_affinity_desc *affinity)
 {
-    printk("%s: step1 hwirq(%lu)\n", __func__, hwirq);
     int virq;
 
     /* Look for default domain if necessary */
@@ -465,4 +472,27 @@ struct irq_desc *__irq_resolve_mapping(struct irq_domain *domain,
 
     rcu_read_unlock();
     return desc;
+}
+
+int irq_domain_alloc_descs(int virq, unsigned int cnt, irq_hw_number_t hwirq,
+               int node, const struct irq_affinity_desc *affinity)
+{
+    unsigned int hint;
+
+    if (virq >= 0) {
+        virq = __irq_alloc_descs(virq, virq, cnt, node, THIS_MODULE,
+                     affinity);
+    } else {
+        hint = hwirq % nr_irqs;
+        if (hint == 0)
+            hint++;
+        virq = __irq_alloc_descs(-1, hint, cnt, node, THIS_MODULE,
+                     affinity);
+        if (virq <= 0 && hint > 1) {
+            virq = __irq_alloc_descs(-1, 1, cnt, node, THIS_MODULE,
+                         affinity);
+        }
+    }
+
+    return virq;
 }

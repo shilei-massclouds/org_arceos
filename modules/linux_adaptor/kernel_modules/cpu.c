@@ -2,6 +2,13 @@
 
 #include "../adaptor.h"
 
+#ifdef CONFIG_INIT_ALL_POSSIBLE
+struct cpumask __cpu_possible_mask __ro_after_init
+    = {CPU_BITS_ALL};
+#else
+struct cpumask __cpu_possible_mask __ro_after_init;
+#endif
+
 /*
  * Find hart ID of the CPU DT node under which given DT node falls.
  *
