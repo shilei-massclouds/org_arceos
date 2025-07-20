@@ -67,8 +67,8 @@ int clinux_init(void)
     // Note: Refer to old cl_irq_init in irq.c.
     cl_plic_init();
 
-#if 0
     cl_virtio_init();
+#if 0
     cl_virtio_mmio_init();
     cl_virtio_blk_init();
 

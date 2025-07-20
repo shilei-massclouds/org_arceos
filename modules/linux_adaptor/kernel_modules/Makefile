@@ -16,7 +16,8 @@ endif
 TARGET = libclinux.a
 
 # Original linux modules
-OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
+OBJS := virtio_blk.o
+OBJS += virtio/virtio.o virtio/virtio_ring.o virtio/virtio_mmio.o
 OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
