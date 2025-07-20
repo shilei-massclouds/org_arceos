@@ -67,11 +67,6 @@ struct irq_data *irq_get_irq_data(unsigned int irq)
     return data;
 }
 
-void irq_modify_status(unsigned int irq, unsigned long clr, unsigned long set)
-{
-    printk("%s: No impl.\n", __func__);
-}
-
 void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
              irq_hw_number_t hwirq, struct irq_chip *chip,
              void *chip_data, irq_flow_handler_t handler,
@@ -148,14 +143,6 @@ __irq_set_handler(unsigned int irq,
     }
 }
 
-struct irq_domain *irq_find_matching_fwspec(struct irq_fwspec *fwspec,
-                        enum irq_domain_bus_token bus_token)
-{
-    struct irq_domain *domain = kmalloc(sizeof(struct irq_domain), 0);
-    log_debug("%s: fill irq_domain\n", __func__);
-    return domain;
-}
-
 unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
 {
     printk("%s: dev(%s) index(%d)\n", __func__, dev->name, index);
@@ -179,11 +166,6 @@ int irq_domain_translate_onecell(struct irq_domain *d,
     *out_hwirq = fwspec->param[0];
     *out_type = IRQ_TYPE_NONE;
     return 0;
-}
-
-void enable_percpu_irq(unsigned int irq, unsigned int type)
-{
-    printk("%s: No impl. irq(%u) type(%u)\n", __func__, irq, type);
 }
 
 unsigned int irq_find_mapping(struct irq_domain *domain,

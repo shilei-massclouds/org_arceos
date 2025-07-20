@@ -25,6 +25,12 @@ struct irqchip_fwid {
     phys_addr_t     *pa;
 };
 
+static bool irq_domain_is_nomap(struct irq_domain *domain)
+{
+    return IS_ENABLED(CONFIG_IRQ_DOMAIN_NOMAP) &&
+           (domain->flags & IRQ_DOMAIN_FLAG_NO_MAP);
+}
+
 static void __irq_domain_publish(struct irq_domain *domain)
 {
     mutex_lock(&irq_domain_mutex);
@@ -280,14 +286,31 @@ err_domain_free:
     return ERR_PTR(err);
 }
 
+static void irq_domain_set_mapping(struct irq_domain *domain,
+                   irq_hw_number_t hwirq,
+                   struct irq_data *irq_data)
+{
+    /*
+     * This also makes sure that all domains point to the same root when
+     * called from irq_domain_insert_irq() for each domain in a hierarchy.
+     */
+    lockdep_assert_held(&domain->root->mutex);
+
+    if (irq_domain_is_nomap(domain))
+        return;
+
+    if (hwirq < domain->revmap_size)
+        rcu_assign_pointer(domain->revmap[hwirq], irq_data);
+    else
+        radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
+}
+
 static int irq_domain_associate_locked(struct irq_domain *domain, unsigned int virq,
                        irq_hw_number_t hwirq)
 {
-    printk("%s: step0\n", __func__);
     struct irq_data *irq_data = irq_get_irq_data(virq);
     int ret;
 
-    printk("%s: step1\n", __func__);
     if (WARN(hwirq >= domain->hwirq_max,
          "error: hwirq 0x%x is too large for %s\n", (int)hwirq, domain->name))
         return -EINVAL;
@@ -296,7 +319,32 @@ static int irq_domain_associate_locked(struct irq_domain *domain, unsigned int v
     if (WARN(irq_data->domain, "error: virq%i is already associated", virq))
         return -EINVAL;
 
-    PANIC("");
+    irq_data->hwirq = hwirq;
+    irq_data->domain = domain;
+    if (domain->ops->map) {
+        ret = domain->ops->map(domain, virq, hwirq);
+        if (ret != 0) {
+            /*
+             * If map() returns -EPERM, this interrupt is protected
+             * by the firmware or some other service and shall not
+             * be mapped. Don't bother telling the user about it.
+             */
+            if (ret != -EPERM) {
+                pr_info("%s didn't like hwirq-0x%lx to VIRQ%i mapping (rc=%d)\n",
+                       domain->name, hwirq, virq, ret);
+            }
+            irq_data->domain = NULL;
+            irq_data->hwirq = 0;
+            return ret;
+        }
+    }
+
+    domain->mapcount++;
+    irq_domain_set_mapping(domain, hwirq, irq_data);
+
+    irq_clear_status_flags(virq, IRQ_NOREQUEST);
+
+    return 0;
 }
 
 int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
@@ -345,7 +393,13 @@ struct irq_domain *irq_find_matching_fwspec(struct irq_fwspec *fwspec,
                         enum irq_domain_bus_token bus_token)
 {
     pr_err("%s: fill irq_domain\n", __func__);
+    static const struct irq_domain_ops dummy_ops;
     struct irq_domain *domain = kmalloc(sizeof(struct irq_domain), 0);
+    /* We need to init root domain. */
+    /* Refer to 'riscv_intc_init_common' in drivers/irqchip/irq-riscv-intc.c. */
+    domain->ops = &dummy_ops;
+    domain->hwirq_max = ~0;
+    INIT_RADIX_TREE(&domain->revmap_tree, GFP_KERNEL);
     return domain;
 }
 
@@ -416,12 +470,6 @@ out:
     mutex_unlock(&domain->root->mutex);
 
     return virq;
-}
-
-static bool irq_domain_is_nomap(struct irq_domain *domain)
-{
-    return IS_ENABLED(CONFIG_IRQ_DOMAIN_NOMAP) &&
-           (domain->flags & IRQ_DOMAIN_FLAG_NO_MAP);
 }
 
 /**

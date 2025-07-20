@@ -51,6 +51,7 @@ int clinux_init(void)
     setup_per_cpu_areas();
     pagecache_init();
     sched_init();
+    radix_tree_init();
     maple_tree_init();
 
     cl_plic_init();

@@ -75,13 +75,3 @@ int riscv_of_parent_hartid(struct device_node *node)
 {
     return 0;
 }
-
-int __cpuhp_setup_state(enum cpuhp_state state,
-            const char *name, bool invoke,
-            int (*startup)(unsigned int cpu),
-            int (*teardown)(unsigned int cpu),
-            bool multi_instance)
-{
-    startup(0);
-    return 0;
-}

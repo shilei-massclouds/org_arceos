@@ -673,13 +673,10 @@ done:
 		if (global_setup) {
 			/* Find parent domain and register chained handler */
 			domain = irq_find_matching_fwnode(riscv_get_intc_hwnode(), DOMAIN_BUS_ANY);
-    printk("%s: 1\n", __func__);
 			if (domain)
 				plic_parent_irq = irq_create_mapping(domain, RV_IRQ_EXT);
-    printk("%s: 2\n", __func__);
 			if (plic_parent_irq)
 				irq_set_chained_handler(plic_parent_irq, plic_handle_irq);
-    printk("%s: 3\n", __func__);
 
 			cpuhp_setup_state(CPUHP_AP_IRQ_SIFIVE_PLIC_STARTING,
 					  "irqchip/sifive/plic:starting",
