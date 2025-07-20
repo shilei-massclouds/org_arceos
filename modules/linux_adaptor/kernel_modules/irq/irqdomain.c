@@ -235,7 +235,6 @@ static struct irq_domain *__irq_domain_instantiate(const struct irq_domain_info 
     struct irq_domain *domain;
     int err;
 
-    printk("------------> %s: step1\n", __func__);
     domain = __irq_domain_create(info);
     if (IS_ERR(domain))
         return domain;
@@ -394,14 +393,39 @@ struct irq_domain *irq_find_matching_fwspec(struct irq_fwspec *fwspec,
                         enum irq_domain_bus_token bus_token)
 {
     pr_err("%s: fill irq_domain fwspec(%lx)\n", __func__, fwspec);
-    static const struct irq_domain_ops dummy_ops;
-    struct irq_domain *domain = kmalloc(sizeof(struct irq_domain), 0);
-    /* We need to init root domain. */
-    /* Refer to 'riscv_intc_init_common' in drivers/irqchip/irq-riscv-intc.c. */
-    domain->ops = &dummy_ops;
-    domain->hwirq_max = ~0;
-    INIT_RADIX_TREE(&domain->revmap_tree, GFP_KERNEL);
-    return domain;
+
+    struct irq_domain *h, *found = NULL;
+    struct fwnode_handle *fwnode = fwspec->fwnode;
+    int rc;
+
+    /*
+     * We might want to match the legacy controller last since
+     * it might potentially be set to match all interrupts in
+     * the absence of a device node. This isn't a problem so far
+     * yet though...
+     *
+     * bus_token == DOMAIN_BUS_ANY matches any domain, any other
+     * values must generate an exact match for the domain to be
+     * selected.
+     */
+    mutex_lock(&irq_domain_mutex);
+    list_for_each_entry(h, &irq_domain_list, link) {
+        if (h->ops->select && bus_token != DOMAIN_BUS_ANY)
+            rc = h->ops->select(h, fwspec, bus_token);
+        else if (h->ops->match)
+            rc = h->ops->match(h, to_of_node(fwnode), bus_token);
+        else
+            rc = ((fwnode != NULL) && (h->fwnode == fwnode) &&
+                  ((bus_token == DOMAIN_BUS_ANY) ||
+                   (h->bus_token == bus_token)));
+
+        if (rc) {
+            found = h;
+            break;
+        }
+    }
+    mutex_unlock(&irq_domain_mutex);
+    return found;
 }
 
 static unsigned int irq_create_mapping_affinity_locked(struct irq_domain *domain,
@@ -545,3 +569,69 @@ int irq_domain_alloc_descs(int virq, unsigned int cnt, irq_hw_number_t hwirq,
 
     return virq;
 }
+
+#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+/**
+ * irq_domain_get_irq_data - Get irq_data associated with @virq and @domain
+ * @domain: domain to match
+ * @virq:   IRQ number to get irq_data
+ */
+struct irq_data *irq_domain_get_irq_data(struct irq_domain *domain,
+                     unsigned int virq)
+{
+    struct irq_data *irq_data;
+
+    for (irq_data = irq_get_irq_data(virq); irq_data;
+         irq_data = irq_data->parent_data)
+        if (irq_data->domain == domain)
+            return irq_data;
+
+    return NULL;
+}
+
+/**
+ * irq_domain_set_hwirq_and_chip - Set hwirq and irqchip of @virq at @domain
+ * @domain: Interrupt domain to match
+ * @virq:   IRQ number
+ * @hwirq:  The hwirq number
+ * @chip:   The associated interrupt chip
+ * @chip_data:  The associated chip data
+ */
+int irq_domain_set_hwirq_and_chip(struct irq_domain *domain, unsigned int virq,
+                  irq_hw_number_t hwirq,
+                  const struct irq_chip *chip,
+                  void *chip_data)
+{
+    struct irq_data *irq_data = irq_domain_get_irq_data(domain, virq);
+
+    if (!irq_data)
+        return -ENOENT;
+
+    irq_data->hwirq = hwirq;
+    irq_data->chip = (struct irq_chip *)(chip ? chip : &no_irq_chip);
+    irq_data->chip_data = chip_data;
+
+    return 0;
+}
+
+/**
+ * irq_domain_set_info - Set the complete data for a @virq in @domain
+ * @domain:     Interrupt domain to match
+ * @virq:       IRQ number
+ * @hwirq:      The hardware interrupt number
+ * @chip:       The associated interrupt chip
+ * @chip_data:      The associated interrupt chip data
+ * @handler:        The interrupt flow handler
+ * @handler_data:   The interrupt flow handler data
+ * @handler_name:   The interrupt handler name
+ */
+void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
+             irq_hw_number_t hwirq, const struct irq_chip *chip,
+             void *chip_data, irq_flow_handler_t handler,
+             void *handler_data, const char *handler_name)
+{
+    irq_domain_set_hwirq_and_chip(domain, virq, hwirq, chip, chip_data);
+    __irq_set_handler(virq, handler, 0, handler_name);
+    irq_set_handler_data(virq, handler_data);
+}
+#endif

@@ -319,3 +319,27 @@ void __irq_put_desc_unlock(struct irq_desc *desc, unsigned long flags, bool bus)
     if (bus)
         chip_bus_sync_unlock(desc);
 }
+
+int irq_set_percpu_devid_partition(unsigned int irq,
+                   const struct cpumask *affinity)
+{
+    struct irq_desc *desc = irq_to_desc(irq);
+
+    if (!desc || desc->percpu_enabled)
+        return -EINVAL;
+
+    desc->percpu_enabled = kzalloc(sizeof(*desc->percpu_enabled), GFP_KERNEL);
+
+    if (!desc->percpu_enabled)
+        return -ENOMEM;
+
+    desc->percpu_affinity = affinity ? : cpu_possible_mask;
+
+    irq_set_percpu_devid_flags(irq);
+    return 0;
+}
+
+int irq_set_percpu_devid(unsigned int irq)
+{
+    return irq_set_percpu_devid_partition(irq, NULL);
+}

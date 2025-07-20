@@ -44,3 +44,22 @@ __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
     __irq_do_set_handler(desc, handle, is_chained, name);
     irq_put_desc_busunlock(desc, flags);
 }
+
+/**
+ *  irq_set_handler_data - set irq handler data for an irq
+ *  @irq:   Interrupt number
+ *  @data:  Pointer to interrupt specific data
+ *
+ *  Set the hardware irq controller data for an irq
+ */
+int irq_set_handler_data(unsigned int irq, void *data)
+{
+    unsigned long flags;
+    struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
+
+    if (!desc)
+        return -EINVAL;
+    desc->irq_common_data.handler_data = data;
+    irq_put_desc_unlock(desc, flags);
+    return 0;
+}
