@@ -618,5 +618,10 @@ static void __exit virtio_exit(void)
 core_initcall(virtio_init);
 module_exit(virtio_exit);
 
+void cl_virtio_init(void)
+{
+    virtio_init();
+}
+
 MODULE_DESCRIPTION("Virtio core interface");
 MODULE_LICENSE("GPL");

@@ -61,5 +61,5 @@ int __platform_driver_register(struct platform_driver *drv,
     if (ret) {
         PANIC("bad platform dev.");
     }
-    PANIC("");
+    return ret;
 }

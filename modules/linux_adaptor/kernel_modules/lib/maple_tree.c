@@ -652,7 +652,6 @@ static inline unsigned int mas_alloc_req(const struct ma_state *mas)
 static inline unsigned long *ma_pivots(struct maple_node *node,
 					   enum maple_type type)
 {
-    printk("%s: step1 type(%u)\n", __func__, type);
 	switch (type) {
 	case maple_arange_64:
 		return node->ma64.pivot;

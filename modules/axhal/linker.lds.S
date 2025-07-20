@@ -17,6 +17,7 @@ SECTIONS
     }
 
     _srodata = .;
+    __start_rodata = .;
     .rodata : ALIGN(4K) {
         *(.rodata .rodata.*)
         *(.srodata .srodata.*)
@@ -31,6 +32,7 @@ SECTIONS
 
     . = ALIGN(4K);
     _erodata = .;
+    __end_rodata = .;
 
     .data : ALIGN(4K) {
         _sdata = .;

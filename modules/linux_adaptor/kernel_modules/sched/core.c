@@ -1,8 +1,11 @@
 #include <linux/sched.h>
 #include <linux/sched/signal.h>
+#include <linux/sched/debug.h>
 #include <linux/resource.h>
 #include <linux/fs.h>
 #include <linux/mqueue.h>
+
+#include "../adaptor.h"
 
 static struct signal_struct signal_dummy = {
     .rlim = INIT_RLIMITS
@@ -29,6 +32,32 @@ unsigned long init_current(unsigned long thread_id)
     );
     pr_debug("%s: init_task(%lu) ptr (0x%lx)\n", __func__, thread_id, tsk);
     return (unsigned long)tsk;
+}
+
+/**
+ * wake_up_process - Wake up a specific process
+ * @p: The process to be woken up.
+ *
+ * Attempt to wake up the nominated process and move it to the set of runnable
+ * processes.
+ *
+ * Return: 1 if the process was woken up, 0 if it was already running.
+ *
+ * This function executes a full memory barrier before accessing the task state.
+ */
+int wake_up_process(struct task_struct *p)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+    //return try_to_wake_up(p, TASK_NORMAL, 0);
+}
+
+asmlinkage __visible void __sched schedule(void)
+{
+    pr_err("%s: ... state(%u) (%u)",
+           __func__, READ_ONCE(current->__state), TASK_RUNNING);
+
+    cl_resched((READ_ONCE(current->__state) == TASK_RUNNING));
 }
 
 void __init sched_init(void)

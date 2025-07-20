@@ -139,7 +139,6 @@ static int irq_domain_set_name(struct irq_domain *domain, const struct irq_domai
     enum irq_domain_bus_token bus_token = info->bus_token;
     const struct fwnode_handle *fwnode = info->fwnode;
 
-    printk("%s: 1\n", __func__);
     if (is_fwnode_irqchip(fwnode)) {
         struct irqchip_fwid *fwid = container_of(fwnode, struct irqchip_fwid, fwnode);
 
@@ -167,7 +166,6 @@ static int irq_domain_set_name(struct irq_domain *domain, const struct irq_domai
     } else if (is_of_node(fwnode) || is_acpi_device_node(fwnode) || is_software_node(fwnode)) {
         return alloc_fwnode_name(domain, fwnode, bus_token, info->name_suffix);
     }
-    printk("%s: 2\n", __func__);
 
     if (domain->name)
         return 0;

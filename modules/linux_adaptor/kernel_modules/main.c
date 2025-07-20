@@ -16,12 +16,13 @@ extern void cl_riscv_intc_init(struct device_node *node,
 
 extern int cl_plic_init(void);
 
+extern void cl_virtio_init();
+
 #if 0
 extern void init_current(unsigned long thread_id);
 
 extern int cl_enable_irq(void);
 
-extern void cl_virtio_init();
 extern void cl_virtio_mmio_init();
 extern void cl_virtio_blk_init();
 
