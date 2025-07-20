@@ -4,11 +4,15 @@
 #include <linux/fs.h>
 #include <linux/sched/init.h>
 #include <linux/buffer_head.h>
+#include <linux/of.h>
 
 #include "adaptor.h"
 
 //#define TEST_EXT2
 #define TEST_EXT4
+
+extern void cl_riscv_intc_init(struct device_node *node,
+                               struct device_node *parent);
 
 extern int cl_plic_init(void);
 
@@ -54,6 +58,13 @@ int clinux_init(void)
     radix_tree_init();
     maple_tree_init();
 
+    {
+        static struct device_node riscv_intc_node;
+        riscv_intc_node.name = "plic";
+        cl_riscv_intc_init(&riscv_intc_node, NULL);
+    }
+
+    // Note: Refer to old cl_irq_init in irq.c.
     cl_plic_init();
 
 #if 0

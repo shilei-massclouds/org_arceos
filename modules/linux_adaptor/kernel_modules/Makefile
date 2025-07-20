@@ -17,7 +17,7 @@ TARGET = libclinux.a
 
 # Original linux modules
 OBJS := virtio_blk.o virtio.o virtio_mmio.o virtio_ring.o
-OBJS += irq-sifive-plic.o
+OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
 OBJS += mm/slub.o mm/percpu.o mm/slab_common.o
@@ -31,7 +31,7 @@ OBJS += locking/mutex.o
 OBJS += base/platform.o base/property.o base/syscore.o
 OBJS += of/base.o of/property.o of/address.o of/irq.o
 OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o
-OBJS += irq/resend.o irq/chip.o
+OBJS += irq/resend.o irq/chip.o irq/handle.o
 
 #OBJS += filesystems.o fs_types.o backing-dev.o
 #OBJS += mpage.o
@@ -64,7 +64,9 @@ OBJS += irq/resend.o irq/chip.o
 #OBJS += jbd2/transaction.o
 
 # Adaptor files, we will re-write them in Rust in future.
-OBJS += cl_mine.o main.o smp.o cpu.o softirq.o panic.o
+OBJS += cl_mine.o main.o smp.o cpu.o softirq.o panic.o \
+		riscv_irq.o \
+		cl_dummy.o
 		#workqueue.o \
 		#ctype.o kstrtox.o \
 		#klist.o locking.o percpu-rwsem.o \

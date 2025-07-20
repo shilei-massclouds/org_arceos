@@ -239,3 +239,18 @@ struct property *of_find_property(const struct device_node *np,
 
     return pp;
 }
+
+/** Checks if the given "compat" string matches one of the strings in
+ * the device's "compatible" property
+ */
+int of_device_is_compatible(const struct device_node *device,
+        const char *compat)
+{
+    unsigned long flags;
+    int res;
+
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    res = __of_device_is_compatible(device, compat, NULL, NULL);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return res;
+}

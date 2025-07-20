@@ -513,12 +513,6 @@ static int plic_parse_context_parent(struct fwnode_handle *fwnode, u32 context,
 	return 0;
 }
 
-struct fwnode_handle *riscv_get_intc_hwnode(void)
-{
-    pr_err("%s: No impl. (arch/riscv/kernel/irq.c)", __func__);
-    return NULL;
-}
-
 static int plic_probe(struct fwnode_handle *fwnode)
 {
 	int error = 0, nr_contexts, nr_handlers = 0, cpu, i;

@@ -235,6 +235,7 @@ static struct irq_domain *__irq_domain_instantiate(const struct irq_domain_info 
     struct irq_domain *domain;
     int err;
 
+    printk("------------> %s: step1\n", __func__);
     domain = __irq_domain_create(info);
     if (IS_ERR(domain))
         return domain;
@@ -392,7 +393,7 @@ struct irq_domain *irq_domain_instantiate(const struct irq_domain_info *info)
 struct irq_domain *irq_find_matching_fwspec(struct irq_fwspec *fwspec,
                         enum irq_domain_bus_token bus_token)
 {
-    pr_err("%s: fill irq_domain\n", __func__);
+    pr_err("%s: fill irq_domain fwspec(%lx)\n", __func__, fwspec);
     static const struct irq_domain_ops dummy_ops;
     struct irq_domain *domain = kmalloc(sizeof(struct irq_domain), 0);
     /* We need to init root domain. */
