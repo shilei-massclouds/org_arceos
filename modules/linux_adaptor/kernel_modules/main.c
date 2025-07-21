@@ -6,6 +6,7 @@
 #include <linux/buffer_head.h>
 #include <linux/of.h>
 
+#include "mm/slab.h"
 #include "adaptor.h"
 
 //#define TEST_EXT2
@@ -17,13 +18,13 @@ extern void cl_riscv_intc_init(struct device_node *node,
 extern int cl_plic_init(void);
 
 extern void cl_virtio_init();
+extern void cl_virtio_mmio_init();
 
 #if 0
 extern void init_current(unsigned long thread_id);
 
 extern int cl_enable_irq(void);
 
-extern void cl_virtio_mmio_init();
 extern void cl_virtio_blk_init();
 
 extern int cl_ext2_fs_init(void);
@@ -53,6 +54,7 @@ int clinux_init(void)
 {
     printk("cLinux base is starting ...\n");
 
+    //kmem_cache_init();
     setup_per_cpu_areas();
     pagecache_init();
     sched_init();
@@ -69,8 +71,8 @@ int clinux_init(void)
     cl_plic_init();
 
     cl_virtio_init();
-#if 0
     cl_virtio_mmio_init();
+#if 0
     cl_virtio_blk_init();
 
     cl_enable_irq();

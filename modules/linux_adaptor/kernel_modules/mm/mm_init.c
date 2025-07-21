@@ -11,12 +11,14 @@ struct kernel_mapping kernel_map __ro_after_init;
 struct page *mem_map;
 unsigned long pfn_base;
 unsigned long max_mapnr;
+phys_addr_t phys_ram_base __ro_after_init;
 
 int init_mem_map(unsigned long pa_start, unsigned long pa_end)
 {
     if (pa_start >= pa_end) {
         PANIC("bad range for 'mem_map'!");
     }
+    phys_ram_base = pa_start;
     pa_start >>= PAGE_SHIFT;
     pa_end >>= PAGE_SHIFT;
 
@@ -30,5 +32,7 @@ int init_mem_map(unsigned long pa_start, unsigned long pa_end)
 
 void setup_paging(unsigned long va_pa_offset)
 {
+    printk("%s: set va_pa_offset(0x%lx)\n", __func__, va_pa_offset);
+    kernel_map.page_offset = va_pa_offset;
     kernel_map.va_pa_offset = va_pa_offset;
 }

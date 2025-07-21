@@ -47,6 +47,10 @@ SECTIONS
         *(.got .got.*)
     }
 
+    .init.data : ALIGN(4K) {
+        *(.init.data .init.data.*)
+    }
+
     .tdata : ALIGN(0x10) {
         _stdata = .;
         *(.tdata .tdata.*)

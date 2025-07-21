@@ -867,6 +867,11 @@ static void __exit virtio_mmio_exit(void)
 	vm_unregister_cmdline_devices();
 }
 
+void cl_virtio_mmio_init(void)
+{
+    virtio_mmio_init();
+}
+
 module_init(virtio_mmio_init);
 module_exit(virtio_mmio_exit);
 

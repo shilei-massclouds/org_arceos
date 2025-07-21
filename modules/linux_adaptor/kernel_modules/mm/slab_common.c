@@ -1,6 +1,10 @@
 #include <linux/slab.h>
 
 #include "slab.h"
+#include "../adaptor.h"
+
+kmem_buckets kmalloc_caches[NR_KMALLOC_TYPES] __ro_after_init =
+{ /* initialization for https://llvm.org/pr42570 */ };
 
 /**
  * __kmem_cache_create_args - Create a kmem cache.
@@ -30,4 +34,32 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
     cache->size = object_size;
     cache->align = args->align;
     return cache;
+}
+
+size_t kmalloc_size_roundup(size_t size)
+{
+    if (size && size <= KMALLOC_MAX_CACHE_SIZE) {
+        /*
+         * The flags don't matter since size_index is common to all.
+         * Neither does the caller for just getting ->object_size.
+         */
+#if 0
+        return kmalloc_slab(size, NULL, GFP_KERNEL, 0)->object_size;
+#else
+        size_t ret = ALIGN(size, 8);
+        pr_err("%s: No impl for kmalloc_slab. size(%u -> %u)",
+               __func__, size, ret);
+        return ret;
+#endif
+    }
+
+    /* Above the smaller buckets, size is a multiple of page size. */
+    if (size && size <= KMALLOC_MAX_SIZE)
+        return PAGE_SIZE << get_order(size);
+
+    /*
+     * Return 'size' for 0 - kmalloc() returns ZERO_SIZE_PTR
+     * and very large size - kmalloc() may fail.
+     */
+    return size;
 }

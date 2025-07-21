@@ -66,13 +66,11 @@ CL_MINE(acpi_disabled)
 CL_MINE(cpu_bit_bitmap)
 CL_MINE(__cpu_online_mask)
 CL_MINE(__cpu_present_mask)
-CL_MINE(devm_platform_ioremap_resource)
 CL_MINE(generic_handle_domain_irq)
 CL_MINE(handle_edge_irq)
 CL_MINE(irq_domain_translate_onecell)
 CL_MINE(irq_domain_translate_twocell)
 CL_MINE(irq_set_affinity)
-CL_MINE(kmalloc_caches)
 CL_MINE(riscv_acpi_get_gsi_info)
 
 // ext2/inode
@@ -377,7 +375,6 @@ CL_MINE(vmaflag_names)
 // bitmap
 CL_MINE(__devm_add_action)
 CL_MINE(__find_nth_bit)
-CL_MINE(__sw_hweight64)
 
 CL_MINE(memdup_user_nul)
 CL_MINE(get_options)
@@ -428,3 +425,26 @@ CL_MINE(kobject_uevent)
 CL_MINE(sysfs_create_dir_ns)
 CL_MINE(sysfs_create_groups)
 CL_MINE(sysfs_rename_dir_ns)
+
+// virtio_mmio
+CL_MINE(platform_get_irq)
+CL_MINE(synchronize_irq)
+CL_MINE(__dma_sync_single_for_cpu)
+CL_MINE(__dma_sync_single_for_device)
+CL_MINE(sg_next)
+CL_MINE(request_threaded_irq)
+CL_MINE(irq_set_irq_wake)
+CL_MINE(__dma_need_sync)
+CL_MINE(dma_set_mask)
+CL_MINE(dma_set_coherent_mask)
+
+// devres
+CL_MINE(devm_kstrdup)
+CL_MINE(__devm_release_region)
+CL_MINE(__devm_request_region)
+CL_MINE(iomem_resource)
+CL_MINE(dev_err_probe)
+CL_MINE(ioremap_prot)
+CL_MINE(devres_destroy)
+
+CL_MINE(mem_cgroup_kmem_disabled)
