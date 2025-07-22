@@ -3,6 +3,10 @@
 #include <linux/dma-map-ops.h>
 
 #include "base.h"
+#include "../adaptor.h"
+
+// Note: fullfil it.
+static const struct kobj_type device_ktype;
 
 /**
  * get_device - increment reference count for device.
@@ -51,7 +55,7 @@ void put_device(struct device *dev)
 void device_initialize(struct device *dev)
 {
     //dev->kobj.kset = devices_kset;
-    //kobject_init(&dev->kobj, &device_ktype);
+    kobject_init(&dev->kobj, &device_ktype);
     INIT_LIST_HEAD(&dev->dma_pools);
     mutex_init(&dev->mutex);
     lockdep_set_novalidate_class(&dev->mutex);
@@ -134,4 +138,314 @@ int dev_err_probe(const struct device *dev, int err, const char *fmt, ...)
     va_end(args);
 
     return err;
+}
+
+/**
+ * dev_set_name - set a device name
+ * @dev: device
+ * @fmt: format string for the device's name
+ */
+int dev_set_name(struct device *dev, const char *fmt, ...)
+{
+    va_list vargs;
+    int err;
+
+    va_start(vargs, fmt);
+    err = kobject_set_name_vargs(&dev->kobj, fmt, vargs);
+    va_end(vargs);
+    return err;
+}
+
+static void klist_children_get(struct klist_node *n)
+{
+    struct device_private *p = to_device_private_parent(n);
+    struct device *dev = p->device;
+
+    get_device(dev);
+}
+
+static void klist_children_put(struct klist_node *n)
+{
+    struct device_private *p = to_device_private_parent(n);
+    struct device *dev = p->device;
+
+    put_device(dev);
+}
+
+static int device_private_init(struct device *dev)
+{
+    dev->p = kzalloc(sizeof(*dev->p), GFP_KERNEL);
+    if (!dev->p)
+        return -ENOMEM;
+    dev->p->device = dev;
+    klist_init(&dev->p->klist_children, klist_children_get,
+           klist_children_put);
+    INIT_LIST_HEAD(&dev->p->deferred_probe);
+    return 0;
+}
+
+static struct kobject *get_device_parent(struct device *dev,
+                     struct device *parent)
+{
+    pr_err("%s: No impl.", __func__);
+    return NULL;
+}
+
+/*
+ * make sure cleaning up dir as the last step, we need to make
+ * sure .release handler of kobject is run with holding the
+ * global lock
+ */
+static void cleanup_glue_dir(struct device *dev, struct kobject *glue_dir)
+{
+    PANIC("");
+}
+
+void bus_notify(struct device *dev, enum bus_notifier_event value)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+/**
+ * device_add - add device to device hierarchy.
+ * @dev: device.
+ *
+ * This is part 2 of device_register(), though may be called
+ * separately _iff_ device_initialize() has been called separately.
+ *
+ * This adds @dev to the kobject hierarchy via kobject_add(), adds it
+ * to the global and sibling lists for the device, then
+ * adds it to the other relevant subsystems of the driver model.
+ *
+ * Do not call this routine or device_register() more than once for
+ * any device structure.  The driver model core is not designed to work
+ * with devices that get unregistered and then spring back to life.
+ * (Among other things, it's very hard to guarantee that all references
+ * to the previous incarnation of @dev have been dropped.)  Allocate
+ * and register a fresh new struct device instead.
+ *
+ * NOTE: _Never_ directly free @dev after calling this function, even
+ * if it returned an error! Always use put_device() to give up your
+ * reference instead.
+ *
+ * Rule of thumb is: if device_add() succeeds, you should call
+ * device_del() when you want to get rid of it. If device_add() has
+ * *not* succeeded, use *only* put_device() to drop the reference
+ * count.
+ */
+int device_add(struct device *dev)
+{
+    struct subsys_private *sp;
+    struct device *parent;
+    struct kobject *kobj;
+    struct class_interface *class_intf;
+    int error = -EINVAL;
+    struct kobject *glue_dir = NULL;
+
+    dev = get_device(dev);
+    if (!dev)
+        goto done;
+
+    if (!dev->p) {
+        error = device_private_init(dev);
+        if (error)
+            goto done;
+    }
+
+    /*
+     * for statically allocated devices, which should all be converted
+     * some day, we need to initialize the name. We prevent reading back
+     * the name, and force the use of dev_name()
+     */
+    if (dev->init_name) {
+        error = dev_set_name(dev, "%s", dev->init_name);
+        dev->init_name = NULL;
+    }
+
+    if (dev_name(dev))
+        error = 0;
+    /* subsystems can specify simple device enumeration */
+    else if (dev->bus && dev->bus->dev_name)
+        error = dev_set_name(dev, "%s%u", dev->bus->dev_name, dev->id);
+    else
+        error = -EINVAL;
+    if (error)
+        goto name_error;
+
+    pr_debug("device: '%s': %s\n", dev_name(dev), __func__);
+    printk("device: '%s': %s\n", dev_name(dev), __func__);
+
+    parent = get_device(dev->parent);
+    kobj = get_device_parent(dev, parent);
+    if (IS_ERR(kobj)) {
+        error = PTR_ERR(kobj);
+        goto parent_error;
+    }
+    if (kobj)
+        dev->kobj.parent = kobj;
+
+    /* use parent numa_node */
+    if (parent && (dev_to_node(dev) == NUMA_NO_NODE))
+        set_dev_node(dev, dev_to_node(parent));
+
+    /* first, register with generic layer. */
+    /* we require the name to be set before, and pass NULL */
+    error = kobject_add(&dev->kobj, dev->kobj.parent, NULL);
+    if (error) {
+        glue_dir = kobj;
+        goto Error;
+    }
+
+#if 0
+    /* notify platform of device entry */
+    device_platform_notify(dev);
+
+    error = device_create_file(dev, &dev_attr_uevent);
+    if (error)
+        goto attrError;
+
+    error = device_add_class_symlinks(dev);
+    if (error)
+        goto SymlinkError;
+    error = device_add_attrs(dev);
+    if (error)
+        goto AttrsError;
+#endif
+    error = bus_add_device(dev);
+    if (error)
+        goto BusError;
+#if 0
+    error = dpm_sysfs_add(dev);
+    if (error)
+        goto DPMError;
+    device_pm_add(dev);
+
+    if (MAJOR(dev->devt)) {
+        error = device_create_file(dev, &dev_attr_dev);
+        if (error)
+            goto DevAttrError;
+
+        error = device_create_sys_dev_entry(dev);
+        if (error)
+            goto SysEntryError;
+
+        devtmpfs_create_node(dev);
+    }
+#endif
+
+    /* Notify clients of device addition.  This call must come
+     * after dpm_sysfs_add() and before kobject_uevent().
+     */
+    bus_notify(dev, BUS_NOTIFY_ADD_DEVICE);
+    kobject_uevent(&dev->kobj, KOBJ_ADD);
+
+#if 0
+    /*
+     * Check if any of the other devices (consumers) have been waiting for
+     * this device (supplier) to be added so that they can create a device
+     * link to it.
+     *
+     * This needs to happen after device_pm_add() because device_link_add()
+     * requires the supplier be registered before it's called.
+     *
+     * But this also needs to happen before bus_probe_device() to make sure
+     * waiting consumers can link to it before the driver is bound to the
+     * device and the driver sync_state callback is called for this device.
+     */
+    if (dev->fwnode && !dev->fwnode->dev) {
+        dev->fwnode->dev = dev;
+        fw_devlink_link_device(dev);
+    }
+#endif
+
+    bus_probe_device(dev);
+
+#if 0
+    /*
+     * If all driver registration is done and a newly added device doesn't
+     * match with any driver, don't block its consumers from probing in
+     * case the consumer device is able to operate without this supplier.
+     */
+    if (dev->fwnode && fw_devlink_drv_reg_done && !dev->can_match)
+        fw_devlink_unblock_consumers(dev);
+
+    if (parent)
+        klist_add_tail(&dev->p->knode_parent,
+                   &parent->p->klist_children);
+
+    sp = class_to_subsys(dev->class);
+    if (sp) {
+        mutex_lock(&sp->mutex);
+        /* tie the class to the device */
+        klist_add_tail(&dev->p->knode_class, &sp->klist_devices);
+
+        /* notify any interfaces that the device is here */
+        list_for_each_entry(class_intf, &sp->interfaces, node)
+            if (class_intf->add_dev)
+                class_intf->add_dev(dev);
+        mutex_unlock(&sp->mutex);
+        subsys_put(sp);
+    }
+#endif
+    printk("%s: ok!\n", __func__);
+done:
+    put_device(dev);
+    return error;
+#if 0
+ SysEntryError:
+    if (MAJOR(dev->devt))
+        device_remove_file(dev, &dev_attr_dev);
+ DevAttrError:
+    device_pm_remove(dev);
+    dpm_sysfs_remove(dev);
+ DPMError:
+    device_set_driver(dev, NULL);
+    bus_remove_device(dev);
+#endif
+ BusError:
+#if 0
+    device_remove_attrs(dev);
+ AttrsError:
+    device_remove_class_symlinks(dev);
+ SymlinkError:
+    device_remove_file(dev, &dev_attr_uevent);
+ attrError:
+    device_platform_notify_remove(dev);
+    kobject_uevent(&dev->kobj, KOBJ_REMOVE);
+    glue_dir = get_glue_dir(dev);
+    kobject_del(&dev->kobj);
+#endif
+ Error:
+    cleanup_glue_dir(dev, glue_dir);
+parent_error:
+    put_device(parent);
+name_error:
+    kfree(dev->p);
+    dev->p = NULL;
+    goto done;
+}
+
+/**
+ * bus_probe_device - probe drivers for a new device
+ * @dev: device to probe
+ *
+ * - Automatically probe for a driver if the bus allows it.
+ */
+void bus_probe_device(struct device *dev)
+{
+    struct subsys_private *sp = bus_to_subsys(dev->bus);
+    struct subsys_interface *sif;
+
+    if (!sp)
+        return;
+
+    if (sp->drivers_autoprobe)
+        device_initial_probe(dev);
+
+    mutex_lock(&sp->mutex);
+    list_for_each_entry(sif, &sp->interfaces, node)
+        if (sif->add_dev)
+            sif->add_dev(dev, sif);
+    mutex_unlock(&sp->mutex);
+    subsys_put(sp);
 }

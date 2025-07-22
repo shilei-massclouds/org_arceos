@@ -52,5 +52,34 @@ bool is_swiotlb_allocated(void)
     //return io_tlb_default_mem.nslabs;
 }
 
+int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int sysfs_create_groups(struct kobject *kobj,
+            const struct attribute_group **groups)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+void kernfs_get(struct kernfs_node *kn)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+void kernfs_put(struct kernfs_node *kn)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int kobject_uevent(struct kobject *kobj, enum kobject_action action)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
 // Defined in arch/riscv/mm/dma-noncoherent.c
 int dma_cache_alignment __ro_after_init = ARCH_DMA_MINALIGN;

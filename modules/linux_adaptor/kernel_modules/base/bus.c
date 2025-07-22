@@ -5,6 +5,17 @@
 
 #include "../adaptor.h"
 
+/* /sys/bus */
+static struct kset *bus_kset;
+
+// Note: fulfill it.
+static const struct kobj_type bus_ktype = {
+    /*
+    .sysfs_ops  = &bus_sysfs_ops,
+    .release    = bus_release,
+    */
+};
+
 static void klist_devices_get(struct klist_node *n)
 {
     struct device_private *dev_prv = to_device_private_bus(n);
@@ -49,15 +60,15 @@ int bus_register(const struct bus_type *bus)
     if (retval)
         goto out;
 
-    //bus_kobj->kset = bus_kset;
-    //bus_kobj->ktype = &bus_ktype;
+    bus_kobj->kset = bus_kset;
+    bus_kobj->ktype = &bus_ktype;
     priv->drivers_autoprobe = 1;
 
-    /*
     retval = kset_register(&priv->subsys);
     if (retval)
         goto out;
 
+    /*
     retval = bus_create_file(bus, &bus_attr_uevent);
     if (retval)
         goto bus_uevent_fail;
@@ -111,4 +122,185 @@ bus_uevent_fail:
 out:
     kfree(priv);
     return retval;
+}
+
+/**
+ * bus_to_subsys - Turn a struct bus_type into a struct subsys_private
+ *
+ * @bus: pointer to the struct bus_type to look up
+ *
+ * The driver core internals needs to work on the subsys_private structure, not
+ * the external struct bus_type pointer.  This function walks the list of
+ * registered busses in the system and finds the matching one and returns the
+ * internal struct subsys_private that relates to that bus.
+ *
+ * Note, the reference count of the return value is INCREMENTED if it is not
+ * NULL.  A call to subsys_put() must be done when finished with the pointer in
+ * order for it to be properly freed.
+ */
+struct subsys_private *bus_to_subsys(const struct bus_type *bus)
+{
+    struct subsys_private *sp = NULL;
+    struct kobject *kobj;
+
+    if (!bus || !bus_kset)
+        return NULL;
+
+    spin_lock(&bus_kset->list_lock);
+
+    if (list_empty(&bus_kset->list))
+        goto done;
+
+    list_for_each_entry(kobj, &bus_kset->list, entry) {
+        struct kset *kset = container_of(kobj, struct kset, kobj);
+
+        sp = container_of_const(kset, struct subsys_private, subsys);
+        if (sp->bus == bus)
+            goto done;
+    }
+    sp = NULL;
+done:
+    sp = subsys_get(sp);
+    spin_unlock(&bus_kset->list_lock);
+    return sp;
+}
+
+/**
+ * bus_add_device - add device to bus
+ * @dev: device being added
+ *
+ * - Add device's bus attributes.
+ * - Create links to device's bus.
+ * - Add the device to its bus's list of devices.
+ */
+int bus_add_device(struct device *dev)
+{
+    struct subsys_private *sp = bus_to_subsys(dev->bus);
+    int error;
+
+    if (!sp) {
+        /*
+         * This is a normal operation for many devices that do not
+         * have a bus assigned to them, just say that all went
+         * well.
+         */
+        return 0;
+    }
+
+    /*
+     * Reference in sp is now incremented and will be dropped when
+     * the device is removed from the bus
+     */
+
+    pr_debug("bus: '%s': add device %s\n", sp->bus->name, dev_name(dev));
+    printk("bus: '%s': add device %s\n", sp->bus->name, dev_name(dev));
+
+#if 0
+    error = device_add_groups(dev, sp->bus->dev_groups);
+    if (error)
+        goto out_put;
+
+    error = sysfs_create_link(&sp->devices_kset->kobj, &dev->kobj, dev_name(dev));
+    if (error)
+        goto out_groups;
+
+    error = sysfs_create_link(&dev->kobj, &sp->subsys.kobj, "subsystem");
+    if (error)
+        goto out_subsys;
+#endif
+
+    klist_add_tail(&dev->p->knode_bus, &sp->klist_devices);
+    return 0;
+
+out_subsys:
+    sysfs_remove_link(&sp->devices_kset->kobj, dev_name(dev));
+out_groups:
+    device_remove_groups(dev, sp->bus->dev_groups);
+out_put:
+    subsys_put(sp);
+    return error;
+}
+
+static struct device_driver *next_driver(struct klist_iter *i)
+{
+    struct klist_node *n = klist_next(i);
+    struct driver_private *drv_priv;
+
+    if (n) {
+        drv_priv = container_of(n, struct driver_private, knode_bus);
+        return drv_priv->driver;
+    }
+    return NULL;
+}
+
+/**
+ * bus_for_each_drv - driver iterator
+ * @bus: bus we're dealing with.
+ * @start: driver to start iterating on.
+ * @data: data to pass to the callback.
+ * @fn: function to call for each driver.
+ *
+ * This is nearly identical to the device iterator above.
+ * We iterate over each driver that belongs to @bus, and call
+ * @fn for each. If @fn returns anything but 0, we break out
+ * and return it. If @start is not NULL, we use it as the head
+ * of the list.
+ *
+ * NOTE: we don't return the driver that returns a non-zero
+ * value, nor do we leave the reference count incremented for that
+ * driver. If the caller needs to know that info, it must set it
+ * in the callback. It must also be sure to increment the refcount
+ * so it doesn't disappear before returning to the caller.
+ */
+int bus_for_each_drv(const struct bus_type *bus, struct device_driver *start,
+             void *data, int (*fn)(struct device_driver *, void *))
+{
+    struct subsys_private *sp = bus_to_subsys(bus);
+    struct klist_iter i;
+    struct device_driver *drv;
+    int error = 0;
+
+    if (!sp)
+        return -EINVAL;
+
+    klist_iter_init_node(&sp->klist_drivers, &i,
+                 start ? &start->p->knode_bus : NULL);
+    while ((drv = next_driver(&i)) && !error)
+        error = fn(drv, data);
+    klist_iter_exit(&i);
+    subsys_put(sp);
+    return error;
+}
+
+static int bus_uevent_filter(const struct kobject *kobj)
+{
+    const struct kobj_type *ktype = get_ktype(kobj);
+
+    if (ktype == &bus_ktype)
+        return 1;
+    return 0;
+}
+
+static const struct kset_uevent_ops bus_uevent_ops = {
+    .filter = bus_uevent_filter,
+};
+
+int __init buses_init(void)
+{
+    bus_kset = kset_create_and_add("bus", &bus_uevent_ops, NULL);
+    if (!bus_kset)
+        return -ENOMEM;
+
+#if 0
+    system_kset = kset_create_and_add("system", NULL, &devices_kset->kobj);
+    if (!system_kset) {
+        /* Do error handling here as devices_init() do */
+        kset_unregister(bus_kset);
+        bus_kset = NULL;
+        pr_err("%s: failed to create and add kset 'bus'\n", __func__);
+        return -ENOMEM;
+    }
+#endif
+
+    return 0;
 }

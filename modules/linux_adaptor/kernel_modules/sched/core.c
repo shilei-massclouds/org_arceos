@@ -69,6 +69,28 @@ int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flag
     return try_to_wake_up(curr->private, mode, wake_flags);
 }
 
+void __might_sleep(const char *file, int line)
+{
+    unsigned int state = get_current_state();
+    /*
+     * Blocking primitives will set (and therefore destroy) current->state,
+     * since we will exit with TASK_RUNNING make sure we enter with it,
+     * otherwise we will destroy state.
+     */
+    WARN_ONCE(state != TASK_RUNNING && current->task_state_change,
+            "do not call blocking ops when !TASK_RUNNING; "
+            "state=%x set at [<%p>] %pS\n", state,
+            (void *)current->task_state_change,
+            (void *)current->task_state_change);
+
+    __might_resched(file, line, 0);
+}
+
+void __might_resched(const char *file, int line, unsigned int offsets)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
 void __init sched_init(void)
 {
     wait_bit_init();

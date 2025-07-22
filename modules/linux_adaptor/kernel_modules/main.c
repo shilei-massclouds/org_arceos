@@ -7,6 +7,7 @@
 #include <linux/of.h>
 
 #include "mm/slab.h"
+#include "base/base.h"
 #include "adaptor.h"
 
 //#define TEST_EXT2
@@ -60,6 +61,7 @@ int clinux_init(void)
     sched_init();
     radix_tree_init();
     maple_tree_init();
+    buses_init();
 
     {
         static struct device_node riscv_intc_node;
@@ -189,7 +191,6 @@ static void test_basic(const char *fs_name, const char *fname)
 #ifdef TEST_EXT4
 static void test_ext4(void)
 {
-    radix_tree_init();
     buffer_init();
 
     /*

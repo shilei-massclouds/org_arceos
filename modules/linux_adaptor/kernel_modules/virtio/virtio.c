@@ -461,13 +461,11 @@ int register_virtio_device(struct virtio_device *dev)
 	dev->dev.bus = &virtio_bus;
 	device_initialize(&dev->dev);
 
-    printk("%s: step1\n", __func__);
 	/* Assign a unique device index and hence name. */
 	err = ida_alloc(&virtio_index_ida, GFP_KERNEL);
 	if (err < 0)
 		goto out;
 
-    printk("%s: step2\n", __func__);
 	dev->index = err;
 	err = dev_set_name(&dev->dev, "virtio%u", dev->index);
 	if (err)
