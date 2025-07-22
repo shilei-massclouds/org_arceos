@@ -1685,6 +1685,11 @@ out_destroy_workqueue:
 	return error;
 }
 
+void cl_virtio_blk_init(void)
+{
+    virtio_blk_init();
+}
+
 static void __exit virtio_blk_fini(void)
 {
 	unregister_virtio_driver(&virtio_blk);

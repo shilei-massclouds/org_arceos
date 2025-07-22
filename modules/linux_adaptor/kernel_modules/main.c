@@ -20,13 +20,13 @@ extern int cl_plic_init(void);
 
 extern void cl_virtio_init();
 extern void cl_virtio_mmio_init();
+extern void cl_virtio_blk_init();
 
 #if 0
 extern void init_current(unsigned long thread_id);
 
 extern int cl_enable_irq(void);
 
-extern void cl_virtio_blk_init();
 
 extern int cl_ext2_fs_init(void);
 extern int cl_ext4_fs_init(void);
@@ -74,8 +74,8 @@ int clinux_init(void)
 
     cl_virtio_init();
     cl_virtio_mmio_init();
-#if 0
     cl_virtio_blk_init();
+#if 0
 
     cl_enable_irq();
 
