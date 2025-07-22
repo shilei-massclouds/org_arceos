@@ -71,6 +71,7 @@
 #include <uapi/linux/virtio_mmio.h>
 #include <linux/virtio_ring.h>
 
+#include "../adaptor.h"
 
 
 /* The alignment to use between consumer and producer parts of vring.
@@ -493,7 +494,10 @@ static int vm_find_vqs(struct virtio_device *vdev, unsigned int nvqs,
 		       struct irq_affinity *desc)
 {
 	struct virtio_mmio_device *vm_dev = to_virtio_mmio_device(vdev);
+    printk("%s: step0\n", __func__);
 	int irq = platform_get_irq(vm_dev->pdev, 0);
+    printk("%s: step1 irq(%d)\n", __func__, irq);
+    PANIC("");
 	int i, err, queue_idx = 0;
 
 	if (irq < 0)

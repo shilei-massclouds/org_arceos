@@ -105,14 +105,6 @@ struct irq_domain *__irq_domain_add(struct fwnode_handle *fwnode, int size,
     return domain;
 }
 
-int platform_get_irq(struct platform_device *dev, unsigned int num)
-{
-    int irq = 3;
-    printk("---------> %s: Note impl it. num(%u) return (%d)\n",
-           __func__, num, irq);
-    return irq;
-}
-
 static irq_handler_t fn_vm_interrupt;
 static struct virtio_mmio_device *vm_dev;
 

@@ -1,5 +1,6 @@
 #include <linux/device.h>
 #include <linux/async.h>
+#include <linux/pinctrl/devinfo.h>
 
 #include "base.h"
 #include "../adaptor.h"
@@ -50,6 +51,33 @@ struct device_attach_data {
      */
     bool have_async;
 };
+
+static bool driver_deferred_probe_enable;
+/**
+ * driver_deferred_probe_trigger() - Kick off re-probing deferred devices
+ *
+ * This functions moves all devices from the pending list to the active
+ * list and schedules the deferred probe workqueue to process them.  It
+ * should be called anytime a driver is successfully bound to a device.
+ *
+ * Note, there is a race condition in multi-threaded probe. In the case where
+ * more than one device is probing at the same time, it is possible for one
+ * probe to complete successfully while another is about to defer. If the second
+ * depends on the first, then it will get put on the pending list after the
+ * trigger event has already occurred and will be stuck there.
+ *
+ * The atomic 'deferred_trigger_count' is used to determine if a successful
+ * trigger has occurred in the midst of probing a driver. If the trigger count
+ * changes in the midst of a probe, then deferred processing should be triggered
+ * again.
+ */
+void driver_deferred_probe_trigger(void)
+{
+    if (!driver_deferred_probe_enable)
+        return;
+
+    PANIC("");
+}
 
 static void __device_attach_async_helper(void *_dev, async_cookie_t cookie)
 {
@@ -193,13 +221,210 @@ static void __device_driver_unlock(struct device *dev, struct device *parent)
         device_unlock(parent);
 }
 
+static void device_remove(struct device *dev)
+{
+    //device_remove_file(dev, &dev_attr_state_synced);
+    //device_remove_groups(dev, dev->driver->dev_groups);
+
+    if (dev->bus && dev->bus->remove)
+        dev->bus->remove(dev);
+    else if (dev->driver->remove)
+        dev->driver->remove(dev);
+}
+static void device_unbind_cleanup(struct device *dev)
+{
+    PANIC("");
+}
+
+static int call_driver_probe(struct device *dev, const struct device_driver *drv)
+{
+    int ret = 0;
+
+    if (dev->bus->probe)
+        ret = dev->bus->probe(dev);
+    else if (drv->probe)
+        ret = drv->probe(dev);
+
+    switch (ret) {
+    case 0:
+        break;
+    case -EPROBE_DEFER:
+        /* Driver requested deferred probing */
+        dev_dbg(dev, "Driver %s requests probe deferral\n", drv->name);
+        break;
+    case -ENODEV:
+    case -ENXIO:
+        dev_dbg(dev, "probe with driver %s rejects match %d\n",
+            drv->name, ret);
+        break;
+    default:
+        /* driver matched but the probe failed */
+        dev_err(dev, "probe with driver %s failed with error %d\n",
+            drv->name, ret);
+        break;
+    }
+
+    return ret;
+}
+
+static void driver_bound(struct device *dev)
+{
+    if (device_is_bound(dev)) {
+        dev_warn(dev, "%s: device already bound\n", __func__);
+        return;
+    }
+
+    dev_dbg(dev, "driver: '%s': %s: bound to device\n", dev->driver->name,
+        __func__);
+
+    klist_add_tail(&dev->p->knode_driver, &dev->driver->p->klist_devices);
+    //device_links_driver_bound(dev);
+
+    //device_pm_check_callbacks(dev);
+
+    /*
+     * Make sure the device is no longer in one of the deferred lists and
+     * kick off retrying all pending devices
+     */
+    //driver_deferred_probe_del(dev);
+    driver_deferred_probe_trigger();
+
+    bus_notify(dev, BUS_NOTIFY_BOUND_DRIVER);
+    kobject_uevent(&dev->kobj, KOBJ_BIND);
+}
+
 static int really_probe(struct device *dev, const struct device_driver *drv)
 {
     bool test_remove = IS_ENABLED(CONFIG_DEBUG_TEST_DRIVER_REMOVE) &&
                !drv->suppress_bind_attrs;
     int ret, link_ret;
 
+    if (defer_all_probes) {
+        /*
+         * Value of defer_all_probes can be set only by
+         * device_block_probing() which, in turn, will call
+         * wait_for_device_probe() right after that to avoid any races.
+         */
+        dev_dbg(dev, "Driver %s force probe deferral\n", drv->name);
+        return -EPROBE_DEFER;
+    }
+
+#if 0
+    link_ret = device_links_check_suppliers(dev);
+    if (link_ret == -EPROBE_DEFER)
+        return link_ret;
+#endif
+
+    dev_dbg(dev, "bus: '%s': %s: probing driver %s with device\n",
+        drv->bus->name, __func__, drv->name);
+    if (!list_empty(&dev->devres_head)) {
+        dev_crit(dev, "Resources present before probing\n");
+        ret = -EBUSY;
+        goto done;
+    }
+
+re_probe:
+    device_set_driver(dev, drv);
+
+#if 0
+    /* If using pinctrl, bind pins now before probing */
+    ret = pinctrl_bind_pins(dev);
+    if (ret)
+        goto pinctrl_bind_failed;
+#endif
+
+    if (dev->bus->dma_configure) {
+        ret = dev->bus->dma_configure(dev);
+        if (ret)
+            goto pinctrl_bind_failed;
+    }
+
+#if 0
+    ret = driver_sysfs_add(dev);
+    if (ret) {
+        dev_err(dev, "%s: driver_sysfs_add failed\n", __func__);
+        goto sysfs_failed;
+    }
+#endif
+
+    if (dev->pm_domain && dev->pm_domain->activate) {
+        ret = dev->pm_domain->activate(dev);
+        if (ret)
+            goto probe_failed;
+    }
+
+    ret = call_driver_probe(dev, drv);
+    if (ret) {
+        /*
+         * If fw_devlink_best_effort is active (denoted by -EAGAIN), the
+         * device might actually probe properly once some of its missing
+         * suppliers have probed. So, treat this as if the driver
+         * returned -EPROBE_DEFER.
+         */
+        if (link_ret == -EAGAIN)
+            ret = -EPROBE_DEFER;
+
+        /*
+         * Return probe errors as positive values so that the callers
+         * can distinguish them from other errors.
+         */
+        ret = -ret;
+        goto probe_failed;
+    }
+
+#if 0
+    ret = device_add_groups(dev, drv->dev_groups);
+    if (ret) {
+        dev_err(dev, "device_add_groups() failed\n");
+        goto dev_groups_failed;
+    }
+
+    if (dev_has_sync_state(dev)) {
+        ret = device_create_file(dev, &dev_attr_state_synced);
+        if (ret) {
+            dev_err(dev, "state_synced sysfs add failed\n");
+            goto dev_sysfs_state_synced_failed;
+        }
+    }
+#endif
+
+    if (test_remove) {
+        test_remove = false;
+
+        device_remove(dev);
+        //driver_sysfs_remove(dev);
+        if (dev->bus && dev->bus->dma_cleanup)
+            dev->bus->dma_cleanup(dev);
+        device_unbind_cleanup(dev);
+
+        goto re_probe;
+    }
+
+    //pinctrl_init_done(dev);
+
+    if (dev->pm_domain && dev->pm_domain->sync)
+        dev->pm_domain->sync(dev);
+
+    driver_bound(dev);
+    dev_dbg(dev, "bus: '%s': %s: bound device to driver %s\n",
+        drv->bus->name, __func__, drv->name);
     PANIC("");
+    goto done;
+
+dev_sysfs_state_synced_failed:
+dev_groups_failed:
+    device_remove(dev);
+probe_failed:
+    //driver_sysfs_remove(dev);
+sysfs_failed:
+    bus_notify(dev, BUS_NOTIFY_DRIVER_NOT_BOUND);
+    if (dev->bus && dev->bus->dma_cleanup)
+        dev->bus->dma_cleanup(dev);
+pinctrl_bind_failed:
+    //device_links_no_driver(dev);
+    device_unbind_cleanup(dev);
+done:
+    return ret;
 }
 
 /*
