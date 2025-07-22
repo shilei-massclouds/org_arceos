@@ -1452,6 +1452,7 @@ static int virtblk_probe(struct virtio_device *vdev)
 		goto out;
 	index = err;
 
+    printk("%s: step1\n", __func__);
 	vdev->priv = vblk = kmalloc(sizeof(*vblk), GFP_KERNEL);
 	if (!vblk) {
 		err = -ENOMEM;
@@ -1464,10 +1465,12 @@ static int virtblk_probe(struct virtio_device *vdev)
 
 	INIT_WORK(&vblk->config_work, virtblk_config_changed_work);
 
+    printk("%s: step2\n", __func__);
 	err = init_vq(vblk);
 	if (err)
 		goto out_free_vblk;
 
+    printk("%s: step3\n", __func__);
 	/* Default queue sizing is to fill the ring. */
 	if (!virtblk_queue_depth) {
 		queue_depth = vblk->vqs[0].vq->num_free;

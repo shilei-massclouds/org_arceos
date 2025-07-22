@@ -4,25 +4,6 @@
 
 #include "booter.h"
 
-struct workqueue_struct {
-};
-
-struct workqueue_struct *
-alloc_workqueue(const char *fmt,
-                unsigned int flags,
-                int max_active, ...)
-{
-    struct workqueue_struct *wq;
-
-    printk("%s: ...\n", __func__);
-
-    wq = kzalloc(sizeof(*wq), GFP_KERNEL);
-    if (!wq)
-        return NULL;
-
-    printk("%s: ok!\n", __func__);
-    return wq;
-}
 
 /**
  * queue_work_on - queue work on specific cpu

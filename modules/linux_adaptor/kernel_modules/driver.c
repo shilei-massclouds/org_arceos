@@ -4,16 +4,6 @@
 #include "booter.h"
 #include "base.h"
 
-int driver_register(struct device_driver *drv)
-{
-    int error;
-    printk("%s: drv [%s] bus [%s]\n", __func__, drv->name, drv->bus->name);
-    error = driver_attach(drv);
-    if (error) {
-        booter_panic("driver attaches device error!");
-    }
-    return 0;
-}
 
 static struct device *next_device(struct klist_iter *i)
 {

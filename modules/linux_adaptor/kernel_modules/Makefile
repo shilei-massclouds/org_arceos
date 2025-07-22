@@ -29,16 +29,18 @@ OBJS += lib/bitmap.o lib/kasprintf.o lib/string_helpers.o lib/list_debug.o
 OBJS += lib/radix-tree.o lib/maple_tree.o lib/kobject.o lib/klist.o
 OBJS += lib/devres.o lib/hweight.o lib/errname.o lib/idr.o lib/xarray.o
 OBJS += math/reciprocal_div.o
+OBJS += time/timekeeping.o
 OBJS += sched/core.o sched/wait.o sched/wait_bit.o
 OBJS += locking/spinlock.o locking/spinlock_debug.o
 OBJS += locking/mutex.o locking/rwsem.o
 OBJS += base/platform.o base/property.o base/syscore.o base/bus.o
-OBJS += base/core.o base/devres.o base/dd.o
+OBJS += base/core.o base/devres.o base/dd.o base/driver.o
 OBJS += of/base.o of/property.o of/address.o of/irq.o
 OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o
 OBJS += irq/resend.o irq/chip.o irq/handle.o
 OBJS += dma/mapping.o dma/swiotlb.o
-OBJS += kernel/resource.o
+OBJS += kernel/resource.o kernel/workqueue.o
+OBJS += block/genhd.o
 
 #OBJS += filesystems.o fs_types.o backing-dev.o
 #OBJS += mpage.o
@@ -74,13 +76,11 @@ OBJS += kernel/resource.o
 OBJS += cl_mine.o main.o smp.o cpu.o softirq.o panic.o \
 		riscv_irq.o \
 		cl_dummy.o
-		#workqueue.o \
 		#ctype.o kstrtox.o \
-		#klist.o locking.o percpu-rwsem.o \
-		#dma.o \
+		#percpu-rwsem.o \
 		#signal.o \
 		#completion.o \
-		#scatterlist.o rbtree.o radix-tree.o mbcache.o
+		#scatterlist.o rbtree.o mbcache.o
 
 CROSS_ = $(ARCH)-linux-musl-
 CC = $(CROSS_)gcc

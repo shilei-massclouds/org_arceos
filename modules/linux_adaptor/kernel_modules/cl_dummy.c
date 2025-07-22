@@ -2,6 +2,8 @@
 
 #include "../adaptor.h"
 
+bool initcall_debug;
+
 #ifdef CONFIG_SPARSEMEM_VMEMMAP
 #define VMEMMAP_ADDR_ALIGN  (1ULL << SECTION_SIZE_BITS)
 
