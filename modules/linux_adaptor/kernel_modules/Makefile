@@ -22,12 +22,12 @@ OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
 OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o
-OBJS += mm/debug_page_alloc.o mm/debug.o
+OBJS += mm/debug_page_alloc.o mm/debug.o mm/ioremap.o
 OBJS += printk/printk.o
 OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o lib/ratelimit.o
 OBJS += lib/bitmap.o lib/kasprintf.o lib/string_helpers.o lib/list_debug.o
 OBJS += lib/radix-tree.o lib/maple_tree.o lib/kobject.o lib/klist.o
-OBJS += lib/devres.o lib/hweight.o
+OBJS += lib/devres.o lib/hweight.o lib/errname.o
 OBJS += math/reciprocal_div.o
 OBJS += sched/core.o sched/wait.o sched/wait_bit.o
 OBJS += locking/spinlock.o locking/spinlock_debug.o
@@ -37,6 +37,8 @@ OBJS += base/core.o base/devres.o
 OBJS += of/base.o of/property.o of/address.o of/irq.o
 OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o
 OBJS += irq/resend.o irq/chip.o irq/handle.o
+OBJS += dma/mapping.o dma/swiotlb.o
+OBJS += kernel/resource.o
 
 #OBJS += filesystems.o fs_types.o backing-dev.o
 #OBJS += mpage.o

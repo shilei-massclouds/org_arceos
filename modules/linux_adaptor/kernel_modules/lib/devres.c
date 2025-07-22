@@ -51,6 +51,7 @@ static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
 		addr = ioremap_np(offset, size);
 		break;
 	}
+    printk("%s: step2\n", __func__);
 
 	if (addr) {
 		*ptr = addr;
@@ -142,8 +143,6 @@ __devm_ioremap_resource(struct device *dev, const struct resource *res,
 
 	size = resource_size(res);
 
-    printk("%s: step1\n", __func__);
-
 	if (res->name)
 		pretty_name = devm_kasprintf(dev, GFP_KERNEL, "%s %s",
 					     dev_name(dev), res->name);
@@ -154,14 +153,11 @@ __devm_ioremap_resource(struct device *dev, const struct resource *res,
 		return IOMEM_ERR_PTR(ret);
 	}
 
-    printk("%s: step2\n", __func__);
-
 	if (!devm_request_mem_region(dev, res->start, size, pretty_name)) {
 		ret = dev_err_probe(dev, -EBUSY, "can't request region for resource %pR\n", res);
 		return IOMEM_ERR_PTR(ret);
 	}
 
-    printk("%s: step3\n", __func__);
 	dest_ptr = __devm_ioremap(dev, res->start, size, type);
 	if (!dest_ptr) {
 		devm_release_mem_region(dev, res->start, size);
@@ -169,6 +165,7 @@ __devm_ioremap_resource(struct device *dev, const struct resource *res,
 		return IOMEM_ERR_PTR(ret);
 	}
 
+    printk("%s: OK dest_ptr(0x%lx)\n", __func__, dest_ptr);
 	return dest_ptr;
 }
 

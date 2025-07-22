@@ -3,6 +3,8 @@
 #include "slab.h"
 #include "../adaptor.h"
 
+enum slab_state slab_state;
+
 kmem_buckets kmalloc_caches[NR_KMALLOC_TYPES] __ro_after_init =
 { /* initialization for https://llvm.org/pr42570 */ };
 
@@ -62,4 +64,11 @@ size_t kmalloc_size_roundup(size_t size)
      * and very large size - kmalloc() may fail.
      */
     return size;
+}
+
+bool slab_is_available(void)
+{
+    pr_err("%s: No impl.", __func__);
+    return true;
+    //return slab_state >= UP;
 }

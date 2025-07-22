@@ -156,3 +156,64 @@ void *devm_kmalloc(struct device *dev, size_t size, gfp_t gfp)
     devres_add(dev, dr->data);
     return dr->data;
 }
+
+static void devres_log(struct device *dev, struct devres_node *node,
+               const char *op)
+{
+    //trace_devres_log(dev, op, node, node->name, node->size);
+    //devres_dbg(dev, node, op);
+    pr_err("DEVRES %3s %p %s (%zu bytes)\n", op, node, node->name, node->size);
+}
+
+static void add_dr(struct device *dev, struct devres_node *node)
+{
+    devres_log(dev, node, "ADD");
+    BUG_ON(!list_empty(&node->entry));
+    list_add_tail(&node->entry, &dev->devres_head);
+}
+
+/**
+ * devres_add - Register device resource
+ * @dev: Device to add resource to
+ * @res: Resource to register
+ *
+ * Register devres @res to @dev.  @res should have been allocated
+ * using devres_alloc().  On driver detach, the associated release
+ * function will be invoked and devres will be freed automatically.
+ */
+void devres_add(struct device *dev, void *res)
+{
+    struct devres *dr = container_of(res, struct devres, data);
+    unsigned long flags;
+
+    spin_lock_irqsave(&dev->devres_lock, flags);
+    add_dr(dev, &dr->node);
+    spin_unlock_irqrestore(&dev->devres_lock, flags);
+}
+
+/**
+ * __devres_alloc_node - Allocate device resource data
+ * @release: Release function devres will be associated with
+ * @size: Allocation size
+ * @gfp: Allocation flags
+ * @nid: NUMA node
+ * @name: Name of the resource
+ *
+ * Allocate devres of @size bytes.  The allocated area is zeroed, then
+ * associated with @release.  The returned pointer can be passed to
+ * other devres_*() functions.
+ *
+ * RETURNS:
+ * Pointer to allocated devres on success, NULL on failure.
+ */
+void *__devres_alloc_node(dr_release_t release, size_t size, gfp_t gfp, int nid,
+              const char *name)
+{
+    struct devres *dr;
+
+    dr = alloc_dr(release, size, gfp | __GFP_ZERO, nid);
+    if (unlikely(!dr))
+        return NULL;
+    set_node_dbginfo(&dr->node, name, size);
+    return dr->data;
+}

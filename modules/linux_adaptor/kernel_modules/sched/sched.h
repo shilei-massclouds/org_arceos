@@ -73,7 +73,7 @@
 #include <trace/events/power.h>
 #include <trace/events/sched.h>
 
-#include "../workqueue_internal.h"
+#include "../kernel/workqueue_internal.h"
 
 struct rq;
 struct cfs_rq;

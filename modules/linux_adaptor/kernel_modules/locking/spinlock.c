@@ -49,3 +49,13 @@ noinline void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
     /* For simplicity, ignore kernel-preemption. */
     // preempt_enable();
 }
+
+void __lockfunc _raw_write_lock(rwlock_t *lock)
+{
+    pr_err("%s: ===> WARN: impl it.\n", __func__);
+}
+
+void __lockfunc _raw_write_unlock(rwlock_t *lock)
+{
+    pr_err("%s: ===> WARN: impl it.\n", __func__);
+}

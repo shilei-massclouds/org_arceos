@@ -1,3 +1,4 @@
+#include <linux/dma-mapping.h>
 #include <linux/platform_device.h>
 #include <linux/of.h>
 
@@ -59,23 +60,11 @@ static int __get_virtblk_device(struct device_node *pnode,
     ppdev->name = "virtblk";
     ppdev->resource = &r;
     ppdev->num_resources = 1;
+    device_initialize(&ppdev->dev);
 
-#if 0
-    static char dev_name[] = "clinux_virtblk";
-    struct platform_device dev;
-    struct resource r;
-
-    r.start =   0xffffffc010008000;
-    r.end   =   0xffffffc010008fff;
-    r.flags =   IORESOURCE_MEM;
-    r.name  =   dev_name;
-
-    dev.name = dev_name;
-    dev.num_resources = 1;
-    dev.resource = &r;
-    dev.platform_dma_mask = DMA_BIT_MASK(32);
-    dev.dev.dma_mask = & dev.platform_dma_mask;
-#endif
+    ppdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+    ppdev->platform_dma_mask = DMA_BIT_MASK(32);
+    ppdev->dev.dma_mask = &ppdev->platform_dma_mask;
 
     return 0;
 }
@@ -132,6 +121,7 @@ devm_platform_get_and_ioremap_resource(struct platform_device *pdev,
     r = platform_get_resource(pdev, IORESOURCE_MEM, index);
     if (res)
         *res = r;
+    printk("%s: ...\n", __func__);
     return devm_ioremap_resource(&pdev->dev, r);
 }
 

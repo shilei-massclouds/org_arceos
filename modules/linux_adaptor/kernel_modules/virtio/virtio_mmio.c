@@ -685,7 +685,9 @@ static int virtio_mmio_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, vm_dev);
 
+    printk("%s: step1\n", __func__);
 	rc = register_virtio_device(&vm_dev->vdev);
+    printk("%s: step2\n", __func__);
 	if (rc)
 		put_device(&vm_dev->vdev.dev);
 
