@@ -434,7 +434,6 @@ CL_MINE(synchronize_irq)
 CL_MINE(__dma_sync_single_for_cpu)
 CL_MINE(__dma_sync_single_for_device)
 CL_MINE(sg_next)
-CL_MINE(request_threaded_irq)
 CL_MINE(irq_set_irq_wake)
 CL_MINE(__dma_need_sync)
 

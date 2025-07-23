@@ -4,6 +4,8 @@
 
 bool initcall_debug;
 
+bool noirqdebug __read_mostly;
+
 #ifdef CONFIG_SPARSEMEM_VMEMMAP
 #define VMEMMAP_ADDR_ALIGN  (1ULL << SECTION_SIZE_BITS)
 

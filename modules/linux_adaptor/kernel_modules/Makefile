@@ -41,7 +41,7 @@ OBJS += of/base.o of/property.o of/address.o of/irq.o
 OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o
 OBJS += irq/resend.o irq/chip.o irq/handle.o irq/msi.o
 OBJS += dma/mapping.o dma/swiotlb.o
-OBJS += kernel/resource.o kernel/workqueue.o
+OBJS += kernel/resource.o kernel/workqueue.o kernel/kthread.o
 OBJS += block/genhd.o
 
 #OBJS += filesystems.o fs_types.o backing-dev.o
