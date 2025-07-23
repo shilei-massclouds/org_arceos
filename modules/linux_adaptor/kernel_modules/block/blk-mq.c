@@ -423,3 +423,134 @@ out_free_srcu:
         kfree(set->srcu);
     return ret;
 }
+
+struct gendisk *__blk_mq_alloc_disk(struct blk_mq_tag_set *set,
+        struct queue_limits *lim, void *queuedata,
+        struct lock_class_key *lkclass)
+{
+    struct request_queue *q;
+    struct gendisk *disk;
+
+    q = blk_mq_alloc_queue(set, lim, queuedata);
+    if (IS_ERR(q))
+        return ERR_CAST(q);
+
+    disk = __alloc_disk_node(q, set->numa_node, lkclass);
+    if (!disk) {
+        blk_mq_destroy_queue(q);
+        blk_put_queue(q);
+        return ERR_PTR(-ENOMEM);
+    }
+    set_bit(GD_OWNS_QUEUE, &disk->state);
+    return disk;
+}
+
+struct request_queue *blk_mq_alloc_queue(struct blk_mq_tag_set *set,
+        struct queue_limits *lim, void *queuedata)
+{
+    struct queue_limits default_lim = { };
+    struct request_queue *q;
+    int ret;
+
+    if (!lim)
+        lim = &default_lim;
+    lim->features |= BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT;
+    if (set->nr_maps > HCTX_TYPE_POLL)
+        lim->features |= BLK_FEAT_POLL;
+
+    q = blk_alloc_queue(lim, set->numa_node);
+    if (IS_ERR(q))
+        return q;
+    q->queuedata = queuedata;
+    ret = blk_mq_init_allocated_queue(set, q);
+    if (ret) {
+        blk_put_queue(q);
+        return ERR_PTR(ret);
+    }
+    return q;
+}
+
+/* All allocations will be freed in release handler of q->mq_kobj */
+static int blk_mq_alloc_ctxs(struct request_queue *q)
+{
+    struct blk_mq_ctxs *ctxs;
+    int cpu;
+
+    ctxs = kzalloc(sizeof(*ctxs), GFP_KERNEL);
+    if (!ctxs)
+        return -ENOMEM;
+
+    ctxs->queue_ctx = alloc_percpu(struct blk_mq_ctx);
+    if (!ctxs->queue_ctx)
+        goto fail;
+
+    for_each_possible_cpu(cpu) {
+        struct blk_mq_ctx *ctx = per_cpu_ptr(ctxs->queue_ctx, cpu);
+        ctx->ctxs = ctxs;
+    }
+
+    q->mq_kobj = &ctxs->kobj;
+    q->queue_ctx = ctxs->queue_ctx;
+
+    return 0;
+ fail:
+    kfree(ctxs);
+    return -ENOMEM;
+}
+
+int blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+        struct request_queue *q)
+{
+    pr_err("%s: No impl.", __func__);
+
+    /* mark the queue as mq asap */
+    q->mq_ops = set->ops;
+
+    /*
+     * ->tag_set has to be setup before initialize hctx, which cpuphp
+     * handler needs it for checking queue mapping
+     */
+    q->tag_set = set;
+
+    if (blk_mq_alloc_ctxs(q))
+        goto err_exit;
+
+    /* init q->mq_kobj and sw queues' kobjects */
+    //blk_mq_sysfs_init(q);
+
+    INIT_LIST_HEAD(&q->unused_hctx_list);
+    spin_lock_init(&q->unused_hctx_lock);
+
+    xa_init(&q->hctx_table);
+
+#if 0
+    blk_mq_realloc_hw_ctxs(set, q);
+    if (!q->nr_hw_queues)
+        goto err_hctxs;
+
+    INIT_WORK(&q->timeout_work, blk_mq_timeout_work);
+    blk_queue_rq_timeout(q, set->timeout ? set->timeout : 30 * HZ);
+#endif
+
+    q->queue_flags |= QUEUE_FLAG_MQ_DEFAULT;
+
+    //INIT_DELAYED_WORK(&q->requeue_work, blk_mq_requeue_work);
+    INIT_LIST_HEAD(&q->flush_list);
+    INIT_LIST_HEAD(&q->requeue_list);
+    spin_lock_init(&q->requeue_lock);
+
+    q->nr_requests = set->queue_depth;
+
+#if 0
+    blk_mq_init_cpu_queues(q, set->nr_hw_queues);
+    blk_mq_add_queue_tag_set(set, q);
+    blk_mq_map_swqueue(q);
+#endif
+    return 0;
+
+err_hctxs:
+    blk_mq_release(q);
+err_exit:
+    q->mq_ops = NULL;
+    return -ENOMEM;
+}

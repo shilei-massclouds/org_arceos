@@ -8,6 +8,8 @@
 
 #include "mm/slab.h"
 #include "base/base.h"
+#include "block/blk.h"
+#include "fs/internal.h"
 #include "adaptor.h"
 
 //#define TEST_EXT2
@@ -62,15 +64,18 @@ int clinux_init(void)
     radix_tree_init();
     maple_tree_init();
     buses_init();
+    bdev_cache_init();
 
     {
         static struct device_node riscv_intc_node;
-        riscv_intc_node.name = "plic";
+        riscv_intc_node.name = "riscv_intc";
         cl_riscv_intc_init(&riscv_intc_node, NULL);
     }
 
     // Note: Refer to old cl_irq_init in irq.c.
     cl_plic_init();
+
+    blk_dev_init();
 
     cl_virtio_init();
     cl_virtio_mmio_init();

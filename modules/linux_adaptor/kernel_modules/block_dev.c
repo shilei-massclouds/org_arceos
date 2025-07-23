@@ -3,11 +3,6 @@
 #include <linux/buffer_head.h>
 #include <linux/writeback.h>
 
-struct bdev_inode {
-    struct block_device bdev;
-    struct inode vfs_inode;
-};
-
 static inline struct bdev_inode *BDEV_I(struct inode *inode)
 {
     return container_of(inode, struct bdev_inode, vfs_inode);

@@ -1,4 +1,11 @@
 #include <linux/blkdev.h>
+#include <linux/backing-dev.h>
+
+#include "blk-throttle.h"
+#include "blk.h"
+#include "blk-mq-sched.h"
+#include "blk-rq-qos.h"
+#include "blk-cgroup.h"
 
 #include "../adaptor.h"
 
@@ -117,4 +124,87 @@ int __register_blkdev(unsigned int major, const char *name,
 out:
     mutex_unlock(&major_names_lock);
     return ret;
+}
+
+struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
+        struct lock_class_key *lkclass)
+{
+    struct gendisk *disk;
+
+    disk = kzalloc_node(sizeof(struct gendisk), GFP_KERNEL, node_id);
+    if (!disk)
+        return NULL;
+
+    if (bioset_init(&disk->bio_split, BIO_POOL_SIZE, 0, 0))
+        goto out_free_disk;
+
+    disk->bdi = bdi_alloc(node_id);
+    if (!disk->bdi)
+        goto out_free_bioset;
+
+    /* bdev_alloc() might need the queue, set before the first call */
+    disk->queue = q;
+
+    disk->part0 = bdev_alloc(disk, 0);
+    if (!disk->part0)
+        goto out_free_bdi;
+
+    pr_err("%s: No impl. q(%lx)", __func__, q);
+    PANIC("");
+
+    return disk;
+
+out_erase_part0:
+    xa_erase(&disk->part_tbl, 0);
+out_destroy_part_tbl:
+    xa_destroy(&disk->part_tbl);
+    disk->part0->bd_disk = NULL;
+    bdev_drop(disk->part0);
+out_free_bdi:
+    bdi_put(disk->bdi);
+out_free_bioset:
+    bioset_exit(&disk->bio_split);
+out_free_disk:
+    kfree(disk);
+    return NULL;
+}
+
+/*
+ * Set disk capacity and notify if the size is not currently zero and will not
+ * be set to zero.  Returns true if a uevent was sent, otherwise false.
+ */
+bool set_capacity_and_notify(struct gendisk *disk, sector_t size)
+{
+    sector_t capacity = get_capacity(disk);
+    char *envp[] = { "RESIZE=1", NULL };
+
+    set_capacity(disk, size);
+
+    /*
+     * Only print a message and send a uevent if the gendisk is user visible
+     * and alive.  This avoids spamming the log and udev when setting the
+     * initial capacity during probing.
+     */
+    if (size == capacity ||
+        !disk_live(disk) ||
+        (disk->flags & GENHD_FL_HIDDEN))
+        return false;
+
+    pr_info("%s: detected capacity change from %lld to %lld\n",
+        disk->disk_name, capacity, size);
+
+    /*
+     * Historically we did not send a uevent for changes to/from an empty
+     * device.
+     */
+    if (!capacity || !size)
+        return false;
+    kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
+    return true;
+}
+
+void set_capacity(struct gendisk *disk, sector_t sectors)
+{
+    //bdev_set_nr_sectors(disk->part0, sectors);
+    PANIC("");
 }

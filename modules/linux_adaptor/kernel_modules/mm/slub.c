@@ -31,6 +31,11 @@ void *__kmalloc_cache_node_noprof(struct kmem_cache *s, gfp_t gfpflags,
     return cl_rust_alloc(size, 8);
 }
 
+void *kmem_cache_alloc_node_noprof(struct kmem_cache *s, gfp_t gfpflags, int node)
+{
+    return kmem_cache_alloc_noprof(s, gfpflags);
+}
+
 void *kmem_cache_alloc_noprof(struct kmem_cache *s, gfp_t gfpflags)
 {
     if (!s) {
