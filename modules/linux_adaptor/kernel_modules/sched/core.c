@@ -91,6 +91,14 @@ void __might_resched(const char *file, int line, unsigned int offsets)
     pr_err("%s: No impl.", __func__);
 }
 
+#if !defined(CONFIG_PREEMPTION) || defined(CONFIG_PREEMPT_DYNAMIC)
+int __sched __cond_resched(void)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+#endif
+
 void __init sched_init(void)
 {
     wait_bit_init();

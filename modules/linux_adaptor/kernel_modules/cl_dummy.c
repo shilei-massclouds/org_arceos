@@ -1,6 +1,10 @@
 #include <linux/of.h>
+#include <linux/cpumask_types.h>
 
 #include "../adaptor.h"
+
+// Defined in arch/riscv/mm/dma-noncoherent.c
+int dma_cache_alignment __ro_after_init = ARCH_DMA_MINALIGN;
 
 bool initcall_debug;
 
@@ -90,5 +94,9 @@ int kobject_uevent(struct kobject *kobj, enum kobject_action action)
     return 0;
 }
 
-// Defined in arch/riscv/mm/dma-noncoherent.c
-int dma_cache_alignment __ro_after_init = ARCH_DMA_MINALIGN;
+struct cpumask *group_cpus_evenly(unsigned int numgrps)
+{
+    static struct cpumask masks = {1};
+    pr_err("%s: No impl.", __func__);
+    return &masks;
+}

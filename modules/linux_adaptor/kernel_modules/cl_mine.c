@@ -399,7 +399,6 @@ CL_MINE(kmem_cache_free)
 CL_MINE(kmem_cache_free_bulk)
 CL_MINE(kmem_cache_alloc_bulk_noprof)
 CL_MINE(irq_free_descs)
-CL_MINE(pcpu_alloc_noprof)
 CL_MINE(handle_bad_irq)
 
 // irq-riscv-intc
@@ -453,3 +452,13 @@ CL_MINE(async_schedule_node)
 
 CL_MINE(init_srcu_struct)
 CL_MINE(cleanup_srcu_struct)
+CL_MINE(blk_mq_free_map_and_rqs)
+CL_MINE(kvfree)
+
+CL_MINE(prepare_to_wait_exclusive)
+CL_MINE(finish_wait)
+CL_MINE(seq_putc)
+CL_MINE(seq_write)
+CL_MINE(__get_random_u32_below)
+CL_MINE(blk_mq_free_rqs)
+CL_MINE(blk_mq_free_rq_map)
