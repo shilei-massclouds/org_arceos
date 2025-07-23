@@ -25,6 +25,24 @@ struct irqchip_fwid {
     phys_addr_t     *pa;
 };
 
+static int irq_domain_translate(struct irq_domain *d,
+                struct irq_fwspec *fwspec,
+                irq_hw_number_t *hwirq, unsigned int *type)
+{
+#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+    if (d->ops->translate)
+        return d->ops->translate(d, fwspec, hwirq, type);
+#endif
+    if (d->ops->xlate)
+        return d->ops->xlate(d, to_of_node(fwspec->fwnode),
+                     fwspec->param, fwspec->param_count,
+                     hwirq, type);
+
+    /* If domain has no translation, then we assume interrupt line */
+    *hwirq = fwspec->param[0];
+    return 0;
+}
+
 static bool irq_domain_is_nomap(struct irq_domain *domain)
 {
     return IS_ENABLED(CONFIG_IRQ_DOMAIN_NOMAP) &&
@@ -390,8 +408,6 @@ struct irq_domain *irq_domain_instantiate(const struct irq_domain_info *info)
 struct irq_domain *irq_find_matching_fwspec(struct irq_fwspec *fwspec,
                         enum irq_domain_bus_token bus_token)
 {
-    pr_err("%s: fill irq_domain fwspec(%lx)\n", __func__, fwspec);
-
     struct irq_domain *h, *found = NULL;
     struct fwnode_handle *fwnode = fwspec->fwnode;
     int rc;
@@ -633,3 +649,336 @@ void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
     irq_set_handler_data(virq, handler_data);
 }
 #endif
+
+unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
+{
+    struct irq_fwspec fwspec;
+
+    of_phandle_args_to_fwspec(irq_data->np, irq_data->args,
+                  irq_data->args_count, &fwspec);
+
+    return irq_create_fwspec_mapping(&fwspec);
+}
+
+void of_phandle_args_to_fwspec(struct device_node *np, const u32 *args,
+                   unsigned int count, struct irq_fwspec *fwspec)
+{
+    int i;
+
+    fwspec->fwnode = of_node_to_fwnode(np);
+    fwspec->param_count = count;
+
+    for (i = 0; i < count; i++)
+        fwspec->param[i] = args[i];
+}
+static struct irq_data *irq_domain_insert_irq_data(struct irq_domain *domain,
+                           struct irq_data *child)
+{
+    struct irq_data *irq_data;
+
+    irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL,
+                irq_data_get_node(child));
+    if (irq_data) {
+        child->parent_data = irq_data;
+        irq_data->irq = child->irq;
+        irq_data->common = child->common;
+        irq_data->domain = domain;
+    }
+
+    return irq_data;
+}
+
+static void __irq_domain_free_hierarchy(struct irq_data *irq_data)
+{
+    struct irq_data *tmp;
+
+    while (irq_data) {
+        tmp = irq_data;
+        irq_data = irq_data->parent_data;
+        kfree(tmp);
+    }
+}
+
+static void irq_domain_free_irq_data(unsigned int virq, unsigned int nr_irqs)
+{
+    struct irq_data *irq_data, *tmp;
+    int i;
+
+    for (i = 0; i < nr_irqs; i++) {
+        irq_data = irq_get_irq_data(virq + i);
+        tmp = irq_data->parent_data;
+        irq_data->parent_data = NULL;
+        irq_data->domain = NULL;
+
+        __irq_domain_free_hierarchy(tmp);
+    }
+}
+
+static int irq_domain_alloc_irq_data(struct irq_domain *domain,
+                     unsigned int virq, unsigned int nr_irqs)
+{
+    struct irq_data *irq_data;
+    struct irq_domain *parent;
+    int i;
+
+    /* The outermost irq_data is embedded in struct irq_desc */
+    for (i = 0; i < nr_irqs; i++) {
+        irq_data = irq_get_irq_data(virq + i);
+        irq_data->domain = domain;
+
+        for (parent = domain->parent; parent; parent = parent->parent) {
+            irq_data = irq_domain_insert_irq_data(parent, irq_data);
+            if (!irq_data) {
+                irq_domain_free_irq_data(virq, i + 1);
+                return -ENOMEM;
+            }
+        }
+    }
+
+    return 0;
+}
+
+int irq_domain_alloc_irqs_hierarchy(struct irq_domain *domain,
+                    unsigned int irq_base,
+                    unsigned int nr_irqs, void *arg)
+{
+    if (!domain->ops->alloc) {
+        pr_debug("domain->ops->alloc() is NULL\n");
+        return -ENOSYS;
+    }
+
+    return domain->ops->alloc(domain, irq_base, nr_irqs, arg);
+}
+
+static int irq_domain_trim_hierarchy(unsigned int virq)
+{
+    struct irq_data *tail, *irqd, *irq_data;
+
+    irq_data = irq_get_irq_data(virq);
+    tail = NULL;
+
+    /* The first entry must have a valid irqchip */
+    if (IS_ERR_OR_NULL(irq_data->chip))
+        return -EINVAL;
+
+    /*
+     * Validate that the irq_data chain is sane in the presence of
+     * a hierarchy trimming marker.
+     */
+    for (irqd = irq_data->parent_data; irqd; irq_data = irqd, irqd = irqd->parent_data) {
+        /* Can't have a valid irqchip after a trim marker */
+        if (irqd->chip && tail)
+            return -EINVAL;
+
+        /* Can't have an empty irqchip before a trim marker */
+        if (!irqd->chip && !tail)
+            return -EINVAL;
+
+        if (IS_ERR(irqd->chip)) {
+            /* Only -ENOTCONN is a valid trim marker */
+            if (PTR_ERR(irqd->chip) != -ENOTCONN)
+                return -EINVAL;
+
+            tail = irq_data;
+        }
+    }
+
+    /* No trim marker, nothing to do */
+    if (!tail)
+        return 0;
+
+    pr_info("IRQ%d: trimming hierarchy from %s\n",
+        virq, tail->parent_data->domain->name);
+
+    /* Sever the inner part of the hierarchy...  */
+    irqd = tail;
+    tail = tail->parent_data;
+    irqd->parent_data = NULL;
+    __irq_domain_free_hierarchy(tail);
+
+    return 0;
+}
+
+static void irq_domain_insert_irq(int virq)
+{
+    struct irq_data *data;
+
+    for (data = irq_get_irq_data(virq); data; data = data->parent_data) {
+        struct irq_domain *domain = data->domain;
+
+        domain->mapcount++;
+        irq_domain_set_mapping(domain, data->hwirq, data);
+    }
+
+    irq_clear_status_flags(virq, IRQ_NOREQUEST);
+}
+
+static int irq_domain_alloc_irqs_locked(struct irq_domain *domain, int irq_base,
+                    unsigned int nr_irqs, int node, void *arg,
+                    bool realloc, const struct irq_affinity_desc *affinity)
+{
+    int i, ret, virq;
+
+    if (realloc && irq_base >= 0) {
+        virq = irq_base;
+    } else {
+        virq = irq_domain_alloc_descs(irq_base, nr_irqs, 0, node,
+                          affinity);
+        if (virq < 0) {
+            pr_debug("cannot allocate IRQ(base %d, count %d)\n",
+                 irq_base, nr_irqs);
+            return virq;
+        }
+    }
+
+    if (irq_domain_alloc_irq_data(domain, virq, nr_irqs)) {
+        pr_debug("cannot allocate memory for IRQ%d\n", virq);
+        ret = -ENOMEM;
+        goto out_free_desc;
+    }
+
+    ret = irq_domain_alloc_irqs_hierarchy(domain, virq, nr_irqs, arg);
+    if (ret < 0)
+        goto out_free_irq_data;
+
+    for (i = 0; i < nr_irqs; i++) {
+        ret = irq_domain_trim_hierarchy(virq + i);
+        if (ret)
+            goto out_free_irq_data;
+    }
+
+    for (i = 0; i < nr_irqs; i++)
+        irq_domain_insert_irq(virq + i);
+
+    return virq;
+
+out_free_irq_data:
+    irq_domain_free_irq_data(virq, nr_irqs);
+out_free_desc:
+    irq_free_descs(virq, nr_irqs);
+    return ret;
+}
+
+unsigned int irq_create_fwspec_mapping(struct irq_fwspec *fwspec)
+{
+    struct irq_domain *domain;
+    struct irq_data *irq_data;
+    irq_hw_number_t hwirq;
+    unsigned int type = IRQ_TYPE_NONE;
+    int virq;
+
+    if (fwspec->fwnode) {
+        domain = irq_find_matching_fwspec(fwspec, DOMAIN_BUS_WIRED);
+        if (!domain)
+            domain = irq_find_matching_fwspec(fwspec, DOMAIN_BUS_ANY);
+    } else {
+        domain = irq_default_domain;
+    }
+
+    if (!domain) {
+        pr_warn("no irq domain found for %s !\n",
+            of_node_full_name(to_of_node(fwspec->fwnode)));
+        return 0;
+    }
+
+    if (irq_domain_translate(domain, fwspec, &hwirq, &type))
+        return 0;
+
+    /*
+     * WARN if the irqchip returns a type with bits
+     * outside the sense mask set and clear these bits.
+     */
+    if (WARN_ON(type & ~IRQ_TYPE_SENSE_MASK))
+        type &= IRQ_TYPE_SENSE_MASK;
+
+    mutex_lock(&domain->root->mutex);
+
+    /*
+     * If we've already configured this interrupt,
+     * don't do it again, or hell will break loose.
+     */
+    virq = irq_find_mapping(domain, hwirq);
+    if (virq) {
+        /*
+         * If the trigger type is not specified or matches the
+         * current trigger type then we are done so return the
+         * interrupt number.
+         */
+        if (type == IRQ_TYPE_NONE || type == irq_get_trigger_type(virq))
+            goto out;
+
+        /*
+         * If the trigger type has not been set yet, then set
+         * it now and return the interrupt number.
+         */
+        if (irq_get_trigger_type(virq) == IRQ_TYPE_NONE) {
+            irq_data = irq_get_irq_data(virq);
+            if (!irq_data) {
+                virq = 0;
+                goto out;
+            }
+
+            irqd_set_trigger_type(irq_data, type);
+            goto out;
+        }
+
+        pr_warn("type mismatch, failed to map hwirq-%lu for %s!\n",
+            hwirq, of_node_full_name(to_of_node(fwspec->fwnode)));
+        virq = 0;
+        goto out;
+    }
+
+    if (irq_domain_is_hierarchy(domain)) {
+        if (irq_domain_is_msi_device(domain)) {
+            mutex_unlock(&domain->root->mutex);
+            virq = msi_device_domain_alloc_wired(domain, hwirq, type);
+            mutex_lock(&domain->root->mutex);
+        } else
+            virq = irq_domain_alloc_irqs_locked(domain, -1, 1, NUMA_NO_NODE,
+                                fwspec, false, NULL);
+        if (virq <= 0) {
+            virq = 0;
+            goto out;
+        }
+    } else {
+        /* Create mapping */
+        virq = irq_create_mapping_affinity_locked(domain, hwirq, NULL);
+        if (!virq)
+            goto out;
+    }
+
+    printk("%s: virq(%u) -> hwirq(%u)\n", __func__, virq, hwirq);
+
+    irq_data = irq_get_irq_data(virq);
+    if (WARN_ON(!irq_data)) {
+        virq = 0;
+        goto out;
+    }
+
+    /* Store trigger type */
+    irqd_set_trigger_type(irq_data, type);
+out:
+    mutex_unlock(&domain->root->mutex);
+
+    return virq;
+}
+
+/**
+ * irq_domain_translate_onecell() - Generic translate for direct one cell
+ * bindings
+ * @d:      Interrupt domain involved in the translation
+ * @fwspec: The firmware interrupt specifier to translate
+ * @out_hwirq:  Pointer to storage for the hardware interrupt number
+ * @out_type:   Pointer to storage for the interrupt type
+ */
+int irq_domain_translate_onecell(struct irq_domain *d,
+                 struct irq_fwspec *fwspec,
+                 unsigned long *out_hwirq,
+                 unsigned int *out_type)
+{
+    if (WARN_ON(fwspec->param_count < 1))
+        return -EINVAL;
+    *out_hwirq = fwspec->param[0];
+    *out_type = IRQ_TYPE_NONE;
+    return 0;
+}

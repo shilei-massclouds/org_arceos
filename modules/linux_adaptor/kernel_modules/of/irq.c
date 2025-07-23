@@ -177,6 +177,5 @@ int of_irq_get(struct device_node *dev, int index)
 out:
     of_node_put(oirq.np);
 
-    PANIC("");
     return rc;
 }
