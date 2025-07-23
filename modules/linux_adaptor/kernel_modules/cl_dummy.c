@@ -6,6 +6,11 @@ bool initcall_debug;
 
 bool noirqdebug __read_mostly;
 
+/*
+ * cpu topology table
+ */
+struct cpu_topology cpu_topology[NR_CPUS];
+
 #ifdef CONFIG_SPARSEMEM_VMEMMAP
 #define VMEMMAP_ADDR_ALIGN  (1ULL << SECTION_SIZE_BITS)
 

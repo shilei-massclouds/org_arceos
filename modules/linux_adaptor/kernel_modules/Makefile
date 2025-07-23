@@ -29,6 +29,7 @@ OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o lib/ratelimit.o
 OBJS += lib/bitmap.o lib/kasprintf.o lib/string_helpers.o lib/list_debug.o
 OBJS += lib/radix-tree.o lib/maple_tree.o lib/kobject.o lib/klist.o
 OBJS += lib/devres.o lib/hweight.o lib/errname.o lib/idr.o lib/xarray.o
+OBJS += lib/group_cpus.o lib/sort.o
 OBJS += math/reciprocal_div.o
 OBJS += time/timekeeping.o
 OBJS += rcu/tree.o
@@ -42,7 +43,8 @@ OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o
 OBJS += irq/resend.o irq/chip.o irq/handle.o irq/msi.o
 OBJS += dma/mapping.o dma/swiotlb.o
 OBJS += kernel/resource.o kernel/workqueue.o kernel/kthread.o
-OBJS += block/genhd.o
+OBJS += block/genhd.o block/blk-mq.o block/blk-mq-virtio.o
+OBJS += block/blk-mq-cpumap.o
 
 #OBJS += filesystems.o fs_types.o backing-dev.o
 #OBJS += mpage.o

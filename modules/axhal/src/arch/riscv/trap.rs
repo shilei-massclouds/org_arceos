@@ -28,8 +28,8 @@ struct BugEntry {
 }
 
 #[cfg(linux_adaptor)]
-fn bug_addr(base: usize, offset: i32) -> usize {
-    (base as isize + offset as isize) as usize
+fn bug_relative_offset(ptr_offset: *const i32) -> usize {
+    (ptr_offset as isize + unsafe { *ptr_offset } as isize) as usize
 }
 
 #[cfg(linux_adaptor)]
@@ -49,16 +49,14 @@ fn report_bug(addr: usize) {
         core::slice::from_raw_parts(bug_table_ptr, bug_table_len)
     };
 
-    let mut pos = bug_table_ptr as usize;
     for bug in bugs {
-        if bug_addr(pos, bug.bug_addr_disp) == addr {
-            let fname_ptr = bug_addr(pos, bug.file_disp) as *const u8;
+        if bug_relative_offset(&bug.bug_addr_disp) == addr {
+            let fname_ptr = bug_relative_offset(&bug.file_disp) as *const u8;
             let fname = unsafe {
                 core::ffi::CStr::from_ptr(fname_ptr)
             };
             panic!("BUG: line {} in {:?}", bug.line, fname);
         }
-        pos += core::mem::size_of::<BugEntry>() as usize;
     }
 
     panic!("For linux_adaptor: let ebreak @ {:#x} cause PANIC!", addr);
