@@ -119,3 +119,9 @@ kgid_t make_kgid(struct user_namespace *ns, gid_t gid)
 {
     return KGIDT_INIT(0);
 }
+
+int blkcg_init_disk(struct gendisk *disk)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
