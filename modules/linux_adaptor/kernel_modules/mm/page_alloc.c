@@ -36,5 +36,6 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
     struct page *page = virt_to_page(va);
     // Note: page_type must be inited with UINT_MAX. Check where set it.
     page->page_type = UINT_MAX;
+    set_page_count(page, 1);
     return page;
 }

@@ -29,9 +29,11 @@ void test_block(void)
     if (page == NULL) {
         PANIC("No page.");
     }
+    page->mapping = dev->bd_mapping;
 
     /* Read first block (PAGE_SIZE) */
     page->index = 0;
+    __folio_set_locked(page);
     ret = a_ops->read_folio(NULL, page);
     if (ret) {
         pr_err("Read block err: %d\n", ret);

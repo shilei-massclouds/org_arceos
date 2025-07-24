@@ -69,6 +69,7 @@ int clinux_init(void)
     radix_tree_init();
     maple_tree_init();
     buses_init();
+    buffer_init();
     vfs_caches_init();
 
     {
@@ -205,8 +206,6 @@ static void test_basic(const char *fs_name, const char *fname)
 #ifdef TEST_EXT4
 static void test_ext4(void)
 {
-    buffer_init();
-
     /*
      * Init Journal first.
      */

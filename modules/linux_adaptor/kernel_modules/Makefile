@@ -52,6 +52,7 @@ OBJS += block/blk-stat.o block/blk-settings.o block/bio.o
 OBJS += block/bdev.o block/fops.o
 OBJS += fs/inode.o fs/libfs.o fs/filesystems.o fs/dcache.o
 OBJS += fs/namespace.o fs/fs_context.o fs/super.o fs/mnt_idmapping.o
+OBJS += fs/buffer.o
 
 #OBJS += filesystems.o fs_types.o backing-dev.o
 #OBJS += mpage.o
