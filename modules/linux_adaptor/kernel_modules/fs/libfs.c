@@ -25,9 +25,75 @@
 
 #include "../adaptor.h"
 
+int simple_statfs(struct dentry *dentry, struct kstatfs *buf)
+{
+#if 0
+    u64 id = huge_encode_dev(dentry->d_sb->s_dev);
+
+    buf->f_fsid = u64_to_fsid(id);
+    buf->f_type = dentry->d_sb->s_magic;
+    buf->f_bsize = PAGE_SIZE;
+    buf->f_namelen = NAME_MAX;
+    return 0;
+#endif
+    PANIC("");
+}
+
+static const struct super_operations simple_super_operations = {
+    .statfs     = simple_statfs,
+};
+
 static int pseudo_fs_fill_super(struct super_block *s, struct fs_context *fc)
 {
-    PANIC("");
+    struct pseudo_fs_context *ctx = fc->fs_private;
+    struct inode *root;
+
+    s->s_maxbytes = MAX_LFS_FILESIZE;
+    s->s_blocksize = PAGE_SIZE;
+    s->s_blocksize_bits = PAGE_SHIFT;
+    s->s_magic = ctx->magic;
+    s->s_op = ctx->ops ?: &simple_super_operations;
+    s->s_xattr = ctx->xattr;
+    s->s_time_gran = 1;
+    root = new_inode(s);
+    if (!root)
+        return -ENOMEM;
+
+    /*
+     * since this is the first inode, make it number 1. New inodes created
+     * after this must take care not to collide with it (by passing
+     * max_reserved of 1 to iunique).
+     */
+    root->i_ino = 1;
+    root->i_mode = S_IFDIR | S_IRUSR | S_IWUSR;
+    simple_inode_init_ts(root);
+    s->s_root = d_make_root(root);
+    if (!s->s_root)
+        return -ENOMEM;
+    s->s_d_op = ctx->dops;
+    return 0;
+}
+
+/**
+ * simple_inode_init_ts - initialize the timestamps for a new inode
+ * @inode: inode to be initialized
+ *
+ * When a new inode is created, most filesystems set the timestamps to the
+ * current time. Add a helper to do this.
+ */
+struct timespec64 simple_inode_init_ts(struct inode *inode)
+{
+#if 0
+    struct timespec64 ts = inode_set_ctime_current(inode);
+
+    inode_set_atime_to_ts(inode, ts);
+    inode_set_mtime_to_ts(inode, ts);
+    return ts;
+#endif
+    struct timespec64 ts;
+    memset(&ts, 0, sizeof(ts));
+    pr_err("%s: No impl.", __func__);
+    return ts;
 }
 
 static int pseudo_fs_get_tree(struct fs_context *fc)

@@ -12,3 +12,9 @@ void __init wait_bit_init(void)
     for (i = 0; i < WAIT_TABLE_SIZE; i++)
         init_waitqueue_head(bit_wait_table + i);
 }
+
+void wake_up_var(void *var)
+{
+    pr_err("%s: No impl.", __func__);
+    //__wake_up_bit(__var_waitqueue(var), var, -1);
+}

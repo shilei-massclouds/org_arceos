@@ -49,6 +49,12 @@ void *kmem_cache_alloc_noprof(struct kmem_cache *s, gfp_t gfpflags)
     return cl_rust_alloc(s->size, align);
 }
 
+void *kmem_cache_alloc_lru_noprof(struct kmem_cache *s, struct list_lru *lru,
+               gfp_t gfpflags)
+{
+    return kmem_cache_alloc_noprof(s, gfpflags);
+}
+
 /**
  * kfree - free previously allocated memory
  * @object: pointer returned by kmalloc() or kmem_cache_alloc()

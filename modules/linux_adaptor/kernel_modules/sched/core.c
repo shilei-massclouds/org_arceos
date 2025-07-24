@@ -9,24 +9,25 @@
 #include "sched.h"
 #include "../adaptor.h"
 
-static struct signal_struct signal_dummy = {
+static struct signal_struct __init_signal = {
     .rlim = INIT_RLIMITS
 };
 
-static struct task_struct task_dummy = {
+static struct task_struct __init_task = {
     /*
 #ifdef CONFIG_THREAD_INFO_IN_TASK
     .thread_info    = INIT_THREAD_INFO(init_task),
     .stack_refcount = REFCOUNT_INIT(1),
 #endif
     */
-    .signal = &signal_dummy
+    .signal     = &__init_signal,
+    .nsproxy    = &init_nsproxy,
 };
 
 unsigned long init_current(unsigned long thread_id)
 {
-    struct task_struct *tsk = &task_dummy;
-    task_dummy.pid = thread_id;
+    struct task_struct *tsk = &__init_task;
+    __init_task.pid = thread_id;
     __asm__ __volatile__ (
         "mv tp, %0"
         : : "rK" (tsk)

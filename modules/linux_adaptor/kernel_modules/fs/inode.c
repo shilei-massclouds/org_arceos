@@ -21,9 +21,40 @@
 
 #include "../adaptor.h"
 
+static DEFINE_PER_CPU(unsigned long, nr_inodes);
+
+static struct kmem_cache *inode_cachep __ro_after_init;
+
+/*
+ * Empty aops. Can be used for the cases where the user does not
+ * define any of the address_space operations.
+ */
+const struct address_space_operations empty_aops = {
+};
+
+static void init_once(void *foo)
+{
+    struct inode *inode = (struct inode *) foo;
+
+    inode_init_once(inode);
+}
+
+void free_inode_nonrcu(struct inode *inode)
+{
+    kmem_cache_free(inode_cachep, inode);
+}
+
+static void i_callback(struct rcu_head *head)
+{
+    struct inode *inode = container_of(head, struct inode, i_rcu);
+    if (inode->free_inode)
+        inode->free_inode(inode);
+    else
+        free_inode_nonrcu(inode);
+}
+
 static struct inode *alloc_inode(struct super_block *sb)
 {
-#if 0
     const struct super_operations *ops = sb->s_op;
     struct inode *inode;
 
@@ -47,8 +78,6 @@ static struct inode *alloc_inode(struct super_block *sb)
     }
 
     return inode;
-#endif
-    PANIC("");
 }
 
 /**
@@ -124,4 +153,135 @@ void inode_init_once(struct inode *inode)
     INIT_LIST_HEAD(&inode->i_sb_list);
     __address_space_init_once(&inode->i_data);
     i_size_ordered_init(inode);
+}
+
+void __init inode_init(void)
+{
+    /* inode slab cache */
+    inode_cachep = kmem_cache_create("inode_cache",
+                     sizeof(struct inode),
+                     0,
+                     (SLAB_RECLAIM_ACCOUNT|SLAB_PANIC|
+                     SLAB_ACCOUNT),
+                     init_once);
+
+    /* Hash may have been set up in inode_init_early */
+    if (!hashdist)
+        return;
+
+#if 0
+    inode_hashtable =
+        alloc_large_system_hash("Inode-cache",
+                    sizeof(struct hlist_head),
+                    ihash_entries,
+                    14,
+                    HASH_ZERO,
+                    &i_hash_shift,
+                    &i_hash_mask,
+                    0,
+                    0);
+#endif
+    pr_err("%s: No impl.", __func__);
+}
+
+static int no_open(struct inode *inode, struct file *file)
+{
+    return -ENXIO;
+}
+
+/**
+ * inode_init_always_gfp - perform inode structure initialisation
+ * @sb: superblock inode belongs to
+ * @inode: inode to initialise
+ * @gfp: allocation flags
+ *
+ * These are initializations that need to be done on every inode
+ * allocation as the fields are not initialised by slab allocation.
+ * If there are additional allocations required @gfp is used.
+ */
+int inode_init_always_gfp(struct super_block *sb, struct inode *inode, gfp_t gfp)
+{
+    static const struct inode_operations empty_iops;
+    static const struct file_operations no_open_fops = {.open = no_open};
+    struct address_space *const mapping = &inode->i_data;
+
+    inode->i_sb = sb;
+    inode->i_blkbits = sb->s_blocksize_bits;
+    inode->i_flags = 0;
+    inode->i_state = 0;
+    atomic64_set(&inode->i_sequence, 0);
+    atomic_set(&inode->i_count, 1);
+    inode->i_op = &empty_iops;
+    inode->i_fop = &no_open_fops;
+    inode->i_ino = 0;
+    inode->__i_nlink = 1;
+    inode->i_opflags = 0;
+    if (sb->s_xattr)
+        inode->i_opflags |= IOP_XATTR;
+    i_uid_write(inode, 0);
+    i_gid_write(inode, 0);
+    atomic_set(&inode->i_writecount, 0);
+    inode->i_size = 0;
+    inode->i_write_hint = WRITE_LIFE_NOT_SET;
+    inode->i_blocks = 0;
+    inode->i_bytes = 0;
+    inode->i_generation = 0;
+    inode->i_pipe = NULL;
+    inode->i_cdev = NULL;
+    inode->i_link = NULL;
+    inode->i_dir_seq = 0;
+    inode->i_rdev = 0;
+    inode->dirtied_when = 0;
+
+#ifdef CONFIG_CGROUP_WRITEBACK
+    inode->i_wb_frn_winner = 0;
+    inode->i_wb_frn_avg_time = 0;
+    inode->i_wb_frn_history = 0;
+#endif
+
+    spin_lock_init(&inode->i_lock);
+    lockdep_set_class(&inode->i_lock, &sb->s_type->i_lock_key);
+
+    init_rwsem(&inode->i_rwsem);
+    lockdep_set_class(&inode->i_rwsem, &sb->s_type->i_mutex_key);
+
+    atomic_set(&inode->i_dio_count, 0);
+
+    mapping->a_ops = &empty_aops;
+    mapping->host = inode;
+    mapping->flags = 0;
+    mapping->wb_err = 0;
+    atomic_set(&mapping->i_mmap_writable, 0);
+#ifdef CONFIG_READ_ONLY_THP_FOR_FS
+    atomic_set(&mapping->nr_thps, 0);
+#endif
+    mapping_set_gfp_mask(mapping, GFP_HIGHUSER_MOVABLE);
+    mapping->i_private_data = NULL;
+    mapping->writeback_index = 0;
+    init_rwsem(&mapping->invalidate_lock);
+    lockdep_set_class_and_name(&mapping->invalidate_lock,
+                   &sb->s_type->invalidate_lock_key,
+                   "mapping.invalidate_lock");
+    if (sb->s_iflags & SB_I_STABLE_WRITES)
+        mapping_set_stable_writes(mapping);
+    inode->i_private = NULL;
+    inode->i_mapping = mapping;
+    INIT_HLIST_HEAD(&inode->i_dentry);  /* buggered by rcu freeing */
+#ifdef CONFIG_FS_POSIX_ACL
+    inode->i_acl = inode->i_default_acl = ACL_NOT_CACHED;
+#endif
+
+#ifdef CONFIG_FSNOTIFY
+    inode->i_fsnotify_mask = 0;
+#endif
+    inode->i_flctx = NULL;
+
+    /*
+    if (unlikely(security_inode_alloc(inode, gfp)))
+        return -ENOMEM;
+    */
+
+    this_cpu_inc(nr_inodes);
+
+    return 0;
 }

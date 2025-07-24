@@ -11,6 +11,44 @@
 
 #include "../adaptor.h"
 
+/*
+ * Handling of filesystem drivers list.
+ * Rules:
+ *  Inclusion to/removals from/scanning of list are protected by spinlock.
+ *  During the unload module must call unregister_filesystem().
+ *  We can access the fields of list element if:
+ *      1) spinlock is held or
+ *      2) we hold the reference to the module.
+ *  The latter can be guaranteed by call of try_module_get(); if it
+ *  returned 0 we must skip the element, otherwise we got the reference.
+ *  Once the reference is obtained we can drop the spinlock.
+ */
+
+static struct file_system_type *file_systems;
+static DEFINE_RWLOCK(file_systems_lock);
+
+/* WARNING: This can be used only if we _already_ own a reference */
+struct file_system_type *get_filesystem(struct file_system_type *fs)
+{
+    __module_get(fs->owner);
+    return fs;
+}
+
+void put_filesystem(struct file_system_type *fs)
+{
+    module_put(fs->owner);
+}
+
+static struct file_system_type **find_filesystem(const char *name, unsigned len)
+{
+    struct file_system_type **p;
+    for (p = &file_systems; *p; p = &(*p)->next)
+        if (strncmp((*p)->name, name, len) == 0 &&
+            !(*p)->name[len])
+            break;
+    return p;
+}
+
 /**
  *  register_filesystem - register a new filesystem
  *  @fs: the file system structure
@@ -25,7 +63,6 @@
  */
 int register_filesystem(struct file_system_type * fs)
 {
-#if 0
     int res = 0;
     struct file_system_type ** p;
 
@@ -44,6 +81,4 @@ int register_filesystem(struct file_system_type * fs)
         *p = fs;
     write_unlock(&file_systems_lock);
     return res;
-#endif
-    PANIC("");
 }

@@ -34,6 +34,7 @@ struct bdev_inode {
 static struct kmem_cache *bdev_cachep __ro_after_init;
 
 struct super_block *blockdev_superblock __ro_after_init;
+static struct vfsmount *blockdev_mnt __ro_after_init;
 
 bool disk_live(struct gendisk *disk)
 {
@@ -84,7 +85,19 @@ static void init_once(void *data)
 
 static struct inode *bdev_alloc_inode(struct super_block *sb)
 {
-    PANIC("");
+    struct bdev_inode *ei = alloc_inode_sb(sb, bdev_cachep, GFP_KERNEL);
+
+    if (!ei)
+        return NULL;
+    memset(&ei->bdev, 0, sizeof(ei->bdev));
+
+#if 0
+    if (security_bdev_alloc(&ei->bdev)) {
+        kmem_cache_free(bdev_cachep, ei);
+        return NULL;
+    }
+#endif
+    return &ei->vfs_inode;
 }
 
 static void bdev_free_inode(struct inode *inode)
@@ -130,13 +143,10 @@ void __init bdev_cache_init(void)
                 SLAB_ACCOUNT|SLAB_PANIC),
             init_once);
     err = register_filesystem(&bd_type);
-#if 0
     if (err)
         panic("Cannot register bdev pseudo-fs");
     blockdev_mnt = kern_mount(&bd_type);
     if (IS_ERR(blockdev_mnt))
         panic("Cannot create bdev pseudo-fs");
     blockdev_superblock = blockdev_mnt->mnt_sb;   /* For writeback */
-#endif
-    PANIC("");
 }

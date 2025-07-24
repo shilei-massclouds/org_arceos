@@ -9,7 +9,7 @@
 #include "mm/slab.h"
 #include "base/base.h"
 #include "block/blk.h"
-#include "fs/internal.h"
+//#include "fs/internal.h"
 #include "adaptor.h"
 
 //#define TEST_EXT2
@@ -64,7 +64,7 @@ int clinux_init(void)
     radix_tree_init();
     maple_tree_init();
     buses_init();
-    bdev_cache_init();
+    vfs_caches_init();
 
     {
         static struct device_node riscv_intc_node;

@@ -1,6 +1,11 @@
 #include <linux/of.h>
 #include <linux/cpumask_types.h>
 
+#include <net/sock.h>
+#include <net/netlink.h>
+#include <net/net_namespace.h>
+#include <net/netns/generic.h>
+
 #include "../adaptor.h"
 
 // Defined in arch/riscv/mm/dma-noncoherent.c
@@ -9,6 +14,10 @@ int dma_cache_alignment __ro_after_init = ARCH_DMA_MINALIGN;
 bool initcall_debug;
 
 bool noirqdebug __read_mostly;
+
+struct net init_net = {
+    .ns.count = 1,
+};
 
 /*
  * cpu topology table
@@ -99,4 +108,14 @@ struct cpumask *group_cpus_evenly(unsigned int numgrps)
     static struct cpumask masks = {1};
     pr_err("%s: No impl.", __func__);
     return &masks;
+}
+
+kuid_t make_kuid(struct user_namespace *ns, uid_t uid)
+{
+    return KUIDT_INIT(0);
+}
+
+kgid_t make_kgid(struct user_namespace *ns, gid_t gid)
+{
+    return KGIDT_INIT(0);
 }
