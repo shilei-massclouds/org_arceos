@@ -57,6 +57,8 @@ int clinux_init(void)
 {
     printk("cLinux base is starting ...\n");
 
+    inode_init_early();
+
     //kmem_cache_init();
     setup_per_cpu_areas();
     pagecache_init();

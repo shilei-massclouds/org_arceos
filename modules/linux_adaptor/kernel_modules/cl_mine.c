@@ -42,7 +42,6 @@ CL_MINE(blk_mq_complete_request_remote)
 CL_MINE(blk_mq_unquiesce_queue)
 CL_MINE(flush_work)
 CL_MINE(queue_work_on)
-CL_MINE(device_add_disk)
 CL_MINE(blk_mq_start_request)
 
 // vsprintf
@@ -406,8 +405,6 @@ CL_MINE(__irq_domain_alloc_fwnode)
 CL_MINE(irq_domain_free_fwnode)
 
 // virtio
-CL_MINE(_raw_spin_lock_irq)
-CL_MINE(_raw_spin_unlock_irq)
 CL_MINE(sysfs_emit)
 CL_MINE(sysfs_emit_at)
 CL_MINE(of_get_next_available_child)
@@ -440,8 +437,6 @@ CL_MINE(device_set_deferred_probe_reason)
 
 CL_MINE(_find_first_bit)
 CL_MINE(_find_first_zero_bit)
-CL_MINE(_raw_spin_unlock_bh)
-CL_MINE(_raw_spin_lock_bh)
 CL_MINE(async_schedule_node)
 
 CL_MINE(init_srcu_struct)
@@ -482,3 +477,10 @@ CL_MINE(block_dirty_folio)
 CL_MINE(block_invalidate_folio)
 CL_MINE(buffer_migrate_folio_norefs)
 CL_MINE(buffer_check_dirty_writeback)
+CL_MINE(elevator_exit)
+CL_MINE(blk_unregister_queue)
+CL_MINE(rq_qos_exit)
+
+CL_MINE(memblock_alloc_try_nid_raw)
+CL_MINE(vmalloc_huge_noprof)
+CL_MINE(find_vm_area)

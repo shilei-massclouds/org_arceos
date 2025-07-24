@@ -50,6 +50,36 @@ noinline void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
     // preempt_enable();
 }
 
+noinline void __lockfunc _raw_spin_lock_irq(raw_spinlock_t *lock)
+{
+    local_irq_disable();
+
+    /* For simplicity, ignore kernel-preemption. */
+    // preempt_disable();
+
+    arch_spin_lock(&lock->raw_lock);
+}
+
+noinline void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)
+{
+    arch_spin_unlock(&lock->raw_lock);
+
+    local_irq_enable();
+
+    /* For simplicity, ignore kernel-preemption. */
+    // preempt_enable();
+}
+
+noinline void __lockfunc _raw_spin_lock_bh(raw_spinlock_t *lock)
+{
+    pr_err("%s: ===> WARN: impl it.\n", __func__);
+}
+
+noinline void __lockfunc _raw_spin_unlock_bh(raw_spinlock_t *lock)
+{
+    pr_err("%s: ===> WARN: impl it.\n", __func__);
+}
+
 void __lockfunc _raw_write_lock(rwlock_t *lock)
 {
     pr_err("%s: ===> WARN: impl it.\n", __func__);

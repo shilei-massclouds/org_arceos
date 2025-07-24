@@ -229,6 +229,17 @@ void bdev_set_nr_sectors(struct block_device *bdev, sector_t sectors)
     spin_unlock(&bdev->bd_size_lock);
 }
 
+void bdev_add(struct block_device *bdev, dev_t dev)
+{
+    struct inode *inode = BD_INODE(bdev);
+    if (bdev_stable_writes(bdev))
+        mapping_set_stable_writes(bdev->bd_mapping);
+    bdev->bd_dev = dev;
+    inode->i_rdev = dev;
+    inode->i_ino = dev;
+    insert_inode_hash(inode);
+}
+
 void __init bdev_cache_init(void)
 {
     int err;

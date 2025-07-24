@@ -25,6 +25,23 @@ static DEFINE_PER_CPU(unsigned long, nr_inodes);
 
 static struct kmem_cache *inode_cachep __ro_after_init;
 
+static unsigned int i_hash_mask __ro_after_init;
+static unsigned int i_hash_shift __ro_after_init;
+static struct hlist_head *inode_hashtable __ro_after_init;
+static __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_hash_lock);
+
+static __initdata unsigned long ihash_entries;
+
+static unsigned long hash(struct super_block *sb, unsigned long hashval)
+{
+    unsigned long tmp;
+
+    tmp = (hashval * (unsigned long)sb) ^ (GOLDEN_RATIO_PRIME + hashval) /
+            L1_CACHE_BYTES;
+    tmp = tmp ^ ((tmp ^ GOLDEN_RATIO_PRIME) >> i_hash_shift);
+    return tmp & i_hash_mask;
+}
+
 /*
  * Empty aops. Can be used for the cases where the user does not
  * define any of the address_space operations.
@@ -155,6 +172,29 @@ void inode_init_once(struct inode *inode)
     i_size_ordered_init(inode);
 }
 
+/*
+ * Initialize the waitqueues and inode hash table.
+ */
+void __init inode_init_early(void)
+{
+    /* If hashes are distributed across NUMA nodes, defer
+     * hash allocation until vmalloc space is available.
+     */
+    if (hashdist)
+        return;
+
+    inode_hashtable =
+        alloc_large_system_hash("Inode-cache",
+                    sizeof(struct hlist_head),
+                    ihash_entries,
+                    14,
+                    HASH_EARLY | HASH_ZERO,
+                    &i_hash_shift,
+                    &i_hash_mask,
+                    0,
+                    0);
+}
+
 void __init inode_init(void)
 {
     /* inode slab cache */
@@ -169,7 +209,6 @@ void __init inode_init(void)
     if (!hashdist)
         return;
 
-#if 0
     inode_hashtable =
         alloc_large_system_hash("Inode-cache",
                     sizeof(struct hlist_head),
@@ -180,8 +219,6 @@ void __init inode_init(void)
                     &i_hash_mask,
                     0,
                     0);
-#endif
-    pr_err("%s: No impl.", __func__);
 }
 
 static int no_open(struct inode *inode, struct file *file)
@@ -284,4 +321,25 @@ int inode_init_always_gfp(struct super_block *sb, struct inode *inode, gfp_t gfp
     this_cpu_inc(nr_inodes);
 
     return 0;
+}
+
+/**
+ *  __insert_inode_hash - hash an inode
+ *  @inode: unhashed inode
+ *  @hashval: unsigned long value used to locate this object in the
+ *      inode_hashtable.
+ *
+ *  Add an inode to the inode hash for this superblock.
+ */
+void __insert_inode_hash(struct inode *inode, unsigned long hashval)
+{
+    printk("%s: step1\n", __func__);
+    struct hlist_head *b = inode_hashtable + hash(inode->i_sb, hashval);
+
+    spin_lock(&inode_hash_lock);
+    spin_lock(&inode->i_lock);
+    hlist_add_head_rcu(&inode->i_hash, b);
+    spin_unlock(&inode->i_lock);
+    spin_unlock(&inode_hash_lock);
+    printk("%s: step2\n", __func__);
 }
