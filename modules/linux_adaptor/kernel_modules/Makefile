@@ -30,7 +30,7 @@ OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o lib/ratelimit.o
 OBJS += lib/bitmap.o lib/kasprintf.o lib/string_helpers.o lib/list_debug.o
 OBJS += lib/radix-tree.o lib/maple_tree.o lib/kobject.o lib/klist.o
 OBJS += lib/devres.o lib/hweight.o lib/errname.o lib/idr.o lib/xarray.o
-OBJS += lib/sort.o lib/sbitmap.o lib/lockref.o lib/rbtree.o
+OBJS += lib/sort.o lib/sbitmap.o lib/lockref.o lib/rbtree.o lib/dec_and_lock.o
 OBJS += math/reciprocal_div.o
 OBJS += time/timekeeping.o
 OBJS += rcu/tree.o
@@ -86,7 +86,8 @@ OBJS += fs/namespace.o fs/fs_context.o fs/super.o fs/mnt_idmapping.o
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o smp.o cpu.o softirq.o panic.o \
 		riscv_irq.o \
-		cl_dummy.o
+		cl_dummy.o \
+		test_block.o
 		#ctype.o kstrtox.o \
 		#percpu-rwsem.o \
 		#signal.o \

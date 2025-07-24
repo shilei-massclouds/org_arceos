@@ -473,6 +473,7 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
     dev_set_name(ddev, "%s", disk->disk_name);
     if (!(disk->flags & GENHD_FL_HIDDEN))
         ddev->devt = MKDEV(disk->major, disk->first_minor);
+    printk("%s: major(%u) minor(%u,%u)\n", __func__, disk->major, disk->first_minor, disk->minors);
     ret = device_add(ddev);
     if (ret)
         goto out_free_ext_minor;
@@ -585,4 +586,9 @@ int blk_alloc_ext_minor(void)
 void blk_free_ext_minor(unsigned int minor)
 {
     ida_free(&ext_devt_ida, minor);
+}
+
+void blk_request_module(dev_t devt)
+{
+    pr_err("%s: No impl.", __func__);
 }

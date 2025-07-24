@@ -240,6 +240,30 @@ void bdev_add(struct block_device *bdev, dev_t dev)
     insert_inode_hash(inode);
 }
 
+struct block_device *blkdev_get_no_open(dev_t dev)
+{
+    struct block_device *bdev;
+    struct inode *inode;
+
+    inode = ilookup(blockdev_superblock, dev);
+    if (!inode && IS_ENABLED(CONFIG_BLOCK_LEGACY_AUTOLOAD)) {
+        blk_request_module(dev);
+        inode = ilookup(blockdev_superblock, dev);
+        if (inode)
+            pr_warn_ratelimited(
+"block device autoloading is deprecated and will be removed.\n");
+    }
+    if (!inode)
+        return NULL;
+
+    /* switch from the inode reference to a device mode one: */
+    bdev = &BDEV_I(inode)->bdev;
+    if (!kobject_get_unless_zero(&bdev->bd_device.kobj))
+        bdev = NULL;
+    iput(inode);
+    return bdev;
+}
+
 void __init bdev_cache_init(void)
 {
     int err;

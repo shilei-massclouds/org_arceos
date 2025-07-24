@@ -70,6 +70,16 @@ int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flag
     return try_to_wake_up(curr->private, mode, wake_flags);
 }
 
+int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
+{
+    if (p == NULL) {
+        PANIC("bad task pointer.");
+    }
+    printk("%s: task_ptr(%lx) tid(%lu)\n", __func__, p, p->pid);
+    cl_wake_up(p->pid);
+    return 1;
+}
+
 void __might_sleep(const char *file, int line)
 {
     unsigned int state = get_current_state();

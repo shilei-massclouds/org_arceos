@@ -12,8 +12,9 @@
 //#include "fs/internal.h"
 #include "adaptor.h"
 
+#define TEST_BLOCK
 //#define TEST_EXT2
-#define TEST_EXT4
+//#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
@@ -23,6 +24,8 @@ extern int cl_plic_init(void);
 extern void cl_virtio_init();
 extern void cl_virtio_mmio_init();
 extern void cl_virtio_blk_init();
+
+extern void test_block(void);
 
 #if 0
 extern void init_current(unsigned long thread_id);
@@ -82,8 +85,12 @@ int clinux_init(void)
     cl_virtio_init();
     cl_virtio_mmio_init();
     cl_virtio_blk_init();
-#if 0
 
+#ifdef TEST_BLOCK
+    test_block();
+#endif
+
+#if 0
     cl_enable_irq();
 
     clinux_test_block_driver();

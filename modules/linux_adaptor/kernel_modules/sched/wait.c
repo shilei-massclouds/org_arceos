@@ -6,6 +6,8 @@
  */
 
 #include <linux/wait.h>
+#include <linux/sched.h>
+#include <linux/sched/signal.h>
 
 void __init_waitqueue_head(struct wait_queue_head *wq_head, const char *name, struct lock_class_key *key)
 {
@@ -82,4 +84,39 @@ int __wake_up(struct wait_queue_head *wq_head, unsigned int mode,
           int nr_exclusive, void *key)
 {
     return __wake_up_common_lock(wq_head, mode, nr_exclusive, 0, key);
+}
+
+long prepare_to_wait_event(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state)
+{
+    unsigned long flags;
+    long ret = 0;
+
+    spin_lock_irqsave(&wq_head->lock, flags);
+    if (signal_pending_state(state, current)) {
+        /*
+         * Exclusive waiter must not fail if it was selected by wakeup,
+         * it should "consume" the condition we were waiting for.
+         *
+         * The caller will recheck the condition and return success if
+         * we were already woken up, we can not miss the event because
+         * wakeup locks/unlocks the same wq_head->lock.
+         *
+         * But we need to ensure that set-condition + wakeup after that
+         * can't see us, it should wake up another exclusive waiter if
+         * we fail.
+         */
+        list_del_init(&wq_entry->entry);
+        ret = -ERESTARTSYS;
+    } else {
+        if (list_empty(&wq_entry->entry)) {
+            if (wq_entry->flags & WQ_FLAG_EXCLUSIVE)
+                __add_wait_queue_entry_tail(wq_head, wq_entry);
+            else
+                __add_wait_queue(wq_head, wq_entry);
+        }
+        set_current_state(state);
+    }
+    spin_unlock_irqrestore(&wq_head->lock, flags);
+
+    return ret;
 }

@@ -172,55 +172,6 @@ void inode_init_once(struct inode *inode)
     i_size_ordered_init(inode);
 }
 
-/*
- * Initialize the waitqueues and inode hash table.
- */
-void __init inode_init_early(void)
-{
-    /* If hashes are distributed across NUMA nodes, defer
-     * hash allocation until vmalloc space is available.
-     */
-    if (hashdist)
-        return;
-
-    inode_hashtable =
-        alloc_large_system_hash("Inode-cache",
-                    sizeof(struct hlist_head),
-                    ihash_entries,
-                    14,
-                    HASH_EARLY | HASH_ZERO,
-                    &i_hash_shift,
-                    &i_hash_mask,
-                    0,
-                    0);
-}
-
-void __init inode_init(void)
-{
-    /* inode slab cache */
-    inode_cachep = kmem_cache_create("inode_cache",
-                     sizeof(struct inode),
-                     0,
-                     (SLAB_RECLAIM_ACCOUNT|SLAB_PANIC|
-                     SLAB_ACCOUNT),
-                     init_once);
-
-    /* Hash may have been set up in inode_init_early */
-    if (!hashdist)
-        return;
-
-    inode_hashtable =
-        alloc_large_system_hash("Inode-cache",
-                    sizeof(struct hlist_head),
-                    ihash_entries,
-                    14,
-                    HASH_ZERO,
-                    &i_hash_shift,
-                    &i_hash_mask,
-                    0,
-                    0);
-}
-
 static int no_open(struct inode *inode, struct file *file)
 {
     return -ENXIO;
@@ -342,4 +293,186 @@ void __insert_inode_hash(struct inode *inode, unsigned long hashval)
     spin_unlock(&inode->i_lock);
     spin_unlock(&inode_hash_lock);
     printk("%s: step2\n", __func__);
+}
+
+/*
+ * If we try to find an inode in the inode hash while it is being
+ * deleted, we have to wait until the filesystem completes its
+ * deletion before reporting that it isn't found.  This function waits
+ * until the deletion _might_ have completed.  Callers are responsible
+ * to recheck inode state.
+ *
+ * It doesn't matter if I_NEW is not set initially, a call to
+ * wake_up_bit(&inode->i_state, __I_NEW) after removing from the hash list
+ * will DTRT.
+ */
+static void __wait_on_freeing_inode(struct inode *inode, bool is_inode_hash_locked)
+{
+    PANIC("");
+}
+
+/*
+ * find_inode_fast is the fast path version of find_inode, see the comment at
+ * iget_locked for details.
+ */
+static struct inode *find_inode_fast(struct super_block *sb,
+                struct hlist_head *head, unsigned long ino,
+                bool is_inode_hash_locked)
+{
+    struct inode *inode = NULL;
+
+    if (is_inode_hash_locked)
+        lockdep_assert_held(&inode_hash_lock);
+    else
+        lockdep_assert_not_held(&inode_hash_lock);
+
+    rcu_read_lock();
+repeat:
+    hlist_for_each_entry_rcu(inode, head, i_hash) {
+        if (inode->i_ino != ino)
+            continue;
+        if (inode->i_sb != sb)
+            continue;
+        spin_lock(&inode->i_lock);
+        if (inode->i_state & (I_FREEING|I_WILL_FREE)) {
+            __wait_on_freeing_inode(inode, is_inode_hash_locked);
+            goto repeat;
+        }
+        if (unlikely(inode->i_state & I_CREATING)) {
+            spin_unlock(&inode->i_lock);
+            rcu_read_unlock();
+            return ERR_PTR(-ESTALE);
+        }
+        __iget(inode);
+        spin_unlock(&inode->i_lock);
+        rcu_read_unlock();
+        return inode;
+    }
+    rcu_read_unlock();
+    return NULL;
+}
+
+/*
+ * Called when we're dropping the last reference
+ * to an inode.
+ *
+ * Call the FS "drop_inode()" function, defaulting to
+ * the legacy UNIX filesystem behaviour.  If it tells
+ * us to evict inode, do so.  Otherwise, retain inode
+ * in cache if fs is alive, sync and evict if fs is
+ * shutting down.
+ */
+static void iput_final(struct inode *inode)
+{
+    struct super_block *sb = inode->i_sb;
+    const struct super_operations *op = inode->i_sb->s_op;
+    unsigned long state;
+    int drop;
+
+    WARN_ON(inode->i_state & I_NEW);
+
+    PANIC("");
+}
+
+/**
+ *  iput    - put an inode
+ *  @inode: inode to put
+ *
+ *  Puts an inode, dropping its usage count. If the inode use count hits
+ *  zero, the inode is then freed and may also be destroyed.
+ *
+ *  Consequently, iput() can sleep.
+ */
+void iput(struct inode *inode)
+{
+    if (!inode)
+        return;
+    BUG_ON(inode->i_state & I_CLEAR);
+retry:
+    if (atomic_dec_and_lock(&inode->i_count, &inode->i_lock)) {
+        if (inode->i_nlink && (inode->i_state & I_DIRTY_TIME)) {
+            atomic_inc(&inode->i_count);
+            spin_unlock(&inode->i_lock);
+            trace_writeback_lazytime_iput(inode);
+            mark_inode_dirty_sync(inode);
+            goto retry;
+        }
+        iput_final(inode);
+    }
+}
+
+/**
+ * ilookup - search for an inode in the inode cache
+ * @sb:     super block of file system to search
+ * @ino:    inode number to search for
+ *
+ * Search for the inode @ino in the inode cache, and if the inode is in the
+ * cache, the inode is returned with an incremented reference count.
+ */
+struct inode *ilookup(struct super_block *sb, unsigned long ino)
+{
+    struct hlist_head *head = inode_hashtable + hash(sb, ino);
+    struct inode *inode;
+again:
+    inode = find_inode_fast(sb, head, ino, false);
+
+    if (inode) {
+        if (IS_ERR(inode))
+            return NULL;
+        wait_on_inode(inode);
+        if (unlikely(inode_unhashed(inode))) {
+            iput(inode);
+            goto again;
+        }
+    }
+    return inode;
+}
+
+/*
+ * Initialize the waitqueues and inode hash table.
+ */
+void __init inode_init_early(void)
+{
+    /* If hashes are distributed across NUMA nodes, defer
+     * hash allocation until vmalloc space is available.
+     */
+    if (hashdist)
+        return;
+
+    inode_hashtable =
+        alloc_large_system_hash("Inode-cache",
+                    sizeof(struct hlist_head),
+                    ihash_entries,
+                    14,
+                    HASH_EARLY | HASH_ZERO,
+                    &i_hash_shift,
+                    &i_hash_mask,
+                    0,
+                    0);
+}
+
+void __init inode_init(void)
+{
+    /* inode slab cache */
+    inode_cachep = kmem_cache_create("inode_cache",
+                     sizeof(struct inode),
+                     0,
+                     (SLAB_RECLAIM_ACCOUNT|SLAB_PANIC|
+                     SLAB_ACCOUNT),
+                     init_once);
+
+    /* Hash may have been set up in inode_init_early */
+    if (!hashdist)
+        return;
+
+    inode_hashtable =
+        alloc_large_system_hash("Inode-cache",
+                    sizeof(struct hlist_head),
+                    ihash_entries,
+                    14,
+                    HASH_ZERO,
+                    &i_hash_shift,
+                    &i_hash_mask,
+                    0,
+                    0);
 }
