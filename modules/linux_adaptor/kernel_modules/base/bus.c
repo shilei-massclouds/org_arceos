@@ -459,7 +459,6 @@ int bus_add_driver(struct device_driver *drv)
     }
 #endif
 
-    PANIC("");
     return 0;
 
 out_detach:

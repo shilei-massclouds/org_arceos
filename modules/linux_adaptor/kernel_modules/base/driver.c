@@ -49,7 +49,6 @@ int driver_register(struct device_driver *drv)
     deferred_probe_extend_timeout();
 #endif
 
-    PANIC("");
     return ret;
 
 #if 0

@@ -408,7 +408,6 @@ re_probe:
     driver_bound(dev);
     dev_dbg(dev, "bus: '%s': %s: bound device to driver %s\n",
         drv->bus->name, __func__, drv->name);
-    PANIC("");
     goto done;
 
 dev_sysfs_state_synced_failed:
@@ -480,7 +479,6 @@ static int __driver_probe_device(const struct device_driver *drv, struct device 
 
     pm_runtime_put_suppliers(dev);
 #endif
-    PANIC("");
     return ret;
 }
 
@@ -517,7 +515,6 @@ static int driver_probe_device(const struct device_driver *drv, struct device *d
     }
     atomic_dec(&probe_count);
     wake_up_all(&probe_waitqueue);
-    PANIC("");
     return ret;
 }
 
@@ -586,7 +583,6 @@ static int __driver_attach(struct device *dev, void *data)
     driver_probe_device(drv, dev);
     __device_driver_unlock(dev, dev->parent);
 
-    PANIC("");
     return 0;
 }
 

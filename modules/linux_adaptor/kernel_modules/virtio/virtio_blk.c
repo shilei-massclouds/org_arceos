@@ -1522,12 +1522,9 @@ static int virtblk_probe(struct virtio_device *vdev)
 	if (virtio_has_feature(vdev, VIRTIO_BLK_F_RO))
 		set_disk_ro(vblk->disk, 1);
 
-    printk("%s: step1\n", __func__);
 	virtblk_update_capacity(vblk, false);
-    printk("%s: step2\n", __func__);
 	virtio_device_ready(vdev);
 
-    printk("%s: step3\n", __func__);
 	/*
 	 * All steps that follow use the VQs therefore they need to be
 	 * placed after the virtio_device_ready() call above.
