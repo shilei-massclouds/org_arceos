@@ -25,13 +25,15 @@ extern void cl_virtio_init();
 extern void cl_virtio_mmio_init();
 extern void cl_virtio_blk_init();
 
+extern void cl_blkdev_init(void);
+extern void cl_init_bio(void);
+
 extern void test_block(void);
 
 #if 0
 extern void init_current(unsigned long thread_id);
 
 extern int cl_enable_irq(void);
-
 
 extern int cl_ext2_fs_init(void);
 extern int cl_ext4_fs_init(void);
@@ -72,6 +74,8 @@ int clinux_init(void)
     buffer_init();
     vfs_caches_init();
 
+    cl_init_bio();
+
     {
         static struct device_node riscv_intc_node;
         riscv_intc_node.name = "riscv_intc";
@@ -81,7 +85,11 @@ int clinux_init(void)
     // Note: Refer to old cl_irq_init in irq.c.
     cl_plic_init();
 
+    // block/blk-core.c
     blk_dev_init();
+
+    // block/fops.c
+    cl_blkdev_init();
 
     cl_virtio_init();
     cl_virtio_mmio_init();

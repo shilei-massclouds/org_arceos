@@ -14,6 +14,19 @@
 #include <linux/io_uring/cmd.h>
 #include "blk.h"
 
+struct blkdev_dio {
+    union {
+        struct kiocb        *iocb;
+        struct task_struct  *waiter;
+    };
+    size_t          size;
+    atomic_t        ref;
+    unsigned int        flags;
+    struct bio      bio ____cacheline_aligned_in_smp;
+};
+
+static struct bio_set blkdev_dio_pool;
+
 static int blkdev_get_block(struct inode *inode, sector_t iblock,
 		struct buffer_head *bh, int create)
 {
@@ -83,3 +96,16 @@ const struct address_space_operations def_blk_aops = {
 	.migrate_folio	= buffer_migrate_folio_norefs,
 	.is_dirty_writeback = buffer_check_dirty_writeback,
 };
+
+static __init int blkdev_init(void)
+{
+    return bioset_init(&blkdev_dio_pool, 4,
+                offsetof(struct blkdev_dio, bio),
+                BIOSET_NEED_BVECS|BIOSET_PERCPU_CACHE);
+}
+module_init(blkdev_init);
+
+void cl_blkdev_init(void)
+{
+    blkdev_init();
+}

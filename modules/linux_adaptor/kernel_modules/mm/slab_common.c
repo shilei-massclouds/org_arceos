@@ -72,3 +72,11 @@ bool slab_is_available(void)
     return true;
     //return slab_state >= UP;
 }
+
+/*
+ * Determine the size of a slab object
+ */
+unsigned int kmem_cache_size(struct kmem_cache *s)
+{
+    return s->object_size;
+}

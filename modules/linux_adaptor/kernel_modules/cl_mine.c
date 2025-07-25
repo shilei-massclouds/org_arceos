@@ -233,7 +233,6 @@ CL_MINE(fput)
 CL_MINE(free_pages)
 CL_MINE(free_percpu)
 CL_MINE(freeze_bdev)
-CL_MINE(fs_bio_set)
 CL_MINE(fs_kobj)
 CL_MINE(generic_file_llseek_size)
 CL_MINE(get_zeroed_page)
@@ -487,7 +486,7 @@ CL_MINE(__lock_buffer)
 
 // buffer
 CL_MINE(bio_put)
-CL_MINE(bio_alloc_bioset)
-CL_MINE(bio_add_folio_nofail)
-CL_MINE(guard_bio_eod)
 CL_MINE(submit_bio)
+
+// bio
+CL_MINE(kmem_cache_destroy)

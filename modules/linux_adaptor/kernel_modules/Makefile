@@ -23,7 +23,7 @@ OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
 OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o
-OBJS += mm/debug_page_alloc.o mm/debug.o mm/ioremap.o
+OBJS += mm/debug_page_alloc.o mm/debug.o mm/ioremap.o mm/mempool.o
 OBJS += mm/backing-dev.o mm/list_lru.o mm/shrinker.o mm/memblock.o
 OBJS += printk/printk.o
 OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o lib/ratelimit.o
@@ -45,7 +45,7 @@ OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o
 OBJS += irq/resend.o irq/chip.o irq/handle.o irq/msi.o
 OBJS += dma/mapping.o dma/swiotlb.o
 OBJS += kernel/resource.o kernel/workqueue.o kernel/kthread.o
-OBJS += kernel/nsproxy.o
+OBJS += kernel/nsproxy.o kernel/cpu.o
 OBJS += block/genhd.o block/blk-mq.o block/blk-mq-virtio.o
 OBJS += block/blk-mq-cpumap.o block/blk-mq-tag.o block/blk-core.o
 OBJS += block/blk-stat.o block/blk-settings.o block/bio.o

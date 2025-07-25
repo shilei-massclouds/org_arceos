@@ -275,6 +275,7 @@ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
     if (!disk)
         return NULL;
 
+    printk("%s: bs(%lx)\n", __func__, &disk->bio_split);
     if (bioset_init(&disk->bio_split, BIO_POOL_SIZE, 0, 0))
         goto out_free_disk;
 
