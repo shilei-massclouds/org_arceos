@@ -525,6 +525,24 @@ void bio_add_folio_nofail(struct bio *bio, struct folio *folio, size_t len,
     __bio_add_page(bio, folio_page(folio, nr), len, off % PAGE_SIZE);
 }
 
+/**
+ * bio_endio - end I/O on a bio
+ * @bio:    bio
+ *
+ * Description:
+ *   bio_endio() will end I/O on the whole bio. bio_endio() is the preferred
+ *   way to end I/O on a bio. No one should call bi_end_io() directly on a
+ *   bio unless they own it and thus know that it has an end_io function.
+ *
+ *   bio_endio() can be called several times on a bio that has been chained
+ *   using bio_chain().  The ->bi_end_io() function will only be called the
+ *   last time.
+ **/
+void bio_endio(struct bio *bio)
+{
+    PANIC("");
+}
+
 static int __init init_bio(void)
 {
     int i;

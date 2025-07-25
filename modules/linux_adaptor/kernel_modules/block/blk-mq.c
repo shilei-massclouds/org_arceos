@@ -554,3 +554,184 @@ err_exit:
     q->mq_ops = NULL;
     return -ENOMEM;
 }
+
+/*
+ * Check if there is a suitable cached request and return it.
+ */
+static struct request *blk_mq_peek_cached_request(struct blk_plug *plug,
+        struct request_queue *q, blk_opf_t opf)
+{
+    enum hctx_type type = blk_mq_get_hctx_type(opf);
+    struct request *rq;
+
+    if (!plug)
+        return NULL;
+    rq = rq_list_peek(&plug->cached_rqs);
+    if (!rq || rq->q != q)
+        return NULL;
+    if (type != rq->mq_hctx->type &&
+        (type != HCTX_TYPE_READ || rq->mq_hctx->type != HCTX_TYPE_DEFAULT))
+        return NULL;
+    if (op_is_flush(rq->cmd_flags) != op_is_flush(opf))
+        return NULL;
+    return rq;
+}
+
+static bool bio_unaligned(const struct bio *bio, struct request_queue *q)
+{
+    unsigned int bs_mask = queue_logical_block_size(q) - 1;
+
+    /* .bi_sector of any zero sized bio need to be initialized */
+    if ((bio->bi_iter.bi_size & bs_mask) ||
+        ((bio->bi_iter.bi_sector << SECTOR_SHIFT) & bs_mask))
+        return true;
+    return false;
+}
+
+/**
+ * blk_mq_submit_bio - Create and send a request to block device.
+ * @bio: Bio pointer.
+ *
+ * Builds up a request structure from @q and @bio and send to the device. The
+ * request may not be queued directly to hardware if:
+ * * This request can be merged with another one
+ * * We want to place request at plug queue for possible future merging
+ * * There is an IO scheduler active at this queue
+ *
+ * It will not queue the request if there is an error with the bio, or at the
+ * request creation.
+ */
+void blk_mq_submit_bio(struct bio *bio)
+{
+    struct request_queue *q = bdev_get_queue(bio->bi_bdev);
+    struct blk_plug *plug = current->plug;
+    const int is_sync = op_is_sync(bio->bi_opf);
+    struct blk_mq_hw_ctx *hctx;
+    unsigned int nr_segs;
+    struct request *rq;
+    blk_status_t ret;
+
+    /*
+     * If the plug has a cached request for this queue, try to use it.
+     */
+    rq = blk_mq_peek_cached_request(plug, q, bio->bi_opf);
+
+    /*
+     * A BIO that was released from a zone write plug has already been
+     * through the preparation in this function, already holds a reference
+     * on the queue usage counter, and is the only write BIO in-flight for
+     * the target zone. Go straight to preparing a request for it.
+     */
+    if (bio_zone_write_plugging(bio)) {
+        nr_segs = bio->__bi_nr_segments;
+        if (rq)
+            blk_queue_exit(q);
+        goto new_request;
+    }
+
+    bio = blk_queue_bounce(bio, q);
+
+    /*
+     * The cached request already holds a q_usage_counter reference and we
+     * don't have to acquire a new one if we use it.
+     */
+    if (!rq) {
+#if 0
+        if (unlikely(bio_queue_enter(bio)))
+            return;
+#endif
+        pr_err("%s: No bio_queue_enter\n", __func__);
+    }
+    printk("%s: step1\n", __func__);
+
+    /*
+     * Device reconfiguration may change logical block size or reduce the
+     * number of poll queues, so the checks for alignment and poll support
+     * have to be done with queue usage counter held.
+     */
+    if (unlikely(bio_unaligned(bio, q))) {
+        bio_io_error(bio);
+        goto queue_exit;
+    }
+
+    if ((bio->bi_opf & REQ_POLLED) && !blk_mq_can_poll(q)) {
+        bio->bi_status = BLK_STS_NOTSUPP;
+        bio_endio(bio);
+        goto queue_exit;
+    }
+
+    bio = __bio_split_to_limits(bio, &q->limits, &nr_segs);
+    if (!bio)
+        goto queue_exit;
+
+    if (!bio_integrity_prep(bio))
+        goto queue_exit;
+
+#if 0
+    if (blk_mq_attempt_bio_merge(q, bio, nr_segs))
+        goto queue_exit;
+
+    if (blk_queue_is_zoned(q) && blk_zone_plug_bio(bio, nr_segs))
+        goto queue_exit;
+#endif
+
+    PANIC("stage 1");
+new_request:
+    PANIC("new_request");
+#if 0
+    if (!rq) {
+        rq = blk_mq_get_new_requests(q, plug, bio, nr_segs);
+        if (unlikely(!rq))
+            goto queue_exit;
+    } else {
+        blk_mq_use_cached_rq(rq, plug, bio);
+    }
+
+    trace_block_getrq(bio);
+
+    rq_qos_track(q, rq, bio);
+
+    blk_mq_bio_to_request(rq, bio, nr_segs);
+
+    ret = blk_crypto_rq_get_keyslot(rq);
+    if (ret != BLK_STS_OK) {
+        bio->bi_status = ret;
+        bio_endio(bio);
+        blk_mq_free_request(rq);
+        return;
+    }
+
+    if (bio_zone_write_plugging(bio))
+        blk_zone_write_plug_init_request(rq);
+
+    if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq))
+        return;
+
+    if (plug) {
+        blk_add_rq_to_plug(plug, rq);
+        return;
+    }
+
+    hctx = rq->mq_hctx;
+    if ((rq->rq_flags & RQF_USE_SCHED) ||
+        (hctx->dispatch_busy && (q->nr_hw_queues == 1 || !is_sync))) {
+        blk_mq_insert_request(rq, 0);
+        blk_mq_run_hw_queue(hctx, true);
+    } else {
+        blk_mq_run_dispatch_ops(q, blk_mq_try_issue_directly(hctx, rq));
+    }
+#endif
+
+    PANIC("");
+    return;
+
+queue_exit:
+    /*
+     * Don't drop the queue reference if we were trying to use a cached
+     * request and thus didn't acquire one.
+     */
+    if (!rq)
+        blk_queue_exit(q);
+
+    PANIC("ERR");
+}
