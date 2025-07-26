@@ -462,9 +462,57 @@ void blk_finish_plug(struct blk_plug *plug)
     }
 }
 
+static void flush_plug_callbacks(struct blk_plug *plug, bool from_schedule)
+{
+    LIST_HEAD(callbacks);
+
+    while (!list_empty(&plug->cb_list)) {
+        list_splice_init(&plug->cb_list, &callbacks);
+
+        while (!list_empty(&callbacks)) {
+            struct blk_plug_cb *cb = list_first_entry(&callbacks,
+                              struct blk_plug_cb,
+                              list);
+            list_del(&cb->list);
+            cb->callback(cb, from_schedule);
+        }
+    }
+}
+
 void __blk_flush_plug(struct blk_plug *plug, bool from_schedule)
 {
+    if (!list_empty(&plug->cb_list))
+        flush_plug_callbacks(plug, from_schedule);
+    blk_mq_flush_plug_list(plug, from_schedule);
+    /*
+     * Unconditionally flush out cached requests, even if the unplug
+     * event came from schedule. Since we know hold references to the
+     * queue for cached requests, we don't want a blocked task holding
+     * up a queue freeze/quiesce event.
+     */
+    if (unlikely(!rq_list_empty(&plug->cached_rqs)))
+        blk_mq_free_plug_rqs(plug);
+
+    plug->cur_ktime = 0;
+    current->flags &= ~PF_BLOCK_TS;
+
     PANIC("");
+}
+
+void update_io_ticks(struct block_device *part, unsigned long now, bool end)
+{
+    unsigned long stamp;
+again:
+    stamp = READ_ONCE(part->bd_stamp);
+    if (unlikely(time_after(now, stamp)) &&
+        likely(try_cmpxchg(&part->bd_stamp, &stamp, now)) &&
+        (end || part_in_flight(part)))
+        __part_stat_add(part, io_ticks, now - stamp);
+
+    if (bdev_is_partition(part)) {
+        part = bdev_whole(part);
+        goto again;
+    }
 }
 
 /**

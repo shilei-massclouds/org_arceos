@@ -6,6 +6,8 @@
 #include "blk-mq.h"
 #include "blk-mq-sched.h"
 
+#include "../adaptor.h"
+
 static int bt_alloc(struct sbitmap_queue *bt, unsigned int depth,
             bool round_robin, int node)
 {
@@ -66,4 +68,74 @@ void blk_mq_free_tags(struct blk_mq_tags *tags)
     sbitmap_queue_free(&tags->bitmap_tags);
     sbitmap_queue_free(&tags->breserved_tags);
     kfree(tags);
+}
+
+static int __blk_mq_get_tag(struct blk_mq_alloc_data *data,
+                struct sbitmap_queue *bt)
+{
+    if (!data->q->elevator && !(data->flags & BLK_MQ_REQ_RESERVED) &&
+            !hctx_may_queue(data->hctx, bt))
+        return BLK_MQ_NO_TAG;
+
+    if (data->shallow_depth)
+        return sbitmap_queue_get_shallow(bt, data->shallow_depth);
+    else
+        return __sbitmap_queue_get(bt);
+}
+
+unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data)
+{
+    struct blk_mq_tags *tags = blk_mq_tags_from_data(data);
+    struct sbitmap_queue *bt;
+    struct sbq_wait_state *ws;
+    DEFINE_SBQ_WAIT(wait);
+    unsigned int tag_offset;
+    int tag;
+
+    if (data->flags & BLK_MQ_REQ_RESERVED) {
+        if (unlikely(!tags->nr_reserved_tags)) {
+            WARN_ON_ONCE(1);
+            return BLK_MQ_NO_TAG;
+        }
+        bt = &tags->breserved_tags;
+        tag_offset = 0;
+    } else {
+        bt = &tags->bitmap_tags;
+        tag_offset = tags->nr_reserved_tags;
+    }
+
+    tag = __blk_mq_get_tag(data, bt);
+    if (tag != BLK_MQ_NO_TAG)
+        goto found_tag;
+
+    if (data->flags & BLK_MQ_REQ_NOWAIT)
+        return BLK_MQ_NO_TAG;
+
+    ws = bt_wait_ptr(bt, data->hctx);
+    do {
+        struct sbitmap_queue *bt_prev;
+
+        /*
+         * We're out of tags on this hardware queue, kick any
+         * pending IO submits before going to sleep waiting for
+         * some to complete.
+         */
+        blk_mq_run_hw_queue(data->hctx, false);
+
+        PANIC("LOOP");
+    } while (1);
+
+    sbitmap_finish_wait(bt, ws, &wait);
+
+    PANIC("");
+found_tag:
+    /*
+     * Give up this allocation if the hctx is inactive.  The caller will
+     * retry on an active hctx.
+     */
+    if (unlikely(test_bit(BLK_MQ_S_INACTIVE, &data->hctx->state))) {
+        blk_mq_put_tag(tags, data->ctx, tag + tag_offset);
+        return BLK_MQ_NO_TAG;
+    }
+    return tag + tag_offset;
 }

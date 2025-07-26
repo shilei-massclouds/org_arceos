@@ -5,6 +5,7 @@
 #include <net/netlink.h>
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
+#include <linux/sched/isolation.h>
 
 #include "../adaptor.h"
 
@@ -105,8 +106,8 @@ int kobject_uevent(struct kobject *kobj, enum kobject_action action)
 
 struct cpumask *group_cpus_evenly(unsigned int numgrps)
 {
-    static struct cpumask masks = {1};
     pr_err("%s: No impl.", __func__);
+    static struct cpumask masks = {1};
     return &masks;
 }
 
@@ -124,4 +125,47 @@ int blkcg_init_disk(struct gendisk *disk)
 {
     pr_err("%s: No impl.", __func__);
     return 0;
+}
+
+/*
+ * Find hart ID of the CPU DT node under which given DT node falls.
+ *
+ * To achieve this, we walk up the DT tree until we find an active
+ * RISC-V core (HART) node and extract the cpuid from it.
+ */
+int riscv_of_parent_hartid(struct device_node *node, unsigned long *hartid)
+{
+    pr_err("%s: No impl.", __func__);
+
+    *hartid = 0;
+    return 0;
+}
+
+u32 __get_random_u32_below(u32 ceil)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+bool housekeeping_test_cpu(int cpu, enum hk_type type)
+{
+    pr_err("%s: No impl.", __func__);
+    return true;
+}
+
+bool cpuset_cpu_is_isolated(int cpu)
+{
+    pr_err("%s: No impl.", __func__);
+    return false;
+}
+
+int __srcu_read_lock(struct srcu_struct *ssp)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+void __srcu_read_unlock(struct srcu_struct *ssp, int idx)
+{
+    pr_err("%s: No impl.", __func__);
 }

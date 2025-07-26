@@ -500,13 +500,11 @@ static int vm_find_vqs(struct virtio_device *vdev, unsigned int nvqs,
 	if (irq < 0)
 		return irq;
 
-    printk("%s: step1 irq(%d)\n", __func__, irq);
 	err = request_irq(irq, vm_interrupt, IRQF_SHARED,
 			dev_name(&vdev->dev), vm_dev);
 	if (err)
 		return err;
 
-    printk("%s: step2 irq(%d)\n", __func__, irq);
 	if (of_property_read_bool(vm_dev->pdev->dev.of_node, "wakeup-source"))
 		enable_irq_wake(irq);
 

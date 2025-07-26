@@ -38,6 +38,23 @@
 #include <trace/events/cpuhp.h>
 
 #include "smpboot.h"
+#include "../adaptor.h"
+
+int __boot_cpu_id;
+
+#ifdef CONFIG_INIT_ALL_POSSIBLE
+struct cpumask __cpu_possible_mask __ro_after_init
+    = {CPU_BITS_ALL};
+#else
+struct cpumask __cpu_possible_mask __ro_after_init;
+#endif
+struct cpumask __cpu_online_mask __read_mostly;
+struct cpumask __cpu_enabled_mask __read_mostly;
+struct cpumask __cpu_present_mask __read_mostly;
+struct cpumask __cpu_active_mask __read_mostly;
+struct cpumask __cpu_dying_mask __read_mostly;
+
+atomic_t __num_online_cpus __read_mostly;
 
 int __cpuhp_state_add_instance(enum cpuhp_state state, struct hlist_node *node,
                    bool invoke)
@@ -51,4 +68,67 @@ int __cpuhp_state_add_instance(enum cpuhp_state state, struct hlist_node *node,
     return ret;
 #endif
     pr_err("%s: No impl.", __func__);
+}
+
+int __cpuhp_setup_state(enum cpuhp_state state,
+            const char *name, bool invoke,
+            int (*startup)(unsigned int cpu),
+            int (*teardown)(unsigned int cpu),
+            bool multi_instance)
+{
+    pr_err("%s: No impl.", __func__);
+
+    if (startup) {
+        startup(0);
+    }
+    return 0;
+
+#if 0
+    int ret;
+
+    cpus_read_lock();
+    ret = __cpuhp_setup_state_cpuslocked(state, name, invoke, startup,
+                         teardown, multi_instance);
+    cpus_read_unlock();
+    return ret;
+#endif
+}
+
+void set_cpu_online(unsigned int cpu, bool online)
+{
+    /*
+     * atomic_inc/dec() is required to handle the horrid abuse of this
+     * function by the reboot and kexec code which invoke it from
+     * IPI/NMI broadcasts when shutting down CPUs. Invocation from
+     * regular CPU hotplug is properly serialized.
+     *
+     * Note, that the fact that __num_online_cpus is of type atomic_t
+     * does not protect readers which are not serialized against
+     * concurrent hotplug operations.
+     */
+    if (online) {
+        if (!cpumask_test_and_set_cpu(cpu, &__cpu_online_mask))
+            atomic_inc(&__num_online_cpus);
+    } else {
+        if (cpumask_test_and_clear_cpu(cpu, &__cpu_online_mask))
+            atomic_dec(&__num_online_cpus);
+    }
+}
+
+/*
+ * Activate the first processor.
+ */
+void __init boot_cpu_init(void)
+{
+    int cpu = smp_processor_id();
+
+    /* Mark the boot cpu "present", "online" etc for SMP and UP case */
+    set_cpu_online(cpu, true);
+    set_cpu_active(cpu, true);
+    set_cpu_present(cpu, true);
+    set_cpu_possible(cpu, true);
+
+#ifdef CONFIG_SMP
+    __boot_cpu_id = cpu;
+#endif
 }

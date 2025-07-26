@@ -593,3 +593,18 @@ void blk_request_module(dev_t devt)
 {
     pr_err("%s: No impl.", __func__);
 }
+
+unsigned int part_in_flight(struct block_device *part)
+{
+    unsigned int inflight = 0;
+    int cpu;
+
+    for_each_possible_cpu(cpu) {
+        inflight += part_stat_local_read_cpu(part, in_flight[0], cpu) +
+                part_stat_local_read_cpu(part, in_flight[1], cpu);
+    }
+    if ((int)inflight < 0)
+        inflight = 0;
+
+    return inflight;
+}

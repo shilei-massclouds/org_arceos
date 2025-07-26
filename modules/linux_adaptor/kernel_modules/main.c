@@ -5,6 +5,7 @@
 #include <linux/sched/init.h>
 #include <linux/buffer_head.h>
 #include <linux/of.h>
+#include <linux/cpu.h>
 
 #include "mm/slab.h"
 #include "base/base.h"
@@ -27,6 +28,7 @@ extern void cl_virtio_blk_init();
 
 extern void cl_blkdev_init(void);
 extern void cl_init_bio(void);
+extern void cl_sg_pool_init(void);
 
 extern void test_block(void);
 
@@ -66,6 +68,7 @@ int clinux_init(void)
 
     //kmem_cache_init();
     setup_per_cpu_areas();
+    boot_cpu_init();
     pagecache_init();
     sched_init();
     radix_tree_init();
@@ -75,6 +78,7 @@ int clinux_init(void)
     vfs_caches_init();
 
     cl_init_bio();
+    cl_sg_pool_init();
 
     {
         static struct device_node riscv_intc_node;

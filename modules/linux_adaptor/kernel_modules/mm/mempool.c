@@ -265,3 +265,40 @@ void mempool_free(void *element, mempool_t *pool)
 {
     PANIC("");
 }
+
+/**
+ * mempool_create_node - create a memory pool
+ * @min_nr:    the minimum number of elements guaranteed to be
+ *             allocated for this pool.
+ * @alloc_fn:  user-defined element-allocation function.
+ * @free_fn:   user-defined element-freeing function.
+ * @pool_data: optional private data available to the user-defined functions.
+ * @gfp_mask:  memory allocation flags
+ * @node_id:   numa node to allocate on
+ *
+ * this function creates and allocates a guaranteed size, preallocated
+ * memory pool. The pool can be used from the mempool_alloc() and mempool_free()
+ * functions. This function might sleep. Both the alloc_fn() and the free_fn()
+ * functions might sleep - as long as the mempool_alloc() function is not called
+ * from IRQ contexts.
+ *
+ * Return: pointer to the created memory pool object or %NULL on error.
+ */
+mempool_t *mempool_create_node_noprof(int min_nr, mempool_alloc_t *alloc_fn,
+                      mempool_free_t *free_fn, void *pool_data,
+                      gfp_t gfp_mask, int node_id)
+{
+    mempool_t *pool;
+
+    pool = kmalloc_node_noprof(sizeof(*pool), gfp_mask | __GFP_ZERO, node_id);
+    if (!pool)
+        return NULL;
+
+    if (mempool_init_node(pool, min_nr, alloc_fn, free_fn, pool_data,
+                  gfp_mask, node_id)) {
+        kfree(pool);
+        return NULL;
+    }
+
+    return pool;
+}
