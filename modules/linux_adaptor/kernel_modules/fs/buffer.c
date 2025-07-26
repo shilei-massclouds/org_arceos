@@ -54,9 +54,81 @@ static struct kmem_cache *bh_cachep __ro_after_init;
  */
 static unsigned long max_buffer_heads __ro_after_init;
 
+void unlock_buffer(struct buffer_head *bh)
+{
+    clear_bit_unlock(BH_Lock, &bh->b_state);
+    smp_mb__after_atomic();
+    wake_up_bit(&bh->b_state, BH_Lock);
+}
+
 static int buffer_exit_cpu_dead(unsigned int cpu)
 {
     PANIC("");
+}
+
+static bool need_fsverity(struct buffer_head *bh)
+{
+    struct folio *folio = bh->b_folio;
+    struct inode *inode = folio->mapping->host;
+
+    return fsverity_active(inode) &&
+        /* needed by ext4 */
+        folio->index < DIV_ROUND_UP(inode->i_size, PAGE_SIZE);
+}
+
+static void buffer_io_error(struct buffer_head *bh, char *msg)
+{
+    if (!test_bit(BH_Quiet, &bh->b_state))
+        printk_ratelimited(KERN_ERR
+            "Buffer I/O error on dev %pg, logical block %llu%s\n",
+            bh->b_bdev, (unsigned long long)bh->b_blocknr, msg);
+}
+
+static void end_buffer_async_read(struct buffer_head *bh, int uptodate)
+{
+    unsigned long flags;
+    struct buffer_head *first;
+    struct buffer_head *tmp;
+    struct folio *folio;
+    int folio_uptodate = 1;
+
+    BUG_ON(!buffer_async_read(bh));
+
+    folio = bh->b_folio;
+    if (uptodate) {
+        set_buffer_uptodate(bh);
+    } else {
+        clear_buffer_uptodate(bh);
+        buffer_io_error(bh, ", async page read");
+    }
+
+    /*
+     * Be _very_ careful from here on. Bad things can happen if
+     * two buffer heads end IO at almost the same time and both
+     * decide that the page is now completely done.
+     */
+    first = folio_buffers(folio);
+    spin_lock_irqsave(&first->b_uptodate_lock, flags);
+    clear_buffer_async_read(bh);
+    unlock_buffer(bh);
+    tmp = bh;
+    do {
+        if (!buffer_uptodate(tmp))
+            folio_uptodate = 0;
+        if (buffer_async_read(tmp)) {
+            BUG_ON(!buffer_locked(tmp));
+            goto still_busy;
+        }
+        tmp = tmp->b_this_page;
+    } while (tmp != bh);
+    spin_unlock_irqrestore(&first->b_uptodate_lock, flags);
+
+    folio_end_read(folio, folio_uptodate);
+    return;
+
+still_busy:
+    spin_unlock_irqrestore(&first->b_uptodate_lock, flags);
+    return;
 }
 
 /*
@@ -65,12 +137,32 @@ static int buffer_exit_cpu_dead(unsigned int cpu)
  */
 static void end_buffer_async_read_io(struct buffer_head *bh, int uptodate)
 {
-    PANIC("");
-}
+    struct inode *inode = bh->b_folio->mapping->host;
+    bool decrypt = fscrypt_inode_uses_fs_layer_crypto(inode);
+    bool verify = need_fsverity(bh);
 
-static void end_buffer_async_read(struct buffer_head *bh, int uptodate)
-{
-    PANIC("");
+    /* Decrypt (with fscrypt) and/or verify (with fsverity) if needed. */
+    if (uptodate && (decrypt || verify)) {
+#if 0
+        struct postprocess_bh_ctx *ctx =
+            kmalloc(sizeof(*ctx), GFP_ATOMIC);
+
+        if (ctx) {
+            ctx->bh = bh;
+            if (decrypt) {
+                INIT_WORK(&ctx->work, decrypt_bh);
+                fscrypt_enqueue_decrypt_work(&ctx->work);
+            } else {
+                INIT_WORK(&ctx->work, verify_bh);
+                fsverity_enqueue_verify_work(&ctx->work);
+            }
+            return;
+        }
+        uptodate = 0;
+#endif
+        PANIC("Not in this branch.");
+    }
+    end_buffer_async_read(bh, uptodate);
 }
 
 /*

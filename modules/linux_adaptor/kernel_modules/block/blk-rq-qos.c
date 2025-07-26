@@ -26,3 +26,21 @@ void __rq_qos_issue(struct rq_qos *rqos, struct request *rq)
         rqos = rqos->next;
     } while (rqos);
 }
+
+void __rq_qos_done_bio(struct rq_qos *rqos, struct bio *bio)
+{
+    do {
+        if (rqos->ops->done_bio)
+            rqos->ops->done_bio(rqos, bio);
+        rqos = rqos->next;
+    } while (rqos);
+}
+
+void __rq_qos_done(struct rq_qos *rqos, struct request *rq)
+{
+    do {
+        if (rqos->ops->done)
+            rqos->ops->done(rqos, rq);
+        rqos = rqos->next;
+    } while (rqos);
+}

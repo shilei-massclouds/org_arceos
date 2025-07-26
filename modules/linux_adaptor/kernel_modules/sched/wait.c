@@ -120,3 +120,8 @@ long prepare_to_wait_event(struct wait_queue_head *wq_head, struct wait_queue_en
 
     return ret;
 }
+
+void __wake_up_locked_key(struct wait_queue_head *wq_head, unsigned int mode, void *key)
+{
+    __wake_up_common(wq_head, mode, 1, 0, key);
+}

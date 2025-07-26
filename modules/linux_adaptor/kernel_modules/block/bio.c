@@ -43,6 +43,24 @@ static struct biovec_slab {
     { .nr_vecs = BIO_MAX_VECS, .name = "biovec-max" },
 };
 
+static struct biovec_slab *biovec_slab(unsigned short nr_vecs)
+{
+    switch (nr_vecs) {
+    /* smaller bios use inline vecs */
+    case 5 ... 16:
+        return &bvec_slabs[0];
+    case 17 ... 64:
+        return &bvec_slabs[1];
+    case 65 ... 128:
+        return &bvec_slabs[2];
+    case 129 ... BIO_MAX_VECS:
+        return &bvec_slabs[3];
+    default:
+        BUG();
+        return NULL;
+    }
+}
+
 /*
  * Our slab pool management
  */
@@ -77,6 +95,21 @@ static inline bool bio_full(struct bio *bio, unsigned len)
     if (bio->bi_iter.bi_size > UINT_MAX - len)
         return true;
     return false;
+}
+
+static struct bio *__bio_chain_endio(struct bio *bio)
+{
+    struct bio *parent = bio->bi_private;
+
+    if (bio->bi_status && !parent->bi_status)
+        parent->bi_status = bio->bi_status;
+    bio_put(bio);
+    return parent;
+}
+
+static void bio_chain_endio(struct bio *bio)
+{
+    bio_endio(__bio_chain_endio(bio));
 }
 
 /**
@@ -525,6 +558,25 @@ void bio_add_folio_nofail(struct bio *bio, struct folio *folio, size_t len,
     __bio_add_page(bio, folio_page(folio, nr), len, off % PAGE_SIZE);
 }
 
+static inline bool bio_remaining_done(struct bio *bio)
+{
+    /*
+     * If we're not chaining, then ->__bi_remaining is always 1 and
+     * we always end io on the first invocation.
+     */
+    if (!bio_flagged(bio, BIO_CHAIN))
+        return true;
+
+    BUG_ON(atomic_read(&bio->__bi_remaining) <= 0);
+
+    if (atomic_dec_and_test(&bio->__bi_remaining)) {
+        bio_clear_flag(bio, BIO_CHAIN);
+        return true;
+    }
+
+    return false;
+}
+
 /**
  * bio_endio - end I/O on a bio
  * @bio:    bio
@@ -540,7 +592,149 @@ void bio_add_folio_nofail(struct bio *bio, struct folio *folio, size_t len,
  **/
 void bio_endio(struct bio *bio)
 {
+again:
+    if (!bio_remaining_done(bio))
+        return;
+    if (!bio_integrity_endio(bio))
+        return;
+
+    blk_zone_bio_endio(bio);
+
+    rq_qos_done_bio(bio);
+
+    if (bio->bi_bdev && bio_flagged(bio, BIO_TRACE_COMPLETION)) {
+        trace_block_bio_complete(bdev_get_queue(bio->bi_bdev), bio);
+        bio_clear_flag(bio, BIO_TRACE_COMPLETION);
+    }
+
+    /*
+     * Need to have a real endio function for chained bios, otherwise
+     * various corner cases will break (like stacking block devices that
+     * save/restore bi_end_io) - however, we want to avoid unbounded
+     * recursion and blowing the stack. Tail call optimization would
+     * handle this, but compiling with frame pointers also disables
+     * gcc's sibling call optimization.
+     */
+    if (bio->bi_end_io == bio_chain_endio) {
+        bio = __bio_chain_endio(bio);
+        goto again;
+    }
+
+#ifdef CONFIG_BLK_CGROUP
+    /*
+     * Release cgroup info.  We shouldn't have to do this here, but quite
+     * a few callers of bio_init fail to call bio_uninit, so we cover up
+     * for that here at least for now.
+     */
+    if (bio->bi_blkg) {
+        blkg_put(bio->bi_blkg);
+        bio->bi_blkg = NULL;
+    }
+#endif
+
+    if (bio->bi_end_io)
+        bio->bi_end_io(bio);
+}
+
+void __bio_advance(struct bio *bio, unsigned bytes)
+{
+    if (bio_integrity(bio))
+        bio_integrity_advance(bio, bytes);
+
+    bio_crypt_advance(bio, bytes);
+    bio_advance_iter(bio, &bio->bi_iter, bytes);
+}
+
+void bio_uninit(struct bio *bio)
+{
+#ifdef CONFIG_BLK_CGROUP
+    if (bio->bi_blkg) {
+        blkg_put(bio->bi_blkg);
+        bio->bi_blkg = NULL;
+    }
+#endif
+    if (bio_integrity(bio))
+        bio_integrity_free(bio);
+
+    bio_crypt_free_ctx(bio);
+}
+
+static void bio_free(struct bio *bio)
+{
+    struct bio_set *bs = bio->bi_pool;
+    void *p = bio;
+
+    WARN_ON_ONCE(!bs);
+
+    bio_uninit(bio);
+    bvec_free(&bs->bvec_pool, bio->bi_io_vec, bio->bi_max_vecs);
+    mempool_free(p - bs->front_pad, &bs->bio_pool);
+}
+
+void bvec_free(mempool_t *pool, struct bio_vec *bv, unsigned short nr_vecs)
+{
+    BUG_ON(nr_vecs > BIO_MAX_VECS);
+
+    if (nr_vecs == BIO_MAX_VECS)
+        mempool_free(bv, pool);
+    else if (nr_vecs > BIO_INLINE_VECS)
+        kmem_cache_free(biovec_slab(nr_vecs)->slab, bv);
+}
+
+static inline void bio_put_percpu_cache(struct bio *bio)
+{
+    struct bio_alloc_cache *cache;
+
+#if 0
+    cache = per_cpu_ptr(bio->bi_pool->cache, get_cpu());
+    if (READ_ONCE(cache->nr_irq) + cache->nr > ALLOC_CACHE_MAX)
+        goto out_free;
+
+    if (in_task()) {
+        bio_uninit(bio);
+        bio->bi_next = cache->free_list;
+        /* Not necessary but helps not to iopoll already freed bios */
+        bio->bi_bdev = NULL;
+        cache->free_list = bio;
+        cache->nr++;
+    } else if (in_hardirq()) {
+        lockdep_assert_irqs_disabled();
+
+        bio_uninit(bio);
+        bio->bi_next = cache->free_list_irq;
+        cache->free_list_irq = bio;
+        cache->nr_irq++;
+    } else {
+        goto out_free;
+    }
+    put_cpu();
+    return;
+out_free:
+    put_cpu();
+    bio_free(bio);
+#endif
     PANIC("");
+}
+
+/**
+ * bio_put - release a reference to a bio
+ * @bio:   bio to release reference to
+ *
+ * Description:
+ *   Put a reference to a &struct bio, either one you have gotten with
+ *   bio_alloc, bio_get or bio_clone_*. The last put of a bio will free it.
+ **/
+void bio_put(struct bio *bio)
+{
+    if (unlikely(bio_flagged(bio, BIO_REFFED))) {
+        BUG_ON(!atomic_read(&bio->__bi_cnt));
+        if (!atomic_dec_and_test(&bio->__bi_cnt))
+            return;
+    }
+    if (bio->bi_opf & REQ_ALLOC_CACHE)
+        bio_put_percpu_cache(bio);
+    else
+        bio_free(bio);
 }
 
 static int __init init_bio(void)

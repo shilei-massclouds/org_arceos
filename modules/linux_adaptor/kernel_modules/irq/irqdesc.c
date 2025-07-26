@@ -343,3 +343,34 @@ int irq_set_percpu_devid(unsigned int irq)
 {
     return irq_set_percpu_devid_partition(irq, NULL);
 }
+
+/**
+ * generic_handle_domain_irq - Invoke the handler for a HW irq belonging
+ *                             to a domain.
+ * @domain: The domain where to perform the lookup
+ * @hwirq:  The HW irq number to convert to a logical one
+ *
+ * Returns: 0 on success, or -EINVAL if conversion has failed
+ *
+ *      This function must be called from an IRQ context with irq regs
+ *      initialized.
+ */
+int generic_handle_domain_irq(struct irq_domain *domain, unsigned int hwirq)
+{
+    return handle_irq_desc(irq_resolve_mapping(domain, hwirq));
+}
+
+int handle_irq_desc(struct irq_desc *desc)
+{
+    struct irq_data *data;
+
+    if (!desc)
+        return -EINVAL;
+
+    data = irq_desc_get_irq_data(desc);
+    if (WARN_ON_ONCE(!in_hardirq() && handle_enforce_irqctx(data)))
+        return -EPERM;
+
+    generic_handle_irq_desc(desc);
+    return 0;
+}

@@ -263,7 +263,55 @@ repeat_alloc:
  */
 void mempool_free(void *element, mempool_t *pool)
 {
-    PANIC("");
+    unsigned long flags;
+
+    if (unlikely(element == NULL))
+        return;
+
+    /*
+     * Paired with the wmb in mempool_alloc().  The preceding read is
+     * for @element and the following @pool->curr_nr.  This ensures
+     * that the visible value of @pool->curr_nr is from after the
+     * allocation of @element.  This is necessary for fringe cases
+     * where @element was passed to this task without going through
+     * barriers.
+     *
+     * For example, assume @p is %NULL at the beginning and one task
+     * performs "p = mempool_alloc(...);" while another task is doing
+     * "while (!p) cpu_relax(); mempool_free(p, ...);".  This function
+     * may end up using curr_nr value which is from before allocation
+     * of @p without the following rmb.
+     */
+    smp_rmb();
+
+    /*
+     * For correctness, we need a test which is guaranteed to trigger
+     * if curr_nr + #allocated == min_nr.  Testing curr_nr < min_nr
+     * without locking achieves that and refilling as soon as possible
+     * is desirable.
+     *
+     * Because curr_nr visible here is always a value after the
+     * allocation of @element, any task which decremented curr_nr below
+     * min_nr is guaranteed to see curr_nr < min_nr unless curr_nr gets
+     * incremented to min_nr afterwards.  If curr_nr gets incremented
+     * to min_nr after the allocation of @element, the elements
+     * allocated after that are subject to the same guarantee.
+     *
+     * Waiters happen iff curr_nr is 0 and the above guarantee also
+     * ensures that there will be frees which return elements to the
+     * pool waking up the waiters.
+     */
+    if (unlikely(READ_ONCE(pool->curr_nr) < pool->min_nr)) {
+        spin_lock_irqsave(&pool->lock, flags);
+        if (likely(pool->curr_nr < pool->min_nr)) {
+            add_element(pool, element);
+            spin_unlock_irqrestore(&pool->lock, flags);
+            wake_up(&pool->wait);
+            return;
+        }
+        spin_unlock_irqrestore(&pool->lock, flags);
+    }
+    pool->free(element, pool->pool_data);
 }
 
 /**

@@ -1652,3 +1652,325 @@ void blk_mq_start_request(struct request *rq)
     if (rq->bio && rq->bio->bi_opf & REQ_POLLED)
             WRITE_ONCE(rq->bio->bi_cookie, rq->mq_hctx->queue_num);
 }
+
+/**
+ * blk_mq_complete_request - end I/O on a request
+ * @rq:     the request being processed
+ *
+ * Description:
+ *  Complete a request by scheduling the ->complete_rq operation.
+ **/
+void blk_mq_complete_request(struct request *rq)
+{
+    if (!blk_mq_complete_request_remote(rq))
+        rq->q->mq_ops->complete(rq);
+}
+
+bool blk_mq_complete_request_remote(struct request *rq)
+{
+    WRITE_ONCE(rq->state, MQ_RQ_COMPLETE);
+
+    /*
+     * For request which hctx has only one ctx mapping,
+     * or a polled request, always complete locally,
+     * it's pointless to redirect the completion.
+     */
+    if ((rq->mq_hctx->nr_ctx == 1 &&
+         rq->mq_ctx->cpu == raw_smp_processor_id()) ||
+         rq->cmd_flags & REQ_POLLED)
+        return false;
+
+#if 0
+    if (blk_mq_complete_need_ipi(rq)) {
+        blk_mq_complete_send_ipi(rq);
+        return true;
+    }
+
+    if (rq->q->nr_hw_queues == 1) {
+        blk_mq_raise_softirq(rq);
+        return true;
+    }
+    return false;
+#endif
+    PANIC("");
+}
+
+void blk_mq_end_request(struct request *rq, blk_status_t error)
+{
+    if (blk_update_request(rq, error, blk_rq_bytes(rq)))
+        BUG();
+    __blk_mq_end_request(rq, error);
+}
+
+static void blk_print_req_error(struct request *req, blk_status_t status)
+{
+#if 0
+    printk_ratelimited(KERN_ERR
+        "%s error, dev %s, sector %llu op 0x%x:(%s) flags 0x%x "
+        "phys_seg %u prio class %u\n",
+        blk_status_to_str(status),
+        req->q->disk ? req->q->disk->disk_name : "?",
+        blk_rq_pos(req), (__force u32)req_op(req),
+        blk_op_str(req_op(req)),
+        (__force u32)(req->cmd_flags & ~REQ_OP_MASK),
+        req->nr_phys_segments,
+        IOPRIO_PRIO_CLASS(req_get_ioprio(req)));
+#endif
+    PANIC("");
+}
+
+static void blk_account_io_completion(struct request *req, unsigned int bytes)
+{
+    if (req->part && blk_do_io_stat(req)) {
+        const int sgrp = op_stat_group(req_op(req));
+
+        part_stat_lock();
+        part_stat_add(req->part, sectors[sgrp], bytes >> 9);
+        part_stat_unlock();
+    }
+}
+
+/**
+ * blk_update_request - Complete multiple bytes without completing the request
+ * @req:      the request being processed
+ * @error:    block status code
+ * @nr_bytes: number of bytes to complete for @req
+ *
+ * Description:
+ *     Ends I/O on a number of bytes attached to @req, but doesn't complete
+ *     the request structure even if @req doesn't have leftover.
+ *     If @req has leftover, sets it up for the next range of segments.
+ *
+ *     Passing the result of blk_rq_bytes() as @nr_bytes guarantees
+ *     %false return from this function.
+ *
+ * Note:
+ *  The RQF_SPECIAL_PAYLOAD flag is ignored on purpose in this function
+ *      except in the consistency check at the end of this function.
+ *
+ * Return:
+ *     %false - this request doesn't have any more data
+ *     %true  - this request has more data
+ **/
+bool blk_update_request(struct request *req, blk_status_t error,
+        unsigned int nr_bytes)
+{
+    bool is_flush = req->rq_flags & RQF_FLUSH_SEQ;
+    bool quiet = req->rq_flags & RQF_QUIET;
+    int total_bytes;
+
+    trace_block_rq_complete(req, error, nr_bytes);
+
+    if (!req->bio)
+        return false;
+
+    if (blk_integrity_rq(req) && req_op(req) == REQ_OP_READ &&
+        error == BLK_STS_OK)
+        blk_integrity_complete(req, nr_bytes);
+
+    /*
+     * Upper layers may call blk_crypto_evict_key() anytime after the last
+     * bio_endio().  Therefore, the keyslot must be released before that.
+     */
+    if (blk_crypto_rq_has_keyslot(req) && nr_bytes >= blk_rq_bytes(req))
+        __blk_crypto_rq_put_keyslot(req);
+
+    if (unlikely(error && !blk_rq_is_passthrough(req) && !quiet) &&
+        !test_bit(GD_DEAD, &req->q->disk->state)) {
+        blk_print_req_error(req, error);
+        trace_block_rq_error(req, error, nr_bytes);
+    }
+
+    blk_account_io_completion(req, nr_bytes);
+
+    total_bytes = 0;
+    while (req->bio) {
+        struct bio *bio = req->bio;
+        unsigned bio_bytes = min(bio->bi_iter.bi_size, nr_bytes);
+
+        if (unlikely(error))
+            bio->bi_status = error;
+
+        if (bio_bytes == bio->bi_iter.bi_size) {
+            req->bio = bio->bi_next;
+        } else if (bio_is_zone_append(bio) && error == BLK_STS_OK) {
+            /*
+             * Partial zone append completions cannot be supported
+             * as the BIO fragments may end up not being written
+             * sequentially.
+             */
+            bio->bi_status = BLK_STS_IOERR;
+        }
+
+        /* Completion has already been traced */
+        bio_clear_flag(bio, BIO_TRACE_COMPLETION);
+        if (unlikely(quiet))
+            bio_set_flag(bio, BIO_QUIET);
+
+        bio_advance(bio, bio_bytes);
+
+        /* Don't actually finish bio if it's part of flush sequence */
+        if (!bio->bi_iter.bi_size) {
+            blk_zone_update_request_bio(req, bio);
+            if (!is_flush)
+                bio_endio(bio);
+        }
+
+        total_bytes += bio_bytes;
+        nr_bytes -= bio_bytes;
+
+        if (!nr_bytes)
+            break;
+    }
+
+    /*
+     * completely done
+     */
+    if (!req->bio) {
+        /*
+         * Reset counters so that the request stacking driver
+         * can find how many bytes remain in the request
+         * later.
+         */
+        req->__data_len = 0;
+        return false;
+    }
+
+    req->__data_len -= total_bytes;
+
+    /* update sector only for requests with clear definition of sector */
+    if (!blk_rq_is_passthrough(req))
+        req->__sector += total_bytes >> 9;
+
+    /* mixed attributes always follow the first bio */
+    if (req->rq_flags & RQF_MIXED_MERGE) {
+        req->cmd_flags &= ~REQ_FAILFAST_MASK;
+        req->cmd_flags |= req->bio->bi_opf & REQ_FAILFAST_MASK;
+    }
+
+    if (!(req->rq_flags & RQF_SPECIAL_PAYLOAD)) {
+        /*
+         * If total number of sectors is less than the first segment
+         * size, something has gone terribly wrong.
+         */
+        if (blk_rq_bytes(req) < blk_rq_cur_bytes(req)) {
+            blk_dump_rq_flags(req, "request botched");
+            req->__data_len = blk_rq_cur_bytes(req);
+        }
+
+        /* recalculate the number of segments */
+        req->nr_phys_segments = blk_recalc_rq_segments(req);
+    }
+
+    PANIC("");
+    return true;
+}
+
+static inline void blk_account_io_done(struct request *req, u64 now)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+static inline void __blk_mq_end_request_acct(struct request *rq, u64 now)
+{
+    if (rq->rq_flags & RQF_STATS)
+        blk_stat_add(rq, now);
+
+    blk_mq_sched_completed_request(rq, now);
+    blk_account_io_done(rq, now);
+}
+
+static void blk_mq_finish_request(struct request *rq)
+{
+    struct request_queue *q = rq->q;
+
+    blk_zone_finish_request(rq);
+
+    if (rq->rq_flags & RQF_USE_SCHED) {
+        q->elevator->type->ops.finish_request(rq);
+        /*
+         * For postflush request that may need to be
+         * completed twice, we should clear this flag
+         * to avoid double finish_request() on the rq.
+         */
+        rq->rq_flags &= ~RQF_USE_SCHED;
+    }
+}
+
+inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
+{
+    if (blk_mq_need_time_stamp(rq))
+        __blk_mq_end_request_acct(rq, blk_time_get_ns());
+
+    blk_mq_finish_request(rq);
+
+    if (rq->end_io) {
+        rq_qos_done(rq->q, rq);
+        if (rq->end_io(rq, error) == RQ_END_IO_FREE)
+            blk_mq_free_request(rq);
+    } else {
+        blk_mq_free_request(rq);
+    }
+}
+
+static void __blk_mq_free_request(struct request *rq)
+{
+    struct request_queue *q = rq->q;
+    struct blk_mq_ctx *ctx = rq->mq_ctx;
+    struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
+    const int sched_tag = rq->internal_tag;
+
+    blk_crypto_free_request(rq);
+    blk_pm_mark_last_busy(rq);
+    rq->mq_hctx = NULL;
+
+    if (rq->tag != BLK_MQ_NO_TAG) {
+        blk_mq_dec_active_requests(hctx);
+        blk_mq_put_tag(hctx->tags, ctx, rq->tag);
+    }
+    if (sched_tag != BLK_MQ_NO_TAG)
+        blk_mq_put_tag(hctx->sched_tags, ctx, sched_tag);
+    blk_mq_sched_restart(hctx);
+    blk_queue_exit(q);
+}
+
+void blk_mq_free_request(struct request *rq)
+{
+    struct request_queue *q = rq->q;
+
+    blk_mq_finish_request(rq);
+
+    if (unlikely(laptop_mode && !blk_rq_is_passthrough(rq)))
+        laptop_io_completion(q->disk->bdi);
+
+    rq_qos_done(q, rq);
+
+    WRITE_ONCE(rq->state, MQ_RQ_IDLE);
+    if (req_ref_put_and_test(rq))
+        __blk_mq_free_request(rq);
+}
+
+void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async)
+{
+    struct blk_mq_hw_ctx *hctx;
+    unsigned long i;
+
+    queue_for_each_hw_ctx(q, hctx, i)
+        blk_mq_start_stopped_hw_queue(hctx, async ||
+                    (hctx->flags & BLK_MQ_F_BLOCKING));
+}
+
+void blk_mq_start_stopped_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
+{
+    if (!blk_mq_hctx_stopped(hctx))
+        return;
+
+    clear_bit(BLK_MQ_S_STOPPED, &hctx->state);
+    /*
+     * Pairs with the smp_mb() in blk_mq_hctx_stopped() to order the
+     * clearing of BLK_MQ_S_STOPPED above and the checking of dispatch
+     * list in the subsequent routine.
+     */
+    smp_mb__after_atomic();
+    blk_mq_run_hw_queue(hctx, async);
+}

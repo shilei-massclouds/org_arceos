@@ -35,3 +35,8 @@ void blk_free_queue_stats(struct blk_queue_stats *stats)
 
     kfree(stats);
 }
+
+void blk_stat_add(struct request *rq, u64 now)
+{
+    pr_err("%s: No impl.", __func__);
+}

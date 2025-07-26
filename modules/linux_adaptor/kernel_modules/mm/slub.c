@@ -65,3 +65,23 @@ void kfree(const void *object)
 {
     cl_rust_dealloc(object);
 }
+
+/**
+ * kmem_cache_free - Deallocate an object
+ * @s: The cache the allocation was from.
+ * @x: The previously allocated object.
+ *
+ * Free an object which was previously allocated from this
+ * cache.
+ */
+void kmem_cache_free(struct kmem_cache *s, void *x)
+{
+#if 0
+    s = cache_from_obj(s, x);
+    if (!s)
+        return;
+    trace_kmem_cache_free(_RET_IP_, x, s);
+    slab_free(s, virt_to_slab(x), x, _RET_IP_);
+#endif
+    pr_err("%s: No impl.", __func__);
+}

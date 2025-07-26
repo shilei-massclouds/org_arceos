@@ -1,6 +1,23 @@
 #include <linux/writeback.h>
 
 /*
+ * Flag that puts the machine in "laptop mode". Doubles as a timeout in jiffies:
+ * a full sync is triggered after this time elapses without any disk activity.
+ */
+int laptop_mode;
+
+/*
+ * We've spun up the disk and we're in laptop mode: schedule writeback
+ * of all dirty data a few seconds from now.  If the flush is already scheduled
+ * then push it back - the user is still using the disk.
+ */
+void laptop_io_completion(struct backing_dev_info *info)
+{
+    //mod_timer(&info->laptop_mode_wb_timer, jiffies + laptop_mode);
+    pr_err("%s: No impl.", __func__);
+}
+
+/*
  * Called early on to tune the page writeback dirty limits.
  *
  * We used to scale dirty pages according to how total memory

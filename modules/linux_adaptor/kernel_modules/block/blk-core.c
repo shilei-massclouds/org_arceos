@@ -371,7 +371,8 @@ end_io:
 
 void blk_queue_exit(struct request_queue *q)
 {
-    percpu_ref_put(&q->q_usage_counter);
+    pr_err("%s: No impl", __func__);
+    //percpu_ref_put(&q->q_usage_counter);
 }
 
 int __bio_queue_enter(struct request_queue *q, struct bio *bio)

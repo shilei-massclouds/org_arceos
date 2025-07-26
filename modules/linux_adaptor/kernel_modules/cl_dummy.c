@@ -169,3 +169,8 @@ void __srcu_read_unlock(struct srcu_struct *ssp, int idx)
 {
     pr_err("%s: No impl.", __func__);
 }
+
+void add_interrupt_randomness(int irq)
+{
+    pr_err("%s: No impl.", __func__);
+}

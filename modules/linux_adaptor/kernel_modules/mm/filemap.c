@@ -149,7 +149,46 @@ static int wake_page_function(wait_queue_entry_t *wait, unsigned mode, int sync,
     if (!wake_page_match(wait_page, key))
         return 0;
 
+    /*
+     * If it's a lock handoff wait, we get the bit for it, and
+     * stop walking (and do not wake it up) if we can't.
+     */
+    flags = wait->flags;
+    if (flags & WQ_FLAG_EXCLUSIVE) {
+        if (test_bit(key->bit_nr, &key->folio->flags))
+            return -1;
+        if (flags & WQ_FLAG_CUSTOM) {
+            if (test_and_set_bit(key->bit_nr, &key->folio->flags))
+                return -1;
+            flags |= WQ_FLAG_DONE;
+        }
+    }
+
+    /*
+     * We are holding the wait-queue lock, but the waiter that
+     * is waiting for this will be checking the flags without
+     * any locking.
+     *
+     * So update the flags atomically, and wake up the waiter
+     * afterwards to avoid any races. This store-release pairs
+     * with the load-acquire in folio_wait_bit_common().
+     */
+    smp_store_release(&wait->flags, flags | WQ_FLAG_WOKEN);
+    wake_up_state(wait->private, mode);
+
+    /*
+     * Ok, we have successfully done what we're waiting for,
+     * and we can unconditionally remove the wait entry.
+     *
+     * Note that this pairs with the "finish_wait()" in the
+     * waiter, and has to be the absolute last thing we do.
+     * After this list_del_init(&wait->entry) the wait entry
+     * might be de-allocated and the process might even have
+     * exited.
+     */
+    list_del_init_careful(&wait->entry);
     PANIC("");
+    return (flags & WQ_FLAG_EXCLUSIVE) != 0;
 }
 
 static inline int folio_wait_bit_common(struct folio *folio, int bit_nr,
@@ -293,6 +332,66 @@ repeat:
 int folio_wait_bit_killable(struct folio *folio, int bit_nr)
 {
     return folio_wait_bit_common(folio, bit_nr, TASK_KILLABLE, SHARED);
+}
+
+static void folio_wake_bit(struct folio *folio, int bit_nr)
+{
+    wait_queue_head_t *q = folio_waitqueue(folio);
+    struct wait_page_key key;
+    unsigned long flags;
+
+    key.folio = folio;
+    key.bit_nr = bit_nr;
+    key.page_match = 0;
+
+    spin_lock_irqsave(&q->lock, flags);
+    __wake_up_locked_key(q, TASK_NORMAL, &key);
+
+#if 0
+    /*
+     * It's possible to miss clearing waiters here, when we woke our page
+     * waiters, but the hashed waitqueue has waiters for other pages on it.
+     * That's okay, it's a rare case. The next waker will clear it.
+     *
+     * Note that, depending on the page pool (buddy, hugetlb, ZONE_DEVICE,
+     * other), the flag may be cleared in the course of freeing the page;
+     * but that is not required for correctness.
+     */
+    if (!waitqueue_active(q) || !key.page_match)
+        folio_clear_waiters(folio);
+
+    spin_unlock_irqrestore(&q->lock, flags);
+#endif
+    PANIC("");
+}
+
+/**
+ * folio_end_read - End read on a folio.
+ * @folio: The folio.
+ * @success: True if all reads completed successfully.
+ *
+ * When all reads against a folio have completed, filesystems should
+ * call this function to let the pagecache know that no more reads
+ * are outstanding.  This will unlock the folio and wake up any thread
+ * sleeping on the lock.  The folio will also be marked uptodate if all
+ * reads succeeded.
+ *
+ * Context: May be called from interrupt or process context.  May not be
+ * called from NMI context.
+ */
+void folio_end_read(struct folio *folio, bool success)
+{
+    unsigned long mask = 1 << PG_locked;
+
+    /* Must be in bottom byte for x86 to work */
+    BUILD_BUG_ON(PG_uptodate > 7);
+    VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
+    VM_BUG_ON_FOLIO(folio_test_uptodate(folio), folio);
+
+    if (likely(success))
+        mask |= 1 << PG_uptodate;
+    if (folio_xor_flags_has_waiters(folio, mask))
+        folio_wake_bit(folio, PG_locked);
 }
 
 void __init pagecache_init(void)
