@@ -32,8 +32,8 @@ void test_block(void)
     }
     folio->mapping = dev->bd_mapping;
 
-    /* Read first block (PAGE_SIZE) */
-    folio->index = 0;
+    /* Read second block (index = 1 and size = PAGE_SIZE) */
+    folio->index = 1;
     __folio_set_locked(folio);
     ret = a_ops->read_folio(NULL, folio);
     if (ret) {
@@ -46,6 +46,17 @@ void test_block(void)
     }
     if (!folio_test_uptodate(folio)) {
         PANIC("Not up_to_date.");
+    }
+
+    void *vaddr = page_to_virt(&folio->page);
+    if (vaddr == NULL) {
+        PANIC("Bad page.");
+    }
+
+    {
+        unsigned int *dwords = (unsigned int *) vaddr;
+        printk("Read: %08lx, %08lx, %08lx, %08lx\n",
+               dwords[0], dwords[1], dwords[2], dwords[3]);
     }
 
     PANIC("Test block ok!");
