@@ -210,8 +210,6 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
         else
             submit_bh(REQ_OP_READ, bh);
     }
-
-    PANIC("");
     return 0;
 }
 

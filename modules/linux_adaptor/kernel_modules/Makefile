@@ -52,6 +52,7 @@ OBJS += block/blk-mq-cpumap.o block/blk-mq-tag.o block/blk-core.o
 OBJS += block/blk-stat.o block/blk-settings.o block/bio.o
 OBJS += block/bdev.o block/fops.o block/blk-merge.o block/blk-mq-sched.o
 OBJS += block/blk-flush.o block/blk-mq-sysfs.o block/blk-rq-qos.o
+OBJS += block/blk-timeout.o
 OBJS += fs/inode.o fs/libfs.o fs/filesystems.o fs/dcache.o
 OBJS += fs/namespace.o fs/fs_context.o fs/super.o fs/mnt_idmapping.o
 OBJS += fs/buffer.o

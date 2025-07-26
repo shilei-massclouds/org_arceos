@@ -38,7 +38,6 @@ CL_MINE(blk_mq_complete_request_remote)
 CL_MINE(blk_mq_unquiesce_queue)
 CL_MINE(flush_work)
 CL_MINE(queue_work_on)
-CL_MINE(blk_mq_start_request)
 
 // vsprintf
 CL_MINE(siphash_1u64)

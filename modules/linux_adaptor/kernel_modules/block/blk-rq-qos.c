@@ -17,3 +17,12 @@ void __rq_qos_track(struct rq_qos *rqos, struct request *rq, struct bio *bio)
         rqos = rqos->next;
     } while (rqos);
 }
+
+void __rq_qos_issue(struct rq_qos *rqos, struct request *rq)
+{
+    do {
+        if (rqos->ops->issue)
+            rqos->ops->issue(rqos, rq);
+        rqos = rqos->next;
+    } while (rqos);
+}

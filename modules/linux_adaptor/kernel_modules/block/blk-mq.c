@@ -1617,3 +1617,38 @@ void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
 #endif
     PANIC("");
 }
+
+/**
+ * blk_mq_start_request - Start processing a request
+ * @rq: Pointer to request to be started
+ *
+ * Function used by device drivers to notify the block layer that a request
+ * is going to be processed now, so blk layer can do proper initializations
+ * such as starting the timeout timer.
+ */
+void blk_mq_start_request(struct request *rq)
+{
+    struct request_queue *q = rq->q;
+
+    trace_block_rq_issue(rq);
+
+    if (test_bit(QUEUE_FLAG_STATS, &q->queue_flags) &&
+        !blk_rq_is_passthrough(rq)) {
+        rq->io_start_time_ns = blk_time_get_ns();
+        rq->stats_sectors = blk_rq_sectors(rq);
+        rq->rq_flags |= RQF_STATS;
+        rq_qos_issue(q, rq);
+    }
+
+    WARN_ON_ONCE(blk_mq_rq_state(rq) != MQ_RQ_IDLE);
+
+    blk_add_timer(rq);
+    WRITE_ONCE(rq->state, MQ_RQ_IN_FLIGHT);
+    rq->mq_hctx->tags->rqs[rq->tag] = rq;
+
+    if (blk_integrity_rq(rq) && req_op(rq) == REQ_OP_WRITE)
+        blk_integrity_prepare(rq);
+
+    if (rq->bio && rq->bio->bi_opf & REQ_POLLED)
+            WRITE_ONCE(rq->bio->bi_cookie, rq->mq_hctx->queue_num);
+}

@@ -495,8 +495,6 @@ void __blk_flush_plug(struct blk_plug *plug, bool from_schedule)
 
     plug->cur_ktime = 0;
     current->flags &= ~PF_BLOCK_TS;
-
-    PANIC("");
 }
 
 void update_io_ticks(struct block_device *part, unsigned long now, bool end)
@@ -580,8 +578,6 @@ static void __submit_bio_noacct_mq(struct bio *bio)
     } while ((bio = bio_list_pop(&bio_list[0])));
 
     current->bio_list = NULL;
-
-    PANIC("");
 }
 
 /*
