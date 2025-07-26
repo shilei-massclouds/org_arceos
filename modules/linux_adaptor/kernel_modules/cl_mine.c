@@ -345,8 +345,6 @@ CL_MINE(truncate_inode_page)
 CL_MINE(__cancel_dirty_page)
 CL_MINE(blk_flush_plug_list)
 
-CL_MINE(plic_handle_irq)
-
 // vsprintf
 CL_MINE(__clk_get_name)
 CL_MINE(_ctype)

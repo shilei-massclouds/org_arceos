@@ -50,7 +50,7 @@ fn prepare_ext_interrupt() {
 
     axhal::irq::register_handler(EXT_IRQ_NUM, || {
         info!("Handle ext interrupt ...");
-        unsafe { plic_handle_irq() };
+        unsafe { call_handle_arch_irq(EXT_IRQ_NUM as usize) };
     });
 }
 
@@ -63,7 +63,7 @@ unsafe extern "C" {
 
 #[cfg(target_arch = "riscv64")]
 unsafe extern "C" {
-    fn plic_handle_irq();
+    fn call_handle_arch_irq(cause: usize);
     fn setup_paging(va_pa_offset: usize);
 }
 

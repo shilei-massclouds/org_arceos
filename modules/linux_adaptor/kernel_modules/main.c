@@ -84,6 +84,10 @@ int clinux_init(void)
         static struct device_node riscv_intc_node;
         riscv_intc_node.name = "riscv_intc";
         cl_riscv_intc_init(&riscv_intc_node, NULL);
+        if (handle_arch_irq == NULL) {
+            PANIC("No handle_arch_irq.");
+        }
+        printk("%s: handle_arch_irq(%lx)\n", __func__, handle_arch_irq);
     }
 
     // Note: Refer to old cl_irq_init in irq.c.
@@ -120,6 +124,13 @@ int clinux_init(void)
     PANIC("Reach here!");
 
     return 0;
+}
+
+void call_handle_arch_irq(unsigned long cause)
+{
+    struct pt_regs regs;
+    regs.cause = cause;
+    handle_arch_irq(&regs);
 }
 
 #if 0
