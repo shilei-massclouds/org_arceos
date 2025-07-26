@@ -491,3 +491,6 @@ CL_MINE(is_vmalloc_or_module_addr)
 CL_MINE(iov_iter_extract_pages)
 CL_MINE(get_free_pages_noprof)
 CL_MINE(iov_iter_advance)
+
+CL_MINE(housekeeping_enabled)
+CL_MINE(housekeeping_cpumask)

@@ -1,7 +1,21 @@
+#define pr_fmt(fmt) "genirq: " fmt
+
 #include <linux/irq.h>
 #include <linux/kthread.h>
+#include <linux/module.h>
+#include <linux/random.h>
+#include <linux/interrupt.h>
+#include <linux/irqdomain.h>
+#include <linux/slab.h>
+#include <linux/sched.h>
+#include <linux/sched/rt.h>
+#include <linux/sched/task.h>
+#include <linux/sched/isolation.h>
+#include <uapi/linux/sched/types.h>
+#include <linux/task_work.h>
 
 #include "internals.h"
+
 #include "../adaptor.h"
 
 cpumask_var_t irq_default_affinity;
@@ -14,6 +28,17 @@ static irqreturn_t irq_nested_primary_handler(int irq, void *dev_id)
 {
     WARN(1, "Primary handler called for nested irq %d\n", irq);
     return IRQ_NONE;
+}
+
+static void irq_validate_effective_affinity(struct irq_data *data)
+{
+    const struct cpumask *m = irq_data_get_effective_affinity_mask(data);
+    struct irq_chip *chip = irq_data_get_irq_chip(data);
+
+    if (!cpumask_empty(m))
+        return;
+    pr_warn_once("irq_chip %s did not update eff. affinity mask of irq %u\n",
+             chip->name, data->irq);
 }
 
 /*
@@ -81,6 +106,7 @@ static bool irq_set_affinity_deactivated(struct irq_data *data,
 {
     struct irq_desc *desc = irq_data_to_desc(data);
 
+    printk("%s: step0\n", __func__);
     /*
      * Handle irq chips which can handle affinity only in activated
      * state correctly
@@ -95,9 +121,106 @@ static bool irq_set_affinity_deactivated(struct irq_data *data,
         return false;
 
     cpumask_copy(desc->irq_common_data.affinity, mask);
+    printk("%s: step1\n", __func__);
     irq_data_update_effective_affinity(data, mask);
     irqd_set(data, IRQD_AFFINITY_SET);
     return true;
+}
+
+static inline int irq_set_affinity_pending(struct irq_data *data,
+                       const struct cpumask *dest)
+{
+    return -EBUSY;
+}
+
+static int irq_try_set_affinity(struct irq_data *data,
+                const struct cpumask *dest, bool force)
+{
+    int ret = irq_do_set_affinity(data, dest, force);
+
+    /*
+     * In case that the underlying vector management is busy and the
+     * architecture supports the generic pending mechanism then utilize
+     * this to avoid returning an error to user space.
+     */
+    if (ret == -EBUSY && !force)
+        ret = irq_set_affinity_pending(data, dest);
+    return ret;
+}
+
+static DEFINE_PER_CPU(struct cpumask, __tmp_mask);
+
+int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
+            bool force)
+{
+    struct cpumask *tmp_mask = this_cpu_ptr(&__tmp_mask);
+    struct irq_desc *desc = irq_data_to_desc(data);
+    struct irq_chip *chip = irq_data_get_irq_chip(data);
+    const struct cpumask  *prog_mask;
+    int ret;
+
+    if (!chip || !chip->irq_set_affinity)
+        return -EINVAL;
+
+    /*
+     * If this is a managed interrupt and housekeeping is enabled on
+     * it check whether the requested affinity mask intersects with
+     * a housekeeping CPU. If so, then remove the isolated CPUs from
+     * the mask and just keep the housekeeping CPU(s). This prevents
+     * the affinity setter from routing the interrupt to an isolated
+     * CPU to avoid that I/O submitted from a housekeeping CPU causes
+     * interrupts on an isolated one.
+     *
+     * If the masks do not intersect or include online CPU(s) then
+     * keep the requested mask. The isolated target CPUs are only
+     * receiving interrupts when the I/O operation was submitted
+     * directly from them.
+     *
+     * If all housekeeping CPUs in the affinity mask are offline, the
+     * interrupt will be migrated by the CPU hotplug code once a
+     * housekeeping CPU which belongs to the affinity mask comes
+     * online.
+     */
+    if (irqd_affinity_is_managed(data) &&
+        housekeeping_enabled(HK_TYPE_MANAGED_IRQ)) {
+        const struct cpumask *hk_mask;
+
+        hk_mask = housekeeping_cpumask(HK_TYPE_MANAGED_IRQ);
+
+        cpumask_and(tmp_mask, mask, hk_mask);
+        if (!cpumask_intersects(tmp_mask, cpu_online_mask))
+            prog_mask = mask;
+        else
+            prog_mask = tmp_mask;
+    } else {
+        prog_mask = mask;
+    }
+
+    /*
+     * Make sure we only provide online CPUs to the irqchip,
+     * unless we are being asked to force the affinity (in which
+     * case we do as we are told).
+     */
+    cpumask_and(tmp_mask, prog_mask, cpu_online_mask);
+    if (!force && !cpumask_empty(tmp_mask))
+        ret = chip->irq_set_affinity(data, tmp_mask, force);
+    else if (force)
+        ret = chip->irq_set_affinity(data, mask, force);
+    else
+        ret = -EINVAL;
+
+    switch (ret) {
+    case IRQ_SET_MASK_OK:
+    case IRQ_SET_MASK_OK_DONE:
+        cpumask_copy(desc->irq_common_data.affinity, mask);
+        fallthrough;
+    case IRQ_SET_MASK_OK_NOCOPY:
+        irq_validate_effective_affinity(data);
+        irq_set_thread_affinity(desc);
+        ret = 0;
+    }
+
+    return ret;
 }
 
 int irq_set_affinity_locked(struct irq_data *data, const struct cpumask *mask,
@@ -113,8 +236,6 @@ int irq_set_affinity_locked(struct irq_data *data, const struct cpumask *mask,
     if (irq_set_affinity_deactivated(data, mask))
         return 0;
 
-    pr_err("%s: No impl.", __func__);
-#if 0
     if (irq_can_move_pcntxt(data) && !irqd_is_setaffinity_pending(data)) {
         ret = irq_try_set_affinity(data, mask, force);
     } else {
@@ -122,6 +243,8 @@ int irq_set_affinity_locked(struct irq_data *data, const struct cpumask *mask,
         irq_copy_pending(desc, mask);
     }
 
+    pr_err("%s: No impl.", __func__);
+#if 0
     if (desc->affinity_notify) {
         kref_get(&desc->affinity_notify->kref);
         if (!schedule_work(&desc->affinity_notify->work)) {
@@ -614,4 +737,29 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
     }
 #endif
     return retval;
+}
+
+/**
+ *  irq_set_thread_affinity - Notify irq threads to adjust affinity
+ *  @desc:      irq descriptor which has affinity changed
+ *
+ *  We just set IRQTF_AFFINITY and delegate the affinity setting
+ *  to the interrupt thread itself. We can not call
+ *  set_cpus_allowed_ptr() here as we hold desc->lock and this
+ *  code can be called from hard interrupt context.
+ */
+void irq_set_thread_affinity(struct irq_desc *desc)
+{
+    struct irqaction *action;
+
+    for_each_action_of_desc(desc, action) {
+        if (action->thread) {
+            set_bit(IRQTF_AFFINITY, &action->thread_flags);
+            wake_up_process(action->thread);
+        }
+        if (action->secondary && action->secondary->thread) {
+            set_bit(IRQTF_AFFINITY, &action->secondary->thread_flags);
+            wake_up_process(action->secondary->thread);
+        }
+    }
 }

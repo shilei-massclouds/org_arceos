@@ -1,4 +1,5 @@
 #include <linux/blkdev.h>
+#include <linux/pagemap.h>
 
 #include "adaptor.h"
 
@@ -25,18 +26,26 @@ void test_block(void)
         PANIC("No 'read_folio'.");
     }
 
-    struct page *page = alloc_page(GFP_KERNEL);
-    if (page == NULL) {
+    struct folio *folio = folio_alloc(GFP_KERNEL, 0);
+    if (folio == NULL) {
         PANIC("No page.");
     }
-    page->mapping = dev->bd_mapping;
+    folio->mapping = dev->bd_mapping;
 
     /* Read first block (PAGE_SIZE) */
-    page->index = 0;
-    __folio_set_locked(page);
-    ret = a_ops->read_folio(NULL, page);
+    folio->index = 0;
+    __folio_set_locked(folio);
+    ret = a_ops->read_folio(NULL, folio);
     if (ret) {
         pr_err("Read block err: %d\n", ret);
+        PANIC("Read error.");
+    }
+    ret = folio_wait_locked_killable(folio);
+    if (ret) {
+        PANIC("Wait unlocked error.");
+    }
+    if (!folio_test_uptodate(folio)) {
+        PANIC("Not up_to_date.");
     }
 
     PANIC("Test block ok!");

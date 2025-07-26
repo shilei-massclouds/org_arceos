@@ -39,3 +39,11 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
     set_page_count(page, 1);
     return page;
 }
+
+struct folio *__folio_alloc_noprof(gfp_t gfp, unsigned int order, int preferred_nid,
+        nodemask_t *nodemask)
+{
+    struct page *page = __alloc_pages_noprof(gfp | __GFP_COMP, order,
+                    preferred_nid, nodemask);
+    return page_rmappable_folio(page);
+}
