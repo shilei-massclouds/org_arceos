@@ -13,9 +13,9 @@
 //#include "fs/internal.h"
 #include "adaptor.h"
 
-#define TEST_BLOCK
+//#define TEST_BLOCK
 //#define TEST_EXT2
-//#define TEST_EXT4
+#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
@@ -30,6 +30,8 @@ extern void cl_blkdev_init(void);
 extern void cl_init_bio(void);
 extern void cl_sg_pool_init(void);
 
+extern int cl_journal_init(void);
+
 extern void test_block(void);
 
 #if 0
@@ -39,7 +41,6 @@ extern int cl_enable_irq(void);
 
 extern int cl_ext2_fs_init(void);
 extern int cl_ext4_fs_init(void);
-extern int cl_journal_init(void);
 
 extern int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos);
 extern int cl_write(struct inode *inode, const void *buf, size_t count, loff_t *pos);
@@ -47,9 +48,6 @@ extern int cl_write(struct inode *inode, const void *buf, size_t count, loff_t *
 /* Stuff needed by irq-sifive-plic */
 unsigned long boot_cpu_hartid;
 
-static int test_read_blocks();
-static int test_write_blocks();
-extern int clinux_test_block_driver(void);
 extern struct dentry *call_mount(const char *name);
 extern int lookup(struct file *dir, const char *target, u64 *ret_ino);
 
@@ -107,20 +105,10 @@ int clinux_init(void)
     test_block();
 #endif
 
-#if 0
-    cl_enable_irq();
-
-    clinux_test_block_driver();
-
-#ifdef TEST_EXT2
-    test_ext2();
-#endif
-
 #ifdef TEST_EXT4
-    test_ext4();
+    cl_journal_init();
 #endif
 
-#endif
     PANIC("Reach here!");
 
     return 0;
@@ -265,67 +253,4 @@ static void test_ext2(void)
 }
 #endif
 
-int clinux_test_block_driver(void)
-{
-#if 0
-    test_read_blocks();
-    booter_panic("Reach here!\n");
-#endif
-
-#if 0
-    test_write_blocks();
-    booter_panic("Reach here!\n");
-#endif
-    return 0;
-}
-
-#if 0
-/* Utilities for testing */
-static int read_a_block(int blk_nr)
-{
-    char buf[16];
-    memset(buf, 0, sizeof(buf));
-    cl_read_block(blk_nr, buf, sizeof(buf));
-    printk("after cl_read_block!\n");
-    /*
-    if (!buf[0] || !buf[1] || !buf[2] || !buf[3]) {
-        booter_panic("Read block error!\n");
-    }
-    */
-
-    printk("\n=============\n");
-    printk("Read Block[%d]: %x, %x, %x, %x\n",
-           blk_nr, buf[0], buf[1], buf[2], buf[3]);
-    printk("=============\n\n");
-    return 0;
-}
-
-/* Test for reading block */
-static int test_read_blocks()
-{
-    read_a_block(0);
-    read_a_block(1);
-}
-#endif
-
-#if 0
-static int write_a_block(int blk_nr)
-{
-    read_a_block(blk_nr);
-    read_a_block(blk_nr+1);
-
-    char wbuf[512];
-    memset(wbuf, 0xAB, sizeof(wbuf));
-    cl_write_block(blk_nr, wbuf, sizeof(wbuf));
-
-    read_a_block(blk_nr);
-    read_a_block(blk_nr+1);
-}
-
-/* Test for writing block */
-static int test_write_blocks()
-{
-    write_a_block(0);
-}
-#endif
 #endif

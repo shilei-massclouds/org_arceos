@@ -80,12 +80,8 @@ OBJS += fs/buffer.o
 #OBJS += ext4/xattr_trusted.o ext4/xattr_user.o
 
 # jbd2
-#OBJS += jbd2/checkpoint.o
-#OBJS += jbd2/commit.o
-#OBJS += jbd2/journal.o
-#OBJS += jbd2/recovery.o
-#OBJS += jbd2/revoke.o
-#OBJS += jbd2/transaction.o
+OBJS += jbd2/checkpoint.o jbd2/commit.o jbd2/journal.o jbd2/recovery.o
+OBJS += jbd2/revoke.o jbd2/transaction.o
 
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o smp.o softirq.o panic.o \
