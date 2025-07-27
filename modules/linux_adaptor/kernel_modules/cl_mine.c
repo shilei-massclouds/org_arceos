@@ -418,7 +418,6 @@ CL_MINE(blk_mq_free_map_and_rqs)
 CL_MINE(kvfree)
 
 CL_MINE(prepare_to_wait_exclusive)
-CL_MINE(finish_wait)
 CL_MINE(seq_putc)
 CL_MINE(seq_write)
 CL_MINE(blk_mq_free_rqs)

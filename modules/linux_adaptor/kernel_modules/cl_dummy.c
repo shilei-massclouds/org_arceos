@@ -174,3 +174,8 @@ void add_interrupt_randomness(int irq)
 {
     pr_err("%s: No impl.", __func__);
 }
+
+void rcu_all_qs(void)
+{
+    pr_err("%s: No impl.", __func__);
+}

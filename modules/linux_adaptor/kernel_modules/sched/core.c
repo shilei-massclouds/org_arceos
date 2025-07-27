@@ -115,7 +115,7 @@ unsigned long init_current(unsigned long thread_id)
         : : "rK" (tsk)
         : "memory"
     );
-    pr_debug("%s: init_task(%lu) ptr (0x%lx)\n", __func__, thread_id, tsk);
+    printk("%s: init_task(%lu) ptr (0x%lx)\n", __func__, thread_id, tsk);
     return (unsigned long)tsk;
 }
 
@@ -157,7 +157,11 @@ int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
     if (p == NULL) {
         PANIC("bad task pointer.");
     }
-    printk("%s: task_ptr(%lx) tid(%lu)\n", __func__, p, p->pid);
+    printk("%s: task_ptr(%lx:%u) tid(%lu) current(%lx:%u)\n",
+           __func__, p, p->__state, p->pid, current, current->__state);
+    if (p == current) {
+        return 0;
+    }
     cl_wake_up(p->pid);
     return 1;
 }
@@ -184,10 +188,59 @@ void __might_resched(const char *file, int line, unsigned int offsets)
     pr_err("%s: No impl.", __func__);
 }
 
+static void __sched notrace preempt_schedule_common(void)
+{
+#if 0
+    do {
+        /*
+         * Because the function tracer can trace preempt_count_sub()
+         * and it also uses preempt_enable/disable_notrace(), if
+         * NEED_RESCHED is set, the preempt_enable_notrace() called
+         * by the function tracer will call this function again and
+         * cause infinite recursion.
+         *
+         * Preemption must be disabled here before the function
+         * tracer can trace. Break up preempt_disable() into two
+         * calls. One to disable preemption without fear of being
+         * traced. The other to still record the preemption latency,
+         * which can also be traced by the function tracer.
+         */
+        preempt_disable_notrace();
+        preempt_latency_start(1);
+        __schedule(SM_PREEMPT);
+        preempt_latency_stop(1);
+        preempt_enable_no_resched_notrace();
+
+        /*
+         * Check again in case we missed a preemption opportunity
+         * between schedule and now.
+         */
+    } while (need_resched());
+#endif
+    PANIC("");
+}
+
 #if !defined(CONFIG_PREEMPTION) || defined(CONFIG_PREEMPT_DYNAMIC)
 int __sched __cond_resched(void)
 {
-    pr_err("%s: No impl.", __func__);
+    if (should_resched(0) && !irqs_disabled()) {
+        preempt_schedule_common();
+        return 1;
+    }
+    /*
+     * In preemptible kernels, ->rcu_read_lock_nesting tells the tick
+     * whether the current CPU is in an RCU read-side critical section,
+     * so the tick can report quiescent states even for CPUs looping
+     * in kernel context.  In contrast, in non-preemptible kernels,
+     * RCU readers leave no in-memory hints, which means that CPU-bound
+     * processes executing in kernel context might never report an
+     * RCU quiescent state.  Therefore, the following code causes
+     * cond_resched() to report a quiescent state, but only when RCU
+     * is in urgent need of one.
+     */
+#ifndef CONFIG_PREEMPT_RCU
+    rcu_all_qs();
+#endif
     return 0;
 }
 #endif

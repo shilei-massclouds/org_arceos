@@ -187,7 +187,6 @@ static int wake_page_function(wait_queue_entry_t *wait, unsigned mode, int sync,
      * exited.
      */
     list_del_init_careful(&wait->entry);
-    PANIC("");
     return (flags & WQ_FLAG_EXCLUSIVE) != 0;
 }
 
@@ -308,7 +307,6 @@ repeat:
         psi_memstall_leave(&pflags);
     }
 
-    PANIC("");
     /*
      * NOTE! The wait->flags weren't stable until we've done the
      * 'finish_wait()', and we could have exited the loop above due
@@ -325,7 +323,6 @@ repeat:
     if (behavior == EXCLUSIVE)
         return wait->flags & WQ_FLAG_DONE ? 0 : -EINTR;
 
-    PANIC("");
     return wait->flags & WQ_FLAG_WOKEN ? 0 : -EINTR;
 }
 

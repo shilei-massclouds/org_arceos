@@ -9,6 +9,8 @@
 #include <linux/sched.h>
 #include <linux/sched/signal.h>
 
+#include "../adaptor.h"
+
 void __init_waitqueue_head(struct wait_queue_head *wq_head, const char *name, struct lock_class_key *key)
 {
     spin_lock_init(&wq_head->lock);
@@ -124,4 +126,38 @@ long prepare_to_wait_event(struct wait_queue_head *wq_head, struct wait_queue_en
 void __wake_up_locked_key(struct wait_queue_head *wq_head, unsigned int mode, void *key)
 {
     __wake_up_common(wq_head, mode, 1, 0, key);
+}
+
+/**
+ * finish_wait - clean up after waiting in a queue
+ * @wq_head: waitqueue waited on
+ * @wq_entry: wait descriptor
+ *
+ * Sets current thread back to running state and removes
+ * the wait descriptor from the given waitqueue if still
+ * queued.
+ */
+void finish_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry)
+{
+    unsigned long flags;
+
+    __set_current_state(TASK_RUNNING);
+    /*
+     * We can check for list emptiness outside the lock
+     * IFF:
+     *  - we use the "careful" check that verifies both
+     *    the next and prev pointers, so that there cannot
+     *    be any half-pending updates in progress on other
+     *    CPU's that we haven't seen yet (and that might
+     *    still change the stack area.
+     * and
+     *  - all other users take the lock (ie we can only
+     *    have _one_ other CPU that looks at or modifies
+     *    the list).
+     */
+    if (!list_empty_careful(&wq_entry->entry)) {
+        spin_lock_irqsave(&wq_head->lock, flags);
+        list_del_init(&wq_entry->entry);
+        spin_unlock_irqrestore(&wq_head->lock, flags);
+    }
 }
