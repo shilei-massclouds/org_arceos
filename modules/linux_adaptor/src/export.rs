@@ -30,6 +30,14 @@ pub extern "C" fn cl_alloc_pages(size: usize, align: usize) -> usize {
     global_allocator().alloc_pages(count, align).unwrap()
 }
 
+/// Free pages.
+#[unsafe(no_mangle)]
+pub extern "C" fn cl_free_pages(addr: usize, count: usize) {
+    assert!(addr > 0);
+    assert!(count > 0);
+    global_allocator().dealloc_pages(addr, count)
+}
+
 /// Printk
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_printk(level: u8, ptr: *const c_char) {

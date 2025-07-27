@@ -252,7 +252,6 @@ CL_MINE(mb_cache_entry_get)
 CL_MINE(mb_cache_entry_touch)
 CL_MINE(memchr_inv)
 
-CL_MINE(__free_pages)
 CL_MINE(io_schedule_timeout)
 
 CL_MINE(memweight)

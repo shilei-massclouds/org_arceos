@@ -3,25 +3,28 @@
 
 #include "adaptor.h"
 
-void test_block(void)
+static const struct address_space *
+prepare_block_dev(void)
 {
-    int ret;
-    const struct address_space_operations *a_ops;
     struct block_device *dev;
 
     dev = blkdev_get_no_open(MKDEV(0xFE, 0x00));
     if (dev == NULL || dev->bd_mapping == NULL) {
         PANIC("No block device!");
     }
+    return dev->bd_mapping;
+}
 
-    a_ops = dev->bd_mapping->a_ops;
-    if (a_ops == NULL) {
-        PANIC("No bdev page cache ops!");
+static void test_read(const struct address_space *aspace, int index)
+{
+    int ret;
+    const struct address_space_operations *a_ops;
+
+    if (aspace == NULL || aspace->a_ops == NULL) {
+        PANIC("No bdev aspace!");
     }
+    a_ops = aspace->a_ops;
 
-    /*
-     * Read block tests
-     */
     if (a_ops->read_folio == NULL) {
         PANIC("No 'read_folio'.");
     }
@@ -30,10 +33,9 @@ void test_block(void)
     if (folio == NULL) {
         PANIC("No page.");
     }
-    folio->mapping = dev->bd_mapping;
+    folio->mapping = aspace;
 
-    /* Read second block (index = 1 and size = PAGE_SIZE) */
-    folio->index = 1;
+    folio->index = index;
     __folio_set_locked(folio);
     ret = a_ops->read_folio(NULL, folio);
     if (ret) {
@@ -53,11 +55,23 @@ void test_block(void)
         PANIC("Bad page.");
     }
 
+    /* Verify block content. */
     {
         unsigned int *dwords = (unsigned int *) vaddr;
         printk("Read: %08lx, %08lx, %08lx, %08lx\n",
                dwords[0], dwords[1], dwords[2], dwords[3]);
     }
 
+    __free_page(folio);
+
     PANIC("Test block ok!");
+}
+
+void test_block(void)
+{
+    const struct address_space *aspace;
+    aspace = prepare_block_dev();
+
+    /* Read second block (index = 1 and size = PAGE_SIZE) */
+    test_read(aspace, 1);
 }
