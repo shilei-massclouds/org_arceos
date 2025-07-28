@@ -31,16 +31,14 @@ extern void cl_init_bio(void);
 extern void cl_sg_pool_init(void);
 
 extern int cl_journal_init(void);
+extern int cl_ext4_init_fs(void);
 
 extern void test_block(void);
 
 #if 0
 extern void init_current(unsigned long thread_id);
 
-extern int cl_enable_irq(void);
-
 extern int cl_ext2_fs_init(void);
-extern int cl_ext4_fs_init(void);
 
 extern int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos);
 extern int cl_write(struct inode *inode, const void *buf, size_t count, loff_t *pos);
@@ -107,6 +105,7 @@ int clinux_init(void)
 
 #ifdef TEST_EXT4
     cl_journal_init();
+    cl_ext4_init_fs();
 #endif
 
     PANIC("Reach here!");
