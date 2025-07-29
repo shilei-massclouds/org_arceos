@@ -89,3 +89,13 @@ void __lockfunc _raw_write_unlock(rwlock_t *lock)
 {
     pr_err("%s: ===> WARN: impl it.\n", __func__);
 }
+
+noinline void __lockfunc _raw_read_lock(rwlock_t *lock)
+{
+    pr_err("%s: ===> WARN: impl it.\n", __func__);
+}
+
+noinline void __lockfunc _raw_read_unlock(rwlock_t *lock)
+{
+    pr_err("%s: ===> WARN: impl it.\n", __func__);
+}

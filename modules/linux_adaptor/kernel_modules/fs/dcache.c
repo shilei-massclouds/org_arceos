@@ -313,6 +313,35 @@ void dput(struct dentry *dentry)
     pr_err("%s: No impl.", __func__);
 }
 
+/**
+ * d_alloc_pseudo - allocate a dentry (for lookup-less filesystems)
+ * @sb: the superblock
+ * @name: qstr of the name
+ *
+ * For a filesystem that just pins its dentries in memory and never
+ * performs lookups at all, return an unhashed IS_ROOT dentry.
+ * This is used for pipes, sockets et.al. - the stuff that should
+ * never be anyone's children or parents.  Unlike all other
+ * dentries, these will not have RCU delay between dropping the
+ * last reference and freeing them.
+ *
+ * The only user is alloc_file_pseudo() and that's what should
+ * be considered a public interface.  Don't use directly.
+ */
+struct dentry *d_alloc_pseudo(struct super_block *sb, const struct qstr *name)
+{
+    static const struct dentry_operations anon_ops = {
+        .d_dname = simple_dname
+    };
+    struct dentry *dentry = __d_alloc(sb, name);
+    if (likely(dentry)) {
+        dentry->d_flags |= DCACHE_NORCU;
+        if (!sb->s_d_op)
+            d_set_d_op(dentry, &anon_ops);
+    }
+    return dentry;
+}
+
 static void __init dcache_init(void)
 {
     /*
@@ -355,8 +384,8 @@ void __init vfs_caches_init(void)
 
     dcache_init();
     inode_init();
-    //files_init();
-    //files_maxfiles_init();
+    files_init();
+    files_maxfiles_init();
     mnt_init();
     bdev_cache_init();
     //chrdev_init();

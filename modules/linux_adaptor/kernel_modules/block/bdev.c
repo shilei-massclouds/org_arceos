@@ -27,11 +27,19 @@
 
 #include "../adaptor.h"
 
+/* Should we allow writing to mounted block devices? */
+static bool bdev_allow_write_mounted = IS_ENABLED(CONFIG_BLK_DEV_WRITE_MOUNTED);
+
 struct bdev_inode {
     struct block_device bdev;
     struct inode vfs_inode;
 };
 
+/*
+ * pseudo-fs
+ */
+
+static  __cacheline_aligned_in_smp DEFINE_MUTEX(bdev_lock);
 static struct kmem_cache *bdev_cachep __ro_after_init;
 
 struct super_block *blockdev_superblock __ro_after_init;
@@ -52,9 +60,147 @@ struct block_device *I_BDEV(struct inode *inode)
     return &BDEV_I(inode)->bdev;
 }
 
+static bool bdev_writes_blocked(struct block_device *bdev)
+{
+    return bdev->bd_writers < 0;
+}
+
 bool disk_live(struct gendisk *disk)
 {
     return !inode_unhashed(BD_INODE(disk->part0));
+}
+
+/* Kill _all_ buffers and pagecache , dirty or not.. */
+static void kill_bdev(struct block_device *bdev)
+{
+    PANIC("");
+}
+
+static void bdev_write_inode(struct block_device *bdev)
+{
+    PANIC("");
+}
+
+static void blkdev_flush_mapping(struct block_device *bdev)
+{
+    WARN_ON_ONCE(bdev->bd_holders);
+    sync_blockdev(bdev);
+    kill_bdev(bdev);
+    bdev_write_inode(bdev);
+}
+
+static void blkdev_put_whole(struct block_device *bdev)
+{
+    if (atomic_dec_and_test(&bdev->bd_openers))
+        blkdev_flush_mapping(bdev);
+    if (bdev->bd_disk->fops->release)
+        bdev->bd_disk->fops->release(bdev->bd_disk);
+}
+
+static void set_init_blocksize(struct block_device *bdev)
+{
+    unsigned int bsize = bdev_logical_block_size(bdev);
+    loff_t size = i_size_read(BD_INODE(bdev));
+
+    while (bsize < PAGE_SIZE) {
+        if (size & bsize)
+            break;
+        bsize <<= 1;
+    }
+    BD_INODE(bdev)->i_blkbits = blksize_bits(bsize);
+}
+
+static int blkdev_get_whole(struct block_device *bdev, blk_mode_t mode)
+{
+    struct gendisk *disk = bdev->bd_disk;
+    int ret;
+
+    if (disk->fops->open) {
+        ret = disk->fops->open(disk, mode);
+        if (ret) {
+            /* avoid ghost partitions on a removed medium */
+            if (ret == -ENOMEDIUM &&
+                 test_bit(GD_NEED_PART_SCAN, &disk->state))
+                bdev_disk_changed(disk, true);
+            return ret;
+        }
+    }
+
+    if (!atomic_read(&bdev->bd_openers))
+        set_init_blocksize(bdev);
+    atomic_inc(&bdev->bd_openers);
+    if (test_bit(GD_NEED_PART_SCAN, &disk->state)) {
+        pr_err("%s: GD_NEED_PART_SCAN\n", __func__);
+#if 0
+        /*
+         * Only return scanning errors if we are called from contexts
+         * that explicitly want them, e.g. the BLKRRPART ioctl.
+         */
+        ret = bdev_disk_changed(disk, false);
+        if (ret && (mode & BLK_OPEN_STRICT_SCAN)) {
+            blkdev_put_whole(bdev);
+            return ret;
+        }
+#endif
+    }
+    return 0;
+}
+
+static int blkdev_get_part(struct block_device *part, blk_mode_t mode)
+{
+    PANIC("");
+}
+
+static bool bdev_may_open(struct block_device *bdev, blk_mode_t mode)
+{
+    if (bdev_allow_write_mounted)
+        return true;
+    /* Writes blocked? */
+    if (mode & BLK_OPEN_WRITE && bdev_writes_blocked(bdev))
+        return false;
+    if (mode & BLK_OPEN_RESTRICT_WRITES && bdev->bd_writers > 0)
+        return false;
+    return true;
+}
+
+/**
+ * bd_may_claim - test whether a block device can be claimed
+ * @bdev: block device of interest
+ * @holder: holder trying to claim @bdev
+ * @hops: holder ops
+ *
+ * Test whether @bdev can be claimed by @holder.
+ *
+ * RETURNS:
+ * %true if @bdev can be claimed, %false otherwise.
+ */
+static bool bd_may_claim(struct block_device *bdev, void *holder,
+        const struct blk_holder_ops *hops)
+{
+    struct block_device *whole = bdev_whole(bdev);
+
+    lockdep_assert_held(&bdev_lock);
+
+    if (bdev->bd_holder) {
+        /*
+         * The same holder can always re-claim.
+         */
+        if (bdev->bd_holder == holder) {
+            if (WARN_ON_ONCE(bdev->bd_holder_ops != hops))
+                return false;
+            return true;
+        }
+        return false;
+    }
+
+    /*
+     * If the whole devices holder is set to bd_may_claim, a partition on
+     * the device is claimed, but not the whole device.
+     */
+    if (whole != bdev &&
+        whole->bd_holder && whole->bd_holder != bd_may_claim)
+        return false;
+    return true;
 }
 
 struct block_device *bdev_alloc(struct gendisk *disk, u8 partno)
@@ -192,6 +338,335 @@ struct block_device *blkdev_get_no_open(dev_t dev)
         bdev = NULL;
     iput(inode);
     return bdev;
+}
+
+/**
+ * lookup_bdev() - Look up a struct block_device by name.
+ * @pathname: Name of the block device in the filesystem.
+ * @dev: Pointer to the block device's dev_t, if found.
+ *
+ * Lookup the block device's dev_t at @pathname in the current
+ * namespace if possible and return it in @dev.
+ *
+ * Context: May sleep.
+ * Return: 0 if succeeded, negative errno otherwise.
+ */
+int lookup_bdev(const char *pathname, dev_t *dev)
+{
+    pr_err("%s: No impl.", __func__);
+    if (strcmp(pathname, "/dev/root") == 0) {
+        *dev = MKDEV(0xFE, 0x00);
+        return 0;
+    }
+    PANIC("Bad blkdev name.");
+}
+
+static void bdev_block_writes(struct block_device *bdev)
+{
+    bdev->bd_writers--;
+}
+
+static void bd_clear_claiming(struct block_device *whole, void *holder)
+{
+    lockdep_assert_held(&bdev_lock);
+    /* tell others that we're done */
+    BUG_ON(whole->bd_claiming != holder);
+    whole->bd_claiming = NULL;
+    wake_up_var(&whole->bd_claiming);
+}
+
+/**
+ * bd_finish_claiming - finish claiming of a block device
+ * @bdev: block device of interest
+ * @holder: holder that has claimed @bdev
+ * @hops: block device holder operations
+ *
+ * Finish exclusive open of a block device. Mark the device as exlusively
+ * open by the holder and wake up all waiters for exclusive open to finish.
+ */
+static void bd_finish_claiming(struct block_device *bdev, void *holder,
+        const struct blk_holder_ops *hops)
+{
+    struct block_device *whole = bdev_whole(bdev);
+
+    mutex_lock(&bdev_lock);
+    BUG_ON(!bd_may_claim(bdev, holder, hops));
+    /*
+     * Note that for a whole device bd_holders will be incremented twice,
+     * and bd_holder will be set to bd_may_claim before being set to holder
+     */
+    whole->bd_holders++;
+    whole->bd_holder = bd_may_claim;
+    bdev->bd_holders++;
+    mutex_lock(&bdev->bd_holder_lock);
+    bdev->bd_holder = holder;
+    bdev->bd_holder_ops = hops;
+    mutex_unlock(&bdev->bd_holder_lock);
+    bd_clear_claiming(whole, holder);
+    mutex_unlock(&bdev_lock);
+}
+
+static void bdev_claim_write_access(struct block_device *bdev, blk_mode_t mode)
+{
+    if (bdev_allow_write_mounted)
+        return;
+
+    /* Claim exclusive or shared write access. */
+    if (mode & BLK_OPEN_RESTRICT_WRITES)
+        bdev_block_writes(bdev);
+    else if (mode & BLK_OPEN_WRITE)
+        bdev->bd_writers++;
+}
+
+/*
+ * If BLK_OPEN_WRITE_IOCTL is set then this is a historical quirk
+ * associated with the floppy driver where it has allowed ioctls if the
+ * file was opened for writing, but does not allow reads or writes.
+ * Make sure that this quirk is reflected in @f_flags.
+ *
+ * It can also happen if a block device is opened as O_RDWR | O_WRONLY.
+ */
+static unsigned blk_to_file_flags(blk_mode_t mode)
+{
+    unsigned int flags = 0;
+
+    if ((mode & (BLK_OPEN_READ | BLK_OPEN_WRITE)) ==
+        (BLK_OPEN_READ | BLK_OPEN_WRITE))
+        flags |= O_RDWR;
+    else if (mode & BLK_OPEN_WRITE_IOCTL)
+        flags |= O_RDWR | O_WRONLY;
+    else if (mode & BLK_OPEN_WRITE)
+        flags |= O_WRONLY;
+    else if (mode & BLK_OPEN_READ)
+        flags |= O_RDONLY; /* homeopathic, because O_RDONLY is 0 */
+    else
+        WARN_ON_ONCE(true);
+
+    if (mode & BLK_OPEN_NDELAY)
+        flags |= O_NDELAY;
+
+    return flags;
+}
+
+struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
+                   const struct blk_holder_ops *hops)
+{
+    struct file *bdev_file;
+    struct block_device *bdev;
+    unsigned int flags;
+    int ret;
+
+    ret = bdev_permission(dev, mode, holder);
+    if (ret)
+        return ERR_PTR(ret);
+
+    bdev = blkdev_get_no_open(dev);
+    if (!bdev)
+        return ERR_PTR(-ENXIO);
+
+    flags = blk_to_file_flags(mode);
+    bdev_file = alloc_file_pseudo_noaccount(BD_INODE(bdev),
+            blockdev_mnt, "", flags | O_LARGEFILE, &def_blk_fops);
+    if (IS_ERR(bdev_file)) {
+        blkdev_put_no_open(bdev);
+        return bdev_file;
+    }
+    ihold(BD_INODE(bdev));
+
+    ret = bdev_open(bdev, mode, holder, hops, bdev_file);
+    if (ret) {
+        /* We failed to open the block device. Let ->release() know. */
+        bdev_file->private_data = ERR_PTR(ret);
+        fput(bdev_file);
+        return ERR_PTR(ret);
+    }
+    return bdev_file;
+}
+
+/**
+ * bdev_open - open a block device
+ * @bdev: block device to open
+ * @mode: open mode (BLK_OPEN_*)
+ * @holder: exclusive holder identifier
+ * @hops: holder operations
+ * @bdev_file: file for the block device
+ *
+ * Open the block device. If @holder is not %NULL, the block device is opened
+ * with exclusive access.  Exclusive opens may nest for the same @holder.
+ *
+ * CONTEXT:
+ * Might sleep.
+ *
+ * RETURNS:
+ * zero on success, -errno on failure.
+ */
+int bdev_open(struct block_device *bdev, blk_mode_t mode, void *holder,
+          const struct blk_holder_ops *hops, struct file *bdev_file)
+{
+    bool unblock_events = true;
+    struct gendisk *disk = bdev->bd_disk;
+    int ret;
+
+    if (holder) {
+        mode |= BLK_OPEN_EXCL;
+        ret = bd_prepare_to_claim(bdev, holder, hops);
+        if (ret)
+            return ret;
+    } else {
+        if (WARN_ON_ONCE(mode & BLK_OPEN_EXCL))
+            return -EIO;
+    }
+
+    //disk_block_events(disk);
+
+    mutex_lock(&disk->open_mutex);
+    ret = -ENXIO;
+    if (!disk_live(disk))
+        goto abort_claiming;
+    if (!try_module_get(disk->fops->owner))
+        goto abort_claiming;
+    ret = -EBUSY;
+    if (!bdev_may_open(bdev, mode))
+        goto put_module;
+    if (bdev_is_partition(bdev))
+        ret = blkdev_get_part(bdev, mode);
+    else
+        ret = blkdev_get_whole(bdev, mode);
+    if (ret)
+        goto put_module;
+    bdev_claim_write_access(bdev, mode);
+    if (holder) {
+        bd_finish_claiming(bdev, holder, hops);
+
+        /*
+         * Block event polling for write claims if requested.  Any write
+         * holder makes the write_holder state stick until all are
+         * released.  This is good enough and tracking individual
+         * writeable reference is too fragile given the way @mode is
+         * used in blkdev_get/put().
+         */
+        if ((mode & BLK_OPEN_WRITE) &&
+            !bdev_test_flag(bdev, BD_WRITE_HOLDER) &&
+            (disk->event_flags & DISK_EVENT_FLAG_BLOCK_ON_EXCL_WRITE)) {
+            bdev_set_flag(bdev, BD_WRITE_HOLDER);
+            unblock_events = false;
+        }
+    }
+    mutex_unlock(&disk->open_mutex);
+
+#if 0
+    if (unblock_events)
+        disk_unblock_events(disk);
+#endif
+
+    bdev_file->f_flags |= O_LARGEFILE;
+    bdev_file->f_mode |= FMODE_CAN_ODIRECT;
+    if (bdev_nowait(bdev))
+        bdev_file->f_mode |= FMODE_NOWAIT;
+    if (mode & BLK_OPEN_RESTRICT_WRITES)
+        bdev_file->f_mode |= FMODE_WRITE_RESTRICTED;
+    bdev_file->f_mapping = bdev->bd_mapping;
+    bdev_file->f_wb_err = filemap_sample_wb_err(bdev_file->f_mapping);
+    bdev_file->private_data = holder;
+
+    return 0;
+put_module:
+    module_put(disk->fops->owner);
+abort_claiming:
+    if (holder)
+        bd_abort_claiming(bdev, holder);
+    mutex_unlock(&disk->open_mutex);
+    //disk_unblock_events(disk);
+    return ret;
+}
+
+/**
+ * bd_abort_claiming - abort claiming of a block device
+ * @bdev: block device of interest
+ * @holder: holder that has claimed @bdev
+ *
+ * Abort claiming of a block device when the exclusive open failed. This can be
+ * also used when exclusive open is not actually desired and we just needed
+ * to block other exclusive openers for a while.
+ */
+void bd_abort_claiming(struct block_device *bdev, void *holder)
+{
+    mutex_lock(&bdev_lock);
+    bd_clear_claiming(bdev_whole(bdev), holder);
+    mutex_unlock(&bdev_lock);
+}
+
+/**
+ * bd_prepare_to_claim - claim a block device
+ * @bdev: block device of interest
+ * @holder: holder trying to claim @bdev
+ * @hops: holder ops.
+ *
+ * Claim @bdev.  This function fails if @bdev is already claimed by another
+ * holder and waits if another claiming is in progress. return, the caller
+ * has ownership of bd_claiming and bd_holder[s].
+ *
+ * RETURNS:
+ * 0 if @bdev can be claimed, -EBUSY otherwise.
+ */
+int bd_prepare_to_claim(struct block_device *bdev, void *holder,
+        const struct blk_holder_ops *hops)
+{
+    struct block_device *whole = bdev_whole(bdev);
+
+    if (WARN_ON_ONCE(!holder))
+        return -EINVAL;
+retry:
+    mutex_lock(&bdev_lock);
+    /* if someone else claimed, fail */
+    if (!bd_may_claim(bdev, holder, hops)) {
+        mutex_unlock(&bdev_lock);
+        return -EBUSY;
+    }
+
+    /* if claiming is already in progress, wait for it to finish */
+    if (whole->bd_claiming) {
+        wait_queue_head_t *wq = __var_waitqueue(&whole->bd_claiming);
+        DEFINE_WAIT(wait);
+
+        prepare_to_wait(wq, &wait, TASK_UNINTERRUPTIBLE);
+        mutex_unlock(&bdev_lock);
+        schedule();
+        finish_wait(wq, &wait);
+        goto retry;
+    }
+
+    /* yay, all mine */
+    whole->bd_claiming = holder;
+    mutex_unlock(&bdev_lock);
+    return 0;
+}
+
+int bdev_permission(dev_t dev, blk_mode_t mode, void *holder)
+{
+    int ret;
+
+#if 0
+    ret = devcgroup_check_permission(DEVCG_DEV_BLOCK,
+            MAJOR(dev), MINOR(dev),
+            ((mode & BLK_OPEN_READ) ? DEVCG_ACC_READ : 0) |
+            ((mode & BLK_OPEN_WRITE) ? DEVCG_ACC_WRITE : 0));
+    if (ret)
+        return ret;
+#endif
+
+    /* Blocking writes requires exclusive opener */
+    if (mode & BLK_OPEN_RESTRICT_WRITES && !holder)
+        return -EINVAL;
+
+    /*
+     * We're using error pointers to indicate to ->release() when we
+     * failed to open that block device. Also this doesn't make sense.
+     */
+    if (WARN_ON_ONCE(IS_ERR(holder)))
+        return -EINVAL;
+
+    return 0;
 }
 
 void __init bdev_cache_init(void)

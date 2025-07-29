@@ -429,6 +429,14 @@ again:
 }
 
 /*
+ * get additional reference to inode; caller must already hold one.
+ */
+void ihold(struct inode *inode)
+{
+    WARN_ON(atomic_inc_return(&inode->i_count) < 2);
+}
+
+/*
  * Initialize the waitqueues and inode hash table.
  */
 void __init inode_init_early(void)

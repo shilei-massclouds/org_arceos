@@ -31,7 +31,7 @@ OBJS += lib/bitmap.o lib/kasprintf.o lib/string_helpers.o lib/list_debug.o
 OBJS += lib/radix-tree.o lib/maple_tree.o lib/kobject.o lib/klist.o
 OBJS += lib/devres.o lib/hweight.o lib/errname.o lib/idr.o lib/xarray.o
 OBJS += lib/sort.o lib/sbitmap.o lib/lockref.o lib/rbtree.o lib/dec_and_lock.o
-OBJS += lib/find_bit.o lib/sg_pool.o lib/scatterlist.o
+OBJS += lib/find_bit.o lib/sg_pool.o lib/scatterlist.o lib/errseq.o
 OBJS += math/reciprocal_div.o
 OBJS += time/timekeeping.o
 OBJS += rcu/tree.o
@@ -55,7 +55,7 @@ OBJS += block/blk-flush.o block/blk-mq-sysfs.o block/blk-rq-qos.o
 OBJS += block/blk-timeout.o
 OBJS += fs/inode.o fs/libfs.o fs/filesystems.o fs/dcache.o
 OBJS += fs/namespace.o fs/fs_context.o fs/super.o fs/mnt_idmapping.o
-OBJS += fs/buffer.o
+OBJS += fs/buffer.o fs/file_table.o
 OBJS += proc/generic.o
 
 #OBJS += fs_types.o
@@ -88,6 +88,7 @@ OBJS += jbd2/revoke.o jbd2/transaction.o
 OBJS += cl_mine.o main.o smp.o softirq.o panic.o \
 		riscv_irq.o \
 		cl_dummy.o \
+		mount_ops.o \
 		test_block.o
 		#ctype.o kstrtox.o \
 		#signal.o \

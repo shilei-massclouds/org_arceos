@@ -106,6 +106,8 @@ int clinux_init(void)
 #ifdef TEST_EXT4
     cl_journal_init();
     cl_ext4_init_fs();
+
+    cl_mount("ext4", "/dev/root");
 #endif
 
     PANIC("Reach here!");

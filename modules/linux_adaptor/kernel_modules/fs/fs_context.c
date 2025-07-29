@@ -229,13 +229,13 @@ int vfs_parse_fs_param(struct fs_context *fc, struct fs_parameter *param)
          * don't pass to the FS.
          */
         return ret;
-#endif
 
     if (fc->ops->parse_param) {
         ret = fc->ops->parse_param(fc, param);
         if (ret != -ENOPARAM)
             return ret;
     }
+#endif
 
     /* If the filesystem doesn't take any arguments, give it the
      * default handling of source.
@@ -285,7 +285,10 @@ int vfs_parse_fs_param_source(struct fs_context *fc, struct fs_parameter *param)
  */
 void logfc(struct fc_log *log, const char *prefix, char level, const char *fmt, ...)
 {
-    PANIC("");
+    va_list args;
+    va_start(args, fmt);
+    _vprintk(fmt, args);
+    va_end(args);
 }
 
 int parse_monolithic_mount_data(struct fs_context *fc, void *data)

@@ -14,6 +14,8 @@
 #include <linux/io_uring/cmd.h>
 #include "blk.h"
 
+#include "../adaptor.h"
+
 struct blkdev_dio {
     union {
         struct kiocb        *iocb;
@@ -95,6 +97,79 @@ const struct address_space_operations def_blk_aops = {
 	.write_end	= blkdev_write_end,
 	.migrate_folio	= buffer_migrate_folio_norefs,
 	.is_dirty_writeback = buffer_check_dirty_writeback,
+};
+
+static int blkdev_open(struct inode *inode, struct file *filp)
+{
+    PANIC("");
+}
+
+static int blkdev_release(struct inode *inode, struct file *filp)
+{
+    PANIC("");
+}
+
+/*
+ * for a block special file file_inode(file)->i_size is zero
+ * so we compute the size by hand (just as in block_read/write above)
+ */
+static loff_t blkdev_llseek(struct file *file, loff_t offset, int whence)
+{
+    PANIC("");
+}
+
+static ssize_t blkdev_read_iter(struct kiocb *iocb, struct iov_iter *to)
+{
+    PANIC("");
+}
+
+/*
+ * Write data to the block device.  Only intended for the block device itself
+ * and the raw driver which basically is a fake block device.
+ *
+ * Does not take i_mutex for the write and thus is not for general purpose
+ * use.
+ */
+static ssize_t blkdev_write_iter(struct kiocb *iocb, struct iov_iter *from)
+{
+    PANIC("");
+}
+
+static int blkdev_mmap(struct file *file, struct vm_area_struct *vma)
+{
+    PANIC("");
+}
+
+static int blkdev_fsync(struct file *filp, loff_t start, loff_t end,
+        int datasync)
+{
+    PANIC("");
+}
+
+static long blkdev_fallocate(struct file *file, int mode, loff_t start,
+                 loff_t len)
+{
+    PANIC("");
+}
+
+const struct file_operations def_blk_fops = {
+    .open       = blkdev_open,
+    .release    = blkdev_release,
+    .llseek     = blkdev_llseek,
+    .read_iter  = blkdev_read_iter,
+    .write_iter = blkdev_write_iter,
+    .iopoll     = iocb_bio_iopoll,
+    .mmap       = blkdev_mmap,
+    .fsync      = blkdev_fsync,
+    .unlocked_ioctl = blkdev_ioctl,
+#ifdef CONFIG_COMPAT
+    .compat_ioctl   = compat_blkdev_ioctl,
+#endif
+    .splice_read    = filemap_splice_read,
+    .splice_write   = iter_file_splice_write,
+    .fallocate  = blkdev_fallocate,
+    .uring_cmd  = blkdev_uring_cmd,
+    .fop_flags  = FOP_BUFFER_RASYNC,
 };
 
 static __init int blkdev_init(void)

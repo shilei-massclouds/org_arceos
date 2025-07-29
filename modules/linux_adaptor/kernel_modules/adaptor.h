@@ -17,6 +17,8 @@ extern int _vprintk(const char *fmt, va_list args);
 extern void cl_resched(unsigned long back_to_runq);
 extern void cl_wake_up(unsigned long tid);
 
+extern void cl_mount(const char *fstype, const char *source);
+
 #define PANIC(args...) \
 do { \
     printk("\n########################\n"); \

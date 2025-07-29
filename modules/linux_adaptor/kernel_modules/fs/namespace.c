@@ -186,6 +186,27 @@ static inline void unlock_mount_hash(void)
     write_sequnlock(&mount_lock);
 }
 
+/*
+ * vfsmount lock must be held for read
+ */
+static inline void mnt_add_count(struct mount *mnt, int n)
+{
+#ifdef CONFIG_SMP
+    this_cpu_add(mnt->mnt_pcp->mnt_count, n);
+#else
+    preempt_disable();
+    mnt->mnt_count += n;
+    preempt_enable();
+#endif
+}
+
+struct vfsmount *mntget(struct vfsmount *mnt)
+{
+    if (mnt)
+        mnt_add_count(real_mount(mnt), 1);
+    return mnt;
+}
+
 /**
  * vfs_create_mount - Create a mount for a configured superblock
  * @fc: The configuration context with the superblock attached

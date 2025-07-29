@@ -304,7 +304,6 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags,
     if (!s)
         return NULL;
 
-    printk("%s: step1\n", __func__);
     INIT_LIST_HEAD(&s->s_mounts);
     //s->s_user_ns = get_user_ns(user_ns);
     init_rwsem(&s->s_umount);
@@ -360,7 +359,6 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags,
     s->s_time_min = TIME64_MIN;
     s->s_time_max = TIME64_MAX;
 
-    printk("%s: step2\n", __func__);
     s->s_shrink = shrinker_alloc(SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE,
                      "sb-%s", type->name);
     if (!s->s_shrink)
@@ -376,7 +374,6 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags,
     if (list_lru_init_memcg(&s->s_inode_lru, s->s_shrink))
         goto fail;
 
-    printk("%s: step3\n", __func__);
     return s;
 
 fail:
@@ -425,6 +422,7 @@ struct super_block *sget_fc(struct fs_context *fc,
     struct user_namespace *user_ns = fc->global ? &init_user_ns : fc->user_ns;
     int err;
 
+#if 0
     /*
      * Never allow s_user_ns != &init_user_ns when FS_USERNS_MOUNT is
      * not set, as the filesystem is likely unprepared to handle it.
@@ -435,6 +433,7 @@ struct super_block *sget_fc(struct fs_context *fc,
         errorfc(fc, "VFS: Mounting from non-initial user namespace is not allowed");
         return ERR_PTR(-EPERM);
     }
+#endif
 retry:
     spin_lock(&sb_lock);
     if (test) {
@@ -505,4 +504,127 @@ void deactivate_super(struct super_block *s)
         __super_lock_excl(s);
         deactivate_locked_super(s);
     }
+}
+
+/**
+ * get_tree_bdev - Get a superblock based on a single block device
+ * @fc: The filesystem context holding the parameters
+ * @fill_super: Helper to initialise a new superblock
+ */
+int get_tree_bdev(struct fs_context *fc,
+        int (*fill_super)(struct super_block *,
+                  struct fs_context *))
+{
+    return get_tree_bdev_flags(fc, fill_super, 0);
+}
+
+/**
+ * get_tree_bdev_flags - Get a superblock based on a single block device
+ * @fc: The filesystem context holding the parameters
+ * @fill_super: Helper to initialise a new superblock
+ * @flags: GET_TREE_BDEV_* flags
+ */
+int get_tree_bdev_flags(struct fs_context *fc,
+        int (*fill_super)(struct super_block *sb,
+                  struct fs_context *fc), unsigned int flags)
+{
+    struct super_block *s;
+    int error = 0;
+    dev_t dev;
+
+    if (!fc->source)
+        return invalf(fc, "No source specified");
+
+    error = lookup_bdev(fc->source, &dev);
+    if (error) {
+        if (!(flags & GET_TREE_BDEV_QUIET_LOOKUP))
+            errorf(fc, "%s: Can't lookup blockdev", fc->source);
+        return error;
+    }
+    fc->sb_flags |= SB_NOSEC;
+    s = sget_dev(fc, dev);
+    if (IS_ERR(s))
+        return PTR_ERR(s);
+
+    if (s->s_root) {
+        /* Don't summarily change the RO/RW state. */
+        if ((fc->sb_flags ^ s->s_flags) & SB_RDONLY) {
+            warnf(fc, "%pg: Can't mount, would change RO state", s->s_bdev);
+            deactivate_locked_super(s);
+            return -EBUSY;
+        }
+    } else {
+        error = setup_bdev_super(s, fc->sb_flags, fc);
+        if (!error)
+            error = fill_super(s, fc);
+        if (error) {
+            deactivate_locked_super(s);
+            return error;
+        }
+        s->s_flags |= SB_ACTIVE;
+    }
+
+    PANIC("");
+}
+
+static int set_bdev_super(struct super_block *s, void *data)
+{
+    s->s_dev = *(dev_t *)data;
+    return 0;
+}
+
+static int super_s_dev_set(struct super_block *s, struct fs_context *fc)
+{
+    return set_bdev_super(s, fc->sget_key);
+}
+
+static int super_s_dev_test(struct super_block *s, struct fs_context *fc)
+{
+    return !(s->s_iflags & SB_I_RETIRED) &&
+        s->s_dev == *(dev_t *)fc->sget_key;
+}
+
+/**
+ * sget_dev - Find or create a superblock by device number
+ * @fc: Filesystem context.
+ * @dev: device number
+ *
+ * Find or create a superblock using the provided device number that
+ * will be stored in fc->sget_key.
+ *
+ * If an extant superblock is matched, then that will be returned with
+ * an elevated reference count that the caller must transfer or discard.
+ *
+ * If no match is made, a new superblock will be allocated and basic
+ * initialisation will be performed (s_type, s_fs_info, s_id, s_dev will
+ * be set). The superblock will be published and it will be returned in
+ * a partially constructed state with SB_BORN and SB_ACTIVE as yet
+ * unset.
+ *
+ * Return: an existing or newly created superblock on success, an error
+ *         pointer on failure.
+ */
+struct super_block *sget_dev(struct fs_context *fc, dev_t dev)
+{
+    fc->sget_key = &dev;
+    return sget_fc(fc, super_s_dev_test, super_s_dev_set);
+}
+
+int setup_bdev_super(struct super_block *sb, int sb_flags,
+        struct fs_context *fc)
+{
+    struct file *bdev_file;
+    blk_mode_t mode = sb_open_mode(sb_flags);
+
+    printk("%s: bdev(%x)\n", __func__, sb->s_dev);
+
+    bdev_file = bdev_file_open_by_dev(sb->s_dev, mode, sb, &fs_holder_ops);
+    if (IS_ERR(bdev_file)) {
+        if (fc)
+            errorf(fc, "%s: Can't open blockdev", fc->source);
+        return PTR_ERR(bdev_file);
+    }
+
+
+    PANIC("");
 }
