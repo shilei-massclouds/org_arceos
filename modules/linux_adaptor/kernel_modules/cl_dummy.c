@@ -6,6 +6,7 @@
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
 #include <linux/sched/isolation.h>
+#include <linux/swap.h>
 
 #include "../adaptor.h"
 
@@ -176,6 +177,18 @@ void add_interrupt_randomness(int irq)
 }
 
 void rcu_all_qs(void)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+bool shmem_mapping(struct address_space *mapping)
+{
+    return false;
+}
+
+struct address_space *swapper_spaces[MAX_SWAPFILES] __read_mostly;
+
+void mlock_drain_local(void)
 {
     pr_err("%s: No impl.", __func__);
 }

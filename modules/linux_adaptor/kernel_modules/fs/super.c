@@ -613,6 +613,7 @@ struct super_block *sget_dev(struct fs_context *fc, dev_t dev)
 int setup_bdev_super(struct super_block *sb, int sb_flags,
         struct fs_context *fc)
 {
+    struct block_device *bdev;
     struct file *bdev_file;
     blk_mode_t mode = sb_open_mode(sb_flags);
 
@@ -624,7 +625,39 @@ int setup_bdev_super(struct super_block *sb, int sb_flags,
             errorf(fc, "%s: Can't open blockdev", fc->source);
         return PTR_ERR(bdev_file);
     }
+    bdev = file_bdev(bdev_file);
 
+    /*
+     * This really should be in blkdev_get_by_dev, but right now can't due
+     * to legacy issues that require us to allow opening a block device node
+     * writable from userspace even for a read-only block device.
+     */
+    if ((mode & BLK_OPEN_WRITE) && bdev_read_only(bdev)) {
+        bdev_fput(bdev_file);
+        return -EACCES;
+    }
 
-    PANIC("");
+    /*
+     * It is enough to check bdev was not frozen before we set
+     * s_bdev as freezing will wait until SB_BORN is set.
+     */
+    if (atomic_read(&bdev->bd_fsfreeze_count) > 0) {
+        if (fc)
+            warnf(fc, "%pg: Can't mount, blockdev is frozen", bdev);
+        bdev_fput(bdev_file);
+        return -EBUSY;
+    }
+    spin_lock(&sb_lock);
+    sb->s_bdev_file = bdev_file;
+    sb->s_bdev = bdev;
+    sb->s_bdi = bdi_get(bdev->bd_disk->bdi);
+    if (bdev_stable_writes(bdev))
+        sb->s_iflags |= SB_I_STABLE_WRITES;
+    spin_unlock(&sb_lock);
+
+    snprintf(sb->s_id, sizeof(sb->s_id), "%pg", bdev);
+    shrinker_debugfs_rename(sb->s_shrink, "sb-%s:%s", sb->s_type->name,
+                sb->s_id);
+    sb_set_blocksize(sb, block_size(bdev));
+    return 0;
 }

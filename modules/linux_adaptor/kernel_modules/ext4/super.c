@@ -5079,6 +5079,7 @@ static int ext4_load_super(struct super_block *sb, ext4_fsblk_t *lsb,
 		goto out;
 	}
 
+    printk("%s: ============== step2\n", __func__);
 	logical_sb_block = sbi->s_sb_block * EXT4_MIN_BLOCK_SIZE;
 	offset = do_div(logical_sb_block, blocksize);
 	bh = ext4_sb_bread_unmovable(sb, logical_sb_block);
@@ -5088,6 +5089,7 @@ static int ext4_load_super(struct super_block *sb, ext4_fsblk_t *lsb,
 		bh = NULL;
 		goto out;
 	}
+    printk("%s: ============== step3\n", __func__);
 	es = (struct ext4_super_block *)(bh->b_data + offset);
 	sbi->s_es = es;
 	if (es->s_magic != cpu_to_le16(EXT4_SUPER_MAGIC)) {
@@ -5220,6 +5222,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 	if (!(ctx->spec & EXT4_SPEC_JOURNAL_IOPRIO))
 		ctx->journal_ioprio = DEFAULT_JOURNAL_IOPRIO;
 
+    printk("%s: ============== step0\n", __func__);
 	sbi->s_inode_readahead_blks = EXT4_DEF_INODE_READAHEAD_BLKS;
 	sbi->s_sectors_written_start =
 		part_stat_read(sb->s_bdev, sectors[STAT_WRITE]);
@@ -5312,6 +5315,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 	if (err)
 		goto failed_mount3;
 
+    printk("%s: ============== step1\n", __func__);
 	sbi->s_stripe = ext4_get_stripe_size(sbi);
 	if (ext4_is_stripe_incompatible(sb, sbi->s_stripe)) {
 		ext4_msg(sb, KERN_WARNING,
@@ -5354,6 +5358,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 
 	sb->s_root = NULL;
 
+    printk("%s: ============== step2\n", __func__);
 	needs_recovery = (es->s_last_orphan != 0 ||
 			  ext4_has_feature_orphan_present(sb) ||
 			  ext4_has_feature_journal_needs_recovery(sb));
@@ -5416,6 +5421,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 		needs_recovery = 0;
 	}
 
+    printk("%s: ============== step3\n", __func__);
 	if (!test_opt(sb, NO_MBCACHE)) {
 		sbi->s_ea_block_cache = ext4_xattr_create_cache();
 		if (!sbi->s_ea_block_cache) {
@@ -5702,10 +5708,12 @@ static int ext4_fill_super(struct super_block *sb, struct fs_context *fc)
 	if (ctx->spec & EXT4_SPEC_s_sb_block)
 		sbi->s_sb_block = ctx->s_sb_block;
 
+    printk("%s: step1\n", __func__);
 	ret = __ext4_fill_super(fc, sb);
 	if (ret < 0)
 		goto free_sbi;
 
+    printk("%s: step2\n", __func__);
 	if (sbi->s_journal) {
 		if (test_opt(sb, DATA_FLAGS) == EXT4_MOUNT_JOURNAL_DATA)
 			descr = " journalled data mode";
@@ -5722,6 +5730,7 @@ static int ext4_fill_super(struct super_block *sb, struct fs_context *fc)
 			 sb_rdonly(sb) ? "ro" : "r/w", descr,
 			 ext4_quota_mode(sb));
 
+    printk("%s: step3\n", __func__);
 	/* Update the s_overhead_clusters if necessary */
 	ext4_update_overhead(sb, false);
 	return 0;

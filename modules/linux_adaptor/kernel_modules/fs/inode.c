@@ -22,6 +22,7 @@
 #include "../adaptor.h"
 
 static DEFINE_PER_CPU(unsigned long, nr_inodes);
+static DEFINE_PER_CPU(unsigned long, nr_unused);
 
 static struct kmem_cache *inode_cachep __ro_after_init;
 
@@ -434,6 +435,33 @@ again:
 void ihold(struct inode *inode)
 {
     WARN_ON(atomic_inc_return(&inode->i_count) < 2);
+}
+
+static void __inode_add_lru(struct inode *inode, bool rotate)
+{
+    if (inode->i_state & (I_DIRTY_ALL | I_SYNC | I_FREEING | I_WILL_FREE))
+        return;
+    if (atomic_read(&inode->i_count))
+        return;
+    if (!(inode->i_sb->s_flags & SB_ACTIVE))
+        return;
+    if (!mapping_shrinkable(&inode->i_data))
+        return;
+
+    if (list_lru_add_obj(&inode->i_sb->s_inode_lru, &inode->i_lru))
+        this_cpu_inc(nr_unused);
+    else if (rotate)
+        inode->i_state |= I_REFERENCED;
+}
+
+/*
+ * Add inode to LRU if needed (inode is unused and clean).
+ *
+ * Needs inode->i_lock held.
+ */
+void inode_add_lru(struct inode *inode)
+{
+    __inode_add_lru(inode, false);
 }
 
 /*

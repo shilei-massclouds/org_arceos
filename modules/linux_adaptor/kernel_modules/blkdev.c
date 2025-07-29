@@ -19,43 +19,6 @@ void __brelse(struct buffer_head * buf)
     WARN(1, KERN_ERR "VFS: brelse: Trying to free free buffer\n");
 }
 
-/* Kill _all_ buffers and pagecache , dirty or not.. */
-static void kill_bdev(struct block_device *bdev)
-{
-#if 0
-    struct address_space *mapping = bdev->bd_mapping;
-
-    if (mapping->nrpages == 0 && mapping->nrexceptional == 0)
-        return;
-
-    invalidate_bh_lrus();
-    truncate_inode_pages(mapping, 0);
-#endif
-    booter_panic("No impl.");
-}
-
-int set_blocksize(struct file *file, int size)
-{
-#if 0
-    /* Size must be a power of two, and between 512 and PAGE_SIZE */
-    if (size > PAGE_SIZE || size < 512 || !is_power_of_2(size))
-        return -EINVAL;
-
-    /* Size cannot be smaller than the size supported by the device */
-    if (size < bdev_logical_block_size(bdev))
-        return -EINVAL;
-
-    /* Don't change the size if it is same as current */
-    if (bdev->bd_inode->i_blkbits != blksize_bits(size)) {
-        sync_blockdev(bdev);
-        bdev->bd_inode->i_blkbits = blksize_bits(size);
-        kill_bdev(bdev);
-    }
-    return 0;
-#endif
-    booter_panic("No impl.");
-}
-
 int __sync_blockdev(struct block_device *bdev, int wait)
 {
 #if 0
@@ -75,21 +38,6 @@ int __sync_blockdev(struct block_device *bdev, int wait)
 int sync_blockdev(struct block_device *bdev)
 {
     return __sync_blockdev(bdev, 1);
-}
-
-int sb_set_blocksize(struct super_block *sb, int size)
-{
-#if 0
-    if (set_blocksize(sb->s_bdev, size))
-        return 0;
-    /* If we get here, we know size is power of two
-     * and it's value is between 512 and PAGE_SIZE */
-    sb->s_blocksize = size;
-    sb->s_blocksize_bits = blksize_bits(size);
-    log_error("%s: size(%d) NOTE!\n", __func__, size);
-    return sb->s_blocksize;
-#endif
-    booter_panic("No impl.");
 }
 
 void blk_start_plug(struct blk_plug *plug)

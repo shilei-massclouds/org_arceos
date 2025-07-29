@@ -22,9 +22,10 @@ OBJS += virtio/virtio_anchor.o
 OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
-OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o
+OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o mm/swap.o
 OBJS += mm/debug_page_alloc.o mm/debug.o mm/ioremap.o mm/mempool.o
 OBJS += mm/backing-dev.o mm/list_lru.o mm/shrinker.o mm/memblock.o
+OBJS += mm/truncate.o
 OBJS += printk/printk.o
 OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o lib/ratelimit.o
 OBJS += lib/bitmap.o lib/kasprintf.o lib/string_helpers.o lib/list_debug.o

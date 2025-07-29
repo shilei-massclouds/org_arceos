@@ -10,10 +10,64 @@
 
 #include "../adaptor.h"
 
+static inline bool list_lru_memcg_aware(struct list_lru *lru)
+{
+    return false;
+}
+
+static inline struct list_lru_one *
+list_lru_from_memcg_idx(struct list_lru *lru, int nid, int idx)
+{
+    return &lru->node[nid].lru;
+}
+
+static int lru_shrinker_id(struct list_lru *lru)
+{
+    return -1;
+}
+
 static void init_one_lru(struct list_lru_one *l)
 {
     INIT_LIST_HEAD(&l->list);
     l->nr_items = 0;
+}
+
+/* The caller must ensure the memcg lifetime. */
+bool list_lru_add(struct list_lru *lru, struct list_head *item, int nid,
+            struct mem_cgroup *memcg)
+{
+    struct list_lru_node *nlru = &lru->node[nid];
+    struct list_lru_one *l;
+
+    spin_lock(&nlru->lock);
+    if (list_empty(item)) {
+        l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
+        list_add_tail(item, &l->list);
+        /* Set shrinker bit if the first element was added */
+        if (!l->nr_items++)
+            set_shrinker_bit(memcg, nid, lru_shrinker_id(lru));
+        nlru->nr_items++;
+        spin_unlock(&nlru->lock);
+        return true;
+    }
+    spin_unlock(&nlru->lock);
+    return false;
+}
+
+bool list_lru_add_obj(struct list_lru *lru, struct list_head *item)
+{
+    bool ret;
+    int nid = page_to_nid(virt_to_page(item));
+
+    if (list_lru_memcg_aware(lru)) {
+        rcu_read_lock();
+        ret = list_lru_add(lru, item, nid, mem_cgroup_from_slab_obj(item));
+        rcu_read_unlock();
+    } else {
+        ret = list_lru_add(lru, item, nid, NULL);
+    }
+
+    return ret;
 }
 
 int __list_lru_init(struct list_lru *lru, bool memcg_aware,

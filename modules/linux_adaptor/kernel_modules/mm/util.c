@@ -1,6 +1,34 @@
 #include <linux/mm.h>
 #include <linux/slab.h>
+#include <linux/string.h>
+#include <linux/compiler.h>
+#include <linux/export.h>
+#include <linux/err.h>
+#include <linux/sched.h>
+#include <linux/sched/mm.h>
+#include <linux/sched/signal.h>
+#include <linux/sched/task_stack.h>
+#include <linux/security.h>
+#include <linux/swap.h>
+#include <linux/swapops.h>
+#include <linux/mman.h>
 #include <linux/hugetlb.h>
+#include <linux/vmalloc.h>
+#include <linux/userfaultfd_k.h>
+#include <linux/elf.h>
+#include <linux/elf-randomize.h>
+#include <linux/personality.h>
+#include <linux/random.h>
+#include <linux/processor.h>
+#include <linux/sizes.h>
+#include <linux/compat.h>
+
+#include <linux/uaccess.h>
+
+#include <kunit/visibility.h>
+
+#include "internal.h"
+#include "swap.h"
 
 #include "../adaptor.h"
 
@@ -157,4 +185,34 @@ char *kmemdup_nul(const char *s, size_t len, gfp_t gfp)
         buf[len] = '\0';
     }
     return buf;
+}
+
+/**
+ * folio_mapping - Find the mapping where this folio is stored.
+ * @folio: The folio.
+ *
+ * For folios which are in the page cache, return the mapping that this
+ * page belongs to.  Folios in the swap cache return the swap mapping
+ * this page is stored in (which is different from the mapping for the
+ * swap file or swap device where the data is stored).
+ *
+ * You can call this for folios which aren't in the swap cache or page
+ * cache and it will return NULL.
+ */
+struct address_space *folio_mapping(struct folio *folio)
+{
+    struct address_space *mapping;
+
+    /* This happens if someone calls flush_dcache_page on slab page */
+    if (unlikely(folio_test_slab(folio)))
+        return NULL;
+
+    if (unlikely(folio_test_swapcache(folio)))
+        return swap_address_space(folio->swap);
+
+    mapping = folio->mapping;
+    if ((unsigned long)mapping & PAGE_MAPPING_FLAGS)
+        return NULL;
+
+    return mapping;
 }

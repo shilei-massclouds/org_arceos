@@ -24,6 +24,11 @@ struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...)
     return shrinker;
 }
 
+void set_shrinker_bit(struct mem_cgroup *memcg, int nid, int shrinker_id)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
 void shrinker_register(struct shrinker *shrinker)
 {
     if (unlikely(!(shrinker->flags & SHRINKER_ALLOCATED))) {

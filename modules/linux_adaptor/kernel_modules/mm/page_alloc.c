@@ -72,3 +72,11 @@ void __free_pages(struct page *page, unsigned int order)
 {
     cl_free_pages(page_to_virt(page), (1 << order));
 }
+
+/*
+ * Free a batch of folios
+ */
+void free_unref_folios(struct folio_batch *folios)
+{
+    PANIC("");
+}

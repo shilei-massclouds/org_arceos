@@ -65,15 +65,107 @@ static bool bdev_writes_blocked(struct block_device *bdev)
     return bdev->bd_writers < 0;
 }
 
-bool disk_live(struct gendisk *disk)
+unsigned int block_size(struct block_device *bdev)
 {
-    return !inode_unhashed(BD_INODE(disk->part0));
+    return 1 << BD_INODE(bdev)->i_blkbits;
 }
 
 /* Kill _all_ buffers and pagecache , dirty or not.. */
 static void kill_bdev(struct block_device *bdev)
 {
-    PANIC("");
+    struct address_space *mapping = bdev->bd_mapping;
+
+    if (mapping_empty(mapping))
+        return;
+
+    invalidate_bh_lrus();
+    truncate_inode_pages(mapping, 0);
+}
+
+int sync_blockdev_nowait(struct block_device *bdev)
+{
+    if (!bdev)
+        return 0;
+    return filemap_flush(bdev->bd_mapping);
+}
+
+/*
+ * Write out and wait upon all the dirty data associated with a block
+ * device via its mapping.  Does not take the superblock lock.
+ */
+int sync_blockdev(struct block_device *bdev)
+{
+    if (!bdev)
+        return 0;
+    return filemap_write_and_wait(bdev->bd_mapping);
+}
+
+int sb_set_blocksize(struct super_block *sb, int size)
+{
+    if (set_blocksize(sb->s_bdev_file, size))
+        return 0;
+    /* If we get here, we know size is power of two
+     * and it's value is between 512 and PAGE_SIZE */
+    sb->s_blocksize = size;
+    sb->s_blocksize_bits = blksize_bits(size);
+    return sb->s_blocksize;
+}
+
+int sb_min_blocksize(struct super_block *sb, int size)
+{
+    int minsize = bdev_logical_block_size(sb->s_bdev);
+    if (size < minsize)
+        size = minsize;
+    return sb_set_blocksize(sb, size);
+}
+
+int set_blocksize(struct file *file, int size)
+{
+    struct inode *inode = file->f_mapping->host;
+    struct block_device *bdev = I_BDEV(inode);
+
+    /* Size must be a power of two, and between 512 and PAGE_SIZE */
+    if (size > PAGE_SIZE || size < 512 || !is_power_of_2(size))
+        return -EINVAL;
+
+    /* Size cannot be smaller than the size supported by the device */
+    if (size < bdev_logical_block_size(bdev))
+        return -EINVAL;
+
+    if (!file->private_data)
+        return -EINVAL;
+
+    /* Don't change the size if it is same as current */
+    if (inode->i_blkbits != blksize_bits(size)) {
+        /*
+         * Flush and truncate the pagecache before we reconfigure the
+         * mapping geometry because folio sizes are variable now.  If a
+         * reader has already allocated a folio whose size is smaller
+         * than the new min_order but invokes readahead after the new
+         * min_order becomes visible, readahead will think there are
+         * "zero" blocks per folio and crash.  Take the inode and
+         * invalidation locks to avoid racing with
+         * read/write/fallocate.
+         */
+        inode_lock(inode);
+        filemap_invalidate_lock(inode->i_mapping);
+
+        sync_blockdev(bdev);
+    printk("%s: ======== step1\n", __func__);
+        kill_bdev(bdev);
+    printk("%s: ======== step2\n", __func__);
+
+        inode->i_blkbits = blksize_bits(size);
+        kill_bdev(bdev);
+        filemap_invalidate_unlock(inode->i_mapping);
+        inode_unlock(inode);
+    }
+    return 0;
+}
+
+bool disk_live(struct gendisk *disk)
+{
+    return !inode_unhashed(BD_INODE(disk->part0));
 }
 
 static void bdev_write_inode(struct block_device *bdev)
@@ -640,6 +732,11 @@ retry:
     whole->bd_claiming = holder;
     mutex_unlock(&bdev_lock);
     return 0;
+}
+
+struct block_device *file_bdev(struct file *bdev_file)
+{
+    return I_BDEV(bdev_file->f_mapping->host);
 }
 
 int bdev_permission(dev_t dev, blk_mode_t mode, void *holder)
