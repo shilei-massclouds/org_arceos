@@ -1974,3 +1974,24 @@ void blk_mq_start_stopped_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
     smp_mb__after_atomic();
     blk_mq_run_hw_queue(hctx, async);
 }
+
+void blk_mq_kick_requeue_list(struct request_queue *q)
+{
+    kblockd_mod_delayed_work_on(WORK_CPU_UNBOUND, &q->requeue_work, 0);
+}
+
+void blk_rq_init(struct request_queue *q, struct request *rq)
+{
+    memset(rq, 0, sizeof(*rq));
+
+    INIT_LIST_HEAD(&rq->queuelist);
+    rq->q = q;
+    rq->__sector = (sector_t) -1;
+    INIT_HLIST_NODE(&rq->hash);
+    RB_CLEAR_NODE(&rq->rb_node);
+    rq->tag = BLK_MQ_NO_TAG;
+    rq->internal_tag = BLK_MQ_NO_TAG;
+    rq->start_time_ns = blk_time_get_ns();
+    rq->part = NULL;
+    blk_crypto_rq_set_defaults(rq);
+}

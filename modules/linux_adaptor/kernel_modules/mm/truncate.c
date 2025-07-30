@@ -287,3 +287,141 @@ void folio_invalidate(struct folio *folio, size_t offset, size_t length)
     if (aops->invalidate_folio)
         aops->invalidate_folio(folio, offset, length);
 }
+
+/**
+ * invalidate_mapping_pages - Invalidate all clean, unlocked cache of one inode
+ * @mapping: the address_space which holds the cache to invalidate
+ * @start: the offset 'from' which to invalidate
+ * @end: the offset 'to' which to invalidate (inclusive)
+ *
+ * This function removes pages that are clean, unmapped and unlocked,
+ * as well as shadow entries. It will not block on IO activity.
+ *
+ * If you want to remove all the pages of one inode, regardless of
+ * their use and writeback state, use truncate_inode_pages().
+ *
+ * Return: The number of indices that had their contents invalidated
+ */
+unsigned long invalidate_mapping_pages(struct address_space *mapping,
+        pgoff_t start, pgoff_t end)
+{
+    return mapping_try_invalidate(mapping, start, end, NULL);
+}
+
+static void clear_shadow_entries(struct address_space *mapping,
+                 struct folio_batch *fbatch, pgoff_t *indices)
+{
+    int i;
+
+#if 0
+    /* Handled by shmem itself, or for DAX we do nothing. */
+    if (shmem_mapping(mapping) || dax_mapping(mapping))
+        return;
+
+    spin_lock(&mapping->host->i_lock);
+    xa_lock_irq(&mapping->i_pages);
+
+    for (i = 0; i < folio_batch_count(fbatch); i++) {
+        struct folio *folio = fbatch->folios[i];
+
+        if (xa_is_value(folio))
+            __clear_shadow_entry(mapping, indices[i], folio);
+    }
+
+    xa_unlock_irq(&mapping->i_pages);
+    if (mapping_shrinkable(mapping))
+        inode_add_lru(mapping->host);
+    spin_unlock(&mapping->host->i_lock);
+#endif
+    PANIC("");
+}
+
+/**
+ * mapping_evict_folio() - Remove an unused folio from the page-cache.
+ * @mapping: The mapping this folio belongs to.
+ * @folio: The folio to remove.
+ *
+ * Safely remove one folio from the page cache.
+ * It only drops clean, unused folios.
+ *
+ * Context: Folio must be locked.
+ * Return: The number of pages successfully removed.
+ */
+long mapping_evict_folio(struct address_space *mapping, struct folio *folio)
+{
+    /* The page may have been truncated before it was locked */
+    if (!mapping)
+        return 0;
+    if (folio_test_dirty(folio) || folio_test_writeback(folio))
+        return 0;
+    /* The refcount will be elevated if any page in the folio is mapped */
+    if (folio_ref_count(folio) >
+            folio_nr_pages(folio) + folio_has_private(folio) + 1)
+        return 0;
+#if 0
+    if (!filemap_release_folio(folio, 0))
+        return 0;
+
+    return remove_mapping(mapping, folio);
+#endif
+    PANIC("");
+}
+
+/**
+ * mapping_try_invalidate - Invalidate all the evictable folios of one inode
+ * @mapping: the address_space which holds the folios to invalidate
+ * @start: the offset 'from' which to invalidate
+ * @end: the offset 'to' which to invalidate (inclusive)
+ * @nr_failed: How many folio invalidations failed
+ *
+ * This function is similar to invalidate_mapping_pages(), except that it
+ * returns the number of folios which could not be evicted in @nr_failed.
+ */
+unsigned long mapping_try_invalidate(struct address_space *mapping,
+        pgoff_t start, pgoff_t end, unsigned long *nr_failed)
+{
+    pgoff_t indices[PAGEVEC_SIZE];
+    struct folio_batch fbatch;
+    pgoff_t index = start;
+    unsigned long ret;
+    unsigned long count = 0;
+    int i;
+    bool xa_has_values = false;
+
+    folio_batch_init(&fbatch);
+    while (find_lock_entries(mapping, &index, end, &fbatch, indices)) {
+        for (i = 0; i < folio_batch_count(&fbatch); i++) {
+            struct folio *folio = fbatch.folios[i];
+
+            /* We rely upon deletion not changing folio->index */
+
+            if (xa_is_value(folio)) {
+                xa_has_values = true;
+                count++;
+                continue;
+            }
+
+            ret = mapping_evict_folio(mapping, folio);
+            folio_unlock(folio);
+            /*
+             * Invalidation is a hint that the folio is no longer
+             * of interest and try to speed up its reclaim.
+             */
+            if (!ret) {
+                deactivate_file_folio(folio);
+                /* Likely in the lru cache of a remote CPU */
+                if (nr_failed)
+                    (*nr_failed)++;
+            }
+            count += ret;
+        }
+
+        if (xa_has_values)
+            clear_shadow_entries(mapping, &fbatch, indices);
+
+        folio_batch_remove_exceptionals(&fbatch);
+        folio_batch_release(&fbatch);
+        cond_resched();
+    }
+    return count;
+}

@@ -1,6 +1,8 @@
 #include <linux/wait_bit.h>
 #include <linux/hash.h>
 #include <linux/sched.h>
+#include <linux/sched/debug.h>
+#include <linux/sched/signal.h>
 
 #define WAIT_TABLE_BITS 8
 #define WAIT_TABLE_SIZE (1 << WAIT_TABLE_BITS)
@@ -102,4 +104,44 @@ void __init wait_bit_init(void)
 
     for (i = 0; i < WAIT_TABLE_SIZE; i++)
         init_waitqueue_head(bit_wait_table + i);
+}
+
+/*
+ * To allow interruptible waiting and asynchronous (i.e. non-blocking)
+ * waiting, the actions of __wait_on_bit() and __wait_on_bit_lock() are
+ * permitted return codes. Nonzero return codes halt waiting and return.
+ */
+int __sched
+__wait_on_bit(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *wbq_entry,
+          wait_bit_action_f *action, unsigned mode)
+{
+    int ret = 0;
+
+    do {
+        prepare_to_wait(wq_head, &wbq_entry->wq_entry, mode);
+        if (test_bit(wbq_entry->key.bit_nr, wbq_entry->key.flags))
+            ret = (*action)(&wbq_entry->key, mode);
+    } while (test_bit_acquire(wbq_entry->key.bit_nr, wbq_entry->key.flags) && !ret);
+
+    finish_wait(wq_head, &wbq_entry->wq_entry);
+
+    return ret;
+}
+
+int __sched out_of_line_wait_on_bit(void *word, int bit,
+                    wait_bit_action_f *action, unsigned mode)
+{
+    struct wait_queue_head *wq_head = bit_waitqueue(word, bit);
+    DEFINE_WAIT_BIT(wq_entry, word, bit);
+
+    return __wait_on_bit(wq_head, &wq_entry, action, mode);
+}
+
+__sched int bit_wait_io(struct wait_bit_key *word, int mode)
+{
+    io_schedule();
+    if (signal_pending_state(mode, current))
+        return -EINTR;
+
+    return 0;
 }

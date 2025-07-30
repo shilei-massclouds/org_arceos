@@ -161,3 +161,36 @@ void finish_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_en
         spin_unlock_irqrestore(&wq_head->lock, flags);
     }
 }
+
+void init_wait_entry(struct wait_queue_entry *wq_entry, int flags)
+{
+    wq_entry->flags = flags;
+    wq_entry->private = current;
+    wq_entry->func = autoremove_wake_function;
+    INIT_LIST_HEAD(&wq_entry->entry);
+}
+
+/*
+ * Note: we use "set_current_state()" _after_ the wait-queue add,
+ * because we need a memory barrier there on SMP, so that any
+ * wake-function that tests for the wait-queue being active
+ * will be guaranteed to see waitqueue addition _or_ subsequent
+ * tests in this thread will see the wakeup having taken place.
+ *
+ * The spin_unlock() itself is semi-permeable and only protects
+ * one way (it only protects stuff inside the critical region and
+ * stops them from bleeding out - it would still allow subsequent
+ * loads to move into the critical region).
+ */
+void
+prepare_to_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state)
+{
+    unsigned long flags;
+
+    wq_entry->flags &= ~WQ_FLAG_EXCLUSIVE;
+    spin_lock_irqsave(&wq_head->lock, flags);
+    if (list_empty(&wq_entry->entry))
+        __add_wait_queue(wq_head, wq_entry);
+    set_current_state(state);
+    spin_unlock_irqrestore(&wq_head->lock, flags);
+}

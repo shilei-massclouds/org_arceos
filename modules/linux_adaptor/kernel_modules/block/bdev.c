@@ -151,9 +151,7 @@ int set_blocksize(struct file *file, int size)
         filemap_invalidate_lock(inode->i_mapping);
 
         sync_blockdev(bdev);
-    printk("%s: ======== step1\n", __func__);
         kill_bdev(bdev);
-    printk("%s: ======== step2\n", __func__);
 
         inode->i_blkbits = blksize_bits(size);
         kill_bdev(bdev);
@@ -764,6 +762,129 @@ int bdev_permission(dev_t dev, blk_mode_t mode, void *holder)
         return -EINVAL;
 
     return 0;
+}
+
+/* Invalidate clean unused buffers and pagecache. */
+void invalidate_bdev(struct block_device *bdev)
+{
+    struct address_space *mapping = bdev->bd_mapping;
+
+    if (mapping->nrpages) {
+        invalidate_bh_lrus();
+        lru_add_drain_all();    /* make sure all lru add caches are flushed */
+        invalidate_mapping_pages(mapping, 0, -1);
+    }
+}
+
+static inline bool bdev_unclaimed(const struct file *bdev_file)
+{
+    return bdev_file->private_data == BDEV_I(bdev_file->f_mapping->host);
+}
+
+static void bdev_unblock_writes(struct block_device *bdev)
+{
+    bdev->bd_writers++;
+}
+
+static void bdev_yield_write_access(struct file *bdev_file)
+{
+    struct block_device *bdev;
+
+    if (bdev_allow_write_mounted)
+        return;
+
+    if (bdev_unclaimed(bdev_file))
+        return;
+
+    bdev = file_bdev(bdev_file);
+
+    if (bdev_file->f_mode & FMODE_WRITE_RESTRICTED)
+        bdev_unblock_writes(bdev);
+    else if (bdev_file->f_mode & FMODE_WRITE)
+        bdev->bd_writers--;
+
+    PANIC("");
+}
+
+static void bd_end_claim(struct block_device *bdev, void *holder)
+{
+    struct block_device *whole = bdev_whole(bdev);
+    bool unblock = false;
+
+    /*
+     * Release a claim on the device.  The holder fields are protected with
+     * bdev_lock.  open_mutex is used to synchronize disk_holder unlinking.
+     */
+    mutex_lock(&bdev_lock);
+    WARN_ON_ONCE(bdev->bd_holder != holder);
+    WARN_ON_ONCE(--bdev->bd_holders < 0);
+    WARN_ON_ONCE(--whole->bd_holders < 0);
+    if (!bdev->bd_holders) {
+        mutex_lock(&bdev->bd_holder_lock);
+        bdev->bd_holder = NULL;
+        bdev->bd_holder_ops = NULL;
+        mutex_unlock(&bdev->bd_holder_lock);
+        if (bdev_test_flag(bdev, BD_WRITE_HOLDER))
+            unblock = true;
+    }
+    if (!whole->bd_holders)
+        whole->bd_holder = NULL;
+    mutex_unlock(&bdev_lock);
+
+    /*
+     * If this was the last claim, remove holder link and unblock evpoll if
+     * it was a write holder.
+     */
+    if (unblock) {
+        //disk_unblock_events(bdev->bd_disk);
+        bdev_clear_flag(bdev, BD_WRITE_HOLDER);
+    }
+}
+
+static inline void bd_yield_claim(struct file *bdev_file)
+{
+    struct block_device *bdev = file_bdev(bdev_file);
+    void *holder = bdev_file->private_data;
+
+    lockdep_assert_held(&bdev->bd_disk->open_mutex);
+
+    if (WARN_ON_ONCE(IS_ERR_OR_NULL(holder)))
+        return;
+
+    if (!bdev_unclaimed(bdev_file))
+        bd_end_claim(bdev, holder);
+}
+
+/**
+ * bdev_fput - yield claim to the block device and put the file
+ * @bdev_file: open block device
+ *
+ * Yield claim on the block device and put the file. Ensure that the
+ * block device can be reclaimed before the file is closed which is a
+ * deferred operation.
+ */
+void bdev_fput(struct file *bdev_file)
+{
+    if (WARN_ON_ONCE(bdev_file->f_op != &def_blk_fops))
+        return;
+
+    if (bdev_file->private_data) {
+        struct block_device *bdev = file_bdev(bdev_file);
+        struct gendisk *disk = bdev->bd_disk;
+
+        mutex_lock(&disk->open_mutex);
+        bdev_yield_write_access(bdev_file);
+        bd_yield_claim(bdev_file);
+        /*
+         * Tell release we already gave up our hold on the
+         * device and if write restrictions are available that
+         * we already gave up write access to the device.
+         */
+        bdev_file->private_data = BDEV_I(bdev_file->f_mapping->host);
+        mutex_unlock(&disk->open_mutex);
+    }
+
+    fput(bdev_file);
 }
 
 void __init bdev_cache_init(void)

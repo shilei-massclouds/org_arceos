@@ -1189,6 +1189,59 @@ out:
     return ret;
 }
 
+/*
+ * Block until a buffer comes unlocked.  This doesn't stop it
+ * from becoming locked again - you have to lock it yourself
+ * if you want to preserve its state.
+ */
+void __wait_on_buffer(struct buffer_head * bh)
+{
+    wait_on_bit_io(&bh->b_state, BH_Lock, TASK_UNINTERRUPTIBLE);
+}
+
+/**
+ * bh_uptodate_or_lock - Test whether the buffer is uptodate
+ * @bh: struct buffer_head
+ *
+ * Return true if the buffer is up-to-date and false,
+ * with the buffer locked, if not.
+ */
+int bh_uptodate_or_lock(struct buffer_head *bh)
+{
+    if (!buffer_uptodate(bh)) {
+        lock_buffer(bh);
+        if (!buffer_uptodate(bh))
+            return 0;
+        unlock_buffer(bh);
+    }
+    return 1;
+}
+
+/**
+ * __bh_read - Submit read for a locked buffer
+ * @bh: struct buffer_head
+ * @op_flags: appending REQ_OP_* flags besides REQ_OP_READ
+ * @wait: wait until reading finish
+ *
+ * Returns zero on success or don't wait, and -EIO on error.
+ */
+int __bh_read(struct buffer_head *bh, blk_opf_t op_flags, bool wait)
+{
+    int ret = 0;
+
+    BUG_ON(!buffer_locked(bh));
+
+    get_bh(bh);
+    bh->b_end_io = end_buffer_read_sync;
+    submit_bh(REQ_OP_READ | op_flags, bh);
+    if (wait) {
+        wait_on_buffer(bh);
+        if (!buffer_uptodate(bh))
+            ret = -EIO;
+    }
+    return ret;
+}
+
 void __init buffer_init(void)
 {
     unsigned long nrpages;

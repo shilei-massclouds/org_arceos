@@ -19,6 +19,12 @@ extern void cl_wake_up(unsigned long tid);
 
 extern void cl_mount(const char *fstype, const char *source);
 
+extern unsigned long
+cl_kthread_run(unsigned long task_ptr,
+               unsigned long threadfn_ptr,
+               unsigned long arg_ptr);
+
+
 #define PANIC(args...) \
 do { \
     printk("\n########################\n"); \

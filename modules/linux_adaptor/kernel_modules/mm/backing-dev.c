@@ -176,6 +176,27 @@ static struct rb_node **bdi_lookup_rb_node(u64 id, struct rb_node **parentp)
     return p;
 }
 
+static void wb_exit(struct bdi_writeback *wb)
+{
+    WARN_ON(delayed_work_pending(&wb->dwork));
+    percpu_counter_destroy_many(wb->stat, NR_WB_STAT_ITEMS);
+#if 0
+    fprop_local_destroy_percpu(&wb->completions);
+#endif
+    pr_err("%s: No impl.", __func__);
+}
+
+static void release_bdi(struct kref *ref)
+{
+    struct backing_dev_info *bdi =
+            container_of(ref, struct backing_dev_info, refcnt);
+
+    WARN_ON_ONCE(test_bit(WB_registered, &bdi->wb.state));
+    WARN_ON_ONCE(bdi->dev);
+    wb_exit(&bdi->wb);
+    kfree(bdi);
+}
+
 int bdi_register_va(struct backing_dev_info *bdi, const char *fmt, va_list args)
 {
     struct device *dev;
@@ -233,4 +254,14 @@ struct backing_dev_info *inode_to_bdi(struct inode *inode)
         return I_BDEV(inode)->bd_disk->bdi;
 #endif
     return sb->s_bdi;
+}
+
+void bdi_unregister(struct backing_dev_info *bdi)
+{
+    PANIC("");
+}
+
+void bdi_put(struct backing_dev_info *bdi)
+{
+    kref_put(&bdi->refcnt, release_bdi);
 }

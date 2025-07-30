@@ -266,3 +266,14 @@ ssize_t sized_strscpy(char *dest, const char *src, size_t count)
 
 	return -E2BIG;
 }
+
+#ifndef __HAVE_ARCH_STRNLEN
+size_t strnlen(const char *s, size_t count)
+{
+    const char *sc;
+
+    for (sc = s; count-- && *sc != '\0'; ++sc)
+        /* nothing */;
+    return sc - s;
+}
+#endif

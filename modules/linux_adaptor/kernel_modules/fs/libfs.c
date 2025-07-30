@@ -130,3 +130,58 @@ struct pseudo_fs_context *init_pseudo(struct fs_context *fc,
     }
     return ctx;
 }
+
+/**
+ * generic_check_addressable - Check addressability of file system
+ * @blocksize_bits: log of file system block size
+ * @num_blocks:     number of blocks in file system
+ *
+ * Determine whether a file system with @num_blocks blocks (and a
+ * block size of 2**@blocksize_bits) is addressable by the sector_t
+ * and page cache of the system.  Return 0 if so and -EFBIG otherwise.
+ */
+int generic_check_addressable(unsigned blocksize_bits, u64 num_blocks)
+{
+    u64 last_fs_block = num_blocks - 1;
+    u64 last_fs_page =
+        last_fs_block >> (PAGE_SHIFT - blocksize_bits);
+
+    if (unlikely(num_blocks == 0))
+        return 0;
+
+    if ((blocksize_bits < 9) || (blocksize_bits > PAGE_SHIFT))
+        return -EINVAL;
+
+    if ((last_fs_block > (sector_t)(~0ULL) >> (blocksize_bits - 9)) ||
+        (last_fs_page > (pgoff_t)(~0ULL))) {
+        return -EFBIG;
+    }
+    return 0;
+}
+
+/**
+ * generic_set_sb_d_ops - helper for choosing the set of
+ * filesystem-wide dentry operations for the enabled features
+ * @sb: superblock to be configured
+ *
+ * Filesystems supporting casefolding and/or fscrypt can call this
+ * helper at mount-time to configure sb->s_d_op to best set of dentry
+ * operations required for the enabled features. The helper must be
+ * called after these have been configured, but before the root dentry
+ * is created.
+ */
+void generic_set_sb_d_ops(struct super_block *sb)
+{
+#if IS_ENABLED(CONFIG_UNICODE)
+    if (sb->s_encoding) {
+        sb->s_d_op = &generic_ci_dentry_ops;
+        return;
+    }
+#endif
+#ifdef CONFIG_FS_ENCRYPTION
+    if (sb->s_cop) {
+        sb->s_d_op = &generic_encrypted_dentry_ops;
+        return;
+    }
+#endif
+}

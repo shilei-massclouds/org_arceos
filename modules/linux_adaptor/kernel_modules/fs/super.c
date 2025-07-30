@@ -661,3 +661,170 @@ int setup_bdev_super(struct super_block *sb, int sb_flags,
     sb_set_blocksize(sb, block_size(bdev));
     return 0;
 }
+
+static void kill_super_notify(struct super_block *sb)
+{
+    lockdep_assert_not_held(&sb->s_umount);
+
+    /* already notified earlier */
+    if (sb->s_flags & SB_DEAD)
+        return;
+
+    /*
+     * Remove it from @fs_supers so it isn't found by new
+     * sget{_fc}() walkers anymore. Any concurrent mounter still
+     * managing to grab a temporary reference is guaranteed to
+     * already see SB_DYING and will wait until we notify them about
+     * SB_DEAD.
+     */
+    spin_lock(&sb_lock);
+    hlist_del_init(&sb->s_instances);
+    spin_unlock(&sb_lock);
+
+    /*
+     * Let concurrent mounts know that this thing is really dead.
+     * We don't need @sb->s_umount here as every concurrent caller
+     * will see SB_DYING and either discard the superblock or wait
+     * for SB_DEAD.
+     */
+    super_wake(sb, SB_DEAD);
+}
+
+/**
+ *  deactivate_locked_super -   drop an active reference to superblock
+ *  @s: superblock to deactivate
+ *
+ *  Drops an active reference to superblock, converting it into a temporary
+ *  one if there is no other active references left.  In that case we
+ *  tell fs driver to shut it down and drop the temporary reference we
+ *  had just acquired.
+ *
+ *  Caller holds exclusive lock on superblock; that lock is released.
+ */
+void deactivate_locked_super(struct super_block *s)
+{
+    struct file_system_type *fs = s->s_type;
+    if (atomic_dec_and_test(&s->s_active)) {
+        shrinker_free(s->s_shrink);
+        fs->kill_sb(s);
+
+        kill_super_notify(s);
+
+        /*
+         * Since list_lru_destroy() may sleep, we cannot call it from
+         * put_super(), where we hold the sb_lock. Therefore we destroy
+         * the lru lists right now.
+         */
+        list_lru_destroy(&s->s_dentry_lru);
+        list_lru_destroy(&s->s_inode_lru);
+
+        put_filesystem(fs);
+        put_super(s);
+    } else {
+        super_unlock_excl(s);
+    }
+}
+
+void kill_block_super(struct super_block *sb)
+{
+    struct block_device *bdev = sb->s_bdev;
+
+    generic_shutdown_super(sb);
+    if (bdev) {
+        sync_blockdev(bdev);
+        bdev_fput(sb->s_bdev_file);
+    }
+}
+
+/**
+ *  generic_shutdown_super  -   common helper for ->kill_sb()
+ *  @sb: superblock to kill
+ *
+ *  generic_shutdown_super() does all fs-independent work on superblock
+ *  shutdown.  Typical ->kill_sb() should pick all fs-specific objects
+ *  that need destruction out of superblock, call generic_shutdown_super()
+ *  and release aforementioned objects.  Note: dentries and inodes _are_
+ *  taken care of and do not need specific handling.
+ *
+ *  Upon calling this function, the filesystem may no longer alter or
+ *  rearrange the set of dentries belonging to this super_block, nor may it
+ *  change the attachments of dentries to inodes.
+ */
+void generic_shutdown_super(struct super_block *sb)
+{
+    const struct super_operations *sop = sb->s_op;
+
+    if (sb->s_root) {
+        PANIC("stage1");
+    }
+    /*
+     * Broadcast to everyone that grabbed a temporary reference to this
+     * superblock before we removed it from @fs_supers that the superblock
+     * is dying. Every walker of @fs_supers outside of sget{_fc}() will now
+     * discard this superblock and treat it as dead.
+     *
+     * We leave the superblock on @fs_supers so it can be found by
+     * sget{_fc}() until we passed sb->kill_sb().
+     */
+    super_wake(sb, SB_DYING);
+    super_unlock_excl(sb);
+    if (sb->s_bdi != &noop_backing_dev_info) {
+        if (sb->s_iflags & SB_I_PERSB_BDI)
+            bdi_unregister(sb->s_bdi);
+        bdi_put(sb->s_bdi);
+        sb->s_bdi = &noop_backing_dev_info;
+    }
+}
+
+static void destroy_super_work(struct work_struct *work)
+{
+#if 0
+    struct super_block *s = container_of(work, struct super_block,
+                            destroy_work);
+    fsnotify_sb_free(s);
+    security_sb_free(s);
+    put_user_ns(s->s_user_ns);
+    kfree(s->s_subtype);
+    for (int i = 0; i < SB_FREEZE_LEVELS; i++)
+        percpu_free_rwsem(&s->s_writers.rw_sem[i]);
+    kfree(s);
+#endif
+    PANIC("");
+}
+
+static void destroy_super_rcu(struct rcu_head *head)
+{
+    struct super_block *s = container_of(head, struct super_block, rcu);
+    INIT_WORK(&s->destroy_work, destroy_super_work);
+    schedule_work(&s->destroy_work);
+}
+
+/* Superblock refcounting  */
+
+/*
+ * Drop a superblock's refcount.  The caller must hold sb_lock.
+ */
+static void __put_super(struct super_block *s)
+{
+    if (!--s->s_count) {
+        list_del_init(&s->s_list);
+        WARN_ON(s->s_dentry_lru.node);
+        WARN_ON(s->s_inode_lru.node);
+        WARN_ON(!list_empty(&s->s_mounts));
+        call_rcu(&s->rcu, destroy_super_rcu);
+    }
+}
+
+/**
+ *  put_super   -   drop a temporary reference to superblock
+ *  @sb: superblock in question
+ *
+ *  Drops a temporary reference, frees superblock if there's no
+ *  references left.
+ */
+void put_super(struct super_block *sb)
+{
+    spin_lock(&sb_lock);
+    __put_super(sb);
+    spin_unlock(&sb_lock);
+}

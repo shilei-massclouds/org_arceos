@@ -10,6 +10,11 @@ EXPORT_PER_CPU_SYMBOL(__mmiowb_state);
 #endif
 #endif
 
+noinline int __lockfunc _raw_spin_trylock(raw_spinlock_t *lock)
+{
+    return arch_spin_trylock(&(lock)->raw_lock);
+}
+
 noinline unsigned long __lockfunc _raw_spin_lock_irqsave(raw_spinlock_t *lock)
 {
     unsigned long flags;

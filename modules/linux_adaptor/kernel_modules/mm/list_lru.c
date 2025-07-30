@@ -10,6 +10,12 @@
 
 #include "../adaptor.h"
 
+static DEFINE_MUTEX(list_lrus_mutex);
+
+static void memcg_destroy_list_lru(struct list_lru *lru)
+{
+}
+
 static inline bool list_lru_memcg_aware(struct list_lru *lru)
 {
     return false;
@@ -102,4 +108,31 @@ int __list_lru_init(struct list_lru *lru, bool memcg_aware,
     //list_lru_register(lru);
 
     return 0;
+}
+
+static void list_lru_unregister(struct list_lru *lru)
+{
+    if (!list_lru_memcg_aware(lru))
+        return;
+
+    mutex_lock(&list_lrus_mutex);
+    list_del(&lru->list);
+    mutex_unlock(&list_lrus_mutex);
+}
+
+void list_lru_destroy(struct list_lru *lru)
+{
+    /* Already destroyed or not yet initialized? */
+    if (!lru->node)
+        return;
+
+    list_lru_unregister(lru);
+
+    memcg_destroy_list_lru(lru);
+    kfree(lru->node);
+    lru->node = NULL;
+
+#ifdef CONFIG_MEMCG
+    lru->shrinker_id = -1;
+#endif
 }

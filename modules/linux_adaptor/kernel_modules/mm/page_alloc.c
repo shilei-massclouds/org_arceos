@@ -80,3 +80,31 @@ void free_unref_folios(struct folio_batch *folios)
 {
     PANIC("");
 }
+
+/*
+ * Common helper functions. Never use with __GFP_HIGHMEM because the returned
+ * address cannot represent highmem pages. Use alloc_pages and then kmap if
+ * you need to access high mem.
+ */
+unsigned long get_free_pages_noprof(gfp_t gfp_mask, unsigned int order)
+{
+    struct page *page;
+
+    page = alloc_pages_noprof(gfp_mask & ~__GFP_HIGHMEM, order);
+    if (!page)
+        return 0;
+    return (unsigned long) page_address(page);
+}
+
+unsigned long get_zeroed_page_noprof(gfp_t gfp_mask)
+{
+    return get_free_pages_noprof(gfp_mask | __GFP_ZERO, 0);
+}
+
+void free_pages(unsigned long addr, unsigned int order)
+{
+    if (addr != 0) {
+        VM_BUG_ON(!virt_addr_valid((void *)addr));
+        __free_pages(virt_to_page((void *)addr), order);
+    }
+}

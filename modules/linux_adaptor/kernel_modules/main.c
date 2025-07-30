@@ -20,6 +20,9 @@
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
 
+extern void cl_crc32_mod_init(void);
+extern void cl_crc32c_mod_init(void);
+
 extern int cl_plic_init(void);
 
 extern void cl_virtio_init();
@@ -61,6 +64,9 @@ int clinux_init(void)
     printk("cLinux base is starting ...\n");
 
     inode_init_early();
+
+    cl_crc32_mod_init();
+    cl_crc32c_mod_init();
 
     //kmem_cache_init();
     setup_per_cpu_areas();

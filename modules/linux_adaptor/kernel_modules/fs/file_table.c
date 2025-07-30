@@ -30,7 +30,37 @@
 /* SLAB cache for file structures */
 static struct kmem_cache *filp_cachep __ro_after_init;
 
-//static struct percpu_counter nr_files __cacheline_aligned_in_smp;
+static struct percpu_counter nr_files __cacheline_aligned_in_smp;
+
+/* the real guts of fput() - releasing the last reference to file
+ */
+static void __fput(struct file *file)
+{
+    PANIC("");
+}
+
+static LLIST_HEAD(delayed_fput_list);
+static void delayed_fput(struct work_struct *unused)
+{
+    struct llist_node *node = llist_del_all(&delayed_fput_list);
+    struct file *f, *t;
+
+    llist_for_each_entry_safe(f, t, node, f_llist)
+        __fput(f);
+}
+
+static DECLARE_DELAYED_WORK(delayed_fput_work, delayed_fput);
+
+/* Container for backing file with optional user path */
+struct backing_file {
+    struct file file;
+    struct path user_path;
+};
+
+static inline struct backing_file *backing_file(struct file *f)
+{
+    return container_of(f, struct backing_file, file);
+}
 
 static int init_file(struct file *f, int flags, const struct cred *cred)
 {
@@ -155,6 +185,55 @@ struct file *alloc_empty_file_noaccount(int flags, const struct cred *cred)
     f->f_mode |= FMODE_NOACCOUNT;
 
     return f;
+}
+
+struct path *backing_file_user_path(struct file *f)
+{
+    return &backing_file(f)->user_path;
+}
+
+static inline void file_free(struct file *f)
+{
+    //security_file_free(f);
+    if (likely(!(f->f_mode & FMODE_NOACCOUNT)))
+        percpu_counter_dec(&nr_files);
+    put_cred(f->f_cred);
+    if (unlikely(f->f_mode & FMODE_BACKING)) {
+        path_put(backing_file_user_path(f));
+        kfree(backing_file(f));
+    } else {
+        kmem_cache_free(filp_cachep, f);
+    }
+}
+
+static void ____fput(struct callback_head *work)
+{
+    __fput(container_of(work, struct file, f_task_work));
+}
+
+void fput(struct file *file)
+{
+    if (atomic_long_dec_and_test(&file->f_count)) {
+        struct task_struct *task = current;
+
+        if (unlikely(!(file->f_mode & (FMODE_BACKING | FMODE_OPENED)))) {
+            file_free(file);
+            return;
+        }
+        if (likely(!in_interrupt() && !(task->flags & PF_KTHREAD))) {
+            init_task_work(&file->f_task_work, ____fput);
+            if (!task_work_add(task, &file->f_task_work, TWA_RESUME))
+                return;
+            /*
+             * After this task has run exit_task_work(),
+             * task_work_add() will fail.  Fall through to delayed
+             * fput to avoid leaking *file.
+             */
+        }
+
+        if (llist_add(&file->f_llist, &delayed_fput_list))
+            schedule_delayed_work(&delayed_fput_work, 1);
+    }
 }
 
 void __init files_init(void)

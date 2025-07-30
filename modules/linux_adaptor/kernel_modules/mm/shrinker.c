@@ -5,6 +5,7 @@
 #include <trace/events/vmscan.h>
 
 #include "internal.h"
+#include "../adaptor.h"
 
 LIST_HEAD(shrinker_list);
 DEFINE_MUTEX(shrinker_mutex);
@@ -49,4 +50,15 @@ void shrinker_register(struct shrinker *shrinker)
      * shrinker_try_get().
      */
     refcount_set(&shrinker->refcount, 1);
+}
+
+void shrinker_free(struct shrinker *shrinker)
+{
+    struct dentry *debugfs_entry = NULL;
+    int debugfs_id;
+
+    if (!shrinker)
+        return;
+
+    pr_err("%s: No impl.", __func__);
 }

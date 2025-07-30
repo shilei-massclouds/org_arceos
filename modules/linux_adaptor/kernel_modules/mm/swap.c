@@ -282,3 +282,74 @@ void lru_add_drain_cpu(int cpu)
 {
     pr_err("%s: No impl.", __func__);
 }
+
+void lru_add_drain_all(void)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+/*
+ * If the folio cannot be invalidated, it is moved to the
+ * inactive list to speed up its reclaim.  It is moved to the
+ * head of the list, rather than the tail, to give the flusher
+ * threads some time to write it out, as this is much more
+ * effective than the single-page writeout from reclaim.
+ *
+ * If the folio isn't mapped and dirty/writeback, the folio
+ * could be reclaimed asap using the reclaim flag.
+ *
+ * 1. active, mapped folio -> none
+ * 2. active, dirty/writeback folio -> inactive, head, reclaim
+ * 3. inactive, mapped folio -> none
+ * 4. inactive, dirty/writeback folio -> inactive, head, reclaim
+ * 5. inactive, clean -> inactive, tail
+ * 6. Others -> none
+ *
+ * In 4, it moves to the head of the inactive list so the folio is
+ * written out by flusher threads as this is much more efficient
+ * than the single-page writeout from reclaim.
+ */
+static void lru_deactivate_file(struct lruvec *lruvec, struct folio *folio)
+{
+    PANIC("");
+}
+
+/**
+ * folio_batch_remove_exceptionals() - Prune non-folios from a batch.
+ * @fbatch: The batch to prune
+ *
+ * find_get_entries() fills a batch with both folios and shadow/swap/DAX
+ * entries.  This function prunes all the non-folio entries from @fbatch
+ * without leaving holes, so that it can be passed on to folio-only batch
+ * operations.
+ */
+void folio_batch_remove_exceptionals(struct folio_batch *fbatch)
+{
+    unsigned int i, j;
+
+    for (i = 0, j = 0; i < folio_batch_count(fbatch); i++) {
+        struct folio *folio = fbatch->folios[i];
+        if (!xa_is_value(folio))
+            fbatch->folios[j++] = folio;
+    }
+    fbatch->nr = j;
+}
+
+/**
+ * deactivate_file_folio() - Deactivate a file folio.
+ * @folio: Folio to deactivate.
+ *
+ * This function hints to the VM that @folio is a good reclaim candidate,
+ * for example if its invalidation fails due to the folio being dirty
+ * or under writeback.
+ *
+ * Context: Caller holds a reference on the folio.
+ */
+void deactivate_file_folio(struct folio *folio)
+{
+    /* Deactivating an unevictable folio will not accelerate reclaim */
+    if (folio_test_unevictable(folio))
+        return;
+
+    folio_batch_add_and_move(folio, lru_deactivate_file, true);
+}

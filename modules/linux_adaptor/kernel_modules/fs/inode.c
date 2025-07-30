@@ -464,6 +464,154 @@ void inode_add_lru(struct inode *inode)
     __inode_add_lru(inode, false);
 }
 
+/**
+ * iget_locked - obtain an inode from a mounted file system
+ * @sb:     super block of file system
+ * @ino:    inode number to get
+ *
+ * Search for the inode specified by @ino in the inode cache and if present
+ * return it with an increased reference count. This is for file systems
+ * where the inode number is sufficient for unique identification of an inode.
+ *
+ * If the inode is not in cache, allocate a new inode and return it locked,
+ * hashed, and with the I_NEW flag set.  The file system gets to fill it in
+ * before unlocking it via unlock_new_inode().
+ */
+struct inode *iget_locked(struct super_block *sb, unsigned long ino)
+{
+    struct hlist_head *head = inode_hashtable + hash(sb, ino);
+    struct inode *inode;
+again:
+    inode = find_inode_fast(sb, head, ino, false);
+    if (inode) {
+        if (IS_ERR(inode))
+            return NULL;
+        wait_on_inode(inode);
+        if (unlikely(inode_unhashed(inode))) {
+            iput(inode);
+            goto again;
+        }
+        return inode;
+    }
+
+    inode = alloc_inode(sb);
+    if (inode) {
+        struct inode *old;
+
+        spin_lock(&inode_hash_lock);
+        /* We released the lock, so.. */
+        old = find_inode_fast(sb, head, ino, true);
+        if (!old) {
+            inode->i_ino = ino;
+            spin_lock(&inode->i_lock);
+            inode->i_state = I_NEW;
+            hlist_add_head_rcu(&inode->i_hash, head);
+            spin_unlock(&inode->i_lock);
+            inode_sb_list_add(inode);
+            spin_unlock(&inode_hash_lock);
+
+            /* Return the locked inode with I_NEW set, the
+             * caller is responsible for filling in the contents
+             */
+            return inode;
+        }
+
+        PANIC("stage1");
+    }
+
+    PANIC("");
+}
+
+/**
+ * set_nlink - directly set an inode's link count
+ * @inode: inode
+ * @nlink: new nlink (should be non-zero)
+ *
+ * This is a low-level filesystem helper to replace any
+ * direct filesystem manipulation of i_nlink.
+ */
+void set_nlink(struct inode *inode, unsigned int nlink)
+{
+    if (!nlink) {
+        clear_nlink(inode);
+    } else {
+        /* Yes, some filesystems do change nlink from zero to one */
+        if (inode->i_nlink == 0)
+            atomic_long_dec(&inode->i_sb->s_remove_count);
+
+        inode->__i_nlink = nlink;
+    }
+}
+
+/*
+ * inode_set_flags - atomically set some inode flags
+ *
+ * Note: the caller should be holding i_mutex, or else be sure that
+ * they have exclusive access to the inode structure (i.e., while the
+ * inode is being instantiated).  The reason for the cmpxchg() loop
+ * --- which wouldn't be necessary if all code paths which modify
+ * i_flags actually followed this rule, is that there is at least one
+ * code path which doesn't today so we use cmpxchg() out of an abundance
+ * of caution.
+ *
+ * In the long run, i_mutex is overkill, and we should probably look
+ * at using the i_lock spinlock to protect i_flags, and then make sure
+ * it is so documented in include/linux/fs.h and that all code follows
+ * the locking convention!!
+ */
+void inode_set_flags(struct inode *inode, unsigned int flags,
+             unsigned int mask)
+{
+    WARN_ON_ONCE(flags & ~mask);
+    set_mask_bits(&inode->i_flags, mask, flags);
+}
+
+/**
+ * unlock_new_inode - clear the I_NEW state and wake up any waiters
+ * @inode:  new inode to unlock
+ *
+ * Called when the inode is fully initialised to clear the new state of the
+ * inode and wake up anyone waiting for the inode to finish initialisation.
+ */
+void unlock_new_inode(struct inode *inode)
+{
+    lockdep_annotate_inode_mutex_key(inode);
+    spin_lock(&inode->i_lock);
+    WARN_ON(!(inode->i_state & I_NEW));
+    inode->i_state &= ~I_NEW & ~I_CREATING;
+    /*
+     * Pairs with the barrier in prepare_to_wait_event() to make sure
+     * ___wait_var_event() either sees the bit cleared or
+     * waitqueue_active() check in wake_up_var() sees the waiter.
+     */
+    smp_mb();
+    inode_wake_up_bit(inode, __I_NEW);
+    spin_unlock(&inode->i_lock);
+}
+
+/**
+ *  bmap    - find a block number in a file
+ *  @inode:  inode owning the block number being requested
+ *  @block: pointer containing the block to find
+ *
+ *  Replaces the value in ``*block`` with the block number on the device holding
+ *  corresponding to the requested block number in the file.
+ *  That is, asked for block 4 of inode 1 the function will replace the
+ *  4 in ``*block``, with disk block relative to the disk start that holds that
+ *  block of the file.
+ *
+ *  Returns -EINVAL in case of error, 0 otherwise. If mapping falls into a
+ *  hole, returns 0 and ``*block`` is also set to 0.
+ */
+int bmap(struct inode *inode, sector_t *block)
+{
+    if (!inode->i_mapping->a_ops->bmap)
+        return -EINVAL;
+
+    *block = inode->i_mapping->a_ops->bmap(inode->i_mapping, *block);
+    return 0;
+}
+
 /*
  * Initialize the waitqueues and inode hash table.
  */

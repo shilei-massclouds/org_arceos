@@ -88,26 +88,6 @@ static wait_queue_head_t *folio_waitqueue(struct folio *folio)
     return &folio_wait_table[hash_ptr(folio, PAGE_WAIT_TABLE_BITS)];
 }
 
-/*
- * Shadow entries reflect the share of the working set that does not
- * fit into memory, so their number depends on the access pattern of
- * the workload.  In most cases, they will refault or get reclaimed
- * along with the inode, but a (malicious) workload that streams
- * through files with a total size several times that of available
- * memory, while preventing the inodes from being reclaimed, can
- * create excessive amounts of shadow nodes.  To keep a lid on this,
- * track shadow nodes and reclaim them when they grow way past the
- * point where they would still be useful.
- */
-
-struct list_lru shadow_nodes;
-
-void workingset_update_node(struct xa_node *node)
-{
-    PANIC("");
-}
-
-
 /* Returns true if writeback might be needed or already in progress. */
 static bool mapping_needs_writeback(struct address_space *mapping)
 {
@@ -985,13 +965,11 @@ unsigned find_lock_entries(struct address_space *mapping, pgoff_t *start,
     XA_STATE(xas, &mapping->i_pages, *start);
     struct folio *folio;
 
-    printk("%s: step1 nr_fbatch(%d)\n", __func__, folio_batch_count(fbatch));
     rcu_read_lock();
     while ((folio = find_get_entry(&xas, end, XA_PRESENT))) {
         unsigned long base;
         unsigned long nr;
 
-        printk("%s: folio mapping(%lx)\n", __func__, folio->mapping);
         if (!xa_is_value(folio)) {
             nr = folio_nr_pages(folio);
             base = folio->index;

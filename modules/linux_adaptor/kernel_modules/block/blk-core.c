@@ -42,6 +42,11 @@
 static DEFINE_IDA(blk_queue_ida);
 
 /*
+ * Controlling structure to kblockd
+ */
+static struct workqueue_struct *kblockd_workqueue;
+
+/*
  * For queue allocation
  */
 static struct kmem_cache *blk_requestq_cachep;
@@ -566,6 +571,12 @@ void blk_start_plug_nr_ios(struct blk_plug *plug, unsigned short nr_ios)
      * preempt will imply a full memory barrier
      */
     tsk->plug = plug;
+}
+
+int kblockd_mod_delayed_work_on(int cpu, struct delayed_work *dwork,
+                unsigned long delay)
+{
+    return mod_delayed_work_on(cpu, kblockd_workqueue, dwork, delay);
 }
 
 static void __submit_bio_noacct_mq(struct bio *bio)

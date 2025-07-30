@@ -7,6 +7,7 @@
 #include <net/netns/generic.h>
 #include <linux/sched/isolation.h>
 #include <linux/swap.h>
+#include <linux/task_work.h>
 
 #include "../adaptor.h"
 
@@ -191,4 +192,67 @@ struct address_space *swapper_spaces[MAX_SWAPFILES] __read_mostly;
 void mlock_drain_local(void)
 {
     pr_err("%s: No impl.", __func__);
+}
+
+int blocking_notifier_call_chain(struct blocking_notifier_head *nh,
+        unsigned long val, void *v)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int task_work_add(struct task_struct *task, struct callback_head *work,
+          enum task_work_notify_mode notify)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int blocking_notifier_chain_register(struct blocking_notifier_head *nh,
+        struct notifier_block *n)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int blocking_notifier_chain_unregister(struct blocking_notifier_head *nh,
+        struct notifier_block *n)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+void init_timer_key(struct timer_list *timer,
+            void (*func)(struct timer_list *), unsigned int flags,
+            const char *name, struct lock_class_key *key)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int __percpu_counter_init_many(struct percpu_counter *fbc, s64 amount,
+                   gfp_t gfp, u32 nr_counters,
+                   struct lock_class_key *key)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+void percpu_counter_add_batch(struct percpu_counter *fbc, s64 amount, s32 batch)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+bool set_freezable(void)
+{
+    pr_err("%s: No impl.", __func__);
+    return false;
+}
+
+int set_task_ioprio(struct task_struct *task, int ioprio)
+{
+    pr_err("%s: No impl.", __func__);
+    //task->io_context->ioprio = ioprio;
+    return 0;
+}
+
+time64_t ktime_get_real_seconds(void)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
 }
