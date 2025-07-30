@@ -521,9 +521,12 @@ impl CurrentTask {
         let Self(arc) = prev;
         ManuallyDrop::into_inner(arc); // `call Arc::drop()` to decrease prev task reference count.
 
-        // Note: just for linux-adaptor.
-        axhal::arch::write_thread_pointer(next.private() as usize);
-        error!("=================================== kthread({})", next.private());
+        if next.private() != 0 {
+            // Note: just for linux-adaptor.
+            axhal::arch::write_thread_pointer(next.private() as usize);
+            error!("========================== ArceOS-Thread({}) kthread({:x})",
+                next.id_name(), next.private());
+        }
 
         let ptr = Arc::into_raw(next);
         unsafe {

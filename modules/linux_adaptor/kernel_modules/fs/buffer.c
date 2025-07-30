@@ -718,7 +718,6 @@ static void submit_bh_wbc(blk_opf_t opf, struct buffer_head *bh,
     if (buffer_prio(bh))
         opf |= REQ_PRIO;
 
-    printk("%s: step1\n", __func__);
     bio = bio_alloc(bh->b_bdev, 1, opf, GFP_NOIO);
 
     fscrypt_set_bio_crypt_ctx_bh(bio, bh, GFP_NOIO);
@@ -734,7 +733,6 @@ static void submit_bh_wbc(blk_opf_t opf, struct buffer_head *bh,
     /* Take care of bh's that straddle the end of the device */
     guard_bio_eod(bio);
 
-    printk("%s: step2\n", __func__);
     if (wbc) {
         wbc_init_bio(wbc, bio);
         wbc_account_cgroup_owner(wbc, bh->b_folio, bh->b_size);

@@ -63,59 +63,6 @@ static void end_bio_bh_io_sync(struct bio *bio)
     bio_put(bio);
 }
 
-static void submit_bh_wbc(blk_opf_t opf, struct buffer_head *bh,
-              enum rw_hint write_hint,
-              struct writeback_control *wbc)
-{
-#if 0
-    struct bio *bio;
-
-    BUG_ON(!buffer_locked(bh));
-    BUG_ON(!buffer_mapped(bh));
-    BUG_ON(!bh->b_end_io);
-    BUG_ON(buffer_delay(bh));
-    BUG_ON(buffer_unwritten(bh));
-
-    /*
-     * Only clear out a write error when rewriting
-     */
-    if (test_set_buffer_req(bh) && (op == REQ_OP_WRITE))
-        clear_buffer_write_io_error(bh);
-
-    bio = bio_alloc(GFP_NOIO, 1);
-
-    //fscrypt_set_bio_crypt_ctx_bh(bio, bh, GFP_NOIO);
-
-    bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
-    bio_set_dev(bio, bh->b_bdev);
-    bio->bi_write_hint = write_hint;
-
-    bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
-    BUG_ON(bio->bi_iter.bi_size != bh->b_size);
-
-    bio->bi_end_io = end_bio_bh_io_sync;
-    bio->bi_private = bh;
-
-    if (buffer_meta(bh))
-        op_flags |= REQ_META;
-    if (buffer_prio(bh))
-        op_flags |= REQ_PRIO;
-    bio_set_op_attrs(bio, op, op_flags);
-
-    /* Take care of bh's that straddle the end of the device */
-    guard_bio_eod(bio);
-
-    if (wbc) {
-        wbc_init_bio(wbc, bio);
-        wbc_account_cgroup_owner(wbc, bh->b_page, bh->b_size);
-    }
-
-    submit_bio(bio);
-    return 0;
-#endif
-    booter_panic("No impl.");
-}
-
 void submit_bh(blk_opf_t opf, struct buffer_head *bh)
 {
     submit_bh_wbc(opf, bh, WRITE_LIFE_NOT_SET, NULL);

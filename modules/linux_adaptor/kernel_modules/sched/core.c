@@ -139,8 +139,8 @@ int wake_up_process(struct task_struct *p)
 
 asmlinkage __visible void __sched schedule(void)
 {
-    pr_err("%s: ... state(%u) (%u)",
-           __func__, READ_ONCE(current->__state), TASK_RUNNING);
+    printk("%s: kthread(%0xlx) state(%u)\n",
+           __func__, current, READ_ONCE(current->__state));
 
     cl_resched((READ_ONCE(current->__state) == TASK_RUNNING));
 }

@@ -1977,6 +1977,7 @@ void blk_mq_start_stopped_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
 
 void blk_mq_kick_requeue_list(struct request_queue *q)
 {
+    printk("%s: ...\n", __func__);
     kblockd_mod_delayed_work_on(WORK_CPU_UNBOUND, &q->requeue_work, 0);
 }
 

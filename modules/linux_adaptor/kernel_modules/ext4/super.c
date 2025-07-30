@@ -3109,7 +3109,9 @@ static int ext4_setup_super(struct super_block *sb, struct ext4_super_block *es,
 			ext4_set_feature_orphan_present(sb);
 	}
 
+    printk("%s: ============== step1\n", __func__);
 	err = ext4_commit_super(sb);
+    printk("%s: ============== step2\n", __func__);
 done:
 	if (test_opt(sb, DEBUG))
 		printk(KERN_INFO "[EXT4 FS bs=%lu, gc=%u, "
@@ -5488,7 +5490,6 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 		goto failed_mount4;
 	}
 
-    printk("%s: ============== step1\n", __func__);
 	generic_set_sb_d_ops(sb);
 	sb->s_root = d_make_root(root);
 	if (!sb->s_root) {
@@ -5497,13 +5498,14 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 		goto failed_mount4;
 	}
 
-    printk("%s: ============== step2\n", __func__);
+    printk("%s: ============== step1\n", __func__);
 	err = ext4_setup_super(sb, es, sb_rdonly(sb));
 	if (err == -EROFS) {
 		sb->s_flags |= SB_RDONLY;
 	} else if (err)
 		goto failed_mount4a;
 
+    printk("%s: ============== step2\n", __func__);
 	ext4_set_resv_clusters(sb);
 
     printk("%s: ============== step3\n", __func__);
@@ -6213,7 +6215,9 @@ static int ext4_commit_super(struct super_block *sb)
 	sbh->b_end_io = end_buffer_write_sync;
 	submit_bh(REQ_OP_WRITE | REQ_SYNC |
 		  (test_opt(sb, BARRIER) ? REQ_FUA : 0), sbh);
+    printk("%s: ============== wait on buffer ...\n", __func__);
 	wait_on_buffer(sbh);
+    printk("%s: ============== got buffer\n", __func__);
 	if (buffer_write_io_error(sbh)) {
 		ext4_msg(sb, KERN_ERR, "I/O error while writing "
 		       "superblock");
