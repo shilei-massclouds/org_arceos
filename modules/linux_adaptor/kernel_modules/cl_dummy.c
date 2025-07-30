@@ -256,3 +256,25 @@ time64_t ktime_get_real_seconds(void)
     pr_err("%s: No impl.", __func__);
     return 0;
 }
+
+unsigned long __msecs_to_jiffies(const unsigned int m)
+{
+    /*
+     * Negative value, means infinite timeout:
+     */
+    if ((int)m < 0)
+        return MAX_JIFFY_OFFSET;
+    return _msecs_to_jiffies(m);
+}
+
+int sprint_symbol(char *buffer, unsigned long address)
+{
+    pr_err("%s: [%s] addr[0x%lx]\n", __func__, buffer, address);
+    return 0;
+}
+
+u16 get_random_u16(void)
+{
+    pr_err("%s: No impl.\n", __func__);
+    return 1;
+}

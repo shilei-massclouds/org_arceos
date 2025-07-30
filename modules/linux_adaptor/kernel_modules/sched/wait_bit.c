@@ -145,3 +145,16 @@ __sched int bit_wait_io(struct wait_bit_key *word, int mode)
 
     return 0;
 }
+
+int wake_bit_function(struct wait_queue_entry *wq_entry, unsigned mode, int sync, void *arg)
+{
+    struct wait_bit_key *key = arg;
+    struct wait_bit_queue_entry *wait_bit = container_of(wq_entry, struct wait_bit_queue_entry, wq_entry);
+
+    if (wait_bit->key.flags != key->flags ||
+            wait_bit->key.bit_nr != key->bit_nr ||
+            test_bit(key->bit_nr, key->flags))
+        return 0;
+
+    return autoremove_wake_function(wq_entry, mode, sync, key);
+}

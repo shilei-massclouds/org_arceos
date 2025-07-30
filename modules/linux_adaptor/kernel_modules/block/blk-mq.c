@@ -39,6 +39,34 @@
 
 static DEFINE_MUTEX(blk_mq_cpuhp_lock);
 
+static void __blk_mq_requeue_request(struct request *rq)
+{
+    struct request_queue *q = rq->q;
+
+    blk_mq_put_driver_tag(rq);
+
+    trace_block_rq_requeue(rq);
+    rq_qos_requeue(q, rq);
+
+    if (blk_mq_request_started(rq)) {
+        WRITE_ONCE(rq->state, MQ_RQ_IDLE);
+        rq->rq_flags &= ~RQF_TIMED_OUT;
+    }
+}
+
+static void blk_mq_handle_dev_resource(struct request *rq,
+                       struct list_head *list)
+{
+    list_add(&rq->queuelist, list);
+    __blk_mq_requeue_request(rq);
+}
+
+enum prep_dispatch {
+    PREP_DISPATCH_OK,
+    PREP_DISPATCH_NO_TAG,
+    PREP_DISPATCH_NO_BUDGET,
+};
+
 static int blk_mq_init_request(struct blk_mq_tag_set *set, struct request *rq,
                    unsigned int hctx_idx, int node)
 {
@@ -1014,6 +1042,328 @@ void blk_mq_release(struct request_queue *q)
     PANIC("");
 }
 
+/*
+ * Mark this ctx as having pending work in this hardware queue
+ */
+static void blk_mq_hctx_mark_pending(struct blk_mq_hw_ctx *hctx,
+                     struct blk_mq_ctx *ctx)
+{
+    const int bit = ctx->index_hw[hctx->type];
+
+    if (!sbitmap_test_bit(&hctx->ctx_map, bit))
+        sbitmap_set_bit(&hctx->ctx_map, bit);
+}
+
+/**
+ * blk_mq_request_bypass_insert - Insert a request at dispatch list.
+ * @rq: Pointer to request to be inserted.
+ * @flags: BLK_MQ_INSERT_*
+ *
+ * Should only be used carefully, when the caller knows we want to
+ * bypass a potential IO scheduler on the target device.
+ */
+static void blk_mq_request_bypass_insert(struct request *rq, blk_insert_t flags)
+{
+    struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
+
+    spin_lock(&hctx->lock);
+    if (flags & BLK_MQ_INSERT_AT_HEAD)
+        list_add(&rq->queuelist, &hctx->dispatch);
+    else
+        list_add_tail(&rq->queuelist, &hctx->dispatch);
+    spin_unlock(&hctx->lock);
+}
+
+static void blk_mq_insert_request(struct request *rq, blk_insert_t flags)
+{
+    struct request_queue *q = rq->q;
+    struct blk_mq_ctx *ctx = rq->mq_ctx;
+    struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
+
+    if (blk_rq_is_passthrough(rq)) {
+        /*
+         * Passthrough request have to be added to hctx->dispatch
+         * directly.  The device may be in a situation where it can't
+         * handle FS request, and always returns BLK_STS_RESOURCE for
+         * them, which gets them added to hctx->dispatch.
+         *
+         * If a passthrough request is required to unblock the queues,
+         * and it is added to the scheduler queue, there is no chance to
+         * dispatch it given we prioritize requests in hctx->dispatch.
+         */
+        blk_mq_request_bypass_insert(rq, flags);
+    } else if (req_op(rq) == REQ_OP_FLUSH) {
+        /*
+         * Firstly normal IO request is inserted to scheduler queue or
+         * sw queue, meantime we add flush request to dispatch queue(
+         * hctx->dispatch) directly and there is at most one in-flight
+         * flush request for each hw queue, so it doesn't matter to add
+         * flush request to tail or front of the dispatch queue.
+         *
+         * Secondly in case of NCQ, flush request belongs to non-NCQ
+         * command, and queueing it will fail when there is any
+         * in-flight normal IO request(NCQ command). When adding flush
+         * rq to the front of hctx->dispatch, it is easier to introduce
+         * extra time to flush rq's latency because of S_SCHED_RESTART
+         * compared with adding to the tail of dispatch queue, then
+         * chance of flush merge is increased, and less flush requests
+         * will be issued to controller. It is observed that ~10% time
+         * is saved in blktests block/004 on disk attached to AHCI/NCQ
+         * drive when adding flush rq to the front of hctx->dispatch.
+         *
+         * Simply queue flush rq to the front of hctx->dispatch so that
+         * intensive flush workloads can benefit in case of NCQ HW.
+         */
+        blk_mq_request_bypass_insert(rq, BLK_MQ_INSERT_AT_HEAD);
+    } else if (q->elevator) {
+        LIST_HEAD(list);
+
+        WARN_ON_ONCE(rq->tag != BLK_MQ_NO_TAG);
+
+        list_add(&rq->queuelist, &list);
+        q->elevator->type->ops.insert_requests(hctx, &list, flags);
+    } else {
+        trace_block_rq_insert(rq);
+
+        spin_lock(&ctx->lock);
+        if (flags & BLK_MQ_INSERT_AT_HEAD)
+            list_add(&rq->queuelist, &ctx->rq_lists[hctx->type]);
+        else
+            list_add_tail(&rq->queuelist,
+                      &ctx->rq_lists[hctx->type]);
+        blk_mq_hctx_mark_pending(hctx, ctx);
+        spin_unlock(&ctx->lock);
+    }
+}
+
+static void blk_mq_requeue_work(struct work_struct *work)
+{
+    struct request_queue *q =
+        container_of(work, struct request_queue, requeue_work.work);
+    LIST_HEAD(rq_list);
+    LIST_HEAD(flush_list);
+    struct request *rq;
+
+    spin_lock_irq(&q->requeue_lock);
+    list_splice_init(&q->requeue_list, &rq_list);
+    list_splice_init(&q->flush_list, &flush_list);
+    spin_unlock_irq(&q->requeue_lock);
+
+    while (!list_empty(&rq_list)) {
+        rq = list_entry(rq_list.next, struct request, queuelist);
+        /*
+         * If RQF_DONTPREP ist set, the request has been started by the
+         * driver already and might have driver-specific data allocated
+         * already.  Insert it into the hctx dispatch list to avoid
+         * block layer merges for the request.
+         */
+        if (rq->rq_flags & RQF_DONTPREP) {
+            list_del_init(&rq->queuelist);
+            blk_mq_request_bypass_insert(rq, 0);
+        } else {
+            list_del_init(&rq->queuelist);
+            blk_mq_insert_request(rq, BLK_MQ_INSERT_AT_HEAD);
+        }
+        PANIC("LOOP");
+    }
+
+    while (!list_empty(&flush_list)) {
+        rq = list_entry(flush_list.next, struct request, queuelist);
+        list_del_init(&rq->queuelist);
+        blk_mq_insert_request(rq, 0);
+    }
+
+    blk_mq_run_hw_queues(q, false);
+}
+
+/*
+ * Return prefered queue to dispatch from (if any) for non-mq aware IO
+ * scheduler.
+ */
+static struct blk_mq_hw_ctx *blk_mq_get_sq_hctx(struct request_queue *q)
+{
+    struct blk_mq_ctx *ctx = blk_mq_get_ctx(q);
+    /*
+     * If the IO scheduler does not respect hardware queues when
+     * dispatching, we just don't bother with multiple HW queues and
+     * dispatch from hctx for the current CPU since running multiple queues
+     * just causes lock contention inside the scheduler and pointless cache
+     * bouncing.
+     */
+    struct blk_mq_hw_ctx *hctx = ctx->hctxs[HCTX_TYPE_DEFAULT];
+
+    if (!blk_mq_hctx_stopped(hctx))
+        return hctx;
+    return NULL;
+}
+
+/**
+ * blk_mq_run_hw_queues - Run all hardware queues in a request queue.
+ * @q: Pointer to the request queue to run.
+ * @async: If we want to run the queue asynchronously.
+ */
+void blk_mq_run_hw_queues(struct request_queue *q, bool async)
+{
+    struct blk_mq_hw_ctx *hctx, *sq_hctx;
+    unsigned long i;
+
+    sq_hctx = NULL;
+    if (blk_queue_sq_sched(q))
+        sq_hctx = blk_mq_get_sq_hctx(q);
+    queue_for_each_hw_ctx(q, hctx, i) {
+        if (blk_mq_hctx_stopped(hctx))
+            continue;
+        /*
+         * Dispatch from this hctx either if there's no hctx preferred
+         * by IO scheduler or if it has requests that bypass the
+         * scheduler.
+         */
+        if (!sq_hctx || sq_hctx == hctx ||
+            !list_empty_careful(&hctx->dispatch))
+            blk_mq_run_hw_queue(hctx, async);
+    }
+}
+
+/*
+ * Check if any of the ctx, dispatch list or elevator
+ * have pending work in this hardware queue.
+ */
+static bool blk_mq_hctx_has_pending(struct blk_mq_hw_ctx *hctx)
+{
+    return !list_empty_careful(&hctx->dispatch) ||
+        sbitmap_any_bit_set(&hctx->ctx_map) ||
+            blk_mq_sched_has_work(hctx);
+}
+
+/*
+ * It'd be great if the workqueue API had a way to pass
+ * in a mask and had some smarts for more clever placement.
+ * For now we just round-robin here, switching for every
+ * BLK_MQ_CPU_WORK_BATCH queued items.
+ */
+static int blk_mq_hctx_next_cpu(struct blk_mq_hw_ctx *hctx)
+{
+    PANIC("");
+}
+
+static inline bool blk_mq_hw_queue_need_run(struct blk_mq_hw_ctx *hctx)
+{
+    bool need_run;
+
+    /*
+     * When queue is quiesced, we may be switching io scheduler, or
+     * updating nr_hw_queues, or other things, and we can't run queue
+     * any more, even blk_mq_hctx_has_pending() can't be called safely.
+     *
+     * And queue will be rerun in blk_mq_unquiesce_queue() if it is
+     * quiesced.
+     */
+    __blk_mq_run_dispatch_ops(hctx->queue, false,
+        need_run = !blk_queue_quiesced(hctx->queue) &&
+        blk_mq_hctx_has_pending(hctx));
+    return need_run;
+}
+
+/**
+ * blk_mq_delay_run_hw_queues - Run all hardware queues asynchronously.
+ * @q: Pointer to the request queue to run.
+ * @msecs: Milliseconds of delay to wait before running the queues.
+ */
+void blk_mq_delay_run_hw_queues(struct request_queue *q, unsigned long msecs)
+{
+    struct blk_mq_hw_ctx *hctx, *sq_hctx;
+    unsigned long i;
+
+#if 0
+    sq_hctx = NULL;
+    if (blk_queue_sq_sched(q))
+        sq_hctx = blk_mq_get_sq_hctx(q);
+    queue_for_each_hw_ctx(q, hctx, i) {
+        if (blk_mq_hctx_stopped(hctx))
+            continue;
+        /*
+         * If there is already a run_work pending, leave the
+         * pending delay untouched. Otherwise, a hctx can stall
+         * if another hctx is re-delaying the other's work
+         * before the work executes.
+         */
+        if (delayed_work_pending(&hctx->run_work))
+            continue;
+        /*
+         * Dispatch from this hctx either if there's no hctx preferred
+         * by IO scheduler or if it has requests that bypass the
+         * scheduler.
+         */
+        if (!sq_hctx || sq_hctx == hctx ||
+            !list_empty_careful(&hctx->dispatch))
+            blk_mq_delay_run_hw_queue(hctx, msecs);
+    }
+#endif
+    PANIC("");
+}
+
+/**
+ * blk_mq_delay_run_hw_queue - Run a hardware queue asynchronously.
+ * @hctx: Pointer to the hardware queue to run.
+ * @msecs: Milliseconds of delay to wait before running the queue.
+ *
+ * Run a hardware queue asynchronously with a delay of @msecs.
+ */
+void blk_mq_delay_run_hw_queue(struct blk_mq_hw_ctx *hctx, unsigned long msecs)
+{
+    if (unlikely(blk_mq_hctx_stopped(hctx)))
+        return;
+    kblockd_mod_delayed_work_on(blk_mq_hctx_next_cpu(hctx), &hctx->run_work,
+                    msecs_to_jiffies(msecs));
+}
+
+/**
+ * blk_mq_run_hw_queue - Start to run a hardware queue.
+ * @hctx: Pointer to the hardware queue to run.
+ * @async: If we want to run the queue asynchronously.
+ *
+ * Check if the request queue is not in a quiesced state and if there are
+ * pending requests to be sent. If this is true, run the queue to send requests
+ * to hardware.
+ */
+void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
+{
+    bool need_run;
+
+    /*
+     * We can't run the queue inline with interrupts disabled.
+     */
+    WARN_ON_ONCE(!async && in_interrupt());
+
+    might_sleep_if(!async && hctx->flags & BLK_MQ_F_BLOCKING);
+
+    need_run = blk_mq_hw_queue_need_run(hctx);
+    if (!need_run) {
+        unsigned long flags;
+
+        /*
+         * Synchronize with blk_mq_unquiesce_queue(), because we check
+         * if hw queue is quiesced locklessly above, we need the use
+         * ->queue_lock to make sure we see the up-to-date status to
+         * not miss rerunning the hw queue.
+         */
+        spin_lock_irqsave(&hctx->queue->queue_lock, flags);
+        need_run = blk_mq_hw_queue_need_run(hctx);
+        spin_unlock_irqrestore(&hctx->queue->queue_lock, flags);
+
+        if (!need_run)
+            return;
+    }
+
+    if (async || !cpumask_test_cpu(raw_smp_processor_id(), hctx->cpumask)) {
+        blk_mq_delay_run_hw_queue(hctx, 0);
+        return;
+    }
+
+    blk_mq_run_dispatch_ops(hctx->queue,
+                blk_mq_sched_dispatch_requests(hctx));
+}
+
 int blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
         struct request_queue *q)
 {
@@ -1050,7 +1400,7 @@ int blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
 
     q->queue_flags |= QUEUE_FLAG_MQ_DEFAULT;
 
-    //INIT_DELAYED_WORK(&q->requeue_work, blk_mq_requeue_work);
+    INIT_DELAYED_WORK(&q->requeue_work, blk_mq_requeue_work);
     INIT_LIST_HEAD(&q->flush_list);
     INIT_LIST_HEAD(&q->requeue_list);
     spin_lock_init(&q->requeue_lock);
@@ -1496,7 +1846,6 @@ void blk_mq_submit_bio(struct bio *bio)
         goto queue_exit;
 
 new_request:
-    printk("%s: step1\n", __func__);
     if (!rq) {
         rq = blk_mq_get_new_requests(q, plug, bio, nr_segs);
         if (unlikely(!rq))
@@ -1522,9 +1871,11 @@ new_request:
     if (bio_zone_write_plugging(bio))
         blk_zone_write_plug_init_request(rq);
 
+    printk("%s: step1\n", __func__);
     if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq))
         return;
 
+    printk("%s: step2\n", __func__);
     if (plug) {
         blk_add_rq_to_plug(plug, rq);
         return;
@@ -1995,4 +2346,249 @@ void blk_rq_init(struct request_queue *q, struct request *rq)
     rq->start_time_ns = blk_time_get_ns();
     rq->part = NULL;
     blk_crypto_rq_set_defaults(rq);
+}
+
+/*
+ * Mark us waiting for a tag. For shared tags, this involves hooking us into
+ * the tag wakeups. For non-shared tags, we can simply mark us needing a
+ * restart. For both cases, take care to check the condition again after
+ * marking us as waiting.
+ */
+static bool blk_mq_mark_tag_wait(struct blk_mq_hw_ctx *hctx,
+                 struct request *rq)
+{
+    struct sbitmap_queue *sbq;
+    struct wait_queue_head *wq;
+    wait_queue_entry_t *wait;
+    bool ret;
+
+
+    PANIC("");
+}
+
+bool __blk_mq_alloc_driver_tag(struct request *rq)
+{
+    struct sbitmap_queue *bt = &rq->mq_hctx->tags->bitmap_tags;
+    unsigned int tag_offset = rq->mq_hctx->tags->nr_reserved_tags;
+    int tag;
+
+#if 0
+    blk_mq_tag_busy(rq->mq_hctx);
+
+    if (blk_mq_tag_is_reserved(rq->mq_hctx->sched_tags, rq->internal_tag)) {
+        bt = &rq->mq_hctx->tags->breserved_tags;
+        tag_offset = 0;
+    } else {
+        if (!hctx_may_queue(rq->mq_hctx, bt))
+            return false;
+    }
+
+    tag = __sbitmap_queue_get(bt);
+    if (tag == BLK_MQ_NO_TAG)
+        return false;
+
+    rq->tag = tag + tag_offset;
+    blk_mq_inc_active_requests(rq->mq_hctx);
+    return true;
+#endif
+    PANIC("");
+}
+
+static enum prep_dispatch blk_mq_prep_dispatch_rq(struct request *rq,
+                          bool need_budget)
+{
+    struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
+    int budget_token = -1;
+
+    if (need_budget) {
+        budget_token = blk_mq_get_dispatch_budget(rq->q);
+        if (budget_token < 0) {
+            blk_mq_put_driver_tag(rq);
+            return PREP_DISPATCH_NO_BUDGET;
+        }
+        blk_mq_set_rq_budget_token(rq, budget_token);
+    }
+
+    if (!blk_mq_get_driver_tag(rq)) {
+        /*
+         * The initial allocation attempt failed, so we need to
+         * rerun the hardware queue when a tag is freed. The
+         * waitqueue takes care of that. If the queue is run
+         * before we add this entry back on the dispatch list,
+         * we'll re-run it below.
+         */
+        if (!blk_mq_mark_tag_wait(hctx, rq)) {
+            /*
+             * All budgets not got from this function will be put
+             * together during handling partial dispatch
+             */
+            if (need_budget)
+                blk_mq_put_dispatch_budget(rq->q, budget_token);
+            return PREP_DISPATCH_NO_TAG;
+        }
+    }
+
+    return PREP_DISPATCH_OK;
+}
+
+/*
+ * blk_mq_commit_rqs will notify driver using bd->last that there is no
+ * more requests. (See comment in struct blk_mq_ops for commit_rqs for
+ * details)
+ * Attention, we should explicitly call this in unusual cases:
+ *  1) did not queue everything initially scheduled to queue
+ *  2) the last attempt to queue a request failed
+ */
+static void blk_mq_commit_rqs(struct blk_mq_hw_ctx *hctx, int queued,
+                  bool from_schedule)
+{
+    if (hctx->queue->mq_ops->commit_rqs && queued) {
+        trace_block_unplug(hctx->queue, queued, !from_schedule);
+        hctx->queue->mq_ops->commit_rqs(hctx);
+    }
+}
+
+#define BLK_MQ_DISPATCH_BUSY_EWMA_WEIGHT  8
+#define BLK_MQ_DISPATCH_BUSY_EWMA_FACTOR  4
+/*
+ * Update dispatch busy with the Exponential Weighted Moving Average(EWMA):
+ * - EWMA is one simple way to compute running average value
+ * - weight(7/8 and 1/8) is applied so that it can decrease exponentially
+ * - take 4 as factor for avoiding to get too small(0) result, and this
+ *   factor doesn't matter because EWMA decreases exponentially
+ */
+static void blk_mq_update_dispatch_busy(struct blk_mq_hw_ctx *hctx, bool busy)
+{
+    unsigned int ewma;
+
+    ewma = hctx->dispatch_busy;
+
+    if (!ewma && !busy)
+        return;
+
+    ewma *= BLK_MQ_DISPATCH_BUSY_EWMA_WEIGHT - 1;
+    if (busy)
+        ewma += 1 << BLK_MQ_DISPATCH_BUSY_EWMA_FACTOR;
+    ewma /= BLK_MQ_DISPATCH_BUSY_EWMA_WEIGHT;
+
+    hctx->dispatch_busy = ewma;
+}
+
+/*
+ * Returns true if we did some work AND can potentially do more.
+ */
+bool blk_mq_dispatch_rq_list(struct blk_mq_hw_ctx *hctx, struct list_head *list,
+                 unsigned int nr_budgets)
+{
+    enum prep_dispatch prep;
+    struct request_queue *q = hctx->queue;
+    struct request *rq;
+    int queued;
+    blk_status_t ret = BLK_STS_OK;
+    bool needs_resource = false;
+
+    if (list_empty(list))
+        return false;
+
+    /*
+     * Now process all the entries, sending them to the driver.
+     */
+    queued = 0;
+    do {
+        struct blk_mq_queue_data bd;
+
+        rq = list_first_entry(list, struct request, queuelist);
+
+        WARN_ON_ONCE(hctx != rq->mq_hctx);
+        prep = blk_mq_prep_dispatch_rq(rq, !nr_budgets);
+        if (prep != PREP_DISPATCH_OK)
+            break;
+
+        list_del_init(&rq->queuelist);
+
+        bd.rq = rq;
+        bd.last = list_empty(list);
+
+        /*
+         * once the request is queued to lld, no need to cover the
+         * budget any more
+         */
+        if (nr_budgets)
+            nr_budgets--;
+
+    printk("%s: step1\n", __func__);
+        ret = q->mq_ops->queue_rq(hctx, &bd);
+    printk("%s: step2\n", __func__);
+        switch (ret) {
+        case BLK_STS_OK:
+            queued++;
+            break;
+        case BLK_STS_RESOURCE:
+            needs_resource = true;
+            fallthrough;
+        case BLK_STS_DEV_RESOURCE:
+            blk_mq_handle_dev_resource(rq, list);
+            goto out;
+        default:
+            blk_mq_end_request(rq, ret);
+        }
+    } while (!list_empty(list));
+out:
+    /* If we didn't flush the entire list, we could have told the driver
+     * there was more coming, but that turned out to be a lie.
+     */
+    if (!list_empty(list) || ret != BLK_STS_OK)
+        blk_mq_commit_rqs(hctx, queued, false);
+
+    /*
+     * Any items that need requeuing? Stuff them into hctx->dispatch,
+     * that is where we will continue on next queue run.
+     */
+    if (!list_empty(list)) {
+        PANIC("stage1");
+    }
+
+    printk("%s: step3\n", __func__);
+    blk_mq_update_dispatch_busy(hctx, false);
+    return true;
+}
+
+struct dispatch_rq_data {
+    struct blk_mq_hw_ctx *hctx;
+    struct request *rq;
+};
+
+static bool dispatch_rq_from_ctx(struct sbitmap *sb, unsigned int bitnr,
+        void *data)
+{
+    struct dispatch_rq_data *dispatch_data = data;
+    struct blk_mq_hw_ctx *hctx = dispatch_data->hctx;
+    struct blk_mq_ctx *ctx = hctx->ctxs[bitnr];
+    enum hctx_type type = hctx->type;
+
+    spin_lock(&ctx->lock);
+    if (!list_empty(&ctx->rq_lists[type])) {
+        dispatch_data->rq = list_entry_rq(ctx->rq_lists[type].next);
+        list_del_init(&dispatch_data->rq->queuelist);
+        if (list_empty(&ctx->rq_lists[type]))
+            sbitmap_clear_bit(sb, bitnr);
+    }
+    spin_unlock(&ctx->lock);
+
+    return !dispatch_data->rq;
+}
+
+struct request *blk_mq_dequeue_from_ctx(struct blk_mq_hw_ctx *hctx,
+                    struct blk_mq_ctx *start)
+{
+    unsigned off = start ? start->index_hw[hctx->type] : 0;
+    struct dispatch_rq_data data = {
+        .hctx = hctx,
+        .rq   = NULL,
+    };
+
+    __sbitmap_for_each_set(&hctx->ctx_map, off,
+                   dispatch_rq_from_ctx, &data);
+
+    return data.rq;
 }

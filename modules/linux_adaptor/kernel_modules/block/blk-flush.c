@@ -11,6 +11,10 @@
 
 #include "../adaptor.h"
 
+static void blk_flush_complete_seq(struct request *rq,
+                   struct blk_flush_queue *fq,
+                   unsigned int seq, blk_status_t error);
+
 /* PREFLUSH/FUA sequences */
 enum {
     REQ_FSEQ_PREFLUSH   = (1 << 0), /* pre-flushing in progress */
@@ -86,7 +90,57 @@ static void blk_flush_restore_request(struct request *rq)
 static enum rq_end_io_ret flush_end_io(struct request *flush_rq,
                        blk_status_t error)
 {
-    PANIC("");
+    struct request_queue *q = flush_rq->q;
+    struct list_head *running;
+    struct request *rq, *n;
+    unsigned long flags = 0;
+    struct blk_flush_queue *fq = blk_get_flush_queue(q, flush_rq->mq_ctx);
+
+    /* release the tag's ownership to the req cloned from */
+    spin_lock_irqsave(&fq->mq_flush_lock, flags);
+
+    if (!req_ref_put_and_test(flush_rq)) {
+        fq->rq_status = error;
+        spin_unlock_irqrestore(&fq->mq_flush_lock, flags);
+        return RQ_END_IO_NONE;
+    }
+
+    //blk_account_io_flush(flush_rq);
+    /*
+     * Flush request has to be marked as IDLE when it is really ended
+     * because its .end_io() is called from timeout code path too for
+     * avoiding use-after-free.
+     */
+    WRITE_ONCE(flush_rq->state, MQ_RQ_IDLE);
+    if (fq->rq_status != BLK_STS_OK) {
+        error = fq->rq_status;
+        fq->rq_status = BLK_STS_OK;
+    }
+
+    if (!q->elevator) {
+        flush_rq->tag = BLK_MQ_NO_TAG;
+    } else {
+        blk_mq_put_driver_tag(flush_rq);
+        flush_rq->internal_tag = BLK_MQ_NO_TAG;
+    }
+
+    running = &fq->flush_queue[fq->flush_running_idx];
+    BUG_ON(fq->flush_pending_idx == fq->flush_running_idx);
+
+    /* account completion of the flush request */
+    fq->flush_running_idx ^= 1;
+
+    /* and push the waiting requests to the next stage */
+    list_for_each_entry_safe(rq, n, running, queuelist) {
+        unsigned int seq = blk_flush_cur_seq(rq);
+
+        BUG_ON(seq != REQ_FSEQ_PREFLUSH && seq != REQ_FSEQ_POSTFLUSH);
+        list_del_init(&rq->queuelist);
+        blk_flush_complete_seq(rq, fq, seq, error);
+    }
+
+    spin_unlock_irqrestore(&fq->mq_flush_lock, flags);
+    return RQ_END_IO_NONE;
 }
 
 /**
@@ -195,6 +249,7 @@ static void blk_flush_complete_seq(struct request *rq,
     else
         seq = REQ_FSEQ_DONE;
 
+    printk("%s: seq(%u)\n", __func__, seq);
     switch (seq) {
     case REQ_FSEQ_PREFLUSH:
     case REQ_FSEQ_POSTFLUSH:
@@ -202,6 +257,7 @@ static void blk_flush_complete_seq(struct request *rq,
         if (list_empty(pending))
             fq->flush_pending_since = jiffies;
         list_add_tail(&rq->queuelist, pending);
+        printk("%s: REQ_FSEQ_POSTFLUSH(%u)\n", __func__, REQ_FSEQ_POSTFLUSH);
         break;
 
     case REQ_FSEQ_DATA:
@@ -263,6 +319,7 @@ static enum rq_end_io_ret mq_flush_data_end_io(struct request *rq,
     spin_unlock_irqrestore(&fq->mq_flush_lock, flags);
 
     blk_mq_sched_restart(hctx);
+    printk("%s: ok!\n", __func__);
     return RQ_END_IO_NONE;
 }
 
@@ -272,6 +329,7 @@ static void blk_rq_init_flush(struct request *rq)
     rq->rq_flags |= RQF_FLUSH_SEQ;
     rq->flush.saved_end_io = rq->end_io; /* Usually NULL */
     rq->end_io = mq_flush_data_end_io;
+    printk("%s: saved_end_io(%lx)\n", __func__, rq->flush.saved_end_io);
 }
 
 /*
@@ -336,6 +394,7 @@ bool blk_insert_flush(struct request *rq)
          */
         return false;
     case REQ_FSEQ_DATA | REQ_FSEQ_POSTFLUSH:
+        printk("%s: REQ_FSEQ_DATA | REQ_FSEQ_POSTFLUSH\n", __func__);
         /*
          * Initialize the flush fields and completion handler to trigger
          * the post flush, and then just pass the command on.

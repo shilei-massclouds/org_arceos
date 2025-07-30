@@ -5498,17 +5498,14 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 		goto failed_mount4;
 	}
 
-    printk("%s: ============== step1\n", __func__);
 	err = ext4_setup_super(sb, es, sb_rdonly(sb));
 	if (err == -EROFS) {
 		sb->s_flags |= SB_RDONLY;
 	} else if (err)
 		goto failed_mount4a;
 
-    printk("%s: ============== step2\n", __func__);
 	ext4_set_resv_clusters(sb);
 
-    printk("%s: ============== step3\n", __func__);
 	if (test_opt(sb, BLOCK_VALIDITY)) {
 		err = ext4_setup_system_zone(sb);
 		if (err) {
@@ -5565,6 +5562,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 	if (err)
 		goto failed_mount6;
 
+    printk("%s: ============== step1\n", __func__);
 	err = ext4_init_orphan_info(sb);
 	if (err)
 		goto failed_mount7;
@@ -5577,6 +5575,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 	}
 #endif  /* CONFIG_QUOTA */
 
+    printk("%s: ============== step2\n", __func__);
 	/*
 	 * Save the original bdev mapping's wb_err value which could be
 	 * used to detect the metadata async write error.
@@ -5601,6 +5600,7 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 			goto failed_mount9;
 	}
 
+    printk("%s: ============== step3\n", __func__);
 	if (test_opt(sb, DISCARD) && !bdev_max_discard_sectors(sb->s_bdev))
 		ext4_msg(sb, KERN_WARNING,
 			 "mounting with \"discard\" option, but the device does not support discard");

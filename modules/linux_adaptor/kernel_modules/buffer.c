@@ -369,13 +369,6 @@ void __lock_buffer(struct buffer_head *bh)
     wait_on_bit_lock_io(&bh->b_state, BH_Lock, TASK_UNINTERRUPTIBLE);
 }
 
-void unlock_buffer(struct buffer_head *bh)
-{
-    clear_bit_unlock(BH_Lock, &bh->b_state);
-    smp_mb__after_atomic();
-    wake_up_bit(&bh->b_state, BH_Lock);
-}
-
 #if 0
 /*
  * The generic ->writepage function for buffer-backed address_spaces
@@ -1013,11 +1006,6 @@ __getblk_gfp(struct block_device *bdev, sector_t block,
     return bh;
 }
 
-void __wait_on_buffer(struct buffer_head * bh)
-{
-    wait_on_bit_io(&bh->b_state, BH_Lock, TASK_UNINTERRUPTIBLE);
-}
-
 /*
  * For a data-integrity writeout, we need to wait upon any in-progress I/O
  * and then start new I/O and then wait upon it.  The caller must have a ref on
@@ -1469,20 +1457,6 @@ out:
         } while (bh != buffers_to_free);
     }
     return ret;
-}
-
-void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
-{
-    printk("%s: ...\n", __func__);
-    if (uptodate) {
-        set_buffer_uptodate(bh);
-    } else {
-        buffer_io_error(bh, ", lost sync page write");
-        mark_buffer_write_io_error(bh);
-        clear_buffer_uptodate(bh);
-    }
-    unlock_buffer(bh);
-    put_bh(bh);
 }
 
 void mark_buffer_write_io_error(struct buffer_head *bh)

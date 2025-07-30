@@ -1,5 +1,7 @@
 #include <linux/slab.h>
 
+#include "../adaptor.h"
+
 struct workqueue_struct {
 };
 
@@ -51,6 +53,24 @@ bool queue_delayed_work_on(int cpu, struct workqueue_struct *wq,
 bool mod_delayed_work_on(int cpu, struct workqueue_struct *wq,
              struct delayed_work *dwork, unsigned long delay)
 {
-    pr_err("%s: No impl.\n", __func__);
-    return false;
+    unsigned long flags;
+    bool ret = false;
+    local_irq_save(flags);
+    printk("%s: step1 irq_disabled(%u)\n", __func__, irqs_disabled());
+
+    if (delay == 0) {
+        if (dwork == NULL || dwork->work.func == NULL) {
+            PANIC("bad dwork.");
+        }
+        dwork->work.func(&dwork->work);
+        /* We must make sure that IRQ disabled. */
+        local_irq_disable();
+        ret = true;
+    } else {
+        PANIC("delay is NOT ZERO!");
+    }
+
+    printk("%s: step2 irq_disabled(%u)\n", __func__, irqs_disabled());
+    local_irq_restore(flags);
+    return ret;
 }

@@ -139,7 +139,7 @@ int wake_up_process(struct task_struct *p)
 
 asmlinkage __visible void __sched schedule(void)
 {
-    printk("%s: kthread(%0xlx) state(%u)\n",
+    printk("%s: current(0x%lx) state(%u)\n",
            __func__, current, READ_ONCE(current->__state));
 
     cl_resched((READ_ONCE(current->__state) == TASK_RUNNING));
@@ -159,9 +159,11 @@ int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
     }
     printk("%s: task_ptr(%lx:%u) tid(%lu) current(%lx:%u)\n",
            __func__, p, p->__state, p->pid, current, current->__state);
+#if 0
     if (p == current) {
         return 0;
     }
+#endif
     cl_wake_up(p->pid);
     return 1;
 }

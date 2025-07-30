@@ -44,3 +44,12 @@ void __rq_qos_done(struct rq_qos *rqos, struct request *rq)
         rqos = rqos->next;
     } while (rqos);
 }
+
+void __rq_qos_requeue(struct rq_qos *rqos, struct request *rq)
+{
+    do {
+        if (rqos->ops->requeue)
+            rqos->ops->requeue(rqos, rq);
+        rqos = rqos->next;
+    } while (rqos);
+}

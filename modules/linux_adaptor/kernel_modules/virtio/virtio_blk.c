@@ -440,7 +440,9 @@ static blk_status_t virtio_queue_rq(struct blk_mq_hw_ctx *hctx,
 	if (unlikely(status))
 		return status;
 
+    printk("%s: step1\n", __func__);
 	spin_lock_irqsave(&vblk->vqs[qid].lock, flags);
+    printk("%s: step2\n", __func__);
 	err = virtblk_add_req(vblk->vqs[qid].vq, vbr);
 	if (err) {
 		virtqueue_kick(vblk->vqs[qid].vq);
@@ -454,6 +456,7 @@ static blk_status_t virtio_queue_rq(struct blk_mq_hw_ctx *hctx,
 		return virtblk_fail_to_queue(req, err);
 	}
 
+    printk("%s: step3\n", __func__);
 	if (bd->last && virtqueue_kick_prepare(vblk->vqs[qid].vq))
 		notify = true;
 	spin_unlock_irqrestore(&vblk->vqs[qid].lock, flags);

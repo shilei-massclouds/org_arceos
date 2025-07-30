@@ -19,22 +19,24 @@ noinline unsigned long __lockfunc _raw_spin_lock_irqsave(raw_spinlock_t *lock)
 {
     unsigned long flags;
 
+    pr_err("%s: (%lx) irq(%lx)\n", __func__, lock, irqs_disabled());
     local_irq_save(flags);
 
     /* For simplicity, ignore kernel-preemption. */
     // preempt_disable();
 
-    arch_spin_lock(&lock->raw_lock);
+    //arch_spin_lock(&lock->raw_lock);
 
     return flags;
 }
 
 noinline void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 {
-    arch_spin_unlock(&lock->raw_lock);
+    //arch_spin_unlock(&lock->raw_lock);
 
     local_irq_restore(flags);
 
+    pr_err("%s: (%lx) irq(%lx)\n", __func__, lock, irqs_disabled());
     /* For simplicity, ignore kernel-preemption. */
     // preempt_enable();
 }
@@ -57,6 +59,7 @@ noinline void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
 
 noinline void __lockfunc _raw_spin_lock_irq(raw_spinlock_t *lock)
 {
+    pr_err("%s: (%lx) irq(%lx)\n", __func__, lock, irqs_disabled());
     local_irq_disable();
 
     /* For simplicity, ignore kernel-preemption. */
@@ -71,6 +74,7 @@ noinline void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)
 
     local_irq_enable();
 
+    pr_err("%s: (%lx) irq(%lx)\n", __func__, lock, irqs_disabled());
     /* For simplicity, ignore kernel-preemption. */
     // preempt_enable();
 }
