@@ -22,6 +22,30 @@
 
 #include "../adaptor.h"
 
+/*
+ * This is the single most critical data structure when it comes
+ * to the dcache: the hashtable for lookups. Somebody should try
+ * to make this good - I've just made it work.
+ *
+ * This hash-function tries to avoid losing too many bits of hash
+ * information, yet avoid using a prime hash-size or similar.
+ *
+ * Marking the variables "used" ensures that the compiler doesn't
+ * optimize them away completely on architectures with runtime
+ * constant infrastructure, this allows debuggers to see their
+ * values. But updating these values has no effect on those arches.
+ */
+
+static unsigned int d_hash_shift __ro_after_init __used;
+
+static struct hlist_bl_head *dentry_hashtable __ro_after_init __used;
+
+static inline struct hlist_bl_head *d_hash(unsigned long hashlen)
+{
+    return runtime_const_ptr(dentry_hashtable) +
+        runtime_const_shift_right_32(hashlen, d_hash_shift);
+}
+
 const struct qstr empty_name = QSTR_INIT("", 0);
 const struct qstr slash_name = QSTR_INIT("/", 1);
 const struct qstr dotdot_name = QSTR_INIT("..", 2);
@@ -52,6 +76,40 @@ static struct kmem_cache *dentry_cache __ro_after_init;
 static DEFINE_PER_CPU(long, nr_dentry);
 static DEFINE_PER_CPU(long, nr_dentry_unused);
 static DEFINE_PER_CPU(long, nr_dentry_negative);
+
+#define IN_LOOKUP_SHIFT 10
+static struct hlist_bl_head in_lookup_hashtable[1 << IN_LOOKUP_SHIFT];
+
+static inline struct hlist_bl_head *in_lookup_hash(const struct dentry *parent,
+                    unsigned int hash)
+{
+    hash += (unsigned long) parent / L1_CACHE_BYTES;
+    return in_lookup_hashtable + hash_32(hash, IN_LOOKUP_SHIFT);
+}
+
+/*
+ * - Unhash the dentry
+ * - Retrieve and clear the waitqueue head in dentry
+ * - Return the waitqueue head
+ */
+static wait_queue_head_t *__d_lookup_unhash(struct dentry *dentry)
+{
+    wait_queue_head_t *d_wait;
+    struct hlist_bl_head *b;
+
+    lockdep_assert_held(&dentry->d_lock);
+
+    b = in_lookup_hash(dentry->d_parent, dentry->d_name.hash);
+    hlist_bl_lock(b);
+    dentry->d_flags &= ~DCACHE_PAR_LOOKUP;
+    __hlist_bl_del(&dentry->d_u.d_in_lookup_hash);
+    d_wait = dentry->d_wait;
+    dentry->d_wait = NULL;
+    hlist_bl_unlock(b);
+    INIT_HLIST_NODE(&dentry->d_u.d_alias);
+    INIT_LIST_HEAD(&dentry->d_lru);
+    return d_wait;
+}
 
 struct dentry *d_make_root(struct inode *root_inode)
 {
@@ -342,6 +400,165 @@ struct dentry *d_alloc_pseudo(struct super_block *sb, const struct qstr *name)
     return dentry;
 }
 
+static inline unsigned start_dir_add(struct inode *dir)
+{
+    preempt_disable_nested();
+    for (;;) {
+        unsigned n = dir->i_dir_seq;
+        if (!(n & 1) && cmpxchg(&dir->i_dir_seq, n, n + 1) == n)
+            return n;
+        cpu_relax();
+    }
+}
+
+static inline void end_dir_add(struct inode *dir, unsigned int n,
+                   wait_queue_head_t *d_wait)
+{
+    smp_store_release(&dir->i_dir_seq, n + 2);
+    preempt_enable_nested();
+    wake_up_all(d_wait);
+}
+
+static void __d_rehash(struct dentry *entry)
+{
+    struct hlist_bl_head *b = d_hash(entry->d_name.hash);
+
+    hlist_bl_lock(b);
+    hlist_bl_add_head_rcu(&entry->d_hash, b);
+    hlist_bl_unlock(b);
+}
+
+/* inode->i_lock held if inode is non-NULL */
+
+static inline void __d_add(struct dentry *dentry, struct inode *inode)
+{
+    wait_queue_head_t *d_wait;
+    struct inode *dir = NULL;
+    unsigned n;
+    spin_lock(&dentry->d_lock);
+    if (unlikely(d_in_lookup(dentry))) {
+        dir = dentry->d_parent->d_inode;
+        n = start_dir_add(dir);
+        d_wait = __d_lookup_unhash(dentry);
+    }
+    if (inode) {
+        unsigned add_flags = d_flags_for_inode(inode);
+        hlist_add_head(&dentry->d_u.d_alias, &inode->i_dentry);
+        raw_write_seqcount_begin(&dentry->d_seq);
+        __d_set_inode_and_type(dentry, inode, add_flags);
+        raw_write_seqcount_end(&dentry->d_seq);
+        //fsnotify_update_flags(dentry);
+    }
+    __d_rehash(dentry);
+    if (dir)
+        end_dir_add(dir, n, d_wait);
+    spin_unlock(&dentry->d_lock);
+    if (inode)
+        spin_unlock(&inode->i_lock);
+}
+
+/**
+ * d_splice_alias - splice a disconnected dentry into the tree if one exists
+ * @inode:  the inode which may have a disconnected dentry
+ * @dentry: a negative dentry which we want to point to the inode.
+ *
+ * If inode is a directory and has an IS_ROOT alias, then d_move that in
+ * place of the given dentry and return it, else simply d_add the inode
+ * to the dentry and return NULL.
+ *
+ * If a non-IS_ROOT directory is found, the filesystem is corrupt, and
+ * we should error out: directories can't have multiple aliases.
+ *
+ * This is needed in the lookup routine of any filesystem that is exportable
+ * (via knfsd) so that we can build dcache paths to directories effectively.
+ *
+ * If a dentry was found and moved, then it is returned.  Otherwise NULL
+ * is returned.  This matches the expected return value of ->lookup.
+ *
+ * Cluster filesystems may call this function with a negative, hashed dentry.
+ * In that case, we know that the inode will be a regular file, and also this
+ * will only occur during atomic_open. So we need to check for the dentry
+ * being already hashed only in the final case.
+ */
+struct dentry *d_splice_alias(struct inode *inode, struct dentry *dentry)
+{
+    if (IS_ERR(inode))
+        return ERR_CAST(inode);
+
+    BUG_ON(!d_unhashed(dentry));
+
+    if (!inode)
+        goto out;
+
+    //security_d_instantiate(dentry, inode);
+    spin_lock(&inode->i_lock);
+    if (S_ISDIR(inode->i_mode)) {
+#if 0
+        struct dentry *new = __d_find_any_alias(inode);
+        if (unlikely(new)) {
+            /* The reference to new ensures it remains an alias */
+            spin_unlock(&inode->i_lock);
+            write_seqlock(&rename_lock);
+            if (unlikely(d_ancestor(new, dentry))) {
+                write_sequnlock(&rename_lock);
+                dput(new);
+                new = ERR_PTR(-ELOOP);
+                pr_warn_ratelimited(
+                    "VFS: Lookup of '%s' in %s %s"
+                    " would have caused loop\n",
+                    dentry->d_name.name,
+                    inode->i_sb->s_type->name,
+                    inode->i_sb->s_id);
+            } else if (!IS_ROOT(new)) {
+                struct dentry *old_parent = dget(new->d_parent);
+                int err = __d_unalias(dentry, new);
+                write_sequnlock(&rename_lock);
+                if (err) {
+                    dput(new);
+                    new = ERR_PTR(err);
+                }
+                dput(old_parent);
+            } else {
+                __d_move(new, dentry, false);
+                write_sequnlock(&rename_lock);
+            }
+            iput(inode);
+            return new;
+        }
+#endif
+        PANIC("DIR");
+    }
+out:
+    __d_add(dentry, inode);
+    return NULL;
+}
+
+static __initdata unsigned long dhash_entries;
+
+static void __init dcache_init_early(void)
+{
+    /* If hashes are distributed across NUMA nodes, defer
+     * hash allocation until vmalloc space is available.
+     */
+    if (hashdist)
+        return;
+
+    dentry_hashtable =
+        alloc_large_system_hash("Dentry cache",
+                    sizeof(struct hlist_bl_head),
+                    dhash_entries,
+                    13,
+                    HASH_EARLY | HASH_ZERO,
+                    &d_hash_shift,
+                    NULL,
+                    0,
+                    0);
+    d_hash_shift = 32 - d_hash_shift;
+
+    runtime_const_init(shift, d_hash_shift);
+    runtime_const_init(ptr, dentry_hashtable);
+}
+
 static void __init dcache_init(void)
 {
     /*
@@ -375,6 +592,17 @@ static void __init dcache_init(void)
 #endif
 
     PANIC("");
+}
+
+void __init vfs_caches_init_early(void)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(in_lookup_hashtable); i++)
+        INIT_HLIST_BL_HEAD(&in_lookup_hashtable[i]);
+
+    dcache_init_early();
+    inode_init_early();
 }
 
 void __init vfs_caches_init(void)

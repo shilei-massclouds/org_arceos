@@ -7,7 +7,8 @@
 
 #include "adaptor.h"
 
-void cl_mount(const char *fstype, const char *source)
+struct dentry *
+cl_mount(const char *fstype, const char *source)
 {
     struct fs_context *fc;
     struct file_system_type *type;
@@ -32,8 +33,10 @@ void cl_mount(const char *fstype, const char *source)
     }
 
     err = vfs_get_tree(fc);
-    if (err) {
+    if (err || fc->root == NULL) {
         PANIC("get tree error.");
     }
     printk("%s: Mount filesystem on block ok!\n", __func__);
+
+    return fc->root;
 }

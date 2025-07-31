@@ -94,7 +94,7 @@ OBJS += cl_mine.o main.o smp.o softirq.o panic.o \
 		riscv_irq.o \
 		cl_dummy.o \
 		mount_ops.o \
-		test_block.o
+		test_block.o test_fs.o
 		#ctype.o kstrtox.o \
 		#signal.o \
 		#completion.o \
