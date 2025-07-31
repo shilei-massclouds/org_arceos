@@ -737,6 +737,90 @@ void bio_put(struct bio *bio)
         bio_free(bio);
 }
 
+static bool bvec_try_merge_page(struct bio_vec *bv, struct page *page,
+        unsigned int len, unsigned int off, bool *same_page)
+{
+    size_t bv_end = bv->bv_offset + bv->bv_len;
+    phys_addr_t vec_end_addr = page_to_phys(bv->bv_page) + bv_end - 1;
+    phys_addr_t page_addr = page_to_phys(page);
+
+    if (vec_end_addr + 1 != page_addr + off)
+        return false;
+    if (xen_domain() && !xen_biovec_phys_mergeable(bv, page))
+        return false;
+    if (!zone_device_pages_have_same_pgmap(bv->bv_page, page))
+        return false;
+
+    *same_page = ((vec_end_addr & PAGE_MASK) == ((page_addr + off) &
+             PAGE_MASK));
+    if (!*same_page) {
+        if (IS_ENABLED(CONFIG_KMSAN))
+            return false;
+        if (bv->bv_page + bv_end / PAGE_SIZE != page + off / PAGE_SIZE)
+            return false;
+    }
+
+    bv->bv_len += len;
+    return true;
+}
+
+/**
+ * bio_add_folio - Attempt to add part of a folio to a bio.
+ * @bio: BIO to add to.
+ * @folio: Folio to add.
+ * @len: How many bytes from the folio to add.
+ * @off: First byte in this folio to add.
+ *
+ * Filesystems that use folios can call this function instead of calling
+ * bio_add_page() for each page in the folio.  If @off is bigger than
+ * PAGE_SIZE, this function can create a bio_vec that starts in a page
+ * after the bv_page.  BIOs do not support folios that are 4GiB or larger.
+ *
+ * Return: Whether the addition was successful.
+ */
+bool bio_add_folio(struct bio *bio, struct folio *folio, size_t len,
+           size_t off)
+{
+    unsigned long nr = off / PAGE_SIZE;
+
+    if (len > UINT_MAX)
+        return false;
+    return bio_add_page(bio, folio_page(folio, nr), len, off % PAGE_SIZE) > 0;
+}
+
+/**
+ *  bio_add_page    -   attempt to add page(s) to bio
+ *  @bio: destination bio
+ *  @page: start page to add
+ *  @len: vec entry length, may cross pages
+ *  @offset: vec entry offset relative to @page, may cross pages
+ *
+ *  Attempt to add page(s) to the bio_vec maplist. This will only fail
+ *  if either bio->bi_vcnt == bio->bi_max_vecs or it's a cloned bio.
+ */
+int bio_add_page(struct bio *bio, struct page *page,
+         unsigned int len, unsigned int offset)
+{
+    bool same_page = false;
+
+    if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
+        return 0;
+    if (bio->bi_iter.bi_size > UINT_MAX - len)
+        return 0;
+
+    if (bio->bi_vcnt > 0 &&
+        bvec_try_merge_page(&bio->bi_io_vec[bio->bi_vcnt - 1],
+                page, len, offset, &same_page)) {
+        bio->bi_iter.bi_size += len;
+        return len;
+    }
+
+    if (bio->bi_vcnt >= bio->bi_max_vecs)
+        return 0;
+    __bio_add_page(bio, page, len, offset);
+    return len;
+}
+
 static int __init init_bio(void)
 {
     int i;

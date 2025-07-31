@@ -278,3 +278,14 @@ u16 get_random_u16(void)
     pr_err("%s: No impl.\n", __func__);
     return 1;
 }
+
+bool blk_cgroup_congested(void)
+{
+    return false;
+}
+
+unsigned long
+__asm_copy_to_user(void __user *to, const void *from, unsigned long n)
+{
+    memcpy((void __force *)to, from, n);
+}

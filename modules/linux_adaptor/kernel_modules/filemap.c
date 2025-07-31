@@ -294,45 +294,6 @@ int filemap_check_errors(struct address_space *mapping)
     return ret;
 }
 
-/**
- * generic_file_read_iter - generic filesystem read routine
- * @iocb:   kernel I/O control block
- * @iter:   destination for the data read
- *
- * This is the "read_iter()" routine for all filesystems
- * that can use the page cache directly.
- *
- * The IOCB_NOWAIT flag in iocb->ki_flags indicates that -EAGAIN shall
- * be returned when no data can be read without waiting for I/O requests
- * to complete; it doesn't prevent readahead.
- *
- * The IOCB_NOIO flag in iocb->ki_flags indicates that no new I/O
- * requests shall be made for the read or for readahead.  When no data
- * can be read, -EAGAIN shall be returned.  When readahead would be
- * triggered, a partial, possibly empty read shall be returned.
- *
- * Return:
- * * number of bytes copied, even for partial reads
- * * negative error code (or 0 if IOCB_NOIO) if nothing was read
- */
-ssize_t
-generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
-{
-    size_t count = iov_iter_count(iter);
-    ssize_t retval = 0;
-
-    if (!count)
-        goto out; /* skip atime */
-
-    if (iocb->ki_flags & IOCB_DIRECT) {
-        booter_panic("No IOCB_DIRECT.");
-    }
-
-    retval = generic_file_buffered_read(iocb, iter, retval);
-out:
-    return retval;
-}
-
 static int wait_on_page_locked_async(struct page *page,
                      struct wait_page_queue *wait)
 {

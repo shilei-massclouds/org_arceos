@@ -27,7 +27,9 @@ size_t iterate_ubuf(struct iov_iter *iter, size_t len, void *priv, void *priv2,
 	void __user *base = iter->ubuf;
 	size_t progress = 0, remain;
 
+    printk("%s: step1 len(%d)\n", __func__, len);
 	remain = step(base + iter->iov_offset, 0, len, priv, priv2);
+    printk("%s: step2\n", __func__);
 	progress = len - remain;
 	iter->iov_offset += progress;
 	iter->count -= progress;

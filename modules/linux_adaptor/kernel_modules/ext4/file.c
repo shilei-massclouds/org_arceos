@@ -131,6 +131,7 @@ static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
 {
 	struct inode *inode = file_inode(iocb->ki_filp);
 
+    printk("%s: step1\n", __func__);
 	if (unlikely(ext4_forced_shutdown(inode->i_sb)))
 		return -EIO;
 
