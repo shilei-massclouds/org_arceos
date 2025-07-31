@@ -35,6 +35,7 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
     cache->object_size = object_size;
     cache->size = object_size;
     cache->align = args->align;
+    cache->ctor = args->ctor;
     return cache;
 }
 

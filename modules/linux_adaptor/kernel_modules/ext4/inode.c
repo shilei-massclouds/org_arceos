@@ -1193,6 +1193,7 @@ retry_grab:
 	folio_unlock(folio);
 
 retry_journal:
+    printk("%s: step1\n", __func__);
 	handle = ext4_journal_start(inode, EXT4_HT_WRITE_PAGE, needed_blocks);
 	if (IS_ERR(handle)) {
 		folio_put(folio);
@@ -1302,6 +1303,7 @@ static int ext4_write_end(struct file *file,
 						  folio);
 
 	copied = block_write_end(file, mapping, pos, len, copied, folio, fsdata);
+    printk("%s: step1\n", __func__);
 	/*
 	 * it's important to update i_size while still holding folio lock:
 	 * page writeout could otherwise come in and zero beyond i_size.
@@ -1314,6 +1316,7 @@ static int ext4_write_end(struct file *file,
 	folio_unlock(folio);
 	folio_put(folio);
 
+    printk("%s: step2\n", __func__);
 	if (old_size < pos && !verity) {
 		pagecache_isize_extended(inode, old_size, pos);
 		ext4_zero_partial_blocks(handle, inode, old_size, pos - old_size);
@@ -1334,6 +1337,7 @@ static int ext4_write_end(struct file *file,
 		 */
 		ext4_orphan_add(handle, inode);
 
+    printk("%s: step3\n", __func__);
 	ret2 = ext4_journal_stop(handle);
 	if (!ret)
 		ret = ret2;
@@ -1349,6 +1353,7 @@ static int ext4_write_end(struct file *file,
 			ext4_orphan_del(NULL, inode);
 	}
 
+    printk("%s: stepN\n", __func__);
 	return ret ? ret : copied;
 }
 

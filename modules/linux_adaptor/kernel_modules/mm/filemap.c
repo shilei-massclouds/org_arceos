@@ -478,7 +478,6 @@ static void folio_wake_bit(struct folio *folio, int bit_nr)
     spin_lock_irqsave(&q->lock, flags);
     __wake_up_locked_key(q, TASK_NORMAL, &key);
 
-#if 0
     /*
      * It's possible to miss clearing waiters here, when we woke our page
      * waiters, but the hashed waitqueue has waiters for other pages on it.
@@ -492,8 +491,6 @@ static void folio_wake_bit(struct folio *folio, int bit_nr)
         folio_clear_waiters(folio);
 
     spin_unlock_irqrestore(&q->lock, flags);
-#endif
-    PANIC("");
 }
 
 /**
@@ -592,7 +589,6 @@ repeat:
     if (!folio)
         goto no_page;
 
-#if 0
     if (fgp_flags & FGP_LOCK) {
         if (fgp_flags & FGP_NOWAIT) {
             if (!folio_trylock(folio)) {
@@ -622,7 +618,6 @@ repeat:
 
     if (fgp_flags & FGP_STABLE)
         folio_wait_stable(folio);
-#endif
 no_page:
     if (!folio && (fgp_flags & FGP_CREAT)) {
         unsigned int min_order = mapping_min_folio_order(mapping);
@@ -1570,6 +1565,95 @@ put_folios:
     file_accessed(filp);
     ra->prev_pos = last_pos;
     return already_read ? already_read : error;
+}
+
+ssize_t generic_perform_write(struct kiocb *iocb, struct iov_iter *i)
+{
+    struct file *file = iocb->ki_filp;
+    loff_t pos = iocb->ki_pos;
+    struct address_space *mapping = file->f_mapping;
+    const struct address_space_operations *a_ops = mapping->a_ops;
+    size_t chunk = mapping_max_folio_size(mapping);
+    long status = 0;
+    ssize_t written = 0;
+
+    do {
+        struct folio *folio;
+        size_t offset;      /* Offset into folio */
+        size_t bytes;       /* Bytes to write to folio */
+        size_t copied;      /* Bytes copied from user */
+        void *fsdata = NULL;
+
+        bytes = iov_iter_count(i);
+retry:
+        offset = pos & (chunk - 1);
+        bytes = min(chunk - offset, bytes);
+        balance_dirty_pages_ratelimited(mapping);
+
+        /*
+         * Bring in the user page that we will copy from _first_.
+         * Otherwise there's a nasty deadlock on copying from the
+         * same page as we're writing to, without it being marked
+         * up-to-date.
+         */
+        if (unlikely(fault_in_iov_iter_readable(i, bytes) == bytes)) {
+            status = -EFAULT;
+            break;
+        }
+
+        if (fatal_signal_pending(current)) {
+            status = -EINTR;
+            break;
+        }
+
+        status = a_ops->write_begin(file, mapping, pos, bytes,
+                        &folio, &fsdata);
+        if (unlikely(status < 0))
+            break;
+
+        offset = offset_in_folio(folio, pos);
+        if (bytes > folio_size(folio) - offset)
+            bytes = folio_size(folio) - offset;
+
+        if (mapping_writably_mapped(mapping))
+            flush_dcache_folio(folio);
+
+        copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
+        flush_dcache_folio(folio);
+
+        status = a_ops->write_end(file, mapping, pos, bytes, copied,
+                        folio, fsdata);
+        if (unlikely(status != copied)) {
+            iov_iter_revert(i, copied - max(status, 0L));
+            if (unlikely(status < 0))
+                break;
+        }
+        cond_resched();
+
+    printk("%s: step3\n", __func__);
+        if (unlikely(status == 0)) {
+            /*
+             * A short copy made ->write_end() reject the
+             * thing entirely.  Might be memory poisoning
+             * halfway through, might be a race with munmap,
+             * might be severe memory pressure.
+             */
+            if (chunk > PAGE_SIZE)
+                chunk /= 2;
+            if (copied) {
+                bytes = copied;
+                goto retry;
+            }
+        } else {
+            pos += status;
+            written += status;
+        }
+    } while (iov_iter_count(i));
+
+    if (!written)
+        return status;
+    iocb->ki_pos += written;
+    return written;
 }
 
 void __init pagecache_init(void)

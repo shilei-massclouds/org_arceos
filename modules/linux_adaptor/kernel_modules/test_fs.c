@@ -24,6 +24,30 @@ static void test_read(struct inode *inode, const char *fs_name)
     printk("Read '%s': [%d]%s\n", fs_name, ret, rbuf);
 }
 
+/* File level write. */
+static void test_write(struct inode *inode, const char *fs_name)
+{
+    ssize_t ret;
+    struct file file;
+    memset(&file, 0, sizeof(struct file));
+    file.f_inode = inode;
+    file.f_mode |= FMODE_WRITE | FMODE_CAN_WRITE;
+    file.f_mapping = inode->i_mapping;
+    file.f_op = inode->i_fop;
+    if (file.f_op == NULL) {
+        PANIC("bad file_operations.");
+    }
+
+    // Note: set O_DSYNC for write.
+    file.f_flags |= O_DSYNC;
+
+    loff_t pos = 0;
+    char wbuf[] = "bcde";
+
+    ret = kernel_write(&file, wbuf, sizeof(wbuf), &pos);
+    printk("Write '%s' to '%s': ret [%d]\n", wbuf, fs_name, ret);
+}
+
 static void test_basic(struct dentry *root,
                        const char *fs_name,
                        const char *fname)
@@ -54,16 +78,15 @@ static void test_basic(struct dentry *root,
     if (t_inode == NULL || t_inode->i_mapping == NULL) {
         PANIC("bad inode.");
     }
+    printk("%s: target inode(%lx)\n", __func__, t_inode);
 
     printk("\n\n============== FS READ =============\n\n");
 
     test_read(t_inode, fs_name);
 
-#if 0
     printk("\n\n============== FS WRITE =============\n\n");
 
     test_write(t_inode, fs_name);
-#endif
 
     printk("\n\n============== TEST FS OK! =============\n\n");
 }
@@ -75,30 +98,3 @@ void test_ext4(struct dentry *root)
      */
     test_basic(root, "ext4", "ext4.txt");
 }
-
-#if 0
-
-// File level write.
-static void test_write(struct inode *inode, const char *fs_name)
-{
-    ssize_t ret;
-    struct file file;
-    memset(&file, 0, sizeof(struct file));
-    file.f_inode = inode;
-    file.f_mapping = inode->i_mapping;
-    file.f_op = inode->i_fop;
-    if (file.f_op == NULL) {
-        booter_panic("bad file_operations.");
-    }
-
-    // Note: set O_DSYNC for write.
-    file.f_flags |= O_DSYNC;
-
-    loff_t pos = 0;
-    char wbuf[] = "bcde";
-
-    ret = new_sync_write(&file, wbuf, sizeof(wbuf), &pos);
-    printk("Write '%s' to '%s': ret [%d]\n", wbuf, fs_name, ret);
-}
-
-#endif

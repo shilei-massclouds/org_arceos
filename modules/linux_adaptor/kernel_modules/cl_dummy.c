@@ -218,13 +218,6 @@ int blocking_notifier_chain_unregister(struct blocking_notifier_head *nh,
     pr_err("%s: No impl.", __func__);
 }
 
-void init_timer_key(struct timer_list *timer,
-            void (*func)(struct timer_list *), unsigned int flags,
-            const char *name, struct lock_class_key *key)
-{
-    pr_err("%s: No impl.", __func__);
-}
-
 int __percpu_counter_init_many(struct percpu_counter *fbc, s64 amount,
                    gfp_t gfp, u32 nr_counters,
                    struct lock_class_key *key)
@@ -288,4 +281,11 @@ unsigned long
 __asm_copy_to_user(void __user *to, const void *from, unsigned long n)
 {
     memcpy((void __force *)to, from, n);
+}
+
+int
+send_sig(int sig, struct task_struct *p, int priv)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
 }

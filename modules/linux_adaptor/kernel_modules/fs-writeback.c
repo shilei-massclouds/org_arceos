@@ -98,34 +98,6 @@ static inline struct inode *wb_inode(struct list_head *head)
     return list_entry(head, struct inode, i_io_list);
 }
 
-/**
- * inode_io_list_move_locked - move an inode onto a bdi_writeback IO list
- * @inode: inode to be moved
- * @wb: target bdi_writeback
- * @head: one of @wb->b_{dirty|io|more_io|dirty_time}
- *
- * Move @inode->i_io_list to @list of @wb and set %WB_has_dirty_io.
- * Returns %true if @inode is the first occupant of the !dirty_time IO
- * lists; otherwise, %false.
- */
-static bool inode_io_list_move_locked(struct inode *inode,
-                      struct bdi_writeback *wb,
-                      struct list_head *head)
-{
-    assert_spin_locked(&wb->list_lock);
-
-    printk("%s: 1\n", __func__);
-    list_move(&inode->i_io_list, head);
-
-    printk("%s: 3\n", __func__);
-    /* dirty_time doesn't count as dirty_io until expiration */
-    if (head != &wb->b_dirty_time)
-        return wb_io_lists_populated(wb);
-
-    wb_io_lists_depopulated(wb);
-    return false;
-}
-
 /*
  * Redirty an inode: set its when-it-was dirtied timestamp and move it to the
  * furthest end of its superblock's dirty-inode list.

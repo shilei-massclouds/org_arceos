@@ -186,44 +186,6 @@ void set_bh_page(struct buffer_head *bh,
         bh->b_data = page_address(page) + offset;
 }
 
-static int __block_commit_write(struct inode *inode, struct page *page,
-		unsigned from, unsigned to)
-{
-	unsigned block_start, block_end;
-	int partial = 0;
-	unsigned blocksize;
-	struct buffer_head *bh, *head;
-
-	bh = head = page_buffers(page);
-	blocksize = bh->b_size;
-
-	block_start = 0;
-	do {
-		block_end = block_start + blocksize;
-		if (block_end <= from || block_start >= to) {
-			if (!buffer_uptodate(bh))
-				partial = 1;
-		} else {
-			set_buffer_uptodate(bh);
-			mark_buffer_dirty(bh);
-		}
-		clear_buffer_new(bh);
-
-		block_start = block_end;
-		bh = bh->b_this_page;
-	} while (bh != head);
-
-	/*
-	 * If this is a partial write which happened to make all buffers
-	 * uptodate then we can optimize away a bogus readpage() for
-	 * the next read(). Here we 'discover' whether the page went
-	 * uptodate as a result of this (potentially partial) write.
-	 */
-	if (!partial)
-		SetPageUptodate(page);
-	return 0;
-}
-
 int block_write_end(struct file *file, struct address_space *mapping,
             loff_t pos, unsigned len, unsigned copied,
             struct page *page, void *fsdata)

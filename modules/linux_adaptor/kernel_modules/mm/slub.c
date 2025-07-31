@@ -46,7 +46,11 @@ void *kmem_cache_alloc_noprof(struct kmem_cache *s, gfp_t gfpflags)
     if (align == 0) {
         align = 8;
     }
-    return cl_rust_alloc(s->size, align);
+    void *ret = cl_rust_alloc(s->size, align);
+    if (s->ctor) {
+        s->ctor(ret);
+    }
+    return ret;
 }
 
 void *kmem_cache_alloc_lru_noprof(struct kmem_cache *s, struct list_lru *lru,

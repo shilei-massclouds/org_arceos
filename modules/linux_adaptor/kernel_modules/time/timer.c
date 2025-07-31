@@ -232,3 +232,87 @@ void init_timer_key(struct timer_list *timer,
     debug_init(timer);
     do_init_timer(timer, func, flags, name, key);
 }
+
+static unsigned long round_jiffies_common(unsigned long j, int cpu,
+        bool force_up)
+{
+    int rem;
+    unsigned long original = j;
+
+    /*
+     * We don't want all cpus firing their timers at once hitting the
+     * same lock or cachelines, so we skew each extra cpu with an extra
+     * 3 jiffies. This 3 jiffies came originally from the mm/ code which
+     * already did this.
+     * The skew is done by adding 3*cpunr, then round, then subtract this
+     * extra offset again.
+     */
+    j += cpu * 3;
+
+    rem = j % HZ;
+
+    /*
+     * If the target jiffy is just after a whole second (which can happen
+     * due to delays of the timer irq, long irq off times etc etc) then
+     * we should round down to the whole second, not up. Use 1/4th second
+     * as cutoff for this rounding as an extreme upper bound for this.
+     * But never round down if @force_up is set.
+     */
+    if (rem < HZ/4 && !force_up) /* round down */
+        j = j - rem;
+    else /* round up */
+        j = j - rem + HZ;
+
+    /* now that we have rounded, subtract the extra skew again */
+    j -= cpu * 3;
+
+    /*
+     * Make sure j is still in the future. Otherwise return the
+     * unmodified value.
+     */
+    return time_is_after_jiffies(j) ? j : original;
+}
+
+/**
+ * round_jiffies_up - function to round jiffies up to a full second
+ * @j: the time in (absolute) jiffies that should be rounded
+ *
+ * This is the same as round_jiffies() except that it will never
+ * round down.  This is useful for timeouts for which the exact time
+ * of firing does not matter too much, as long as they don't fire too
+ * early.
+ */
+unsigned long round_jiffies_up(unsigned long j)
+{
+    return round_jiffies_common(j, raw_smp_processor_id(), true);
+}
+
+/**
+ * add_timer - Start a timer
+ * @timer:  The timer to be started
+ *
+ * Start @timer to expire at @timer->expires in the future. @timer->expires
+ * is the absolute expiry time measured in 'jiffies'. When the timer expires
+ * timer->function(timer) will be invoked from soft interrupt context.
+ *
+ * The @timer->expires and @timer->function fields must be set prior
+ * to calling this function.
+ *
+ * If @timer->function == NULL then the start operation is silently
+ * discarded.
+ *
+ * If @timer->expires is already in the past @timer will be queued to
+ * expire at the next timer tick.
+ *
+ * This can only operate on an inactive timer. Attempts to invoke this on
+ * an active timer are rejected with a warning.
+ */
+void add_timer(struct timer_list *timer)
+{
+    pr_err("%s: No impl.", __func__);
+#if 0
+    if (WARN_ON_ONCE(timer_pending(timer)))
+        return;
+    __mod_timer(timer, timer->expires, MOD_TIMER_NOTPENDING);
+#endif
+}

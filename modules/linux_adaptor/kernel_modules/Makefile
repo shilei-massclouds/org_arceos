@@ -38,7 +38,7 @@ OBJS += lib/crc32.o lib/iov_iter.o
 OBJS += math/reciprocal_div.o
 OBJS += crypto/api.o crypto/algapi.o
 OBJS += crypto/shash.o crypto/crc32_generic.o crypto/crc32c_generic.o
-OBJS += time/timekeeping.o
+OBJS += time/timekeeping.o time/timer.o
 OBJS += rcu/tree.o
 OBJS += sched/core.o sched/wait.o sched/wait_bit.o
 OBJS += sched/swait.o sched/completion.o
@@ -61,7 +61,7 @@ OBJS += block/blk-timeout.o
 OBJS += fs/inode.o fs/libfs.o fs/filesystems.o fs/dcache.o
 OBJS += fs/namespace.o fs/fs_context.o fs/super.o fs/mnt_idmapping.o
 OBJS += fs/buffer.o fs/file_table.o fs/bad_inode.o fs/mbcache.o
-OBJS += fs/read_write.o
+OBJS += fs/read_write.o fs/fs-writeback.o
 OBJS += proc/generic.o
 
 #OBJS += fs_types.o

@@ -135,7 +135,6 @@ void end_buffer_read_sync(struct buffer_head *bh, int uptodate)
 
 void unlock_buffer(struct buffer_head *bh)
 {
-    printk("%s: step1\n", __func__);
     clear_bit_unlock(BH_Lock, &bh->b_state);
     smp_mb__after_atomic();
     wake_up_bit(&bh->b_state, BH_Lock);
@@ -1265,6 +1264,123 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
     }
     unlock_buffer(bh);
     put_bh(bh);
+}
+
+static void __block_commit_write(struct folio *folio, size_t from, size_t to)
+{
+    size_t block_start, block_end;
+    bool partial = false;
+    unsigned blocksize;
+    struct buffer_head *bh, *head;
+
+    bh = head = folio_buffers(folio);
+    if (!bh)
+        return;
+    blocksize = bh->b_size;
+
+    block_start = 0;
+    do {
+        block_end = block_start + blocksize;
+        if (block_end <= from || block_start >= to) {
+            if (!buffer_uptodate(bh))
+                partial = true;
+        } else {
+            set_buffer_uptodate(bh);
+            mark_buffer_dirty(bh);
+        }
+        if (buffer_new(bh))
+            clear_buffer_new(bh);
+
+        block_start = block_end;
+        bh = bh->b_this_page;
+    } while (bh != head);
+
+    /*
+     * If this is a partial write which happened to make all buffers
+     * uptodate then we can optimize away a bogus read_folio() for
+     * the next read(). Here we 'discover' whether the folio went
+     * uptodate as a result of this (potentially partial) write.
+     */
+    if (!partial)
+        folio_mark_uptodate(folio);
+}
+
+/**
+ * mark_buffer_dirty - mark a buffer_head as needing writeout
+ * @bh: the buffer_head to mark dirty
+ *
+ * mark_buffer_dirty() will set the dirty bit against the buffer, then set
+ * its backing page dirty, then tag the page as dirty in the page cache
+ * and then attach the address_space's inode to its superblock's dirty
+ * inode list.
+ *
+ * mark_buffer_dirty() is atomic.  It takes bh->b_folio->mapping->i_private_lock,
+ * i_pages lock and mapping->host->i_lock.
+ */
+void mark_buffer_dirty(struct buffer_head *bh)
+{
+    WARN_ON_ONCE(!buffer_uptodate(bh));
+
+    trace_block_dirty_buffer(bh);
+
+    /*
+     * Very *carefully* optimize the it-is-already-dirty case.
+     *
+     * Don't let the final "is it dirty" escape to before we
+     * perhaps modified the buffer.
+     */
+    if (buffer_dirty(bh)) {
+        smp_mb();
+        if (buffer_dirty(bh))
+            return;
+    }
+
+    if (!test_set_buffer_dirty(bh)) {
+        struct folio *folio = bh->b_folio;
+        struct address_space *mapping = NULL;
+
+        folio_memcg_lock(folio);
+        if (!folio_test_set_dirty(folio)) {
+            mapping = folio->mapping;
+            if (mapping)
+                __folio_mark_dirty(folio, mapping, 0);
+        }
+        folio_memcg_unlock(folio);
+        if (mapping)
+            __mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+    }
+}
+
+int block_write_end(struct file *file, struct address_space *mapping,
+            loff_t pos, unsigned len, unsigned copied,
+            struct folio *folio, void *fsdata)
+{
+    size_t start = pos - folio_pos(folio);
+
+    if (unlikely(copied < len)) {
+        /*
+         * The buffers that were written will now be uptodate, so
+         * we don't have to worry about a read_folio reading them
+         * and overwriting a partial write. However if we have
+         * encountered a short write and only partially written
+         * into a buffer, it will not be marked uptodate, so a
+         * read_folio might come in and destroy our partial write.
+         *
+         * Do the simplest thing, and just treat any short write to a
+         * non uptodate folio as a zero-length write, and force the
+         * caller to redo the whole thing.
+         */
+        if (!folio_test_uptodate(folio))
+            copied = 0;
+
+        folio_zero_new_buffers(folio, start+copied, start+len);
+    }
+    flush_dcache_folio(folio);
+
+    /* This could be a short (even 0-length) commit */
+    __block_commit_write(folio, start, start + copied);
+
+    return copied;
 }
 
 void __init buffer_init(void)

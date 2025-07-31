@@ -42,3 +42,63 @@ kprojid_t make_kprojid(struct user_namespace *ns, projid_t projid)
     pr_err("%s: No impl.", __func__);
     return KPROJIDT_INIT(0);
 }
+
+/**
+ *  from_kuid - Create a uid from a kuid user-namespace pair.
+ *  @targ: The user namespace we want a uid in.
+ *  @kuid: The kernel internal uid to start with.
+ *
+ *  Map @kuid into the user-namespace specified by @targ and
+ *  return the resulting uid.
+ *
+ *  There is always a mapping into the initial user_namespace.
+ *
+ *  If @kuid has no mapping in @targ (uid_t)-1 is returned.
+ */
+uid_t from_kuid(struct user_namespace *targ, kuid_t kuid)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+    /* Map the uid from a global kernel uid */
+    //return map_id_up(&targ->uid_map, __kuid_val(kuid));
+}
+
+/**
+ *  from_kgid - Create a gid from a kgid user-namespace pair.
+ *  @targ: The user namespace we want a gid in.
+ *  @kgid: The kernel internal gid to start with.
+ *
+ *  Map @kgid into the user-namespace specified by @targ and
+ *  return the resulting gid.
+ *
+ *  There is always a mapping into the initial user_namespace.
+ *
+ *  If @kgid has no mapping in @targ (gid_t)-1 is returned.
+ */
+gid_t from_kgid(struct user_namespace *targ, kgid_t kgid)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+    /* Map the gid from a global kernel gid */
+    //return map_id_up(&targ->gid_map, __kgid_val(kgid));
+}
+
+/**
+ *  from_kprojid - Create a projid from a kprojid user-namespace pair.
+ *  @targ: The user namespace we want a projid in.
+ *  @kprojid: The kernel internal project identifier to start with.
+ *
+ *  Map @kprojid into the user-namespace specified by @targ and
+ *  return the resulting projid.
+ *
+ *  There is always a mapping into the initial user_namespace.
+ *
+ *  If @kprojid has no mapping in @targ (projid_t)-1 is returned.
+ */
+projid_t from_kprojid(struct user_namespace *targ, kprojid_t kprojid)
+{
+    pr_err("%s: No impl.", __func__);
+    return kprojid.val;
+    /* Map the uid from a global kernel uid */
+    //return map_id_up(&targ->projid_map, __kprojid_val(kprojid));
+}

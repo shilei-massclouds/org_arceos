@@ -81,6 +81,7 @@ pub extern "C" fn cl_kthread_run(
 /// Reschedule.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_resched(back_to_runq: usize) {
+    error!("resched current ..");
     if back_to_runq != 0 {
         axtask::yield_now();
     } else {

@@ -27,6 +27,9 @@ static u64 bdi_id_cursor;
 static struct rb_root bdi_tree = RB_ROOT;
 LIST_HEAD(bdi_list);
 
+/* bdi_wq serves all asynchronous writeback tasks */
+struct workqueue_struct *bdi_wq;
+
 /*
  * cgwb_lock protects bdi->cgwb_tree, blkcg->cgwb_list, offline_cgwbs and
  * memcg->cgwb_list.  bdi->cgwb_tree is also RCU protected.

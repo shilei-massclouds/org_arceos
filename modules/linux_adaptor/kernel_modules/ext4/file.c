@@ -297,7 +297,9 @@ static ssize_t ext4_buffered_write_iter(struct kiocb *iocb,
 	if (ret <= 0)
 		goto out;
 
+    printk("%s: step1\n", __func__);
 	ret = generic_perform_write(iocb, from);
+    printk("%s: step2\n", __func__);
 
 out:
 	inode_unlock(inode);
