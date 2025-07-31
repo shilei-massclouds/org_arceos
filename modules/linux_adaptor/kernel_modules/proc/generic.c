@@ -33,3 +33,19 @@ struct proc_dir_entry *proc_create_data(const char *name, umode_t mode,
     pr_err("%s: No impl.", __func__);
     return kmalloc(sizeof(struct proc_dir_entry), 0);
 }
+
+struct proc_dir_entry *proc_create_single_data(const char *name, umode_t mode,
+        struct proc_dir_entry *parent,
+        int (*show)(struct seq_file *, void *), void *data)
+{
+    pr_err("%s: No impl.", __func__);
+    return kmalloc(sizeof(struct proc_dir_entry), 0);
+}
+
+struct proc_dir_entry *proc_create_seq_private(const char *name, umode_t mode,
+        struct proc_dir_entry *parent, const struct seq_operations *ops,
+        unsigned int state_size, void *data)
+{
+    pr_err("%s: No impl.", __func__);
+    return kmalloc(sizeof(struct proc_dir_entry), 0);
+}

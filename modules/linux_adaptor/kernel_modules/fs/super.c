@@ -564,7 +564,9 @@ int get_tree_bdev_flags(struct fs_context *fc,
         s->s_flags |= SB_ACTIVE;
     }
 
-    PANIC("");
+    BUG_ON(fc->root);
+    fc->root = dget(s->s_root);
+    return 0;
 }
 
 static int set_bdev_super(struct super_block *s, void *data)

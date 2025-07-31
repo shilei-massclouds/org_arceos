@@ -35,4 +35,5 @@ void cl_mount(const char *fstype, const char *source)
     if (err) {
         PANIC("get tree error.");
     }
+    printk("%s: Mount filesystem on block ok!\n", __func__);
 }

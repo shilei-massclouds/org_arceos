@@ -3109,9 +3109,7 @@ static int ext4_setup_super(struct super_block *sb, struct ext4_super_block *es,
 			ext4_set_feature_orphan_present(sb);
 	}
 
-    printk("%s: ============== step1\n", __func__);
 	err = ext4_commit_super(sb);
-    printk("%s: ============== step2\n", __func__);
 done:
 	if (test_opt(sb, DEBUG))
 		printk(KERN_INFO "[EXT4 FS bs=%lu, gc=%u, "
@@ -5562,7 +5560,6 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 	if (err)
 		goto failed_mount6;
 
-    printk("%s: ============== step1\n", __func__);
 	err = ext4_init_orphan_info(sb);
 	if (err)
 		goto failed_mount7;
@@ -5575,7 +5572,6 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 	}
 #endif  /* CONFIG_QUOTA */
 
-    printk("%s: ============== step2\n", __func__);
 	/*
 	 * Save the original bdev mapping's wb_err value which could be
 	 * used to detect the metadata async write error.
@@ -5600,7 +5596,6 @@ static int __ext4_fill_super(struct fs_context *fc, struct super_block *sb)
 			goto failed_mount9;
 	}
 
-    printk("%s: ============== step3\n", __func__);
 	if (test_opt(sb, DISCARD) && !bdev_max_discard_sectors(sb->s_bdev))
 		ext4_msg(sb, KERN_WARNING,
 			 "mounting with \"discard\" option, but the device does not support discard");
@@ -5707,12 +5702,10 @@ static int ext4_fill_super(struct super_block *sb, struct fs_context *fc)
 	if (ctx->spec & EXT4_SPEC_s_sb_block)
 		sbi->s_sb_block = ctx->s_sb_block;
 
-    printk("%s: step1\n", __func__);
 	ret = __ext4_fill_super(fc, sb);
 	if (ret < 0)
 		goto free_sbi;
 
-    printk("%s: step2\n", __func__);
 	if (sbi->s_journal) {
 		if (test_opt(sb, DATA_FLAGS) == EXT4_MOUNT_JOURNAL_DATA)
 			descr = " journalled data mode";
@@ -5729,7 +5722,6 @@ static int ext4_fill_super(struct super_block *sb, struct fs_context *fc)
 			 sb_rdonly(sb) ? "ro" : "r/w", descr,
 			 ext4_quota_mode(sb));
 
-    printk("%s: step3\n", __func__);
 	/* Update the s_overhead_clusters if necessary */
 	ext4_update_overhead(sb, false);
 	return 0;
