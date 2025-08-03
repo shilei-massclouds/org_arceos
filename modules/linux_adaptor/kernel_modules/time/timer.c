@@ -316,3 +316,22 @@ void add_timer(struct timer_list *timer)
     __mod_timer(timer, timer->expires, MOD_TIMER_NOTPENDING);
 #endif
 }
+
+/**
+ * add_timer_global() - Start a timer without TIMER_PINNED flag set
+ * @timer:  The timer to be started
+ *
+ * Same as add_timer() except that the timer flag TIMER_PINNED is unset.
+ *
+ * See add_timer() for further details.
+ */
+void add_timer_global(struct timer_list *timer)
+{
+    pr_err("%s: No impl.", __func__);
+#if 0
+    if (WARN_ON_ONCE(timer_pending(timer)))
+        return;
+    timer->flags &= ~TIMER_PINNED;
+    __mod_timer(timer, timer->expires, MOD_TIMER_NOTPENDING);
+#endif
+}

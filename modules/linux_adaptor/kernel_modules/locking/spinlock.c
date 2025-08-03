@@ -25,14 +25,14 @@ noinline unsigned long __lockfunc _raw_spin_lock_irqsave(raw_spinlock_t *lock)
     /* For simplicity, ignore kernel-preemption. */
     // preempt_disable();
 
-    //arch_spin_lock(&lock->raw_lock);
+    arch_spin_lock(&lock->raw_lock);
 
     return flags;
 }
 
 noinline void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 {
-    //arch_spin_unlock(&lock->raw_lock);
+    arch_spin_unlock(&lock->raw_lock);
 
     local_irq_restore(flags);
 
@@ -82,11 +82,13 @@ noinline void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)
 noinline void __lockfunc _raw_spin_lock_bh(raw_spinlock_t *lock)
 {
     pr_err("%s: ===> WARN: impl it.\n", __func__);
+    arch_spin_lock(&lock->raw_lock);
 }
 
 noinline void __lockfunc _raw_spin_unlock_bh(raw_spinlock_t *lock)
 {
     pr_err("%s: ===> WARN: impl it.\n", __func__);
+    arch_spin_unlock(&lock->raw_lock);
 }
 
 void __lockfunc _raw_write_lock(rwlock_t *lock)

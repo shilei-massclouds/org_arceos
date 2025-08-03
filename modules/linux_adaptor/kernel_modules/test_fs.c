@@ -38,14 +38,17 @@ static void test_write(struct inode *inode, const char *fs_name)
         PANIC("bad file_operations.");
     }
 
-    // Note: set O_DSYNC for write.
-    file.f_flags |= O_DSYNC;
+    // Note: set IOCB_DSYNC for sync.
+    //file.f_iocb_flags |= IOCB_DSYNC;
 
     loff_t pos = 0;
     char wbuf[] = "bcde";
 
     ret = kernel_write(&file, wbuf, sizeof(wbuf), &pos);
     printk("Write '%s' to '%s': ret [%d]\n", wbuf, fs_name, ret);
+    if (ret <= 0) {
+        PANIC("write error!");
+    }
 }
 
 static void test_basic(struct dentry *root,

@@ -317,3 +317,12 @@ out_unlock:
         spin_unlock(&wb->list_lock);
     spin_unlock(&inode->i_lock);
 }
+
+/*
+ * Handle writeback of dirty data for the device backed by this bdi. Also
+ * reschedules periodically and does kupdated style flushing.
+ */
+void wb_workfn(struct work_struct *work)
+{
+    PANIC("");
+}

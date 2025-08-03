@@ -52,6 +52,7 @@ OBJS += irq/resend.o irq/chip.o irq/handle.o irq/msi.o irq/spurious.o
 OBJS += dma/mapping.o dma/swiotlb.o
 OBJS += kernel/resource.o kernel/workqueue.o kernel/kthread.o
 OBJS += kernel/nsproxy.o kernel/cpu.o kernel/user_namespace.o
+OBJS += kernel/panic.o kernel/exit.o
 OBJS += block/genhd.o block/blk-mq.o block/blk-mq-virtio.o
 OBJS += block/blk-mq-cpumap.o block/blk-mq-tag.o block/blk-core.o
 OBJS += block/blk-stat.o block/blk-settings.o block/bio.o

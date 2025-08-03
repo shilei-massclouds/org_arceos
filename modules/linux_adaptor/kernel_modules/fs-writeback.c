@@ -944,6 +944,7 @@ void __mark_inode_dirty(struct inode *inode, int flags)
 
 out_unlock_inode:
     spin_unlock(&inode->i_lock);
+    printk("%s: stepN\n", __func__);
 }
 
 /*

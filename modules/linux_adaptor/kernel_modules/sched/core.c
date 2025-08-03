@@ -109,7 +109,9 @@ static struct task_struct __init_task = {
 unsigned long init_current(unsigned long thread_id)
 {
     struct task_struct *tsk = &__init_task;
-    __init_task.pid = thread_id;
+    tsk->pid = thread_id;
+    tsk->flags |= PF_KTHREAD;
+    set_kthread_struct(tsk);
     __asm__ __volatile__ (
         "mv tp, %0"
         : : "rK" (tsk)
@@ -132,9 +134,7 @@ unsigned long init_current(unsigned long thread_id)
  */
 int wake_up_process(struct task_struct *p)
 {
-    pr_err("%s: No impl.", __func__);
-    return 0;
-    //return try_to_wake_up(p, TASK_NORMAL, 0);
+    return try_to_wake_up(p, TASK_NORMAL, 0);
 }
 
 asmlinkage __visible void __sched schedule(void)
@@ -164,6 +164,9 @@ int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
         return 0;
     }
 #endif
+    if (p->__state == TASK_RUNNING) {
+        return 0;
+    }
     cl_wake_up(p->pid);
     return 1;
 }

@@ -289,3 +289,21 @@ send_sig(int sig, struct task_struct *p, int priv)
     pr_err("%s: No impl.", __func__);
     return 0;
 }
+
+const struct cpumask *housekeeping_cpumask(enum hk_type type)
+{
+    pr_err("%s: No impl.", __func__);
+    return cpu_possible_mask;
+}
+
+bool housekeeping_enabled(enum hk_type type)
+{
+    pr_err("%s: No impl.", __func__);
+    return false;
+}
+
+void set_user_nice(struct task_struct *p, long nice)
+{
+    pr_err("%s: No impl.", __func__);
+    p->static_prio = NICE_TO_PRIO(nice);
+}

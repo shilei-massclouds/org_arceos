@@ -32,6 +32,7 @@ extern void cl_virtio_blk_init();
 extern void cl_blkdev_init(void);
 extern void cl_init_bio(void);
 extern void cl_sg_pool_init(void);
+extern int cl_default_bdi_init(void);
 
 extern int cl_journal_init(void);
 extern int cl_ext4_init_fs(void);
@@ -80,9 +81,14 @@ int clinux_init(void)
     buses_init();
     buffer_init();
     vfs_caches_init();
+    workqueue_init_early();
 
     cl_init_bio();
     cl_sg_pool_init();
+
+    workqueue_init();
+    workqueue_init_topology();
+    cl_default_bdi_init();
 
     {
         static struct device_node riscv_intc_node;

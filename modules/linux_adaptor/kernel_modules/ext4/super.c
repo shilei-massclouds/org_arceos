@@ -3783,6 +3783,7 @@ static int ext4_lazyinit_thread(void *arg)
 	struct ext4_li_request *elr;
 	unsigned long next_wakeup, cur;
 
+    printk("%s: step1\n", __func__);
 	BUG_ON(NULL == eli);
 	set_freezable();
 
@@ -3854,6 +3855,7 @@ cont_thread:
 	}
 
 exit_thread:
+    printk("%s: step2\n", __func__);
 	/*
 	 * It looks like the request list is empty, but we need
 	 * to check it under the li_list_mtx lock, to prevent any
@@ -3873,6 +3875,7 @@ exit_thread:
 	kfree(ext4_li_info);
 	ext4_li_info = NULL;
 	mutex_unlock(&ext4_li_mtx);
+    printk("%s: step3\n", __func__);
 
 	return 0;
 }

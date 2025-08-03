@@ -66,3 +66,19 @@ void up_read(struct rw_semaphore *sem)
     __up_read(sem);
 #endif
 }
+
+/*
+ * trylock for reading -- returns 1 if successful, 0 if contention
+ */
+int down_read_trylock(struct rw_semaphore *sem)
+{
+#if 0
+    int ret = __down_read_trylock(sem);
+
+    if (ret == 1)
+        rwsem_acquire_read(&sem->dep_map, 0, 1, _RET_IP_);
+    return ret;
+#endif
+    pr_err("%s: No impl.", __func__);
+    return 1;
+}

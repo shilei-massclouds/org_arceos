@@ -467,3 +467,53 @@ void device_del(struct device *dev)
 {
     PANIC("");
 }
+
+/**
+ * device_register - register a device with the system.
+ * @dev: pointer to the device structure
+ *
+ * This happens in two clean steps - initialize the device
+ * and add it to the system. The two steps can be called
+ * separately, but this is the easiest and most common.
+ * I.e. you should only call the two helpers separately if
+ * have a clearly defined need to use and refcount the device
+ * before it is added to the hierarchy.
+ *
+ * For more information, see the kerneldoc for device_initialize()
+ * and device_add().
+ *
+ * NOTE: _Never_ directly free @dev after calling this function, even
+ * if it returned an error! Always use put_device() to give up the
+ * reference initialized in this function instead.
+ */
+int device_register(struct device *dev)
+{
+    device_initialize(dev);
+    return device_add(dev);
+}
+
+/**
+ * device_create_file - create sysfs attribute file for device.
+ * @dev: device.
+ * @attr: device attribute descriptor.
+ */
+int device_create_file(struct device *dev,
+               const struct device_attribute *attr)
+{
+    int error = 0;
+
+    if (dev) {
+#if 0
+        WARN(((attr->attr.mode & S_IWUGO) && !attr->store),
+            "Attribute %s: write permission without 'store'\n",
+            attr->attr.name);
+        WARN(((attr->attr.mode & S_IRUGO) && !attr->show),
+            "Attribute %s: read permission without 'show'\n",
+            attr->attr.name);
+        error = sysfs_create_file(&dev->kobj, &attr->attr);
+#endif
+        pr_err("%s: No impl.", __func__);
+    }
+
+    return error;
+}

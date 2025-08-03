@@ -678,13 +678,11 @@ int __init blk_dev_init(void)
     BUILD_BUG_ON(REQ_OP_BITS + REQ_FLAG_BITS > 8 *
             sizeof_field(struct bio, bi_opf));
 
-#if 0
     /* used for unplugging and affects IO latency/throughput - HIGHPRI */
     kblockd_workqueue = alloc_workqueue("kblockd",
                         WQ_MEM_RECLAIM | WQ_HIGHPRI, 0);
     if (!kblockd_workqueue)
         panic("Failed to create kblockd\n");
-#endif
 
     blk_requestq_cachep = KMEM_CACHE(request_queue, SLAB_PANIC);
 

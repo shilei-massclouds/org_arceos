@@ -36,6 +36,17 @@ struct workqueue_struct *bdi_wq;
  */
 static DEFINE_SPINLOCK(cgwb_lock);
 
+static void wb_update_bandwidth_workfn(struct work_struct *work)
+{
+#if 0
+    struct bdi_writeback *wb = container_of(to_delayed_work(work),
+                        struct bdi_writeback, bw_dwork);
+
+    wb_update_bandwidth(wb);
+#endif
+    PANIC("");
+}
+
 /*
  * Initial write bandwidth: 100 MB/s
  */
@@ -65,10 +76,10 @@ static int wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi,
 
     spin_lock_init(&wb->work_lock);
     INIT_LIST_HEAD(&wb->work_list);
-#if 0
     INIT_DELAYED_WORK(&wb->dwork, wb_workfn);
     INIT_DELAYED_WORK(&wb->bw_dwork, wb_update_bandwidth_workfn);
 
+#if 0
     err = fprop_local_init_percpu(&wb->completions, gfp);
     if (err)
         return err;
@@ -267,4 +278,18 @@ void bdi_unregister(struct backing_dev_info *bdi)
 void bdi_put(struct backing_dev_info *bdi)
 {
     kref_put(&bdi->refcnt, release_bdi);
+}
+
+static int __init default_bdi_init(void)
+{
+    bdi_wq = alloc_workqueue("writeback", WQ_MEM_RECLAIM | WQ_UNBOUND |
+                 WQ_SYSFS, 0);
+    if (!bdi_wq)
+        return -ENOMEM;
+    return 0;
+}
+
+int cl_default_bdi_init(void)
+{
+    return default_bdi_init();
 }

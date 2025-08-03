@@ -817,7 +817,7 @@ blk_mq_alloc_hctx(struct request_queue *q, struct blk_mq_tag_set *set,
         node = set->numa_node;
     hctx->numa_node = node;
 
-    //INIT_DELAYED_WORK(&hctx->run_work, blk_mq_run_work_fn);
+    INIT_DELAYED_WORK(&hctx->run_work, blk_mq_run_work_fn);
     spin_lock_init(&hctx->lock);
     INIT_LIST_HEAD(&hctx->dispatch);
     INIT_HLIST_NODE(&hctx->cpuhp_dead);
