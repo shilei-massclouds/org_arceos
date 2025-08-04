@@ -48,8 +48,7 @@ pub extern "C" fn cl_printk(level: u8, ptr: *const c_char) {
         '7' => debug!("{}", rust_str),
         '6' => info!("{}", rust_str),
         '4' => warn!("{}", rust_str),
-        //'3' => error!("{}", rust_str),
-        '3' => ax_println!("{}", rust_str),
+        '3' => error!("{}", rust_str),
         _ => ax_print!("{}", rust_str),
     }
 }
@@ -73,7 +72,7 @@ pub extern "C" fn cl_kthread_run(
             threadfn(arg);
         },
         "linux kthread".into(),
-        0x1000,
+        0x2000,     // KThread stack size must be compatible with linux.
     );
     error!("Kthread task pointer({:#x})", task_ptr);
     task.set_private(task_ptr);
