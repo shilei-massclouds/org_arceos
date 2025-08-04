@@ -340,7 +340,6 @@ CL_MINE(seq_read)
 CL_MINE(seq_release)
 CL_MINE(write_dirty_buffer)
 
-CL_MINE(ktime_get_coarse_real_ts64)
 CL_MINE(percpu_counter_batch)
 CL_MINE(__cond_resched_lock)
 
@@ -479,8 +478,6 @@ CL_MINE(fc_drop_locked)
 // block/bdev
 CL_MINE(block_write_begin)
 CL_MINE(__folio_put)
-CL_MINE(block_write_full_folio)
-CL_MINE(write_cache_pages)
 CL_MINE(block_dirty_folio)
 CL_MINE(buffer_migrate_folio_norefs)
 CL_MINE(buffer_check_dirty_writeback)

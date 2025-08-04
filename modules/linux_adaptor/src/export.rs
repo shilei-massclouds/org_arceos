@@ -49,6 +49,7 @@ pub extern "C" fn cl_printk(level: u8, ptr: *const c_char) {
         '6' => info!("{}", rust_str),
         '4' => warn!("{}", rust_str),
         //'3' => error!("{}", rust_str),
+        '3' => ax_println!("{}", rust_str),
         _ => ax_print!("{}", rust_str),
     }
 }

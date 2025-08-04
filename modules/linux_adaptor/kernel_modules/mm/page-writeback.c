@@ -57,6 +57,20 @@ void laptop_io_completion(struct backing_dev_info *info)
     pr_err("%s: No impl.", __func__);
 }
 
+static pgoff_t wbc_end(struct writeback_control *wbc)
+{
+    if (wbc->range_cyclic)
+        return -1;
+    return wbc->range_end >> PAGE_SHIFT;
+}
+
+static xa_mark_t wbc_to_tag(struct writeback_control *wbc)
+{
+    if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
+        return PAGECACHE_TAG_TOWRITE;
+    return PAGECACHE_TAG_DIRTY;
+}
+
 /*
  * Called early on to tune the page writeback dirty limits.
  *
@@ -512,4 +526,208 @@ bool __folio_end_writeback(struct folio *folio)
     folio_memcg_unlock(folio);
 
     return ret;
+}
+
+static bool folio_prepare_writeback(struct address_space *mapping,
+        struct writeback_control *wbc, struct folio *folio)
+{
+    /*
+     * Folio truncated or invalidated. We can freely skip it then,
+     * even for data integrity operations: the folio has disappeared
+     * concurrently, so there could be no real expectation of this
+     * data integrity operation even if there is now a new, dirty
+     * folio at the same pagecache index.
+     */
+    if (unlikely(folio->mapping != mapping))
+        return false;
+
+    /*
+     * Did somebody else write it for us?
+     */
+    if (!folio_test_dirty(folio))
+        return false;
+
+    if (folio_test_writeback(folio)) {
+        if (wbc->sync_mode == WB_SYNC_NONE)
+            return false;
+        folio_wait_writeback(folio);
+    }
+    BUG_ON(folio_test_writeback(folio));
+
+    if (!folio_clear_dirty_for_io(folio))
+        return false;
+
+    return true;
+}
+
+static struct folio *writeback_get_folio(struct address_space *mapping,
+        struct writeback_control *wbc)
+{
+    struct folio *folio;
+
+retry:
+    folio = folio_batch_next(&wbc->fbatch);
+    if (!folio) {
+        folio_batch_release(&wbc->fbatch);
+        cond_resched();
+        filemap_get_folios_tag(mapping, &wbc->index, wbc_end(wbc),
+                wbc_to_tag(wbc), &wbc->fbatch);
+        folio = folio_batch_next(&wbc->fbatch);
+        if (!folio)
+            return NULL;
+    }
+
+    folio_lock(folio);
+    if (unlikely(!folio_prepare_writeback(mapping, wbc, folio))) {
+        folio_unlock(folio);
+        goto retry;
+    }
+
+    trace_wbc_writepage(wbc, inode_to_bdi(mapping->host));
+    return folio;
+}
+
+/**
+ * writeback_iter - iterate folio of a mapping for writeback
+ * @mapping: address space structure to write
+ * @wbc: writeback context
+ * @folio: previously iterated folio (%NULL to start)
+ * @error: in-out pointer for writeback errors (see below)
+ *
+ * This function returns the next folio for the writeback operation described by
+ * @wbc on @mapping and  should be called in a while loop in the ->writepages
+ * implementation.
+ *
+ * To start the writeback operation, %NULL is passed in the @folio argument, and
+ * for every subsequent iteration the folio returned previously should be passed
+ * back in.
+ *
+ * If there was an error in the per-folio writeback inside the writeback_iter()
+ * loop, @error should be set to the error value.
+ *
+ * Once the writeback described in @wbc has finished, this function will return
+ * %NULL and if there was an error in any iteration restore it to @error.
+ *
+ * Note: callers should not manually break out of the loop using break or goto
+ * but must keep calling writeback_iter() until it returns %NULL.
+ *
+ * Return: the folio to write or %NULL if the loop is done.
+ */
+struct folio *writeback_iter(struct address_space *mapping,
+        struct writeback_control *wbc, struct folio *folio, int *error)
+{
+    printk("%s: ...\n", __func__);
+    if (!folio) {
+        folio_batch_init(&wbc->fbatch);
+        wbc->saved_err = *error = 0;
+
+        /*
+         * For range cyclic writeback we remember where we stopped so
+         * that we can continue where we stopped.
+         *
+         * For non-cyclic writeback we always start at the beginning of
+         * the passed in range.
+         */
+        if (wbc->range_cyclic)
+            wbc->index = mapping->writeback_index;
+        else
+            wbc->index = wbc->range_start >> PAGE_SHIFT;
+
+        /*
+         * To avoid livelocks when other processes dirty new pages, we
+         * first tag pages which should be written back and only then
+         * start writing them.
+         *
+         * For data-integrity writeback we have to be careful so that we
+         * do not miss some pages (e.g., because some other process has
+         * cleared the TOWRITE tag we set).  The rule we follow is that
+         * TOWRITE tag can be cleared only by the process clearing the
+         * DIRTY tag (and submitting the page for I/O).
+         */
+        if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
+            tag_pages_for_writeback(mapping, wbc->index,
+                    wbc_end(wbc));
+    } else {
+        wbc->nr_to_write -= folio_nr_pages(folio);
+
+        WARN_ON_ONCE(*error > 0);
+
+        /*
+         * For integrity writeback we have to keep going until we have
+         * written all the folios we tagged for writeback above, even if
+         * we run past wbc->nr_to_write or encounter errors.
+         * We stash away the first error we encounter in wbc->saved_err
+         * so that it can be retrieved when we're done.  This is because
+         * the file system may still have state to clear for each folio.
+         *
+         * For background writeback we exit as soon as we run past
+         * wbc->nr_to_write or encounter the first error.
+         */
+        if (wbc->sync_mode == WB_SYNC_ALL) {
+            if (*error && !wbc->saved_err)
+                wbc->saved_err = *error;
+        } else {
+            if (*error || wbc->nr_to_write <= 0)
+                goto done;
+        }
+    }
+
+    folio = writeback_get_folio(mapping, wbc);
+    if (!folio) {
+        /*
+         * To avoid deadlocks between range_cyclic writeback and callers
+         * that hold pages in PageWriteback to aggregate I/O until
+         * the writeback iteration finishes, we do not loop back to the
+         * start of the file.  Doing so causes a page lock/page
+         * writeback access order inversion - we should only ever lock
+         * multiple pages in ascending page->index order, and looping
+         * back to the start of the file violates that rule and causes
+         * deadlocks.
+         */
+        if (wbc->range_cyclic)
+            mapping->writeback_index = 0;
+
+        /*
+         * Return the first error we encountered (if there was any) to
+         * the caller.
+         */
+        *error = wbc->saved_err;
+    }
+    return folio;
+
+done:
+    if (wbc->range_cyclic)
+        mapping->writeback_index = folio_next_index(folio);
+    folio_batch_release(&wbc->fbatch);
+    return NULL;
+}
+
+
+/**
+ * write_cache_pages - walk the list of dirty pages of the given address space and write all of them.
+ * @mapping: address space structure to write
+ * @wbc: subtract the number of written pages from *@wbc->nr_to_write
+ * @writepage: function called for each page
+ * @data: data passed to writepage function
+ *
+ * Return: %0 on success, negative error code otherwise
+ *
+ * Note: please use writeback_iter() instead.
+ */
+int write_cache_pages(struct address_space *mapping,
+              struct writeback_control *wbc, writepage_t writepage,
+              void *data)
+{
+    struct folio *folio = NULL;
+    int error;
+
+    while ((folio = writeback_iter(mapping, wbc, folio, &error))) {
+        error = writepage(folio, wbc, data);
+        if (error == AOP_WRITEPAGE_ACTIVATE) {
+            folio_unlock(folio);
+            error = 0;
+        }
+    }
+
+    return error;
 }

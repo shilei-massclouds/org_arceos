@@ -1164,7 +1164,6 @@ static void blk_mq_requeue_work(struct work_struct *work)
             list_del_init(&rq->queuelist);
             blk_mq_insert_request(rq, BLK_MQ_INSERT_AT_HEAD);
         }
-        PANIC("LOOP");
     }
 
     while (!list_empty(&flush_list)) {
@@ -2607,4 +2606,37 @@ struct request *blk_mq_dequeue_from_ctx(struct blk_mq_hw_ctx *hctx,
                    dispatch_rq_from_ctx, &data);
 
     return data.rq;
+}
+
+struct flush_busy_ctx_data {
+    struct blk_mq_hw_ctx *hctx;
+    struct list_head *list;
+};
+
+static bool flush_busy_ctx(struct sbitmap *sb, unsigned int bitnr, void *data)
+{
+    struct flush_busy_ctx_data *flush_data = data;
+    struct blk_mq_hw_ctx *hctx = flush_data->hctx;
+    struct blk_mq_ctx *ctx = hctx->ctxs[bitnr];
+    enum hctx_type type = hctx->type;
+
+    spin_lock(&ctx->lock);
+    list_splice_tail_init(&ctx->rq_lists[type], flush_data->list);
+    sbitmap_clear_bit(sb, bitnr);
+    spin_unlock(&ctx->lock);
+    return true;
+}
+
+/*
+ * Process software queues that have been marked busy, splicing them
+ * to the for-dispatch
+ */
+void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list)
+{
+    struct flush_busy_ctx_data data = {
+        .hctx = hctx,
+        .list = list,
+    };
+
+    sbitmap_for_each_set(&hctx->ctx_map, flush_busy_ctx, &data);
 }

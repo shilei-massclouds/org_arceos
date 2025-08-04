@@ -233,11 +233,8 @@ static int __blk_mq_sched_dispatch_requests(struct blk_mq_hw_ctx *hctx)
     /* dequeue request one by one from sw queue if queue is busy */
     if (need_dispatch)
         return blk_mq_do_dispatch_ctx(hctx);
-#if 0
     blk_mq_flush_busy_ctxs(hctx, &rq_list);
     blk_mq_dispatch_rq_list(hctx, &rq_list, 0);
-#endif
-    PANIC("");
     return 0;
 }
 

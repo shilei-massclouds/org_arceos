@@ -109,6 +109,13 @@ static void __end_buffer_read_notouch(struct buffer_head *bh, int uptodate)
     unlock_buffer(bh);
 }
 
+static void mark_buffer_async_write_endio(struct buffer_head *bh,
+                      bh_end_io_t *handler)
+{
+    bh->b_end_io = handler;
+    set_buffer_async_write(bh);
+}
+
 /**
  * __brelse - Release a buffer.
  * @bh: The buffer to release.
@@ -1423,6 +1430,227 @@ void __bh_read_batch(int nr, struct buffer_head *bhs[],
         get_bh(bh);
         submit_bh(REQ_OP_READ | op_flags, bh);
     }
+}
+
+/*
+ * Completion handler for block_write_full_folio() - folios which are unlocked
+ * during I/O, and which have the writeback flag cleared upon I/O completion.
+ */
+static void end_buffer_async_write(struct buffer_head *bh, int uptodate)
+{
+    unsigned long flags;
+    struct buffer_head *first;
+    struct buffer_head *tmp;
+    struct folio *folio;
+
+    BUG_ON(!buffer_async_write(bh));
+
+    folio = bh->b_folio;
+    if (uptodate) {
+        set_buffer_uptodate(bh);
+    } else {
+        buffer_io_error(bh, ", lost async page write");
+        mark_buffer_write_io_error(bh);
+        clear_buffer_uptodate(bh);
+    }
+
+    first = folio_buffers(folio);
+    spin_lock_irqsave(&first->b_uptodate_lock, flags);
+
+    clear_buffer_async_write(bh);
+    unlock_buffer(bh);
+    tmp = bh->b_this_page;
+    while (tmp != bh) {
+        if (buffer_async_write(tmp)) {
+            BUG_ON(!buffer_locked(tmp));
+            goto still_busy;
+        }
+        tmp = tmp->b_this_page;
+    }
+    spin_unlock_irqrestore(&first->b_uptodate_lock, flags);
+    folio_end_writeback(folio);
+    return;
+
+still_busy:
+    spin_unlock_irqrestore(&first->b_uptodate_lock, flags);
+    return;
+}
+
+/*
+ * While block_write_full_folio is writing back the dirty buffers under
+ * the page lock, whoever dirtied the buffers may decide to clean them
+ * again at any time.  We handle that by only looking at the buffer
+ * state inside lock_buffer().
+ *
+ * If block_write_full_folio() is called for regular writeback
+ * (wbc->sync_mode == WB_SYNC_NONE) then it will redirty a page which has a
+ * locked buffer.   This only can happen if someone has written the buffer
+ * directly, with submit_bh().  At the address_space level PageWriteback
+ * prevents this contention from occurring.
+ *
+ * If block_write_full_folio() is called with wbc->sync_mode ==
+ * WB_SYNC_ALL, the writes are posted using REQ_SYNC; this
+ * causes the writes to be flagged as synchronous writes.
+ */
+int __block_write_full_folio(struct inode *inode, struct folio *folio,
+            get_block_t *get_block, struct writeback_control *wbc)
+{
+    int err;
+    sector_t block;
+    sector_t last_block;
+    struct buffer_head *bh, *head;
+    size_t blocksize;
+    int nr_underway = 0;
+    blk_opf_t write_flags = wbc_to_write_flags(wbc);
+
+    head = folio_create_buffers(folio, inode,
+                    (1 << BH_Dirty) | (1 << BH_Uptodate));
+
+    /*
+     * Be very careful.  We have no exclusion from block_dirty_folio
+     * here, and the (potentially unmapped) buffers may become dirty at
+     * any time.  If a buffer becomes dirty here after we've inspected it
+     * then we just miss that fact, and the folio stays dirty.
+     *
+     * Buffers outside i_size may be dirtied by block_dirty_folio;
+     * handle that here by just cleaning them.
+     */
+
+    bh = head;
+    blocksize = bh->b_size;
+
+    block = div_u64(folio_pos(folio), blocksize);
+    last_block = div_u64(i_size_read(inode) - 1, blocksize);
+
+    /*
+     * Get all the dirty buffers mapped to disk addresses and
+     * handle any aliases from the underlying blockdev's mapping.
+     */
+    do {
+        if (block > last_block) {
+            /*
+             * mapped buffers outside i_size will occur, because
+             * this folio can be outside i_size when there is a
+             * truncate in progress.
+             */
+            /*
+             * The buffer was zeroed by block_write_full_folio()
+             */
+            clear_buffer_dirty(bh);
+            set_buffer_uptodate(bh);
+        } else if ((!buffer_mapped(bh) || buffer_delay(bh)) &&
+               buffer_dirty(bh)) {
+            WARN_ON(bh->b_size != blocksize);
+            err = get_block(inode, block, bh, 1);
+            if (err)
+                goto recover;
+            clear_buffer_delay(bh);
+            if (buffer_new(bh)) {
+                /* blockdev mappings never come here */
+                clear_buffer_new(bh);
+                clean_bdev_bh_alias(bh);
+            }
+        }
+        bh = bh->b_this_page;
+        block++;
+    } while (bh != head);
+
+    do {
+        if (!buffer_mapped(bh))
+            continue;
+        /*
+         * If it's a fully non-blocking write attempt and we cannot
+         * lock the buffer then redirty the folio.  Note that this can
+         * potentially cause a busy-wait loop from writeback threads
+         * and kswapd activity, but those code paths have their own
+         * higher-level throttling.
+         */
+        if (wbc->sync_mode != WB_SYNC_NONE) {
+            lock_buffer(bh);
+        } else if (!trylock_buffer(bh)) {
+            folio_redirty_for_writepage(wbc, folio);
+            continue;
+        }
+        if (test_clear_buffer_dirty(bh)) {
+            mark_buffer_async_write_endio(bh,
+                end_buffer_async_write);
+        } else {
+            unlock_buffer(bh);
+        }
+    } while ((bh = bh->b_this_page) != head);
+
+    /*
+     * The folio and its buffers are protected by the writeback flag,
+     * so we can drop the bh refcounts early.
+     */
+    BUG_ON(folio_test_writeback(folio));
+    folio_start_writeback(folio);
+
+    do {
+        struct buffer_head *next = bh->b_this_page;
+        if (buffer_async_write(bh)) {
+            submit_bh_wbc(REQ_OP_WRITE | write_flags, bh,
+                      inode->i_write_hint, wbc);
+            nr_underway++;
+        }
+        bh = next;
+    } while (bh != head);
+    folio_unlock(folio);
+
+    err = 0;
+done:
+    if (nr_underway == 0) {
+        /*
+         * The folio was marked dirty, but the buffers were
+         * clean.  Someone wrote them back by hand with
+         * write_dirty_buffer/submit_bh.  A rare case.
+         */
+        folio_end_writeback(folio);
+
+        /*
+         * The folio and buffer_heads can be released at any time from
+         * here on.
+         */
+    }
+    return err;
+
+recover:
+    PANIC("recover");
+}
+
+/*
+ * The generic ->writepage function for buffer-backed address_spaces
+ */
+int block_write_full_folio(struct folio *folio, struct writeback_control *wbc,
+        void *get_block)
+{
+    struct inode * const inode = folio->mapping->host;
+    loff_t i_size = i_size_read(inode);
+
+    printk("%s: i_size(%lu)\n", __func__, i_size);
+    /* Is the folio fully inside i_size? */
+    if (folio_pos(folio) + folio_size(folio) <= i_size)
+        return __block_write_full_folio(inode, folio, get_block, wbc);
+
+#if 0
+    /* Is the folio fully outside i_size? (truncate in progress) */
+    if (folio_pos(folio) >= i_size) {
+        folio_unlock(folio);
+        return 0; /* don't care */
+    }
+
+    /*
+     * The folio straddles i_size.  It must be zeroed out on each and every
+     * writepage invocation because it may be mmapped.  "A file is mapped
+     * in multiples of the page size.  For a file that is not a multiple of
+     * the page size, the remaining memory is zeroed when mapped, and
+     * writes to that region are not written out to the file."
+     */
+    folio_zero_segment(folio, offset_in_folio(folio, i_size),
+            folio_size(folio));
+    return __block_write_full_folio(inode, folio, get_block, wbc);
+#endif
+    PANIC("");
 }
 
 void __init buffer_init(void)
