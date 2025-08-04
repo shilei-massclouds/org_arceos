@@ -59,6 +59,7 @@ static inline int __get_task_ioprio(struct task_struct *p)
 	struct io_context *ioc = p->io_context;
 	int prio;
 
+    printk("%s: ioc(%lx)\n", __func__, ioc);
 	if (!ioc)
 		return IOPRIO_DEFAULT;
 

@@ -129,6 +129,7 @@ void __brelse(struct buffer_head *bh)
  */
 void end_buffer_read_sync(struct buffer_head *bh, int uptodate)
 {
+    printk("%s: step1\n", __func__);
     __end_buffer_read_notouch(bh, uptodate);
     put_bh(bh);
 }
@@ -1254,7 +1255,7 @@ void mark_buffer_write_io_error(struct buffer_head *bh)
 
 void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
 {
-    printk("%s: step1 uptodate(%d)\n", __func__, uptodate);
+    printk("%s: step1 uptodate(%d) bio_list(%lx)\n", __func__, uptodate, current->bio_list);
     if (uptodate) {
         set_buffer_uptodate(bh);
     } else {
@@ -1262,8 +1263,11 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
         mark_buffer_write_io_error(bh);
         clear_buffer_uptodate(bh);
     }
+    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
     unlock_buffer(bh);
+    printk("%s: step3 bio_list(%lx)\n", __func__, current->bio_list);
     put_bh(bh);
+    printk("%s: stepN bio_list(%lx)\n", __func__, current->bio_list);
 }
 
 static void __block_commit_write(struct folio *folio, size_t from, size_t to)
@@ -1381,6 +1385,44 @@ int block_write_end(struct file *file, struct address_space *mapping,
     __block_commit_write(folio, start, start + copied);
 
     return copied;
+}
+
+/**
+ * __bh_read_batch - Submit read for a batch of unlocked buffers
+ * @nr: entry number of the buffer batch
+ * @bhs: a batch of struct buffer_head
+ * @op_flags: appending REQ_OP_* flags besides REQ_OP_READ
+ * @force_lock: force to get a lock on the buffer if set, otherwise drops any
+ *              buffer that cannot lock.
+ *
+ * Returns zero on success or don't wait, and -EIO on error.
+ */
+void __bh_read_batch(int nr, struct buffer_head *bhs[],
+             blk_opf_t op_flags, bool force_lock)
+{
+    int i;
+
+    for (i = 0; i < nr; i++) {
+        struct buffer_head *bh = bhs[i];
+
+        if (buffer_uptodate(bh))
+            continue;
+
+        if (force_lock)
+            lock_buffer(bh);
+        else
+            if (!trylock_buffer(bh))
+                continue;
+
+        if (buffer_uptodate(bh)) {
+            unlock_buffer(bh);
+            continue;
+        }
+
+        bh->b_end_io = end_buffer_read_sync;
+        get_bh(bh);
+        submit_bh(REQ_OP_READ | op_flags, bh);
+    }
 }
 
 void __init buffer_init(void)

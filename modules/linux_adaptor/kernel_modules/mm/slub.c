@@ -67,6 +67,7 @@ void *kmem_cache_alloc_lru_noprof(struct kmem_cache *s, struct list_lru *lru,
  */
 void kfree(const void *object)
 {
+    pr_err("%s: ...", __func__);
     cl_rust_dealloc(object);
 }
 

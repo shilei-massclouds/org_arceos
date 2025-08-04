@@ -3783,7 +3783,7 @@ static int ext4_lazyinit_thread(void *arg)
 	struct ext4_li_request *elr;
 	unsigned long next_wakeup, cur;
 
-    printk("%s: step1\n", __func__);
+    printk("%s: BEGIN current(%lx)\n", __func__, current);
 	BUG_ON(NULL == eli);
 	set_freezable();
 
@@ -3875,7 +3875,7 @@ exit_thread:
 	kfree(ext4_li_info);
 	ext4_li_info = NULL;
 	mutex_unlock(&ext4_li_mtx);
-    printk("%s: step3\n", __func__);
+    printk("%s: END\n", __func__);
 
 	return 0;
 }
@@ -4030,11 +4030,14 @@ int ext4_register_li_request(struct super_block *sb,
 	 */
 	elr = NULL;
 
+    pr_err("%s: No impl for EXT4_LAZYINIT_RUNNING.", __func__);
+#if 0
 	if (!(ext4_li_info->li_state & EXT4_LAZYINIT_RUNNING)) {
 		ret = ext4_run_lazyinit_thread();
 		if (ret)
 			goto out;
 	}
+#endif
 out:
 	mutex_unlock(&ext4_li_mtx);
 	if (ret)

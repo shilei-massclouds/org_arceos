@@ -1875,9 +1875,10 @@ new_request:
     if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq))
         return;
 
-    printk("%s: step2\n", __func__);
+    printk("%s: step2 current(%lx) plug(%lx)\n", __func__, current, current->plug);
     if (plug) {
         blk_add_rq_to_plug(plug, rq);
+        printk("%s: step3\n", __func__);
         return;
     }
 
@@ -2013,6 +2014,7 @@ void blk_mq_start_request(struct request *rq)
  **/
 void blk_mq_complete_request(struct request *rq)
 {
+    printk("%s: ... bio_list(%lx)\n", __func__, current->bio_list);
     if (!blk_mq_complete_request_remote(rq))
         rq->q->mq_ops->complete(rq);
 }
@@ -2048,9 +2050,12 @@ bool blk_mq_complete_request_remote(struct request *rq)
 
 void blk_mq_end_request(struct request *rq, blk_status_t error)
 {
+    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     if (blk_update_request(rq, error, blk_rq_bytes(rq)))
         BUG();
+    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
     __blk_mq_end_request(rq, error);
+    printk("%s: step3 bio_list(%lx)\n", __func__, current->bio_list);
 }
 
 static void blk_print_req_error(struct request *req, blk_status_t status)
@@ -2110,6 +2115,7 @@ bool blk_update_request(struct request *req, blk_status_t error,
     bool quiet = req->rq_flags & RQF_QUIET;
     int total_bytes;
 
+    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     trace_block_rq_complete(req, error, nr_bytes);
 
     if (!req->bio)
@@ -2184,6 +2190,7 @@ bool blk_update_request(struct request *req, blk_status_t error,
          * later.
          */
         req->__data_len = 0;
+    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
         return false;
     }
 
@@ -2224,11 +2231,14 @@ static inline void blk_account_io_done(struct request *req, u64 now)
 
 static inline void __blk_mq_end_request_acct(struct request *rq, u64 now)
 {
+    printk("%s: step1 rq(%lx)\n", __func__, rq);
     if (rq->rq_flags & RQF_STATS)
         blk_stat_add(rq, now);
 
+    printk("%s: step2\n", __func__);
     blk_mq_sched_completed_request(rq, now);
     blk_account_io_done(rq, now);
+    printk("%s: stepN\n", __func__);
 }
 
 static void blk_mq_finish_request(struct request *rq)
@@ -2250,11 +2260,15 @@ static void blk_mq_finish_request(struct request *rq)
 
 inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
 {
+    printk("%s: BEGIN current(%lx) bio_list(%lx) rq(%lx)\n",
+           __func__, current, current->bio_list, rq);
     if (blk_mq_need_time_stamp(rq))
         __blk_mq_end_request_acct(rq, blk_time_get_ns());
 
+    printk("%s: step2.1\n", __func__);
     blk_mq_finish_request(rq);
 
+    printk("%s: step2.2 (%lx)\n", __func__, rq->end_io);
     if (rq->end_io) {
         rq_qos_done(rq->q, rq);
         if (rq->end_io(rq, error) == RQ_END_IO_FREE)
@@ -2262,6 +2276,7 @@ inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
     } else {
         blk_mq_free_request(rq);
     }
+    printk("%s: END bio_list(%lx)\n", __func__, current->bio_list);
 }
 
 static void __blk_mq_free_request(struct request *rq)
@@ -2550,6 +2565,7 @@ out:
 
     printk("%s: step3\n", __func__);
     blk_mq_update_dispatch_busy(hctx, false);
+    printk("%s: stepN\n", __func__);
     return true;
 }
 

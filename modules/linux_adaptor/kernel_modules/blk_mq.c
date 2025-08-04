@@ -449,35 +449,9 @@ int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
     return nsegs;
 }
 
-void blk_mq_complete_request(struct request *rq)
-{
-    log_debug("%s: ...", __func__);
-
-    /* From blk_mq_complete_request_remote */
-    WRITE_ONCE(rq->state, MQ_RQ_COMPLETE);
-    log_debug("%s: ### SET MQ_RQ_COMPLETE rq(%lx)", __func__, rq);
-
-    const struct blk_mq_ops *mq_ops = cl_disk->queue->mq_ops;
-    if (mq_ops == NULL) {
-        booter_panic("mq_ops is NULL!");
-    }
-    mq_ops->complete(rq);
-}
-
 void blk_mq_start_stopped_hw_queues(struct request_queue *q, bool async)
 {
     log_debug("%s: No impl.\n", __func__);
-}
-
-void blk_mq_end_request(struct request *rq, blk_status_t error)
-{
-    printk("%s: blk_status_t(%d) %u\n", __func__, error, blk_rq_bytes(rq));
-    if (blk_update_request(rq, error, blk_rq_bytes(rq))) {
-        BUG();
-    }
-    printk("%s: step2\n", __func__);
-    __blk_mq_end_request(rq, error);
-    printk("%s: step3\n", __func__);
 }
 
 static void req_bio_endio(struct request *rq, struct bio *bio,
@@ -595,18 +569,6 @@ bool blk_update_request(struct request *req, blk_status_t error,
     }
 
     return true;
-}
-
-inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
-{
-    if (rq->end_io) {
-    printk("%s: step1\n", __func__);
-        //rq_qos_done(rq->q, rq);
-        rq->end_io(rq, error);
-    } else {
-    printk("%s: step2\n", __func__);
-        blk_mq_free_request(rq);
-    }
 }
 
 void blk_mq_free_request(struct request *rq)

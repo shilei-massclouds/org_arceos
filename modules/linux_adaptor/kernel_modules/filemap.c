@@ -1021,45 +1021,6 @@ struct page *grab_cache_page_write_begin(struct address_space *mapping,
     return page;
 }
 
-/**
- * __filemap_fdatawrite_range - start writeback on mapping dirty pages in range
- * @mapping:    address space structure to write
- * @start:  offset in bytes where the range starts
- * @end:    offset in bytes where the range ends (inclusive)
- * @sync_mode:  enable synchronous operation
- *
- * Start writeback against all of a mapping's dirty pages that lie
- * within the byte offsets <start, end> inclusive.
- *
- * If sync_mode is WB_SYNC_ALL then this is a "data integrity" operation, as
- * opposed to a regular memory cleansing writeback.  The difference between
- * these two operations is that if a dirty page/buffer is encountered, it must
- * be waited upon, and not just skipped over.
- *
- * Return: %0 on success, negative error code otherwise.
- */
-int __filemap_fdatawrite_range(struct address_space *mapping, loff_t start,
-                loff_t end, int sync_mode)
-{
-    int ret;
-    struct writeback_control wbc = {
-        .sync_mode = sync_mode,
-        .nr_to_write = LONG_MAX,
-        .range_start = start,
-        .range_end = end,
-    };
-
-    // Note: impl mapping_cap_writeback_dirty(...).
-    if (!mapping_cap_writeback_dirty(mapping) ||
-        !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
-        return 0;
-
-    wbc_attach_fdatawrite_inode(&wbc, mapping->host);
-    ret = do_writepages(mapping, &wbc);
-    wbc_detach_inode(&wbc);
-    return ret;
-}
-
 static void __filemap_fdatawait_range(struct address_space *mapping,
                      loff_t start_byte, loff_t end_byte)
 {
@@ -1112,41 +1073,6 @@ int filemap_fdatawait_range(struct address_space *mapping, loff_t start_byte,
 {
     __filemap_fdatawait_range(mapping, start_byte, end_byte);
     return filemap_check_errors(mapping);
-}
-
-/**
- * file_write_and_wait_range - write out & wait on a file range
- * @file:   file pointing to address_space with pages
- * @lstart: offset in bytes where the range starts
- * @lend:   offset in bytes where the range ends (inclusive)
- *
- * Write out and wait upon file offsets lstart->lend, inclusive.
- *
- * Note that @lend is inclusive (describes the last byte to be written) so
- * that this function can be used to write to the very end-of-file (end = -1).
- *
- * After writing out and waiting on the data, we check and advance the
- * f_wb_err cursor to the latest value, and return any errors detected there.
- *
- * Return: %0 on success, negative error code otherwise.
- */
-int file_write_and_wait_range(struct file *file, loff_t lstart, loff_t lend)
-{
-    int err = 0, err2;
-    struct address_space *mapping = file->f_mapping;
-
-    if (mapping_needs_writeback(mapping)) {
-        err = __filemap_fdatawrite_range(mapping, lstart, lend,
-                         WB_SYNC_ALL);
-        /* See comment of filemap_write_and_wait() */
-        if (err != -EIO)
-    printk("%s: step1\n", __func__);
-            __filemap_fdatawait_range(mapping, lstart, lend);
-    }
-    err2 = file_check_and_advance_wb_err(file);
-    if (!err)
-        err = err2;
-    return err;
 }
 
 /**

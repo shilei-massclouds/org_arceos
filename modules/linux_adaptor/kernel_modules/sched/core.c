@@ -278,6 +278,22 @@ int wake_up_state(struct task_struct *p, unsigned int state)
     return try_to_wake_up(p, state, 0);
 }
 
+/*
+ * This task is about to go to sleep on IO. Increment rq->nr_iowait so
+ * that process accounting knows that this is a task in IO wait state.
+ */
+long __sched io_schedule_timeout(long timeout)
+{
+    int token;
+    long ret;
+
+    token = io_schedule_prepare();
+    ret = schedule_timeout(timeout);
+    io_schedule_finish(token);
+
+    return ret;
+}
+
 void __init sched_init(void)
 {
     wait_bit_init();

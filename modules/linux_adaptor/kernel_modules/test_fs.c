@@ -39,7 +39,7 @@ static void test_write(struct inode *inode, const char *fs_name)
     }
 
     // Note: set IOCB_DSYNC for sync.
-    //file.f_iocb_flags |= IOCB_DSYNC;
+    file.f_iocb_flags |= IOCB_DSYNC;
 
     loff_t pos = 0;
     char wbuf[] = "bcde";

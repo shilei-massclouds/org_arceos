@@ -155,10 +155,12 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 		goto out;
 	}
 
+    printk("%s: step1\n", __func__);
 	ret = file_write_and_wait_range(file, start, end);
 	if (ret)
 		goto out;
 
+    printk("%s: step2 current(%lx)\n", __func__, current);
 	/*
 	 *  The caller's filemap_fdatawrite()/wait will sync the data.
 	 *  Metadata is in the journal, we wait for proper transaction to
@@ -177,5 +179,6 @@ out:
 	if (ret == 0)
 		ret = err;
 	trace_ext4_sync_file_exit(inode, ret);
+    printk("%s: stepN\n", __func__);
 	return ret;
 }

@@ -153,7 +153,9 @@ static int journal_submit_commit_record(journal_t *journal,
 	    !jbd2_has_feature_async_commit(journal))
 		write_flags |= REQ_PREFLUSH | REQ_FUA;
 
+    printk("%s: before submit_bh\n", __func__);
 	submit_bh(write_flags, bh);
+    printk("%s: after submit_bh\n", __func__);
 	*cbh = bh;
 	return 0;
 }
@@ -394,9 +396,11 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 		 * since journal is empty and it is ok for write to be
 		 * flushed only with transaction commit.
 		 */
+    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
 		jbd2_journal_update_sb_log_tail(journal,
 						journal->j_tail_sequence,
 						journal->j_tail, 0);
+    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
 		mutex_unlock(&journal->j_checkpoint_mutex);
 	} else {
 		jbd2_debug(3, "superblock not updated\n");
@@ -433,6 +437,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 	trace_jbd2_start_commit(journal, commit_transaction);
 	jbd2_debug(1, "JBD2: starting commit of transaction %d\n",
 			commit_transaction->t_tid);
+    printk("%s: step3 bio_list(%lx)\n", __func__, current->bio_list);
 
 	write_lock(&journal->j_state_lock);
 	journal->j_fc_off = 0;
@@ -505,6 +510,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 	spin_unlock(&journal->j_list_lock);
 
 	jbd2_debug(3, "JBD2: commit phase 1\n");
+	printk("JBD2: commit phase 1\n");
 
 	/*
 	 * Clear revoked flag to reflect there is no revoked buffers
@@ -538,6 +544,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 	write_unlock(&journal->j_state_lock);
 
 	jbd2_debug(3, "JBD2: commit phase 2a\n");
+	printk("JBD2: commit phase 2a\n");
 
 	/*
 	 * Now start flushing things to disk, in the order they appear
@@ -551,6 +558,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 	jbd2_journal_write_revoke_records(commit_transaction, &log_bufs);
 
 	jbd2_debug(3, "JBD2: commit phase 2b\n");
+	printk("JBD2: commit phase 2b\n");
 
 	/*
 	 * Way to go: we have now written out all of the data for a
@@ -606,6 +614,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 			J_ASSERT (bufs == 0);
 
 			jbd2_debug(4, "JBD2: get descriptor\n");
+			printk("JBD2: get descriptor\n");
 
 			descriptor = jbd2_journal_get_descriptor_buffer(
 							commit_transaction,
@@ -618,6 +627,8 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 			jbd2_debug(4, "JBD2: got buffer %llu (%p)\n",
 				(unsigned long long)descriptor->b_blocknr,
 				descriptor->b_data);
+			printk("JBD2: got buffer (%lx)\n", current->bio_list);
+
 			tagp = &descriptor->b_data[sizeof(journal_header_t)];
 			space_left = descriptor->b_size -
 						sizeof(journal_header_t);
@@ -701,6 +712,7 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 		    space_left < tag_bytes + 16 + csum_size) {
 
 			jbd2_debug(4, "JBD2: Submit %d IOs\n", bufs);
+			printk("JBD2: Submit %d IOs bio_list(%lx)\n", bufs, current->bio_list);
 
 			/* Write an end-of-descriptor marker before
                            submitting the IOs.  "tag" still points to

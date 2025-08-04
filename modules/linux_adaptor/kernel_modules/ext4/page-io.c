@@ -142,6 +142,7 @@ static void ext4_finish_bio(struct bio *bio)
 		if (!under_io) {
 			fscrypt_free_bounce_page(&io_folio->page);
 			folio_end_writeback(folio);
+    printk("%s: step2\n", __func__);
 		}
 	}
 }
@@ -374,7 +375,9 @@ static void ext4_end_bio(struct bio *bio)
 		 * we finish the bio.
 		 */
 		ext4_put_io_end_defer(io_end);
+    printk("%s: step1\n", __func__);
 		ext4_finish_bio(bio);
+    printk("%s: step2\n", __func__);
 		bio_put(bio);
 	}
 }
@@ -429,6 +432,7 @@ static void io_submit_add_bh(struct ext4_io_submit *io,
 submit_and_retry:
 		ext4_io_submit(io);
 	}
+    printk("%s: step1 io_bio(%lx)\n", __func__, io->io_bio);
 	if (io->io_bio == NULL)
 		io_submit_init_bio(io, bh);
 	if (!bio_add_folio(io->io_bio, io_folio, bh->b_size, bh_offset(bh)))
@@ -452,6 +456,7 @@ int ext4_bio_write_folio(struct ext4_io_submit *io, struct folio *folio,
 	BUG_ON(!folio_test_locked(folio));
 	BUG_ON(folio_test_writeback(folio));
 
+    printk("%s: step1 len(%u)\n", __func__, len);
 	/*
 	 * Comments copied from block_write_full_folio:
 	 *

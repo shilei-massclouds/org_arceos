@@ -163,6 +163,7 @@ int __filemap_fdatawrite_range(struct address_space *mapping, loff_t start,
         .range_end = end,
     };
 
+    printk("%s: step1 sync_mode(%d)\n", __func__, sync_mode);
     return filemap_fdatawrite_wbc(mapping, &wbc);
 }
 
@@ -181,13 +182,17 @@ int filemap_fdatawrite_wbc(struct address_space *mapping,
 {
     int ret;
 
+    printk("%s: step0\n", __func__);
     if (!mapping_can_writeback(mapping) ||
         !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
         return 0;
 
+    printk("%s: step1\n", __func__);
     wbc_attach_fdatawrite_inode(wbc, mapping->host);
     ret = do_writepages(mapping, wbc);
+    printk("%s: step2\n", __func__);
     wbc_detach_inode(wbc);
+    printk("%s: step3\n", __func__);
     return ret;
 }
 
@@ -1654,6 +1659,197 @@ retry:
         return status;
     iocb->ki_pos += written;
     return written;
+}
+
+/**
+ * file_check_and_advance_wb_err - report wb error (if any) that was previously
+ *                 and advance wb_err to current one
+ * @file: struct file on which the error is being reported
+ *
+ * When userland calls fsync (or something like nfsd does the equivalent), we
+ * want to report any writeback errors that occurred since the last fsync (or
+ * since the file was opened if there haven't been any).
+ *
+ * Grab the wb_err from the mapping. If it matches what we have in the file,
+ * then just quickly return 0. The file is all caught up.
+ *
+ * If it doesn't match, then take the mapping value, set the "seen" flag in
+ * it and try to swap it into place. If it works, or another task beat us
+ * to it with the new value, then update the f_wb_err and return the error
+ * portion. The error at this point must be reported via proper channels
+ * (a'la fsync, or NFS COMMIT operation, etc.).
+ *
+ * While we handle mapping->wb_err with atomic operations, the f_wb_err
+ * value is protected by the f_lock since we must ensure that it reflects
+ * the latest value swapped in for this file descriptor.
+ *
+ * Return: %0 on success, negative error code otherwise.
+ */
+int file_check_and_advance_wb_err(struct file *file)
+{
+    int err = 0;
+    errseq_t old = READ_ONCE(file->f_wb_err);
+    struct address_space *mapping = file->f_mapping;
+
+    printk("%s: step1\n", __func__);
+    /* Locklessly handle the common case where nothing has changed */
+    if (errseq_check(&mapping->wb_err, old)) {
+        /* Something changed, must use slow path */
+        spin_lock(&file->f_lock);
+        old = file->f_wb_err;
+        err = errseq_check_and_advance(&mapping->wb_err,
+                        &file->f_wb_err);
+        trace_file_check_and_advance_wb_err(file, old);
+        spin_unlock(&file->f_lock);
+    }
+
+    /*
+     * We're mostly using this function as a drop in replacement for
+     * filemap_check_errors. Clear AS_EIO/AS_ENOSPC to emulate the effect
+     * that the legacy code would have had on these flags.
+     */
+    clear_bit(AS_EIO, &mapping->flags);
+    clear_bit(AS_ENOSPC, &mapping->flags);
+    return err;
+}
+
+/**
+ * file_write_and_wait_range - write out & wait on a file range
+ * @file:   file pointing to address_space with pages
+ * @lstart: offset in bytes where the range starts
+ * @lend:   offset in bytes where the range ends (inclusive)
+ *
+ * Write out and wait upon file offsets lstart->lend, inclusive.
+ *
+ * Note that @lend is inclusive (describes the last byte to be written) so
+ * that this function can be used to write to the very end-of-file (end = -1).
+ *
+ * After writing out and waiting on the data, we check and advance the
+ * f_wb_err cursor to the latest value, and return any errors detected there.
+ *
+ * Return: %0 on success, negative error code otherwise.
+ */
+int file_write_and_wait_range(struct file *file, loff_t lstart, loff_t lend)
+{
+    int err = 0, err2;
+    struct address_space *mapping = file->f_mapping;
+
+    if (lend < lstart)
+        return 0;
+
+    printk("%s: step1\n", __func__);
+    if (mapping_needs_writeback(mapping)) {
+        err = __filemap_fdatawrite_range(mapping, lstart, lend,
+                         WB_SYNC_ALL);
+        /* See comment of filemap_write_and_wait() */
+        if (err != -EIO)
+            __filemap_fdatawait_range(mapping, lstart, lend);
+    }
+    printk("%s: step2\n", __func__);
+    err2 = file_check_and_advance_wb_err(file);
+    printk("%s: step3\n", __func__);
+    if (!err)
+        err = err2;
+    return err;
+}
+
+/**
+ * filemap_get_folios_tag - Get a batch of folios matching @tag
+ * @mapping:    The address_space to search
+ * @start:      The starting page index
+ * @end:        The final page index (inclusive)
+ * @tag:        The tag index
+ * @fbatch:     The batch to fill
+ *
+ * The first folio may start before @start; if it does, it will contain
+ * @start.  The final folio may extend beyond @end; if it does, it will
+ * contain @end.  The folios have ascending indices.  There may be gaps
+ * between the folios if there are indices which have no folio in the
+ * page cache.  If folios are added to or removed from the page cache
+ * while this is running, they may or may not be found by this call.
+ * Only returns folios that are tagged with @tag.
+ *
+ * Return: The number of folios found.
+ * Also update @start to index the next folio for traversal.
+ */
+unsigned filemap_get_folios_tag(struct address_space *mapping, pgoff_t *start,
+            pgoff_t end, xa_mark_t tag, struct folio_batch *fbatch)
+{
+    XA_STATE(xas, &mapping->i_pages, *start);
+    struct folio *folio;
+
+    rcu_read_lock();
+    while ((folio = find_get_entry(&xas, end, tag)) != NULL) {
+        /*
+         * Shadow entries should never be tagged, but this iteration
+         * is lockless so there is a window for page reclaim to evict
+         * a page we saw tagged. Skip over it.
+         */
+        if (xa_is_value(folio))
+            continue;
+        if (!folio_batch_add(fbatch, folio)) {
+            unsigned long nr = folio_nr_pages(folio);
+            *start = folio->index + nr;
+            goto out;
+        }
+    }
+    /*
+     * We come here when there is no page beyond @end. We take care to not
+     * overflow the index @start as it confuses some of the callers. This
+     * breaks the iteration when there is a page at index -1 but that is
+     * already broke anyway.
+     */
+    if (end == (pgoff_t)-1)
+        *start = (pgoff_t)-1;
+    else
+        *start = end + 1;
+out:
+    rcu_read_unlock();
+
+    return folio_batch_count(fbatch);
+}
+
+void folio_wait_bit(struct folio *folio, int bit_nr)
+{
+    folio_wait_bit_common(folio, bit_nr, TASK_UNINTERRUPTIBLE, SHARED);
+}
+
+/**
+ * folio_end_writeback - End writeback against a folio.
+ * @folio: The folio.
+ *
+ * The folio must actually be under writeback.
+ *
+ * Context: May be called from process or interrupt context.
+ */
+void folio_end_writeback(struct folio *folio)
+{
+    VM_BUG_ON_FOLIO(!folio_test_writeback(folio), folio);
+
+    printk("%s: step1\n", __func__);
+    /*
+     * folio_test_clear_reclaim() could be used here but it is an
+     * atomic operation and overkill in this particular case. Failing
+     * to shuffle a folio marked for immediate reclaim is too mild
+     * a gain to justify taking an atomic operation penalty at the
+     * end of every folio writeback.
+     */
+    if (folio_test_reclaim(folio)) {
+        folio_clear_reclaim(folio);
+        folio_rotate_reclaimable(folio);
+    }
+
+    /*
+     * Writeback does not hold a folio reference of its own, relying
+     * on truncation to wait for the clearing of PG_writeback.
+     * But here we must make sure that the folio is not freed and
+     * reused before the folio_wake_bit().
+     */
+    folio_get(folio);
+    if (__folio_end_writeback(folio))
+        folio_wake_bit(folio, PG_writeback);
+    //acct_reclaim_writeback(folio);
+    folio_put(folio);
 }
 
 void __init pagecache_init(void)

@@ -423,6 +423,7 @@ struct bio *bio_alloc_bioset(struct block_device *bdev, unsigned short nr_vecs,
     struct bio *bio;
     void *p;
 
+    printk("%s: step1 current(%lx)\n", __func__, current);
     /* should not use nobvec bioset for nr_vecs > 0 */
     if (WARN_ON_ONCE(!mempool_initialized(&bs->bvec_pool) && nr_vecs > 0))
         return NULL;
@@ -460,6 +461,7 @@ struct bio *bio_alloc_bioset(struct block_device *bdev, unsigned short nr_vecs,
      * blocking to the rescuer workqueue before we retry with the original
      * gfp_flags.
      */
+    printk("%s: step2 bio_list(%lx) bs(%lx)\n", __func__, current->bio_list, bs);
     if (current->bio_list &&
         (!bio_list_empty(&current->bio_list[0]) ||
          !bio_list_empty(&current->bio_list[1])) &&
@@ -499,6 +501,7 @@ struct bio *bio_alloc_bioset(struct block_device *bdev, unsigned short nr_vecs,
     }
 
     bio->bi_pool = bs;
+    printk("%s: stepN\n", __func__);
     return bio;
 
 err_free:
@@ -506,10 +509,46 @@ err_free:
     return NULL;
 }
 
+/*
+ * Make the first allocation restricted and don't dump info on allocation
+ * failures, since we'll fall back to the mempool in case of failure.
+ */
+static inline gfp_t bvec_alloc_gfp(gfp_t gfp)
+{
+    return (gfp & ~(__GFP_DIRECT_RECLAIM | __GFP_IO)) |
+        __GFP_NOMEMALLOC | __GFP_NORETRY | __GFP_NOWARN;
+}
+
 struct bio_vec *bvec_alloc(mempool_t *pool, unsigned short *nr_vecs,
         gfp_t gfp_mask)
 {
-    PANIC("");
+    struct biovec_slab *bvs = biovec_slab(*nr_vecs);
+
+    if (WARN_ON_ONCE(!bvs))
+        return NULL;
+
+    /*
+     * Upgrade the nr_vecs request to take full advantage of the allocation.
+     * We also rely on this in the bvec_free path.
+     */
+    *nr_vecs = bvs->nr_vecs;
+
+    printk("nr_vecs(%u)\n", bvs->nr_vecs);
+    /*
+     * Try a slab allocation first for all smaller allocations.  If that
+     * fails and __GFP_DIRECT_RECLAIM is set retry with the mempool.
+     * The mempool is sized to handle up to BIO_MAX_VECS entries.
+     */
+    if (*nr_vecs < BIO_MAX_VECS) {
+        struct bio_vec *bvl;
+
+        bvl = kmem_cache_alloc(bvs->slab, bvec_alloc_gfp(gfp_mask));
+        if (likely(bvl) || !(gfp_mask & __GFP_DIRECT_RECLAIM))
+            return bvl;
+        *nr_vecs = BIO_MAX_VECS;
+    }
+
+    return mempool_alloc(pool, gfp_mask);
 }
 
 static int bio_cpu_dead(unsigned int cpu, struct hlist_node *node)
@@ -819,6 +858,38 @@ int bio_add_page(struct bio *bio, struct page *page,
         return 0;
     __bio_add_page(bio, page, len, offset);
     return len;
+}
+
+static void submit_bio_wait_endio(struct bio *bio)
+{
+    printk("%s: step1\n", __func__);
+    complete(bio->bi_private);
+}
+
+/**
+ * submit_bio_wait - submit a bio, and wait until it completes
+ * @bio: The &struct bio which describes the I/O
+ *
+ * Simple wrapper around submit_bio(). Returns 0 on success, or the error from
+ * bio_endio() on failure.
+ *
+ * WARNING: Unlike to how submit_bio() is usually used, this function does not
+ * result in bio reference to be consumed. The caller must drop the reference
+ * on his own.
+ */
+int submit_bio_wait(struct bio *bio)
+{
+    printk("%s: step1\n", __func__);
+    DECLARE_COMPLETION_ONSTACK_MAP(done,
+            bio->bi_bdev->bd_disk->lockdep_map);
+
+    bio->bi_private = &done;
+    bio->bi_end_io = submit_bio_wait_endio;
+    bio->bi_opf |= REQ_SYNC;
+    submit_bio(bio);
+    blk_wait_io(&done);
+
+    return blk_status_to_errno(bio->bi_status);
 }
 
 static int __init init_bio(void)

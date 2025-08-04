@@ -155,6 +155,7 @@ ssize_t __kernel_write_iter(struct file *file, struct iov_iter *from, loff_t *po
     struct kiocb kiocb;
     ssize_t ret;
 
+    printk("%s: step1 curr(%lx)\n", __func__, current);
     if (WARN_ON_ONCE(!(file->f_mode & FMODE_WRITE)))
         return -EBADF;
     if (!(file->f_mode & FMODE_CAN_WRITE))
@@ -176,6 +177,7 @@ ssize_t __kernel_write_iter(struct file *file, struct iov_iter *from, loff_t *po
         add_wchar(current, ret);
     }
     inc_syscw(current);
+    printk("%s: stepN\n", __func__);
     return ret;
 }
 

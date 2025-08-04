@@ -214,6 +214,7 @@ static inline enum req_op req_op(const struct request *req)
 
 static inline bool blk_rq_is_passthrough(struct request *rq)
 {
+    printk("%s: step2\n", __func__);
 	return blk_op_is_passthrough(rq->cmd_flags);
 }
 
@@ -855,12 +856,14 @@ void blk_mq_end_request_batch(struct io_comp_batch *ib);
  */
 static inline bool blk_mq_need_time_stamp(struct request *rq)
 {
+    printk("%s: step1\n", __func__);
 	/*
 	 * passthrough io doesn't use iostat accounting, cgroup stats
 	 * and io scheduler functionalities.
 	 */
 	if (blk_rq_is_passthrough(rq))
 		return false;
+    printk("%s: step2\n", __func__);
 	return (rq->rq_flags & (RQF_IO_STAT | RQF_STATS | RQF_USE_SCHED));
 }
 

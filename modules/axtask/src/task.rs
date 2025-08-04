@@ -555,5 +555,6 @@ extern "C" fn task_entry() -> ! {
     if let Some(entry) = task.entry {
         unsafe { Box::from_raw(entry)() };
     }
+    error!("Just exit ..");
     crate::exit(0);
 }

@@ -307,3 +307,14 @@ void set_user_nice(struct task_struct *p, long nice)
     pr_err("%s: No impl.", __func__);
     p->static_prio = NICE_TO_PRIO(nice);
 }
+
+void bio_associate_blkg_from_css(struct bio *bio,
+                 struct cgroup_subsys_state *css)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+/*
+ * Zero means infinite timeout - no checking done:
+ */
+unsigned long __read_mostly sysctl_hung_task_timeout_secs = CONFIG_DEFAULT_HUNG_TASK_TIMEOUT;

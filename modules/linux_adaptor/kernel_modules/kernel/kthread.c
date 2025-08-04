@@ -83,7 +83,8 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
                                        (unsigned long)data);
 
     vscnprintf(name, sizeof(name), namefmt, args);
-    printk("%s: tid[%lu] name[%s]\n", __func__, tid, name);
+    printk("%s: curr(%lx) tid[%lu] name[%s]\n", __func__, current, tid, name);
+    printk("%s: ioc(%lx)\n", __func__, task->io_context);
     task->pid = tid;
     task->flags |= PF_KTHREAD;
     set_kthread_struct(task);

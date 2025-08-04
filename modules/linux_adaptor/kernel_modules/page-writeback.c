@@ -50,25 +50,6 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
     log_error("%s: No impl.\n", __func__);
 }
 
-int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
-{
-	int ret;
-
-	if (wbc->nr_to_write <= 0)
-		return 0;
-	while (1) {
-		if (mapping->a_ops->writepages)
-			ret = mapping->a_ops->writepages(mapping, wbc);
-		else
-			ret = generic_writepages(mapping, wbc);
-		if ((ret != -ENOMEM) || (wbc->sync_mode != WB_SYNC_ALL))
-			break;
-		cond_resched();
-		congestion_wait(BLK_RW_ASYNC, HZ/50);
-	}
-	return ret;
-}
-
 /**
  * tag_pages_for_writeback - tag pages to be written by write_cache_pages
  * @mapping: address space structure to write

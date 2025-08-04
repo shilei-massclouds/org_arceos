@@ -58,7 +58,47 @@ atomic_t lru_disable_count = ATOMIC_INIT(0);
 
 static void lru_add(struct lruvec *lruvec, struct folio *folio)
 {
-    PANIC("");
+    int was_unevictable = folio_test_clear_unevictable(folio);
+    long nr_pages = folio_nr_pages(folio);
+
+    VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
+
+    /*
+     * Is an smp_mb__after_atomic() still required here, before
+     * folio_evictable() tests the mlocked flag, to rule out the possibility
+     * of stranding an evictable folio on an unevictable LRU?  I think
+     * not, because __munlock_folio() only clears the mlocked flag
+     * while the LRU lock is held.
+     *
+     * (That is not true of __page_cache_release(), and not necessarily
+     * true of folios_put(): but those only clear the mlocked flag after
+     * folio_put_testzero() has excluded any other users of the folio.)
+     */
+    if (folio_evictable(folio)) {
+#if 0
+        if (was_unevictable)
+            __count_vm_events(UNEVICTABLE_PGRESCUED, nr_pages);
+#endif
+    } else {
+        folio_clear_active(folio);
+        folio_set_unevictable(folio);
+        /*
+         * folio->mlock_count = !!folio_test_mlocked(folio)?
+         * But that leaves __mlock_folio() in doubt whether another
+         * actor has already counted the mlock or not.  Err on the
+         * safe side, underestimate, let page reclaim fix it, rather
+         * than leaving a page on the unevictable LRU indefinitely.
+         */
+        folio->mlock_count = 0;
+#if 0
+        if (!was_unevictable)
+            __count_vm_events(UNEVICTABLE_PGCULLED, nr_pages);
+#endif
+    }
+
+    pr_err("%s: No impl. for 'lruvec_add_folio'", __func__);
+    //lruvec_add_folio(lruvec, folio);
+    trace_mm_lru_insertion(folio);
 }
 
 static void folio_batch_move_lru(struct folio_batch *fbatch, move_fn_t move_fn)
@@ -67,21 +107,21 @@ static void folio_batch_move_lru(struct folio_batch *fbatch, move_fn_t move_fn)
     struct lruvec *lruvec = NULL;
     unsigned long flags = 0;
 
-#if 0
+    printk("%s: step1\n", __func__);
     for (i = 0; i < folio_batch_count(fbatch); i++) {
         struct folio *folio = fbatch->folios[i];
 
-        folio_lruvec_relock_irqsave(folio, &lruvec, &flags);
+        //folio_lruvec_relock_irqsave(folio, &lruvec, &flags);
         move_fn(lruvec, folio);
 
         folio_set_lru(folio);
     }
 
+#if 0
     if (lruvec)
         unlock_page_lruvec_irqrestore(lruvec, flags);
-    folios_put(fbatch);
 #endif
-    PANIC("");
+    folios_put(fbatch);
 }
 
 static void __folio_batch_add_and_move(struct folio_batch __percpu *fbatch,
@@ -352,4 +392,23 @@ void deactivate_file_folio(struct folio *folio)
         return;
 
     folio_batch_add_and_move(folio, lru_deactivate_file, true);
+}
+
+/*
+ * Writeback is about to end against a folio which has been marked for
+ * immediate reclaim.  If it still appears to be reclaimable, move it
+ * to the tail of the inactive list.
+ *
+ * folio_rotate_reclaimable() must disable IRQs, to prevent nasty races.
+ */
+void folio_rotate_reclaimable(struct folio *folio)
+{
+#if 0
+    if (folio_test_locked(folio) || folio_test_dirty(folio) ||
+        folio_test_unevictable(folio))
+        return;
+
+    folio_batch_add_and_move(folio, lru_move_tail, true);
+#endif
+    PANIC("");
 }

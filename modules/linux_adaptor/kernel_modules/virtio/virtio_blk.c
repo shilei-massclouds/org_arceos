@@ -334,6 +334,7 @@ static inline u8 virtblk_vbr_status(struct virtblk_req *vbr)
 
 static inline void virtblk_request_done(struct request *req)
 {
+    printk("%s: step0 bio_list(%lx)\n", __func__, current->bio_list);
 	struct virtblk_req *vbr = blk_mq_rq_to_pdu(req);
 	blk_status_t status = virtblk_result(virtblk_vbr_status(vbr));
 	struct virtio_blk *vblk = req->mq_hctx->queue->queuedata;
@@ -345,6 +346,7 @@ static inline void virtblk_request_done(struct request *req)
 		req->__sector = virtio64_to_cpu(vblk->vdev,
 						vbr->in_hdr.zone_append.sector);
 
+    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
 	blk_mq_end_request(req, status);
 }
 

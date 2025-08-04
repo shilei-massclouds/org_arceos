@@ -417,3 +417,19 @@ bool blk_insert_flush(struct request *rq)
         return true;
     }
 }
+
+/**
+ * blkdev_issue_flush - queue a flush
+ * @bdev:   blockdev to issue flush for
+ *
+ * Description:
+ *    Issue a flush for the block device in question.
+ */
+int blkdev_issue_flush(struct block_device *bdev)
+{
+    struct bio bio;
+
+    printk("%s: step1\n", __func__);
+    bio_init(&bio, bdev, NULL, 0, REQ_OP_WRITE | REQ_PREFLUSH);
+    return submit_bio_wait(&bio);
+}

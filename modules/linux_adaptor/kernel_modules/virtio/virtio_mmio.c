@@ -305,6 +305,7 @@ static irqreturn_t vm_interrupt(int irq, void *opaque)
 	unsigned long status;
 	unsigned long flags;
 	irqreturn_t ret = IRQ_NONE;
+    printk("%s: step0 bio_list(%lx)\n", __func__, current->bio_list);
 
 	/* Read and acknowledge interrupts */
 	status = readl(vm_dev->base + VIRTIO_MMIO_INTERRUPT_STATUS);
@@ -316,7 +317,9 @@ static irqreturn_t vm_interrupt(int irq, void *opaque)
 	}
 
 	if (likely(status & VIRTIO_MMIO_INT_VRING)) {
+    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
 		spin_lock_irqsave(&vm_dev->lock, flags);
+    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
 		list_for_each_entry(info, &vm_dev->virtqueues, node)
 			ret |= vring_interrupt(irq, info->vq);
 		spin_unlock_irqrestore(&vm_dev->lock, flags);

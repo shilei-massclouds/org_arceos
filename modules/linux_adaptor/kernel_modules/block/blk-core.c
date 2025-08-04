@@ -51,6 +51,40 @@ static struct workqueue_struct *kblockd_workqueue;
  */
 static struct kmem_cache *blk_requestq_cachep;
 
+static const struct {
+    int     errno;
+    const char  *name;
+} blk_errors[] = {
+    [BLK_STS_OK]        = { 0,      "" },
+    [BLK_STS_NOTSUPP]   = { -EOPNOTSUPP, "operation not supported" },
+    [BLK_STS_TIMEOUT]   = { -ETIMEDOUT, "timeout" },
+    [BLK_STS_NOSPC]     = { -ENOSPC,    "critical space allocation" },
+    [BLK_STS_TRANSPORT] = { -ENOLINK,   "recoverable transport" },
+    [BLK_STS_TARGET]    = { -EREMOTEIO, "critical target" },
+    [BLK_STS_RESV_CONFLICT] = { -EBADE, "reservation conflict" },
+    [BLK_STS_MEDIUM]    = { -ENODATA,   "critical medium" },
+    [BLK_STS_PROTECTION]    = { -EILSEQ,    "protection" },
+    [BLK_STS_RESOURCE]  = { -ENOMEM,    "kernel resource" },
+    [BLK_STS_DEV_RESOURCE]  = { -EBUSY, "device resource" },
+    [BLK_STS_AGAIN]     = { -EAGAIN,    "nonblocking retry" },
+    [BLK_STS_OFFLINE]   = { -ENODEV,    "device offline" },
+
+    /* device mapper special case, should not leak out: */
+    [BLK_STS_DM_REQUEUE]    = { -EREMCHG, "dm internal retry" },
+
+    /* zone device specific errors */
+    [BLK_STS_ZONE_OPEN_RESOURCE]    = { -ETOOMANYREFS, "open zones exceeded" },
+    [BLK_STS_ZONE_ACTIVE_RESOURCE]  = { -EOVERFLOW, "active zones exceeded" },
+
+    /* Command duration limit device-side timeout */
+    [BLK_STS_DURATION_LIMIT]    = { -ETIME, "duration limit exceeded" },
+
+    [BLK_STS_INVAL]     = { -EINVAL,    "invalid" },
+
+    /* everything else not covered above: */
+    [BLK_STS_IOERR]     = { -EIO,   "I/O" },
+};
+
 struct request_queue *blk_alloc_queue(struct queue_limits *lim, int node_id)
 {
     struct request_queue *q;
@@ -136,9 +170,13 @@ fail_q:
 
 static void bio_set_ioprio(struct bio *bio)
 {
+    printk("%s: step1\n", __func__);
     /* Nobody set ioprio so far? Initialize it based on task's nice value */
-    if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) == IOPRIO_CLASS_NONE)
+    if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) == IOPRIO_CLASS_NONE) {
+    printk("%s: step2 current(%lx)\n", __func__, current);
         bio->bi_ioprio = get_current_ioprio();
+    printk("%s: step3\n", __func__);
+    }
     blkcg_set_ioprio(bio);
 }
 
@@ -272,6 +310,7 @@ void submit_bio_noacct(struct bio *bio)
     struct request_queue *q = bdev_get_queue(bdev);
     blk_status_t status = BLK_STS_IOERR;
 
+    printk("%s: step1\n", __func__);
     might_sleep();
 
     /*
@@ -309,6 +348,7 @@ void submit_bio_noacct(struct bio *bio)
         }
     }
 
+    printk("%s: step2 op(%u)\n", __func__, bio_op(bio));
     switch (bio_op(bio)) {
     case REQ_OP_READ:
         break;
@@ -364,6 +404,7 @@ void submit_bio_noacct(struct bio *bio)
     if (blk_throtl_bio(bio))
         return;
     submit_bio_noacct_nocheck(bio);
+    printk("%s: stepN\n", __func__);
     return;
 
 not_supported:
@@ -583,6 +624,7 @@ static void __submit_bio_noacct_mq(struct bio *bio)
 {
     struct bio_list bio_list[2] = { };
 
+    printk("---> %s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     current->bio_list = bio_list;
 
     do {
@@ -590,6 +632,7 @@ static void __submit_bio_noacct_mq(struct bio *bio)
     } while ((bio = bio_list_pop(&bio_list[0])));
 
     current->bio_list = NULL;
+    printk("---> %s: step2 bio_list(%lx)\n", __func__, current->bio_list);
 }
 
 /*
@@ -619,7 +662,7 @@ static void __submit_bio_noacct(struct bio *bio)
 void submit_bio_noacct_nocheck(struct bio *bio)
 {
     //blk_cgroup_bio_start(bio);
-    blkcg_bio_issue_init(bio);
+    //blkcg_bio_issue_init(bio);
 
     if (!bio_flagged(bio, BIO_TRACE_COMPLETION)) {
         //trace_block_bio_queue(bio);
@@ -630,18 +673,22 @@ void submit_bio_noacct_nocheck(struct bio *bio)
         bio_set_flag(bio, BIO_TRACE_COMPLETION);
     }
 
+    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     /*
      * We only want one ->submit_bio to be active at a time, else stack
      * usage with stacked devices could be a problem.  Use current->bio_list
      * to collect a list of requests submited by a ->submit_bio method while
      * it is active, and then process them after it returned.
      */
-    if (current->bio_list)
+    if (current->bio_list) {
+        printk("%s: step2\n", __func__);
         bio_list_add(&current->bio_list[0], bio);
-    else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO))
+        printk("%s: step3\n", __func__);
+    } else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO)) {
         __submit_bio_noacct_mq(bio);
-    else
+    } else {
         __submit_bio_noacct(bio);
+    }
 }
 
 /**
@@ -659,6 +706,7 @@ void submit_bio_noacct_nocheck(struct bio *bio)
  */
 void submit_bio(struct bio *bio)
 {
+    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     if (bio_op(bio) == REQ_OP_READ) {
         task_io_account_read(bio->bi_iter.bi_size);
         //count_vm_events(PGPGIN, bio_sectors(bio));
@@ -667,7 +715,30 @@ void submit_bio(struct bio *bio)
     }
 
     bio_set_ioprio(bio);
+    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
     submit_bio_noacct(bio);
+    printk("%s: step3 bio_list(%lx)\n", __func__, current->bio_list);
+}
+
+int blk_status_to_errno(blk_status_t status)
+{
+    int idx = (__force int)status;
+
+    if (WARN_ON_ONCE(idx >= ARRAY_SIZE(blk_errors)))
+        return -EIO;
+    return blk_errors[idx].errno;
+}
+
+blk_status_t errno_to_blk_status(int errno)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(blk_errors); i++) {
+        if (blk_errors[i].errno == errno)
+            return (__force blk_status_t)i;
+    }
+
+    return BLK_STS_IOERR;
 }
 
 int __init blk_dev_init(void)

@@ -42,3 +42,17 @@ void swake_up_locked(struct swait_queue_head *q, int wake_flags)
     try_to_wake_up(curr->task, TASK_NORMAL, wake_flags);
     list_del_init(&curr->task_list);
 }
+
+void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
+{
+    wait->task = current;
+    if (list_empty(&wait->task_list))
+        list_add_tail(&wait->task_list, &q->task_list);
+}
+
+void __finish_swait(struct swait_queue_head *q, struct swait_queue *wait)
+{
+    __set_current_state(TASK_RUNNING);
+    if (!list_empty(&wait->task_list))
+        list_del_init(&wait->task_list);
+}

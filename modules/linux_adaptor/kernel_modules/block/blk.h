@@ -658,11 +658,14 @@ static inline int req_ref_read(struct request *req)
 
 static inline u64 blk_time_get_ns(void)
 {
+#if 0
 	struct blk_plug *plug = current->plug;
 
+    printk("%s: step1 plug(%lx)\n", __func__, plug);
 	if (!plug || !in_task())
 		return ktime_get_ns();
 
+    printk("%s: step2\n", __func__);
 	/*
 	 * 0 could very well be a valid time, but rather than flag "this is
 	 * a valid timestamp" separately, just accept that we'll do an extra
@@ -673,6 +676,9 @@ static inline u64 blk_time_get_ns(void)
 		current->flags |= PF_BLOCK_TS;
 	}
 	return plug->cur_ktime;
+#endif
+    pr_err("%s: No impl.", __func__);
+    return 0;
 }
 
 static inline ktime_t blk_time_get(void)

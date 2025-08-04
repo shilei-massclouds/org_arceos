@@ -2047,11 +2047,14 @@ static int mpage_process_page_bufs(struct mpage_da_data *mpd,
 	} while (lblk++, (bh = bh->b_this_page) != head);
 	/* So far everything mapped? Submit the page for IO. */
 	if (mpd->map.m_len == 0) {
+    printk("%s: step1\n", __func__);
 		err = mpage_submit_folio(mpd, head->b_folio);
+    printk("%s: step2\n", __func__);
 		if (err < 0)
 			return err;
 		mpage_folio_done(mpd, head->b_folio);
 	}
+    printk("%s: step3 lblk(%u) blocks(%u)\n", __func__, lblk, blocks);
 	if (lblk >= blocks) {
 		mpd->scanned_until_end = 1;
 		return 0;
@@ -2548,8 +2551,10 @@ static int mpage_prepare_extent_to_map(struct mpage_da_data *mpd)
 				lblk = ((ext4_lblk_t)folio->index) <<
 					(PAGE_SHIFT - blkbits);
 				head = folio_buffers(folio);
+    printk("%s: step1\n", __func__);
 				err = mpage_process_page_bufs(mpd, head, head,
 						lblk);
+    printk("%s: step2\n", __func__);
 				if (err <= 0)
 					goto out;
 				err = 0;
@@ -2557,6 +2562,7 @@ static int mpage_prepare_extent_to_map(struct mpage_da_data *mpd)
 		}
 		folio_batch_release(&fbatch);
 		cond_resched();
+    printk("%s: step3\n", __func__);
 	}
 	mpd->scanned_until_end = 1;
 	if (handle)
@@ -2690,6 +2696,7 @@ retry:
 		ret = -ENOMEM;
 		goto unplug;
 	}
+    printk("%s: step0\n", __func__);
 	ret = mpage_prepare_extent_to_map(mpd);
 	/* Unlock pages we didn't use */
 	mpage_release_unused_pages(mpd, false);
@@ -2700,6 +2707,7 @@ retry:
 	if (ret < 0)
 		goto unplug;
 
+    printk("%s: step1\n", __func__);
 	while (!mpd->scanned_until_end && wbc->nr_to_write > 0) {
 		/* For each extent of pages we use new io_end */
 		mpd->io_submit.io_end = ext4_init_io_end(inode, GFP_KERNEL);
@@ -2708,6 +2716,7 @@ retry:
 			break;
 		}
 
+    printk("%s: step2\n", __func__);
 		WARN_ON_ONCE(!mpd->can_map);
 		/*
 		 * We have two constraints: We find one extent to map and we
@@ -2788,6 +2797,7 @@ retry:
 			break;
 	}
 unplug:
+    printk("%s: step3\n", __func__);
 	blk_finish_plug(&plug);
 	if (!ret && !cycled && wbc->nr_to_write > 0) {
 		cycled = 1;
@@ -2825,8 +2835,11 @@ static int ext4_writepages(struct address_space *mapping,
 	if (unlikely(ext4_forced_shutdown(sb)))
 		return -EIO;
 
+    printk("%s: step1 (%lx)\n", __func__, EXT4_SB(sb));
 	alloc_ctx = ext4_writepages_down_read(sb);
+    printk("%s: step2\n", __func__);
 	ret = ext4_do_writepages(&mpd);
+    printk("%s: step3\n", __func__);
 	/*
 	 * For data=journal writeback we could have come across pages marked
 	 * for delayed dirtying (PageChecked) which were just added to the

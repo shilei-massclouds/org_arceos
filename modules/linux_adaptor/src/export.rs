@@ -41,13 +41,14 @@ pub extern "C" fn cl_free_pages(addr: usize, count: usize) {
 /// Printk
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_printk(level: u8, ptr: *const c_char) {
+    /* Note: 'error!' can destroy current int linux. WHY? */
     let c_str = unsafe { CStr::from_ptr(ptr) };
     let rust_str = c_str.to_str().expect("Bad encoding");
     match level as char {
         '7' => debug!("{}", rust_str),
         '6' => info!("{}", rust_str),
         '4' => warn!("{}", rust_str),
-        '3' => error!("{}", rust_str),
+        //'3' => error!("{}", rust_str),
         _ => ax_print!("{}", rust_str),
     }
 }

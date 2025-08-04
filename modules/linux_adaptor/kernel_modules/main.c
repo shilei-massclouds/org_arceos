@@ -118,11 +118,15 @@ int clinux_init(void)
 #endif
 
 #ifdef TEST_EXT4
+    printk("====== Journal init ======\n");
     cl_journal_init();
+    printk("====== Ext4 init ======\n");
     cl_ext4_init_fs();
 
+    printk("====== Ext4 mount ======\n");
     root = cl_mount("ext4", "/dev/root");
 
+    printk("====== Ext4 test ======\n");
     test_ext4(root);
 #endif
 

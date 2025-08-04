@@ -38,6 +38,28 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/timer.h>
 
+#include "../adaptor.h"
+
+#define MOD_TIMER_PENDING_ONLY      0x01
+#define MOD_TIMER_REDUCE            0x02
+#define MOD_TIMER_NOTPENDING        0x04
+
+/*
+ * Since schedule_timeout()'s timer is defined on the stack, it must store
+ * the target task on the stack as well.
+ */
+struct process_timer {
+    struct timer_list timer;
+    struct task_struct *task;
+};
+
+static inline int
+__mod_timer(struct timer_list *timer, unsigned long expires, unsigned int options)
+{
+    pr_err("%s: =================> expires(%ld)", __func__, expires);
+    return 0;
+}
+
 /**
  * timer_delete_sync - Deactivate a timer and wait for the handler to finish.
  * @timer:  The timer to be deactivated
@@ -334,4 +356,98 @@ void add_timer_global(struct timer_list *timer)
     timer->flags &= ~TIMER_PINNED;
     __mod_timer(timer, timer->expires, MOD_TIMER_NOTPENDING);
 #endif
+}
+
+static void process_timeout(struct timer_list *t)
+{
+    struct process_timer *timeout = from_timer(timeout, t, timer);
+
+    printk("%s: step1\n", __func__);
+    wake_up_process(timeout->task);
+}
+
+/**
+ * schedule_timeout - sleep until timeout
+ * @timeout: timeout value in jiffies
+ *
+ * Make the current task sleep until @timeout jiffies have elapsed.
+ * The function behavior depends on the current task state
+ * (see also set_current_state() description):
+ *
+ * %TASK_RUNNING - the scheduler is called, but the task does not sleep
+ * at all. That happens because sched_submit_work() does nothing for
+ * tasks in %TASK_RUNNING state.
+ *
+ * %TASK_UNINTERRUPTIBLE - at least @timeout jiffies are guaranteed to
+ * pass before the routine returns unless the current task is explicitly
+ * woken up, (e.g. by wake_up_process()).
+ *
+ * %TASK_INTERRUPTIBLE - the routine may return early if a signal is
+ * delivered to the current task or the current task is explicitly woken
+ * up.
+ *
+ * The current task state is guaranteed to be %TASK_RUNNING when this
+ * routine returns.
+ *
+ * Specifying a @timeout value of %MAX_SCHEDULE_TIMEOUT will schedule
+ * the CPU away without a bound on the timeout. In this case the return
+ * value will be %MAX_SCHEDULE_TIMEOUT.
+ *
+ * Returns 0 when the timer has expired otherwise the remaining time in
+ * jiffies will be returned. In all cases the return value is guaranteed
+ * to be non-negative.
+ */
+signed long __sched schedule_timeout(signed long timeout)
+{
+    struct process_timer timer;
+    unsigned long expire;
+
+    pr_err("%s: =================> timeout(%ld)", __func__, timeout);
+    switch (timeout)
+    {
+    case MAX_SCHEDULE_TIMEOUT:
+        /*
+         * These two special cases are useful to be comfortable
+         * in the caller. Nothing more. We could take
+         * MAX_SCHEDULE_TIMEOUT from one of the negative value
+         * but I' d like to return a valid offset (>=0) to allow
+         * the caller to do everything it want with the retval.
+         */
+        schedule();
+        goto out;
+    default:
+        /*
+         * Another bit of PARANOID. Note that the retval will be
+         * 0 since no piece of kernel is supposed to do a check
+         * for a negative retval of schedule_timeout() (since it
+         * should never happens anyway). You just have the printk()
+         * that will tell you if something is gone wrong and where.
+         */
+        if (timeout < 0) {
+            printk(KERN_ERR "schedule_timeout: wrong timeout "
+                "value %lx\n", timeout);
+            dump_stack();
+            __set_current_state(TASK_RUNNING);
+            goto out;
+        }
+    }
+
+    expire = timeout + jiffies;
+
+    timer.task = current;
+    timer_setup_on_stack(&timer.timer, process_timeout, 0);
+    __mod_timer(&timer.timer, expire, MOD_TIMER_NOTPENDING);
+    printk("=========> %s: step1\n", __func__);
+    schedule();
+    printk("=========> %s: step2\n", __func__);
+    del_timer_sync(&timer.timer);
+
+    /* Remove the timer from the object tracker */
+    destroy_timer_on_stack(&timer.timer);
+
+    timeout = expire - jiffies;
+
+ out:
+    printk("=========> %s: step3 timeout(%ld)\n", __func__, timeout);
+    return timeout < 0 ? 0 : timeout;
 }
