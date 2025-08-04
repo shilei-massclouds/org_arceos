@@ -294,6 +294,31 @@ long __sched io_schedule_timeout(long timeout)
     return ret;
 }
 
+/*
+ * __cond_resched_lock() - if a reschedule is pending, drop the given lock,
+ * call schedule, and on return reacquire the lock.
+ *
+ * This works OK both with and without CONFIG_PREEMPTION. We do strange low-level
+ * operations here to prevent schedule() from being called twice (once via
+ * spin_unlock(), once by hand).
+ */
+int __cond_resched_lock(spinlock_t *lock)
+{
+    int resched = should_resched(PREEMPT_LOCK_OFFSET);
+    int ret = 0;
+
+    lockdep_assert_held(lock);
+
+    if (spin_needbreak(lock) || resched) {
+        spin_unlock(lock);
+        if (!_cond_resched())
+            cpu_relax();
+        ret = 1;
+        spin_lock(lock);
+    }
+    return ret;
+}
+
 void __init sched_init(void)
 {
     wait_bit_init();

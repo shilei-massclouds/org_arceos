@@ -341,7 +341,6 @@ CL_MINE(seq_release)
 CL_MINE(write_dirty_buffer)
 
 CL_MINE(percpu_counter_batch)
-CL_MINE(__cond_resched_lock)
 
 CL_MINE(freezing_slow_path)
 CL_MINE(__refrigerator)
