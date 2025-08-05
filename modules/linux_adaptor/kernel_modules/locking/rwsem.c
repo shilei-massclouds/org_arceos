@@ -82,3 +82,19 @@ int down_read_trylock(struct rw_semaphore *sem)
     pr_err("%s: No impl.", __func__);
     return 1;
 }
+
+int __sched down_read_killable(struct rw_semaphore *sem)
+{
+    pr_err("%s: No impl.", __func__);
+#if 0
+    might_sleep();
+    rwsem_acquire_read(&sem->dep_map, 0, 0, _RET_IP_);
+
+    if (LOCK_CONTENDED_RETURN(sem, __down_read_trylock, __down_read_killable)) {
+        rwsem_release(&sem->dep_map, _RET_IP_);
+        return -EINTR;
+    }
+#endif
+
+    return 0;
+}
