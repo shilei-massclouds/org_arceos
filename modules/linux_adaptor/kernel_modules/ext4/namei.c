@@ -80,7 +80,9 @@ static struct buffer_head *ext4_append(handle_t *handle,
 		return ERR_PTR(-EFSCORRUPTED);
 	}
 
+    printk("%s: step1\n", __func__);
 	bh = ext4_bread(handle, inode, *block, EXT4_GET_BLOCKS_CREATE);
+    printk("%s: step2\n", __func__);
 	if (IS_ERR(bh))
 		return bh;
 	inode->i_size += inode->i_sb->s_blocksize;
@@ -2978,10 +2980,13 @@ int ext4_init_new_dir(handle_t *handle, struct inode *dir,
 	}
 
 	inode->i_size = 0;
+    printk("%s: step1\n", __func__);
 	dir_block = ext4_append(handle, inode, &block);
+    printk("%s: step2\n", __func__);
 	if (IS_ERR(dir_block))
 		return PTR_ERR(dir_block);
 	de = (struct ext4_dir_entry_2 *)dir_block->b_data;
+    printk("%s: step3\n", __func__);
 	ext4_init_dot_dotdot(inode, de, blocksize, csum_size, dir->i_ino, 0);
 	set_nlink(inode, 2);
 	if (csum_size)
@@ -3028,8 +3033,10 @@ retry:
 	if (err)
 		goto out_clear_inode;
 	err = ext4_mark_inode_dirty(handle, inode);
+    printk("%s: step1\n", __func__);
 	if (!err)
 		err = ext4_add_entry(handle, dentry, inode);
+    printk("%s: step2\n", __func__);
 	if (err) {
 out_clear_inode:
 		clear_nlink(inode);

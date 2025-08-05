@@ -4377,7 +4377,9 @@ int ext4_ext_map_blocks(handle_t *handle, struct inode *inode,
 		ar.flags |= EXT4_MB_DELALLOC_RESERVED;
 	if (flags & EXT4_GET_BLOCKS_METADATA_NOFAIL)
 		ar.flags |= EXT4_MB_USE_RESERVED;
+    printk("%s: step1\n", __func__);
 	newblock = ext4_mb_new_blocks(handle, &ar, &err);
+    printk("%s: step2 err(%d)\n", __func__, err);
 	if (!newblock)
 		goto out;
 	allocated_clusters = ar.len;

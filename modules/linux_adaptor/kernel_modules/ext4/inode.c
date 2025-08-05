@@ -510,6 +510,7 @@ static int ext4_map_create_blocks(handle_t *handle, struct inode *inode,
 	 */
 	map->m_flags &= ~EXT4_MAP_FLAGS;
 
+    printk("%s: step1\n", __func__);
 	/*
 	 * We need to check for EXT4 here because migrate could have
 	 * changed the inode type in between.
@@ -610,6 +611,7 @@ int ext4_map_blocks(handle_t *handle, struct inode *inode,
 	ext_debug(inode, "flag 0x%x, max_blocks %u, logical block %lu\n",
 		  flags, map->m_len, (unsigned long) map->m_lblk);
 
+    printk("%s: step0\n", __func__);
 	/*
 	 * ext4_map_blocks returns an int, and m_len is an unsigned int
 	 */
@@ -701,6 +703,7 @@ found:
 	 * with create == 1 flag.
 	 */
 	down_write(&EXT4_I(inode)->i_data_sem);
+    printk("%s: step1\n", __func__);
 	retval = ext4_map_create_blocks(handle, inode, map, flags);
 	up_write((&EXT4_I(inode)->i_data_sem));
 	if (retval > 0 && map->m_flags & EXT4_MAP_MAPPED) {
@@ -848,7 +851,9 @@ struct buffer_head *ext4_getblk(handle_t *handle, struct inode *inode,
 
 	map.m_lblk = block;
 	map.m_len = 1;
+    printk("%s: step1\n", __func__);
 	err = ext4_map_blocks(handle, inode, &map, map_flags);
+    printk("%s: step2 err(%d)\n", __func__, err);
 
 	if (err == 0)
 		return create ? ERR_PTR(-ENOSPC) : NULL;
@@ -904,7 +909,9 @@ struct buffer_head *ext4_bread(handle_t *handle, struct inode *inode,
 	struct buffer_head *bh;
 	int ret;
 
+    printk("%s: step1\n", __func__);
 	bh = ext4_getblk(handle, inode, block, map_flags);
+    printk("%s: step2\n", __func__);
 	if (IS_ERR(bh))
 		return bh;
 	if (!bh || ext4_buffer_uptodate(bh))

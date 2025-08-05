@@ -143,12 +143,6 @@ int riscv_of_parent_hartid(struct device_node *node, unsigned long *hartid)
     return 0;
 }
 
-u32 __get_random_u32_below(u32 ceil)
-{
-    pr_err("%s: No impl.", __func__);
-    return 0;
-}
-
 bool housekeeping_test_cpu(int cpu, enum hk_type type)
 {
     pr_err("%s: No impl.", __func__);
@@ -168,11 +162,6 @@ int __srcu_read_lock(struct srcu_struct *ssp)
 }
 
 void __srcu_read_unlock(struct srcu_struct *ssp, int idx)
-{
-    pr_err("%s: No impl.", __func__);
-}
-
-void add_interrupt_randomness(int irq)
 {
     pr_err("%s: No impl.", __func__);
 }
@@ -218,14 +207,6 @@ int blocking_notifier_chain_unregister(struct blocking_notifier_head *nh,
     pr_err("%s: No impl.", __func__);
 }
 
-int __percpu_counter_init_many(struct percpu_counter *fbc, s64 amount,
-                   gfp_t gfp, u32 nr_counters,
-                   struct lock_class_key *key)
-{
-    pr_err("%s: No impl.", __func__);
-    return 0;
-}
-
 void percpu_counter_add_batch(struct percpu_counter *fbc, s64 amount, s32 batch)
 {
     pr_err("%s: No impl.", __func__);
@@ -264,12 +245,6 @@ int sprint_symbol(char *buffer, unsigned long address)
 {
     pr_err("%s: [%s] addr[0x%lx]\n", __func__, buffer, address);
     return 0;
-}
-
-u16 get_random_u16(void)
-{
-    pr_err("%s: No impl.\n", __func__);
-    return 1;
 }
 
 bool blk_cgroup_congested(void)
@@ -318,3 +293,29 @@ void bio_associate_blkg_from_css(struct bio *bio,
  * Zero means infinite timeout - no checking done:
  */
 unsigned long __read_mostly sysctl_hung_task_timeout_secs = CONFIG_DEFAULT_HUNG_TASK_TIMEOUT;
+
+int register_pm_notifier(struct notifier_block *nb)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_inode_init_security(struct inode *inode, struct inode *dir,
+                 const struct qstr *qstr,
+                 const initxattrs initxattrs, void *fs_data)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int in_group_p(kgid_t grp)
+{
+    pr_err("%s: No impl.", __func__);
+    return 1;
+}
+
+bool capable(int cap)
+{
+    pr_err("%s: No impl.", __func__);
+    return true;
+}

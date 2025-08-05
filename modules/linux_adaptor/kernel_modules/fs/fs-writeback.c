@@ -248,10 +248,39 @@ void __mark_inode_dirty(struct inode *inode, int flags)
     int dirtytime = 0;
     struct bdi_writeback *wb = NULL;
 
+    printk("%s: step1\n", __func__);
     trace_writeback_mark_inode_dirty(inode, flags);
 
     if (flags & I_DIRTY_INODE) {
-        PANIC("I_DIRTY_INODE");
+        /*
+         * Inode timestamp update will piggback on this dirtying.
+         * We tell ->dirty_inode callback that timestamps need to
+         * be updated by setting I_DIRTY_TIME in flags.
+         */
+        if (inode->i_state & I_DIRTY_TIME) {
+            spin_lock(&inode->i_lock);
+            if (inode->i_state & I_DIRTY_TIME) {
+                inode->i_state &= ~I_DIRTY_TIME;
+                flags |= I_DIRTY_TIME;
+            }
+            spin_unlock(&inode->i_lock);
+        }
+
+        /*
+         * Notify the filesystem about the inode being dirtied, so that
+         * (if needed) it can update on-disk fields and journal the
+         * inode.  This is only needed when the inode itself is being
+         * dirtied now.  I.e. it's only needed for I_DIRTY_INODE, not
+         * for just I_DIRTY_PAGES or I_DIRTY_TIME.
+         */
+        trace_writeback_dirty_inode_start(inode, flags);
+        if (sb->s_op->dirty_inode)
+            sb->s_op->dirty_inode(inode,
+                flags & (I_DIRTY_INODE | I_DIRTY_TIME));
+        trace_writeback_dirty_inode(inode, flags);
+
+        /* I_DIRTY_INODE supersedes I_DIRTY_TIME. */
+        flags &= ~I_DIRTY_TIME;
     } else {
         /*
          * Else it's either I_DIRTY_PAGES, I_DIRTY_TIME, or nothing.

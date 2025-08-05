@@ -55,3 +55,13 @@ posix_acl_alloc(int count, gfp_t flags)
         posix_acl_init(acl, count);
     return acl;
 }
+
+int
+posix_acl_create(struct inode *dir, umode_t *mode,
+        struct posix_acl **default_acl, struct posix_acl **acl)
+{
+    pr_err("%s: No impl.", __func__);
+    *default_acl = NULL;
+    *acl = NULL;
+    return 0;
+}

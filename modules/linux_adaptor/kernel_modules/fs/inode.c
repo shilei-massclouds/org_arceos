@@ -760,6 +760,104 @@ int insert_inode_locked(struct inode *inode)
     PANIC("");
 }
 
+/**
+ * clear_nlink - directly zero an inode's link count
+ * @inode: inode
+ *
+ * This is a low-level filesystem helper to replace any
+ * direct filesystem manipulation of i_nlink.  See
+ * drop_nlink() for why we care about i_nlink hitting zero.
+ */
+void clear_nlink(struct inode *inode)
+{
+    if (inode->i_nlink) {
+        inode->__i_nlink = 0;
+        atomic_long_inc(&inode->i_sb->s_remove_count);
+    }
+}
+
+/**
+ * timestamp_truncate - Truncate timespec to a granularity
+ * @t: Timespec
+ * @inode: inode being updated
+ *
+ * Truncate a timespec to the granularity supported by the fs
+ * containing the inode. Always rounds down. gran must
+ * not be 0 nor greater than a second (NSEC_PER_SEC, or 10^9 ns).
+ */
+struct timespec64 timestamp_truncate(struct timespec64 t, struct inode *inode)
+{
+    struct super_block *sb = inode->i_sb;
+    unsigned int gran = sb->s_time_gran;
+
+    t.tv_sec = clamp(t.tv_sec, sb->s_time_min, sb->s_time_max);
+    if (unlikely(t.tv_sec == sb->s_time_max || t.tv_sec == sb->s_time_min))
+        t.tv_nsec = 0;
+
+    /* Avoid division in the common cases 1 ns and 1 s. */
+    if (gran == 1)
+        ; /* nothing */
+    else if (gran == NSEC_PER_SEC)
+        t.tv_nsec = 0;
+    else if (gran > 1 && gran < NSEC_PER_SEC)
+        t.tv_nsec -= t.tv_nsec % gran;
+    else
+        WARN(1, "invalid file time granularity: %u", gran);
+    return t;
+}
+
+/**
+ * current_time - Return FS time
+ * @inode: inode.
+ *
+ * Return the current time truncated to the time granularity supported by
+ * the fs.
+ *
+ * Note that inode and inode->sb cannot be NULL.
+ * Otherwise, the function warns and returns time without truncation.
+ */
+struct timespec64 current_time(struct inode *inode)
+{
+    struct timespec64 now;
+
+    ktime_get_coarse_real_ts64(&now);
+    return timestamp_truncate(now, inode);
+}
+EXPORT_SYMBOL(current_time);
+
+/**
+ * inode_set_ctime_current - set the ctime to current_time
+ * @inode: inode
+ *
+ * Set the inode->i_ctime to the current value for the inode. Returns
+ * the current value that was assigned to i_ctime.
+ */
+struct timespec64 inode_set_ctime_current(struct inode *inode)
+{
+    struct timespec64 now = current_time(inode);
+
+    inode_set_ctime_to_ts(inode, now);
+    return now;
+}
+
+/**
+ * inc_nlink - directly increment an inode's link count
+ * @inode: inode
+ *
+ * This is a low-level filesystem helper to replace any
+ * direct filesystem manipulation of i_nlink.  Currently,
+ * it is only here for parity with dec_nlink().
+ */
+void inc_nlink(struct inode *inode)
+{
+    if (unlikely(inode->i_nlink == 0)) {
+        WARN_ON(!(inode->i_state & I_LINKABLE));
+        atomic_long_dec(&inode->i_sb->s_remove_count);
+    }
+
+    inode->__i_nlink++;
+}
+
 /*
  * Initialize the waitqueues and inode hash table.
  */

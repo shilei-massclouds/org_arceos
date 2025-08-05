@@ -451,3 +451,8 @@ signed long __sched schedule_timeout(signed long timeout)
     printk("=========> %s: step3 timeout(%ld)\n", __func__, timeout);
     return timeout < 0 ? 0 : timeout;
 }
+
+void add_timer_on(struct timer_list *timer, int cpu)
+{
+    pr_err("%s: No impl.", __func__);
+}

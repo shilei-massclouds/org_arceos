@@ -594,6 +594,58 @@ static void __init dcache_init(void)
     PANIC("");
 }
 
+/**
+ * d_alloc  -   allocate a dcache entry
+ * @parent: parent of entry to allocate
+ * @name: qstr of the name
+ *
+ * Allocates a dentry. It returns %NULL if there is insufficient memory
+ * available. On a success the dentry is returned. The name passed in is
+ * copied and the copy passed in may be reused after this call.
+ */
+struct dentry *d_alloc(struct dentry * parent, const struct qstr *name)
+{
+    struct dentry *dentry = __d_alloc(parent->d_sb, name);
+    if (!dentry)
+        return NULL;
+    spin_lock(&parent->d_lock);
+    /*
+     * don't need child lock because it is not subject
+     * to concurrency here
+     */
+    dentry->d_parent = dget_dlock(parent);
+    hlist_add_head(&dentry->d_sib, &parent->d_children);
+    spin_unlock(&parent->d_lock);
+
+    return dentry;
+}
+
+/*
+ * This should be equivalent to d_instantiate() + unlock_new_inode(),
+ * with lockdep-related part of unlock_new_inode() done before
+ * anything else.  Use that instead of open-coding d_instantiate()/
+ * unlock_new_inode() combinations.
+ */
+void d_instantiate_new(struct dentry *entry, struct inode *inode)
+{
+    BUG_ON(!hlist_unhashed(&entry->d_u.d_alias));
+    BUG_ON(!inode);
+    lockdep_annotate_inode_mutex_key(inode);
+    //security_d_instantiate(entry, inode);
+    spin_lock(&inode->i_lock);
+    __d_instantiate(entry, inode);
+    WARN_ON(!(inode->i_state & I_NEW));
+    inode->i_state &= ~I_NEW & ~I_CREATING;
+    /*
+     * Pairs with the barrier in prepare_to_wait_event() to make sure
+     * ___wait_var_event() either sees the bit cleared or
+     * waitqueue_active() check in wake_up_var() sees the waiter.
+     */
+    smp_mb();
+    inode_wake_up_bit(inode, __I_NEW);
+    spin_unlock(&inode->i_lock);
+}
+
 void __init vfs_caches_init_early(void)
 {
     int i;

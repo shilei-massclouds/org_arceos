@@ -231,26 +231,32 @@ static void test_dir_iter(struct inode *root)
     printk("iterate dir Ok!\n");
 }
 
-static void test_dir_ops(struct inode *root, const char *dirname)
+static void test_dir_ops(struct dentry *root_dentry, const char *dirname)
 {
-    struct inode *dir;
-    dir = lookup_inode(root, dirname);
+    struct inode *root = root_dentry->d_inode;
+    struct inode *dir = lookup_inode(root, dirname);
     if (dir) {
         PANIC("dir already exists.");
     }
 
     printk("create dir '%s' ..\n", dirname);
 
+#if 0
     struct dentry target;
     memset(&target, 0, sizeof(struct dentry));
     target.d_name.name = dirname;
     target.d_name.len = strlen(target.d_name.name);
     target.d_name.hash = 0;
+    target.d_parent = &target;
+#endif
+    struct qstr qname = QSTR(dirname);
+    struct dentry *target = d_alloc(root_dentry, &qname);
 
-    if (root->i_op->mkdir(&nop_mnt_idmap, root, &target, 0777)) {
+    if (root->i_op->mkdir(&nop_mnt_idmap, root, target, 0777)) {
         PANIC("create dir error.");
     }
-    PANIC("");
+
+    printk("create dir '%s' ok!\n", dirname);
 }
 
 void test_ext4(struct dentry *root)
@@ -270,5 +276,5 @@ void test_ext4(struct dentry *root)
     /*
      * Test create/delete dir.
      */
-    test_dir_ops(root_inode, "new_dir");
+    test_dir_ops(root, "new_dir");
 }
