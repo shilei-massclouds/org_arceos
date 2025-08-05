@@ -116,21 +116,31 @@ prepare_inode(struct dentry *root)
     return root_inode;
 }
 
-static void test_basic(struct inode *root,
-                       const char *fs_name,
-                       const char *fname)
+static struct inode *
+lookup_inode(struct inode *root, const char *fname)
 {
     /* Lookup inode of filesystem. */
     unsigned int lookup_flags = 0;
+    struct dentry *ret;
     struct dentry target;
     memset(&target, 0, sizeof(struct dentry));
     target.d_name.name = fname;
     target.d_name.len = strlen(target.d_name.name);
     target.d_name.hash = 0;
 
-    root->i_op->lookup(root, &target, lookup_flags);
+    ret = root->i_op->lookup(root, &target, lookup_flags);
+    if (IS_ERR(ret)) {
+        PANIC("lookup error.");
+    }
+    return target.d_inode;
+}
 
-    struct inode *t_inode = target.d_inode;
+static void test_basic(struct inode *root,
+                       const char *fs_name,
+                       const char *fname)
+{
+    struct inode *t_inode;
+    t_inode = lookup_inode(root, fname);
     if (t_inode == NULL || t_inode->i_mapping == NULL) {
         PANIC("bad inode.");
     }
@@ -221,6 +231,28 @@ static void test_dir_iter(struct inode *root)
     printk("iterate dir Ok!\n");
 }
 
+static void test_dir_ops(struct inode *root, const char *dirname)
+{
+    struct inode *dir;
+    dir = lookup_inode(root, dirname);
+    if (dir) {
+        PANIC("dir already exists.");
+    }
+
+    printk("create dir '%s' ..\n", dirname);
+
+    struct dentry target;
+    memset(&target, 0, sizeof(struct dentry));
+    target.d_name.name = dirname;
+    target.d_name.len = strlen(target.d_name.name);
+    target.d_name.hash = 0;
+
+    if (root->i_op->mkdir(&nop_mnt_idmap, root, &target, 0777)) {
+        PANIC("create dir error.");
+    }
+    PANIC("");
+}
+
 void test_ext4(struct dentry *root)
 {
     struct inode *root_inode = prepare_inode(root);
@@ -234,4 +266,9 @@ void test_ext4(struct dentry *root)
      * Test dir iterate.
      */
     test_dir_iter(root_inode);
+
+    /*
+     * Test create/delete dir.
+     */
+    test_dir_ops(root_inode, "new_dir");
 }

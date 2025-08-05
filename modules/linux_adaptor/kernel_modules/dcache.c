@@ -15,10 +15,3 @@ struct dentry *d_make_root(struct inode *root_inode)
 
     return dentry;
 }
-
-struct dentry *d_splice_alias(struct inode *inode, struct dentry *dentry){
-    log_debug("%s: inode(%lx, %u) dentry(%lx)\n",
-              __func__, inode, inode->i_ino, dentry);
-    dentry->d_inode = inode;
-    return dentry;
-}
