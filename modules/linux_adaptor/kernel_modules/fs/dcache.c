@@ -125,6 +125,17 @@ struct dentry *d_make_root(struct inode *root_inode)
     return res;
 }
 
+static struct dentry * __d_find_any_alias(struct inode *inode)
+{
+    struct dentry *alias;
+
+    if (hlist_empty(&inode->i_dentry))
+        return NULL;
+    alias = hlist_entry(inode->i_dentry.first, struct dentry, d_u.d_alias);
+    lockref_get(&alias->d_lockref);
+    return alias;
+}
+
 /**
  * __d_alloc    -   allocate a dcache entry
  * @sb: filesystem it will belong to
@@ -493,9 +504,9 @@ struct dentry *d_splice_alias(struct inode *inode, struct dentry *dentry)
     //security_d_instantiate(dentry, inode);
     spin_lock(&inode->i_lock);
     if (S_ISDIR(inode->i_mode)) {
-#if 0
         struct dentry *new = __d_find_any_alias(inode);
         if (unlikely(new)) {
+#if 0
             /* The reference to new ensures it remains an alias */
             spin_unlock(&inode->i_lock);
             write_seqlock(&rename_lock);
@@ -524,9 +535,9 @@ struct dentry *d_splice_alias(struct inode *inode, struct dentry *dentry)
             }
             iput(inode);
             return new;
-        }
 #endif
-        PANIC("DIR");
+            PANIC("DIR");
+        }
     }
 out:
     __d_add(dentry, inode);

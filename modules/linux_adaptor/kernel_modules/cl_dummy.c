@@ -115,11 +115,27 @@ struct cpumask *group_cpus_evenly(unsigned int numgrps)
 
 kuid_t make_kuid(struct user_namespace *ns, uid_t uid)
 {
+    pr_err("%s: No impl.", __func__);
+    return KUIDT_INIT(0);
+}
+
+kuid_t from_vfsuid(struct mnt_idmap *idmap,
+           struct user_namespace *fs_userns, vfsuid_t vfsuid)
+{
+    pr_err("%s: No impl.", __func__);
     return KUIDT_INIT(0);
 }
 
 kgid_t make_kgid(struct user_namespace *ns, gid_t gid)
 {
+    pr_err("%s: No impl.", __func__);
+    return KGIDT_INIT(0);
+}
+
+kgid_t from_vfsgid(struct mnt_idmap *idmap,
+           struct user_namespace *fs_userns, vfsgid_t vfsgid)
+{
+    pr_err("%s: No impl.", __func__);
     return KGIDT_INIT(0);
 }
 

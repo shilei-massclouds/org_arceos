@@ -853,7 +853,6 @@ struct buffer_head *ext4_getblk(handle_t *handle, struct inode *inode,
 	map.m_len = 1;
     printk("%s: step1\n", __func__);
 	err = ext4_map_blocks(handle, inode, &map, map_flags);
-    printk("%s: step2 err(%d)\n", __func__, err);
 
 	if (err == 0)
 		return create ? ERR_PTR(-ENOSPC) : NULL;
@@ -5070,6 +5069,7 @@ struct inode *__ext4_iget(struct super_block *sb, unsigned long ino,
 	if (ret)
 		goto bad_inode;
 
+    printk("%s: step1 i_mode(%u) ino(%u)\n", __func__, inode->i_mode, inode->i_ino);
 	if (S_ISREG(inode->i_mode)) {
 		inode->i_op = &ext4_file_inode_operations;
 		inode->i_fop = &ext4_file_operations;
@@ -5108,6 +5108,7 @@ struct inode *__ext4_iget(struct super_block *sb, unsigned long ino,
 	} else if (ino == EXT4_BOOT_LOADER_INO) {
 		make_bad_inode(inode);
 	} else {
+    printk("%s: EFSCORRUPTED\n", __func__);
 		ret = -EFSCORRUPTED;
 		ext4_error_inode(inode, function, line, 0,
 				 "iget: bogus i_mode (%o)", inode->i_mode);

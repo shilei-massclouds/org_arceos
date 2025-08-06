@@ -912,7 +912,6 @@ skip_update:
 void inode_init_owner(struct mnt_idmap *idmap, struct inode *inode,
               const struct inode *dir, umode_t mode)
 {
-#if 0
     inode_fsuid_set(inode, idmap);
     if (dir && dir->i_mode & S_ISGID) {
         inode->i_gid = dir->i_gid;
@@ -923,8 +922,6 @@ void inode_init_owner(struct mnt_idmap *idmap, struct inode *inode,
     } else
         inode_fsgid_set(inode, idmap);
     inode->i_mode = mode;
-#endif
-    pr_err("%s: No impl.", __func__);
 }
 
 int insert_inode_locked(struct inode *inode)

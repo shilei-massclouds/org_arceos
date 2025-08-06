@@ -199,7 +199,7 @@ bool is_bad_inode(struct inode *inode)
  */
 void iget_failed(struct inode *inode)
 {
-    printk("%s: ..\n", __func__);
+    printk("%s: .. ino(%u)\n", __func__, inode->i_ino);
     make_bad_inode(inode);
     unlock_new_inode(inode);
     iput(inode);

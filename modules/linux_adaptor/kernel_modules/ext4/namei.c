@@ -1796,7 +1796,11 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 	if (dentry->d_name.len > EXT4_NAME_LEN)
 		return ERR_PTR(-ENAMETOOLONG);
 
+    printk("%s: dir.ino(%u) dentry.inode(%lx)\n", __func__, dir->i_ino, dentry->d_inode);
 	bh = ext4_lookup_entry(dir, dentry, &de);
+    if (dentry && dentry->d_inode) {
+        printk("%s: step2.1 target.ino(%u)\n", __func__, dentry->d_inode->i_ino);
+    }
 	if (IS_ERR(bh))
 		return ERR_CAST(bh);
 	inode = NULL;
@@ -1812,6 +1816,7 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 					 dentry);
 			return ERR_PTR(-EFSCORRUPTED);
 		}
+    printk("%s: step1 ino(%u)\n", __func__, ino);
 		inode = ext4_iget(dir->i_sb, ino, EXT4_IGET_NORMAL);
 		if (inode == ERR_PTR(-ESTALE)) {
 			EXT4_ERROR_INODE(dir,
@@ -1828,6 +1833,7 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 			iput(inode);
 			return ERR_PTR(-EPERM);
 		}
+    printk("%s: step3\n", __func__);
 	}
 
 	if (IS_ENABLED(CONFIG_UNICODE) && !inode && IS_CASEFOLDED(dir)) {

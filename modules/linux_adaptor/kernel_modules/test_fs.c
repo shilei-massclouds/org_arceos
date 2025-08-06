@@ -147,15 +147,15 @@ static void test_basic(struct inode *root,
     }
     printk("%s: target inode(%lx)\n", __func__, t_inode);
 
-    printk("\n\n============== FS READ (first) =============\n\n");
+    printk("\n\n============== FILE READ (first) =============\n\n");
 
     test_read(t_inode, fs_name);
 
-    printk("\n\n============== FS WRITE (first) =============\n\n");
+    printk("\n\n============== FILE WRITE (first) =============\n\n");
 
     test_write(t_inode, fs_name);
 
-    printk("\n\n============== TEST FS OK! =============\n\n");
+    printk("\n\n============== FILE RW OK! =============\n\n");
 }
 
 static int _iterate_dir(struct inode *inode, struct dir_context *ctx)
@@ -234,6 +234,9 @@ static void test_dir_iter(struct inode *root)
 
 static void test_dir_ops(struct dentry *root_dentry, const char *dirname)
 {
+    printk("\n\n============== DIR CREATE =============\n\n");
+    printk("check dir '%s' ..\n", dirname);
+
     struct inode *root = root_dentry->d_inode;
     struct inode *dir = lookup_inode(root, dirname);
     if (dir) {
