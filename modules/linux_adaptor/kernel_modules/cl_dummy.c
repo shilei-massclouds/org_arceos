@@ -342,3 +342,8 @@ int fsnotify(__u32 mask, const void *data, int data_type, struct inode *dir,
     pr_err("%s: No impl.", __func__);
     return 0;
 }
+
+void __fsnotify_inode_delete(struct inode *inode)
+{
+    pr_err("%s: No impl.", __func__);
+}

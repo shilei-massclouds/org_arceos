@@ -1,5 +1,6 @@
 #include <linux/fs.h>
 #include <linux/dirent.h>
+#include <linux/blkdev.h>
 
 #include "adaptor.h"
 
@@ -306,7 +307,6 @@ static void test_dir_ops(struct dentry *root_dentry, const char *dirname)
     struct dentry *dir = lookup(root_dentry, dirname);
     if (dir) {
         printk("dir '%s' already exists.\n", dirname);
-        //delete_dir(root_dentry, dir);
         PANIC("dir already exists.");
     }
 
@@ -338,6 +338,7 @@ static void test_file_ops(struct dentry *root_dentry, const char *fname)
         if (find) {
             PANIC("cannot delete file.");
         }
+        //PANIC("file already exists.");
     }
 
     printk("create file '%s' ..\n", fname);
@@ -348,6 +349,7 @@ static void test_file_ops(struct dentry *root_dentry, const char *fname)
     if (root->i_op->create(&nop_mnt_idmap, root, target, 0777|S_IFREG, false)) {
         PANIC("create dir error.");
     }
+    dput(target);
 
     printk("create file '%s' ok!\n", fname);
 
@@ -359,11 +361,14 @@ static void test_file_ops(struct dentry *root_dentry, const char *fname)
     printk("file i_mode(%x)\n", f->i_mode);
     test_write(f, "");
 
+    printk("write file '%s' count(%d) ok!\n", fname, f->i_count);
+
     printk("delete file '%s' ..\n", fname);
 
     if (root->i_op->unlink(root, find)) {
         PANIC("unlink dir error.");
     }
+    dput(find);
 
     find = lookup(root_dentry, fname);
     if (find) {
@@ -401,4 +406,8 @@ void test_ext4(struct dentry *root)
      * Test dir iterate (again).
      */
     test_dir_iter(root_inode);
+
+    printk("=========== %s: flush blkdev ...\n", __func__);
+    int err = blkdev_issue_flush(root_inode->i_sb->s_bdev);
+    printk("=========== %s: flush blkdev OK! err(%d)\n", __func__, err);
 }
