@@ -77,6 +77,11 @@ static inline bool bio_will_gap(struct request_queue *q,
     PANIC("");
 }
 
+static inline bool req_gap_front_merge(struct request *req, struct bio *bio)
+{
+    return bio_will_gap(req->q, NULL, bio, req->bio);
+}
+
 static inline bool req_gap_back_merge(struct request *req, struct bio *bio)
 {
     return bio_will_gap(req->q, req, req->biotail, bio);
@@ -143,6 +148,37 @@ enum bio_merge_status bio_attempt_back_merge(struct request *req,
     return BIO_MERGE_OK;
 }
 
+static inline int ll_new_hw_segment(struct request *req, struct bio *bio,
+        unsigned int nr_phys_segs)
+{
+    if (!blk_cgroup_mergeable(req, bio))
+        goto no_merge;
+
+    if (blk_integrity_merge_bio(req->q, req, bio) == false)
+        goto no_merge;
+
+    /* discard request merge won't add new segment */
+    if (req_op(req) == REQ_OP_DISCARD)
+        return 1;
+
+    if (req->nr_phys_segments + nr_phys_segs > blk_rq_get_max_segments(req))
+        goto no_merge;
+
+    /*
+     * This will form the start of a new hw segment.  Bump both
+     * counters.
+     */
+    req->nr_phys_segments += nr_phys_segs;
+    if (bio_integrity(bio))
+        req->nr_integrity_segments += blk_rq_count_integrity_sg(req->q,
+                                    bio);
+    return 1;
+
+no_merge:
+    req_set_nomerge(req->q, req);
+    return 0;
+}
+
 static inline unsigned int blk_rq_get_max_sectors(struct request *rq,
                           sector_t offset)
 {
@@ -189,9 +225,62 @@ int ll_back_merge_fn(struct request *req, struct bio *bio, unsigned int nr_segs)
     PANIC("");
 }
 
+static int ll_front_merge_fn(struct request *req, struct bio *bio,
+        unsigned int nr_segs)
+{
+    if (req_gap_front_merge(req, bio))
+        return 0;
+    if (blk_integrity_rq(req) &&
+        integrity_req_gap_front_merge(req, bio))
+        return 0;
+    if (!bio_crypt_ctx_front_mergeable(req, bio))
+        return 0;
+    if (blk_rq_sectors(req) + bio_sectors(bio) >
+        blk_rq_get_max_sectors(req, bio->bi_iter.bi_sector)) {
+        req_set_nomerge(req->q, req);
+        return 0;
+    }
+
+    return ll_new_hw_segment(req, bio, nr_segs);
+}
+
 static enum bio_merge_status bio_attempt_front_merge(struct request *req,
         struct bio *bio, unsigned int nr_segs)
 {
+    const blk_opf_t ff = bio_failfast(bio);
+
+    /*
+     * A front merge for writes to sequential zones of a zoned block device
+     * can happen only if the user submitted writes out of order. Do not
+     * merge such write to let it fail.
+     */
+    if (req->rq_flags & RQF_ZONE_WRITE_PLUGGING)
+        return BIO_MERGE_FAILED;
+
+    if (!ll_front_merge_fn(req, bio, nr_segs))
+        return BIO_MERGE_FAILED;
+
+#if 0
+    trace_block_bio_frontmerge(bio);
+    rq_qos_merge(req->q, req, bio);
+
+    if ((req->cmd_flags & REQ_FAILFAST_MASK) != ff)
+        blk_rq_set_mixed_merge(req);
+
+    blk_update_mixed_merge(req, bio, true);
+
+    bio->bi_next = req->bio;
+    req->bio = bio;
+
+    req->__sector = bio->bi_iter.bi_sector;
+    req->__data_len += bio->bi_iter.bi_size;
+
+    bio_crypt_do_front_merge(req, bio);
+
+    blk_account_io_merge_bio(req);
+    return BIO_MERGE_OK;
+#endif
+
     PANIC("");
 }
 

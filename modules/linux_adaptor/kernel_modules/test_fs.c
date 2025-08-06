@@ -136,6 +136,29 @@ lookup_inode(struct inode *root, const char *fname)
     return target.d_inode;
 }
 
+static struct dentry *
+lookup(struct dentry *parent, const char *name)
+{
+    /* Lookup inode by name in parent dir. */
+    struct dentry *ret;
+    struct inode *parent_inode = parent->d_inode;
+    unsigned int lookup_flags = 0;
+    struct qstr qname = QSTR(name);
+    struct dentry *target = d_alloc(parent, &qname);
+
+    printk("%s: step1\n", __func__);
+    ret = parent_inode->i_op->lookup(parent_inode, target, lookup_flags);
+    printk("%s: step2\n", __func__);
+    if (IS_ERR(ret)) {
+        printk("%s: err(%d)\n", __func__, PTR_ERR(ret));
+        PANIC("lookup error.");
+    }
+    if (target->d_inode) {
+        return target;
+    }
+    return NULL;
+}
+
 static void test_basic(struct inode *root,
                        const char *fs_name,
                        const char *fname)
@@ -232,31 +255,75 @@ static void test_dir_iter(struct inode *root)
     printk("iterate dir Ok!\n");
 }
 
+static struct dentry *
+create_dir(struct dentry *parent, const char *dname)
+{
+    struct inode *parent_inode = parent->d_inode;
+    struct qstr qname = QSTR(dname);
+    struct dentry *target = d_alloc(parent, &qname);
+
+    if (parent_inode->i_op->mkdir(&nop_mnt_idmap, parent_inode, target, 0777)) {
+        PANIC("create dir error.");
+    }
+    if (target->d_inode == NULL) {
+        PANIC("bad dentry for no inode.");
+    }
+
+    return target;
+}
+
+static int
+delete_dir(struct dentry *parent, struct dentry *target)
+{
+    struct inode *parent_inode = parent->d_inode;
+#if 0
+    struct dentry *target = lookup(parent, dname);
+    if (target == NULL) {
+        printk("No target dentry '%s'.", dname);
+        PANIC("No target dentry.");
+    }
+    struct qstr qname = QSTR(dname);
+    struct dentry *target = d_alloc(parent, &qname);
+    target->d_inode = inode;
+#endif
+
+    if (parent_inode->i_op->rmdir(parent_inode, target)) {
+        PANIC("delete dir error.");
+    }
+
+    return 0;
+}
+
 static void test_dir_ops(struct dentry *root_dentry, const char *dirname)
 {
-    printk("\n\n============== DIR CREATE =============\n\n");
+    printk("\n\n============== DIR CREATE && DELETE =============\n\n");
     printk("check dir '%s' ..\n", dirname);
 
     struct inode *root = root_dentry->d_inode;
-    struct inode *dir = lookup_inode(root, dirname);
+    struct dentry *dir = lookup(root_dentry, dirname);
     if (dir) {
+        printk("dir '%s' already exists.\n", dirname);
+        //delete_dir(root_dentry, dir);
         PANIC("dir already exists.");
     }
 
     printk("create dir '%s' ..\n", dirname);
 
-    struct qstr qname = QSTR(dirname);
-    struct dentry *target = d_alloc(root_dentry, &qname);
-
-    if (root->i_op->mkdir(&nop_mnt_idmap, root, target, 0777)) {
-        PANIC("create dir error.");
-    }
+    dir = create_dir(root_dentry, dirname);
 
     printk("create dir '%s' ok!\n", dirname);
+
+    printk("delete dir '%s' ..\n", dirname);
+
+    delete_dir(root_dentry, dir);
+
+    printk("delete dir '%s' ok!\n", dirname);
 }
 
-static void test_create_file(struct dentry *root_dentry, const char *fname)
+static void test_file_ops(struct dentry *root_dentry, const char *fname)
 {
+    printk("\n\n============== FILE CREATE && DELETE =============\n\n");
+
     struct inode *root = root_dentry->d_inode;
     struct inode *f = lookup_inode(root, fname);
     if (f) {
@@ -268,7 +335,7 @@ static void test_create_file(struct dentry *root_dentry, const char *fname)
     struct qstr qname = QSTR(fname);
     struct dentry *target = d_alloc(root_dentry, &qname);
 
-    if (root->i_op->create(&nop_mnt_idmap, root, target, 0777, false)) {
+    if (root->i_op->create(&nop_mnt_idmap, root, target, 0777|S_IFREG, false)) {
         PANIC("create dir error.");
     }
 
@@ -278,7 +345,16 @@ static void test_create_file(struct dentry *root_dentry, const char *fname)
     if (f == NULL) {
         PANIC("no file.");
     }
+    printk("file i_mode(%x)\n", f->i_mode);
     test_write(f, "");
+
+    printk("delete file '%s' ..\n", fname);
+
+    if (root->i_op->unlink(root, target)) {
+        PANIC("unlink dir error.");
+    }
+
+    printk("delete file '%s' ok!\n", fname);
 }
 
 void test_ext4(struct dentry *root)
@@ -303,7 +379,7 @@ void test_ext4(struct dentry *root)
     /*
      * Test create/delete dir.
      */
-    test_create_file(root, "new_file");
+    test_file_ops(root, "new_file");
 
     /*
      * Test dir iterate (again).

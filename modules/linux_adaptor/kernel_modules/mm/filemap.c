@@ -901,8 +901,7 @@ out:
 unsigned filemap_get_folios(struct address_space *mapping, pgoff_t *start,
         pgoff_t end, struct folio_batch *fbatch)
 {
-    PANIC("");
-    //return filemap_get_folios_tag(mapping, start, end, XA_PRESENT, fbatch);
+    return filemap_get_folios_tag(mapping, start, end, XA_PRESENT, fbatch);
 }
 
 /**

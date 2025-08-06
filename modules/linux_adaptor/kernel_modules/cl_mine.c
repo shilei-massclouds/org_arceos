@@ -104,7 +104,6 @@ CL_MINE(truncate_setsize)
 // ext2/namei
 CL_MINE(discard_new_inode)
 CL_MINE(d_obtain_alias)
-CL_MINE(drop_nlink)
 CL_MINE(d_tmpfile)
 CL_MINE(page_symlink)
 
@@ -125,7 +124,6 @@ CL_MINE(iter_file_splice_write)
 
 // ext2/balloc
 CL_MINE(bh_submit_read)
-CL_MINE(inode_sub_bytes)
 CL_MINE(memscan)
 
 // ext2/ialloc
@@ -296,7 +294,6 @@ CL_MINE(sysfs_notify)
 CL_MINE(generic_buffers_fsync_noflush)
 
 // jbd2
-CL_MINE(__bforget)
 CL_MINE(crc32_be)
 CL_MINE(filemap_fdatawait_range_keep_errors)
 CL_MINE(filemap_fdatawrite_range)
@@ -308,7 +305,6 @@ CL_MINE(seq_lseek)
 CL_MINE(seq_open)
 CL_MINE(seq_read)
 CL_MINE(seq_release)
-CL_MINE(write_dirty_buffer)
 
 CL_MINE(percpu_counter_batch)
 

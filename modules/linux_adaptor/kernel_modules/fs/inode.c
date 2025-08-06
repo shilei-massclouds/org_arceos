@@ -1086,6 +1086,25 @@ void __remove_inode_hash(struct inode *inode)
     spin_unlock(&inode_hash_lock);
 }
 
+/**
+ * drop_nlink - directly drop an inode's link count
+ * @inode: inode
+ *
+ * This is a low-level filesystem helper to replace any
+ * direct filesystem manipulation of i_nlink.  In cases
+ * where we are attempting to track writes to the
+ * filesystem, a decrement to zero means an imminent
+ * write when the file is truncated and actually unlinked
+ * on the filesystem.
+ */
+void drop_nlink(struct inode *inode)
+{
+    WARN_ON(inode->i_nlink == 0);
+    inode->__i_nlink--;
+    if (!inode->i_nlink)
+        atomic_long_inc(&inode->i_sb->s_remove_count);
+}
+
 /*
  * Initialize the waitqueues and inode hash table.
  */

@@ -176,6 +176,7 @@ int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 void __might_sleep(const char *file, int line)
 {
     unsigned int state = get_current_state();
+#if 0
     /*
      * Blocking primitives will set (and therefore destroy) current->state,
      * since we will exit with TASK_RUNNING make sure we enter with it,
@@ -186,6 +187,8 @@ void __might_sleep(const char *file, int line)
             "state=%x set at [<%p>] %pS\n", state,
             (void *)current->task_state_change,
             (void *)current->task_state_change);
+#endif
+    pr_err("%s: No impl.", __func__);
 
     __might_resched(file, line, 0);
 }

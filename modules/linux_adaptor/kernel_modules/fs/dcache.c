@@ -498,6 +498,7 @@ struct dentry *d_splice_alias(struct inode *inode, struct dentry *dentry)
 
     BUG_ON(!d_unhashed(dentry));
 
+    printk("%s: step1\n", __func__);
     if (!inode)
         goto out;
 

@@ -107,8 +107,11 @@ int ext4_orphan_add(handle_t *handle, struct inode *inode)
 	if (!sbi->s_journal || is_bad_inode(inode))
 		return 0;
 
+    pr_err("%s: No impl for 'inode_is_locked'.", __func__);
+    /*
 	WARN_ON_ONCE(!(inode->i_state & (I_NEW | I_FREEING)) &&
 		     !inode_is_locked(inode));
+             */
 	/*
 	 * Inode orphaned in orphan file or in orphan list?
 	 */

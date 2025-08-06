@@ -1683,6 +1683,39 @@ void invalidate_inode_buffers(struct inode *inode)
     }
 }
 
+/**
+ * __bforget - Discard any dirty data in a buffer.
+ * @bh: The buffer to forget.
+ *
+ * This variant of bforget() can be called if @bh is guaranteed to not
+ * be NULL.
+ */
+void __bforget(struct buffer_head *bh)
+{
+    clear_buffer_dirty(bh);
+    if (bh->b_assoc_map) {
+        struct address_space *buffer_mapping = bh->b_folio->mapping;
+
+        spin_lock(&buffer_mapping->i_private_lock);
+        list_del_init(&bh->b_assoc_buffers);
+        bh->b_assoc_map = NULL;
+        spin_unlock(&buffer_mapping->i_private_lock);
+    }
+    __brelse(bh);
+}
+
+void write_dirty_buffer(struct buffer_head *bh, blk_opf_t op_flags)
+{
+    lock_buffer(bh);
+    if (!test_clear_buffer_dirty(bh)) {
+        unlock_buffer(bh);
+        return;
+    }
+    bh->b_end_io = end_buffer_write_sync;
+    get_bh(bh);
+    submit_bh(REQ_OP_WRITE | op_flags, bh);
+}
+
 void __init buffer_init(void)
 {
     unsigned long nrpages;

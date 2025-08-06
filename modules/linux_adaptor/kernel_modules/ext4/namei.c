@@ -1580,6 +1580,7 @@ static struct buffer_head *__ext4_find_entry(struct inode *dir,
 			goto cleanup_and_exit;
 	}
 
+    printk("%s: step1 name(%s)\n", __func__, name);
 	if ((namelen <= 2) && (name[0] == '.') &&
 	    (name[1] == '.' || name[1] == '\0')) {
 		/*
@@ -1708,7 +1709,9 @@ static struct buffer_head *ext4_find_entry(struct inode *dir,
 	if (err)
 		return ERR_PTR(err);
 
+    printk("%s: step1\n", __func__);
 	bh = __ext4_find_entry(dir, &fname, res_dir, inlined);
+    printk("%s: step2 bh(%lx)\n", __func__, bh);
 
 	ext4_fname_free_filename(&fname);
 	return bh;
@@ -1833,7 +1836,6 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 			iput(inode);
 			return ERR_PTR(-EPERM);
 		}
-    printk("%s: step3\n", __func__);
 	}
 
 	if (IS_ENABLED(CONFIG_UNICODE) && !inode && IS_CASEFOLDED(dir)) {
@@ -1845,6 +1847,7 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 		return NULL;
 	}
 
+    printk("%s: stepN\n", __func__);
 	return d_splice_alias(inode, dentry);
 }
 
@@ -3167,6 +3170,7 @@ static int ext4_rmdir(struct inode *dir, struct dentry *dentry)
 	struct ext4_dir_entry_2 *de;
 	handle_t *handle = NULL;
 
+    printk("%s: step1\n", __func__);
 	if (unlikely(ext4_forced_shutdown(dir->i_sb)))
 		return -EIO;
 
@@ -3179,6 +3183,7 @@ static int ext4_rmdir(struct inode *dir, struct dentry *dentry)
 	if (retval)
 		return retval;
 
+    printk("%s: step2\n", __func__);
 	retval = -ENOENT;
 	bh = ext4_find_entry(dir, &dentry->d_name, &de, NULL);
 	if (IS_ERR(bh))
