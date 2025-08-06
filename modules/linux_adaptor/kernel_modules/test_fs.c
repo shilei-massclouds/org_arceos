@@ -116,6 +116,7 @@ prepare_inode(struct dentry *root)
     return root_inode;
 }
 
+#if 0
 static struct inode *
 lookup_inode(struct inode *root, const char *fname)
 {
@@ -135,6 +136,7 @@ lookup_inode(struct inode *root, const char *fname)
     }
     return target.d_inode;
 }
+#endif
 
 static struct dentry *
 lookup(struct dentry *parent, const char *name)
@@ -159,24 +161,25 @@ lookup(struct dentry *parent, const char *name)
     return NULL;
 }
 
-static void test_basic(struct inode *root,
-                       const char *fs_name,
-                       const char *fname)
+static void test_file_rw(struct dentry *root,
+                         const char *fs_name,
+                         const char *fname)
 {
-    struct inode *t_inode;
-    t_inode = lookup_inode(root, fname);
-    if (t_inode == NULL || t_inode->i_mapping == NULL) {
-        PANIC("bad inode.");
+    printk("\n\n============== LOOKUP FILE =============\n\n");
+
+    struct dentry *target;
+    target = lookup(root, fname);
+    if (target == NULL || target->d_inode == NULL) {
+        PANIC("bad dentry.");
     }
-    printk("%s: target inode(%lx)\n", __func__, t_inode);
 
     printk("\n\n============== FILE READ (first) =============\n\n");
 
-    test_read(t_inode, fs_name);
+    test_read(target->d_inode, fs_name);
 
     printk("\n\n============== FILE WRITE (first) =============\n\n");
 
-    test_write(t_inode, fs_name);
+    test_write(target->d_inode, fs_name);
 
     printk("\n\n============== FILE RW OK! =============\n\n");
 }
@@ -325,9 +328,16 @@ static void test_file_ops(struct dentry *root_dentry, const char *fname)
     printk("\n\n============== FILE CREATE && DELETE =============\n\n");
 
     struct inode *root = root_dentry->d_inode;
-    struct inode *f = lookup_inode(root, fname);
-    if (f) {
-        PANIC("file already exists.");
+    struct dentry *find = lookup(root_dentry, fname);
+    if (find) {
+        printk("file '%s' already exists.\n", fname);
+        if (root->i_op->unlink(root, find)) {
+            PANIC("unlink dir error.");
+        }
+        find = lookup(root_dentry, fname);
+        if (find) {
+            PANIC("cannot delete file.");
+        }
     }
 
     printk("create file '%s' ..\n", fname);
@@ -341,17 +351,23 @@ static void test_file_ops(struct dentry *root_dentry, const char *fname)
 
     printk("create file '%s' ok!\n", fname);
 
-    f = lookup_inode(root, fname);
-    if (f == NULL) {
+    find = lookup(root_dentry, fname);
+    if (find == NULL) {
         PANIC("no file.");
     }
+    struct inode *f = find->d_inode;
     printk("file i_mode(%x)\n", f->i_mode);
     test_write(f, "");
 
     printk("delete file '%s' ..\n", fname);
 
-    if (root->i_op->unlink(root, target)) {
+    if (root->i_op->unlink(root, find)) {
         PANIC("unlink dir error.");
+    }
+
+    find = lookup(root_dentry, fname);
+    if (find) {
+        PANIC("cannot delete file.");
     }
 
     printk("delete file '%s' ok!\n", fname);
@@ -364,7 +380,7 @@ void test_ext4(struct dentry *root)
     /*
      * Test read & write file.
      */
-    test_basic(root_inode, "ext4", "ext4.txt");
+    test_file_rw(root, "ext4", "ext4.txt");
 
     /*
      * Test dir iterate.
