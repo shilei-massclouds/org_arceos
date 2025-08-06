@@ -136,3 +136,39 @@ void list_lru_destroy(struct list_lru *lru)
     lru->shrinker_id = -1;
 #endif
 }
+
+/* The caller must ensure the memcg lifetime. */
+bool list_lru_del(struct list_lru *lru, struct list_head *item, int nid,
+            struct mem_cgroup *memcg)
+{
+    struct list_lru_node *nlru = &lru->node[nid];
+    struct list_lru_one *l;
+
+    spin_lock(&nlru->lock);
+    if (!list_empty(item)) {
+        l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
+        list_del_init(item);
+        l->nr_items--;
+        nlru->nr_items--;
+        spin_unlock(&nlru->lock);
+        return true;
+    }
+    spin_unlock(&nlru->lock);
+    return false;
+}
+
+bool list_lru_del_obj(struct list_lru *lru, struct list_head *item)
+{
+    bool ret;
+    int nid = page_to_nid(virt_to_page(item));
+
+    if (list_lru_memcg_aware(lru)) {
+        rcu_read_lock();
+        ret = list_lru_del(lru, item, nid, mem_cgroup_from_slab_obj(item));
+        rcu_read_unlock();
+    } else {
+        ret = list_lru_del(lru, item, nid, NULL);
+    }
+
+    return ret;
+}

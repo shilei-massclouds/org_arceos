@@ -130,6 +130,7 @@ lookup_inode(struct inode *root, const char *fname)
 
     ret = root->i_op->lookup(root, &target, lookup_flags);
     if (IS_ERR(ret)) {
+        printk("%s: err(%d)\n", __func__, PTR_ERR(ret));
         PANIC("lookup error.");
     }
     return target.d_inode;
@@ -241,14 +242,6 @@ static void test_dir_ops(struct dentry *root_dentry, const char *dirname)
 
     printk("create dir '%s' ..\n", dirname);
 
-#if 0
-    struct dentry target;
-    memset(&target, 0, sizeof(struct dentry));
-    target.d_name.name = dirname;
-    target.d_name.len = strlen(target.d_name.name);
-    target.d_name.hash = 0;
-    target.d_parent = &target;
-#endif
     struct qstr qname = QSTR(dirname);
     struct dentry *target = d_alloc(root_dentry, &qname);
 
@@ -257,6 +250,32 @@ static void test_dir_ops(struct dentry *root_dentry, const char *dirname)
     }
 
     printk("create dir '%s' ok!\n", dirname);
+}
+
+static void test_create_file(struct dentry *root_dentry, const char *fname)
+{
+    struct inode *root = root_dentry->d_inode;
+    struct inode *f = lookup_inode(root, fname);
+    if (f) {
+        PANIC("file already exists.");
+    }
+
+    printk("create file '%s' ..\n", fname);
+
+    struct qstr qname = QSTR(fname);
+    struct dentry *target = d_alloc(root_dentry, &qname);
+
+    if (root->i_op->create(&nop_mnt_idmap, root, target, 0777, false)) {
+        PANIC("create dir error.");
+    }
+
+    printk("create file '%s' ok!\n", fname);
+
+    f = lookup_inode(root, fname);
+    if (f == NULL) {
+        PANIC("no file.");
+    }
+    test_write(f, "");
 }
 
 void test_ext4(struct dentry *root)
@@ -277,4 +296,14 @@ void test_ext4(struct dentry *root)
      * Test create/delete dir.
      */
     test_dir_ops(root, "new_dir");
+
+    /*
+     * Test create/delete dir.
+     */
+    test_create_file(root, "new_file");
+
+    /*
+     * Test dir iterate (again).
+     */
+    test_dir_iter(root_inode);
 }

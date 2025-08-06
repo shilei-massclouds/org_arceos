@@ -625,3 +625,72 @@ void wbc_detach_inode(struct writeback_control *wbc)
     wb_put(wbc->wb);
     wbc->wb = NULL;
 }
+
+/*
+ * Write out an inode's dirty data and metadata on-demand, i.e. separately from
+ * the regular batched writeback done by the flusher threads in
+ * writeback_sb_inodes().  @wbc controls various aspects of the write, such as
+ * whether it is a data-integrity sync (%WB_SYNC_ALL) or not (%WB_SYNC_NONE).
+ *
+ * To prevent the inode from going away, either the caller must have a reference
+ * to the inode, or the inode must have I_WILL_FREE or I_FREEING set.
+ */
+static int writeback_single_inode(struct inode *inode,
+                  struct writeback_control *wbc)
+{
+    PANIC("");
+}
+
+/*
+ * Wait for writeback on an inode to complete. Called with i_lock held.
+ * Caller must make sure inode cannot go away when we drop i_lock.
+ */
+void inode_wait_for_writeback(struct inode *inode)
+{
+    struct wait_bit_queue_entry wqe;
+    struct wait_queue_head *wq_head;
+
+    assert_spin_locked(&inode->i_lock);
+
+    if (!(inode->i_state & I_SYNC))
+        return;
+
+    wq_head = inode_bit_waitqueue(&wqe, inode, __I_SYNC);
+    for (;;) {
+        prepare_to_wait_event(wq_head, &wqe.wq_entry, TASK_UNINTERRUPTIBLE);
+        /* Checking I_SYNC with inode->i_lock guarantees memory ordering. */
+        if (!(inode->i_state & I_SYNC))
+            break;
+        spin_unlock(&inode->i_lock);
+        schedule();
+        spin_lock(&inode->i_lock);
+    }
+    finish_wait(wq_head, &wqe.wq_entry);
+}
+
+/**
+ * write_inode_now  -   write an inode to disk
+ * @inode: inode to write to disk
+ * @sync: whether the write should be synchronous or not
+ *
+ * This function commits an inode to disk immediately if it is dirty. This is
+ * primarily needed by knfsd.
+ *
+ * The caller must either have a ref on the inode or must have set I_WILL_FREE.
+ */
+int write_inode_now(struct inode *inode, int sync)
+{
+    struct writeback_control wbc = {
+        .nr_to_write = LONG_MAX,
+        .sync_mode = sync ? WB_SYNC_ALL : WB_SYNC_NONE,
+        .range_start = 0,
+        .range_end = LLONG_MAX,
+    };
+
+    printk("%s: ..\n", __func__);
+    if (!mapping_can_writeback(inode->i_mapping))
+        wbc.nr_to_write = 0;
+
+    might_sleep();
+    return writeback_single_inode(inode, &wbc);
+}

@@ -5250,7 +5250,9 @@ static int ext4_do_update_inode(handle_t *handle,
 					      bh->b_data);
 
 	BUFFER_TRACE(bh, "call ext4_handle_dirty_metadata");
+    printk("%s: step1\n", __func__);
 	err = ext4_handle_dirty_metadata(handle, NULL, bh);
+    printk("%s: step2 err(%d)\n", __func__, err);
 	if (err)
 		goto out_error;
 	ext4_clear_inode_state(inode, EXT4_STATE_NEW);
@@ -5884,7 +5886,9 @@ int ext4_mark_iloc_dirty(handle_t *handle,
 	get_bh(iloc->bh);
 
 	/* ext4_do_update_inode() does jbd2_journal_dirty_metadata */
+    printk("%s: step1\n", __func__);
 	err = ext4_do_update_inode(handle, inode, iloc);
+    printk("%s: step2\n", __func__);
 	put_bh(iloc->bh);
 	return err;
 }
@@ -6088,7 +6092,9 @@ int __ext4_mark_inode_dirty(handle_t *handle, struct inode *inode,
 		ext4_try_to_expand_extra_isize(inode, sbi->s_want_extra_isize,
 					       iloc, handle);
 
+    printk("%s: step1\n", __func__);
 	err = ext4_mark_iloc_dirty(handle, inode, &iloc);
+    printk("%s: step2\n", __func__);
 out:
 	if (unlikely(err))
 		ext4_error_inode_err(inode, func, line, 0, err,

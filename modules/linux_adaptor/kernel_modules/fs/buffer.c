@@ -36,6 +36,8 @@
 
 #define BH_LRU_SIZE 16
 
+#define BH_ENTRY(list) list_entry((list), struct buffer_head, b_assoc_buffers)
+
 struct bh_lru {
     struct buffer_head *bhs[BH_LRU_SIZE];
 };
@@ -69,6 +71,11 @@ static unsigned long max_buffer_heads __ro_after_init;
 #define bh_lru_lock()   preempt_disable()
 #define bh_lru_unlock() preempt_enable()
 #endif
+
+int inode_has_buffers(struct inode *inode)
+{
+    return !list_empty(&inode->i_data.i_private_list);
+}
 
 static inline void check_irqs_on(void)
 {
@@ -1651,6 +1658,29 @@ int block_write_full_folio(struct folio *folio, struct writeback_control *wbc,
     return __block_write_full_folio(inode, folio, get_block, wbc);
 #endif
     PANIC("");
+}
+
+/*
+ * Invalidate any and all dirty buffers on a given inode.  We are
+ * probably unmounting the fs, but that doesn't mean we have already
+ * done a sync().  Just drop the buffers from the inode list.
+ *
+ * NOTE: we take the inode's blockdev's mapping's i_private_lock.  Which
+ * assumes that all the buffers are against the blockdev.  Not true
+ * for reiserfs.
+ */
+void invalidate_inode_buffers(struct inode *inode)
+{
+    if (inode_has_buffers(inode)) {
+        struct address_space *mapping = &inode->i_data;
+        struct list_head *list = &mapping->i_private_list;
+        struct address_space *buffer_mapping = mapping->i_private_data;
+
+        spin_lock(&buffer_mapping->i_private_lock);
+        while (!list_empty(list))
+            __remove_assoc_queue(BH_ENTRY(list->next));
+        spin_unlock(&buffer_mapping->i_private_lock);
+    }
 }
 
 void __init buffer_init(void)

@@ -351,7 +351,9 @@ int __ext4_handle_dirty_metadata(const char *where, unsigned int line,
 	set_buffer_prio(bh);
 	set_buffer_uptodate(bh);
 	if (ext4_handle_valid(handle)) {
+    printk("%s: step1\n", __func__);
 		err = jbd2_journal_dirty_metadata(handle, bh);
+    printk("%s: step2\n", __func__);
 		/* Errors can only happen due to aborted journal or a nasty bug */
 		if (!is_handle_aborted(handle) && WARN_ON_ONCE(err)) {
 			ext4_journal_abort_handle(where, line, __func__, bh,

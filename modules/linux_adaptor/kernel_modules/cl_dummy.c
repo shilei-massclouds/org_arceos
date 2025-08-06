@@ -319,3 +319,10 @@ bool capable(int cap)
     pr_err("%s: No impl.", __func__);
     return true;
 }
+
+int fsnotify(__u32 mask, const void *data, int data_type, struct inode *dir,
+         const struct qstr *file_name, struct inode *inode, u32 cookie)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}

@@ -43,6 +43,12 @@ static unsigned long hash(struct super_block *sb, unsigned long hashval)
     return tmp & i_hash_mask;
 }
 
+static void inode_lru_list_del(struct inode *inode)
+{
+    if (list_lru_del_obj(&inode->i_sb->s_inode_lru, &inode->i_lru))
+        this_cpu_dec(nr_unused);
+}
+
 /*
  * Empty aops. Can be used for the cases where the user does not
  * define any of the address_space operations.
@@ -133,6 +139,42 @@ struct inode *new_inode(struct super_block *sb)
     if (inode)
         inode_sb_list_add(inode);
     return inode;
+}
+
+void __destroy_inode(struct inode *inode)
+{
+    BUG_ON(inode_has_buffers(inode));
+    inode_detach_wb(inode);
+    //security_inode_free(inode);
+    //fsnotify_inode_delete(inode);
+    //locks_free_lock_context(inode);
+    if (!inode->i_nlink) {
+        WARN_ON(atomic_long_read(&inode->i_sb->s_remove_count) == 0);
+        atomic_long_dec(&inode->i_sb->s_remove_count);
+    }
+
+#ifdef CONFIG_FS_POSIX_ACL
+    if (inode->i_acl && !is_uncached_acl(inode->i_acl))
+        posix_acl_release(inode->i_acl);
+    if (inode->i_default_acl && !is_uncached_acl(inode->i_default_acl))
+        posix_acl_release(inode->i_default_acl);
+#endif
+    this_cpu_dec(nr_inodes);
+}
+
+static void destroy_inode(struct inode *inode)
+{
+    const struct super_operations *ops = inode->i_sb->s_op;
+
+    BUG_ON(!list_empty(&inode->i_lru));
+    __destroy_inode(inode);
+    if (ops->destroy_inode) {
+        ops->destroy_inode(inode);
+        if (!ops->free_inode)
+            return;
+    }
+    inode->free_inode = ops->free_inode;
+    call_rcu(&inode->i_rcu, i_callback);
 }
 
 /**
@@ -312,6 +354,149 @@ static void __wait_on_freeing_inode(struct inode *inode, bool is_inode_hash_lock
     PANIC("");
 }
 
+static inline void inode_sb_list_del(struct inode *inode)
+{
+    if (!list_empty(&inode->i_sb_list)) {
+        spin_lock(&inode->i_sb->s_inode_list_lock);
+        list_del_init(&inode->i_sb_list);
+        spin_unlock(&inode->i_sb->s_inode_list_lock);
+    }
+}
+
+static void inode_wait_for_lru_isolating(struct inode *inode)
+{
+    struct wait_bit_queue_entry wqe;
+    struct wait_queue_head *wq_head;
+
+    lockdep_assert_held(&inode->i_lock);
+    if (!(inode->i_state & I_LRU_ISOLATING))
+        return;
+
+    wq_head = inode_bit_waitqueue(&wqe, inode, __I_LRU_ISOLATING);
+    for (;;) {
+        prepare_to_wait_event(wq_head, &wqe.wq_entry, TASK_UNINTERRUPTIBLE);
+        /*
+         * Checking I_LRU_ISOLATING with inode->i_lock guarantees
+         * memory ordering.
+         */
+        if (!(inode->i_state & I_LRU_ISOLATING))
+            break;
+        spin_unlock(&inode->i_lock);
+        schedule();
+        spin_lock(&inode->i_lock);
+    }
+    finish_wait(wq_head, &wqe.wq_entry);
+    WARN_ON(inode->i_state & I_LRU_ISOLATING);
+}
+
+struct wait_queue_head *inode_bit_waitqueue(struct wait_bit_queue_entry *wqe,
+                        struct inode *inode, u32 bit)
+{
+        void *bit_address;
+
+        bit_address = inode_state_wait_address(inode, bit);
+        init_wait_var_entry(wqe, bit_address, 0);
+        return __var_waitqueue(bit_address);
+}
+
+/*
+ * Free the inode passed in, removing it from the lists it is still connected
+ * to. We remove any pages still attached to the inode and wait for any IO that
+ * is still in progress before finally destroying the inode.
+ *
+ * An inode must already be marked I_FREEING so that we avoid the inode being
+ * moved back onto lists if we race with other code that manipulates the lists
+ * (e.g. writeback_single_inode). The caller is responsible for setting this.
+ *
+ * An inode must already be removed from the LRU list before being evicted from
+ * the cache. This should occur atomically with setting the I_FREEING state
+ * flag, so no inodes here should ever be on the LRU when being evicted.
+ */
+static void evict(struct inode *inode)
+{
+    const struct super_operations *op = inode->i_sb->s_op;
+
+    BUG_ON(!(inode->i_state & I_FREEING));
+    BUG_ON(!list_empty(&inode->i_lru));
+
+    if (!list_empty(&inode->i_io_list))
+        inode_io_list_del(inode);
+
+    inode_sb_list_del(inode);
+
+    spin_lock(&inode->i_lock);
+    inode_wait_for_lru_isolating(inode);
+
+    /*
+     * Wait for flusher thread to be done with the inode so that filesystem
+     * does not start destroying it while writeback is still running. Since
+     * the inode has I_FREEING set, flusher thread won't start new work on
+     * the inode.  We just have to wait for running writeback to finish.
+     */
+    inode_wait_for_writeback(inode);
+    spin_unlock(&inode->i_lock);
+
+    if (op->evict_inode) {
+        op->evict_inode(inode);
+    } else {
+        truncate_inode_pages_final(&inode->i_data);
+        clear_inode(inode);
+    }
+    if (S_ISCHR(inode->i_mode) && inode->i_cdev)
+        cd_forget(inode);
+
+    remove_inode_hash(inode);
+
+    /*
+     * Wake up waiters in __wait_on_freeing_inode().
+     *
+     * Lockless hash lookup may end up finding the inode before we removed
+     * it above, but only lock it *after* we are done with the wakeup below.
+     * In this case the potential waiter cannot safely block.
+     *
+     * The inode being unhashed after the call to remove_inode_hash() is
+     * used as an indicator whether blocking on it is safe.
+     */
+    spin_lock(&inode->i_lock);
+    /*
+     * Pairs with the barrier in prepare_to_wait_event() to make sure
+     * ___wait_var_event() either sees the bit cleared or
+     * waitqueue_active() check in wake_up_var() sees the waiter.
+     */
+    smp_mb();
+    inode_wake_up_bit(inode, __I_NEW);
+    BUG_ON(inode->i_state != (I_FREEING | I_CLEAR));
+    spin_unlock(&inode->i_lock);
+
+    destroy_inode(inode);
+}
+
+void clear_inode(struct inode *inode)
+{
+    /*
+     * We have to cycle the i_pages lock here because reclaim can be in the
+     * process of removing the last page (in __filemap_remove_folio())
+     * and we must not free the mapping under it.
+     */
+    xa_lock_irq(&inode->i_data.i_pages);
+    BUG_ON(inode->i_data.nrpages);
+    /*
+     * Almost always, mapping_empty(&inode->i_data) here; but there are
+     * two known and long-standing ways in which nodes may get left behind
+     * (when deep radix-tree node allocation failed partway; or when THP
+     * collapse_file() failed). Until those two known cases are cleaned up,
+     * or a cleanup function is called here, do not BUG_ON(!mapping_empty),
+     * nor even WARN_ON(!mapping_empty).
+     */
+    xa_unlock_irq(&inode->i_data.i_pages);
+    BUG_ON(!list_empty(&inode->i_data.i_private_list));
+    BUG_ON(!(inode->i_state & I_FREEING));
+    BUG_ON(inode->i_state & I_CLEAR);
+    BUG_ON(!list_empty(&inode->i_wb_list));
+    /* don't need i_lock here, no concurrent mods to i_state */
+    inode->i_state = I_FREEING | I_CLEAR;
+}
+
 /*
  * find_inode_fast is the fast path version of find_inode, see the comment at
  * iget_locked for details.
@@ -353,6 +538,23 @@ repeat:
     return NULL;
 }
 
+static void __inode_add_lru(struct inode *inode, bool rotate)
+{
+    if (inode->i_state & (I_DIRTY_ALL | I_SYNC | I_FREEING | I_WILL_FREE))
+        return;
+    if (atomic_read(&inode->i_count))
+        return;
+    if (!(inode->i_sb->s_flags & SB_ACTIVE))
+        return;
+    if (!mapping_shrinkable(&inode->i_data))
+        return;
+
+    if (list_lru_add_obj(&inode->i_sb->s_inode_lru, &inode->i_lru))
+        this_cpu_inc(nr_unused);
+    else if (rotate)
+        inode->i_state |= I_REFERENCED;
+}
+
 /*
  * Called when we're dropping the last reference
  * to an inode.
@@ -372,7 +574,38 @@ static void iput_final(struct inode *inode)
 
     WARN_ON(inode->i_state & I_NEW);
 
-    PANIC("");
+    if (op->drop_inode)
+        drop = op->drop_inode(inode);
+    else
+        drop = generic_drop_inode(inode);
+
+    if (!drop &&
+        !(inode->i_state & I_DONTCACHE) &&
+        (sb->s_flags & SB_ACTIVE)) {
+        __inode_add_lru(inode, true);
+        spin_unlock(&inode->i_lock);
+        return;
+    }
+
+    state = inode->i_state;
+    if (!drop) {
+        WRITE_ONCE(inode->i_state, state | I_WILL_FREE);
+        spin_unlock(&inode->i_lock);
+
+        write_inode_now(inode, 1);
+
+        spin_lock(&inode->i_lock);
+        state = inode->i_state;
+        WARN_ON(state & I_NEW);
+        state &= ~I_WILL_FREE;
+    }
+
+    WRITE_ONCE(inode->i_state, state | I_FREEING);
+    if (!list_empty(&inode->i_lru))
+        inode_lru_list_del(inode);
+    spin_unlock(&inode->i_lock);
+
+    evict(inode);
 }
 
 /**
@@ -435,23 +668,6 @@ again:
 void ihold(struct inode *inode)
 {
     WARN_ON(atomic_inc_return(&inode->i_count) < 2);
-}
-
-static void __inode_add_lru(struct inode *inode, bool rotate)
-{
-    if (inode->i_state & (I_DIRTY_ALL | I_SYNC | I_FREEING | I_WILL_FREE))
-        return;
-    if (atomic_read(&inode->i_count))
-        return;
-    if (!(inode->i_sb->s_flags & SB_ACTIVE))
-        return;
-    if (!mapping_shrinkable(&inode->i_data))
-        return;
-
-    if (list_lru_add_obj(&inode->i_sb->s_inode_lru, &inode->i_lru))
-        this_cpu_inc(nr_unused);
-    else if (rotate)
-        inode->i_state |= I_REFERENCED;
 }
 
 /*
@@ -856,6 +1072,21 @@ void inc_nlink(struct inode *inode)
     }
 
     inode->__i_nlink++;
+}
+
+/**
+ *  __remove_inode_hash - remove an inode from the hash
+ *  @inode: inode to unhash
+ *
+ *  Remove an inode from the superblock.
+ */
+void __remove_inode_hash(struct inode *inode)
+{
+    spin_lock(&inode_hash_lock);
+    spin_lock(&inode->i_lock);
+    hlist_del_init_rcu(&inode->i_hash);
+    spin_unlock(&inode->i_lock);
+    spin_unlock(&inode_hash_lock);
 }
 
 /*
