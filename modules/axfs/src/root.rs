@@ -155,6 +155,8 @@ pub(crate) fn init_rootfs(disk: crate::dev::Disk) {
             FAT_FS.init_once(Arc::new(fs::fatfs::FatFileSystem::new(disk)));
             FAT_FS.init();
             let main_fs = FAT_FS.clone();
+        } else if #[cfg(feature = "linux-ext4")] {
+            let main_fs = fs::linux_ext4::new(disk);
         }
     }
 

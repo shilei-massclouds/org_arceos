@@ -54,6 +54,7 @@ const fn file_perm_to_rwx(mode: u32) -> [u8; 9] {
 }
 
 pub fn create_file(path: &str) -> File {
+    println!("Create '{}' ...", path);
     let f = File::create(path).unwrap();
     let metadata = f.metadata().unwrap();
     assert!(metadata.is_file());

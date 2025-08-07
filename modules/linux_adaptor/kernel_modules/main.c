@@ -15,7 +15,7 @@
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-#define TEST_EXT4
+//#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
@@ -60,6 +60,8 @@ static void test_ext2(void);
 #endif
 
 extern void test_ext4(struct dentry *);
+
+static struct dentry *cl_ext4_root;
 
 int clinux_init(void)
 {
@@ -122,7 +124,6 @@ int clinux_init(void)
     test_block();
 #endif
 
-#ifdef TEST_EXT4
     printk("====== Journal init ======\n");
     cl_journal_init();
     printk("====== Ext4 init ======\n");
@@ -130,14 +131,25 @@ int clinux_init(void)
 
     printk("====== Ext4 mount ======\n");
     root = cl_mount("ext4", "/dev/root");
+    if (root == NULL) {
+        PANIC("bad ext4 root.");
+    }
+    cl_ext4_root = root;
+    printk("Ext4 root addr(%lx)\n", cl_ext4_root);
 
+#ifdef TEST_EXT4
     printk("====== Ext4 test ======\n");
     test_ext4(root);
+    PANIC("Reach here!");
 #endif
 
-    PANIC("Reach here!");
-
     return 0;
+}
+
+unsigned long
+cl_ext4_root_handle(void)
+{
+    return (unsigned long) cl_ext4_root;
 }
 
 void call_handle_arch_irq(unsigned long cause)

@@ -1369,6 +1369,25 @@ error:
     return error;
 }
 
+static int filemap_readahead(struct kiocb *iocb, struct file *file,
+        struct address_space *mapping, struct folio *folio,
+        pgoff_t last_index)
+{
+    DEFINE_READAHEAD(ractl, file, &file->f_ra, mapping, folio->index);
+
+    if (iocb->ki_flags & IOCB_NOIO)
+        return -EAGAIN;
+    page_cache_async_ra(&ractl, folio, last_index - folio->index);
+    return 0;
+}
+
+static int filemap_update_page(struct kiocb *iocb,
+        struct address_space *mapping, size_t count,
+        struct folio *folio, bool need_uptodate)
+{
+    PANIC("");
+}
+
 static int filemap_get_pages(struct kiocb *iocb, size_t count,
         struct folio_batch *fbatch, bool need_uptodate)
 {
@@ -1408,7 +1427,6 @@ retry:
         return err;
     }
 
-#if 0
     folio = fbatch->folios[folio_batch_count(fbatch) - 1];
     if (folio_test_readahead(folio)) {
         err = filemap_readahead(iocb, filp, mapping, folio, last_index);
@@ -1426,11 +1444,8 @@ retry:
     }
 
     trace_mm_filemap_get_pages(mapping, index, last_index - 1);
-#endif
-    PANIC("");
     return 0;
 err:
-    PANIC("ERR");
     if (err < 0)
         folio_put(folio);
     if (likely(--fbatch->nr))

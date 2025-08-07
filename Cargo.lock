@@ -421,6 +421,7 @@ dependencies = [
  "fatfs",
  "lazyinit",
  "log",
+ "spin",
 ]
 
 [[package]]

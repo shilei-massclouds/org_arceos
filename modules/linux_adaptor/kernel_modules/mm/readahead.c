@@ -172,3 +172,19 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
 {
     PANIC("");
 }
+
+void page_cache_async_ra(struct readahead_control *ractl,
+        struct folio *folio, unsigned long req_count)
+{
+    unsigned long max_pages;
+    struct file_ra_state *ra = ractl->ra;
+    pgoff_t index = readahead_index(ractl);
+    pgoff_t expected, start;
+    unsigned int order = folio_order(folio);
+
+    /* no readahead */
+    if (!ra->ra_pages)
+        return;
+
+    PANIC("");
+}

@@ -17,8 +17,9 @@ sysfs = ["dep:axfs_ramfs"]
 fatfs = ["dep:fatfs"]
 myfs = ["dep:crate_interface"]
 use-ramdisk = []
+linux-ext4 = []
 
-default = ["devfs", "ramfs", "fatfs", "procfs", "sysfs"]
+default = ["devfs", "ramfs", "linux-ext4", "procfs", "sysfs"]
 
 [dependencies]
 log = "=0.4.21"
@@ -35,6 +36,7 @@ axsync = { workspace = true }
 axdriver = { workspace = true, features = ["block"] }
 axdriver_block = { git = "https://github.com/arceos-org/axdriver_crates.git", tag = "v0.1.2" }
 axns = { workspace = true }
+spin = "0.9"
 
 [dependencies.fatfs]
 git = "https://github.com/rafalh/rust-fatfs"
