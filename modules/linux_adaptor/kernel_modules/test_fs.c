@@ -407,6 +407,7 @@ void test_ext4(struct dentry *root)
      */
     test_dir_iter(root_inode);
 
+    /* Note: use 'sync_filesystem' to replace it. */
     printk("=========== %s: flush blkdev ...\n", __func__);
     int err = blkdev_issue_flush(root_inode->i_sb->s_bdev);
     printk("=========== %s: flush blkdev OK! err(%d)\n", __func__, err);

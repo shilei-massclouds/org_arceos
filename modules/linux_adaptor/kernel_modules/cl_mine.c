@@ -142,7 +142,6 @@ CL_MINE(rcu_barrier)
 CL_MINE(seq_printf)
 CL_MINE(seq_puts)
 CL_MINE(strsep)
-CL_MINE(sync_filesystem)
 CL_MINE(unregister_filesystem)
 
 // ext2/dir

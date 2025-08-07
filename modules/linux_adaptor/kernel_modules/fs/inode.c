@@ -1099,10 +1099,36 @@ void __remove_inode_hash(struct inode *inode)
  */
 void drop_nlink(struct inode *inode)
 {
+    printk("%s: i_nlink(%u)\n", __func__, inode->i_nlink);
     WARN_ON(inode->i_nlink == 0);
     inode->__i_nlink--;
     if (!inode->i_nlink)
         atomic_long_inc(&inode->i_sb->s_remove_count);
+}
+
+static long get_nr_inodes(void)
+{
+    int i;
+    long sum = 0;
+    for_each_possible_cpu(i)
+        sum += per_cpu(nr_inodes, i);
+    return sum < 0 ? 0 : sum;
+}
+
+static inline long get_nr_inodes_unused(void)
+{
+    int i;
+    long sum = 0;
+    for_each_possible_cpu(i)
+        sum += per_cpu(nr_unused, i);
+    return sum < 0 ? 0 : sum;
+}
+
+long get_nr_dirty_inodes(void)
+{
+    /* not actually dirty inodes, but a wild approximation */
+    long nr_dirty = get_nr_inodes() - get_nr_inodes_unused();
+    return nr_dirty > 0 ? nr_dirty : 0;
 }
 
 /*

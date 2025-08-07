@@ -26,6 +26,25 @@
 #include "../adaptor.h"
 
 /*
+ * Passed into wb_writeback(), essentially a subset of writeback_control
+ */
+struct wb_writeback_work {
+    long nr_pages;
+    struct super_block *sb;
+    enum writeback_sync_modes sync_mode;
+    unsigned int tagged_writepages:1;
+    unsigned int for_kupdate:1;
+    unsigned int range_cyclic:1;
+    unsigned int for_background:1;
+    unsigned int for_sync:1;    /* sync(2) WB_SYNC_ALL writeback */
+    unsigned int auto_free:1;   /* free on completion */
+    enum wb_reason reason;      /* why was writeback initiated? */
+
+    struct list_head list;      /* pending work list */
+    struct wb_completion *done; /* set if the caller waits */
+};
+
+/*
  * Parameters for foreign inode detection, see wbc_detach_inode() to see
  * how they're used.
  *
@@ -111,6 +130,161 @@ static void wb_wakeup_delayed(struct bdi_writeback *wb)
     if (test_bit(WB_registered, &wb->state))
         queue_delayed_work(bdi_wq, &wb->dwork, timeout);
     spin_unlock_irq(&wb->work_lock);
+}
+
+static void finish_writeback_work(struct wb_writeback_work *work)
+{
+    struct wb_completion *done = work->done;
+
+    if (work->auto_free)
+        kfree(work);
+    if (done) {
+        wait_queue_head_t *waitq = done->waitq;
+
+        /* @done can't be accessed after the following dec */
+        if (atomic_dec_and_test(&done->cnt))
+            wake_up_all(waitq);
+    }
+}
+
+static void wb_queue_work(struct bdi_writeback *wb,
+              struct wb_writeback_work *work)
+{
+    trace_writeback_queue(wb, work);
+
+    printk("%s: step1\n", __func__);
+    if (work->done)
+        atomic_inc(&work->done->cnt);
+
+    spin_lock_irq(&wb->work_lock);
+
+    printk("%s: step2\n", __func__);
+    if (test_bit(WB_registered, &wb->state)) {
+        list_add_tail(&work->list, &wb->work_list);
+    printk("%s: step2.1\n", __func__);
+        mod_delayed_work(bdi_wq, &wb->dwork, 0);
+    printk("%s: step2.2\n", __func__);
+    } else
+        finish_writeback_work(work);
+    printk("%s: step3\n", __func__);
+
+    spin_unlock_irq(&wb->work_lock);
+    printk("%s: stepN\n", __func__);
+}
+
+/**
+ * wb_split_bdi_pages - split nr_pages to write according to bandwidth
+ * @wb: target bdi_writeback to split @nr_pages to
+ * @nr_pages: number of pages to write for the whole bdi
+ *
+ * Split @wb's portion of @nr_pages according to @wb's write bandwidth in
+ * relation to the total write bandwidth of all wb's w/ dirty inodes on
+ * @wb->bdi.
+ */
+static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
+{
+    unsigned long this_bw = wb->avg_write_bandwidth;
+    unsigned long tot_bw = atomic_long_read(&wb->bdi->tot_write_bandwidth);
+
+    if (nr_pages == LONG_MAX)
+        return LONG_MAX;
+
+    /*
+     * This may be called on clean wb's and proportional distribution
+     * may not make sense, just use the original @nr_pages in those
+     * cases.  In general, we wanna err on the side of writing more.
+     */
+    if (!tot_bw || this_bw >= tot_bw)
+        return nr_pages;
+    else
+        return DIV_ROUND_UP_ULL((u64)nr_pages * this_bw, tot_bw);
+}
+
+/**
+ * bdi_split_work_to_wbs - split a wb_writeback_work to all wb's of a bdi
+ * @bdi: target backing_dev_info
+ * @base_work: wb_writeback_work to issue
+ * @skip_if_busy: skip wb's which already have writeback in progress
+ *
+ * Split and issue @base_work to all wb's (bdi_writeback's) of @bdi which
+ * have dirty inodes.  If @base_work->nr_page isn't %LONG_MAX, it's
+ * distributed to the busy wbs according to each wb's proportion in the
+ * total active write bandwidth of @bdi.
+ */
+static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
+                  struct wb_writeback_work *base_work,
+                  bool skip_if_busy)
+{
+    struct bdi_writeback *last_wb = NULL;
+    struct bdi_writeback *wb = list_entry(&bdi->wb_list,
+                          struct bdi_writeback, bdi_node);
+
+    might_sleep();
+restart:
+    rcu_read_lock();
+    list_for_each_entry_continue_rcu(wb, &bdi->wb_list, bdi_node) {
+        DEFINE_WB_COMPLETION(fallback_work_done, bdi);
+        struct wb_writeback_work fallback_work;
+        struct wb_writeback_work *work;
+        long nr_pages;
+
+        if (last_wb) {
+            wb_put(last_wb);
+            last_wb = NULL;
+        }
+
+        /* SYNC_ALL writes out I_DIRTY_TIME too */
+        if (!wb_has_dirty_io(wb) &&
+            (base_work->sync_mode == WB_SYNC_NONE ||
+             list_empty(&wb->b_dirty_time)))
+            continue;
+        if (skip_if_busy && writeback_in_progress(wb))
+            continue;
+
+        nr_pages = wb_split_bdi_pages(wb, base_work->nr_pages);
+
+        work = kmalloc(sizeof(*work), GFP_ATOMIC);
+        if (work) {
+            *work = *base_work;
+            work->nr_pages = nr_pages;
+            work->auto_free = 1;
+    printk("%s: step1\n", __func__);
+            wb_queue_work(wb, work);
+    printk("%s: step2\n", __func__);
+            continue;
+        }
+
+        /*
+         * If wb_tryget fails, the wb has been shutdown, skip it.
+         *
+         * Pin @wb so that it stays on @bdi->wb_list.  This allows
+         * continuing iteration from @wb after dropping and
+         * regrabbing rcu read lock.
+         */
+        if (!wb_tryget(wb))
+            continue;
+
+        /* alloc failed, execute synchronously using on-stack fallback */
+        work = &fallback_work;
+        *work = *base_work;
+        work->nr_pages = nr_pages;
+        work->auto_free = 0;
+        work->done = &fallback_work_done;
+
+        wb_queue_work(wb, work);
+        last_wb = wb;
+
+        rcu_read_unlock();
+        wb_wait_for_completion(&fallback_work_done);
+    printk("%s: step3\n", __func__);
+        goto restart;
+    }
+    rcu_read_unlock();
+
+    if (last_wb)
+        wb_put(last_wb);
+
+    PANIC("");
 }
 
 void __inode_attach_wb(struct inode *inode, struct folio *folio)
@@ -693,4 +867,98 @@ int write_inode_now(struct inode *inode, int sync)
 
     might_sleep();
     return writeback_single_inode(inode, &wbc);
+}
+
+/*
+ * Add in the number of potentially dirty inodes, because each inode
+ * write can dirty pagecache in the underlying blockdev.
+ */
+static unsigned long get_nr_dirty_pages(void)
+{
+    return global_node_page_state(NR_FILE_DIRTY) +
+        get_nr_dirty_inodes();
+}
+
+static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
+                     enum wb_reason reason, bool skip_if_busy)
+{
+    struct backing_dev_info *bdi = sb->s_bdi;
+    DEFINE_WB_COMPLETION(done, bdi);
+    struct wb_writeback_work work = {
+        .sb         = sb,
+        .sync_mode      = WB_SYNC_NONE,
+        .tagged_writepages  = 1,
+        .done           = &done,
+        .nr_pages       = nr,
+        .reason         = reason,
+    };
+
+    if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
+        return;
+    WARN_ON(!rwsem_is_locked(&sb->s_umount));
+
+    printk("%s: step1\n", __func__);
+    bdi_split_work_to_wbs(sb->s_bdi, &work, skip_if_busy);
+    printk("%s: step2\n", __func__);
+    wb_wait_for_completion(&done);
+    printk("%s: step3\n", __func__);
+}
+
+/**
+ * writeback_inodes_sb_nr - writeback dirty inodes from given super_block
+ * @sb: the superblock
+ * @nr: the number of pages to write
+ * @reason: reason why some writeback work initiated
+ *
+ * Start writeback on some inodes on this super_block. No guarantees are made
+ * on how many (if any) will be written, and this function does not wait
+ * for IO completion of submitted IO.
+ */
+void writeback_inodes_sb_nr(struct super_block *sb,
+                unsigned long nr,
+                enum wb_reason reason)
+{
+    __writeback_inodes_sb_nr(sb, nr, reason, false);
+}
+
+/**
+ * writeback_inodes_sb  -   writeback dirty inodes from given super_block
+ * @sb: the superblock
+ * @reason: reason why some writeback work was initiated
+ *
+ * Start writeback on some inodes on this super_block. No guarantees are made
+ * on how many (if any) will be written, and this function does not wait
+ * for IO completion of submitted IO.
+ */
+void writeback_inodes_sb(struct super_block *sb, enum wb_reason reason)
+{
+    writeback_inodes_sb_nr(sb, get_nr_dirty_pages(), reason);
+}
+
+/**
+ * sync_inodes_sb   -   sync sb inode pages
+ * @sb: the superblock
+ *
+ * This function writes and waits on any dirty inode belonging to this
+ * super_block.
+ */
+void sync_inodes_sb(struct super_block *sb)
+{
+    PANIC("");
+}
+
+/**
+ * wb_wait_for_completion - wait for completion of bdi_writeback_works
+ * @done: target wb_completion
+ *
+ * Wait for one or more work items issued to @bdi with their ->done field
+ * set to @done, which should have been initialized with
+ * DEFINE_WB_COMPLETION().  This function returns after all such work items
+ * are completed.  Work items which are waited upon aren't freed
+ * automatically on completion.
+ */
+void wb_wait_for_completion(struct wb_completion *done)
+{
+    atomic_dec(&done->cnt);     /* put down the initial count */
+    wait_event(*done->waitq, !atomic_read(&done->cnt));
 }
