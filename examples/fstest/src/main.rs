@@ -70,6 +70,7 @@ fn do_file_test(path: &str) {
     println!("Read and verify '{}' ok!", path);
 
     // Remove the file.
+    println!("Remove '{}' ...", path);
     remove_file(path);
     println!("Remove '{}' ok!", path);
 }

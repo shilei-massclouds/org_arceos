@@ -1847,7 +1847,7 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 		return NULL;
 	}
 
-    printk("%s: stepN\n", __func__);
+    printk("%s: stepN inode(%lx)\n", __func__, inode);
 	return d_splice_alias(inode, dentry);
 }
 

@@ -98,6 +98,7 @@ impl DirNode {
     /// Creates a new node with the given name and type in this directory.
     pub fn create_node(&self, name: &str, ty: VfsNodeType) -> VfsResult {
         error!("create node: {name} {ty:?}");
+        error!("======================= step1 {}", name);
         if self.exist(name) {
             error!("AlreadyExists {name}");
             return Err(VfsError::AlreadyExists);
@@ -177,7 +178,17 @@ impl VfsNodeOps for DirNode {
         error!("create {ty:?} at ext4: {path}");
         let (name, rest) = split_path(path);
         if let Some(rest) = rest {
-            panic!("{name} {rest}");
+            match name {
+                "" | "." => self.create(rest, ty),
+                ".." => self.parent().ok_or(VfsError::NotFound)?.create(rest, ty),
+                _ => {
+                    panic!("{name} {rest}");
+                    /*
+                    let subdir = self.lookup_child(name)?;
+                    subdir.create(rest, ty)
+                    */
+                }
+            }
         } else if name.is_empty() || name == "." || name == ".." {
             panic!("already exists: {name}");
         } else {

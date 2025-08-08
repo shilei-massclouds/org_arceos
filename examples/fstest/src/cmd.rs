@@ -146,9 +146,11 @@ pub fn remove_file(path: &str) {
 }
 
 pub fn create_dir(path: &str) {
+    println!("Create dir '{}' ...", path);
     mkdir(path);
     let metadata = fs::metadata(path).unwrap();
     assert!(metadata.is_dir());
+    println!("Create dir '{}' ok!", path);
 }
 
 fn mkdir(args: &str) {
@@ -169,5 +171,7 @@ fn mkdir(args: &str) {
 }
 
 pub fn remove_dir(path: &str) {
+    println!("Remove dir '{}' ...", path);
     fs::remove_dir(path).unwrap();
+    println!("Remove dir '{}' ok!", path);
 }

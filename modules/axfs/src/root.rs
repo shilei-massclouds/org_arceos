@@ -59,7 +59,11 @@ impl RootDirectory {
             return ax_err!(InvalidInput, "mount point already exists");
         }
         // create the mount point in the main filesystem if it does not exist
-        self.main_fs.root_dir().create(path, FileType::Dir)?;
+        if let Err(e) = self.main_fs.root_dir().create(path, FileType::Dir) {
+            if e != AxError::AlreadyExists {
+                return Err(e);
+            }
+        };
         fs.mount(path, self.main_fs.root_dir().lookup(path)?)?;
         self.mounts.push(MountPoint::new(path, fs));
         Ok(())

@@ -67,3 +67,34 @@ bool mutex_is_locked(struct mutex *lock)
     return true;
     //return __mutex_owner(lock) != NULL;
 }
+
+/**
+ * mutex_trylock - try to acquire the mutex, without waiting
+ * @lock: the mutex to be acquired
+ *
+ * Try to acquire the mutex atomically. Returns 1 if the mutex
+ * has been acquired successfully, and 0 on contention.
+ *
+ * NOTE: this function follows the spin_trylock() convention, so
+ * it is negated from the down_trylock() return values! Be careful
+ * about this when converting semaphore users to mutexes.
+ *
+ * This function must not be used in interrupt context. The
+ * mutex must be released by the same task that acquired it.
+ */
+int __sched mutex_trylock(struct mutex *lock)
+{
+#if 0
+    bool locked;
+
+    MUTEX_WARN_ON(lock->magic != lock);
+
+    locked = __mutex_trylock(lock);
+    if (locked)
+        mutex_acquire(&lock->dep_map, 0, 1, _RET_IP_);
+
+    return locked;
+#endif
+    pr_err("=== NOTE ===: %s: No impl.\n", __func__);
+    return true;
+}

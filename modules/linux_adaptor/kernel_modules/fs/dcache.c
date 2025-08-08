@@ -22,6 +22,8 @@
 
 #include "../adaptor.h"
 
+__cacheline_aligned_in_smp DEFINE_SEQLOCK(rename_lock);
+
 /*
  * This is the single most critical data structure when it comes
  * to the dcache: the hashtable for lookups. Somebody should try
@@ -76,6 +78,25 @@ static struct kmem_cache *dentry_cache __ro_after_init;
 static DEFINE_PER_CPU(long, nr_dentry);
 static DEFINE_PER_CPU(long, nr_dentry_unused);
 static DEFINE_PER_CPU(long, nr_dentry_negative);
+
+/**
+ * d_ancestor - search for an ancestor
+ * @p1: ancestor dentry
+ * @p2: child dentry
+ *
+ * Returns the ancestor dentry of p2 which is a child of p1, if p1 is
+ * an ancestor of p2, else NULL.
+ */
+struct dentry *d_ancestor(struct dentry *p1, struct dentry *p2)
+{
+    struct dentry *p;
+
+    for (p = p2; !IS_ROOT(p); p = p->d_parent) {
+        if (p->d_parent == p1)
+            return p;
+    }
+    return NULL;
+}
 
 /*
  * The DCACHE_LRU_LIST bit is set whenever the 'd_lru' entry
@@ -879,6 +900,162 @@ static inline void __d_add(struct dentry *dentry, struct inode *inode)
         spin_unlock(&inode->i_lock);
 }
 
+static void copy_name(struct dentry *dentry, struct dentry *target)
+{
+    struct external_name *old_name = NULL;
+    if (unlikely(dname_external(dentry)))
+        old_name = external_name(dentry);
+    if (unlikely(dname_external(target))) {
+        atomic_inc(&external_name(target)->u.count);
+        dentry->d_name = target->d_name;
+    } else {
+        memcpy(dentry->d_iname, target->d_name.name,
+                target->d_name.len + 1);
+        dentry->d_name.name = dentry->d_iname;
+        dentry->d_name.hash_len = target->d_name.hash_len;
+    }
+    if (old_name && likely(atomic_dec_and_test(&old_name->u.count)))
+        kfree_rcu(old_name, u.head);
+}
+
+static void swap_names(struct dentry *dentry, struct dentry *target)
+{
+    PANIC("");
+}
+
+/*
+ * __d_move - move a dentry
+ * @dentry: entry to move
+ * @target: new dentry
+ * @exchange: exchange the two dentries
+ *
+ * Update the dcache to reflect the move of a file name. Negative
+ * dcache entries should not be moved in this way. Caller must hold
+ * rename_lock, the i_mutex of the source and target directories,
+ * and the sb->s_vfs_rename_mutex if they differ. See lock_rename().
+ */
+static void __d_move(struct dentry *dentry, struct dentry *target,
+             bool exchange)
+{
+    struct dentry *old_parent, *p;
+    wait_queue_head_t *d_wait;
+    struct inode *dir = NULL;
+    unsigned n;
+
+    WARN_ON(!dentry->d_inode);
+    if (WARN_ON(dentry == target))
+        return;
+
+    BUG_ON(d_ancestor(target, dentry));
+    old_parent = dentry->d_parent;
+    p = d_ancestor(old_parent, target);
+    if (IS_ROOT(dentry)) {
+        BUG_ON(p);
+        spin_lock(&target->d_parent->d_lock);
+    } else if (!p) {
+        /* target is not a descendent of dentry->d_parent */
+        spin_lock(&target->d_parent->d_lock);
+        spin_lock_nested(&old_parent->d_lock, DENTRY_D_LOCK_NESTED);
+    } else {
+        BUG_ON(p == dentry);
+        spin_lock(&old_parent->d_lock);
+        if (p != target)
+            spin_lock_nested(&target->d_parent->d_lock,
+                    DENTRY_D_LOCK_NESTED);
+    }
+    spin_lock_nested(&dentry->d_lock, 2);
+    spin_lock_nested(&target->d_lock, 3);
+
+    if (unlikely(d_in_lookup(target))) {
+        dir = target->d_parent->d_inode;
+        n = start_dir_add(dir);
+        d_wait = __d_lookup_unhash(target);
+    }
+
+    write_seqcount_begin(&dentry->d_seq);
+    write_seqcount_begin_nested(&target->d_seq, DENTRY_D_LOCK_NESTED);
+
+    /* unhash both */
+    if (!d_unhashed(dentry))
+        ___d_drop(dentry);
+    if (!d_unhashed(target))
+        ___d_drop(target);
+
+    /* ... and switch them in the tree */
+    dentry->d_parent = target->d_parent;
+    if (!exchange) {
+        copy_name(dentry, target);
+        target->d_hash.pprev = NULL;
+        dentry->d_parent->d_lockref.count++;
+        if (dentry != old_parent) /* wasn't IS_ROOT */
+            WARN_ON(!--old_parent->d_lockref.count);
+    } else {
+        target->d_parent = old_parent;
+        swap_names(dentry, target);
+        if (!hlist_unhashed(&target->d_sib))
+            __hlist_del(&target->d_sib);
+        hlist_add_head(&target->d_sib, &target->d_parent->d_children);
+        __d_rehash(target);
+        fsnotify_update_flags(target);
+    }
+    if (!hlist_unhashed(&dentry->d_sib))
+        __hlist_del(&dentry->d_sib);
+    hlist_add_head(&dentry->d_sib, &dentry->d_parent->d_children);
+    __d_rehash(dentry);
+    fsnotify_update_flags(dentry);
+    fscrypt_handle_d_move(dentry);
+
+    write_seqcount_end(&target->d_seq);
+    write_seqcount_end(&dentry->d_seq);
+
+    if (dir)
+        end_dir_add(dir, n, d_wait);
+
+    if (dentry->d_parent != old_parent)
+        spin_unlock(&dentry->d_parent->d_lock);
+    if (dentry != old_parent)
+        spin_unlock(&old_parent->d_lock);
+    spin_unlock(&target->d_lock);
+    spin_unlock(&dentry->d_lock);
+}
+
+/*
+ * This helper attempts to cope with remotely renamed directories
+ *
+ * It assumes that the caller is already holding
+ * dentry->d_parent->d_inode->i_mutex, and rename_lock
+ *
+ * Note: If ever the locking in lock_rename() changes, then please
+ * remember to update this too...
+ */
+static int __d_unalias(struct dentry *dentry, struct dentry *alias)
+{
+    struct mutex *m1 = NULL;
+    struct rw_semaphore *m2 = NULL;
+    int ret = -ESTALE;
+
+    /* If alias and dentry share a parent, then no extra locks required */
+    if (alias->d_parent == dentry->d_parent)
+        goto out_unalias;
+
+    /* See lock_rename() */
+    if (!mutex_trylock(&dentry->d_sb->s_vfs_rename_mutex))
+        goto out_err;
+    m1 = &dentry->d_sb->s_vfs_rename_mutex;
+    if (!inode_trylock_shared(alias->d_parent->d_inode))
+        goto out_err;
+    m2 = &alias->d_parent->d_inode->i_rwsem;
+out_unalias:
+    __d_move(alias, dentry, false);
+    ret = 0;
+out_err:
+    if (m2)
+        up_read(m2);
+    if (m1)
+        mutex_unlock(m1);
+    return ret;
+}
+
 /**
  * d_splice_alias - splice a disconnected dentry into the tree if one exists
  * @inode:  the inode which may have a disconnected dentry
@@ -918,7 +1095,6 @@ struct dentry *d_splice_alias(struct inode *inode, struct dentry *dentry)
     if (S_ISDIR(inode->i_mode)) {
         struct dentry *new = __d_find_any_alias(inode);
         if (unlikely(new)) {
-#if 0
             /* The reference to new ensures it remains an alias */
             spin_unlock(&inode->i_lock);
             write_seqlock(&rename_lock);
@@ -947,8 +1123,6 @@ struct dentry *d_splice_alias(struct inode *inode, struct dentry *dentry)
             }
             iput(inode);
             return new;
-#endif
-            PANIC("DIR");
         }
     }
 out:

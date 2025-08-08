@@ -197,13 +197,14 @@ lookup(struct dentry *parent, const char *name)
     struct qstr qname = QSTR(name);
     struct dentry *target = d_alloc(parent, &qname);
 
-    printk("%s: step1\n", __func__);
+    printk("------> %s: step1 parent(%lx) name(%s)\n",
+           __func__, parent, name);
     ret = parent_inode->i_op->lookup(parent_inode, target, lookup_flags);
-    printk("%s: step2\n", __func__);
     if (IS_ERR(ret)) {
         printk("%s: err(%d)\n", __func__, PTR_ERR(ret));
         PANIC("lookup error.");
     }
+    printk("%s: step2 inode(%lx)\n", __func__, target->d_inode);
     if (target->d_inode) {
         return target;
     }
@@ -478,6 +479,7 @@ cl_vfs_remove(struct dentry *parent, const char *name)
         PANIC("No parent inode.");
     }
 
+    printk("%s: remove '%s' ...\n", __func__, name);
     struct dentry *target = lookup(parent, name);
     if (target == NULL) {
         PANIC("No target dentry.");
@@ -487,10 +489,12 @@ cl_vfs_remove(struct dentry *parent, const char *name)
         if (parent_inode->i_op->unlink(parent_inode, target)) {
             PANIC("unlink dir error.");
         }
+        printk("%s: remove file '%s' ok!\n", __func__, name);
     } else if (S_ISDIR(inode->i_mode)) {
         if (parent_inode->i_op->rmdir(parent_inode, target)) {
             PANIC("delete dir error.");
         }
+        printk("%s: remove dir '%s' ok!\n", __func__, name);
     } else {
         PANIC("bad type.");
     }
