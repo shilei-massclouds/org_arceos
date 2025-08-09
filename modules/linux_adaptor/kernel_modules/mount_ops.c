@@ -1,5 +1,6 @@
 #include <linux/fs_context.h>
 #include <linux/fs.h>
+#include <linux/fs_struct.h>
 #include <linux/mount.h>
 
 #include "fs/mount.h"
@@ -37,6 +38,23 @@ cl_mount(const char *fstype, const char *source)
         PANIC("get tree error.");
     }
     printk("%s: Mount filesystem on block ok!\n", __func__);
+
+    /* Note: check why we need it? */
+    up_write(&fc->root->d_sb->s_umount);
+
+    struct vfsmount *mnt = vfs_create_mount(fc);
+    if (IS_ERR(mnt)) {
+        PANIC("create vfs mount error.");
+    }
+
+    struct path root;
+
+    root.mnt = mnt;
+    root.dentry = mnt->mnt_root;
+    mnt->mnt_flags |= MNT_LOCKED;
+
+    set_fs_pwd(current->fs, &root);
+    set_fs_root(current->fs, &root);
 
     return fc->root;
 }

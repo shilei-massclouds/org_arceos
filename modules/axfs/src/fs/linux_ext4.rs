@@ -1,14 +1,10 @@
 use crate::dev::Disk;
 use core::mem;
 use core::ffi::{c_char, CStr};
-use alloc::sync::{Arc, Weak};
+use alloc::sync::Arc;
 use axfs_vfs::{VfsOps, VfsNodeRef, VfsNodeOps, VfsResult, VfsNodeType};
 use axfs_vfs::{VfsError, VfsDirEntry, VfsNodeAttr};
 use axfs_vfs::impl_vfs_non_dir_default;
-use spin::once::Once;
-use spin::RwLock;
-use alloc::collections::BTreeMap;
-use alloc::{string::String, vec::Vec};
 use alloc::ffi::CString;
 
 #[repr(C)]
@@ -29,7 +25,6 @@ const DT_DIR: u8 = 4;
 const DT_REG: u8 = 8;
 
 pub struct LinuxExt4 {
-    parent: Once<VfsNodeRef>,
     root: Arc<DirNode>,
 }
 
@@ -38,14 +33,8 @@ impl LinuxExt4 {
     pub fn new() -> Self {
         let handle = unsafe { cl_ext4_root_handle() };
         Self {
-            parent: Once::new(),
             root: DirNode::new(handle),
         }
-    }
-
-    /// Returns the root directory node in [`Arc<DirNode>`](DirNode).
-    pub fn root_dir_node(&self) -> Arc<DirNode> {
-        self.root.clone()
     }
 }
 
@@ -61,7 +50,7 @@ pub(crate) fn new(_disk: Disk) -> Arc<dyn VfsOps> {
 }
 
 impl VfsOps for LinuxExt4 {
-    fn mount(&self, _path: &str, mount_point: VfsNodeRef) -> VfsResult {
+    fn mount(&self, _path: &str, _mount_point: VfsNodeRef) -> VfsResult {
         unimplemented!();
     }
 

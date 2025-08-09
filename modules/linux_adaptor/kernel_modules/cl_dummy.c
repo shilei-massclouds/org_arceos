@@ -347,3 +347,48 @@ void __fsnotify_inode_delete(struct inode *inode)
 {
     pr_err("%s: No impl.", __func__);
 }
+
+void __audit_inode(struct filename *name, const struct dentry *dentry,
+           unsigned int flags)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int security_inode_permission(struct inode *inode, int mask)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int devcgroup_check_permission(short type, u32 major, u32 minor, short access)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+/*
+ * Notify this dentry's parent about a child's events with child name info
+ * if parent is watching or if inode/sb/mount are interested in events with
+ * parent and name info.
+ *
+ * Notify only the child without name info if parent is not watching and
+ * inode/sb/mount are not interested in events with parent and name info.
+ */
+int __fsnotify_parent(struct dentry *dentry, __u32 mask, const void *data,
+              int data_type)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_file_open(struct file *file)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_file_post_open(struct file *file, int mask)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}

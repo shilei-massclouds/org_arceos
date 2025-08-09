@@ -19,6 +19,17 @@
 #include "../adaptor.h"
 
 /*
+ * Initialise a struct file's readahead state.  Assumes that the caller has
+ * memset *ra to zero.
+ */
+void
+file_ra_state_init(struct file_ra_state *ra, struct address_space *mapping)
+{
+    ra->ra_pages = inode_to_bdi(mapping->host)->ra_pages;
+    ra->prev_pos = -1;
+}
+
+/*
  * do_page_cache_ra() actually reads a chunk of disk.  It allocates
  * the pages first, then submits them for I/O. This avoids the very bad
  * behaviour which would occur if page allocations are causing VM writeback.

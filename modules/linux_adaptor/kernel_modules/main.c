@@ -15,7 +15,7 @@
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-//#define TEST_EXT4
+#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
@@ -61,6 +61,7 @@ static void test_ext2(void);
 
 extern void test_ext4(struct dentry *);
 
+/* Delete 'cl_ext4_root' because we will use current->fs */
 static struct dentry *cl_ext4_root;
 
 int clinux_init(void)
@@ -149,6 +150,7 @@ int clinux_init(void)
 unsigned long
 cl_ext4_root_handle(void)
 {
+    /* Delete 'cl_ext4_root' because we will use current->fs */
     return (unsigned long) cl_ext4_root;
 }
 

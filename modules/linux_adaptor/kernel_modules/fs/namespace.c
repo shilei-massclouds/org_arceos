@@ -200,11 +200,113 @@ static inline void mnt_add_count(struct mount *mnt, int n)
 #endif
 }
 
+static void mntput_no_expire(struct mount *mnt)
+{
+    LIST_HEAD(list);
+    int count;
+
+    rcu_read_lock();
+    if (likely(READ_ONCE(mnt->mnt_ns))) {
+        /*
+         * Since we don't do lock_mount_hash() here,
+         * ->mnt_ns can change under us.  However, if it's
+         * non-NULL, then there's a reference that won't
+         * be dropped until after an RCU delay done after
+         * turning ->mnt_ns NULL.  So if we observe it
+         * non-NULL under rcu_read_lock(), the reference
+         * we are dropping is not the final one.
+         */
+        mnt_add_count(mnt, -1);
+        rcu_read_unlock();
+        return;
+    }
+    lock_mount_hash();
+    /*
+     * make sure that if __legitimize_mnt() has not seen us grab
+     * mount_lock, we'll see their refcount increment here.
+     */
+    smp_mb();
+    mnt_add_count(mnt, -1);
+    count = mnt_get_count(mnt);
+    if (count != 0) {
+        WARN_ON(count < 0);
+        rcu_read_unlock();
+        unlock_mount_hash();
+        return;
+    }
+    if (unlikely(mnt->mnt.mnt_flags & MNT_DOOMED)) {
+        rcu_read_unlock();
+        unlock_mount_hash();
+        return;
+    }
+#if 0
+    mnt->mnt.mnt_flags |= MNT_DOOMED;
+    rcu_read_unlock();
+
+    list_del(&mnt->mnt_instance);
+
+    if (unlikely(!list_empty(&mnt->mnt_mounts))) {
+        struct mount *p, *tmp;
+        list_for_each_entry_safe(p, tmp, &mnt->mnt_mounts,  mnt_child) {
+            __put_mountpoint(unhash_mnt(p), &list);
+            hlist_add_head(&p->mnt_umount, &mnt->mnt_stuck_children);
+        }
+    }
+    unlock_mount_hash();
+    shrink_dentry_list(&list);
+
+    if (likely(!(mnt->mnt.mnt_flags & MNT_INTERNAL))) {
+        struct task_struct *task = current;
+        if (likely(!(task->flags & PF_KTHREAD))) {
+            init_task_work(&mnt->mnt_rcu, __cleanup_mnt);
+            if (!task_work_add(task, &mnt->mnt_rcu, TWA_RESUME))
+                return;
+        }
+        if (llist_add(&mnt->mnt_llist, &delayed_mntput_list))
+            schedule_delayed_work(&delayed_mntput_work, 1);
+        return;
+    }
+    cleanup_mnt(mnt);
+#endif
+
+    PANIC("");
+}
+
+/*
+ * vfsmount lock must be held for write
+ */
+int mnt_get_count(struct mount *mnt)
+{
+#ifdef CONFIG_SMP
+    int count = 0;
+    int cpu;
+
+    for_each_possible_cpu(cpu) {
+        count += per_cpu_ptr(mnt->mnt_pcp, cpu)->mnt_count;
+    }
+
+    return count;
+#else
+    return mnt->mnt_count;
+#endif
+}
+
 struct vfsmount *mntget(struct vfsmount *mnt)
 {
     if (mnt)
         mnt_add_count(real_mount(mnt), 1);
     return mnt;
+}
+
+void mntput(struct vfsmount *mnt)
+{
+    if (mnt) {
+        struct mount *m = real_mount(mnt);
+        /* avoid cacheline pingpong */
+        if (unlikely(m->mnt_expiry_mark))
+            WRITE_ONCE(m->mnt_expiry_mark, 0);
+        mntput_no_expire(m);
+    }
 }
 
 /**
@@ -240,6 +342,91 @@ struct vfsmount *vfs_create_mount(struct fs_context *fc)
     list_add_tail(&mnt->mnt_instance, &mnt->mnt.mnt_sb->s_mounts);
     unlock_mount_hash();
     return &mnt->mnt;
+}
+
+/* call under rcu_read_lock */
+int __legitimize_mnt(struct vfsmount *bastard, unsigned seq)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+bool path_is_under(const struct path *path1, const struct path *path2)
+{
+    PANIC("");
+}
+
+/**
+ * mnt_want_write - get write access to a mount
+ * @m: the mount on which to take a write
+ *
+ * This tells the low-level filesystem that a write is about to be performed to
+ * it, and makes sure that writes are allowed (mount is read-write, filesystem
+ * is not frozen) before returning success.  When the write operation is
+ * finished, mnt_drop_write() must be called.  This is effectively a refcount.
+ */
+int mnt_want_write(struct vfsmount *m)
+{
+    int ret;
+
+    sb_start_write(m->mnt_sb);
+    ret = mnt_get_write_access(m);
+    if (ret)
+        sb_end_write(m->mnt_sb);
+    return ret;
+}
+
+/*
+ * Most r/o & frozen checks on a fs are for operations that take discrete
+ * amounts of time, like a write() or unlink().  We must keep track of when
+ * those operations start (for permission checks) and when they end, so that we
+ * can determine when writes are able to occur to a filesystem.
+ */
+/**
+ * mnt_get_write_access - get write access to a mount without freeze protection
+ * @m: the mount on which to take a write
+ *
+ * This tells the low-level filesystem that a write is about to be performed to
+ * it, and makes sure that writes are allowed (mnt it read-write) before
+ * returning success. This operation does not protect against filesystem being
+ * frozen. When the write operation is finished, mnt_put_write_access() must be
+ * called. This is effectively a refcount.
+ */
+int mnt_get_write_access(struct vfsmount *m)
+{
+    PANIC("");
+}
+
+/**
+ * mnt_put_write_access - give up write access to a mount
+ * @mnt: the mount on which to give up write access
+ *
+ * Tells the low-level filesystem that we are done
+ * performing writes to it.  Must be matched with
+ * mnt_get_write_access() call above.
+ */
+void mnt_put_write_access(struct vfsmount *mnt)
+{
+#if 0
+    preempt_disable();
+    mnt_dec_writers(real_mount(mnt));
+    preempt_enable();
+#endif
+    PANIC("");
+}
+
+/**
+ * mnt_drop_write - give up write access to a mount
+ * @mnt: the mount on which to give up write access
+ *
+ * Tells the low-level filesystem that we are done performing writes to it and
+ * also allows filesystem to be frozen again.  Must be matched with
+ * mnt_want_write() call above.
+ */
+void mnt_drop_write(struct vfsmount *mnt)
+{
+    mnt_put_write_access(mnt);
+    sb_end_write(mnt->mnt_sb);
 }
 
 void __init mnt_init(void)

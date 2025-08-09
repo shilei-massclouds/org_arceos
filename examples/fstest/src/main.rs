@@ -35,10 +35,10 @@ fn main() {
     // Create a directory.
     create_dir("dir1");
 
-    //do_file_test("dir1/f2.txt");
+    do_file_test("dir1/f2.txt");
 
     // Remove the directory.
-    //remove_dir("dir1");
+    remove_dir("dir1");
 
     println!("fstest ok!");
 }

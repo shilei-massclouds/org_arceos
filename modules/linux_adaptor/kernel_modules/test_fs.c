@@ -1,8 +1,10 @@
 #include <linux/fs.h>
 #include <linux/dirent.h>
 #include <linux/blkdev.h>
+#include <linux/syscalls.h>
 
 #include "adaptor.h"
+#include "cl_syscalls.h"
 
 extern int verify_dirent_name(const char *name, int len);
 
@@ -70,7 +72,8 @@ cl_vfs_read(struct dentry *dentry, unsigned long offset, char *buf, size_t len)
         PANIC("bad file_operations.");
     }
 
-    return kernel_read(&file, buf, len, &offset);
+    loff_t _offset = offset;
+    return kernel_read(&file, buf, len, &_offset);
 }
 
 /* File level read. */
@@ -117,7 +120,9 @@ cl_vfs_write(struct dentry *dentry, unsigned long offset, const char *buf, size_
 
     // Note: set IOCB_DSYNC for sync.
     file.f_iocb_flags |= IOCB_DSYNC;
-    return kernel_write(&file, buf, len, &offset);
+
+    loff_t _offset = offset;
+    return kernel_write(&file, buf, len, &_offset);
 }
 
 /* File level write. */
@@ -604,8 +609,22 @@ static void test_file_ops(struct dentry *root_dentry, const char *fname)
     printk("delete file '%s' ok!\n", fname);
 }
 
+static void
+test_getdents64(void)
+{
+    printk("\n\n============== getdents64 ... =============\n\n");
+    int fd = cl_sys_open("/", O_DIRECTORY, 0);
+    printk("open '%d'\n", fd);
+    PANIC("");
+    printk("\n\n============== getdents64 ok! =============\n\n");
+}
+
 void test_ext4(struct dentry *root)
 {
+    test_getdents64();
+
+    PANIC("Reach here!");
+
     struct inode *root_inode = prepare_inode(root);
 
     /*

@@ -263,7 +263,6 @@ CL_MINE(pagecache_write_begin)
 CL_MINE(pagecache_write_end)
 CL_MINE(__page_symlink)
 CL_MINE(pagevec_lookup_range)
-CL_MINE(path_put)
 CL_MINE(PDE_DATA)
 CL_MINE(__percpu_down_read)
 CL_MINE(percpu_down_write)
@@ -543,3 +542,6 @@ CL_MINE(try_to_del_timer_sync)
 
 CL_MINE(set_cached_acl)
 CL_MINE(posix_acl_update_mode)
+
+// fs/namei
+CL_MINE(__audit_reusename)

@@ -104,6 +104,8 @@ static struct task_struct __init_task = {
     */
     .signal     = &__init_signal,
     .nsproxy    = &init_nsproxy,
+    .fs         = &init_fs,
+    .files      = &init_files,
     RCU_POINTER_INITIALIZER(real_cred, &init_cred),
     RCU_POINTER_INITIALIZER(cred, &init_cred),
 };

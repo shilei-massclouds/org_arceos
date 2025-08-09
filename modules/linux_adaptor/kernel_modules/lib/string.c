@@ -332,3 +332,19 @@ void *memchr(const void *s, int c, size_t n)
 }
 EXPORT_SYMBOL(memchr);
 #endif
+
+#ifndef __HAVE_ARCH_STRNCPY
+char *strncpy(char *dest, const char *src, size_t count)
+{
+    char *tmp = dest;
+
+    while (count) {
+        if ((*tmp = *src) != 0)
+            src++;
+        tmp++;
+        count--;
+    }
+    return dest;
+}
+EXPORT_SYMBOL(strncpy);
+#endif

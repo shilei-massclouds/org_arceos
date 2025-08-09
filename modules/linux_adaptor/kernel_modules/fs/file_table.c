@@ -27,10 +27,31 @@
 
 #include "../adaptor.h"
 
+/* sysctl tunables... */
+static struct files_stat_struct files_stat = {
+    .max_files = NR_FILE
+};
+
 /* SLAB cache for file structures */
 static struct kmem_cache *filp_cachep __ro_after_init;
 
 static struct percpu_counter nr_files __cacheline_aligned_in_smp;
+
+/*
+ * Return the total number of open files in the system
+ */
+static long get_nr_files(void)
+{
+    return percpu_counter_read_positive(&nr_files);
+}
+
+/*
+ * Return the maximum number of open files in the system
+ */
+unsigned long get_max_files(void)
+{
+    return files_stat.max_files;
+}
 
 /* the real guts of fput() - releasing the last reference to file
  */
@@ -246,7 +267,7 @@ void __init files_init(void)
     filp_cachep = kmem_cache_create("filp", sizeof(struct file), &args,
                 SLAB_HWCACHE_ALIGN | SLAB_PANIC |
                 SLAB_ACCOUNT | SLAB_TYPESAFE_BY_RCU);
-    //percpu_counter_init(&nr_files, 0, GFP_KERNEL);
+    percpu_counter_init(&nr_files, 0, GFP_KERNEL);
 }
 
 /*
@@ -266,4 +287,57 @@ void __init files_maxfiles_init(void)
     files_stat.max_files = max_t(unsigned long, n, NR_FILE);
 #endif
     pr_err("%s: No impl.", __func__);
+}
+
+/* Find an unused file structure and return a pointer to it.
+ * Returns an error pointer if some error happend e.g. we over file
+ * structures limit, run out of memory or operation is not permitted.
+ *
+ * Be very careful using this.  You are responsible for
+ * getting write access to any mount that you might assign
+ * to this filp, if it is opened for write.  If this is not
+ * done, you will imbalance int the mount's writer count
+ * and a warning at __fput() time.
+ */
+struct file *alloc_empty_file(int flags, const struct cred *cred)
+{
+    static long old_max;
+    struct file *f;
+    int error;
+
+#if 1
+    /*
+     * Privileged users can go above max_files
+     */
+    if (get_nr_files() >= files_stat.max_files && !capable(CAP_SYS_ADMIN)) {
+        /*
+         * percpu_counters are inaccurate.  Do an expensive check before
+         * we go and fail.
+         */
+        if (percpu_counter_sum_positive(&nr_files) >= files_stat.max_files)
+            goto over;
+    }
+#endif
+
+    f = kmem_cache_zalloc(filp_cachep, GFP_KERNEL);
+    if (unlikely(!f))
+        return ERR_PTR(-ENOMEM);
+
+    error = init_file(f, flags, cred);
+    if (unlikely(error)) {
+        kmem_cache_free(filp_cachep, f);
+        return ERR_PTR(error);
+    }
+
+    percpu_counter_inc(&nr_files);
+
+    return f;
+
+over:
+    /* Ran out of filps - report that */
+    if (get_nr_files() > old_max) {
+        pr_info("VFS: file-max limit %lu reached\n", get_max_files());
+        old_max = get_nr_files();
+    }
+    return ERR_PTR(-ENFILE);
 }
