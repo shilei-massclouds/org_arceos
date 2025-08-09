@@ -2230,14 +2230,11 @@ static inline void blk_account_io_done(struct request *req, u64 now)
 
 static inline void __blk_mq_end_request_acct(struct request *rq, u64 now)
 {
-    printk("%s: step1 rq(%lx)\n", __func__, rq);
     if (rq->rq_flags & RQF_STATS)
         blk_stat_add(rq, now);
 
-    printk("%s: step2\n", __func__);
     blk_mq_sched_completed_request(rq, now);
     blk_account_io_done(rq, now);
-    printk("%s: stepN\n", __func__);
 }
 
 static void blk_mq_finish_request(struct request *rq)
@@ -2259,15 +2256,11 @@ static void blk_mq_finish_request(struct request *rq)
 
 inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
 {
-    printk("%s: BEGIN current(%lx) bio_list(%lx) rq(%lx)\n",
-           __func__, current, current->bio_list, rq);
     if (blk_mq_need_time_stamp(rq))
         __blk_mq_end_request_acct(rq, blk_time_get_ns());
 
-    printk("%s: step2.1\n", __func__);
     blk_mq_finish_request(rq);
 
-    printk("%s: step2.2 (%lx)\n", __func__, rq->end_io);
     if (rq->end_io) {
         rq_qos_done(rq->q, rq);
         if (rq->end_io(rq, error) == RQ_END_IO_FREE)
@@ -2275,7 +2268,6 @@ inline void __blk_mq_end_request(struct request *rq, blk_status_t error)
     } else {
         blk_mq_free_request(rq);
     }
-    printk("%s: END bio_list(%lx)\n", __func__, current->bio_list);
 }
 
 static void __blk_mq_free_request(struct request *rq)

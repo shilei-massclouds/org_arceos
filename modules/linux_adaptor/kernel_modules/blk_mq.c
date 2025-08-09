@@ -509,7 +509,6 @@ bool blk_update_request(struct request *req, blk_status_t error,
 
     //blk_account_io_completion(req, nr_bytes);
 
-    printk("%s: step1 nr_bytes(%u)\n", __func__, nr_bytes);
     total_bytes = 0;
     while (req->bio) {
         struct bio *bio = req->bio;

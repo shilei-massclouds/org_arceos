@@ -706,7 +706,6 @@ void submit_bio_noacct_nocheck(struct bio *bio)
  */
 void submit_bio(struct bio *bio)
 {
-    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     if (bio_op(bio) == REQ_OP_READ) {
         task_io_account_read(bio->bi_iter.bi_size);
         //count_vm_events(PGPGIN, bio_sectors(bio));
@@ -715,9 +714,7 @@ void submit_bio(struct bio *bio)
     }
 
     bio_set_ioprio(bio);
-    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
     submit_bio_noacct(bio);
-    printk("%s: step3 bio_list(%lx)\n", __func__, current->bio_list);
 }
 
 int blk_status_to_errno(blk_status_t status)

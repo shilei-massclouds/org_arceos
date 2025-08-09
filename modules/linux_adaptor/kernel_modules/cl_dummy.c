@@ -392,3 +392,9 @@ int security_file_post_open(struct file *file, int mask)
     pr_err("%s: No impl.", __func__);
     return 0;
 }
+
+int security_file_permission(struct file *file, int mask)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}

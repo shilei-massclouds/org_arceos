@@ -1117,11 +1117,8 @@ void add_interrupt_randomness(int irq)
 	struct pt_regs *regs = get_irq_regs();
 	unsigned int new_count;
 
-    printk("%s: step1\n", __func__);
-    printk("%s: regs(%lx)\n", __func__, regs);
 	fast_mix(fast_pool->pool, entropy,
 		 (regs ? instruction_pointer(regs) : _RET_IP_) ^ swab(irq));
-    printk("%s: step2\n", __func__);
 	new_count = ++fast_pool->count;
 
 	if (new_count & MIX_INFLIGHT)

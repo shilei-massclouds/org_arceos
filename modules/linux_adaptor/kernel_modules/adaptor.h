@@ -17,8 +17,7 @@ extern int _vprintk(const char *fmt, va_list args);
 extern void cl_resched(unsigned long back_to_runq);
 extern void cl_wake_up(unsigned long tid);
 
-extern struct dentry *
-cl_mount(const char *fstype, const char *source);
+extern int cl_mount(const char *fstype, const char *source);
 
 extern unsigned long
 cl_kthread_run(unsigned long task_ptr,

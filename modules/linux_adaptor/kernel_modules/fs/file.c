@@ -227,6 +227,107 @@ void fd_install(unsigned int fd, struct file *file)
     rcu_read_unlock_sched();
 }
 
+static inline struct file *__fget_files_rcu(struct files_struct *files,
+       unsigned int fd, fmode_t mask)
+{
+    for (;;) {
+
+        PANIC("");
+    }
+}
+
+static struct file *__fget_files(struct files_struct *files, unsigned int fd,
+                 fmode_t mask)
+{
+    struct file *file;
+
+    rcu_read_lock();
+    file = __fget_files_rcu(files, fd, mask);
+    rcu_read_unlock();
+
+    return file;
+}
+
+/*
+ * Lightweight file lookup - no refcnt increment if fd table isn't shared.
+ *
+ * You can use this instead of fget if you satisfy all of the following
+ * conditions:
+ * 1) You must call fput_light before exiting the syscall and returning control
+ *    to userspace (i.e. you cannot remember the returned struct file * after
+ *    returning to userspace).
+ * 2) You must not call filp_close on the returned struct file * in between
+ *    calls to fget_light and fput_light.
+ * 3) You must not clone the current task in between the calls to fget_light
+ *    and fput_light.
+ *
+ * The fput_needed flag returned by fget_light should be passed to the
+ * corresponding fput_light.
+ */
+static inline struct fd __fget_light(unsigned int fd, fmode_t mask)
+{
+    struct files_struct *files = current->files;
+    struct file *file;
+
+    /*
+     * If another thread is concurrently calling close_fd() followed
+     * by put_files_struct(), we must not observe the old table
+     * entry combined with the new refcount - otherwise we could
+     * return a file that is concurrently being freed.
+     *
+     * atomic_read_acquire() pairs with atomic_dec_and_test() in
+     * put_files_struct().
+     */
+    if (likely(atomic_read_acquire(&files->count) == 1)) {
+        file = files_lookup_fd_raw(files, fd);
+        if (!file || unlikely(file->f_mode & mask))
+            return EMPTY_FD;
+        return BORROWED_FD(file);
+    } else {
+        file = __fget_files(files, fd, mask);
+        if (!file)
+            return EMPTY_FD;
+        return CLONED_FD(file);
+    }
+}
+struct fd fdget(unsigned int fd)
+{
+    return __fget_light(fd, FMODE_PATH);
+}
+
+/*
+ * Try to avoid f_pos locking. We only need it if the
+ * file is marked for FMODE_ATOMIC_POS, and it can be
+ * accessed multiple ways.
+ *
+ * Always do it for directories, because pidfd_getfd()
+ * can make a file accessible even if it otherwise would
+ * not be, and for directories this is a correctness
+ * issue, not a "POSIX requirement".
+ */
+static inline bool file_needs_f_pos_lock(struct file *file)
+{
+    return (file->f_mode & FMODE_ATOMIC_POS) &&
+        (file_count(file) > 1 || file->f_op->iterate_shared);
+}
+
+struct fd fdget_pos(unsigned int fd)
+{
+    struct fd f = fdget(fd);
+    struct file *file = fd_file(f);
+
+    if (file && file_needs_f_pos_lock(file)) {
+        f.word |= FDPUT_POS_UNLOCK;
+        mutex_lock(&file->f_pos_lock);
+    }
+    return f;
+}
+
+void __f_unlock_pos(struct file *f)
+{
+    mutex_unlock(&f->f_pos_lock);
+}
+
 struct files_struct init_files = {
     .count      = ATOMIC_INIT(1),
     .fdt        = &init_files.fdtab,

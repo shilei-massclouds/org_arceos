@@ -24,6 +24,8 @@ const NAME_OFFSET: isize = 8 + 8 + 2 + 1;
 const DT_DIR: u8 = 4;
 const DT_REG: u8 = 8;
 
+const O_DIRECTORY: usize = 0x00200000;
+
 pub struct LinuxExt4 {
     root: Arc<DirNode>,
 }
@@ -31,7 +33,8 @@ pub struct LinuxExt4 {
 impl LinuxExt4 {
     /// Create a new instance.
     pub fn new() -> Self {
-        let handle = unsafe { cl_ext4_root_handle() };
+        let c_name = CString::new("/").unwrap();
+        let handle = unsafe { cl_sys_open(c_name.as_ptr(), O_DIRECTORY, 0) };
         Self {
             root: DirNode::new(handle),
         }
@@ -296,7 +299,7 @@ fn split_path(path: &str) -> (&str, Option<&str>) {
 }
 
 unsafe extern "C" {
-    fn cl_ext4_root_handle() -> usize;
+    fn cl_sys_open(fname: *const c_char, flags: usize, mode: usize) -> usize;
     fn cl_vfs_parent(curr: usize) -> usize;
 
     fn cl_vfs_lookup(

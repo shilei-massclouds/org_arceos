@@ -8,8 +8,7 @@
 
 #include "adaptor.h"
 
-struct dentry *
-cl_mount(const char *fstype, const char *source)
+int cl_mount(const char *fstype, const char *source)
 {
     struct fs_context *fc;
     struct file_system_type *type;
@@ -56,5 +55,6 @@ cl_mount(const char *fstype, const char *source)
     set_fs_pwd(current->fs, &root);
     set_fs_root(current->fs, &root);
 
-    return fc->root;
+    put_fs_context(fc);
+    return 0;
 }

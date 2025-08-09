@@ -16,42 +16,6 @@ struct getdents_callback64 {
     int error;
 };
 
-static bool filldir64(struct dir_context *ctx, const char *name, int namlen,
-                      loff_t offset, u64 ino, unsigned int d_type)
-{
-    struct linux_dirent64 __user *dirent, *prev;
-    struct getdents_callback64 *buf =
-        container_of(ctx, struct getdents_callback64, ctx);
-    int reclen = ALIGN(offsetof(struct linux_dirent64, d_name) + namlen + 1,
-        sizeof(u64));
-    int prev_reclen;
-
-    buf->error = verify_dirent_name(name, namlen);
-    if (unlikely(buf->error))
-        return false;
-    buf->error = -EINVAL;   /* only used if we fail.. */
-    if (reclen > buf->count)
-        return false;
-    prev_reclen = buf->prev_reclen;
-    if (prev_reclen && signal_pending(current))
-        return false;
-    dirent = buf->current_dir;
-    prev = (void __user *)dirent - prev_reclen;
-
-    /* This might be 'dirent->d_off', but if so it will get overwritten */
-    prev->d_off = offset;
-    dirent->d_ino = ino;
-    dirent->d_reclen = reclen;
-    dirent->d_type = d_type;
-    memcpy(dirent->d_name, name, namlen);
-
-    buf->prev_reclen = reclen;
-    buf->current_dir = (void __user *)dirent + reclen;
-    buf->count -= reclen;
-
-    return true;
-}
-
 unsigned long
 cl_vfs_read(struct dentry *dentry, unsigned long offset, char *buf, size_t len)
 {
@@ -353,6 +317,7 @@ out:
 unsigned long
 cl_vfs_read_dir(struct dentry *dentry, char *ptr, size_t len)
 {
+#if 0
     int ret;
     struct getdents_callback64 buf = {
         .ctx.actor = filldir64,
@@ -372,12 +337,15 @@ cl_vfs_read_dir(struct dentry *dentry, char *ptr, size_t len)
         ret = len - buf.count;
     }
     return (unsigned long) ret;
+#endif
+    PANIC("");
 }
 
 #define _DIR_BUF_LEN 512
 
 static void test_dir_iter(struct inode *root)
 {
+#if 0
     int ret;
     char dir_buf[_DIR_BUF_LEN] = {};
     char *pos = dir_buf;
@@ -417,6 +385,8 @@ static void test_dir_iter(struct inode *root)
     }
 
     printk("iterate dir Ok!\n");
+#endif
+    PANIC("");
 }
 
 static struct dentry *
@@ -613,18 +583,39 @@ static void
 test_getdents64(void)
 {
     printk("\n\n============== getdents64 ... =============\n\n");
+
+    int count;
     int fd = cl_sys_open("/", O_DIRECTORY, 0);
-    printk("open '%d'\n", fd);
-    PANIC("");
+    if (fd < 0) {
+        PANIC("bad dir fd.");
+    }
+    printk("%s: open '%d'\n", __func__, fd);
+
+    char buf[512];
+    struct linux_dirent64 *dirent = buf;
+    count = cl_sys_getdents64(fd, dirent, sizeof(buf));
+    if (count <= 0) {
+        PANIC("read dir err.");
+    }
+
+    int pos = 0;
+    while (pos < count) {
+        struct linux_dirent64 *dirent = (struct linux_dirent64 *) (buf + pos);
+        printk("[%lu] %s type(%u) len(%u)\n",
+               dirent->d_ino, dirent->d_name, dirent->d_type, dirent->d_reclen);
+        pos += dirent->d_reclen;
+    }
+
     printk("\n\n============== getdents64 ok! =============\n\n");
 }
 
-void test_ext4(struct dentry *root)
+void test_ext4(void)
 {
     test_getdents64();
 
     PANIC("Reach here!");
 
+#if 0
     struct inode *root_inode = prepare_inode(root);
 
     /*
@@ -656,4 +647,5 @@ void test_ext4(struct dentry *root)
     printk("=========== %s: flush blkdev ...\n", __func__);
     int err = blkdev_issue_flush(root_inode->i_sb->s_bdev);
     printk("=========== %s: flush blkdev OK! err(%d)\n", __func__, err);
+#endif
 }

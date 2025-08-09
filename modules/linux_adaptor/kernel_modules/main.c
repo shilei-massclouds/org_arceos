@@ -59,15 +59,10 @@ extern ssize_t new_sync_write(struct file *filp, const char *buf, size_t len, lo
 static void test_ext2(void);
 #endif
 
-extern void test_ext4(struct dentry *);
-
-/* Delete 'cl_ext4_root' because we will use current->fs */
-static struct dentry *cl_ext4_root;
+extern void test_ext4();
 
 int clinux_init(void)
 {
-    struct dentry *root;
-
     printk("cLinux base is starting ...\n");
 
     random_init_early("");
@@ -131,27 +126,17 @@ int clinux_init(void)
     cl_ext4_init_fs();
 
     printk("====== Ext4 mount ======\n");
-    root = cl_mount("ext4", "/dev/root");
-    if (root == NULL) {
+    if (cl_mount("ext4", "/dev/root") < 0) {
         PANIC("bad ext4 root.");
     }
-    cl_ext4_root = root;
-    printk("Ext4 root addr(%lx)\n", cl_ext4_root);
 
 #ifdef TEST_EXT4
     printk("====== Ext4 test ======\n");
-    test_ext4(root);
+    test_ext4();
     PANIC("Reach here!");
 #endif
 
     return 0;
-}
-
-unsigned long
-cl_ext4_root_handle(void)
-{
-    /* Delete 'cl_ext4_root' because we will use current->fs */
-    return (unsigned long) cl_ext4_root;
 }
 
 void call_handle_arch_irq(unsigned long cause)
