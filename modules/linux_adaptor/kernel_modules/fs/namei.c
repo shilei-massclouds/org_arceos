@@ -28,6 +28,10 @@
 #include "mount.h"
 #include "../adaptor.h"
 
+#define ND_ROOT_PRESET 1
+#define ND_ROOT_GRABBED 2
+#define ND_JUMPED 4
+
 #define EMBEDDED_LEVELS 2
 struct nameidata {
     struct path path;
@@ -52,6 +56,8 @@ struct nameidata {
     vfsuid_t    dir_vfsuid;
     umode_t     dir_mode;
 } __randomize_layout;
+
+enum {WALK_TRAILING = 1, WALK_MORE = 2, WALK_NOFOLLOW = 4};
 
 #define EMBEDDED_NAME_MAX   (PATH_MAX - offsetof(struct filename, iname))
 
@@ -134,100 +140,6 @@ void putname(struct filename *name)
         __putname(name);
 }
 
-static void drop_links(struct nameidata *nd)
-{
-    int i = nd->depth;
-    while (i--) {
-        struct saved *last = nd->stack + i;
-        do_delayed_call(&last->done);
-        clear_delayed_call(&last->done);
-    }
-}
-
-#define ND_ROOT_PRESET 1
-#define ND_ROOT_GRABBED 2
-#define ND_JUMPED 4
-
-static void leave_rcu(struct nameidata *nd)
-{
-    nd->flags &= ~LOOKUP_RCU;
-    nd->seq = nd->next_seq = 0;
-    rcu_read_unlock();
-}
-
-static void terminate_walk(struct nameidata *nd)
-{
-    drop_links(nd);
-    if (!(nd->flags & LOOKUP_RCU)) {
-        int i;
-        path_put(&nd->path);
-        for (i = 0; i < nd->depth; i++)
-            path_put(&nd->stack[i].link);
-        if (nd->state & ND_ROOT_GRABBED) {
-            path_put(&nd->root);
-            nd->state &= ~ND_ROOT_GRABBED;
-        }
-    } else {
-        leave_rcu(nd);
-    }
-    nd->depth = 0;
-    nd->path.mnt = NULL;
-    nd->path.dentry = NULL;
-}
-
-static int handle_truncate(struct mnt_idmap *idmap, struct file *filp)
-{
-    PANIC("");
-}
-
-static void __set_nameidata(struct nameidata *p, int dfd, struct filename *name)
-{
-    struct nameidata *old = current->nameidata;
-    p->stack = p->internal;
-    p->depth = 0;
-    p->dfd = dfd;
-    p->name = name;
-    p->path.mnt = NULL;
-    p->path.dentry = NULL;
-    p->total_link_count = old ? old->total_link_count : 0;
-    p->saved = old;
-    current->nameidata = p;
-}
-
-static inline void set_nameidata(struct nameidata *p, int dfd, struct filename *name,
-              const struct path *root)
-{
-    __set_nameidata(p, dfd, name);
-    p->state = 0;
-    if (unlikely(root)) {
-        p->state = ND_ROOT_PRESET;
-        p->root = *root;
-    }
-}
-
-static void restore_nameidata(void)
-{
-    struct nameidata *now = current->nameidata, *old = now->saved;
-
-    current->nameidata = old;
-    if (old)
-        old->total_link_count = now->total_link_count;
-    if (now->stack != now->internal)
-        kfree(now->stack);
-}
-
-static int do_tmpfile(struct nameidata *nd, unsigned flags,
-        const struct open_flags *op,
-        struct file *file)
-{
-    PANIC("");
-}
-
-static int do_o_path(struct nameidata *nd, unsigned flags, struct file *file)
-{
-    PANIC("");
-}
-
 static int set_root(struct nameidata *nd)
 {
     struct fs_struct *fs = current->fs;
@@ -287,28 +199,34 @@ static int nd_jump_root(struct nameidata *nd)
     return 0;
 }
 
-/**
- * path_get - get a reference to a path
- * @path: path to get the reference to
- *
- * Given a path increment the reference count to the dentry and the vfsmount.
- */
-void path_get(const struct path *path)
+static inline void put_link(struct nameidata *nd)
 {
-    mntget(path->mnt);
-    dget(path->dentry);
+    struct saved *last = nd->stack + --nd->depth;
+    do_delayed_call(&last->done);
+    if (!(nd->flags & LOOKUP_RCU))
+        path_put(&last->link);
 }
 
-/**
- * path_put - put a reference to a path
- * @path: path to put the reference to
- *
- * Given a path decrement the reference count to the dentry and the vfsmount.
- */
-void path_put(const struct path *path)
+static const char *handle_dots(struct nameidata *nd, int type)
 {
-    dput(path->dentry);
-    mntput(path->mnt);
+    if (type == LAST_DOTDOT) {
+        PANIC("LAST_DOTDOT");
+    }
+    return NULL;
+}
+
+/*
+ * Do we need to follow links? We _really_ want to be able
+ * to do this check without having to look at inode->i_op,
+ * so we keep a cache of "no, this doesn't need follow_link"
+ * for the common case.
+ *
+ * NOTE: dentry must be what nd->next_seq had been sampled from.
+ */
+static const char *step_into(struct nameidata *nd, int flags,
+             struct dentry *dentry)
+{
+    PANIC("");
 }
 
 /* must be paired with terminate_walk() */
@@ -353,6 +271,35 @@ static const char *path_init(struct nameidata *nd, unsigned flags)
     PANIC("");
 }
 
+static const char *walk_component(struct nameidata *nd, int flags)
+{
+    struct dentry *dentry;
+    /*
+     * "." and ".." are special - ".." especially so because it has
+     * to be able to know about the current root directory and
+     * parent relationships.
+     */
+    if (unlikely(nd->last_type != LAST_NORM)) {
+        if (!(flags & WALK_MORE) && nd->depth)
+            put_link(nd);
+        return handle_dots(nd, nd->last_type);
+    }
+#if 0
+    dentry = lookup_fast(nd);
+    if (IS_ERR(dentry))
+        return ERR_CAST(dentry);
+    if (unlikely(!dentry)) {
+        dentry = lookup_slow(&nd->last, nd->path.dentry, nd->flags);
+        if (IS_ERR(dentry))
+            return ERR_CAST(dentry);
+    }
+    if (!(flags & WALK_MORE) && nd->depth)
+        put_link(nd);
+    return step_into(nd, flags, dentry);
+#endif
+    PANIC("");
+}
+
 /*
  * Name resolution.
  * This is the basic name resolution function, turning a pathname into
@@ -383,48 +330,20 @@ static int link_path_walk(const char *name, struct nameidata *nd)
     }
 }
 
-static inline void put_link(struct nameidata *nd)
+static inline const char *lookup_last(struct nameidata *nd)
 {
-    struct saved *last = nd->stack + --nd->depth;
-    do_delayed_call(&last->done);
+    if (nd->last_type == LAST_NORM && nd->last.name[nd->last.len])
+        nd->flags |= LOOKUP_FOLLOW | LOOKUP_DIRECTORY;
+
+    return walk_component(nd, WALK_TRAILING);
+}
+
+static int handle_lookup_down(struct nameidata *nd)
+{
     if (!(nd->flags & LOOKUP_RCU))
-        path_put(&last->link);
-}
-
-static const char *handle_dots(struct nameidata *nd, int type)
-{
-    if (type == LAST_DOTDOT) {
-        PANIC("LAST_DOTDOT");
-    }
-    return NULL;
-}
-
-static const char *open_last_lookups(struct nameidata *nd,
-           struct file *file, const struct open_flags *op)
-{
-    struct dentry *dir = nd->path.dentry;
-    int open_flag = op->open_flag;
-    bool got_write = false;
-    struct dentry *dentry;
-    const char *res;
-
-    nd->flags |= op->intent;
-
-    if (nd->last_type != LAST_NORM) {
-        if (nd->depth)
-            put_link(nd);
-        return handle_dots(nd, nd->last_type);
-    }
-
-    printk("%s: step1\n", __func__);
-#if 0
-    /* We _can_ be in RCU mode here */
-    dentry = lookup_fast_for_open(nd, open_flag);
-    if (IS_ERR(dentry))
-        return ERR_CAST(dentry);
-#endif
-
-    PANIC("");
+        dget(nd->path.dentry);
+    nd->next_seq = nd->seq;
+    return PTR_ERR(step_into(nd, WALK_NOFOLLOW, nd->path.dentry));
 }
 
 /* path_put is needed afterwards regardless of success or failure */
@@ -448,6 +367,23 @@ static inline bool legitimize_path(struct nameidata *nd,
                 struct path *path, unsigned seq)
 {
     return __legitimize_path(path, seq, nd->m_seq);
+}
+
+static void drop_links(struct nameidata *nd)
+{
+    int i = nd->depth;
+    while (i--) {
+        struct saved *last = nd->stack + i;
+        do_delayed_call(&last->done);
+        clear_delayed_call(&last->done);
+    }
+}
+
+static void leave_rcu(struct nameidata *nd)
+{
+    nd->flags &= ~LOOKUP_RCU;
+    nd->seq = nd->next_seq = 0;
+    rcu_read_unlock();
 }
 
 static bool legitimize_links(struct nameidata *nd)
@@ -580,6 +516,175 @@ static int complete_walk(struct nameidata *nd)
 
     PANIC("");
     return status;
+}
+
+static void terminate_walk(struct nameidata *nd)
+{
+    drop_links(nd);
+    if (!(nd->flags & LOOKUP_RCU)) {
+        int i;
+        path_put(&nd->path);
+        for (i = 0; i < nd->depth; i++)
+            path_put(&nd->stack[i].link);
+        if (nd->state & ND_ROOT_GRABBED) {
+            path_put(&nd->root);
+            nd->state &= ~ND_ROOT_GRABBED;
+        }
+    } else {
+        leave_rcu(nd);
+    }
+    nd->depth = 0;
+    nd->path.mnt = NULL;
+    nd->path.dentry = NULL;
+}
+
+/* Returns 0 and nd will be valid on success; Returns error, otherwise. */
+static int path_lookupat(struct nameidata *nd, unsigned flags, struct path *path)
+{
+    const char *s = path_init(nd, flags);
+    int err;
+
+    if (unlikely(flags & LOOKUP_DOWN) && !IS_ERR(s)) {
+#if 0
+        err = handle_lookup_down(nd);
+        if (unlikely(err < 0))
+            s = ERR_PTR(err);
+#endif
+        PANIC("LOOKUP_DOWN");
+    }
+
+    while (!(err = link_path_walk(s, nd)) &&
+           (s = lookup_last(nd)) != NULL)
+        ;
+    if (!err && unlikely(nd->flags & LOOKUP_MOUNTPOINT)) {
+        err = handle_lookup_down(nd);
+        nd->state &= ~ND_JUMPED; // no d_weak_revalidate(), please...
+    }
+    if (!err)
+        err = complete_walk(nd);
+
+    if (!err && nd->flags & LOOKUP_DIRECTORY)
+        if (!d_can_lookup(nd->path.dentry))
+            err = -ENOTDIR;
+    if (!err) {
+        *path = nd->path;
+        nd->path.mnt = NULL;
+        nd->path.dentry = NULL;
+    }
+    terminate_walk(nd);
+    return err;
+}
+
+static int handle_truncate(struct mnt_idmap *idmap, struct file *filp)
+{
+    PANIC("");
+}
+
+static void __set_nameidata(struct nameidata *p, int dfd, struct filename *name)
+{
+    struct nameidata *old = current->nameidata;
+    p->stack = p->internal;
+    p->depth = 0;
+    p->dfd = dfd;
+    p->name = name;
+    p->path.mnt = NULL;
+    p->path.dentry = NULL;
+    p->total_link_count = old ? old->total_link_count : 0;
+    p->saved = old;
+    current->nameidata = p;
+}
+
+static inline void set_nameidata(struct nameidata *p, int dfd, struct filename *name,
+              const struct path *root)
+{
+    __set_nameidata(p, dfd, name);
+    p->state = 0;
+    if (unlikely(root)) {
+        p->state = ND_ROOT_PRESET;
+        p->root = *root;
+    }
+}
+
+static void restore_nameidata(void)
+{
+    struct nameidata *now = current->nameidata, *old = now->saved;
+
+    current->nameidata = old;
+    if (old)
+        old->total_link_count = now->total_link_count;
+    if (now->stack != now->internal)
+        kfree(now->stack);
+}
+
+static int do_tmpfile(struct nameidata *nd, unsigned flags,
+        const struct open_flags *op,
+        struct file *file)
+{
+    PANIC("");
+}
+
+static int do_o_path(struct nameidata *nd, unsigned flags, struct file *file)
+{
+    struct path path;
+    int error = path_lookupat(nd, flags, &path);
+    if (!error) {
+        audit_inode(nd->name, path.dentry, 0);
+        error = vfs_open(&path, file);
+        path_put(&path);
+    }
+    return error;
+}
+
+/**
+ * path_get - get a reference to a path
+ * @path: path to get the reference to
+ *
+ * Given a path increment the reference count to the dentry and the vfsmount.
+ */
+void path_get(const struct path *path)
+{
+    mntget(path->mnt);
+    dget(path->dentry);
+}
+
+/**
+ * path_put - put a reference to a path
+ * @path: path to put the reference to
+ *
+ * Given a path decrement the reference count to the dentry and the vfsmount.
+ */
+void path_put(const struct path *path)
+{
+    dput(path->dentry);
+    mntput(path->mnt);
+}
+
+static const char *open_last_lookups(struct nameidata *nd,
+           struct file *file, const struct open_flags *op)
+{
+    struct dentry *dir = nd->path.dentry;
+    int open_flag = op->open_flag;
+    bool got_write = false;
+    struct dentry *dentry;
+    const char *res;
+
+    nd->flags |= op->intent;
+
+    if (nd->last_type != LAST_NORM) {
+        if (nd->depth)
+            put_link(nd);
+        return handle_dots(nd, nd->last_type);
+    }
+
+    printk("%s: step1\n", __func__);
+#if 0
+    /* We _can_ be in RCU mode here */
+    dentry = lookup_fast_for_open(nd, open_flag);
+    if (IS_ERR(dentry))
+        return ERR_CAST(dentry);
+#endif
+
+    PANIC("");
 }
 
 /**

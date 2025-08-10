@@ -582,7 +582,7 @@ static void test_file_ops(struct dentry *root_dentry, const char *fname)
 static void
 test_getdents64(void)
 {
-    printk("\n\n============== getdents64 ... =============\n\n");
+    printk("\n============== getdents64 ... =============\n");
 
     int count;
     int fd = cl_sys_open("/", O_DIRECTORY, 0);
@@ -595,6 +595,7 @@ test_getdents64(void)
     struct linux_dirent64 *dirent = buf;
     count = cl_sys_getdents64(fd, dirent, sizeof(buf));
     if (count <= 0) {
+        printk("read dir err %d.\n", count);
         PANIC("read dir err.");
     }
 
@@ -610,12 +611,14 @@ test_getdents64(void)
         PANIC("close dir fd err.");
     }
 
-    printk("\n\n============== getdents64 ok! =============\n\n");
+    printk("\n============== getdents64 ok! =============\n\n");
 }
 
 static void
 test_file_create(void)
 {
+    printk("\n============== file create ... =============\n");
+    printk("\n============== file create ok! =============\n\n");
 }
 
 void test_ext4(void)
