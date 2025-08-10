@@ -560,7 +560,7 @@ test_getdents64(void)
     printk("%s: open dir fd '%d'\n", __func__, fd);
 
     char buf[512];
-    struct linux_dirent64 *dirent = buf;
+    struct linux_dirent64 *dirent = (struct linux_dirent64 *) buf;
     count = cl_sys_getdents64(fd, dirent, sizeof(buf));
     if (count <= 0) {
         printk("read dir err %d.\n", count);
@@ -613,13 +613,46 @@ test_file_remove(void)
     printk("\n============== file remove ok! =============\n\n");
 }
 
+static void
+test_file_stat(const char *fname)
+{
+    printk("\n============== file stat ... =============\n");
+
+    struct stat buf;
+    int err = cl_sys_newstat(fname, &buf);
+    if (err < 0) {
+        if (err == -ENOENT) {
+            printk("No such file '%s'.\n", fname);
+        } else {
+            printk("stat err: %d\n", err);
+            PANIC("get file stat err.");
+        }
+    } else {
+        printk("[%s] ino: %lu, mode: %u, size: %ld\n",
+               fname, buf.st_ino, buf.st_mode, buf.st_size);
+        if (S_ISREG(buf.st_mode)) {
+            printk("It is a FILE.\n");
+        } else if (S_ISDIR(buf.st_mode)) {
+            printk("It is a DIR.\n");
+        } else {
+            printk("It is other types.\n");
+        }
+    }
+
+    printk("\n============== file stat ok! =============\n\n");
+}
+
 void test_ext4(void)
 {
     test_getdents64();
 
     test_file_create();
 
+    test_file_stat("/f1.txt");
+
     test_file_remove();
+
+    test_file_stat("/f1.txt");
 
     PANIC("Reach here!");
 

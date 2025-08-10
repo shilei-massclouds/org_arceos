@@ -19,4 +19,6 @@ extern int cl_sys_getdents64(unsigned int fd,
                              struct linux_dirent64 *dirent,
                              unsigned int count);
 
+extern int cl_sys_newstat(const char *filename, struct stat *statbuf);
+
 #endif /* _CL_SYSCALLS_H_ */

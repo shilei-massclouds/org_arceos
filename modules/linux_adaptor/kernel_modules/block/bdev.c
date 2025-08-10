@@ -887,6 +887,15 @@ void bdev_fput(struct file *bdev_file)
     fput(bdev_file);
 }
 
+/*
+ * Handle STATX_{DIOALIGN, WRITE_ATOMIC} for block devices.
+ */
+void bdev_statx(struct path *path, struct kstat *stat,
+        u32 request_mask)
+{
+    PANIC("");
+}
+
 void __init bdev_cache_init(void)
 {
     int err;

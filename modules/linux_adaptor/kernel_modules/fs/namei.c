@@ -231,6 +231,65 @@ static const char *handle_dots(struct nameidata *nd, int type)
 }
 
 /*
+ * Try to skip to top of mountpoint pile in rcuwalk mode.  Fail if
+ * we meet a managed dentry that would need blocking.
+ */
+static bool __follow_mount_rcu(struct nameidata *nd, struct path *path)
+{
+    struct dentry *dentry = path->dentry;
+    unsigned int flags = dentry->d_flags;
+
+    if (likely(!(flags & DCACHE_MANAGED_DENTRY)))
+        return true;
+
+    if (unlikely(nd->flags & LOOKUP_NO_XDEV))
+        return false;
+
+
+    PANIC("");
+}
+
+static inline int handle_mounts(struct nameidata *nd, struct dentry *dentry,
+              struct path *path)
+{
+    bool jumped;
+    int ret;
+
+    path->mnt = nd->path.mnt;
+    path->dentry = dentry;
+    if (nd->flags & LOOKUP_RCU) {
+        unsigned int seq = nd->next_seq;
+        if (likely(__follow_mount_rcu(nd, path)))
+            return 0;
+#if 0
+        // *path and nd->next_seq might've been clobbered
+        path->mnt = nd->path.mnt;
+        path->dentry = dentry;
+        nd->next_seq = seq;
+        if (!try_to_unlazy_next(nd, dentry))
+            return -ECHILD;
+#endif
+        PANIC("LOOKUP_RCU");
+    }
+#if 0
+    ret = traverse_mounts(path, &jumped, &nd->total_link_count, nd->flags);
+    if (jumped) {
+        if (unlikely(nd->flags & LOOKUP_NO_XDEV))
+            ret = -EXDEV;
+        else
+            nd->state |= ND_JUMPED;
+    }
+    if (unlikely(ret)) {
+        dput(path->dentry);
+        if (path->mnt != nd->path.mnt)
+            mntput(path->mnt);
+    }
+    return ret;
+#endif
+    PANIC("");
+}
+
+/*
  * Do we need to follow links? We _really_ want to be able
  * to do this check without having to look at inode->i_op,
  * so we keep a cache of "no, this doesn't need follow_link"
@@ -241,6 +300,43 @@ static const char *handle_dots(struct nameidata *nd, int type)
 static const char *step_into(struct nameidata *nd, int flags,
              struct dentry *dentry)
 {
+    struct path path;
+    struct inode *inode;
+    int err = handle_mounts(nd, dentry, &path);
+
+    if (err < 0)
+        return ERR_PTR(err);
+    inode = path.dentry->d_inode;
+    if (likely(!d_is_symlink(path.dentry)) ||
+       ((flags & WALK_TRAILING) && !(nd->flags & LOOKUP_FOLLOW)) ||
+       (flags & WALK_NOFOLLOW)) {
+        /* not a symlink or should not follow */
+        if (nd->flags & LOOKUP_RCU) {
+            if (read_seqcount_retry(&path.dentry->d_seq, nd->next_seq))
+                return ERR_PTR(-ECHILD);
+            if (unlikely(!inode))
+                return ERR_PTR(-ENOENT);
+        } else {
+            dput(nd->path.dentry);
+            if (nd->path.mnt != path.mnt)
+                mntput(nd->path.mnt);
+        }
+        nd->path = path;
+        nd->inode = inode;
+        nd->seq = nd->next_seq;
+        return NULL;
+    }
+#if 0
+    if (nd->flags & LOOKUP_RCU) {
+        /* make sure that d_is_symlink above matches inode */
+        if (read_seqcount_retry(&path.dentry->d_seq, nd->next_seq))
+            return ERR_PTR(-ECHILD);
+    } else {
+        if (path.mnt == nd->path.mnt)
+            mntget(path.mnt);
+    }
+    return pick_link(nd, &path, inode, flags);
+#endif
     PANIC("");
 }
 
@@ -286,6 +382,85 @@ static const char *path_init(struct nameidata *nd, unsigned flags)
     PANIC("");
 }
 
+/**
+ * lookup_fast - do fast lockless (but racy) lookup of a dentry
+ * @nd: current nameidata
+ *
+ * Do a fast, but racy lookup in the dcache for the given dentry, and
+ * revalidate it. Returns a valid dentry pointer or NULL if one wasn't
+ * found. On error, an ERR_PTR will be returned.
+ *
+ * If this function returns a valid dentry and the walk is no longer
+ * lazy, the dentry will carry a reference that must later be put. If
+ * RCU mode is still in force, then this is not the case and the dentry
+ * must be legitimized before use. If this returns NULL, then the walk
+ * will no longer be in RCU mode.
+ */
+static struct dentry *lookup_fast(struct nameidata *nd)
+{
+    struct dentry *dentry, *parent = nd->path.dentry;
+    int status = 1;
+
+    /*
+     * Rename seqlock is not required here because in the off chance
+     * of a false negative due to a concurrent rename, the caller is
+     * going to fall back to non-racy lookup.
+     */
+    if (nd->flags & LOOKUP_RCU) {
+        dentry = __d_lookup_rcu(parent, &nd->last, &nd->next_seq);
+        if (unlikely(!dentry)) {
+            if (!try_to_unlazy(nd))
+                return ERR_PTR(-ECHILD);
+            return NULL;
+        }
+
+        /*
+         * This sequence count validates that the parent had no
+         * changes while we did the lookup of the dentry above.
+         */
+        if (read_seqcount_retry(&parent->d_seq, nd->seq))
+            return ERR_PTR(-ECHILD);
+
+        status = d_revalidate(dentry, nd->flags);
+        if (likely(status > 0))
+            return dentry;
+#if 0
+        if (!try_to_unlazy_next(nd, dentry))
+            return ERR_PTR(-ECHILD);
+        if (status == -ECHILD)
+            /* we'd been told to redo it in non-rcu mode */
+            status = d_revalidate(dentry, nd->flags);
+#endif
+
+        PANIC("LOOKUP_RCU");
+    } else {
+        PANIC("ELSE");
+    }
+    if (unlikely(status <= 0)) {
+        if (!status)
+            d_invalidate(dentry);
+        dput(dentry);
+        return ERR_PTR(status);
+    }
+    PANIC("");
+    return dentry;
+}
+
+static struct dentry *lookup_slow(const struct qstr *name,
+                  struct dentry *dir,
+                  unsigned int flags)
+{
+    struct inode *inode = dir->d_inode;
+    struct dentry *res;
+#if 0
+    inode_lock_shared(inode);
+    res = __lookup_slow(name, dir, flags);
+    inode_unlock_shared(inode);
+    return res;
+#endif
+    PANIC("");
+}
+
 static const char *walk_component(struct nameidata *nd, int flags)
 {
     struct dentry *dentry;
@@ -299,7 +474,6 @@ static const char *walk_component(struct nameidata *nd, int flags)
             put_link(nd);
         return handle_dots(nd, nd->last_type);
     }
-#if 0
     dentry = lookup_fast(nd);
     if (IS_ERR(dentry))
         return ERR_CAST(dentry);
@@ -311,8 +485,6 @@ static const char *walk_component(struct nameidata *nd, int flags)
     if (!(flags & WALK_MORE) && nd->depth)
         put_link(nd);
     return step_into(nd, flags, dentry);
-#endif
-    PANIC("");
 }
 
 static inline int may_lookup(struct mnt_idmap *idmap,
@@ -1015,70 +1187,6 @@ out_dput:
 static inline bool trailing_slashes(struct nameidata *nd)
 {
     return (bool)nd->last.name[nd->last.len];
-}
-
-/**
- * lookup_fast - do fast lockless (but racy) lookup of a dentry
- * @nd: current nameidata
- *
- * Do a fast, but racy lookup in the dcache for the given dentry, and
- * revalidate it. Returns a valid dentry pointer or NULL if one wasn't
- * found. On error, an ERR_PTR will be returned.
- *
- * If this function returns a valid dentry and the walk is no longer
- * lazy, the dentry will carry a reference that must later be put. If
- * RCU mode is still in force, then this is not the case and the dentry
- * must be legitimized before use. If this returns NULL, then the walk
- * will no longer be in RCU mode.
- */
-static struct dentry *lookup_fast(struct nameidata *nd)
-{
-    struct dentry *dentry, *parent = nd->path.dentry;
-    int status = 1;
-
-    /*
-     * Rename seqlock is not required here because in the off chance
-     * of a false negative due to a concurrent rename, the caller is
-     * going to fall back to non-racy lookup.
-     */
-    if (nd->flags & LOOKUP_RCU) {
-        dentry = __d_lookup_rcu(parent, &nd->last, &nd->next_seq);
-        if (unlikely(!dentry)) {
-            if (!try_to_unlazy(nd))
-                return ERR_PTR(-ECHILD);
-            return NULL;
-        }
-
-#if 0
-        /*
-         * This sequence count validates that the parent had no
-         * changes while we did the lookup of the dentry above.
-         */
-        if (read_seqcount_retry(&parent->d_seq, nd->seq))
-            return ERR_PTR(-ECHILD);
-
-        status = d_revalidate(dentry, nd->flags);
-        if (likely(status > 0))
-            return dentry;
-        if (!try_to_unlazy_next(nd, dentry))
-            return ERR_PTR(-ECHILD);
-        if (status == -ECHILD)
-            /* we'd been told to redo it in non-rcu mode */
-            status = d_revalidate(dentry, nd->flags);
-#endif
-
-        PANIC("LOOKUP_RCU");
-    } else {
-        PANIC("ELSE");
-    }
-    if (unlikely(status <= 0)) {
-        if (!status)
-            d_invalidate(dentry);
-        dput(dentry);
-        return ERR_PTR(status);
-    }
-    PANIC("");
-    return dentry;
 }
 
 static struct dentry *lookup_fast_for_open(struct nameidata *nd, int open_flag)
@@ -1864,4 +1972,25 @@ int __check_sticky(struct mnt_idmap *idmap, struct inode *dir,
 #endif
     pr_err("%s: No impl.", __func__);
     return 0;
+}
+
+int filename_lookup(int dfd, struct filename *name, unsigned flags,
+            struct path *path, struct path *root)
+{
+    int retval;
+    struct nameidata nd;
+    if (IS_ERR(name))
+        return PTR_ERR(name);
+    set_nameidata(&nd, dfd, name, root);
+    retval = path_lookupat(&nd, flags | LOOKUP_RCU, path);
+    if (unlikely(retval == -ECHILD))
+        retval = path_lookupat(&nd, flags, path);
+    if (unlikely(retval == -ESTALE))
+        retval = path_lookupat(&nd, flags | LOOKUP_REVAL, path);
+
+    if (likely(!retval))
+        audit_inode(name, path->dentry,
+                flags & LOOKUP_MOUNTPOINT ? AUDIT_INODE_NOEVAL : 0);
+    restore_nameidata();
+    return retval;
 }

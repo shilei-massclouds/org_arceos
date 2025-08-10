@@ -459,6 +459,12 @@ int security_inode_unlink(struct inode *dir, struct dentry *dentry)
     return 0;
 }
 
+int security_inode_getattr(const struct path *path)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
 /*
  * __detach_mounts - lazily unmount all mounts on the specified dentry
  *
@@ -472,4 +478,16 @@ int security_inode_unlink(struct inode *dir, struct dentry *dentry)
 void __detach_mounts(struct dentry *dentry)
 {
     pr_err("%s: No impl.", __func__);
+}
+
+uid_t from_kuid_munged(struct user_namespace *targ, kuid_t kuid)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+gid_t from_kgid_munged(struct user_namespace *targ, kgid_t kgid)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
 }

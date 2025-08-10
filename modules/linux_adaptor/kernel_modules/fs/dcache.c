@@ -226,7 +226,36 @@ struct dentry *__d_lookup_rcu(const struct dentry *parent,
      * See Documentation/filesystems/path-lookup.txt for more details.
      */
     hlist_bl_for_each_entry_rcu(dentry, node, b, d_hash) {
-        PANIC("LOOP");
+        unsigned seq;
+
+        /*
+         * The dentry sequence count protects us from concurrent
+         * renames, and thus protects parent and name fields.
+         *
+         * The caller must perform a seqcount check in order
+         * to do anything useful with the returned dentry.
+         *
+         * NOTE! We do a "raw" seqcount_begin here. That means that
+         * we don't wait for the sequence count to stabilize if it
+         * is in the middle of a sequence change. If we do the slow
+         * dentry compare, we will do seqretries until it is stable,
+         * and if we end up with a successful lookup, we actually
+         * want to exit RCU lookup anyway.
+         *
+         * Note that raw_seqcount_begin still *does* smp_rmb(), so
+         * we are still guaranteed NUL-termination of ->d_name.name.
+         */
+        seq = raw_seqcount_begin(&dentry->d_seq);
+        if (dentry->d_parent != parent)
+            continue;
+        if (d_unhashed(dentry))
+            continue;
+        if (dentry->d_name.hash_len != hashlen)
+            continue;
+        if (dentry_cmp(dentry, str, hashlen_len(hashlen)) != 0)
+            continue;
+        *seqp = seq;
+        return dentry;
     }
     return NULL;
 }
