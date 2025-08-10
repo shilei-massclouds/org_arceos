@@ -328,6 +328,56 @@ void __f_unlock_pos(struct file *f)
     mutex_unlock(&f->f_pos_lock);
 }
 
+/**
+ * file_close_fd_locked - return file associated with fd
+ * @files: file struct to retrieve file from
+ * @fd: file descriptor to retrieve file for
+ *
+ * Doesn't take a separate reference count.
+ *
+ * Context: files_lock must be held.
+ *
+ * Returns: The file associated with @fd (NULL if @fd is not open)
+ */
+struct file *file_close_fd_locked(struct files_struct *files, unsigned fd)
+{
+    struct fdtable *fdt = files_fdtable(files);
+    struct file *file;
+
+    lockdep_assert_held(&files->file_lock);
+
+    if (fd >= fdt->max_fds)
+        return NULL;
+
+    fd = array_index_nospec(fd, fdt->max_fds);
+    file = rcu_dereference_raw(fdt->fd[fd]);
+    if (file) {
+        rcu_assign_pointer(fdt->fd[fd], NULL);
+        __put_unused_fd(files, fd);
+    }
+    return file;
+}
+
+/**
+ * file_close_fd - return file associated with fd
+ * @fd: file descriptor to retrieve file for
+ *
+ * Doesn't take a separate reference count.
+ *
+ * Returns: The file associated with @fd (NULL if @fd is not open)
+ */
+struct file *file_close_fd(unsigned int fd)
+{
+    struct files_struct *files = current->files;
+    struct file *file;
+
+    spin_lock(&files->file_lock);
+    file = file_close_fd_locked(files, fd);
+    spin_unlock(&files->file_lock);
+
+    return file;
+}
+
 struct files_struct init_files = {
     .count      = ATOMIC_INIT(1),
     .fdt        = &init_files.fdtab,

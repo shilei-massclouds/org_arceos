@@ -429,6 +429,11 @@ void mnt_drop_write(struct vfsmount *mnt)
     sb_end_write(mnt->mnt_sb);
 }
 
+void dissolve_on_fput(struct vfsmount *mnt)
+{
+    PANIC("");
+}
+
 void __init mnt_init(void)
 {
     int err;

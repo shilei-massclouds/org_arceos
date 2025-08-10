@@ -38,3 +38,21 @@ int __break_lease(struct inode *inode, unsigned int mode, unsigned int type)
 {
     PANIC("");
 }
+
+/*
+ * This function is called when the file is being removed
+ * from the task's fd array.  POSIX locks belonging to this task
+ * are deleted at this time.
+ */
+void locks_remove_posix(struct file *filp, fl_owner_t owner)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+/*
+ * This function is called on the last close of an open file.
+ */
+void locks_remove_file(struct file *filp)
+{
+    pr_err("%s: No impl.", __func__);
+}

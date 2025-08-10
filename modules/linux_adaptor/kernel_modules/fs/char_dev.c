@@ -18,14 +18,22 @@
 
 #include "internal.h"
 
+static DEFINE_SPINLOCK(cdev_lock);
+
 void cd_forget(struct inode *inode)
 {
-#if 0
     spin_lock(&cdev_lock);
     list_del_init(&inode->i_devices);
     inode->i_cdev = NULL;
     inode->i_mapping = &inode->i_data;
     spin_unlock(&cdev_lock);
-#endif
-    pr_err("%s: No impl.", __func__);
+}
+
+void cdev_put(struct cdev *p)
+{
+    if (p) {
+        struct module *owner = p->owner;
+        kobject_put(&p->kobj);
+        module_put(owner);
+    }
 }

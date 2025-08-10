@@ -589,7 +589,7 @@ test_getdents64(void)
     if (fd < 0) {
         PANIC("bad dir fd.");
     }
-    printk("%s: open '%d'\n", __func__, fd);
+    printk("%s: open fd '%d'\n", __func__, fd);
 
     char buf[512];
     struct linux_dirent64 *dirent = buf;
@@ -606,12 +606,23 @@ test_getdents64(void)
         pos += dirent->d_reclen;
     }
 
+    if (cl_sys_close(fd)) {
+        PANIC("close dir fd err.");
+    }
+
     printk("\n\n============== getdents64 ok! =============\n\n");
+}
+
+static void
+test_file_create(void)
+{
 }
 
 void test_ext4(void)
 {
     test_getdents64();
+
+    test_file_create();
 
     PANIC("Reach here!");
 

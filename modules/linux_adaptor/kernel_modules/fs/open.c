@@ -363,3 +363,54 @@ int vfs_open(const struct path *path, struct file *file)
     }
     return ret;
 }
+
+/*
+ * "id" is the POSIX thread ID. We use the
+ * files pointer for this..
+ */
+static int filp_flush(struct file *filp, fl_owner_t id)
+{
+    int retval = 0;
+
+    if (CHECK_DATA_CORRUPTION(file_count(filp) == 0,
+            "VFS: Close: file count is 0 (f_op=%ps)",
+            filp->f_op)) {
+        return 0;
+    }
+
+    if (filp->f_op->flush)
+        retval = filp->f_op->flush(filp, id);
+
+    if (likely(!(filp->f_mode & FMODE_PATH))) {
+        dnotify_flush(filp, id);
+        locks_remove_posix(filp, id);
+    }
+    return retval;
+}
+
+int cl_sys_close(int fd)
+{
+    int retval;
+    struct file *file;
+
+    file = file_close_fd(fd);
+    if (!file)
+        return -EBADF;
+
+    retval = filp_flush(file, current->files);
+
+    /*
+     * We're returning to user space. Don't bother
+     * with any delayed fput() cases.
+     */
+    __fput_sync(file);
+
+    /* can't restart close syscall because file table entry was cleared */
+    if (unlikely(retval == -ERESTARTSYS ||
+             retval == -ERESTARTNOINTR ||
+             retval == -ERESTARTNOHAND ||
+             retval == -ERESTART_RESTARTBLOCK))
+        retval = -EINTR;
+
+    return retval;
+}

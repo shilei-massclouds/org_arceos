@@ -11,6 +11,7 @@
  */
 
 extern int cl_sys_open(const char *filename, int flags, umode_t mode);
+extern int cl_sys_close(int fd);
 
 extern int cl_sys_getdents64(unsigned int fd,
                              struct linux_dirent64 *dirent,

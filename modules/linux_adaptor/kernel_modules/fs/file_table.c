@@ -35,6 +35,17 @@ static struct files_stat_struct files_stat = {
 /* SLAB cache for file structures */
 static struct kmem_cache *filp_cachep __ro_after_init;
 
+/* Container for backing file with optional user path */
+struct backing_file {
+    struct file file;
+    struct path user_path;
+};
+
+static inline struct backing_file *backing_file(struct file *f)
+{
+    return container_of(f, struct backing_file, file);
+}
+
 static struct percpu_counter nr_files __cacheline_aligned_in_smp;
 
 /*
@@ -53,11 +64,62 @@ unsigned long get_max_files(void)
     return files_stat.max_files;
 }
 
+static inline void file_free(struct file *f)
+{
+    //security_file_free(f);
+    if (likely(!(f->f_mode & FMODE_NOACCOUNT)))
+        percpu_counter_dec(&nr_files);
+    put_cred(f->f_cred);
+    if (unlikely(f->f_mode & FMODE_BACKING)) {
+        path_put(backing_file_user_path(f));
+        kfree(backing_file(f));
+    } else {
+        kmem_cache_free(filp_cachep, f);
+    }
+}
+
 /* the real guts of fput() - releasing the last reference to file
  */
 static void __fput(struct file *file)
 {
-    PANIC("");
+    struct dentry *dentry = file->f_path.dentry;
+    struct vfsmount *mnt = file->f_path.mnt;
+    struct inode *inode = file->f_inode;
+    fmode_t mode = file->f_mode;
+
+    if (unlikely(!(file->f_mode & FMODE_OPENED)))
+        goto out;
+
+    might_sleep();
+
+    fsnotify_close(file);
+    /*
+     * The function eventpoll_release() should be the first called
+     * in the file cleanup chain.
+     */
+    eventpoll_release(file);
+    locks_remove_file(file);
+
+    security_file_release(file);
+    if (unlikely(file->f_flags & FASYNC)) {
+        if (file->f_op->fasync)
+            file->f_op->fasync(-1, file, 0);
+    }
+    if (file->f_op->release)
+        file->f_op->release(inode, file);
+    if (unlikely(S_ISCHR(inode->i_mode) && inode->i_cdev != NULL &&
+             !(mode & FMODE_PATH))) {
+        cdev_put(inode->i_cdev);
+    }
+    fops_put(file->f_op);
+    file_f_owner_release(file);
+    put_file_access(file);
+    dput(dentry);
+    if (unlikely(mode & FMODE_NEED_UNMOUNT))
+        dissolve_on_fput(mnt);
+    mntput(mnt);
+out:
+    file_free(file);
 }
 
 static LLIST_HEAD(delayed_fput_list);
@@ -71,17 +133,6 @@ static void delayed_fput(struct work_struct *unused)
 }
 
 static DECLARE_DELAYED_WORK(delayed_fput_work, delayed_fput);
-
-/* Container for backing file with optional user path */
-struct backing_file {
-    struct file file;
-    struct path user_path;
-};
-
-static inline struct backing_file *backing_file(struct file *f)
-{
-    return container_of(f, struct backing_file, file);
-}
 
 static int init_file(struct file *f, int flags, const struct cred *cred)
 {
@@ -213,20 +264,6 @@ struct path *backing_file_user_path(struct file *f)
     return &backing_file(f)->user_path;
 }
 
-static inline void file_free(struct file *f)
-{
-    //security_file_free(f);
-    if (likely(!(f->f_mode & FMODE_NOACCOUNT)))
-        percpu_counter_dec(&nr_files);
-    put_cred(f->f_cred);
-    if (unlikely(f->f_mode & FMODE_BACKING)) {
-        path_put(backing_file_user_path(f));
-        kfree(backing_file(f));
-    } else {
-        kmem_cache_free(filp_cachep, f);
-    }
-}
-
 static void ____fput(struct callback_head *work)
 {
     __fput(container_of(work, struct file, f_task_work));
@@ -340,4 +377,18 @@ over:
         old_max = get_nr_files();
     }
     return ERR_PTR(-ENFILE);
+}
+
+/*
+ * synchronous analog of fput(); for kernel threads that might be needed
+ * in some umount() (and thus can't use flush_delayed_fput() without
+ * risking deadlocks), need to wait for completion of __fput() and know
+ * for this specific struct file it won't involve anything that would
+ * need them.  Use only if you really need it - at the very least,
+ * don't blindly convert fput() by kernel thread to that.
+ */
+void __fput_sync(struct file *file)
+{
+    if (atomic_long_dec_and_test(&file->f_count))
+        __fput(file);
 }

@@ -398,3 +398,23 @@ int security_file_permission(struct file *file, int mask)
     pr_err("%s: No impl.", __func__);
     return 0;
 }
+
+void dnotify_flush(struct file *filp, fl_owner_t id)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+void eventpoll_release_file(struct file *file)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+void security_file_release(struct file *file)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+void file_f_owner_release(struct file *file)
+{
+    pr_err("%s: No impl.", __func__);
+}
