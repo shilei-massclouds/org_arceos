@@ -324,6 +324,13 @@ int security_inode_init_security(struct inode *inode, struct inode *dir,
     return 0;
 }
 
+int security_inode_create(struct inode *dir, struct dentry *dentry,
+              umode_t mode)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
 int in_group_p(kgid_t grp)
 {
     pr_err("%s: No impl.", __func__);
@@ -381,24 +388,6 @@ int __fsnotify_parent(struct dentry *dentry, __u32 mask, const void *data,
     return 0;
 }
 
-int security_file_open(struct file *file)
-{
-    pr_err("%s: No impl.", __func__);
-    return 0;
-}
-
-int security_file_post_open(struct file *file, int mask)
-{
-    pr_err("%s: No impl.", __func__);
-    return 0;
-}
-
-int security_file_permission(struct file *file, int mask)
-{
-    pr_err("%s: No impl.", __func__);
-    return 0;
-}
-
 void dnotify_flush(struct file *filp, fl_owner_t id)
 {
     pr_err("%s: No impl.", __func__);
@@ -414,7 +403,46 @@ void security_file_release(struct file *file)
     pr_err("%s: No impl.", __func__);
 }
 
+int security_path_mknod(const struct path *dir, struct dentry *dentry,
+            umode_t mode, unsigned int dev)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_file_open(struct file *file)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_file_permission(struct file *file, int mask)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_file_post_open(struct file *file, int mask)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
 void file_f_owner_release(struct file *file)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+bool capable_wrt_inode_uidgid(struct mnt_idmap *idmap,
+                  const struct inode *inode, int cap)
+{
+    pr_err("%s: No impl.", __func__);
+    return true;
+}
+
+void __audit_inode_child(struct inode *parent,
+             const struct dentry *dentry,
+             const unsigned char type)
 {
     pr_err("%s: No impl.", __func__);
 }

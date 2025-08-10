@@ -95,6 +95,64 @@ struct vfsmount *vfs_kern_mount(struct file_system_type *type,
     return mnt;
 }
 
+/*
+ * Most r/o checks on a fs are for operations that take
+ * discrete amounts of time, like a write() or unlink().
+ * We must keep track of when those operations start
+ * (for permission checks) and when they end, so that
+ * we can determine when writes are able to occur to
+ * a filesystem.
+ */
+/*
+ * __mnt_is_readonly: check whether a mount is read-only
+ * @mnt: the mount to check for its write status
+ *
+ * This shouldn't be used directly ouside of the VFS.
+ * It does not guarantee that the filesystem will stay
+ * r/w, just that it is right *now*.  This can not and
+ * should not be used in place of IS_RDONLY(inode).
+ * mnt_want/drop_write() will _keep_ the filesystem
+ * r/w.
+ */
+bool __mnt_is_readonly(struct vfsmount *mnt)
+{
+    return (mnt->mnt_flags & MNT_READONLY) || sb_rdonly(mnt->mnt_sb);
+}
+
+static int mnt_is_readonly(struct vfsmount *mnt)
+{
+    if (READ_ONCE(mnt->mnt_sb->s_readonly_remount))
+        return 1;
+    /*
+     * The barrier pairs with the barrier in sb_start_ro_state_change()
+     * making sure if we don't see s_readonly_remount set yet, we also will
+     * not see any superblock / mount flag changes done by remount.
+     * It also pairs with the barrier in sb_end_ro_state_change()
+     * assuring that if we see s_readonly_remount already cleared, we will
+     * see the values of superblock / mount flags updated by remount.
+     */
+    smp_rmb();
+    return __mnt_is_readonly(mnt);
+}
+
+static inline void mnt_inc_writers(struct mount *mnt)
+{
+#ifdef CONFIG_SMP
+    this_cpu_inc(mnt->mnt_pcp->mnt_writers);
+#else
+    mnt->mnt_writers++;
+#endif
+}
+
+static inline void mnt_dec_writers(struct mount *mnt)
+{
+#ifdef CONFIG_SMP
+    this_cpu_dec(mnt->mnt_pcp->mnt_writers);
+#else
+    mnt->mnt_writers--;
+#endif
+}
+
 struct vfsmount *fc_mount(struct fs_context *fc)
 {
     int err = vfs_get_tree(fc);
@@ -200,6 +258,50 @@ static inline void mnt_add_count(struct mount *mnt, int n)
 #endif
 }
 
+static void cleanup_mnt(struct mount *mnt)
+{
+#if 0
+    struct hlist_node *p;
+    struct mount *m;
+    /*
+     * The warning here probably indicates that somebody messed
+     * up a mnt_want/drop_write() pair.  If this happens, the
+     * filesystem was probably unable to make r/w->r/o transitions.
+     * The locking used to deal with mnt_count decrement provides barriers,
+     * so mnt_get_writers() below is safe.
+     */
+    WARN_ON(mnt_get_writers(mnt));
+    if (unlikely(mnt->mnt_pins.first))
+        mnt_pin_kill(mnt);
+    hlist_for_each_entry_safe(m, p, &mnt->mnt_stuck_children, mnt_umount) {
+        hlist_del(&m->mnt_umount);
+        mntput(&m->mnt);
+    }
+    fsnotify_vfsmount_delete(&mnt->mnt);
+    dput(mnt->mnt.mnt_root);
+    deactivate_super(mnt->mnt.mnt_sb);
+    mnt_free_id(mnt);
+    call_rcu(&mnt->mnt_rcu, delayed_free_vfsmnt);
+#endif
+    PANIC("");
+}
+
+static LLIST_HEAD(delayed_mntput_list);
+static void delayed_mntput(struct work_struct *unused)
+{
+    struct llist_node *node = llist_del_all(&delayed_mntput_list);
+    struct mount *m, *t;
+
+    llist_for_each_entry_safe(m, t, node, mnt_llist)
+        cleanup_mnt(m);
+}
+static DECLARE_DELAYED_WORK(delayed_mntput_work, delayed_mntput);
+
+static void __cleanup_mnt(struct rcu_head *head)
+{
+    cleanup_mnt(container_of(head, struct mount, mnt_rcu));
+}
+
 static void mntput_no_expire(struct mount *mnt)
 {
     LIST_HEAD(list);
@@ -239,18 +341,20 @@ static void mntput_no_expire(struct mount *mnt)
         unlock_mount_hash();
         return;
     }
-#if 0
     mnt->mnt.mnt_flags |= MNT_DOOMED;
     rcu_read_unlock();
 
     list_del(&mnt->mnt_instance);
 
     if (unlikely(!list_empty(&mnt->mnt_mounts))) {
+#if 0
         struct mount *p, *tmp;
         list_for_each_entry_safe(p, tmp, &mnt->mnt_mounts,  mnt_child) {
             __put_mountpoint(unhash_mnt(p), &list);
             hlist_add_head(&p->mnt_umount, &mnt->mnt_stuck_children);
         }
+#endif
+        PANIC("");
     }
     unlock_mount_hash();
     shrink_dentry_list(&list);
@@ -266,6 +370,7 @@ static void mntput_no_expire(struct mount *mnt)
             schedule_delayed_work(&delayed_mntput_work, 1);
         return;
     }
+#if 0
     cleanup_mnt(mnt);
 #endif
 
@@ -394,7 +499,49 @@ int mnt_want_write(struct vfsmount *m)
  */
 int mnt_get_write_access(struct vfsmount *m)
 {
-    PANIC("");
+    struct mount *mnt = real_mount(m);
+    int ret = 0;
+
+    preempt_disable();
+    mnt_inc_writers(mnt);
+    /*
+     * The store to mnt_inc_writers must be visible before we pass
+     * MNT_WRITE_HOLD loop below, so that the slowpath can see our
+     * incremented count after it has set MNT_WRITE_HOLD.
+     */
+    smp_mb();
+    might_lock(&mount_lock.lock);
+    while (READ_ONCE(mnt->mnt.mnt_flags) & MNT_WRITE_HOLD) {
+        if (!IS_ENABLED(CONFIG_PREEMPT_RT)) {
+            cpu_relax();
+        } else {
+            /*
+             * This prevents priority inversion, if the task
+             * setting MNT_WRITE_HOLD got preempted on a remote
+             * CPU, and it prevents life lock if the task setting
+             * MNT_WRITE_HOLD has a lower priority and is bound to
+             * the same CPU as the task that is spinning here.
+             */
+            preempt_enable();
+            lock_mount_hash();
+            unlock_mount_hash();
+            preempt_disable();
+        }
+    }
+    /*
+     * The barrier pairs with the barrier sb_start_ro_state_change() making
+     * sure that if we see MNT_WRITE_HOLD cleared, we will also see
+     * s_readonly_remount set (or even SB_RDONLY / MNT_READONLY flags) in
+     * mnt_is_readonly() and bail in case we are racing with remount
+     * read-only.
+     */
+    smp_rmb();
+    if (mnt_is_readonly(m)) {
+        mnt_dec_writers(mnt);
+        ret = -EROFS;
+    }
+    preempt_enable();
+    return ret;
 }
 
 /**
@@ -407,12 +554,9 @@ int mnt_get_write_access(struct vfsmount *m)
  */
 void mnt_put_write_access(struct vfsmount *mnt)
 {
-#if 0
     preempt_disable();
     mnt_dec_writers(real_mount(mnt));
     preempt_enable();
-#endif
-    PANIC("");
 }
 
 /**

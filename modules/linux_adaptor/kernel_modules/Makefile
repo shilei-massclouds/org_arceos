@@ -67,7 +67,7 @@ OBJS += fs/namespace.o fs/fs_context.o fs/super.o fs/mnt_idmapping.o
 OBJS += fs/buffer.o fs/file_table.o fs/bad_inode.o fs/mbcache.o
 OBJS += fs/read_write.o fs/fs-writeback.o fs/readdir.o fs/posix_acl.o
 OBJS += fs/stat.o fs/char_dev.o fs/open.o fs/namei.o fs/file.o fs/exec.o
-OBJS += fs/fs_struct.o fs/locks.o
+OBJS += fs/fs_struct.o fs/locks.o fs/d_path.o
 OBJS += char/random.o
 OBJS += proc/generic.o
 

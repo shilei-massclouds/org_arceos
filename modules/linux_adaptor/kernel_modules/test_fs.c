@@ -589,7 +589,7 @@ test_getdents64(void)
     if (fd < 0) {
         PANIC("bad dir fd.");
     }
-    printk("%s: open fd '%d'\n", __func__, fd);
+    printk("%s: open dir fd '%d'\n", __func__, fd);
 
     char buf[512];
     struct linux_dirent64 *dirent = buf;
@@ -618,6 +618,18 @@ static void
 test_file_create(void)
 {
     printk("\n============== file create ... =============\n");
+
+    int count;
+    int fd = cl_sys_open("/f1.txt", O_CREAT, S_IRUSR|S_IWUSR);
+    if (fd < 0) {
+        PANIC("bad file fd.");
+    }
+    printk("%s: create file fd '%d'\n", __func__, fd);
+
+    if (cl_sys_close(fd)) {
+        PANIC("close dir fd err.");
+    }
+
     printk("\n============== file create ok! =============\n\n");
 }
 

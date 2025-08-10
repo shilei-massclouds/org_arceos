@@ -268,6 +268,7 @@ static int do_dentry_open(struct file *f,
     if (error)
         goto cleanup_all;
 
+    printk("-------> %s: step1\n", __func__);
     /* normally all 3 are set; ->open() can clear them if needed */
     f->f_mode |= FMODE_LSEEK | FMODE_PREAD | FMODE_PWRITE;
     if (!open)
@@ -277,6 +278,7 @@ static int do_dentry_open(struct file *f,
         if (error)
             goto cleanup_all;
     }
+    printk("-------> %s: step2\n", __func__);
     f->f_mode |= FMODE_OPENED;
     if ((f->f_mode & FMODE_READ) &&
          likely(f->f_op->read || f->f_op->read_iter))
@@ -297,6 +299,7 @@ static int do_dentry_open(struct file *f,
     if ((f->f_flags & O_DIRECT) && !(f->f_mode & FMODE_CAN_ODIRECT))
         return -EINVAL;
 
+    printk("-------> %s: step3\n", __func__);
     /*
      * XXX: Huge page cache doesn't support writing yet. Drop all page
      * cache for this file before processing writes.
@@ -413,4 +416,17 @@ int cl_sys_close(int fd)
         retval = -EINTR;
 
     return retval;
+}
+
+/*
+ * Called when an inode is about to be open.
+ * We use this to disallow opening large files on 32bit systems if
+ * the caller didn't specify O_LARGEFILE.  On 64bit systems we force
+ * on this flag in sys_open.
+ */
+int generic_file_open(struct inode * inode, struct file * filp)
+{
+    if (!(filp->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
+        return -EOVERFLOW;
+    return 0;
 }

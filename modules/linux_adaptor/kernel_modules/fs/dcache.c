@@ -99,6 +99,83 @@ struct dentry *d_ancestor(struct dentry *p1, struct dentry *p2)
 }
 
 /*
+ * This is __d_lookup_rcu() when the parent dentry has
+ * DCACHE_OP_COMPARE, which makes things much nastier.
+ */
+static noinline struct dentry *__d_lookup_rcu_op_compare(
+    const struct dentry *parent,
+    const struct qstr *name,
+    unsigned *seqp)
+{
+    PANIC("");
+}
+
+/**
+ * __d_lookup_rcu - search for a dentry (racy, store-free)
+ * @parent: parent dentry
+ * @name: qstr of name we wish to find
+ * @seqp: returns d_seq value at the point where the dentry was found
+ * Returns: dentry, or NULL
+ *
+ * __d_lookup_rcu is the dcache lookup function for rcu-walk name
+ * resolution (store-free path walking) design described in
+ * Documentation/filesystems/path-lookup.txt.
+ *
+ * This is not to be used outside core vfs.
+ *
+ * __d_lookup_rcu must only be used in rcu-walk mode, ie. with vfsmount lock
+ * held, and rcu_read_lock held. The returned dentry must not be stored into
+ * without taking d_lock and checking d_seq sequence count against @seq
+ * returned here.
+ *
+ * Alternatively, __d_lookup_rcu may be called again to look up the child of
+ * the returned dentry, so long as its parent's seqlock is checked after the
+ * child is looked up. Thus, an interlocking stepping of sequence lock checks
+ * is formed, giving integrity down the path walk.
+ *
+ * NOTE! The caller *has* to check the resulting dentry against the sequence
+ * number we've returned before using any of the resulting dentry state!
+ */
+struct dentry *__d_lookup_rcu(const struct dentry *parent,
+                const struct qstr *name,
+                unsigned *seqp)
+{
+    u64 hashlen = name->hash_len;
+    const unsigned char *str = name->name;
+    struct hlist_bl_head *b = d_hash(hashlen);
+    struct hlist_bl_node *node;
+    struct dentry *dentry;
+
+    /*
+     * Note: There is significant duplication with __d_lookup_rcu which is
+     * required to prevent single threaded performance regressions
+     * especially on architectures where smp_rmb (in seqcounts) are costly.
+     * Keep the two functions in sync.
+     */
+
+    if (unlikely(parent->d_flags & DCACHE_OP_COMPARE))
+        return __d_lookup_rcu_op_compare(parent, name, seqp);
+
+    /*
+     * The hash list is protected using RCU.
+     *
+     * Carefully use d_seq when comparing a candidate dentry, to avoid
+     * races with d_move().
+     *
+     * It is possible that concurrent renames can mess up our list
+     * walk here and result in missing our dentry, resulting in the
+     * false-negative result. d_lookup() protects against concurrent
+     * renames using rename_lock seqlock.
+     *
+     * See Documentation/filesystems/path-lookup.txt for more details.
+     */
+    hlist_bl_for_each_entry_rcu(dentry, node, b, d_hash) {
+        PANIC("LOOP");
+    }
+    return NULL;
+}
+
+/*
  * The DCACHE_LRU_LIST bit is set whenever the 'd_lru' entry
  * is in use - which includes both the "real" per-superblock
  * LRU list _and_ the DCACHE_SHRINK_LIST use.
@@ -777,6 +854,78 @@ static struct dentry *__dentry_kill(struct dentry *dentry)
     return parent;
 }
 
+struct dentry *d_alloc_parallel(struct dentry *parent,
+                const struct qstr *name,
+                wait_queue_head_t *wq)
+{
+    unsigned int hash = name->hash;
+    struct hlist_bl_head *b = in_lookup_hash(parent, hash);
+    struct hlist_bl_node *node;
+    struct dentry *new = d_alloc(parent, name);
+    struct dentry *dentry;
+    unsigned seq, r_seq, d_seq;
+
+    if (unlikely(!new))
+        return ERR_PTR(-ENOMEM);
+
+retry:
+    rcu_read_lock();
+    seq = smp_load_acquire(&parent->d_inode->i_dir_seq);
+    r_seq = read_seqbegin(&rename_lock);
+    dentry = __d_lookup_rcu(parent, name, &d_seq);
+    if (unlikely(dentry)) {
+        if (!lockref_get_not_dead(&dentry->d_lockref)) {
+            rcu_read_unlock();
+            goto retry;
+        }
+        if (read_seqcount_retry(&dentry->d_seq, d_seq)) {
+            rcu_read_unlock();
+            dput(dentry);
+            goto retry;
+        }
+        rcu_read_unlock();
+        dput(new);
+        return dentry;
+    }
+    if (unlikely(read_seqretry(&rename_lock, r_seq))) {
+        rcu_read_unlock();
+        goto retry;
+    }
+
+    if (unlikely(seq & 1)) {
+        rcu_read_unlock();
+        goto retry;
+    }
+
+    hlist_bl_lock(b);
+    if (unlikely(READ_ONCE(parent->d_inode->i_dir_seq) != seq)) {
+        hlist_bl_unlock(b);
+        rcu_read_unlock();
+        goto retry;
+    }
+    /*
+     * No changes for the parent since the beginning of d_lookup().
+     * Since all removals from the chain happen with hlist_bl_lock(),
+     * any potential in-lookup matches are going to stay here until
+     * we unlock the chain.  All fields are stable in everything
+     * we encounter.
+     */
+    hlist_bl_for_each_entry(dentry, node, b, d_u.d_in_lookup_hash) {
+        PANIC("LOOP");
+    }
+    rcu_read_unlock();
+    /* we can't take ->d_lock here; it's OK, though. */
+    new->d_flags |= DCACHE_PAR_LOOKUP;
+    new->d_wait = wq;
+    hlist_bl_add_head(&new->d_u.d_in_lookup_hash, b);
+    hlist_bl_unlock(b);
+    return new;
+mismatch:
+    spin_unlock(&dentry->d_lock);
+    dput(dentry);
+    goto retry;
+}
+
 /*
  * dput - release a dentry
  * @dentry: dentry to release
@@ -1241,6 +1390,135 @@ void d_instantiate_new(struct dentry *entry, struct inode *inode)
     smp_mb();
     inode_wake_up_bit(inode, __I_NEW);
     spin_unlock(&inode->i_lock);
+}
+
+/**
+ * __d_lookup - search for a dentry (racy)
+ * @parent: parent dentry
+ * @name: qstr of name we wish to find
+ * Returns: dentry, or NULL
+ *
+ * __d_lookup is like d_lookup, however it may (rarely) return a
+ * false-negative result due to unrelated rename activity.
+ *
+ * __d_lookup is slightly faster by avoiding rename_lock read seqlock,
+ * however it must be used carefully, eg. with a following d_lookup in
+ * the case of failure.
+ *
+ * __d_lookup callers must be commented.
+ */
+struct dentry *__d_lookup(const struct dentry *parent, const struct qstr *name)
+{
+    unsigned int hash = name->hash;
+    struct hlist_bl_head *b = d_hash(hash);
+    struct hlist_bl_node *node;
+    struct dentry *found = NULL;
+    struct dentry *dentry;
+
+    /*
+     * Note: There is significant duplication with __d_lookup_rcu which is
+     * required to prevent single threaded performance regressions
+     * especially on architectures where smp_rmb (in seqcounts) are costly.
+     * Keep the two functions in sync.
+     */
+
+    /*
+     * The hash list is protected using RCU.
+     *
+     * Take d_lock when comparing a candidate dentry, to avoid races
+     * with d_move().
+     *
+     * It is possible that concurrent renames can mess up our list
+     * walk here and result in missing our dentry, resulting in the
+     * false-negative result. d_lookup() protects against concurrent
+     * renames using rename_lock seqlock.
+     *
+     * See Documentation/filesystems/path-lookup.txt for more details.
+     */
+    rcu_read_lock();
+
+    hlist_bl_for_each_entry_rcu(dentry, node, b, d_hash) {
+
+        PANIC("LOOP");
+    }
+    rcu_read_unlock();
+
+    return found;
+}
+
+/**
+ * d_lookup - search for a dentry
+ * @parent: parent dentry
+ * @name: qstr of name we wish to find
+ * Returns: dentry, or NULL
+ *
+ * d_lookup searches the children of the parent dentry for the name in
+ * question. If the dentry is found its reference count is incremented and the
+ * dentry is returned. The caller must use dput to free the entry when it has
+ * finished using it. %NULL is returned if the dentry does not exist.
+ */
+struct dentry *d_lookup(const struct dentry *parent, const struct qstr *name)
+{
+    struct dentry *dentry;
+    unsigned seq;
+
+    do {
+        seq = read_seqbegin(&rename_lock);
+        dentry = __d_lookup(parent, name);
+        if (dentry)
+            break;
+    } while (read_seqretry(&rename_lock, seq));
+    return dentry;
+}
+
+void __d_lookup_unhash_wake(struct dentry *dentry)
+{
+    spin_lock(&dentry->d_lock);
+    wake_up_all(__d_lookup_unhash(dentry));
+    spin_unlock(&dentry->d_lock);
+}
+
+static void d_shrink_del(struct dentry *dentry)
+{
+    D_FLAG_VERIFY(dentry, DCACHE_SHRINK_LIST | DCACHE_LRU_LIST);
+    list_del_init(&dentry->d_lru);
+    dentry->d_flags &= ~(DCACHE_SHRINK_LIST | DCACHE_LRU_LIST);
+    this_cpu_dec(nr_dentry_unused);
+}
+
+static inline void shrink_kill(struct dentry *victim)
+{
+    do {
+        rcu_read_unlock();
+        victim = __dentry_kill(victim);
+        rcu_read_lock();
+    } while (victim && lock_for_kill(victim));
+    rcu_read_unlock();
+    if (victim)
+        spin_unlock(&victim->d_lock);
+}
+
+void shrink_dentry_list(struct list_head *list)
+{
+    while (!list_empty(list)) {
+        struct dentry *dentry;
+
+        dentry = list_entry(list->prev, struct dentry, d_lru);
+        spin_lock(&dentry->d_lock);
+        rcu_read_lock();
+        if (!lock_for_kill(dentry)) {
+            bool can_free;
+            rcu_read_unlock();
+            d_shrink_del(dentry);
+            can_free = dentry->d_flags & DCACHE_DENTRY_KILLED;
+            spin_unlock(&dentry->d_lock);
+            if (can_free)
+                dentry_free(dentry);
+            continue;
+        }
+        d_shrink_del(dentry);
+        shrink_kill(dentry);
+    }
 }
 
 void __init vfs_caches_init_early(void)

@@ -46,6 +46,11 @@ void set_fs_pwd(struct fs_struct *fs, const struct path *path)
         path_put(&old_pwd);
 }
 
+int current_umask(void)
+{
+    return current->fs->umask;
+}
+
 /* to be mentioned only in INIT_TASK */
 struct fs_struct init_fs = {
     .users      = 1,

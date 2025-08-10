@@ -1131,6 +1131,54 @@ long get_nr_dirty_inodes(void)
     return nr_dirty > 0 ? nr_dirty : 0;
 }
 
+/**
+ * mode_strip_sgid - handle the sgid bit for non-directories
+ * @idmap: idmap of the mount the inode was created from
+ * @dir: parent directory inode
+ * @mode: mode of the file to be created in @dir
+ *
+ * If the @mode of the new file has both the S_ISGID and S_IXGRP bit
+ * raised and @dir has the S_ISGID bit raised ensure that the caller is
+ * either in the group of the parent directory or they have CAP_FSETID
+ * in their user namespace and are privileged over the parent directory.
+ * In all other cases, strip the S_ISGID bit from @mode.
+ *
+ * Return: the new mode to use for the file
+ */
+umode_t mode_strip_sgid(struct mnt_idmap *idmap,
+            const struct inode *dir, umode_t mode)
+{
+    if ((mode & (S_ISGID | S_IXGRP)) != (S_ISGID | S_IXGRP))
+        return mode;
+    if (S_ISDIR(mode) || !dir || !(dir->i_mode & S_ISGID))
+        return mode;
+    if (in_group_or_capable(idmap, dir, i_gid_into_vfsgid(idmap, dir)))
+        return mode;
+    return mode & ~S_ISGID;
+}
+
+/**
+ * in_group_or_capable - check whether caller is CAP_FSETID privileged
+ * @idmap:  idmap of the mount @inode was found from
+ * @inode:  inode to check
+ * @vfsgid: the new/current vfsgid of @inode
+ *
+ * Check wether @vfsgid is in the caller's group list or if the caller is
+ * privileged with CAP_FSETID over @inode. This can be used to determine
+ * whether the setgid bit can be kept or must be dropped.
+ *
+ * Return: true if the caller is sufficiently privileged, false if not.
+ */
+bool in_group_or_capable(struct mnt_idmap *idmap,
+             const struct inode *inode, vfsgid_t vfsgid)
+{
+    if (vfsgid_in_group_p(vfsgid))
+        return true;
+    if (capable_wrt_inode_uidgid(idmap, inode, CAP_FSETID))
+        return true;
+    return false;
+}
+
 /*
  * Initialize the waitqueues and inode hash table.
  */
