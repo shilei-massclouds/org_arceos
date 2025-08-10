@@ -147,6 +147,14 @@ void putname(struct filename *name)
         __putname(name);
 }
 
+static inline int d_revalidate(struct dentry *dentry, unsigned int flags)
+{
+    if (unlikely(dentry->d_flags & DCACHE_OP_REVALIDATE))
+        return dentry->d_op->d_revalidate(dentry, flags);
+    else
+        return 1;
+}
+
 static int set_root(struct nameidata *nd)
 {
     struct fs_struct *fs = current->fs;
@@ -914,7 +922,6 @@ static struct dentry *lookup_open(struct nameidata *nd, struct file *file,
         if (d_in_lookup(dentry))
             break;
 
-#if 0
         error = d_revalidate(dentry, nd->flags);
         if (likely(error > 0))
             break;
@@ -923,7 +930,6 @@ static struct dentry *lookup_open(struct nameidata *nd, struct file *file,
         d_invalidate(dentry);
         dput(dentry);
         dentry = NULL;
-#endif
 
         PANIC("LOOP");
     }
@@ -1187,6 +1193,69 @@ finish_lookup:
     if (unlikely(res))
         nd->flags &= ~(LOOKUP_OPEN|LOOKUP_CREATE|LOOKUP_EXCL);
     return res;
+}
+
+/*
+ *  Check whether we can remove a link victim from directory dir, check
+ *  whether the type of victim is right.
+ *  1. We can't do it if dir is read-only (done in permission())
+ *  2. We should have write and exec permissions on dir
+ *  3. We can't remove anything from append-only dir
+ *  4. We can't do anything with immutable dir (done in permission())
+ *  5. If the sticky bit on dir is set we should either
+ *  a. be owner of dir, or
+ *  b. be owner of victim, or
+ *  c. have CAP_FOWNER capability
+ *  6. If the victim is append-only or immutable we can't do antyhing with
+ *     links pointing to it.
+ *  7. If the victim has an unknown uid or gid we can't change the inode.
+ *  8. If we were asked to remove a directory and victim isn't one - ENOTDIR.
+ *  9. If we were asked to remove a non-directory and victim isn't one - EISDIR.
+ * 10. We can't remove a root or mountpoint.
+ * 11. We don't allow removal of NFS sillyrenamed files; it's handled by
+ *     nfs_async_unlink().
+ */
+static int may_delete(struct mnt_idmap *idmap, struct inode *dir,
+              struct dentry *victim, bool isdir)
+{
+    struct inode *inode = d_backing_inode(victim);
+    int error;
+
+    if (d_is_negative(victim))
+        return -ENOENT;
+    BUG_ON(!inode);
+
+    BUG_ON(victim->d_parent->d_inode != dir);
+
+    /* Inode writeback is not safe when the uid or gid are invalid. */
+    if (!vfsuid_valid(i_uid_into_vfsuid(idmap, inode)) ||
+        !vfsgid_valid(i_gid_into_vfsgid(idmap, inode)))
+        return -EOVERFLOW;
+
+    audit_inode_child(dir, victim, AUDIT_TYPE_CHILD_DELETE);
+
+    error = inode_permission(idmap, dir, MAY_WRITE | MAY_EXEC);
+    if (error)
+        return error;
+    if (IS_APPEND(dir))
+        return -EPERM;
+
+    if (check_sticky(idmap, dir, inode) || IS_APPEND(inode) ||
+        IS_IMMUTABLE(inode) || IS_SWAPFILE(inode) ||
+        HAS_UNMAPPED_ID(idmap, inode))
+        return -EPERM;
+    if (isdir) {
+        if (!d_is_dir(victim))
+            return -ENOTDIR;
+        if (IS_ROOT(victim))
+            return -EBUSY;
+    } else if (d_is_dir(victim))
+        return -EISDIR;
+    if (IS_DEADDIR(dir))
+        return -ENOENT;
+    if (victim->d_flags & DCACHE_NFSFS_RENAMED)
+        return -EBUSY;
+    return 0;
 }
 
 /**
@@ -1460,11 +1529,9 @@ static int do_open(struct nameidata *nd,
             return error;
         do_truncate = true;
     }
-    printk("-------> %s: step1\n", __func__);
     error = may_open(idmap, &nd->path, acc_mode, open_flag);
     if (!error && !(file->f_mode & FMODE_OPENED))
         error = vfs_open(&nd->path, file);
-    printk("-------> %s: step2\n", __func__);
     if (!error)
         error = security_file_post_open(file, op->acc_mode);
     if (!error && do_truncate)
@@ -1499,7 +1566,6 @@ static struct file *path_openat(struct nameidata *nd,
             ;
         if (!error)
             error = do_open(nd, file, op);
-        printk("-------> %s: step2\n", __func__);
         terminate_walk(nd);
     }
     if (likely(!error)) {
@@ -1537,4 +1603,265 @@ struct file *do_filp_open(int dfd, struct filename *pathname,
         filp = path_openat(&nd, op, flags | LOOKUP_REVAL);
     restore_nameidata();
     return filp;
+}
+
+int cl_sys_unlink(const char *pathname)
+{
+    return do_unlinkat(AT_FDCWD, getname(pathname));
+}
+
+/* Returns 0 and nd will be valid on success; Returns error, otherwise. */
+static int path_parentat(struct nameidata *nd, unsigned flags,
+                struct path *parent)
+{
+    const char *s = path_init(nd, flags);
+    int err = link_path_walk(s, nd);
+    if (!err)
+        err = complete_walk(nd);
+    if (!err) {
+        *parent = nd->path;
+        nd->path.mnt = NULL;
+        nd->path.dentry = NULL;
+    }
+    terminate_walk(nd);
+    return err;
+}
+
+/* Note: this does not consume "name" */
+static int __filename_parentat(int dfd, struct filename *name,
+                   unsigned int flags, struct path *parent,
+                   struct qstr *last, int *type,
+                   const struct path *root)
+{
+    int retval;
+    struct nameidata nd;
+
+    if (IS_ERR(name))
+        return PTR_ERR(name);
+    set_nameidata(&nd, dfd, name, root);
+    retval = path_parentat(&nd, flags | LOOKUP_RCU, parent);
+    if (unlikely(retval == -ECHILD))
+        retval = path_parentat(&nd, flags, parent);
+    if (unlikely(retval == -ESTALE))
+        retval = path_parentat(&nd, flags | LOOKUP_REVAL, parent);
+    if (likely(!retval)) {
+        *last = nd.last;
+        *type = nd.last_type;
+        audit_inode(name, parent->dentry, AUDIT_INODE_PARENT);
+    }
+    restore_nameidata();
+    return retval;
+}
+
+static int filename_parentat(int dfd, struct filename *name,
+                 unsigned int flags, struct path *parent,
+                 struct qstr *last, int *type)
+{
+    return __filename_parentat(dfd, name, flags, parent, last, type, NULL);
+}
+
+/*
+ * Make sure that the actual truncation of the file will occur outside its
+ * directory's i_mutex.  Truncate can take a long time if there is a lot of
+ * writeout happening, and we don't want to prevent access to the directory
+ * while waiting on the I/O.
+ */
+int do_unlinkat(int dfd, struct filename *name)
+{
+    int error;
+    struct dentry *dentry;
+    struct path path;
+    struct qstr last;
+    int type;
+    struct inode *inode = NULL;
+    struct inode *delegated_inode = NULL;
+    unsigned int lookup_flags = 0;
+retry:
+    error = filename_parentat(dfd, name, lookup_flags, &path, &last, &type);
+    if (error)
+        goto exit1;
+
+    error = -EISDIR;
+    if (type != LAST_NORM)
+        goto exit2;
+
+    error = mnt_want_write(path.mnt);
+    if (error)
+        goto exit2;
+retry_deleg:
+    inode_lock_nested(path.dentry->d_inode, I_MUTEX_PARENT);
+    dentry = lookup_one_qstr_excl(&last, path.dentry, lookup_flags);
+    error = PTR_ERR(dentry);
+    if (!IS_ERR(dentry)) {
+
+        /* Why not before? Because we want correct error value */
+        if (last.name[last.len] || d_is_negative(dentry))
+            goto slashes;
+        inode = dentry->d_inode;
+        ihold(inode);
+        error = security_path_unlink(&path, dentry);
+        if (error)
+            goto exit3;
+        error = vfs_unlink(mnt_idmap(path.mnt), path.dentry->d_inode,
+                   dentry, &delegated_inode);
+exit3:
+        dput(dentry);
+    }
+    inode_unlock(path.dentry->d_inode);
+    if (inode)
+        iput(inode);    /* truncate the inode here */
+    inode = NULL;
+    if (delegated_inode) {
+        error = break_deleg_wait(&delegated_inode);
+        if (!error)
+            goto retry_deleg;
+    }
+    mnt_drop_write(path.mnt);
+exit2:
+    path_put(&path);
+    if (retry_estale(error, lookup_flags)) {
+        lookup_flags |= LOOKUP_REVAL;
+        inode = NULL;
+        goto retry;
+    }
+exit1:
+    putname(name);
+    return error;
+
+slashes:
+    if (d_is_negative(dentry))
+        error = -ENOENT;
+    else if (d_is_dir(dentry))
+        error = -EISDIR;
+    else
+        error = -ENOTDIR;
+    goto exit3;
+}
+
+/*
+ * This looks up the name in dcache and possibly revalidates the found dentry.
+ * NULL is returned if the dentry does not exist in the cache.
+ */
+static struct dentry *lookup_dcache(const struct qstr *name,
+                    struct dentry *dir,
+                    unsigned int flags)
+{
+    struct dentry *dentry = d_lookup(dir, name);
+    if (dentry) {
+        int error = d_revalidate(dentry, flags);
+        if (unlikely(error <= 0)) {
+            if (!error)
+                d_invalidate(dentry);
+            dput(dentry);
+            return ERR_PTR(error);
+        }
+    }
+    return dentry;
+}
+
+/*
+ * Parent directory has inode locked exclusive.  This is one
+ * and only case when ->lookup() gets called on non in-lookup
+ * dentries - as the matter of fact, this only gets called
+ * when directory is guaranteed to have no in-lookup children
+ * at all.
+ */
+struct dentry *lookup_one_qstr_excl(const struct qstr *name,
+                    struct dentry *base,
+                    unsigned int flags)
+{
+    struct dentry *dentry = lookup_dcache(name, base, flags);
+    struct dentry *old;
+    struct inode *dir = base->d_inode;
+
+    if (dentry)
+        return dentry;
+
+
+    PANIC("");
+}
+
+/**
+ * vfs_unlink - unlink a filesystem object
+ * @idmap:  idmap of the mount the inode was found from
+ * @dir:    parent directory
+ * @dentry: victim
+ * @delegated_inode: returns victim inode, if the inode is delegated.
+ *
+ * The caller must hold dir->i_mutex.
+ *
+ * If vfs_unlink discovers a delegation, it will return -EWOULDBLOCK and
+ * return a reference to the inode in delegated_inode.  The caller
+ * should then break the delegation on that inode and retry.  Because
+ * breaking a delegation may take a long time, the caller should drop
+ * dir->i_mutex before doing so.
+ *
+ * Alternatively, a caller may pass NULL for delegated_inode.  This may
+ * be appropriate for callers that expect the underlying filesystem not
+ * to be NFS exported.
+ *
+ * If the inode has been found through an idmapped mount the idmap of
+ * the vfsmount must be passed through @idmap. This function will then take
+ * care to map the inode according to @idmap before checking permissions.
+ * On non-idmapped mounts or if permission checking is to be performed on the
+ * raw inode simply pass @nop_mnt_idmap.
+ */
+int vfs_unlink(struct mnt_idmap *idmap, struct inode *dir,
+           struct dentry *dentry, struct inode **delegated_inode)
+{
+    struct inode *target = dentry->d_inode;
+    int error = may_delete(idmap, dir, dentry, 0);
+
+    if (error)
+        return error;
+
+    if (!dir->i_op->unlink)
+        return -EPERM;
+
+    inode_lock(target);
+    if (IS_SWAPFILE(target))
+        error = -EPERM;
+    else if (is_local_mountpoint(dentry))
+        error = -EBUSY;
+    else {
+        error = security_inode_unlink(dir, dentry);
+        if (!error) {
+            error = try_break_deleg(target, delegated_inode);
+            if (error)
+                goto out;
+            error = dir->i_op->unlink(dir, dentry);
+            if (!error) {
+                dont_mount(dentry);
+                detach_mounts(dentry);
+            }
+        }
+    }
+out:
+    inode_unlock(target);
+
+    /* We don't d_delete() NFS sillyrenamed files--they still exist. */
+    if (!error && dentry->d_flags & DCACHE_NFSFS_RENAMED) {
+        fsnotify_unlink(dir, dentry);
+    } else if (!error) {
+        fsnotify_link_count(target);
+        d_delete_notify(dir, dentry);
+    }
+
+    return error;
+}
+
+int __check_sticky(struct mnt_idmap *idmap, struct inode *dir,
+           struct inode *inode)
+{
+#if 0
+    kuid_t fsuid = current_fsuid();
+
+    if (vfsuid_eq_kuid(i_uid_into_vfsuid(idmap, inode), fsuid))
+        return 0;
+    if (vfsuid_eq_kuid(i_uid_into_vfsuid(idmap, dir), fsuid))
+        return 0;
+    return !capable_wrt_inode_uidgid(idmap, inode, CAP_FOWNER);
+#endif
+    pr_err("%s: No impl.", __func__);
+    return 0;
 }

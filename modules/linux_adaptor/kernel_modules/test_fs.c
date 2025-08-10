@@ -6,16 +6,6 @@
 #include "adaptor.h"
 #include "cl_syscalls.h"
 
-extern int verify_dirent_name(const char *name, int len);
-
-struct getdents_callback64 {
-    struct dir_context ctx;
-    struct linux_dirent64 __user * current_dir;
-    int prev_reclen;
-    int count;
-    int error;
-};
-
 unsigned long
 cl_vfs_read(struct dentry *dentry, unsigned long offset, char *buf, size_t len)
 {
@@ -133,28 +123,6 @@ prepare_inode(struct dentry *root)
 
     return root_inode;
 }
-
-#if 0
-static struct inode *
-lookup_inode(struct inode *root, const char *fname)
-{
-    /* Lookup inode of filesystem. */
-    unsigned int lookup_flags = 0;
-    struct dentry *ret;
-    struct dentry target;
-    memset(&target, 0, sizeof(struct dentry));
-    target.d_name.name = fname;
-    target.d_name.len = strlen(target.d_name.name);
-    target.d_name.hash = 0;
-
-    ret = root->i_op->lookup(root, &target, lookup_flags);
-    if (IS_ERR(ret)) {
-        printk("%s: err(%d)\n", __func__, PTR_ERR(ret));
-        PANIC("lookup error.");
-    }
-    return target.d_inode;
-}
-#endif
 
 static struct dentry *
 lookup(struct dentry *parent, const char *name)
@@ -619,7 +587,6 @@ test_file_create(void)
 {
     printk("\n============== file create ... =============\n");
 
-    int count;
     int fd = cl_sys_open("/f1.txt", O_CREAT, S_IRUSR|S_IWUSR);
     if (fd < 0) {
         PANIC("bad file fd.");
@@ -633,11 +600,26 @@ test_file_create(void)
     printk("\n============== file create ok! =============\n\n");
 }
 
+static void
+test_file_remove(void)
+{
+    printk("\n============== file remove ... =============\n");
+
+    int err = cl_sys_unlink("/f1.txt");
+    if (err < 0) {
+        PANIC("remove file err.");
+    }
+
+    printk("\n============== file remove ok! =============\n\n");
+}
+
 void test_ext4(void)
 {
     test_getdents64();
 
     test_file_create();
+
+    test_file_remove();
 
     PANIC("Reach here!");
 

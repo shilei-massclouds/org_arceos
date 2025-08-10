@@ -79,6 +79,62 @@ static DEFINE_PER_CPU(long, nr_dentry);
 static DEFINE_PER_CPU(long, nr_dentry_unused);
 static DEFINE_PER_CPU(long, nr_dentry_negative);
 
+static inline int dentry_string_cmp(const unsigned char *cs, const unsigned char *ct, unsigned tcount)
+{
+    do {
+        if (*cs != *ct)
+            return 1;
+        cs++;
+        ct++;
+        tcount--;
+    } while (tcount);
+    return 0;
+}
+
+static inline int dentry_cmp(const struct dentry *dentry, const unsigned char *ct, unsigned tcount)
+{
+    /*
+     * Be careful about RCU walk racing with rename:
+     * use 'READ_ONCE' to fetch the name pointer.
+     *
+     * NOTE! Even if a rename will mean that the length
+     * was not loaded atomically, we don't care. The
+     * RCU walk will check the sequence count eventually,
+     * and catch it. And we won't overrun the buffer,
+     * because we're reading the name pointer atomically,
+     * and a dentry name is guaranteed to be properly
+     * terminated with a NUL byte.
+     *
+     * End result: even if 'len' is wrong, we'll exit
+     * early because the data cannot match (there can
+     * be no NUL in the ct/tcount data)
+     */
+    const unsigned char *cs = READ_ONCE(dentry->d_name.name);
+
+    return dentry_string_cmp(cs, ct, tcount);
+}
+
+/**
+ * d_same_name - compare dentry name with case-exact name
+ * @parent: parent dentry
+ * @dentry: the negative dentry that was passed to the parent's lookup func
+ * @name:   the case-exact name to be associated with the returned dentry
+ *
+ * Return: true if names are same, or false
+ */
+bool d_same_name(const struct dentry *dentry, const struct dentry *parent,
+         const struct qstr *name)
+{
+    if (likely(!(parent->d_flags & DCACHE_OP_COMPARE))) {
+        if (dentry->d_name.len != name->len)
+            return false;
+        return dentry_cmp(dentry, name->name, name->len) == 0;
+    }
+    return parent->d_op->d_compare(dentry,
+                       dentry->d_name.len, dentry->d_name.name,
+                       name) == 0;
+}
+
 /**
  * d_ancestor - search for an ancestor
  * @p1: ancestor dentry
@@ -1439,6 +1495,25 @@ struct dentry *__d_lookup(const struct dentry *parent, const struct qstr *name)
 
     hlist_bl_for_each_entry_rcu(dentry, node, b, d_hash) {
 
+        if (dentry->d_name.hash != hash)
+            continue;
+
+        spin_lock(&dentry->d_lock);
+        if (dentry->d_parent != parent)
+            goto next;
+        if (d_unhashed(dentry))
+            goto next;
+
+        if (!d_same_name(dentry, parent, name))
+            goto next;
+
+        dentry->d_lockref.count++;
+        found = dentry;
+        spin_unlock(&dentry->d_lock);
+        break;
+next:
+        spin_unlock(&dentry->d_lock);
+
         PANIC("LOOP");
     }
     rcu_read_unlock();
@@ -1518,6 +1593,42 @@ void shrink_dentry_list(struct list_head *list)
         }
         d_shrink_del(dentry);
         shrink_kill(dentry);
+    }
+}
+
+/**
+ * d_invalidate - detach submounts, prune dcache, and drop
+ * @dentry: dentry to invalidate (aka detach, prune and drop)
+ */
+void d_invalidate(struct dentry *dentry)
+{
+    PANIC("");
+}
+
+/**
+ * d_delete - delete a dentry
+ * @dentry: The dentry to delete
+ *
+ * Turn the dentry into a negative dentry if possible, otherwise
+ * remove it from the hash queues so it can be deleted later
+ */
+
+void d_delete(struct dentry * dentry)
+{
+    struct inode *inode = dentry->d_inode;
+
+    spin_lock(&inode->i_lock);
+    spin_lock(&dentry->d_lock);
+    /*
+     * Are we the only user?
+     */
+    if (dentry->d_lockref.count == 1) {
+        dentry->d_flags &= ~DCACHE_CANT_MOUNT;
+        dentry_unlink_inode(dentry);
+    } else {
+        __d_drop(dentry);
+        spin_unlock(&dentry->d_lock);
+        spin_unlock(&inode->i_lock);
     }
 }
 

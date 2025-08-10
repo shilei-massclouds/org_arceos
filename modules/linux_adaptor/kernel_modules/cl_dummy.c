@@ -446,3 +446,30 @@ void __audit_inode_child(struct inode *parent,
 {
     pr_err("%s: No impl.", __func__);
 }
+
+int security_path_unlink(const struct path *dir, struct dentry *dentry)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_inode_unlink(struct inode *dir, struct dentry *dentry)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+/*
+ * __detach_mounts - lazily unmount all mounts on the specified dentry
+ *
+ * During unlink, rmdir, and d_drop it is possible to loose the path
+ * to an existing mountpoint, and wind up leaking the mount.
+ * detach_mounts allows lazily unmounting those mounts instead of
+ * leaking them.
+ *
+ * The caller may hold dentry->d_inode->i_mutex.
+ */
+void __detach_mounts(struct dentry *dentry)
+{
+    pr_err("%s: No impl.", __func__);
+}

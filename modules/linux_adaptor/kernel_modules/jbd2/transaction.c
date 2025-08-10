@@ -1534,7 +1534,6 @@ int jbd2_journal_dirty_metadata(handle_t *handle, struct buffer_head *bh)
 
 	spin_lock(&jh->b_state_lock);
 
-    printk("%s: step2\n", __func__);
 	if (is_handle_aborted(handle)) {
 		/*
 		 * Check journal aborting with @jh->b_state_lock locked,

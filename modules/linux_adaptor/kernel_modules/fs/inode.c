@@ -1099,7 +1099,6 @@ void __remove_inode_hash(struct inode *inode)
  */
 void drop_nlink(struct inode *inode)
 {
-    printk("%s: i_nlink(%u)\n", __func__, inode->i_nlink);
     WARN_ON(inode->i_nlink == 0);
     inode->__i_nlink--;
     if (!inode->i_nlink)

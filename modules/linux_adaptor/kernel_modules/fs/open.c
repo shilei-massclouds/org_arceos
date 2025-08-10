@@ -268,7 +268,6 @@ static int do_dentry_open(struct file *f,
     if (error)
         goto cleanup_all;
 
-    printk("-------> %s: step1\n", __func__);
     /* normally all 3 are set; ->open() can clear them if needed */
     f->f_mode |= FMODE_LSEEK | FMODE_PREAD | FMODE_PWRITE;
     if (!open)
@@ -278,7 +277,6 @@ static int do_dentry_open(struct file *f,
         if (error)
             goto cleanup_all;
     }
-    printk("-------> %s: step2\n", __func__);
     f->f_mode |= FMODE_OPENED;
     if ((f->f_mode & FMODE_READ) &&
          likely(f->f_op->read || f->f_op->read_iter))
@@ -299,7 +297,6 @@ static int do_dentry_open(struct file *f,
     if ((f->f_flags & O_DIRECT) && !(f->f_mode & FMODE_CAN_ODIRECT))
         return -EINVAL;
 
-    printk("-------> %s: step3\n", __func__);
     /*
      * XXX: Huge page cache doesn't support writing yet. Drop all page
      * cache for this file before processing writes.

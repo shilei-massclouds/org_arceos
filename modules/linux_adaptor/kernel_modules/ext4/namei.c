@@ -89,10 +89,8 @@ static struct buffer_head *ext4_append(handle_t *handle,
 	if (err)
 		goto out;
 	BUFFER_TRACE(bh, "get_write_access");
-    printk("%s: step1\n", __func__);
 	err = ext4_journal_get_write_access(handle, inode->i_sb, bh,
 					    EXT4_JTR_NONE);
-    printk("%s: step2 err(%d)\n", __func__, err);
 	if (err)
 		goto out;
 	return bh;
@@ -1580,7 +1578,6 @@ static struct buffer_head *__ext4_find_entry(struct inode *dir,
 			goto cleanup_and_exit;
 	}
 
-    printk("%s: step1 name(%s)\n", __func__, name);
 	if ((namelen <= 2) && (name[0] == '.') &&
 	    (name[1] == '.' || name[1] == '\0')) {
 		/*
@@ -1709,9 +1706,7 @@ static struct buffer_head *ext4_find_entry(struct inode *dir,
 	if (err)
 		return ERR_PTR(err);
 
-    printk("%s: step1\n", __func__);
 	bh = __ext4_find_entry(dir, &fname, res_dir, inlined);
-    printk("%s: step2 bh(%lx)\n", __func__, bh);
 
 	ext4_fname_free_filename(&fname);
 	return bh;
@@ -1799,11 +1794,7 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 	if (dentry->d_name.len > EXT4_NAME_LEN)
 		return ERR_PTR(-ENAMETOOLONG);
 
-    printk("%s: dir.ino(%u) dentry.inode(%lx)\n", __func__, dir->i_ino, dentry->d_inode);
 	bh = ext4_lookup_entry(dir, dentry, &de);
-    if (dentry && dentry->d_inode) {
-        printk("%s: step2.1 target.ino(%u)\n", __func__, dentry->d_inode->i_ino);
-    }
 	if (IS_ERR(bh))
 		return ERR_CAST(bh);
 	inode = NULL;
@@ -1819,7 +1810,6 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 					 dentry);
 			return ERR_PTR(-EFSCORRUPTED);
 		}
-    printk("%s: step1 ino(%u)\n", __func__, ino);
 		inode = ext4_iget(dir->i_sb, ino, EXT4_IGET_NORMAL);
 		if (inode == ERR_PTR(-ESTALE)) {
 			EXT4_ERROR_INODE(dir,
@@ -1847,7 +1837,6 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 		return NULL;
 	}
 
-    printk("%s: stepN inode(%lx)\n", __func__, inode);
 	return d_splice_alias(inode, dentry);
 }
 
@@ -2180,9 +2169,7 @@ static int add_dirent_to_buf(handle_t *handle, struct ext4_filename *fname,
 	inode_inc_iversion(dir);
 	err2 = ext4_mark_inode_dirty(handle, dir);
 	BUFFER_TRACE(bh, "call ext4_handle_dirty_metadata");
-    printk("%s: step1\n", __func__);
 	err = ext4_handle_dirty_dirblock(handle, dir, bh);
-    printk("%s: step2 err(%d)\n", __func__, err);
 	if (err)
 		ext4_std_error(dir->i_sb, err);
 	return err ? err : err2;
@@ -2458,10 +2445,8 @@ static int ext4_add_entry(handle_t *handle, struct dentry *dentry,
 			bh = NULL;
 			goto out;
 		}
-    printk("%s: step0.1 block(%u)\n", __func__, block);
 		retval = add_dirent_to_buf(handle, &fname, dir, inode,
 					   NULL, bh);
-    printk("%s: step0.2 retval(%u)\n", __func__, retval);
 		if (retval != -ENOSPC)
 			goto out;
 
@@ -2476,7 +2461,6 @@ static int ext4_add_entry(handle_t *handle, struct dentry *dentry,
 	}
 	bh = ext4_append(handle, dir, &block);
 add_to_new_block:
-    printk("%s: step1\n", __func__);
 	if (IS_ERR(bh)) {
 		retval = PTR_ERR(bh);
 		bh = NULL;
@@ -2493,10 +2477,8 @@ add_to_new_block:
 out:
 	ext4_fname_free_filename(&fname);
 	brelse(bh);
-    printk("%s: step2\n", __func__);
 	if (retval == 0)
 		ext4_set_inode_state(inode, EXT4_STATE_NEWENTRY);
-    printk("%s: step3\n", __func__);
 	return retval;
 }
 
@@ -2996,13 +2978,10 @@ int ext4_init_new_dir(handle_t *handle, struct inode *dir,
 	}
 
 	inode->i_size = 0;
-    printk("%s: step1\n", __func__);
 	dir_block = ext4_append(handle, inode, &block);
-    printk("%s: step2\n", __func__);
 	if (IS_ERR(dir_block))
 		return PTR_ERR(dir_block);
 	de = (struct ext4_dir_entry_2 *)dir_block->b_data;
-    printk("%s: step3\n", __func__);
 	ext4_init_dot_dotdot(inode, de, blocksize, csum_size, dir->i_ino, 0);
 	set_nlink(inode, 2);
 	if (csum_size)
@@ -3048,7 +3027,6 @@ retry:
 	err = ext4_init_new_dir(handle, dir, inode);
 	if (err)
 		goto out_clear_inode;
-    printk("%s: step1\n", __func__);
 	err = ext4_mark_inode_dirty(handle, inode);
 	if (!err)
 		err = ext4_add_entry(handle, dentry, inode);
@@ -3072,12 +3050,9 @@ out_clear_inode:
 		goto out_clear_inode;
 	d_instantiate_new(dentry, inode);
 	ext4_fc_track_create(handle, dentry);
-    printk("%s: step2\n", __func__);
 	if (IS_DIRSYNC(dir)) {
-        printk("%s: IS_DIRSYNC\n", __func__);
 		ext4_handle_sync(handle);
     }
-    printk("%s: stepN\n", __func__);
 
 out_stop:
 	if (handle)
@@ -3170,7 +3145,6 @@ static int ext4_rmdir(struct inode *dir, struct dentry *dentry)
 	struct ext4_dir_entry_2 *de;
 	handle_t *handle = NULL;
 
-    printk("%s: step1\n", __func__);
 	if (unlikely(ext4_forced_shutdown(dir->i_sb)))
 		return -EIO;
 
@@ -3183,7 +3157,6 @@ static int ext4_rmdir(struct inode *dir, struct dentry *dentry)
 	if (retval)
 		return retval;
 
-    printk("%s: step2\n", __func__);
 	retval = -ENOENT;
 	bh = ext4_find_entry(dir, &dentry->d_name, &de, NULL);
 	if (IS_ERR(bh))

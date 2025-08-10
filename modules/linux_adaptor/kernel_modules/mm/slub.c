@@ -41,7 +41,9 @@ void *kmem_cache_alloc_noprof(struct kmem_cache *s, gfp_t gfpflags)
     if (!s) {
         PANIC("Bad kmem_cache");
     }
-    printk("%s: object_size(%u, %u) align(%u)\n", __func__, s->object_size, s->size, s->align);
+    pr_debug("%s: object_size(%u, %u) align(%u)",
+             __func__, s->object_size, s->size, s->align);
+
     int align = s->align;
     if (align == 0) {
         align = 8;

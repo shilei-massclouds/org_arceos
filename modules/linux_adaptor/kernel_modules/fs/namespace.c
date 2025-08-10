@@ -452,8 +452,25 @@ struct vfsmount *vfs_create_mount(struct fs_context *fc)
 /* call under rcu_read_lock */
 int __legitimize_mnt(struct vfsmount *bastard, unsigned seq)
 {
-    pr_err("%s: No impl.", __func__);
-    return 0;
+    struct mount *mnt;
+    if (read_seqretry(&mount_lock, seq))
+        return 1;
+    if (bastard == NULL)
+        return 0;
+    mnt = real_mount(bastard);
+    mnt_add_count(mnt, 1);
+    smp_mb();       // see mntput_no_expire() and do_umount()
+    if (likely(!read_seqretry(&mount_lock, seq)))
+        return 0;
+    lock_mount_hash();
+    if (unlikely(bastard->mnt_flags & (MNT_SYNC_UMOUNT | MNT_DOOMED))) {
+        mnt_add_count(mnt, -1);
+        unlock_mount_hash();
+        return 1;
+    }
+    unlock_mount_hash();
+    /* caller will mntput() */
+    return -1;
 }
 
 bool path_is_under(const struct path *path1, const struct path *path2)
@@ -576,6 +593,27 @@ void mnt_drop_write(struct vfsmount *mnt)
 void dissolve_on_fput(struct vfsmount *mnt)
 {
     PANIC("");
+}
+
+/*
+ * __is_local_mountpoint - Test to see if dentry is a mountpoint in the
+ *                         current mount namespace.
+ *
+ * The common case is dentries are not mountpoints at all and that
+ * test is handled inline.  For the slow case when we are actually
+ * dealing with a mountpoint of some kind, walk through all of the
+ * mounts in the current mount namespace and test to see if the dentry
+ * is a mountpoint.
+ *
+ * The mount_hashtable is not usable in the context because we
+ * need to identify all mounts that may be in the current mount
+ * namespace not just a mount that happens to have some specified
+ * parent mount.
+ */
+bool __is_local_mountpoint(struct dentry *dentry)
+{
+    pr_err("%s: No impl.", __func__);
+    return false;
 }
 
 void __init mnt_init(void)
