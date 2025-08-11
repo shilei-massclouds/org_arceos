@@ -249,6 +249,24 @@ static bool __follow_mount_rcu(struct nameidata *nd, struct path *path)
     PANIC("");
 }
 
+static inline int traverse_mounts(struct path *path, bool *jumped,
+                  int *count, unsigned lookup_flags)
+{
+    unsigned flags = smp_load_acquire(&path->dentry->d_flags);
+
+    /* fastpath */
+    if (likely(!(flags & DCACHE_MANAGED_DENTRY))) {
+        *jumped = false;
+        if (unlikely(d_flags_negative(flags)))
+            return -ENOENT;
+        return 0;
+    }
+#if 0
+    return __traverse_mounts(path, flags, jumped, count, lookup_flags);
+#endif
+    PANIC("");
+}
+
 static inline int handle_mounts(struct nameidata *nd, struct dentry *dentry,
               struct path *path)
 {
@@ -271,7 +289,6 @@ static inline int handle_mounts(struct nameidata *nd, struct dentry *dentry,
 #endif
         PANIC("LOOKUP_RCU");
     }
-#if 0
     ret = traverse_mounts(path, &jumped, &nd->total_link_count, nd->flags);
     if (jumped) {
         if (unlikely(nd->flags & LOOKUP_NO_XDEV))
@@ -285,8 +302,6 @@ static inline int handle_mounts(struct nameidata *nd, struct dentry *dentry,
             mntput(path->mnt);
     }
     return ret;
-#endif
-    PANIC("");
 }
 
 /*

@@ -33,15 +33,19 @@ static int warn_unsupported(struct file *file, const char *op)
     return -EINVAL;
 }
 
-static ssize_t new_sync_read(struct file *filp, char __user *buf, size_t len, loff_t *ppos)
+static ssize_t new_sync_read(struct file *filp, char *buf, size_t len, loff_t *ppos)
 {
+    struct kvec iov = {
+        .iov_base   = buf,
+        .iov_len    = min_t(size_t, len, MAX_RW_COUNT),
+    };
     struct kiocb kiocb;
     struct iov_iter iter;
     ssize_t ret;
 
     init_sync_kiocb(&kiocb, filp);
     kiocb.ki_pos = (ppos ? *ppos : 0);
-    iov_iter_ubuf(&iter, ITER_DEST, buf, len);
+    iov_iter_kvec(&iter, ITER_DEST, &iov, 1, iov.iov_len);
 
     ret = filp->f_op->read_iter(&kiocb, &iter);
     BUG_ON(ret == -EIOCBQUEUED);
@@ -310,7 +314,5 @@ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
         add_rchar(current, ret);
     }
     inc_syscr(current);
-    printk("ret: %d\n", ret);
-    PANIC("");
     return ret;
 }

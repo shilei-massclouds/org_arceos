@@ -145,6 +145,7 @@ static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
 	if (iocb->ki_flags & IOCB_DIRECT)
 		return ext4_dio_read_iter(iocb, to);
 
+    printk("%s: step2\n", __func__);
 	return generic_file_read_iter(iocb, to);
 }
 
