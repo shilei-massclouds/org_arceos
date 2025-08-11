@@ -461,19 +461,54 @@ static struct dentry *lookup_fast(struct nameidata *nd)
     return dentry;
 }
 
+/* Fast lookup failed, do it the slow way */
+static struct dentry *__lookup_slow(const struct qstr *name,
+                    struct dentry *dir,
+                    unsigned int flags)
+{
+    struct dentry *dentry, *old;
+    struct inode *inode = dir->d_inode;
+    DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
+
+    /* Don't go there if it's already dead */
+    if (unlikely(IS_DEADDIR(inode)))
+        return ERR_PTR(-ENOENT);
+again:
+    dentry = d_alloc_parallel(dir, name, &wq);
+    if (IS_ERR(dentry))
+        return dentry;
+    if (unlikely(!d_in_lookup(dentry))) {
+        int error = d_revalidate(dentry, flags);
+        if (unlikely(error <= 0)) {
+            if (!error) {
+                d_invalidate(dentry);
+                dput(dentry);
+                goto again;
+            }
+            dput(dentry);
+            dentry = ERR_PTR(error);
+        }
+    } else {
+        old = inode->i_op->lookup(inode, dentry, flags);
+        d_lookup_done(dentry);
+        if (unlikely(old)) {
+            dput(dentry);
+            dentry = old;
+        }
+    }
+    return dentry;
+}
+
 static struct dentry *lookup_slow(const struct qstr *name,
                   struct dentry *dir,
                   unsigned int flags)
 {
     struct inode *inode = dir->d_inode;
     struct dentry *res;
-#if 0
     inode_lock_shared(inode);
     res = __lookup_slow(name, dir, flags);
     inode_unlock_shared(inode);
     return res;
-#endif
-    PANIC("");
 }
 
 static const char *walk_component(struct nameidata *nd, int flags)
@@ -524,6 +559,29 @@ static inline int may_lookup(struct mnt_idmap *idmap,
         return err;
 
     return inode_permission(idmap, nd->inode, MAY_EXEC);
+}
+
+/*  Check whether we can create an object with dentry child in directory
+ *  dir.
+ *  1. We can't do it if child already exists (open has special treatment for
+ *     this case, but since we are inlined it's OK)
+ *  2. We can't do it if dir is read-only (done in permission())
+ *  3. We can't do it if the fs can't represent the fsuid or fsgid.
+ *  4. We should have write and exec permissions on dir
+ *  5. We can't do it if dir is immutable (done in permission())
+ */
+static inline int may_create(struct mnt_idmap *idmap,
+                 struct inode *dir, struct dentry *child)
+{
+    audit_inode_child(dir, child, AUDIT_TYPE_CHILD_CREATE);
+    if (child->d_inode)
+        return -EEXIST;
+    if (IS_DEADDIR(dir))
+        return -ENOENT;
+    if (!fsuidgid_has_mapping(dir->i_sb, idmap))
+        return -EOVERFLOW;
+
+    return inode_permission(idmap, dir, MAY_WRITE | MAY_EXEC);
 }
 
 /*
@@ -2001,4 +2059,157 @@ int filename_lookup(int dfd, struct filename *name, unsigned flags,
                 flags & LOOKUP_MOUNTPOINT ? AUDIT_INODE_NOEVAL : 0);
     restore_nameidata();
     return retval;
+}
+
+int cl_sys_mkdir(const char *pathname, umode_t mode)
+{
+    return do_mkdirat(AT_FDCWD, getname(pathname), mode);
+}
+
+static struct dentry *filename_create(int dfd, struct filename *name,
+                      struct path *path, unsigned int lookup_flags)
+{
+    struct dentry *dentry = ERR_PTR(-EEXIST);
+    struct qstr last;
+    bool want_dir = lookup_flags & LOOKUP_DIRECTORY;
+    unsigned int reval_flag = lookup_flags & LOOKUP_REVAL;
+    unsigned int create_flags = LOOKUP_CREATE | LOOKUP_EXCL;
+    int type;
+    int err2;
+    int error;
+
+    error = filename_parentat(dfd, name, reval_flag, path, &last, &type);
+    if (error)
+        return ERR_PTR(error);
+
+    /*
+     * Yucky last component or no last component at all?
+     * (foo/., foo/.., /////)
+     */
+    if (unlikely(type != LAST_NORM))
+        goto out;
+
+    /* don't fail immediately if it's r/o, at least try to report other errors */
+    err2 = mnt_want_write(path->mnt);
+    /*
+     * Do the final lookup.  Suppress 'create' if there is a trailing
+     * '/', and a directory wasn't requested.
+     */
+    if (last.name[last.len] && !want_dir)
+        create_flags = 0;
+    inode_lock_nested(path->dentry->d_inode, I_MUTEX_PARENT);
+    dentry = lookup_one_qstr_excl(&last, path->dentry,
+                      reval_flag | create_flags);
+    if (IS_ERR(dentry))
+        goto unlock;
+
+    error = -EEXIST;
+    if (d_is_positive(dentry))
+        goto fail;
+
+    /*
+     * Special case - lookup gave negative, but... we had foo/bar/
+     * From the vfs_mknod() POV we just have a negative dentry -
+     * all is fine. Let's be bastards - you had / on the end, you've
+     * been asking for (non-existent) directory. -ENOENT for you.
+     */
+    if (unlikely(!create_flags)) {
+        error = -ENOENT;
+        goto fail;
+    }
+    if (unlikely(err2)) {
+        error = err2;
+        goto fail;
+    }
+    return dentry;
+fail:
+    dput(dentry);
+    dentry = ERR_PTR(error);
+unlock:
+    inode_unlock(path->dentry->d_inode);
+    if (!err2)
+        mnt_drop_write(path->mnt);
+out:
+    path_put(path);
+    PANIC("fail");
+    return dentry;
+}
+
+int do_mkdirat(int dfd, struct filename *name, umode_t mode)
+{
+    struct dentry *dentry;
+    struct path path;
+    int error;
+    unsigned int lookup_flags = LOOKUP_DIRECTORY;
+
+retry:
+    dentry = filename_create(dfd, name, &path, lookup_flags);
+    error = PTR_ERR(dentry);
+    if (IS_ERR(dentry))
+        goto out_putname;
+
+    error = security_path_mkdir(&path, dentry,
+            mode_strip_umask(path.dentry->d_inode, mode));
+    if (!error) {
+        error = vfs_mkdir(mnt_idmap(path.mnt), path.dentry->d_inode,
+                  dentry, mode);
+    }
+    done_path_create(&path, dentry);
+    if (retry_estale(error, lookup_flags)) {
+        lookup_flags |= LOOKUP_REVAL;
+        goto retry;
+    }
+out_putname:
+    putname(name);
+    return error;
+}
+
+/**
+ * vfs_mkdir - create directory
+ * @idmap:  idmap of the mount the inode was found from
+ * @dir:    inode of the parent directory
+ * @dentry: dentry of the child directory
+ * @mode:   mode of the child directory
+ *
+ * Create a directory.
+ *
+ * If the inode has been found through an idmapped mount the idmap of
+ * the vfsmount must be passed through @idmap. This function will then take
+ * care to map the inode according to @idmap before checking permissions.
+ * On non-idmapped mounts or if permission checking is to be performed on the
+ * raw inode simply pass @nop_mnt_idmap.
+ */
+int vfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
+          struct dentry *dentry, umode_t mode)
+{
+    int error;
+    unsigned max_links = dir->i_sb->s_max_links;
+
+    error = may_create(idmap, dir, dentry);
+    if (error)
+        return error;
+
+    if (!dir->i_op->mkdir)
+        return -EPERM;
+
+    mode = vfs_prepare_mode(idmap, dir, mode, S_IRWXUGO | S_ISVTX, 0);
+    error = security_inode_mkdir(dir, dentry, mode);
+    if (error)
+        return error;
+
+    if (max_links && dir->i_nlink >= max_links)
+        return -EMLINK;
+
+    error = dir->i_op->mkdir(idmap, dir, dentry, mode);
+    if (!error)
+        fsnotify_mkdir(dir, dentry);
+    return error;
+}
+
+void done_path_create(struct path *path, struct dentry *dentry)
+{
+    dput(dentry);
+    inode_unlock(path->dentry->d_inode);
+    mnt_drop_write(path->mnt);
+    path_put(path);
 }

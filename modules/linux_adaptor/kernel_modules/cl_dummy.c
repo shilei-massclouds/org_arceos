@@ -324,6 +324,12 @@ int security_inode_init_security(struct inode *inode, struct inode *dir,
     return 0;
 }
 
+int security_inode_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
 int security_inode_create(struct inode *dir, struct dentry *dentry,
               umode_t mode)
 {
@@ -460,6 +466,13 @@ int security_inode_unlink(struct inode *dir, struct dentry *dentry)
 }
 
 int security_inode_getattr(const struct path *path)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_path_mkdir(const struct path *dir, struct dentry *dentry,
+            umode_t mode)
 {
     pr_err("%s: No impl.", __func__);
     return 0;

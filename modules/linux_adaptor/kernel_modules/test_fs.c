@@ -572,6 +572,25 @@ test_file_create(const char *fname)
 }
 
 static void
+test_dir_create(const char *dname)
+{
+    printk("\n============== dir create ... =============\n");
+
+    CL_ASSERT(!_exists(dname), "dir already exists.");
+
+    printk("create dir '%s'.\n", dname);
+    int err = cl_sys_mkdir(dname, 0700);
+    if (err) {
+        printk("create dir '%s' error '%d'.\n", dname, err);
+        PANIC("create dir err.");
+    }
+
+    CL_ASSERT(_exists(dname), "No dir after creating it.");
+
+    printk("\n============== dir create ok! =============\n\n");
+}
+
+static void
 test_file_remove(const char *fname)
 {
     printk("\n============== file remove ... =============\n");
@@ -615,8 +634,8 @@ test_file_stat(const char *fname)
     printk("\n============== file stat ok! =============\n\n");
 }
 
-static void
-test_file_read(const char *fname)
+static int
+test_file_read(const char *fname, char *buf, size_t len)
 {
     printk("\n============== file read ... =============\n");
 
@@ -627,8 +646,7 @@ test_file_read(const char *fname)
     }
     printk("%s: open dir fd '%d'\n", __func__, fd);
 
-    char buf[_BUF_LEN];
-    int err = cl_sys_read(fd, buf, sizeof(buf));
+    int err = cl_sys_read(fd, buf, len);
     if (err < 0) {
         printk("read err: %d\n", err);
         PANIC("read file err.");
@@ -643,10 +661,11 @@ test_file_read(const char *fname)
     }
 
     printk("\n============== file read ok! =============\n\n");
+    return err;
 }
 
 static void
-test_file_write(const char *fname)
+test_file_write(const char *fname, const char *buf, size_t len)
 {
     printk("\n============== file write ... =============\n");
 
@@ -657,8 +676,7 @@ test_file_write(const char *fname)
     }
     printk("%s: open dir fd '%d'\n", __func__, fd);
 
-    char buf[] = "1234";
-    int err = cl_sys_write(fd, buf, sizeof(buf));
+    int err = cl_sys_write(fd, buf, len);
     if (err < 0) {
         printk("write err: %d\n", err);
         PANIC("write file err.");
@@ -671,30 +689,35 @@ test_file_write(const char *fname)
     printk("\n============== file write ok! =============\n\n");
 }
 
+static void
+test_file_common(const char *path)
+{
+    test_file_create(path);
+
+    char wbuf[] = "1234";
+    test_file_write(path, wbuf, sizeof(wbuf));
+
+    char rbuf[_BUF_LEN];
+    int count = test_file_read(path, rbuf, sizeof(rbuf));
+    CL_ASSERT(count == sizeof(wbuf), "bad file size.");
+    CL_ASSERT(memcmp(rbuf, wbuf, count) == 0, "bad file content.");
+
+    test_file_stat(path);
+
+    test_file_remove(path);
+}
+
 void test_ext4(void)
 {
     test_getdents64();
 
-    test_file_create("/f1.txt");
+    test_file_common("/f1.txt");
 
-    test_file_read("/f1.txt");
-
-    test_file_write("/f1.txt");
-
-    test_file_read("/f1.txt");
-
-    test_file_stat("/f1.txt");
-
-    test_file_remove("/f1.txt");
+    test_dir_create("/dir1");
 
     PANIC("Reach here!");
 
 #if 0
-    /*
-     * Test read & write file.
-     */
-    test_file_rw(root, "ext4", "ext4.txt");
-
     /*
      * Test dir iterate.
      */
