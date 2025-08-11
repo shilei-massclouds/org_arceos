@@ -55,6 +55,27 @@ static ssize_t new_sync_read(struct file *filp, char *buf, size_t len, loff_t *p
     return ret;
 }
 
+static ssize_t new_sync_write(struct file *filp, const char *buf, size_t len, loff_t *ppos)
+{
+    struct kvec iov = {
+        .iov_base   = (void *)buf,
+        .iov_len    = min_t(size_t, len, MAX_RW_COUNT),
+    };
+    struct kiocb kiocb;
+    struct iov_iter iter;
+    ssize_t ret;
+
+    init_sync_kiocb(&kiocb, filp);
+    kiocb.ki_pos = (ppos ? *ppos : 0);
+    iov_iter_kvec(&iter, ITER_SOURCE, &iov, 1, iov.iov_len);
+
+    ret = filp->f_op->write_iter(&kiocb, &iter);
+    BUG_ON(ret == -EIOCBQUEUED);
+    if (ret > 0 && ppos)
+        *ppos = kiocb.ki_pos;
+    return ret;
+}
+
 int rw_verify_area(int read_write, struct file *file, const loff_t *ppos, size_t count)
 {
     int mask = read_write == READ ? MAY_READ : MAY_WRITE;
@@ -314,5 +335,60 @@ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
         add_rchar(current, ret);
     }
     inc_syscr(current);
+    return ret;
+}
+
+ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
+{
+    struct fd f = fdget_pos(fd);
+    ssize_t ret = -EBADF;
+
+    if (fd_file(f)) {
+        loff_t pos, *ppos = file_ppos(fd_file(f));
+        if (ppos) {
+            pos = *ppos;
+            ppos = &pos;
+        }
+        ret = vfs_write(fd_file(f), buf, count, ppos);
+        if (ret >= 0 && ppos)
+            fd_file(f)->f_pos = pos;
+        fdput_pos(f);
+    }
+
+    return ret;
+}
+
+int cl_sys_write(unsigned int fd, const char *buf, size_t count)
+{
+    return ksys_write(fd, buf, count);
+}
+
+ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
+{
+    ssize_t ret;
+
+    if (!(file->f_mode & FMODE_WRITE))
+        return -EBADF;
+    if (!(file->f_mode & FMODE_CAN_WRITE))
+        return -EINVAL;
+
+    ret = rw_verify_area(WRITE, file, pos, count);
+    if (ret)
+        return ret;
+    if (count > MAX_RW_COUNT)
+        count =  MAX_RW_COUNT;
+    file_start_write(file);
+    if (file->f_op->write)
+        ret = file->f_op->write(file, buf, count, pos);
+    else if (file->f_op->write_iter)
+        ret = new_sync_write(file, buf, count, pos);
+    else
+        ret = -EINVAL;
+    if (ret > 0) {
+        fsnotify_modify(file);
+        add_wchar(current, ret);
+    }
+    inc_syscw(current);
+    file_end_write(file);
     return ret;
 }

@@ -731,3 +731,55 @@ int write_cache_pages(struct address_space *mapping,
 
     return error;
 }
+
+/*
+ * This cancels just the dirty bit on the kernel page itself, it does NOT
+ * actually remove dirty bits on any mmap's that may be around. It also
+ * leaves the page tagged dirty, so any sync activity will still find it on
+ * the dirty lists, and in particular, clear_page_dirty_for_io() will still
+ * look at the dirty bits in the VM.
+ *
+ * Doing this should *normally* only ever be done when a page is truncated,
+ * and is not actually mapped anywhere at all. However, fs/buffer.c does
+ * this when it notices that somebody has cleaned out all the buffers on a
+ * page without actually doing it through the VM. Can you say "ext3 is
+ * horribly ugly"? Thought you could.
+ */
+void __folio_cancel_dirty(struct folio *folio)
+{
+    struct address_space *mapping = folio_mapping(folio);
+
+    if (mapping_can_writeback(mapping)) {
+        struct inode *inode = mapping->host;
+        struct bdi_writeback *wb;
+        struct wb_lock_cookie cookie = {};
+
+        folio_memcg_lock(folio);
+        wb = unlocked_inode_to_wb_begin(inode, &cookie);
+
+        if (folio_test_clear_dirty(folio))
+            folio_account_cleaned(folio, wb);
+
+        unlocked_inode_to_wb_end(inode, &cookie);
+        folio_memcg_unlock(folio);
+    } else {
+        folio_clear_dirty(folio);
+    }
+}
+
+/*
+ * Helper function for deaccounting dirty page without writeback.
+ *
+ * Caller must hold folio_memcg_lock().
+ */
+void folio_account_cleaned(struct folio *folio, struct bdi_writeback *wb)
+{
+    long nr = folio_nr_pages(folio);
+
+#if 0
+    lruvec_stat_mod_folio(folio, NR_FILE_DIRTY, -nr);
+    zone_stat_mod_folio(folio, NR_ZONE_WRITE_PENDING, -nr);
+#endif
+    wb_stat_mod(wb, WB_RECLAIMABLE, -nr);
+    task_io_account_cancelled_write(nr * PAGE_SIZE);
+}

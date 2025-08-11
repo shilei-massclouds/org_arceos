@@ -634,6 +634,10 @@ test_file_read(const char *fname)
         PANIC("read file err.");
     }
 
+    if (err > 0) {
+        printk("read file: [%d] '%s'\n", err, buf);
+    }
+
     if (cl_sys_close(fd)) {
         PANIC("close dir fd err.");
     }
@@ -641,11 +645,41 @@ test_file_read(const char *fname)
     printk("\n============== file read ok! =============\n\n");
 }
 
+static void
+test_file_write(const char *fname)
+{
+    printk("\n============== file write ... =============\n");
+
+    int fd = cl_sys_open(fname, O_WRONLY, 0);
+    if (fd < 0) {
+        printk("open for write err '%d'.\n", fd);
+        PANIC("bad dir fd.");
+    }
+    printk("%s: open dir fd '%d'\n", __func__, fd);
+
+    char buf[] = "1234";
+    int err = cl_sys_write(fd, buf, sizeof(buf));
+    if (err < 0) {
+        printk("write err: %d\n", err);
+        PANIC("write file err.");
+    }
+
+    if (cl_sys_close(fd)) {
+        PANIC("close dir fd err.");
+    }
+
+    printk("\n============== file write ok! =============\n\n");
+}
+
 void test_ext4(void)
 {
     test_getdents64();
 
     test_file_create("/f1.txt");
+
+    test_file_read("/f1.txt");
+
+    test_file_write("/f1.txt");
 
     test_file_read("/f1.txt");
 

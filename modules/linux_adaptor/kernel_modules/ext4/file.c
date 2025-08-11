@@ -131,7 +131,6 @@ static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
 {
 	struct inode *inode = file_inode(iocb->ki_filp);
 
-    printk("%s: step1\n", __func__);
 	if (unlikely(ext4_forced_shutdown(inode->i_sb)))
 		return -EIO;
 
@@ -145,7 +144,6 @@ static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
 	if (iocb->ki_flags & IOCB_DIRECT)
 		return ext4_dio_read_iter(iocb, to);
 
-    printk("%s: step2\n", __func__);
 	return generic_file_read_iter(iocb, to);
 }
 
@@ -298,15 +296,12 @@ static ssize_t ext4_buffered_write_iter(struct kiocb *iocb,
 	if (ret <= 0)
 		goto out;
 
-    printk("%s: ======================== step1\n", __func__);
 	ret = generic_perform_write(iocb, from);
-    printk("%s: ======================== step2\n", __func__);
 
 out:
 	inode_unlock(inode);
 	if (unlikely(ret <= 0))
 		return ret;
-    printk("%s: ======================== step3\n", __func__);
 	return generic_write_sync(iocb, ret);
 }
 

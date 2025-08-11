@@ -390,6 +390,20 @@ static bool inode_io_list_move_locked(struct inode *inode,
 }
 
 /**
+ * inode_to_wb_and_lock_list - determine an inode's wb and lock it
+ * @inode: inode of interest
+ *
+ * Same as locked_inode_to_wb_and_lock_list() but @inode->i_lock isn't held
+ * on entry.
+ */
+static struct bdi_writeback *inode_to_wb_and_lock_list(struct inode *inode)
+    __acquires(&wb->list_lock)
+{
+    spin_lock(&inode->i_lock);
+    return locked_inode_to_wb_and_lock_list(inode);
+}
+
+/**
  * __mark_inode_dirty - internal function to mark an inode dirty
  *
  * @inode: inode to mark
@@ -961,4 +975,22 @@ void wb_wait_for_completion(struct wb_completion *done)
 {
     atomic_dec(&done->cnt);     /* put down the initial count */
     wait_event(*done->waitq, !atomic_read(&done->cnt));
+}
+
+/*
+ * Remove the inode from the writeback list it is on.
+ */
+void inode_io_list_del(struct inode *inode)
+{
+    struct bdi_writeback *wb;
+
+    wb = inode_to_wb_and_lock_list(inode);
+    spin_lock(&inode->i_lock);
+
+    inode->i_state &= ~I_SYNC_QUEUED;
+    list_del_init(&inode->i_io_list);
+    wb_io_lists_depopulated(wb);
+
+    spin_unlock(&inode->i_lock);
+    spin_unlock(&wb->list_lock);
 }
