@@ -630,22 +630,22 @@ test_file_remove(const char *fname)
 }
 
 static void
-test_file_stat(const char *fname)
+test_stat(const char *path)
 {
-    printk("\n============== file stat ... =============\n");
+    printk("\n============== stat ... =============\n");
 
     struct stat buf;
-    int err = cl_sys_newstat(fname, &buf);
+    int err = cl_sys_newstat(path, &buf);
     if (err < 0) {
         if (err == -ENOENT) {
-            PANIC("No such file.\n");
+            PANIC("No such item.\n");
         } else {
             printk("stat err: %d\n", err);
-            PANIC("get file stat err.");
+            PANIC("get stat err.");
         }
     } else {
         printk("[%s] ino: %lu, mode: %u, size: %ld\n",
-               fname, buf.st_ino, buf.st_mode, buf.st_size);
+               path, buf.st_ino, buf.st_mode, buf.st_size);
         if (S_ISREG(buf.st_mode)) {
             printk("It is a FILE.\n");
         } else if (S_ISDIR(buf.st_mode)) {
@@ -655,7 +655,7 @@ test_file_stat(const char *fname)
         }
     }
 
-    printk("\n============== file stat ok! =============\n\n");
+    printk("\n============== stat ok! =============\n\n");
 }
 
 static int
@@ -668,7 +668,7 @@ test_file_read(const char *fname, char *buf, size_t len)
         printk("open for read err '%d'.\n", fd);
         PANIC("bad dir fd.");
     }
-    printk("%s: open dir fd '%d'\n", __func__, fd);
+    printk("%s: open file '%s' fd '%d'\n", __func__, fname, fd);
 
     int err = cl_sys_read(fd, buf, len);
     if (err < 0) {
@@ -726,7 +726,7 @@ test_file_common(const char *path)
     CL_ASSERT(count == sizeof(wbuf), "bad file size.");
     CL_ASSERT(memcmp(rbuf, wbuf, count) == 0, "bad file content.");
 
-    test_file_stat(path);
+    test_stat(path);
 
     test_file_remove(path);
 }
@@ -739,31 +739,15 @@ void test_ext4(void)
 
     test_dir_create("/dir1");
 
+    test_file_common("/dir1/f1.txt");
+
+    test_stat("/dir1");
+
     test_dir_remove("/dir1");
 
     PANIC("Reach here!");
 
 #if 0
-    /*
-     * Test dir iterate.
-     */
-    test_dir_iter(root_inode);
-
-    /*
-     * Test create/delete dir.
-     */
-    test_dir_ops(root, "new_dir");
-
-    /*
-     * Test create/delete dir.
-     */
-    test_file_ops(root, "new_file");
-
-    /*
-     * Test dir iterate (again).
-     */
-    test_dir_iter(root_inode);
-
     /* Note: use 'sync_filesystem' to replace it. */
     printk("=========== %s: flush blkdev ...\n", __func__);
     int err = blkdev_issue_flush(root_inode->i_sb->s_bdev);
