@@ -2213,3 +2213,120 @@ void done_path_create(struct path *path, struct dentry *dentry)
     mnt_drop_write(path->mnt);
     path_put(path);
 }
+
+int cl_sys_rmdir(const char *pathname)
+{
+    return do_rmdir(AT_FDCWD, getname(pathname));
+}
+
+int do_rmdir(int dfd, struct filename *name)
+{
+    int error;
+    struct dentry *dentry;
+    struct path path;
+    struct qstr last;
+    int type;
+    unsigned int lookup_flags = 0;
+retry:
+    error = filename_parentat(dfd, name, lookup_flags, &path, &last, &type);
+    if (error)
+        goto exit1;
+
+    switch (type) {
+    case LAST_DOTDOT:
+        error = -ENOTEMPTY;
+        goto exit2;
+    case LAST_DOT:
+        error = -EINVAL;
+        goto exit2;
+    case LAST_ROOT:
+        error = -EBUSY;
+        goto exit2;
+    }
+
+    error = mnt_want_write(path.mnt);
+    if (error)
+        goto exit2;
+
+    inode_lock_nested(path.dentry->d_inode, I_MUTEX_PARENT);
+    dentry = lookup_one_qstr_excl(&last, path.dentry, lookup_flags);
+    error = PTR_ERR(dentry);
+    if (IS_ERR(dentry))
+        goto exit3;
+    if (!dentry->d_inode) {
+        error = -ENOENT;
+        goto exit4;
+    }
+    error = security_path_rmdir(&path, dentry);
+    if (error)
+        goto exit4;
+    error = vfs_rmdir(mnt_idmap(path.mnt), path.dentry->d_inode, dentry);
+exit4:
+    dput(dentry);
+exit3:
+    inode_unlock(path.dentry->d_inode);
+    mnt_drop_write(path.mnt);
+exit2:
+    path_put(&path);
+    if (retry_estale(error, lookup_flags)) {
+        lookup_flags |= LOOKUP_REVAL;
+        goto retry;
+    }
+exit1:
+    putname(name);
+    return error;
+}
+
+/**
+ * vfs_rmdir - remove directory
+ * @idmap:  idmap of the mount the inode was found from
+ * @dir:    inode of the parent directory
+ * @dentry: dentry of the child directory
+ *
+ * Remove a directory.
+ *
+ * If the inode has been found through an idmapped mount the idmap of
+ * the vfsmount must be passed through @idmap. This function will then take
+ * care to map the inode according to @idmap before checking permissions.
+ * On non-idmapped mounts or if permission checking is to be performed on the
+ * raw inode simply pass @nop_mnt_idmap.
+ */
+int vfs_rmdir(struct mnt_idmap *idmap, struct inode *dir,
+             struct dentry *dentry)
+{
+    int error = may_delete(idmap, dir, dentry, 1);
+
+    if (error)
+        return error;
+
+    if (!dir->i_op->rmdir)
+        return -EPERM;
+
+    dget(dentry);
+    inode_lock(dentry->d_inode);
+
+    error = -EBUSY;
+    if (is_local_mountpoint(dentry) ||
+        (dentry->d_inode->i_flags & S_KERNEL_FILE))
+        goto out;
+
+    error = security_inode_rmdir(dir, dentry);
+    if (error)
+        goto out;
+
+    error = dir->i_op->rmdir(dir, dentry);
+    if (error)
+        goto out;
+
+    shrink_dcache_parent(dentry);
+    dentry->d_inode->i_flags |= S_DEAD;
+    dont_mount(dentry);
+    detach_mounts(dentry);
+
+out:
+    inode_unlock(dentry->d_inode);
+    dput(dentry);
+    if (!error)
+        d_delete_notify(dir, dentry);
+    return error;
+}

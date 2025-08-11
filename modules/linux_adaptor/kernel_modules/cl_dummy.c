@@ -478,6 +478,18 @@ int security_path_mkdir(const struct path *dir, struct dentry *dentry,
     return 0;
 }
 
+int security_path_rmdir(const struct path *dir, struct dentry *dentry)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_inode_rmdir(struct inode *dir, struct dentry *dentry)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
 /*
  * __detach_mounts - lazily unmount all mounts on the specified dentry
  *

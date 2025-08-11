@@ -298,6 +298,7 @@ cl_vfs_read_dir(struct dentry *dentry, char *ptr, size_t len)
     PANIC("");
 }
 
+#if 0
 static struct dentry *
 create_dir(struct dentry *parent, const char *dname)
 {
@@ -314,16 +315,20 @@ create_dir(struct dentry *parent, const char *dname)
 
     return target;
 }
+#endif
 
 unsigned long
 cl_vfs_create_dir(struct dentry *parent, const char *dname)
 {
+    PANIC("");
+#if 0
     struct dentry *ret = create_dir(parent, dname);
     if (IS_ERR(ret)) {
         return PTR_ERR(ret);
     }
     dput(ret);
     return 0;
+#endif
 }
 
 static struct dentry *
@@ -591,6 +596,25 @@ test_dir_create(const char *dname)
 }
 
 static void
+test_dir_remove(const char *dname)
+{
+    printk("\n============== dir remove ... =============\n");
+
+    CL_ASSERT(_exists(dname), "No dir.");
+
+    printk("remove dir '%s'.\n", dname);
+    int err = cl_sys_rmdir(dname);
+    if (err) {
+        printk("remove dir '%s' error '%d'.\n", dname, err);
+        PANIC("remove dir err.");
+    }
+
+    CL_ASSERT(!_exists(dname), "remove dir error.");
+
+    printk("\n============== dir remove ok! =============\n\n");
+}
+
+static void
 test_file_remove(const char *fname)
 {
     printk("\n============== file remove ... =============\n");
@@ -714,6 +738,8 @@ void test_ext4(void)
     test_file_common("/f1.txt");
 
     test_dir_create("/dir1");
+
+    test_dir_remove("/dir1");
 
     PANIC("Reach here!");
 

@@ -25,5 +25,6 @@ extern int cl_sys_getdents64(unsigned int fd,
 extern int cl_sys_newstat(const char *filename, struct stat *statbuf);
 
 extern int cl_sys_mkdir(const char *pathname, umode_t mode);
+extern int cl_sys_rmdir(const char *pathname);
 
 #endif /* _CL_SYSCALLS_H_ */
