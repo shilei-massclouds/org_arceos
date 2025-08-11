@@ -253,3 +253,64 @@ ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
     iov_iter_truncate(from, count);
     return iov_iter_count(from);
 }
+
+int cl_sys_read(unsigned int fd, char *buf, size_t count)
+{
+    return ksys_read(fd, buf, count);
+}
+
+/* file_ppos returns &file->f_pos or NULL if file is stream */
+static inline loff_t *file_ppos(struct file *file)
+{
+    return file->f_mode & FMODE_STREAM ? NULL : &file->f_pos;
+}
+
+ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count)
+{
+    struct fd f = fdget_pos(fd);
+    ssize_t ret = -EBADF;
+
+    if (fd_file(f)) {
+        loff_t pos, *ppos = file_ppos(fd_file(f));
+        if (ppos) {
+            pos = *ppos;
+            ppos = &pos;
+        }
+        ret = vfs_read(fd_file(f), buf, count, ppos);
+        if (ret >= 0 && ppos)
+            fd_file(f)->f_pos = pos;
+        fdput_pos(f);
+    }
+    return ret;
+}
+
+ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
+{
+    ssize_t ret;
+
+    if (!(file->f_mode & FMODE_READ))
+        return -EBADF;
+    if (!(file->f_mode & FMODE_CAN_READ))
+        return -EINVAL;
+
+    ret = rw_verify_area(READ, file, pos, count);
+    if (ret)
+        return ret;
+    if (count > MAX_RW_COUNT)
+        count =  MAX_RW_COUNT;
+
+    if (file->f_op->read)
+        ret = file->f_op->read(file, buf, count, pos);
+    else if (file->f_op->read_iter)
+        ret = new_sync_read(file, buf, count, pos);
+    else
+        ret = -EINVAL;
+    if (ret > 0) {
+        fsnotify_access(file);
+        add_rchar(current, ret);
+    }
+    inc_syscr(current);
+    printk("ret: %d\n", ret);
+    PANIC("");
+    return ret;
+}

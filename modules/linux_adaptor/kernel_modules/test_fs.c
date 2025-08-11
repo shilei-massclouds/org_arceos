@@ -30,6 +30,7 @@ cl_vfs_read(struct dentry *dentry, unsigned long offset, char *buf, size_t len)
     return kernel_read(&file, buf, len, &_offset);
 }
 
+#if 0
 /* File level read. */
 static void test_read(struct inode *inode, const char *fs_name)
 {
@@ -51,6 +52,7 @@ static void test_read(struct inode *inode, const char *fs_name)
     ret = kernel_read(&file, rbuf, sizeof(rbuf), &pos);
     printk("Read '%s': [%d]%s\n", fs_name, ret, rbuf);
 }
+#endif
 
 unsigned long
 cl_vfs_write(struct dentry *dentry, unsigned long offset, const char *buf, size_t len)
@@ -79,6 +81,7 @@ cl_vfs_write(struct dentry *dentry, unsigned long offset, const char *buf, size_
     return kernel_write(&file, buf, len, &_offset);
 }
 
+#if 0
 /* File level write. */
 static void test_write(struct inode *inode, const char *fs_name)
 {
@@ -106,23 +109,7 @@ static void test_write(struct inode *inode, const char *fs_name)
     }
 }
 
-static struct inode *
-prepare_inode(struct dentry *root)
-{
-    if (root == NULL || root->d_inode == NULL) {
-        PANIC("Bad fs root entry!");
-    }
-
-    struct inode *root_inode = root->d_inode;
-    if (!S_ISDIR(root_inode->i_mode)) {
-        PANIC("fs root inode is NOT DIR!");
-    }
-    if (root_inode->i_sb == NULL) {
-        PANIC("No fs superblock!");
-    }
-
-    return root_inode;
-}
+#endif
 
 static struct dentry *
 lookup(struct dentry *parent, const char *name)
@@ -230,6 +217,7 @@ cl_vfs_parent(struct dentry *curr)
     return (unsigned long) curr->d_parent;
 }
 
+#if 0
 static void test_file_rw(struct dentry *root,
                          const char *fs_name,
                          const char *fname)
@@ -281,6 +269,7 @@ static int _iterate_dir(struct inode *inode, struct dir_context *ctx)
 out:
     return res;
 }
+#endif
 
 unsigned long
 cl_vfs_read_dir(struct dentry *dentry, char *ptr, size_t len)
@@ -305,54 +294,6 @@ cl_vfs_read_dir(struct dentry *dentry, char *ptr, size_t len)
         ret = len - buf.count;
     }
     return (unsigned long) ret;
-#endif
-    PANIC("");
-}
-
-#define _DIR_BUF_LEN 512
-
-static void test_dir_iter(struct inode *root)
-{
-#if 0
-    int ret;
-    char dir_buf[_DIR_BUF_LEN] = {};
-    char *pos = dir_buf;
-
-    struct getdents_callback64 buf = {
-        .ctx.actor = filldir64,
-        .count = _DIR_BUF_LEN,
-        .current_dir = (struct linux_dirent64 *) dir_buf
-    };
-
-    ret = _iterate_dir(root, &buf.ctx);
-    if (ret >= 0)
-        ret = buf.error;
-    if (buf.prev_reclen) {
-        struct linux_dirent64 *lastdirent;
-        typeof(lastdirent->d_off) d_off = buf.ctx.pos;
-
-        lastdirent = (void *) buf.current_dir - buf.prev_reclen;
-        lastdirent->d_off = d_off;
-        ret = _DIR_BUF_LEN - buf.count;
-    }
-    if (ret < 0) {
-        PANIC("read dir error.");
-    }
-
-    printk("iterate dir ...\n");
-    while (ret > 0) {
-        struct linux_dirent64 *dirents = (struct linux_dirent64 *) pos;
-        printk("name: %s, ino: %u, reclen: %u, ret: %u\n",
-               dirents->d_name,
-               dirents->d_ino,
-               dirents->d_reclen,
-               ret);
-
-        ret -= dirents->d_reclen;
-        pos += dirents->d_reclen;
-    }
-
-    printk("iterate dir Ok!\n");
 #endif
     PANIC("");
 }
@@ -445,6 +386,7 @@ cl_vfs_remove(struct dentry *parent, const char *name)
     return 0;
 }
 
+#if 0
 static int
 delete_dir(struct dentry *parent, struct dentry *target)
 {
@@ -546,22 +488,49 @@ static void test_file_ops(struct dentry *root_dentry, const char *fname)
 
     printk("delete file '%s' ok!\n", fname);
 }
+#endif
+
+/*
+ * Utilities
+ */
+
+static bool
+_exists(const char *fname)
+{
+    struct stat buf;
+    int err = cl_sys_newstat(fname, &buf);
+    if (err < 0) {
+        if (err == -ENOENT) {
+            return false;
+        } else {
+            printk("stat err: %d\n", err);
+            PANIC("get file stat err.");
+        }
+    }
+    return true;
+}
+
+/*
+ * Testcases
+ */
+
+#define _BUF_LEN 512
+#define _DIR_BUF_LEN 512
 
 static void
 test_getdents64(void)
 {
     printk("\n============== getdents64 ... =============\n");
 
-    int count;
     int fd = cl_sys_open("/", O_DIRECTORY, 0);
     if (fd < 0) {
         PANIC("bad dir fd.");
     }
     printk("%s: open dir fd '%d'\n", __func__, fd);
 
-    char buf[512];
+    char buf[_DIR_BUF_LEN];
     struct linux_dirent64 *dirent = (struct linux_dirent64 *) buf;
-    count = cl_sys_getdents64(fd, dirent, sizeof(buf));
+    int count = cl_sys_getdents64(fd, dirent, sizeof(buf));
     if (count <= 0) {
         printk("read dir err %d.\n", count);
         PANIC("read dir err.");
@@ -583,32 +552,36 @@ test_getdents64(void)
 }
 
 static void
-test_file_create(void)
+test_file_create(const char *fname)
 {
     printk("\n============== file create ... =============\n");
 
-    int fd = cl_sys_open("/f1.txt", O_CREAT, S_IRUSR|S_IWUSR);
+    int fd = cl_sys_open(fname, O_CREAT, S_IRUSR|S_IWUSR);
     if (fd < 0) {
         PANIC("bad file fd.");
     }
-    printk("%s: create file fd '%d'\n", __func__, fd);
+    printk("create file '%s' fd '%d'.\n", fname, fd);
 
     if (cl_sys_close(fd)) {
         PANIC("close dir fd err.");
     }
 
+    CL_ASSERT(_exists(fname), "No file after creating it.");
+
     printk("\n============== file create ok! =============\n\n");
 }
 
 static void
-test_file_remove(void)
+test_file_remove(const char *fname)
 {
     printk("\n============== file remove ... =============\n");
 
-    int err = cl_sys_unlink("/f1.txt");
+    int err = cl_sys_unlink(fname);
     if (err < 0) {
         PANIC("remove file err.");
     }
+
+    CL_ASSERT(!_exists(fname), "Found file after removing it.");
 
     printk("\n============== file remove ok! =============\n\n");
 }
@@ -622,7 +595,7 @@ test_file_stat(const char *fname)
     int err = cl_sys_newstat(fname, &buf);
     if (err < 0) {
         if (err == -ENOENT) {
-            printk("No such file '%s'.\n", fname);
+            PANIC("No such file.\n");
         } else {
             printk("stat err: %d\n", err);
             PANIC("get file stat err.");
@@ -642,23 +615,47 @@ test_file_stat(const char *fname)
     printk("\n============== file stat ok! =============\n\n");
 }
 
+static void
+test_file_read(const char *fname)
+{
+    printk("\n============== file read ... =============\n");
+
+    int fd = cl_sys_open(fname, O_RDONLY, 0);
+    if (fd < 0) {
+        printk("open for read err '%d'.\n", fd);
+        PANIC("bad dir fd.");
+    }
+    printk("%s: open dir fd '%d'\n", __func__, fd);
+
+    char buf[_BUF_LEN];
+    int err = cl_sys_read(fd, buf, sizeof(buf));
+    if (err < 0) {
+        printk("read err: %d\n", err);
+        PANIC("read file err.");
+    }
+
+    if (cl_sys_close(fd)) {
+        PANIC("close dir fd err.");
+    }
+
+    printk("\n============== file read ok! =============\n\n");
+}
+
 void test_ext4(void)
 {
     test_getdents64();
 
-    test_file_create();
+    test_file_create("/f1.txt");
+
+    test_file_read("/f1.txt");
 
     test_file_stat("/f1.txt");
 
-    test_file_remove();
-
-    test_file_stat("/f1.txt");
+    test_file_remove("/f1.txt");
 
     PANIC("Reach here!");
 
 #if 0
-    struct inode *root_inode = prepare_inode(root);
-
     /*
      * Test read & write file.
      */

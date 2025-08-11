@@ -31,7 +31,14 @@ do { \
     printk("\nPANIC: %s(%s:%d) %s\n", __FUNCTION__, __FILE__, __LINE__, args); \
     printk("\n########################\n"); \
     cl_terminate(); \
-} while (0);
+} while (0)
+
+#define CL_ASSERT(cond, msg) \
+do {                        \
+    if (!cond) {            \
+        PANIC(msg);         \
+    }                       \
+} while (0)
 
 //
 // Helper for decomposing components.

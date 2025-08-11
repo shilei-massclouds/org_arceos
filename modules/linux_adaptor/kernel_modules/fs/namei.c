@@ -1209,7 +1209,6 @@ static struct dentry *lookup_fast_for_open(struct nameidata *nd, int open_flag)
     if (IS_ERR_OR_NULL(dentry))
         return dentry;
 
-#if 0
     if (open_flag & O_CREAT) {
         /* Discard negative dentries. Need inode_lock to do the create */
         if (!dentry->d_inode) {
@@ -1219,8 +1218,6 @@ static struct dentry *lookup_fast_for_open(struct nameidata *nd, int open_flag)
         }
     }
     return dentry;
-#endif
-    PANIC("");
 }
 
 static const char *open_last_lookups(struct nameidata *nd,
@@ -1682,7 +1679,6 @@ static struct file *path_openat(struct nameidata *nd,
         WARN_ON(1);
         error = -EINVAL;
     }
-#if 0
     fput(file);
     if (error == -EOPENSTALE) {
         if (flags & LOOKUP_RCU)
@@ -1691,9 +1687,6 @@ static struct file *path_openat(struct nameidata *nd,
             error = -ESTALE;
     }
     return ERR_PTR(error);
-#endif
-
-    PANIC("");
 }
 
 struct file *do_filp_open(int dfd, struct filename *pathname,
