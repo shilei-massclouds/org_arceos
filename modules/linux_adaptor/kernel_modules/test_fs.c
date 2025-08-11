@@ -6,6 +6,7 @@
 #include "adaptor.h"
 #include "cl_syscalls.h"
 
+#if 0
 unsigned long
 cl_vfs_read(struct dentry *dentry, unsigned long offset, char *buf, size_t len)
 {
@@ -28,29 +29,6 @@ cl_vfs_read(struct dentry *dentry, unsigned long offset, char *buf, size_t len)
 
     loff_t _offset = offset;
     return kernel_read(&file, buf, len, &_offset);
-}
-
-#if 0
-/* File level read. */
-static void test_read(struct inode *inode, const char *fs_name)
-{
-    ssize_t ret;
-    struct file file;
-    memset(&file, 0, sizeof(struct file));
-    file.f_inode = inode;
-    file.f_mode |= FMODE_READ | FMODE_CAN_READ;
-    file.f_mapping = inode->i_mapping;
-    file.f_op = inode->i_fop;
-    if (file.f_op == NULL) {
-        PANIC("bad file_operations.");
-    }
-
-    loff_t pos = 0;
-    char rbuf[256];
-    memset(rbuf, 0, sizeof(rbuf));
-
-    ret = kernel_read(&file, rbuf, sizeof(rbuf), &pos);
-    printk("Read '%s': [%d]%s\n", fs_name, ret, rbuf);
 }
 #endif
 
@@ -80,36 +58,6 @@ cl_vfs_write(struct dentry *dentry, unsigned long offset, const char *buf, size_
     loff_t _offset = offset;
     return kernel_write(&file, buf, len, &_offset);
 }
-
-#if 0
-/* File level write. */
-static void test_write(struct inode *inode, const char *fs_name)
-{
-    ssize_t ret;
-    struct file file;
-    memset(&file, 0, sizeof(struct file));
-    file.f_inode = inode;
-    file.f_mode |= FMODE_WRITE | FMODE_CAN_WRITE;
-    file.f_mapping = inode->i_mapping;
-    file.f_op = inode->i_fop;
-    if (file.f_op == NULL) {
-        PANIC("bad file_operations.");
-    }
-
-    // Note: set IOCB_DSYNC for sync.
-    file.f_iocb_flags |= IOCB_DSYNC;
-
-    loff_t pos = 0;
-    char wbuf[] = "bcde";
-
-    ret = kernel_write(&file, wbuf, sizeof(wbuf), &pos);
-    printk("Write '%s' to '%s': ret [%d]\n", wbuf, fs_name, ret);
-    if (ret <= 0) {
-        PANIC("write error!");
-    }
-}
-
-#endif
 
 static struct dentry *
 lookup(struct dentry *parent, const char *name)
@@ -217,60 +165,6 @@ cl_vfs_parent(struct dentry *curr)
     return (unsigned long) curr->d_parent;
 }
 
-#if 0
-static void test_file_rw(struct dentry *root,
-                         const char *fs_name,
-                         const char *fname)
-{
-    printk("\n\n============== LOOKUP FILE =============\n\n");
-
-    struct dentry *target;
-    target = lookup(root, fname);
-    if (target == NULL || target->d_inode == NULL) {
-        PANIC("bad dentry.");
-    }
-
-    printk("\n\n============== FILE READ (first) =============\n\n");
-
-    test_read(target->d_inode, fs_name);
-
-    printk("\n\n============== FILE WRITE (first) =============\n\n");
-
-    test_write(target->d_inode, fs_name);
-
-    printk("\n\n============== FILE RW OK! =============\n\n");
-}
-
-static int _iterate_dir(struct inode *inode, struct dir_context *ctx)
-{
-    int res = -ENOTDIR;
-
-    if (!inode->i_fop->iterate_shared)
-        goto out;
-
-    res = down_read_killable(&inode->i_rwsem);
-    if (res)
-        goto out;
-
-    res = -ENOENT;
-    if (!IS_DEADDIR(inode)) {
-        struct file file;
-        memset(&file, 0, sizeof(struct file));
-        file.f_inode = inode;
-
-        res = inode->i_fop->open(inode, &file);
-        if (res != 0) {
-            PANIC("open dir error.");
-        }
-
-        res = inode->i_fop->iterate_shared(&file, ctx);
-    }
-    inode_unlock_shared(inode);
-out:
-    return res;
-}
-#endif
-
 unsigned long
 cl_vfs_read_dir(struct dentry *dentry, char *ptr, size_t len)
 {
@@ -297,25 +191,6 @@ cl_vfs_read_dir(struct dentry *dentry, char *ptr, size_t len)
 #endif
     PANIC("");
 }
-
-#if 0
-static struct dentry *
-create_dir(struct dentry *parent, const char *dname)
-{
-    struct inode *parent_inode = parent->d_inode;
-    struct qstr qname = QSTR(dname);
-    struct dentry *target = d_alloc(parent, &qname);
-
-    if (parent_inode->i_op->mkdir(&nop_mnt_idmap, parent_inode, target, 0777)) {
-        PANIC("create dir error.");
-    }
-    if (target->d_inode == NULL) {
-        PANIC("bad dentry for no inode.");
-    }
-
-    return target;
-}
-#endif
 
 unsigned long
 cl_vfs_create_dir(struct dentry *parent, const char *dname)
@@ -390,110 +265,6 @@ cl_vfs_remove(struct dentry *parent, const char *name)
     dput(target);
     return 0;
 }
-
-#if 0
-static int
-delete_dir(struct dentry *parent, struct dentry *target)
-{
-    struct inode *parent_inode = parent->d_inode;
-#if 0
-    struct dentry *target = lookup(parent, dname);
-    if (target == NULL) {
-        printk("No target dentry '%s'.", dname);
-        PANIC("No target dentry.");
-    }
-    struct qstr qname = QSTR(dname);
-    struct dentry *target = d_alloc(parent, &qname);
-    target->d_inode = inode;
-#endif
-
-    if (parent_inode->i_op->rmdir(parent_inode, target)) {
-        PANIC("delete dir error.");
-    }
-
-    return 0;
-}
-
-static void test_dir_ops(struct dentry *root_dentry, const char *dirname)
-{
-    printk("\n\n============== DIR CREATE && DELETE =============\n\n");
-    printk("check dir '%s' ..\n", dirname);
-
-    struct inode *root = root_dentry->d_inode;
-    struct dentry *dir = lookup(root_dentry, dirname);
-    if (dir) {
-        printk("dir '%s' already exists.\n", dirname);
-        PANIC("dir already exists.");
-    }
-
-    printk("create dir '%s' ..\n", dirname);
-
-    dir = create_dir(root_dentry, dirname);
-
-    printk("create dir '%s' ok!\n", dirname);
-
-    printk("delete dir '%s' ..\n", dirname);
-
-    delete_dir(root_dentry, dir);
-
-    printk("delete dir '%s' ok!\n", dirname);
-}
-
-static void test_file_ops(struct dentry *root_dentry, const char *fname)
-{
-    printk("\n\n============== FILE CREATE && DELETE =============\n\n");
-
-    struct inode *root = root_dentry->d_inode;
-    struct dentry *find = lookup(root_dentry, fname);
-    if (find) {
-        printk("file '%s' already exists.\n", fname);
-        if (root->i_op->unlink(root, find)) {
-            PANIC("unlink dir error.");
-        }
-        find = lookup(root_dentry, fname);
-        if (find) {
-            PANIC("cannot delete file.");
-        }
-        //PANIC("file already exists.");
-    }
-
-    printk("create file '%s' ..\n", fname);
-
-    struct qstr qname = QSTR(fname);
-    struct dentry *target = d_alloc(root_dentry, &qname);
-
-    if (root->i_op->create(&nop_mnt_idmap, root, target, 0777|S_IFREG, false)) {
-        PANIC("create dir error.");
-    }
-    dput(target);
-
-    printk("create file '%s' ok!\n", fname);
-
-    find = lookup(root_dentry, fname);
-    if (find == NULL) {
-        PANIC("no file.");
-    }
-    struct inode *f = find->d_inode;
-    printk("file i_mode(%x)\n", f->i_mode);
-    test_write(f, "");
-
-    printk("write file '%s' count(%d) ok!\n", fname, f->i_count);
-
-    printk("delete file '%s' ..\n", fname);
-
-    if (root->i_op->unlink(root, find)) {
-        PANIC("unlink dir error.");
-    }
-    dput(find);
-
-    find = lookup(root_dentry, fname);
-    if (find) {
-        PANIC("cannot delete file.");
-    }
-
-    printk("delete file '%s' ok!\n", fname);
-}
-#endif
 
 /*
  * Utilities
@@ -659,7 +430,7 @@ test_stat(const char *path)
 }
 
 static int
-test_file_read(const char *fname, char *buf, size_t len)
+test_file_read(const char *fname, char *buf, size_t len, off_t offset)
 {
     printk("\n============== file read ... =============\n");
 
@@ -669,6 +440,9 @@ test_file_read(const char *fname, char *buf, size_t len)
         PANIC("bad dir fd.");
     }
     printk("%s: open file '%s' fd '%d'\n", __func__, fname, fd);
+
+    int pos = cl_sys_lseek(fd, offset, SEEK_SET);
+    CL_ASSERT(pos == offset, "seek error.");
 
     int err = cl_sys_read(fd, buf, len);
     if (err < 0) {
@@ -689,7 +463,7 @@ test_file_read(const char *fname, char *buf, size_t len)
 }
 
 static void
-test_file_write(const char *fname, const char *buf, size_t len)
+test_file_write(const char *fname, const char *buf, size_t len, off_t offset)
 {
     printk("\n============== file write ... =============\n");
 
@@ -699,6 +473,9 @@ test_file_write(const char *fname, const char *buf, size_t len)
         PANIC("bad dir fd.");
     }
     printk("%s: open dir fd '%d'\n", __func__, fd);
+
+    int pos = cl_sys_lseek(fd, offset, SEEK_SET);
+    CL_ASSERT(pos == offset, "seek error.");
 
     int err = cl_sys_write(fd, buf, len);
     if (err < 0) {
@@ -714,15 +491,15 @@ test_file_write(const char *fname, const char *buf, size_t len)
 }
 
 static void
-test_file_common(const char *path)
+test_file_common(const char *path, off_t offset)
 {
     test_file_create(path);
 
     char wbuf[] = "1234";
-    test_file_write(path, wbuf, sizeof(wbuf));
+    test_file_write(path, wbuf, sizeof(wbuf), offset);
 
     char rbuf[_BUF_LEN];
-    int count = test_file_read(path, rbuf, sizeof(rbuf));
+    int count = test_file_read(path, rbuf, sizeof(rbuf), offset);
     CL_ASSERT(count == sizeof(wbuf), "bad file size.");
     CL_ASSERT(memcmp(rbuf, wbuf, count) == 0, "bad file content.");
 
@@ -735,11 +512,12 @@ void test_ext4(void)
 {
     test_getdents64();
 
-    test_file_common("/f1.txt");
+    test_file_common("/f1.txt", 0);
+    test_file_common("/f1.txt", 512);
 
     test_dir_create("/dir1");
 
-    test_file_common("/dir1/f1.txt");
+    test_file_common("/dir1/f1.txt", 0);
 
     test_stat("/dir1");
 

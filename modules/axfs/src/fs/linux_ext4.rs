@@ -6,6 +6,7 @@ use axfs_vfs::{VfsOps, VfsNodeRef, VfsNodeOps, VfsResult, VfsNodeType};
 use axfs_vfs::{VfsError, VfsDirEntry, VfsNodeAttr};
 use axfs_vfs::impl_vfs_non_dir_default;
 use alloc::ffi::CString;
+use axerrno::ax_err;
 
 #[repr(C)]
 struct LinuxDirent64 {
@@ -25,6 +26,9 @@ const DT_DIR: u8 = 4;
 const DT_REG: u8 = 8;
 
 const O_DIRECTORY: usize = 0x00200000;
+
+/// seek relative to beginning of file
+const SEEK_SET: usize = 0;
 
 pub struct LinuxExt4 {
     root: Arc<DirNode>,
@@ -276,9 +280,14 @@ impl VfsNodeOps for FileNode {
 
     fn read_at(&self, offset: u64, buf: &mut [u8]) -> VfsResult<usize> {
         let ret = unsafe {
-            cl_vfs_read(self.handle, offset as usize, buf.as_mut_ptr(), buf.len())
+            cl_sys_lseek(self.handle, offset as usize, SEEK_SET);
+            cl_sys_read(self.handle, buf.as_mut_ptr(), buf.len())
         };
-        Ok(ret)
+        if ret < 0 {
+            ax_err!(Io)
+        } else {
+            Ok(ret as usize)
+        }
     }
 
     fn write_at(&self, offset: u64, buf: &[u8]) -> VfsResult<usize> {
@@ -300,6 +309,9 @@ fn split_path(path: &str) -> (&str, Option<&str>) {
 
 unsafe extern "C" {
     fn cl_sys_open(fname: *const c_char, flags: usize, mode: usize) -> usize;
+
+    fn cl_sys_lseek(fd: usize, offset: usize, whence: usize);
+
     fn cl_vfs_parent(curr: usize) -> usize;
 
     fn cl_vfs_lookup(
@@ -313,9 +325,7 @@ unsafe extern "C" {
     fn cl_vfs_remove(parent: usize, name: *const c_char) -> usize;
     fn cl_vfs_read_dir(handle: usize, buf: *const u8, len: usize) -> usize;
 
-    fn cl_vfs_read(
-        handle: usize, offset: usize, buf: *mut u8, len: usize
-    ) -> usize;
+    fn cl_sys_read(fd: usize, buf: *mut u8, count: usize) -> i32;
 
     fn cl_vfs_write(
         handle: usize, offset: usize, buf: *const u8, len: usize
