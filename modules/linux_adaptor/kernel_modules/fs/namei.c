@@ -1527,7 +1527,7 @@ static int sb_permission(struct super_block *sb, struct inode *inode, int mask)
 int generic_permission(struct mnt_idmap *idmap, struct inode *inode,
                int mask)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 0;
 }
 
@@ -2036,7 +2036,7 @@ int __check_sticky(struct mnt_idmap *idmap, struct inode *dir,
         return 0;
     return !capable_wrt_inode_uidgid(idmap, inode, CAP_FOWNER);
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 0;
 }
 

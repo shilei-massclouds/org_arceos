@@ -96,7 +96,7 @@ static void lru_add(struct lruvec *lruvec, struct folio *folio)
 #endif
     }
 
-    pr_err("%s: No impl. for 'lruvec_add_folio'", __func__);
+    pr_notice("%s: No impl. for 'lruvec_add_folio'", __func__);
     //lruvec_add_folio(lruvec, folio);
     trace_mm_lru_insertion(folio);
 }
@@ -174,7 +174,7 @@ static void __folio_batch_add_and_move(struct folio_batch __percpu *fbatch,
  */
 void folio_mark_accessed(struct folio *folio)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /**
@@ -320,12 +320,12 @@ void lru_add_drain(void)
  */
 void lru_add_drain_cpu(int cpu)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 void lru_add_drain_all(void)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /*

@@ -39,7 +39,7 @@ kprojid_t make_kprojid(struct user_namespace *ns, projid_t projid)
     /* Map the uid to a global kernel uid */
     return KPROJIDT_INIT(map_id_down(&ns->projid_map, projid));
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return KPROJIDT_INIT(0);
 }
 
@@ -57,7 +57,7 @@ kprojid_t make_kprojid(struct user_namespace *ns, projid_t projid)
  */
 uid_t from_kuid(struct user_namespace *targ, kuid_t kuid)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 0;
     /* Map the uid from a global kernel uid */
     //return map_id_up(&targ->uid_map, __kuid_val(kuid));
@@ -77,7 +77,7 @@ uid_t from_kuid(struct user_namespace *targ, kuid_t kuid)
  */
 gid_t from_kgid(struct user_namespace *targ, kgid_t kgid)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 0;
     /* Map the gid from a global kernel gid */
     //return map_id_up(&targ->gid_map, __kgid_val(kgid));
@@ -97,7 +97,7 @@ gid_t from_kgid(struct user_namespace *targ, kgid_t kgid)
  */
 projid_t from_kprojid(struct user_namespace *targ, kprojid_t kprojid)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return kprojid.val;
     /* Map the uid from a global kernel uid */
     //return map_id_up(&targ->projid_map, __kprojid_val(kprojid));

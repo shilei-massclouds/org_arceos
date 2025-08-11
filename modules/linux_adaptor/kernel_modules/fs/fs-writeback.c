@@ -436,7 +436,6 @@ void __mark_inode_dirty(struct inode *inode, int flags)
     int dirtytime = 0;
     struct bdi_writeback *wb = NULL;
 
-    printk("%s: step1\n", __func__);
     trace_writeback_mark_inode_dirty(inode, flags);
 
     if (flags & I_DIRTY_INODE) {
@@ -544,11 +543,9 @@ void __mark_inode_dirty(struct inode *inode, int flags)
             else
                 dirty_list = &wb->b_dirty_time;
 
-        printk("%s: step1\n", __func__);
             wakeup_bdi = inode_io_list_move_locked(inode, wb,
                                    dirty_list);
 
-        printk("%s: step2\n", __func__);
             spin_unlock(&wb->list_lock);
             spin_unlock(&inode->i_lock);
             trace_writeback_dirty_inode_enqueue(inode);

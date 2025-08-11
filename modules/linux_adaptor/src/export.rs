@@ -47,6 +47,7 @@ pub extern "C" fn cl_printk(level: u8, ptr: *const c_char) {
     match level as char {
         '7' => debug!("{}", rust_str),
         '6' => info!("{}", rust_str),
+        '5' => (),  // Notice Level: indicate dummy linux functions.
         '4' => warn!("{}", rust_str),
         '3' => error!("{}", rust_str),
         _ => ax_print!("{}", rust_str),

@@ -69,7 +69,7 @@ void *kmem_cache_alloc_lru_noprof(struct kmem_cache *s, struct list_lru *lru,
  */
 void kfree(const void *object)
 {
-    pr_err("%s: ...", __func__);
+    pr_notice("%s: ...", __func__);
     cl_rust_dealloc(object);
 }
 
@@ -90,5 +90,5 @@ void kmem_cache_free(struct kmem_cache *s, void *x)
     trace_kmem_cache_free(_RET_IP_, x, s);
     slab_free(s, virt_to_slab(x), x, _RET_IP_);
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }

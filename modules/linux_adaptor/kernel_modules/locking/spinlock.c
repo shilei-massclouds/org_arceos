@@ -82,32 +82,32 @@ noinline void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)
 
 noinline void __lockfunc _raw_spin_lock_bh(raw_spinlock_t *lock)
 {
-    pr_err("%s: ===> WARN: impl it.\n", __func__);
+    pr_notice("%s: ===> WARN: impl it.\n", __func__);
     arch_spin_lock(&lock->raw_lock);
 }
 
 noinline void __lockfunc _raw_spin_unlock_bh(raw_spinlock_t *lock)
 {
-    pr_err("%s: ===> WARN: impl it.\n", __func__);
+    pr_notice("%s: ===> WARN: impl it.\n", __func__);
     arch_spin_unlock(&lock->raw_lock);
 }
 
 void __lockfunc _raw_write_lock(rwlock_t *lock)
 {
-    pr_err("%s: ===> WARN: impl it.\n", __func__);
+    pr_notice("%s: ===> WARN: impl it.\n", __func__);
 }
 
 void __lockfunc _raw_write_unlock(rwlock_t *lock)
 {
-    pr_err("%s: ===> WARN: impl it.\n", __func__);
+    pr_notice("%s: ===> WARN: impl it.\n", __func__);
 }
 
 noinline void __lockfunc _raw_read_lock(rwlock_t *lock)
 {
-    pr_err("%s: ===> WARN: impl it.\n", __func__);
+    pr_notice("%s: ===> WARN: impl it.\n", __func__);
 }
 
 noinline void __lockfunc _raw_read_unlock(rwlock_t *lock)
 {
-    pr_err("%s: ===> WARN: impl it.\n", __func__);
+    pr_notice("%s: ===> WARN: impl it.\n", __func__);
 }
