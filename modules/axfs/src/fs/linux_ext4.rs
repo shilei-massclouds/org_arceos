@@ -36,7 +36,7 @@ const O_DIRECTORY: usize = 0o200000;
 
 const S_IRUSR: usize = 0o400;
 const S_IWUSR: usize = 0o200;
-const S_IXUSR: usize = 0o100;
+//const S_IXUSR: usize = 0o100;
 
 /// seek relative to beginning of file
 const SEEK_SET: usize = 0;
@@ -80,7 +80,6 @@ impl VfsOps for LinuxExt4 {
 ///
 struct DirNode {
     path: String,
-    fd: Option<usize>,
     last_count: AtomicUsize,
 }
 
@@ -88,7 +87,6 @@ impl DirNode {
     pub(super) fn new(path: &str) -> Arc<Self> {
         Arc::new(Self {
             path: String::from(path),
-            fd: None,
             last_count: AtomicUsize::new(0),
         })
     }
@@ -392,13 +390,6 @@ impl VfsNodeOps for FileNode {
     }
 
     impl_vfs_non_dir_default! {}
-}
-
-fn split_path(path: &str) -> (&str, Option<&str>) {
-    let trimmed_path = path.trim_start_matches('/');
-    trimmed_path.find('/').map_or((trimmed_path, None), |n| {
-        (&trimmed_path[..n], Some(&trimmed_path[n + 1..]))
-    })
 }
 
 fn split_path_reverse(path: &str) -> (Option<&str>, &str) {

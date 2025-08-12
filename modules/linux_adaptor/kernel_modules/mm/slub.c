@@ -11,7 +11,11 @@ void *__kmalloc_cache_noprof(struct kmem_cache *s, gfp_t gfpflags, size_t size)
 
 void *__kmalloc_noprof(size_t size, gfp_t flags)
 {
-    return cl_rust_alloc(size, 8);
+    unsigned char *ret = cl_rust_alloc(size, 8);
+    if (flags & __GFP_ZERO) {
+        memset(ret, 0, size);
+    }
+    return (void *) ret;
 }
 
 void *__kmalloc_node_noprof(DECL_BUCKET_PARAMS(size, b), gfp_t flags, int node)
