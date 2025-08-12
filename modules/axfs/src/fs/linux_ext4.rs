@@ -29,7 +29,9 @@ const NAME_OFFSET: isize = 8 + 8 + 2 + 1;
 const DT_DIR: u8 = 4;
 const DT_REG: u8 = 8;
 
-const O_CREAT: usize = 0o100;
+const O_RDONLY: usize   = 0o000;
+const O_WRONLY: usize   = 0o001;
+const O_CREAT: usize    = 0o100;
 const O_DIRECTORY: usize = 0o200000;
 
 const S_IRUSR: usize = 0o400;
@@ -330,38 +332,55 @@ impl VfsNodeOps for FileNode {
     }
 
     fn truncate(&self, size: u64) -> VfsResult {
-        panic!("Note: No impl. size: {}", size);
+        error!("truncate '{}' to {}", self.path, size);
+        let c_path = CString::new(self.path.clone()).unwrap();
+        let ret = unsafe {
+            cl_sys_truncate(c_path.as_ptr(), size as usize)
+        };
+        assert_eq!(ret, 0);
         Ok(())
     }
 
     fn read_at(&self, offset: u64, buf: &mut [u8]) -> VfsResult<usize> {
-        /*
+        error!("read '{}'", self.path);
+        let c_path = CString::new(self.path.clone()).unwrap();
+        let fd = unsafe {
+            cl_sys_open(c_path.as_ptr(), O_RDONLY, 0)
+        };
+
         let ret = unsafe {
-            cl_sys_lseek(self.handle, offset as usize, SEEK_SET);
-            cl_sys_read(self.handle, buf.as_mut_ptr(), buf.len())
+            cl_sys_lseek(fd as usize, offset as usize, SEEK_SET);
+            cl_sys_read(fd as usize, buf.as_mut_ptr(), buf.len())
         };
         if ret < 0 {
             ax_err!(Io)
         } else {
+            if fd >= 0 {
+                unsafe { cl_sys_close(fd as usize); }
+            }
             Ok(ret as usize)
         }
-        */
-        unimplemented!();
     }
 
     fn write_at(&self, offset: u64, buf: &[u8]) -> VfsResult<usize> {
-        /*
+        error!("write '{}'", self.path);
+        let c_path = CString::new(self.path.clone()).unwrap();
+        let fd = unsafe {
+            cl_sys_open(c_path.as_ptr(), O_WRONLY, 0)
+        };
+
         let ret = unsafe {
-            cl_sys_lseek(self.handle, offset as usize, SEEK_SET);
-            cl_sys_write(self.handle, buf.as_ptr(), buf.len())
+            cl_sys_lseek(fd as usize, offset as usize, SEEK_SET);
+            cl_sys_write(fd as usize, buf.as_ptr(), buf.len())
         };
         if ret < 0 {
             ax_err!(Io)
         } else {
+            if fd >= 0 {
+                unsafe { cl_sys_close(fd as usize); }
+            }
             Ok(ret as usize)
         }
-        */
-        unimplemented!();
     }
 
     impl_vfs_non_dir_default! {}
@@ -384,6 +403,8 @@ fn split_path_reverse(path: &str) -> (Option<&str>, &str) {
 unsafe extern "C" {
     fn cl_sys_open(fname: *const c_char, flags: usize, mode: usize) -> i32;
     fn cl_sys_close(fd: usize) -> i32;
+
+    fn cl_sys_truncate(path: *const c_char, len: usize) -> i32;
 
     fn cl_sys_lseek(fd: usize, offset: usize, whence: usize);
 
