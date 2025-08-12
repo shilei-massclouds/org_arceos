@@ -1179,6 +1179,57 @@ bool in_group_or_capable(struct mnt_idmap *idmap,
 }
 
 /*
+ * Return mask of changes for notify_change() that need to be done as a
+ * response to write or truncate. Return 0 if nothing has to be changed.
+ * Negative value on error (change should be denied).
+ */
+int dentry_needs_remove_privs(struct mnt_idmap *idmap,
+                  struct dentry *dentry)
+{
+    struct inode *inode = d_inode(dentry);
+    int mask = 0;
+    int ret;
+
+    if (IS_NOSEC(inode))
+        return 0;
+
+#if 0
+    mask = setattr_should_drop_suidgid(idmap, inode);
+    ret = security_inode_need_killpriv(dentry);
+    if (ret < 0)
+        return ret;
+    if (ret)
+        mask |= ATTR_KILL_PRIV;
+    return mask;
+#endif
+    pr_notice("%s: No impl", __func__);
+    return 0;
+}
+
+/*
+ * Direct i/o helper functions
+ */
+bool inode_dio_finished(const struct inode *inode)
+{
+    return atomic_read(&inode->i_dio_count) == 0;
+}
+
+/**
+ * inode_dio_wait - wait for outstanding DIO requests to finish
+ * @inode: inode to wait for
+ *
+ * Waits for all pending direct I/O requests to finish so that we can
+ * proceed with a truncate or equivalent operation.
+ *
+ * Must be called under a lock that serializes taking new references
+ * to i_dio_count, usually by inode->i_mutex.
+ */
+void inode_dio_wait(struct inode *inode)
+{
+    wait_var_event(&inode->i_dio_count, inode_dio_finished(inode));
+}
+
+/*
  * Initialize the waitqueues and inode hash table.
  */
 void __init inode_init_early(void)

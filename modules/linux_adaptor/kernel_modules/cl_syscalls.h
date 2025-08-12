@@ -13,6 +13,8 @@
 extern int cl_sys_open(const char *filename, int flags, umode_t mode);
 extern int cl_sys_close(int fd);
 
+extern int cl_sys_truncate(const char *path, long length);
+
 extern int cl_sys_lseek(unsigned int fd, off_t offset, unsigned int whence);
 
 extern int cl_sys_read(unsigned int fd, char *buf, size_t count);

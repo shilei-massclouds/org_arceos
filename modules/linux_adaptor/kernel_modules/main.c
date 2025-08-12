@@ -14,7 +14,7 @@
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-//#define TEST_EXT4
+#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
@@ -45,7 +45,6 @@ extern void init_current(unsigned long thread_id);
 extern int cl_ext2_fs_init(void);
 
 extern int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos);
-extern int cl_write(struct inode *inode, const void *buf, size_t count, loff_t *pos);
 
 /* Stuff needed by irq-sifive-plic */
 unsigned long boot_cpu_hartid;
@@ -54,7 +53,6 @@ extern struct dentry *call_mount(const char *name);
 extern int lookup(struct file *dir, const char *target, u64 *ret_ino);
 
 extern ssize_t new_sync_read(struct file *filp, char *buf, size_t len, loff_t *ppos);
-extern ssize_t new_sync_write(struct file *filp, const char *buf, size_t len, loff_t *ppos);
 static void test_ext2(void);
 #endif
 

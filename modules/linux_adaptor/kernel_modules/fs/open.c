@@ -33,6 +33,37 @@
 #define WILL_CREATE(flags)  (flags & (O_CREAT | __O_TMPFILE))
 #define O_PATH_FLAGS        (O_DIRECTORY | O_NOFOLLOW | O_PATH | O_CLOEXEC)
 
+int do_truncate(struct mnt_idmap *idmap, struct dentry *dentry,
+        loff_t length, unsigned int time_attrs, struct file *filp)
+{
+    int ret;
+    struct iattr newattrs;
+
+    /* Not pretty: "inode->i_size" shouldn't really be signed. But it is. */
+    if (length < 0)
+        return -EINVAL;
+
+    newattrs.ia_size = length;
+    newattrs.ia_valid = ATTR_SIZE | time_attrs;
+    if (filp) {
+        newattrs.ia_file = filp;
+        newattrs.ia_valid |= ATTR_FILE;
+    }
+
+    /* Remove suid, sgid, and file capabilities on truncate too */
+    ret = dentry_needs_remove_privs(idmap, dentry);
+    if (ret < 0)
+        return ret;
+    if (ret)
+        newattrs.ia_valid |= ret | ATTR_FORCE;
+
+    inode_lock(dentry->d_inode);
+    /* Note any delegations or leases have already been broken: */
+    ret = notify_change(idmap, dentry, &newattrs, NULL);
+    inode_unlock(dentry->d_inode);
+    return ret;
+}
+
 inline struct open_how build_open_how(int flags, umode_t mode)
 {
     struct open_how how = {
@@ -443,4 +474,82 @@ int generic_file_open(struct inode * inode, struct file * filp)
     if (!(filp->f_flags & O_LARGEFILE) && i_size_read(inode) > MAX_NON_LFS)
         return -EOVERFLOW;
     return 0;
+}
+
+long do_sys_truncate(const char *pathname, loff_t length)
+{
+    unsigned int lookup_flags = LOOKUP_FOLLOW;
+    struct path path;
+    int error;
+
+    if (length < 0) /* sorry, but loff_t says... */
+        return -EINVAL;
+
+retry:
+    error = user_path_at(AT_FDCWD, pathname, lookup_flags, &path);
+    if (!error) {
+        error = vfs_truncate(&path, length);
+        path_put(&path);
+    }
+    if (retry_estale(error, lookup_flags)) {
+        lookup_flags |= LOOKUP_REVAL;
+        goto retry;
+    }
+    return error;
+}
+
+int cl_sys_truncate(const char *path, long length)
+{
+    return do_sys_truncate(path, length);
+}
+
+long vfs_truncate(const struct path *path, loff_t length)
+{
+    struct mnt_idmap *idmap;
+    struct inode *inode;
+    long error;
+
+    inode = path->dentry->d_inode;
+
+    /* For directories it's -EISDIR, for other non-regulars - -EINVAL */
+    if (S_ISDIR(inode->i_mode))
+        return -EISDIR;
+    if (!S_ISREG(inode->i_mode))
+        return -EINVAL;
+
+    error = mnt_want_write(path->mnt);
+    if (error)
+        goto out;
+
+    idmap = mnt_idmap(path->mnt);
+    error = inode_permission(idmap, inode, MAY_WRITE);
+    if (error)
+        goto mnt_drop_write_and_out;
+
+    error = -EPERM;
+    if (IS_APPEND(inode))
+        goto mnt_drop_write_and_out;
+
+    error = get_write_access(inode);
+    if (error)
+        goto mnt_drop_write_and_out;
+
+    /*
+     * Make sure that there are no leases.  get_write_access() protects
+     * against the truncate racing with a lease-granting setlease().
+     */
+    error = break_lease(inode, O_WRONLY);
+    if (error)
+        goto put_write_and_out;
+
+    error = security_path_truncate(path);
+    if (!error)
+        error = do_truncate(idmap, path->dentry, length, 0, NULL);
+
+put_write_and_out:
+    put_write_access(inode);
+mnt_drop_write_and_out:
+    mnt_drop_write(path->mnt);
+out:
+    return error;
 }

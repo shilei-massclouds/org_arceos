@@ -272,3 +272,35 @@ bool inode_maybe_inc_iversion(struct inode *inode, bool force)
     } while (!atomic64_try_cmpxchg(&inode->i_version, &cur, new));
     return true;
 }
+
+/**
+ * simple_setattr - setattr for simple filesystem
+ * @idmap: idmap of the target mount
+ * @dentry: dentry
+ * @iattr: iattr structure
+ *
+ * Returns 0 on success, -error on failure.
+ *
+ * simple_setattr is a simple ->setattr implementation without a proper
+ * implementation of size changes.
+ *
+ * It can either be used for in-memory filesystems or special files
+ * on simple regular filesystems.  Anything that needs to change on-disk
+ * or wire state on size changes needs its own setattr method.
+ */
+int simple_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+           struct iattr *iattr)
+{
+    struct inode *inode = d_inode(dentry);
+    int error;
+
+    error = setattr_prepare(idmap, dentry, iattr);
+    if (error)
+        return error;
+
+    if (iattr->ia_valid & ATTR_SIZE)
+        truncate_setsize(inode, iattr->ia_size);
+    setattr_copy(idmap, inode, iattr);
+    mark_inode_dirty(inode);
+    return 0;
+}

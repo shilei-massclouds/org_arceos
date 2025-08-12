@@ -413,6 +413,20 @@ test_file_write(const char *fname, const char *buf, size_t len, off_t offset)
 }
 
 static void
+test_file_truncate(const char *fname, long len)
+{
+    printk("\n============== file truncate ... =============\n");
+
+    int err = cl_sys_truncate(fname, len);
+    if (err < 0) {
+        printk("truncate err: %d\n", err);
+        PANIC("truncate file err.");
+    }
+
+    printk("\n============== file truncate ok! =============\n\n");
+}
+
+static void
 test_file_common(const char *path, off_t offset)
 {
     test_file_create(path);
@@ -426,6 +440,8 @@ test_file_common(const char *path, off_t offset)
     CL_ASSERT(memcmp(rbuf, wbuf, count) == 0, "bad file content.");
 
     test_stat(path);
+
+    test_file_truncate(path, 0);
 
     test_file_remove(path);
 }

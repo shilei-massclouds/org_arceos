@@ -324,6 +324,13 @@ int security_inode_init_security(struct inode *inode, struct inode *dir,
     return 0;
 }
 
+void security_inode_post_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+                 int ia_valid)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
 int security_inode_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
 {
     pr_notice("%s: No impl.", __func__);
@@ -485,6 +492,19 @@ int security_path_rmdir(const struct path *dir, struct dentry *dentry)
 }
 
 int security_inode_rmdir(struct inode *dir, struct dentry *dentry)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_path_truncate(const struct path *path)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+int security_inode_setattr(struct mnt_idmap *idmap,
+               struct dentry *dentry, struct iattr *attr)
 {
     pr_notice("%s: No impl.", __func__);
     return 0;

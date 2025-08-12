@@ -2359,3 +2359,13 @@ out:
         d_delete_notify(dir, dentry);
     return error;
 }
+
+int user_path_at(int dfd, const char __user *name, unsigned flags,
+         struct path *path)
+{
+    struct filename *filename = getname_flags(name, flags);
+    int ret = filename_lookup(dfd, filename, flags, path, NULL);
+
+    putname(filename);
+    return ret;
+}
