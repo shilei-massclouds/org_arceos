@@ -10,12 +10,11 @@
 #include "mm/slab.h"
 #include "base/base.h"
 #include "block/blk.h"
-//#include "fs/internal.h"
 #include "adaptor.h"
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-#define TEST_EXT4
+//#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);

@@ -1716,6 +1716,11 @@ void write_dirty_buffer(struct buffer_head *bh, blk_opf_t op_flags)
     submit_bh(REQ_OP_WRITE | op_flags, bh);
 }
 
+void __lock_buffer(struct buffer_head *bh)
+{
+    wait_on_bit_lock_io(&bh->b_state, BH_Lock, TASK_UNINTERRUPTIBLE);
+}
+
 void __init buffer_init(void)
 {
     unsigned long nrpages;

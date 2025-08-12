@@ -6,7 +6,11 @@ use axfs_vfs::{VfsOps, VfsNodeRef, VfsNodeOps, VfsResult, VfsNodeType};
 use axfs_vfs::{VfsError, VfsDirEntry, VfsNodeAttr};
 use axfs_vfs::impl_vfs_non_dir_default;
 use alloc::ffi::CString;
+use alloc::string::String;
+use alloc::format;
 use axerrno::ax_err;
+use axerrno::LinuxError;
+use core::sync::atomic::{AtomicUsize, Ordering};
 
 #[repr(C)]
 struct LinuxDirent64 {
@@ -25,7 +29,12 @@ const NAME_OFFSET: isize = 8 + 8 + 2 + 1;
 const DT_DIR: u8 = 4;
 const DT_REG: u8 = 8;
 
-const O_DIRECTORY: usize = 0x00200000;
+const O_CREAT: usize = 0o100;
+const O_DIRECTORY: usize = 0o200000;
+
+const S_IRUSR: usize = 0o400;
+const S_IWUSR: usize = 0o200;
+const S_IXUSR: usize = 0o100;
 
 /// seek relative to beginning of file
 const SEEK_SET: usize = 0;
@@ -37,10 +46,8 @@ pub struct LinuxExt4 {
 impl LinuxExt4 {
     /// Create a new instance.
     pub fn new() -> Self {
-        let c_name = CString::new("/").unwrap();
-        let handle = unsafe { cl_sys_open(c_name.as_ptr(), O_DIRECTORY, 0) };
         Self {
-            root: DirNode::new(handle),
+            root: DirNode::new("/"),
         }
     }
 }
@@ -70,59 +77,52 @@ impl VfsOps for LinuxExt4 {
 /// The directory node for Linux Ext4 filesystem.
 ///
 struct DirNode {
-    handle: usize,  /* linux dir node handle */
+    path: String,
+    fd: Option<usize>,
+    last_count: AtomicUsize,
 }
 
 impl DirNode {
-    pub(super) fn new(handle: usize) -> Arc<Self> {
+    pub(super) fn new(path: &str) -> Arc<Self> {
         Arc::new(Self {
-            handle
+            path: String::from(path),
+            fd: None,
+            last_count: AtomicUsize::new(0),
         })
     }
 
     /// Checks whether a node with the given name exists in this directory.
-    pub fn exist(&self, name: &str) -> bool {
-        let c_name = CString::new(name).unwrap();
-        let ret = unsafe { cl_vfs_exists(self.handle, c_name.as_ptr()) };
-        if ret == 0 {
-            false
+    pub fn exist(&self, path: &str) -> Option<(VfsNodeType, usize)> {
+        error!("exist at ext4: {path}");
+        let c_path = CString::new(path).unwrap();
+        let mut ty = 0;
+        let mut size = 0;
+        let ret = unsafe {
+            cl_sys_exist(c_path.as_ptr(), &mut ty, &mut size)
+        };
+
+        if ret < 0 {
+            if ret == -LinuxError::ENOENT.code() {
+                return None;
+            }
+            panic!("unknown err for checking existence.");
+        }
+
+        let r_type = match ty as u8 {
+            DT_REG => VfsNodeType::File,
+            DT_DIR => VfsNodeType::Dir,
+            _ => unimplemented!("{}", ty),
+        };
+        Some((r_type, size))
+    }
+
+    /// Construct full path based on 'self.path'
+    fn full_path(&self, path: &str) -> String {
+        if self.path == "/" {
+            format!("/{}", path)
         } else {
-            true
+            format!("{}/{}", self.path, path)
         }
-    }
-
-    /// Creates a new node with the given name and type in this directory.
-    pub fn create_node(&self, name: &str, ty: VfsNodeType) -> VfsResult {
-        error!("create node: {name} {ty:?}");
-        error!("======================= step1 {}", name);
-        if self.exist(name) {
-            error!("AlreadyExists {name}");
-            return Err(VfsError::AlreadyExists);
-        }
-        let c_name = CString::new(name).unwrap();
-        match ty {
-            VfsNodeType::File => {
-                let _ = unsafe {
-                    cl_vfs_create_file(self.handle, c_name.as_ptr())
-                };
-            },
-            VfsNodeType::Dir => {
-                let _ = unsafe {
-                    cl_vfs_create_dir(self.handle, c_name.as_ptr())
-                };
-            },
-            _ => return Err(VfsError::Unsupported),
-        };
-        Ok(())
-    }
-
-    /// Removes a node by the given name in this directory.
-    pub fn remove_node(&self, name: &str) -> VfsResult {
-        let c_name = CString::new(name).unwrap();
-        let _ = unsafe {
-            cl_vfs_remove(self.handle, c_name.as_ptr())
-        };
-        Ok(())
     }
 }
 
@@ -132,15 +132,31 @@ impl VfsNodeOps for DirNode {
     }
 
     fn parent(&self) -> Option<VfsNodeRef> {
-        let handle = unsafe { cl_vfs_parent(self.handle) };
-        if handle != 0 {
-            Some(DirNode::new(handle) as VfsNodeRef)
+        error!("parent of {} ..", self.path);
+        let (prefix, _self) = split_path_reverse(&self.path);
+        let prefix = prefix?;
+        let parent = if prefix.len() == 0 {
+            "/"
         } else {
-            None
-        }
+            prefix
+        };
+        error!("parent of {}: {}", self.path, parent);
+        Some(DirNode::new(parent) as VfsNodeRef)
     }
 
     fn lookup(self: Arc<Self>, path: &str) -> VfsResult<VfsNodeRef> {
+        let path = self.full_path(path);
+        error!("lookup at ext4: {}", path);
+        if let Some((ty, _sz)) = self.exist(&path) {
+            match ty {
+                VfsNodeType::File => Ok(FileNode::new(&path) as VfsNodeRef),
+                VfsNodeType::Dir => Ok(DirNode::new(&path) as VfsNodeRef),
+                _ => Err(VfsError::Unsupported),
+            }
+        } else {
+            Err(VfsError::NotFound)
+        }
+        /*
         let (name, rest) = split_path(path);
         let node = match name {
             "" | "." => Ok(self.clone() as VfsNodeRef),
@@ -168,32 +184,41 @@ impl VfsNodeOps for DirNode {
         } else {
             Ok(node)
         }
+        */
     }
 
     fn create(&self, path: &str, ty: VfsNodeType) -> VfsResult {
+        let path = self.full_path(path);
         error!("create {ty:?} at ext4: {path}");
-        let (name, rest) = split_path(path);
-        if let Some(rest) = rest {
-            match name {
-                "" | "." => self.create(rest, ty),
-                ".." => self.parent().ok_or(VfsError::NotFound)?.create(rest, ty),
-                _ => {
-                    panic!("{name} {rest}");
-                    /*
-                    let subdir = self.lookup_child(name)?;
-                    subdir.create(rest, ty)
-                    */
+
+        let c_path = CString::new(path).unwrap();
+        match ty {
+            VfsNodeType::File => {
+                unsafe {
+                    let fd = cl_sys_open(c_path.as_ptr(), O_CREAT, S_IRUSR|S_IWUSR);
+                    if fd < 0 {
+                        return ax_err!(Io);
+                    }
+                    cl_sys_close(fd as usize);
                 }
-            }
-        } else if name.is_empty() || name == "." || name == ".." {
-            panic!("already exists: {name}");
-        } else {
-            self.create_node(name, ty)
-        }
+                return Ok(());
+            },
+            VfsNodeType::Dir => {
+                let ret = unsafe {
+                    cl_sys_mkdir(c_path.as_ptr(), 0o700)
+                };
+                if ret < 0 {
+                    return ax_err!(Io);
+                }
+                return Ok(());
+            },
+            _ => return Err(VfsError::Unsupported),
+        };
     }
 
     fn remove(&self, path: &str) -> VfsResult {
         error!("remove at ext4: {path}");
+        /*
         let (name, rest) = split_path(path);
         if let Some(rest) = rest {
             panic!("{name} {rest}");
@@ -202,23 +227,41 @@ impl VfsNodeOps for DirNode {
         } else {
             self.remove_node(name)
         }
+        */
+        unimplemented!();
     }
 
     fn read_dir(&self, start_idx: usize, dirents: &mut [VfsDirEntry]) -> VfsResult<usize> {
+        error!("read_dir: start_idx[{start_idx}] path: {}", self.path);
+        let last_count = self.last_count.load(Ordering::Relaxed);
+        assert!(start_idx == 0 || start_idx == last_count);
         if start_idx != 0 {
-            error!("Note: we must handle read_dir properly.");
+            error!("Note: alread used all entries and reset 'last_count' to zero.");
+            self.last_count.store(0, Ordering::Relaxed);
             return Ok(0);
         }
 
-        let buf: [u8; 512] = [0; 512];
-        let mut ret = unsafe {
-            cl_vfs_read_dir(self.handle, buf.as_ptr(), buf.len())
+        let c_path = CString::new(self.path.clone()).unwrap();
+
+        let mut buf: [u8; 512] = [0; 512];
+        let fd = unsafe { cl_sys_open(c_path.as_ptr(), O_DIRECTORY, 0) };
+        if fd < 0 {
+            panic!("bad dir fd.");
+        }
+
+        let count = unsafe {
+            cl_sys_getdents64(fd as usize, buf.as_mut_ptr(), buf.len())
         };
-        assert!(ret < buf.len());
+        if count < 0 {
+            panic!("get dents64 err: {}", count);
+        }
+
+        let mut count = count as usize;
+        assert!(count < buf.len());
         error!("sizeof {}", mem::size_of::<LinuxDirent64>());
         let mut idx = 0;
         let mut ptr = buf.as_ptr();
-        while ret > 0 {
+        while count > 0 {
             let de_ptr = ptr as *const LinuxDirent64;
             unsafe {
                 error!("LinuxDirent64: ino {}, off {:#x}, reclen {}, type {}",
@@ -244,8 +287,14 @@ impl VfsNodeOps for DirNode {
             idx += 1;
 
             ptr = unsafe { ptr.offset(reclen as isize) };
-            ret -= reclen;
+            count -= reclen;
         }
+
+        if unsafe { cl_sys_close(fd as usize) } < 0 {
+            panic!("close dir fd err.");
+        }
+
+        self.last_count.store(idx, Ordering::Relaxed);
         Ok(idx)
     }
 
@@ -256,29 +305,37 @@ impl VfsNodeOps for DirNode {
 ///
 /// It implements [`axfs_vfs::VfsNodeOps`].
 pub struct FileNode {
-    handle: usize,  /* linux dir node handle */
+    path: String,
 }
 
 impl FileNode {
-    pub(super) fn new(handle: usize) -> Arc<Self> {
+    pub(super) fn new(path: &str) -> Arc<Self> {
         Arc::new(Self {
-            handle
+            path: String::from(path),
         })
     }
 }
 
 impl VfsNodeOps for FileNode {
     fn get_attr(&self) -> VfsResult<VfsNodeAttr> {
-        let size = unsafe { cl_vfs_file_size(self.handle) };
+        error!("get_attr path {}", self.path);
+        let c_path = CString::new(self.path.clone()).unwrap();
+        let mut _ty = 0;
+        let mut size = 0;
+        let ret = unsafe {
+            cl_sys_exist(c_path.as_ptr(), &mut _ty, &mut size)
+        };
+        assert_eq!(ret, 0);
         Ok(VfsNodeAttr::new_file(size as _, 0))
     }
 
     fn truncate(&self, size: u64) -> VfsResult {
-        error!("Note: No impl. size: {}", size);
+        panic!("Note: No impl. size: {}", size);
         Ok(())
     }
 
     fn read_at(&self, offset: u64, buf: &mut [u8]) -> VfsResult<usize> {
+        /*
         let ret = unsafe {
             cl_sys_lseek(self.handle, offset as usize, SEEK_SET);
             cl_sys_read(self.handle, buf.as_mut_ptr(), buf.len())
@@ -288,13 +345,23 @@ impl VfsNodeOps for FileNode {
         } else {
             Ok(ret as usize)
         }
+        */
+        unimplemented!();
     }
 
     fn write_at(&self, offset: u64, buf: &[u8]) -> VfsResult<usize> {
+        /*
         let ret = unsafe {
-            cl_vfs_write(self.handle, offset as usize, buf.as_ptr(), buf.len())
+            cl_sys_lseek(self.handle, offset as usize, SEEK_SET);
+            cl_sys_write(self.handle, buf.as_ptr(), buf.len())
         };
-        Ok(ret)
+        if ret < 0 {
+            ax_err!(Io)
+        } else {
+            Ok(ret as usize)
+        }
+        */
+        unimplemented!();
     }
 
     impl_vfs_non_dir_default! {}
@@ -307,27 +374,28 @@ fn split_path(path: &str) -> (&str, Option<&str>) {
     })
 }
 
+fn split_path_reverse(path: &str) -> (Option<&str>, &str) {
+    let trimmed_path = path.trim_end_matches('/');
+    trimmed_path.rfind('/').map_or((None, trimmed_path), |n| {
+        (Some(&trimmed_path[..n]), &trimmed_path[n + 1..])
+    })
+}
+
 unsafe extern "C" {
-    fn cl_sys_open(fname: *const c_char, flags: usize, mode: usize) -> usize;
+    fn cl_sys_open(fname: *const c_char, flags: usize, mode: usize) -> i32;
+    fn cl_sys_close(fd: usize) -> i32;
 
     fn cl_sys_lseek(fd: usize, offset: usize, whence: usize);
 
-    fn cl_vfs_parent(curr: usize) -> usize;
+    fn cl_sys_mkdir(path: *const c_char, mode: usize) -> i32;
 
-    fn cl_vfs_lookup(
-        parent: usize, name: *const c_char, ret_type: *mut u8
-    ) -> usize;
-
-    fn cl_vfs_file_size(handle: usize) -> usize;
-    fn cl_vfs_exists(parent: usize, name: *const c_char) -> usize;
-    fn cl_vfs_create_dir(parent: usize, dname: *const c_char) -> usize;
-    fn cl_vfs_create_file(parent: usize, fname: *const c_char) -> usize;
-    fn cl_vfs_remove(parent: usize, name: *const c_char) -> usize;
-    fn cl_vfs_read_dir(handle: usize, buf: *const u8, len: usize) -> usize;
+    fn cl_sys_getdents64(fd: usize, buf: *mut u8, len: usize) -> i32;
 
     fn cl_sys_read(fd: usize, buf: *mut u8, count: usize) -> i32;
 
-    fn cl_vfs_write(
-        handle: usize, offset: usize, buf: *const u8, len: usize
-    ) -> usize;
+    fn cl_sys_write(fd: usize, buf: *const u8, count: usize) -> i32;
+
+    fn cl_sys_exist(
+        path: *const c_char, r_type: *mut usize, r_size: *mut usize
+    ) -> i32;
 }

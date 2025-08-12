@@ -437,7 +437,6 @@ CL_MINE(rq_qos_exit)
 CL_MINE(memblock_alloc_try_nid_raw)
 CL_MINE(vmalloc_huge_noprof)
 CL_MINE(find_vm_area)
-CL_MINE(__lock_buffer)
 
 // bio
 CL_MINE(kmem_cache_destroy)

@@ -158,3 +158,41 @@ int wake_bit_function(struct wait_queue_entry *wq_entry, unsigned mode, int sync
 
     return autoremove_wake_function(wq_entry, mode, sync, key);
 }
+
+int __sched
+__wait_on_bit_lock(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *wbq_entry,
+            wait_bit_action_f *action, unsigned mode)
+{
+    int ret = 0;
+
+    for (;;) {
+        prepare_to_wait_exclusive(wq_head, &wbq_entry->wq_entry, mode);
+        if (test_bit(wbq_entry->key.bit_nr, wbq_entry->key.flags)) {
+            ret = action(&wbq_entry->key, mode);
+            /*
+             * See the comment in prepare_to_wait_event().
+             * finish_wait() does not necessarily takes wwq_head->lock,
+             * but test_and_set_bit() implies mb() which pairs with
+             * smp_mb__after_atomic() before wake_up_page().
+             */
+            if (ret)
+                finish_wait(wq_head, &wbq_entry->wq_entry);
+        }
+        if (!test_and_set_bit(wbq_entry->key.bit_nr, wbq_entry->key.flags)) {
+            if (!ret)
+                finish_wait(wq_head, &wbq_entry->wq_entry);
+            return 0;
+        } else if (ret) {
+            return ret;
+        }
+    }
+}
+
+int __sched out_of_line_wait_on_bit_lock(void *word, int bit,
+                     wait_bit_action_f *action, unsigned mode)
+{
+    struct wait_queue_head *wq_head = bit_waitqueue(word, bit);
+    DEFINE_WAIT_BIT(wq_entry, word, bit);
+
+    return __wait_on_bit_lock(wq_head, &wq_entry, action, mode);
+}

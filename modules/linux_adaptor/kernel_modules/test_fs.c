@@ -6,59 +6,6 @@
 #include "adaptor.h"
 #include "cl_syscalls.h"
 
-#if 0
-unsigned long
-cl_vfs_read(struct dentry *dentry, unsigned long offset, char *buf, size_t len)
-{
-    printk("%s: offset %lu, buflen %u\n", __func__, offset, len);
-    if (dentry == NULL || dentry->d_inode == NULL) {
-        PANIC("bad handle.");
-    }
-    struct inode *inode = dentry->d_inode;
-
-    ssize_t ret;
-    struct file file;
-    memset(&file, 0, sizeof(struct file));
-    file.f_inode = inode;
-    file.f_mode |= FMODE_READ | FMODE_CAN_READ;
-    file.f_mapping = inode->i_mapping;
-    file.f_op = inode->i_fop;
-    if (file.f_op == NULL) {
-        PANIC("bad file_operations.");
-    }
-
-    loff_t _offset = offset;
-    return kernel_read(&file, buf, len, &_offset);
-}
-#endif
-
-unsigned long
-cl_vfs_write(struct dentry *dentry, unsigned long offset, const char *buf, size_t len)
-{
-    printk("%s: offset %lu, buf %x,%x, len %u\n", __func__, offset, buf[0], buf[1], len);
-    if (dentry == NULL || dentry->d_inode == NULL) {
-        PANIC("bad handle.");
-    }
-    struct inode *inode = dentry->d_inode;
-
-    ssize_t ret;
-    struct file file;
-    memset(&file, 0, sizeof(struct file));
-    file.f_inode = inode;
-    file.f_mode |= FMODE_WRITE | FMODE_CAN_WRITE;
-    file.f_mapping = inode->i_mapping;
-    file.f_op = inode->i_fop;
-    if (file.f_op == NULL) {
-        PANIC("bad file_operations.");
-    }
-
-    // Note: set IOCB_DSYNC for sync.
-    file.f_iocb_flags |= IOCB_DSYNC;
-
-    loff_t _offset = offset;
-    return kernel_write(&file, buf, len, &_offset);
-}
-
 static struct dentry *
 lookup(struct dentry *parent, const char *name)
 {
@@ -165,33 +112,7 @@ cl_vfs_parent(struct dentry *curr)
     return (unsigned long) curr->d_parent;
 }
 
-unsigned long
-cl_vfs_read_dir(struct dentry *dentry, char *ptr, size_t len)
-{
 #if 0
-    int ret;
-    struct getdents_callback64 buf = {
-        .ctx.actor = filldir64,
-        .count = len,
-        .current_dir = (struct linux_dirent64 *) ptr
-    };
-
-    ret = _iterate_dir(dentry->d_inode, &buf.ctx);
-    if (ret >= 0)
-        ret = buf.error;
-    if (buf.prev_reclen) {
-        struct linux_dirent64 *lastdirent;
-        typeof(lastdirent->d_off) d_off = buf.ctx.pos;
-
-        lastdirent = (void *) buf.current_dir - buf.prev_reclen;
-        lastdirent->d_off = d_off;
-        ret = len - buf.count;
-    }
-    return (unsigned long) ret;
-#endif
-    PANIC("");
-}
-
 unsigned long
 cl_vfs_create_dir(struct dentry *parent, const char *dname)
 {
@@ -205,6 +126,7 @@ cl_vfs_create_dir(struct dentry *parent, const char *dname)
     return 0;
 #endif
 }
+#endif
 
 static struct dentry *
 create_file(struct dentry *parent, const char *fname)

@@ -98,7 +98,7 @@ OBJS += jbd2/revoke.o jbd2/transaction.o
 OBJS += cl_mine.o main.o smp.o softirq.o panic.o \
 		riscv_irq.o \
 		cl_dummy.o \
-		mount_ops.o \
+		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
 		#ctype.o kstrtox.o \
 		#signal.o \

@@ -393,8 +393,25 @@ static const char *path_init(struct nameidata *nd, unsigned flags)
         return s;
     }
 
+    /* Relative pathname -- get the starting-point it is relative to. */
+    if (nd->dfd == AT_FDCWD) {
+        PANIC("AT_FDCWD");
+    } else {
+        PANIC("no AT_FDCWD");
+    }
 
+    /* For scoped-lookups we need to set the root to the dirfd as well. */
+    if (flags & LOOKUP_IS_SCOPED) {
+        nd->root = nd->path;
+        if (flags & LOOKUP_RCU) {
+            nd->root_seq = nd->seq;
+        } else {
+            path_get(&nd->root);
+            nd->state |= ND_ROOT_GRABBED;
+        }
+    }
     PANIC("");
+    return s;
 }
 
 /**
@@ -1951,8 +1968,20 @@ struct dentry *lookup_one_qstr_excl(const struct qstr *name,
     if (dentry)
         return dentry;
 
+    /* Don't create child dentry for a dead directory. */
+    if (unlikely(IS_DEADDIR(dir)))
+        return ERR_PTR(-ENOENT);
 
-    PANIC("");
+    dentry = d_alloc(base, name);
+    if (unlikely(!dentry))
+        return ERR_PTR(-ENOMEM);
+
+    old = dir->i_op->lookup(dir, dentry, flags);
+    if (unlikely(old)) {
+        dput(dentry);
+        dentry = old;
+    }
+    return dentry;
 }
 
 /**
