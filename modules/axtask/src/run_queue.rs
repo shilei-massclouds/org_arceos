@@ -316,7 +316,7 @@ impl<G: BaseGuard> CurrentRunQueueRef<'_, G> {
             self.inner
                 .put_task_with_state(task, TaskState::Blocked, true);
         } else {
-            panic!("No detached task which id is {}.", tid);
+            warn!("No detached task which id is {}.", tid);
         }
     }
 

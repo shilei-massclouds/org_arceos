@@ -526,6 +526,8 @@ impl CurrentTask {
             axhal::arch::write_thread_pointer(next.private() as usize);
             error!("========================== ArceOS-Thread({}) kthread({:x})",
                 next.id_name(), next.private());
+        } else {
+            error!("Next: {}", next.id_name());
         }
 
         let ptr = Arc::into_raw(next);

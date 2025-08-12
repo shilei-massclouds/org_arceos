@@ -4,6 +4,7 @@ use core::ffi::{c_char, CStr};
 use alloc::alloc::{alloc, Layout};
 use axalloc::global_allocator;
 use axhal::mem::PAGE_SIZE_4K;
+use axtask::current;
 
 /// Alloc bytes.
 #[unsafe(no_mangle)]
@@ -83,7 +84,8 @@ pub extern "C" fn cl_kthread_run(
 /// Reschedule.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_resched(back_to_runq: usize) {
-    error!("resched current ..");
+    error!("resched current .. back_to_run {}; curr {}",
+        back_to_runq, current().id_name());
     if back_to_runq != 0 {
         axtask::yield_now();
     } else {

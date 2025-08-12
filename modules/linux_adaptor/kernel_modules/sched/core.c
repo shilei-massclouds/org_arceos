@@ -125,6 +125,15 @@ unsigned long init_current(unsigned long thread_id)
     return (unsigned long)tsk;
 }
 
+/*
+ * Mark the task runnable.
+ */
+static inline void ttwu_do_wakeup(struct task_struct *p)
+{
+    WRITE_ONCE(p->__state, TASK_RUNNING);
+    trace_sched_wakeup(p);
+}
+
 /**
  * wake_up_process - Wake up a specific process
  * @p: The process to be woken up.
@@ -163,14 +172,14 @@ int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
     }
     printk("%s: task_ptr(%lx:%u) tid(%lu) current(%lx:%u)\n",
            __func__, p, p->__state, p->pid, current, current->__state);
-#if 0
     if (p == current) {
+        ttwu_do_wakeup(p);
         return 0;
     }
-#endif
     if (p->__state == TASK_RUNNING) {
         return 0;
     }
+    ttwu_do_wakeup(p);
     cl_wake_up(p->pid);
     return 1;
 }
@@ -178,7 +187,7 @@ int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 void __might_sleep(const char *file, int line)
 {
     unsigned int state = get_current_state();
-#if 0
+#if 1
     /*
      * Blocking primitives will set (and therefore destroy) current->state,
      * since we will exit with TASK_RUNNING make sure we enter with it,

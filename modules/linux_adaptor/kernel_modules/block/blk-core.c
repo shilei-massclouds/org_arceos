@@ -673,7 +673,6 @@ void submit_bio_noacct_nocheck(struct bio *bio)
         bio_set_flag(bio, BIO_TRACE_COMPLETION);
     }
 
-    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     /*
      * We only want one ->submit_bio to be active at a time, else stack
      * usage with stacked devices could be a problem.  Use current->bio_list
@@ -681,9 +680,7 @@ void submit_bio_noacct_nocheck(struct bio *bio)
      * it is active, and then process them after it returned.
      */
     if (current->bio_list) {
-        printk("%s: step2\n", __func__);
         bio_list_add(&current->bio_list[0], bio);
-        printk("%s: step3\n", __func__);
     } else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO)) {
         __submit_bio_noacct_mq(bio);
     } else {
