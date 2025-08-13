@@ -404,7 +404,6 @@ CL_MINE(cleanup_srcu_struct)
 CL_MINE(blk_mq_free_map_and_rqs)
 CL_MINE(kvfree)
 
-CL_MINE(prepare_to_wait_exclusive)
 CL_MINE(seq_putc)
 CL_MINE(seq_write)
 CL_MINE(blk_mq_free_rqs)
