@@ -37,6 +37,8 @@ extern int cl_default_bdi_init(void);
 extern int cl_journal_init(void);
 extern int cl_ext4_init_fs(void);
 
+extern void cl_invoke_softirq(void);
+
 extern void test_block(void);
 
 #if 0
@@ -58,9 +60,13 @@ static void test_ext2(void);
 
 extern void test_ext4();
 
+static int clinux_started = 0;
+
 int clinux_init(void)
 {
     printk("cLinux base is starting ...\n");
+
+    clinux_started = 1;
 
     random_init_early("");
     vfs_caches_init_early();
@@ -141,4 +147,22 @@ void call_handle_arch_irq(unsigned long cause)
     struct pt_regs regs;
     regs.cause = cause;
     handle_arch_irq(&regs);
+}
+
+// Refer to "__irq_exit_rcu" in [softirq.c]
+void cl_handle_softirq(unsigned long irqnum)
+{
+    printk("%s: irqnum(%u) clinux started(%d)\n",
+           __func__, irqnum, clinux_started);
+    if (clinux_started == 0) {
+        return;
+    }
+
+    local_irq_disable();
+
+    if (!in_interrupt() && local_softirq_pending())
+        cl_invoke_softirq();
+
+    // Note: consider to handle tick_irq_exit in future.
+    // tick_irq_exit();
 }

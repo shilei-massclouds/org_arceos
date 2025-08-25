@@ -96,12 +96,10 @@ static struct signal_struct __init_signal = {
 };
 
 static struct task_struct __init_task = {
-    /*
 #ifdef CONFIG_THREAD_INFO_IN_TASK
-    .thread_info    = INIT_THREAD_INFO(init_task),
+    .thread_info    = INIT_THREAD_INFO(__init_task),
     .stack_refcount = REFCOUNT_INIT(1),
 #endif
-    */
     .signal     = &__init_signal,
     .nsproxy    = &init_nsproxy,
     .fs         = &init_fs,

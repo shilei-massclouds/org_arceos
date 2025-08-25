@@ -2,6 +2,7 @@
 
 use handler_table::HandlerTable;
 
+use crate::arch::irqs_enabled;
 use crate::platform::irq::{MAX_IRQ_COUNT, dispatch_irq};
 use crate::trap::{IRQ, register_trap_handler};
 
@@ -39,6 +40,15 @@ pub(crate) fn register_handler_common(irq_num: usize, handler: IrqHandler) -> bo
 fn handler_irq(irq_num: usize) -> bool {
     let guard = kernel_guard::NoPreempt::new();
     dispatch_irq(irq_num);
+    assert!(!irqs_enabled());
+    #[cfg(linux_adaptor)]
+    unsafe {
+        cl_handle_softirq(irq_num);
+    }
     drop(guard); // rescheduling may occur when preemption is re-enabled.
     true
+}
+
+unsafe extern "C" {
+    fn cl_handle_softirq(irq_num: usize);
 }
