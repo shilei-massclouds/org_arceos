@@ -43,14 +43,6 @@ unsigned long init_current(unsigned long thread_id)
     return (unsigned long)__task;
 }
 
-asmlinkage __visible void __sched schedule(void)
-{
-    log_error("%s: ... state(%u) (%u)",
-              __func__, READ_ONCE(current->state), TASK_RUNNING);
-
-    cl_resched((READ_ONCE(current->state) == TASK_RUNNING));
-}
-
 int __sched _cond_resched(void)
 {
     log_error("%s: No impl.", __func__);
@@ -93,9 +85,4 @@ void __sched io_schedule(void)
     token = io_schedule_prepare();
     schedule();
     io_schedule_finish(token);
-}
-
-void __init sched_init(void)
-{
-    wait_bit_init();
 }

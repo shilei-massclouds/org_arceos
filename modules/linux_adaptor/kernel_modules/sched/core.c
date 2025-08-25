@@ -113,6 +113,7 @@ unsigned long init_current(unsigned long thread_id)
     struct task_struct *tsk = &__init_task;
     tsk->pid = thread_id;
     tsk->flags |= PF_KTHREAD;
+    WRITE_ONCE(tsk->__state, TASK_RUNNING);
     set_kthread_struct(tsk);
     __asm__ __volatile__ (
         "mv tp, %0"
@@ -121,6 +122,11 @@ unsigned long init_current(unsigned long thread_id)
     );
     printk("%s: init_task(%lu) ptr (0x%lx)\n", __func__, thread_id, tsk);
     return (unsigned long)tsk;
+}
+
+unsigned long get_main_task_id()
+{
+    return __init_task.pid;
 }
 
 /*
@@ -153,7 +159,7 @@ asmlinkage __visible void __sched schedule(void)
     printk("%s: current(0x%lx) state(%u)\n",
            __func__, current, READ_ONCE(current->__state));
 
-    cl_resched((READ_ONCE(current->__state) == TASK_RUNNING));
+    cl_resched(READ_ONCE(current->__state));
 }
 
 int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flags,
@@ -331,6 +337,21 @@ int __cond_resched_lock(spinlock_t *lock)
         spin_lock(lock);
     }
     return ret;
+}
+
+void cl_set_task_state(struct task_struct *p, unsigned int state)
+{
+    if (p == NULL) {
+        PANIC("bad task ptr.");
+    }
+
+    if (state != TASK_RUNNING &&
+        state != TASK_INTERRUPTIBLE &&
+        state != TASK_UNINTERRUPTIBLE) {
+        PANIC("bad task state.");
+    }
+
+    WRITE_ONCE(p->__state, state);
 }
 
 void __init sched_init(void)

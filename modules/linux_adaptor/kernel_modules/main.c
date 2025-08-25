@@ -42,8 +42,6 @@ extern void cl_invoke_softirq(void);
 extern void test_block(void);
 
 #if 0
-extern void init_current(unsigned long thread_id);
-
 extern int cl_ext2_fs_init(void);
 
 extern int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos);

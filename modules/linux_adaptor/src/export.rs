@@ -6,6 +6,12 @@ use axalloc::global_allocator;
 use axhal::mem::PAGE_SIZE_4K;
 use axtask::current;
 
+const CL_TASK_STATE_MASK:   usize = 0x00000003;
+
+const TASK_RUNNING:         usize = 0x00000000;
+const TASK_INTERRUPTIBLE:   usize = 0x00000001;
+const TASK_UNINTERRUPTIBLE: usize = 0x00000002;
+
 /// Alloc bytes.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_rust_alloc(size: usize, align: usize) -> usize {
@@ -83,13 +89,15 @@ pub extern "C" fn cl_kthread_run(
 
 /// Reschedule.
 #[unsafe(no_mangle)]
-pub extern "C" fn cl_resched(back_to_runq: usize) {
-    error!("resched current .. back_to_run {}; curr {}",
-        back_to_runq, current().id_name());
-    if back_to_runq != 0 {
-        axtask::yield_now();
-    } else {
-        axtask::__resched();
+pub extern "C" fn cl_resched(state: usize) {
+    error!("resched current .. state {}(origin:{}); curr {}",
+        state & CL_TASK_STATE_MASK, state, current().id_name());
+
+    match state & CL_TASK_STATE_MASK {
+        TASK_RUNNING => axtask::yield_now(),
+        TASK_INTERRUPTIBLE => axtask::__resched(true),
+        TASK_UNINTERRUPTIBLE => axtask::__resched(false),
+        _ => panic!("bad task state: {}", state),
     }
 }
 

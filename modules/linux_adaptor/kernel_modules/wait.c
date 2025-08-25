@@ -226,24 +226,6 @@ static void __wake_up_common_lock(struct wait_queue_head *wq_head, unsigned int 
     } while (bookmark.flags & WQ_FLAG_BOOKMARK);
 }
 
-/**
- * __wake_up - wake up threads blocked on a waitqueue.
- * @wq_head: the waitqueue
- * @mode: which threads
- * @nr_exclusive: how many wake-one or wake-many threads to wake up
- * @key: is directly passed to the wakeup function
- *
- * If this function wakes up a task, it executes a full memory barrier before
- * accessing the task state.
- */
-void __wake_up(struct wait_queue_head *wq_head, unsigned int mode,
-            int nr_exclusive, void *key)
-{
-    log_error("%s: ...", __func__);
-    __wake_up_common_lock(wq_head, mode, nr_exclusive, 0, key);
-    log_error("%s: ok!", __func__);
-}
-
 void
 prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state)
 {

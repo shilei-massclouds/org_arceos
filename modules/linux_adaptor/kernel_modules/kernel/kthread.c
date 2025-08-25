@@ -83,10 +83,12 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
                                        (unsigned long)data);
 
     vscnprintf(name, sizeof(name), namefmt, args);
-    printk("%s: curr(%lx) tid[%lu] name[%s]\n", __func__, current, tid, name);
+    printk("%s: curr(%lx:%u) tid[%lu] name[%s]\n",
+           __func__, current, current->__state, tid, name);
     printk("%s: ioc(%lx)\n", __func__, task->io_context);
     task->pid = tid;
     task->flags |= PF_KTHREAD;
+    WRITE_ONCE(task->__state, TASK_RUNNING);
     set_kthread_struct(task);
     return task;
 }
@@ -119,16 +121,6 @@ struct task_struct *kthread_create_on_node(int (*threadfn)(void *data),
                        const char namefmt[],
                        ...)
 {
-#if 0
-    struct task_struct *task = kmalloc(sizeof(struct task_struct), 0);
-    unsigned long tid = cl_kthread_run((unsigned long)task,
-                                       (unsigned long)threadfn,
-                                       (unsigned long)data);
-    printk("%s: kthread[%lu]\n", __func__, tid);
-    task->pid = tid;
-    return task;
-#endif
-
     struct task_struct *task;
     va_list args;
 
@@ -282,7 +274,6 @@ repeat:
 
     try_to_freeze();
     cond_resched();
-    PANIC("");
     goto repeat;
 }
 

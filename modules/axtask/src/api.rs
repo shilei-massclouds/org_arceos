@@ -3,6 +3,7 @@
 use alloc::{string::String, sync::Arc};
 
 use kernel_guard::NoPreemptIrqSave;
+use crate::run_queue::check_interruptible;
 
 pub(crate) use crate::run_queue::{current_run_queue, select_run_queue};
 
@@ -183,8 +184,9 @@ pub fn yield_now() {
 }
 
 /// Current task just gives up the CPU time voluntarily, but NOT back to run-queue.
-pub fn __resched() {
-    current_run_queue::<NoPreemptIrqSave>().__resched()
+/// 'interruptbile' indicates sleeping state of current task. 
+pub fn __resched(interruptible: bool) {
+    current_run_queue::<NoPreemptIrqSave>().__resched(interruptible)
 }
 
 /// Wake up the task by tid.
@@ -219,10 +221,19 @@ pub fn exit(exit_code: i32) -> ! {
 /// It runs an infinite loop that keeps calling [`yield_now()`].
 pub fn run_idle() -> ! {
     loop {
+        check_interruptible();
         yield_now();
         error!("idle task: waiting for IRQs...");
         #[cfg(feature = "irq")]
         axhal::arch::wait_for_irqs();
-        __wake_up(2);
+
+        let linux_main_task_id = unsafe { get_main_task_id() };
+        assert!(linux_main_task_id != 0);
+        assert_eq!(linux_main_task_id, 2);
+        __wake_up(linux_main_task_id);
     }
+}
+
+unsafe extern "C" {
+    fn get_main_task_id() -> u64;
 }
