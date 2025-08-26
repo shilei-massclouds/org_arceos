@@ -44,6 +44,7 @@ d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
 
 unsafe extern "C" {
     fn main();
+    fn cl_run_local_timers();
 }
 
 struct LogIfImpl;
@@ -259,6 +260,9 @@ fn init_interrupt() {
         update_timer();
         #[cfg(feature = "multitask")]
         axtask::on_timer_tick();
+
+        // Only valid for 'linux_adaptor'
+        unsafe { cl_run_local_timers() };
     });
 
     // Enable IRQs before starting app

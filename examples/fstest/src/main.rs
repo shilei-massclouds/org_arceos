@@ -19,12 +19,15 @@ mod cmd;
 
 use cmd::{
     show_dir, create_file, open_file, write_file, read_file,
-    remove_file, create_dir, remove_dir
+    remove_file, create_dir, remove_dir, check_dir,
 };
 
 #[cfg_attr(feature = "axstd", unsafe(no_mangle))]
 fn main() {
     println!("fstest ..");
+
+    // Check dir which has been created last time.
+    let ret = check_dir("dir2");
 
     // List all at root directory.
     show_dir("");
@@ -40,7 +43,14 @@ fn main() {
     // Remove the directory.
     remove_dir("dir1");
 
-    println!("fstest ok!");
+    // Create an extra directory.
+    create_dir("dir2");
+
+    if !ret {
+        println!("extra dir ERR!")
+    } else {
+        println!("fstest ok!");
+    }
 }
 
 fn do_file_test(path: &str) {

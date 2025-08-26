@@ -328,7 +328,6 @@ void security_inode_post_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
                  int ia_valid)
 {
     pr_notice("%s: No impl.", __func__);
-    return 0;
 }
 
 int security_inode_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
@@ -535,4 +534,15 @@ gid_t from_kgid_munged(struct user_namespace *targ, kgid_t kgid)
 {
     pr_notice("%s: No impl.", __func__);
     return 0;
+}
+
+/**
+ * tmigr_requires_handle_remote() - Check the need of remote timer handling
+ *
+ * Must be called with interrupts disabled.
+ */
+bool tmigr_requires_handle_remote(void)
+{
+    pr_notice("%s: No impl.", __func__);
+    return false;
 }

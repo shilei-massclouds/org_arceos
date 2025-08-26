@@ -58,13 +58,14 @@ static void test_ext2(void);
 
 extern void test_ext4();
 
-static int clinux_started = 0;
+int clinux_starting = 0;
+int clinux_started = 0;
 
 int clinux_init(void)
 {
     printk("cLinux base is starting ...\n");
 
-    clinux_started = 1;
+    clinux_starting = 1;
 
     random_init_early("");
     vfs_caches_init_early();
@@ -90,6 +91,7 @@ int clinux_init(void)
     cl_init_bio();
     cl_sg_pool_init();
 
+    init_timers();
     workqueue_init();
     workqueue_init_topology();
     cl_default_bdi_init();
@@ -103,6 +105,8 @@ int clinux_init(void)
         }
         printk("%s: handle_arch_irq(%lx)\n", __func__, handle_arch_irq);
     }
+
+    clinux_started = 1;
 
     // Note: Refer to old cl_irq_init in irq.c.
     cl_plic_init();
@@ -150,8 +154,8 @@ void call_handle_arch_irq(unsigned long cause)
 // Refer to "__irq_exit_rcu" in [softirq.c]
 void cl_handle_softirq(unsigned long irqnum)
 {
-    printk("%s: irqnum(%u) clinux started(%d)\n",
-           __func__, irqnum, clinux_started);
+    printk("%s: irqnum(%u) clinux starting(%d)\n",
+           __func__, irqnum, clinux_starting);
     if (clinux_started == 0) {
         return;
     }

@@ -2,6 +2,8 @@ OUTPUT_ARCH(%ARCH%)
 
 BASE_ADDRESS = %KERNEL_BASE%;
 
+jiffies = jiffies_64;
+
 ENTRY(_start)
 SECTIONS
 {

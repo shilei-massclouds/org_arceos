@@ -153,6 +153,14 @@ pub fn create_dir(path: &str) {
     println!("Create dir '{}' ok!", path);
 }
 
+pub fn check_dir(path: &str) -> bool {
+    if let Ok(metadata) = fs::metadata(path) {
+        metadata.is_dir()
+    } else {
+        false
+    }
+}
+
 fn mkdir(args: &str) {
     if args.is_empty() {
         print_err!("mkdir", "missing operand");
