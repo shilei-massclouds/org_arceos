@@ -46,6 +46,9 @@ fn main() {
     // Create an extra directory.
     create_dir("dir2");
 
+    // Let's fly for a while and jbd2 may write journal.
+    std::thread::sleep(std::time::Duration::new(1, 0));
+
     if !ret {
         println!("extra dir ERR!")
     } else {

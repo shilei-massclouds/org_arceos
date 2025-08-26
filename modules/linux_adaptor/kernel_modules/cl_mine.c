@@ -271,7 +271,6 @@ CL_MINE(wait_for_completion)
 CL_MINE(folio_redirty_for_writepage)
 CL_MINE(kstrtoull)
 CL_MINE(kstrtouint)
-CL_MINE(sysfs_notify)
 CL_MINE(generic_buffers_fsync_noflush)
 
 // jbd2

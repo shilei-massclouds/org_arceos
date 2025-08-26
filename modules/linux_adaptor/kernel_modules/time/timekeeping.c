@@ -42,3 +42,12 @@ ktime_t ktime_get_with_offset(enum tk_offsets offs)
     pr_err("%s: No impl.", __func__);
     return 0;
 }
+
+/*
+ * Must hold jiffies_lock
+ */
+void do_timer(unsigned long ticks)
+{
+    jiffies_64 += ticks;
+    //calc_global_load();
+}

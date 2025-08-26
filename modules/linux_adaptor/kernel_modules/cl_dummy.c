@@ -546,3 +546,8 @@ bool tmigr_requires_handle_remote(void)
     pr_notice("%s: No impl.", __func__);
     return false;
 }
+
+void sysfs_notify(struct kobject *kobj, const char *dir, const char *attr)
+{
+    pr_notice("%s: No impl.", __func__);
+}

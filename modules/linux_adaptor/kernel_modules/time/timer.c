@@ -923,7 +923,47 @@ signed long __sched schedule_timeout(signed long timeout)
 
 void add_timer_on(struct timer_list *timer, int cpu)
 {
-    pr_err("%s: No impl.", __func__);
+    struct timer_base *new_base, *base;
+    unsigned long flags;
+
+    //debug_assert_init(timer);
+
+    if (WARN_ON_ONCE(timer_pending(timer)))
+        return;
+
+    /* Make sure timer flags have TIMER_PINNED flag set */
+    timer->flags |= TIMER_PINNED;
+
+    new_base = get_timer_cpu_base(timer->flags, cpu);
+
+    /*
+     * If @timer was on a different CPU, it should be migrated with the
+     * old base locked to prevent other operations proceeding with the
+     * wrong base locked.  See lock_timer_base().
+     */
+    base = lock_timer_base(timer, &flags);
+    /*
+     * Has @timer been shutdown? This needs to be evaluated while
+     * holding base lock to prevent a race against the shutdown code.
+     */
+    if (!timer->function)
+        goto out_unlock;
+
+    if (base != new_base) {
+        timer->flags |= TIMER_MIGRATING;
+
+        raw_spin_unlock(&base->lock);
+        base = new_base;
+        raw_spin_lock(&base->lock);
+        WRITE_ONCE(timer->flags,
+               (timer->flags & ~TIMER_BASEMASK) | cpu);
+    }
+    forward_timer_base(base);
+
+    //debug_timer_activate(timer);
+    internal_add_timer(base, timer);
+out_unlock:
+    raw_spin_unlock_irqrestore(&base->lock, flags);
 }
 
 static int collect_expired_timers(struct timer_base *base,
@@ -1269,6 +1309,7 @@ void cl_run_local_timers(void)
         return;
     }
 
+    do_timer(1);
     run_local_timers();
 }
 
