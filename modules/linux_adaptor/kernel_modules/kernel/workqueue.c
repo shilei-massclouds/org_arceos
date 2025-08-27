@@ -887,6 +887,7 @@ static struct worker_pool *get_work_pool(struct work_struct *work)
 		return work_struct_pwq(data)->pool;
 
 	pool_id = data >> WORK_OFFQ_POOL_SHIFT;
+    printk("%s: 1 pool_id(%u)\n", __func__, pool_id);
 	if (pool_id == WORK_OFFQ_POOL_NONE)
 		return NULL;
 
@@ -2074,7 +2075,9 @@ static int try_to_grab_pending(struct work_struct *work, u32 cflags,
 	 * The queueing is in progress, or it is already queued. Try to
 	 * steal it from ->worklist without clearing WORK_STRUCT_PENDING.
 	 */
+    printk("%s: 1\n", __func__);
 	pool = get_work_pool(work);
+    printk("%s: 2 pool(%lx)\n", __func__, pool);
 	if (!pool)
 		goto fail;
 
@@ -2582,7 +2585,9 @@ bool mod_delayed_work_on(int cpu, struct workqueue_struct *wq,
 	unsigned long irq_flags;
 	bool ret;
 
+    printk("%s: 1\n", __func__);
 	ret = work_grab_pending(&dwork->work, WORK_CANCEL_DELAYED, &irq_flags);
+    printk("%s: 2\n", __func__);
 
 	if (!clear_pending_if_disabled(&dwork->work))
 		__queue_delayed_work(cpu, wq, dwork, delay);

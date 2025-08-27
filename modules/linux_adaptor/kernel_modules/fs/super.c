@@ -55,6 +55,11 @@ static inline void super_unlock_excl(struct super_block *sb)
     super_unlock(sb, true);
 }
 
+static inline void super_unlock_shared(struct super_block *sb)
+{
+    super_unlock(sb, false);
+}
+
 /* Free a superblock that has never been seen by anyone */
 static void destroy_unused_super(struct super_block *s)
 {
@@ -829,4 +834,33 @@ void put_super(struct super_block *sb)
     spin_lock(&sb_lock);
     __put_super(sb);
     spin_unlock(&sb_lock);
+}
+
+/*
+ *  super_trylock_shared - try to grab ->s_umount shared
+ *  @sb: reference we are trying to grab
+ *
+ *  Try to prevent fs shutdown.  This is used in places where we
+ *  cannot take an active reference but we need to ensure that the
+ *  filesystem is not shut down while we are working on it. It returns
+ *  false if we cannot acquire s_umount or if we lose the race and
+ *  filesystem already got into shutdown, and returns true with the s_umount
+ *  lock held in read mode in case of success. On successful return,
+ *  the caller must drop the s_umount lock when done.
+ *
+ *  Note that unlike get_super() et.al. this one does *not* bump ->s_count.
+ *  The reason why it's safe is that we are OK with doing trylock instead
+ *  of down_read().  There's a couple of places that are OK with that, but
+ *  it's very much not a general-purpose interface.
+ */
+bool super_trylock_shared(struct super_block *sb)
+{
+    if (down_read_trylock(&sb->s_umount)) {
+        if (!(sb->s_flags & SB_DYING) && sb->s_root &&
+            (sb->s_flags & SB_BORN))
+            return true;
+        super_unlock_shared(sb);
+    }
+
+    return false;
 }

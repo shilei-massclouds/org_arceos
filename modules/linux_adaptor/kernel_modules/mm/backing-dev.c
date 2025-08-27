@@ -18,6 +18,8 @@
 
 #include "../adaptor.h"
 
+static const char *bdi_unknown_name = "(unknown)";
+
 /*
  * bdi_lock protects bdi_tree and updates to bdi_list. bdi_list has RCU
  * reader side locking.
@@ -278,6 +280,13 @@ void bdi_unregister(struct backing_dev_info *bdi)
 void bdi_put(struct backing_dev_info *bdi)
 {
     kref_put(&bdi->refcnt, release_bdi);
+}
+
+const char *bdi_dev_name(struct backing_dev_info *bdi)
+{
+    if (!bdi || !bdi->dev)
+        return bdi_unknown_name;
+    return bdi->dev_name;
 }
 
 static int __init default_bdi_init(void)

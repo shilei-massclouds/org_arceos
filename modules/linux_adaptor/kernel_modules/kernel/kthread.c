@@ -350,3 +350,16 @@ bool set_kthread_struct(struct task_struct *p)
     p->worker_private = kthread;
     return true;
 }
+
+/**
+ * kthread_data - return data value specified on kthread creation
+ * @task: kthread task in question
+ *
+ * Return the data value specified when kthread @task was created.
+ * The caller is responsible for ensuring the validity of @task when
+ * calling this function.
+ */
+void *kthread_data(struct task_struct *task)
+{
+    return to_kthread(task)->data;
+}

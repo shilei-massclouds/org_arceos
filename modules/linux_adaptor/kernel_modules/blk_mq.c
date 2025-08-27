@@ -153,56 +153,6 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
  */
 #define INIT_BW     (100 << (20 - PAGE_SHIFT))
 
-static int wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi,
-           gfp_t gfp)
-{
-    int i, err;
-
-    memset(wb, 0, sizeof(*wb));
-
-    if (wb != &bdi->wb)
-        bdi_get(bdi);
-    wb->bdi = bdi;
-    wb->last_old_flush = jiffies;
-    INIT_LIST_HEAD(&wb->b_dirty);
-    INIT_LIST_HEAD(&wb->b_io);
-    INIT_LIST_HEAD(&wb->b_more_io);
-    INIT_LIST_HEAD(&wb->b_dirty_time);
-    spin_lock_init(&wb->list_lock);
-
-    wb->bw_time_stamp = jiffies;
-    wb->balanced_dirty_ratelimit = INIT_BW;
-    wb->dirty_ratelimit = INIT_BW;
-    wb->write_bandwidth = INIT_BW;
-    wb->avg_write_bandwidth = INIT_BW;
-
-    spin_lock_init(&wb->work_lock);
-    INIT_LIST_HEAD(&wb->work_list);
-    INIT_DELAYED_WORK(&wb->dwork, wb_workfn);
-    wb->dirty_sleep = jiffies;
-
-    err = fprop_local_init_percpu(&wb->completions, gfp);
-    if (err)
-        goto out_put_bdi;
-
-    for (i = 0; i < NR_WB_STAT_ITEMS; i++) {
-        err = percpu_counter_init(&wb->stat[i], 0, gfp);
-        if (err)
-            goto out_destroy_stat;
-    }
-
-    return 0;
-
-out_destroy_stat:
-    while (i--)
-        percpu_counter_destroy(&wb->stat[i]);
-    fprop_local_destroy_percpu(&wb->completions);
-out_put_bdi:
-    if (wb != &bdi->wb)
-        bdi_put(bdi);
-    return err;
-}
-
 /**
  * blk_queue_write_cache - configure queue's write cache
  * @q:      the request queue for the device

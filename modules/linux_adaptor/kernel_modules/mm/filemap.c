@@ -225,7 +225,6 @@ static void __filemap_fdatawait_range(struct address_space *mapping,
     struct folio_batch fbatch;
     unsigned nr_folios;
 
-#if 0
     folio_batch_init(&fbatch);
 
     while (index <= end) {
@@ -245,7 +244,29 @@ static void __filemap_fdatawait_range(struct address_space *mapping,
         folio_batch_release(&fbatch);
         cond_resched();
     }
-#endif
+}
+
+/**
+ * filemap_fdatawait_range - wait for writeback to complete
+ * @mapping:        address space structure to wait for
+ * @start_byte:     offset in bytes where the range starts
+ * @end_byte:       offset in bytes where the range ends (inclusive)
+ *
+ * Walk the list of under-writeback pages of the given address space
+ * in the given range and wait for all of them.  Check error status of
+ * the address space and return it.
+ *
+ * Since the error status of the address space is cleared by this function,
+ * callers are responsible for checking the return value and handling and/or
+ * reporting the error.
+ *
+ * Return: error status of the address space.
+ */
+int filemap_fdatawait_range(struct address_space *mapping, loff_t start_byte,
+                loff_t end_byte)
+{
+    __filemap_fdatawait_range(mapping, start_byte, end_byte);
+    return filemap_check_errors(mapping);
 }
 
 /*

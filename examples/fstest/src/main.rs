@@ -46,6 +46,10 @@ fn main() {
     // Create an extra directory.
     create_dir("dir2");
 
+    unsafe {
+        cl_wakeup_flusher_threads();
+    }
+
     // Let's fly for a while and jbd2 may write journal.
     std::thread::sleep(std::time::Duration::new(1, 0));
 
@@ -54,6 +58,10 @@ fn main() {
     } else {
         println!("fstest ok!");
     }
+}
+
+unsafe extern "C" {
+    fn cl_wakeup_flusher_threads();
 }
 
 fn do_file_test(path: &str) {

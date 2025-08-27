@@ -178,6 +178,16 @@ static inline void timer_base_unlock_expiry(struct timer_base *base) { }
 static inline void timer_sync_wait_running(struct timer_base *base) { }
 static inline void del_timer_wait_running(struct timer_list *timer) { }
 
+static inline void debug_timer_init(struct timer_list *timer) { }
+static inline void debug_timer_activate(struct timer_list *timer) { }
+static inline void debug_timer_deactivate(struct timer_list *timer) { }
+static inline void debug_timer_assert_init(struct timer_list *timer) { }
+
+static inline void debug_assert_init(struct timer_list *timer)
+{
+    debug_timer_assert_init(timer);
+}
+
 static inline bool is_timers_nohz_active(void)
 {
     pr_notice("%s: No impl.", __func__);
@@ -468,7 +478,7 @@ __mod_timer(struct timer_list *timer, unsigned long expires, unsigned int option
     unsigned int idx = UINT_MAX;
     int ret = 0;
 
-    // debug_assert_init(timer);
+    debug_assert_init(timer);
 
     /*
      * This is a common optimization triggered by the networking code - if
@@ -517,7 +527,7 @@ __mod_timer(struct timer_list *timer, unsigned long expires, unsigned int option
         }
     }
 
-    // debug_timer_activate(timer);
+    debug_timer_activate(timer);
 
     timer->expires = expires;
     /*
@@ -537,6 +547,108 @@ out_unlock:
     return ret;
 }
 
+/**
+ * __try_to_del_timer_sync - Internal function: Try to deactivate a timer
+ * @timer:  Timer to deactivate
+ * @shutdown:   If true, this indicates that the timer is about to be
+ *      shutdown permanently.
+ *
+ * If @shutdown is true then @timer->function is set to NULL under the
+ * timer base lock which prevents further rearming of the timer. Any
+ * attempt to rearm @timer after this function returns will be silently
+ * ignored.
+ *
+ * This function cannot guarantee that the timer cannot be rearmed
+ * right after dropping the base lock if @shutdown is false. That
+ * needs to be prevented by the calling code if necessary.
+ *
+ * Return:
+ * * %0  - The timer was not pending
+ * * %1  - The timer was pending and deactivated
+ * * %-1 - The timer callback function is running on a different CPU
+ */
+static int __try_to_del_timer_sync(struct timer_list *timer, bool shutdown)
+{
+    struct timer_base *base;
+    unsigned long flags;
+    int ret = -1;
+
+    debug_assert_init(timer);
+
+    base = lock_timer_base(timer, &flags);
+
+    if (base->running_timer != timer)
+        ret = detach_if_pending(timer, base, true);
+    if (shutdown)
+        timer->function = NULL;
+
+    raw_spin_unlock_irqrestore(&base->lock, flags);
+
+    return ret;
+}
+
+/**
+ * __timer_delete_sync - Internal function: Deactivate a timer and wait
+ *           for the handler to finish.
+ * @timer:  The timer to be deactivated
+ * @shutdown:   If true, @timer->function will be set to NULL under the
+ *      timer base lock which prevents rearming of @timer
+ *
+ * If @shutdown is not set the timer can be rearmed later. If the timer can
+ * be rearmed concurrently, i.e. after dropping the base lock then the
+ * return value is meaningless.
+ *
+ * If @shutdown is set then @timer->function is set to NULL under timer
+ * base lock which prevents rearming of the timer. Any attempt to rearm
+ * a shutdown timer is silently ignored.
+ *
+ * If the timer should be reused after shutdown it has to be initialized
+ * again.
+ *
+ * Return:
+ * * %0 - The timer was not pending
+ * * %1 - The timer was pending and deactivated
+ */
+static int __timer_delete_sync(struct timer_list *timer, bool shutdown)
+{
+    int ret;
+
+#ifdef CONFIG_LOCKDEP
+    unsigned long flags;
+
+    /*
+     * If lockdep gives a backtrace here, please reference
+     * the synchronization rules above.
+     */
+    local_irq_save(flags);
+    lock_map_acquire(&timer->lockdep_map);
+    lock_map_release(&timer->lockdep_map);
+    local_irq_restore(flags);
+#endif
+    /*
+     * don't use it in hardirq context, because it
+     * could lead to deadlock.
+     */
+    WARN_ON(in_hardirq() && !(timer->flags & TIMER_IRQSAFE));
+
+    /*
+     * Must be able to sleep on PREEMPT_RT because of the slowpath in
+     * del_timer_wait_running().
+     */
+    if (IS_ENABLED(CONFIG_PREEMPT_RT) && !(timer->flags & TIMER_IRQSAFE))
+        lockdep_assert_preemption_enabled();
+
+    do {
+        ret = __try_to_del_timer_sync(timer, shutdown);
+
+        if (unlikely(ret < 0)) {
+            del_timer_wait_running(timer);
+            cpu_relax();
+        }
+    } while (ret < 0);
+
+    return ret;
+}
 /**
  * timer_delete_sync - Deactivate a timer and wait for the handler to finish.
  * @timer:  The timer to be deactivated
@@ -582,9 +694,7 @@ out_unlock:
  */
 int timer_delete_sync(struct timer_list *timer)
 {
-    pr_err("%s: No impl.", __func__);
-    return 0;
-    //return __timer_delete_sync(timer, false);
+    return __timer_delete_sync(timer, false);
 }
 
 /**
@@ -640,9 +750,7 @@ static int __timer_delete(struct timer_list *timer, bool shutdown)
     unsigned long flags;
     int ret = 0;
 
-#if 0
     debug_assert_init(timer);
-#endif
 
     /*
      * If @shutdown is set then the lock has to be taken whether the
@@ -656,15 +764,11 @@ static int __timer_delete(struct timer_list *timer, bool shutdown)
      * that the callback cannot requeue the timer.
      */
     if (timer_pending(timer) || shutdown) {
-#if 0
         base = lock_timer_base(timer, &flags);
         ret = detach_if_pending(timer, base, true);
-#endif
         if (shutdown)
             timer->function = NULL;
-#if 0
         raw_spin_unlock_irqrestore(&base->lock, flags);
-#endif
     }
 
     return ret;
@@ -688,8 +792,6 @@ int timer_delete(struct timer_list *timer)
 {
     return __timer_delete(timer, false);
 }
-
-static inline void debug_timer_init(struct timer_list *timer) { }
 
 static inline void debug_init(struct timer_list *timer)
 {
@@ -926,7 +1028,7 @@ void add_timer_on(struct timer_list *timer, int cpu)
     struct timer_base *new_base, *base;
     unsigned long flags;
 
-    //debug_assert_init(timer);
+    debug_assert_init(timer);
 
     if (WARN_ON_ONCE(timer_pending(timer)))
         return;
@@ -960,7 +1062,7 @@ void add_timer_on(struct timer_list *timer, int cpu)
     }
     forward_timer_base(base);
 
-    //debug_timer_activate(timer);
+    debug_timer_activate(timer);
     internal_add_timer(base, timer);
 out_unlock:
     raw_spin_unlock_irqrestore(&base->lock, flags);

@@ -41,6 +41,11 @@
 unsigned int dirty_writeback_interval = 5 * 100; /* centiseconds */
 
 /*
+ * The longest time for which data is allowed to remain dirty
+ */
+unsigned int dirty_expire_interval = 30 * 100; /* centiseconds */
+
+/*
  * Flag that puts the machine in "laptop mode". Doubles as a timeout in jiffies:
  * a full sync is triggered after this time elapses without any disk activity.
  */
@@ -782,4 +787,30 @@ void folio_account_cleaned(struct folio *folio, struct bdi_writeback *wb)
 #endif
     wb_stat_mod(wb, WB_RECLAIMABLE, -nr);
     task_io_account_cancelled_write(nr * PAGE_SIZE);
+}
+
+/**
+ * wb_over_bg_thresh - does @wb need to be written back?
+ * @wb: bdi_writeback of interest
+ *
+ * Determines whether background writeback should keep writing @wb or it's
+ * clean enough.
+ *
+ * Return: %true if writeback should continue.
+ */
+bool wb_over_bg_thresh(struct bdi_writeback *wb)
+{
+#if 0
+    struct dirty_throttle_control gdtc = { GDTC_INIT(wb) };
+    struct dirty_throttle_control mdtc = { MDTC_INIT(wb, &gdtc) };
+
+    if (domain_over_bg_thresh(&gdtc))
+        return true;
+
+    if (mdtc_valid(&mdtc))
+        return domain_over_bg_thresh(&mdtc);
+#endif
+    pr_notice("%s: No impl.", __func__);
+
+    return false;
 }
