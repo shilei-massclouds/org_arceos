@@ -19,15 +19,25 @@ mod cmd;
 
 use cmd::{
     show_dir, create_file, open_file, write_file, read_file,
-    remove_file, create_dir, remove_dir, check_dir,
+    remove_file, create_dir, remove_dir, check_dir, check_file,
 };
 
 #[cfg_attr(feature = "axstd", unsafe(no_mangle))]
 fn main() {
     println!("fstest ..");
 
+    if !check_dir("tmp") {
+        panic!("No tmp directory.");
+    }
+
     // Check dir which has been created last time.
-    let ret = check_dir("dir2");
+    if !check_dir("dir2") {
+        println!("No 'dir2' found which has been created last time.");
+    }
+
+    if !check_file("last_file") {
+        println!("No 'last_file' found which has been created last time.");
+    }
 
     // List all at root directory.
     show_dir("");
@@ -46,19 +56,25 @@ fn main() {
     // Create an extra directory.
     create_dir("dir2");
 
+    if !check_dir("dir2") {
+        panic!("No 'dir2' found.");
+    }
+
+    create_file("last_file");
+    if !check_file("last_file") {
+        panic!("No 'last_file' found.");
+    }
+
+    // NOTE: move it in clinux kthread.
     unsafe {
         cl_wakeup_flusher_threads();
     }
 
     println!("wait for one second ..");
     // Let's fly for a while and jbd2 may write journal.
-    std::thread::sleep(std::time::Duration::new(1, 0));
+    std::thread::sleep(std::time::Duration::new(10, 0));
 
-    if !ret {
-        println!("extra dir ERR!")
-    } else {
-        println!("fstest ok!");
-    }
+    println!("fstest ok!");
 }
 
 unsafe extern "C" {
