@@ -15,6 +15,11 @@
 #include "blk-rq-qos.h"
 #include "blk-wbt.h"
 
+void blk_queue_rq_timeout(struct request_queue *q, unsigned int timeout)
+{
+    q->rq_timeout = timeout;
+}
+
 /*
  * Check that the limits in lim are valid, initialize defaults for unset
  * values, and cap values based on others where needed.

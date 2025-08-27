@@ -21,6 +21,7 @@
 #include <linux/workqueue.h>
 
 #include <asm/softirq_stack.h>
+#include <asm/stacktrace.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/irq.h>
@@ -247,4 +248,70 @@ void raise_softirq(unsigned int nr)
 void open_softirq(int nr, void (*action)(void))
 {
     softirq_vec[nr].action = action;
+}
+
+void __local_bh_enable_ip(unsigned long ip, unsigned int cnt)
+{
+    WARN_ON_ONCE(in_hardirq());
+    lockdep_assert_irqs_enabled();
+#ifdef CONFIG_TRACE_IRQFLAGS
+    local_irq_disable();
+#endif
+    /*
+     * Are softirqs going to be turned on now:
+     */
+    if (softirq_count() == SOFTIRQ_DISABLE_OFFSET)
+        lockdep_softirqs_on(ip);
+    /*
+     * Keep preemption disabled until we are done with
+     * softirq processing:
+     */
+    __preempt_count_sub(cnt - 1);
+
+    if (unlikely(!in_interrupt() && local_softirq_pending())) {
+        /*
+         * Run softirq if any pending. And do it in its own stack
+         * as we may be calling this deep in a task call stack already.
+         */
+        do_softirq();
+    }
+
+    preempt_count_dec();
+#ifdef CONFIG_TRACE_IRQFLAGS
+    local_irq_enable();
+#endif
+    preempt_check_resched();
+}
+
+asmlinkage __visible void do_softirq(void)
+{
+    __u32 pending;
+    unsigned long flags;
+
+    if (in_interrupt())
+        return;
+
+    local_irq_save(flags);
+
+    pending = local_softirq_pending();
+
+    if (pending)
+        do_softirq_own_stack();
+
+    local_irq_restore(flags);
+}
+
+static void ___do_softirq(struct pt_regs *regs)
+{
+    __do_softirq();
+}
+
+void do_softirq_own_stack(void)
+{
+    if (on_thread_stack()) {
+        //call_on_irq_stack(NULL, ___do_softirq);
+        PANIC("");
+    } else {
+        __do_softirq();
+    }
 }

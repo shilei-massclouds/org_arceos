@@ -57,17 +57,6 @@ bool is_software_node(const struct fwnode_handle *fwnode)
 }
 
 /**
- * dump_stack_lvl - dump the current task information and its stack trace
- * @log_lvl: log level
- *
- * Architectures can override this implementation by implementing its own.
- */
-asmlinkage __visible void dump_stack_lvl(const char *log_lvl)
-{
-    printk("%s", log_lvl);
-}
-
-/**
  * is_swiotlb_allocated() - check if the default software IO TLB is initialized
  */
 bool is_swiotlb_allocated(void)
@@ -550,4 +539,18 @@ bool tmigr_requires_handle_remote(void)
 void sysfs_notify(struct kobject *kobj, const char *dir, const char *attr)
 {
     pr_notice("%s: No impl.", __func__);
+}
+
+/*
+ * Generic 'turn off all lock debugging' function:
+ */
+int debug_locks_off(void)
+{
+    return 0;
+}
+
+int __kernel_text_address(unsigned long addr)
+{
+    pr_notice("%s: No impl. addr(%lx)", __func__, addr);
+    return 1;
 }

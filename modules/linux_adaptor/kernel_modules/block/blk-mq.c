@@ -1363,6 +1363,11 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
                 blk_mq_sched_dispatch_requests(hctx));
 }
 
+static void blk_mq_timeout_work(struct work_struct *work)
+{
+    PANIC("");
+}
+
 int blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
         struct request_queue *q)
 {
@@ -1392,7 +1397,7 @@ int blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
     if (!q->nr_hw_queues)
         goto err_hctxs;
 
-#if 0
+#if 1
     INIT_WORK(&q->timeout_work, blk_mq_timeout_work);
     blk_queue_rq_timeout(q, set->timeout ? set->timeout : 30 * HZ);
 #endif

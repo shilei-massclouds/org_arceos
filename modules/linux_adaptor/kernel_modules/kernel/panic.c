@@ -30,6 +30,8 @@
 
 extern int _vprintk(const char *fmt, va_list args);
 
+atomic_t panic_cpu = ATOMIC_INIT(PANIC_CPU_INVALID);
+
 void __warn_printk(const char *fmt, ...)
 {
     //bool rcu = warn_rcu_enter();
@@ -41,4 +43,18 @@ void __warn_printk(const char *fmt, ...)
     _vprintk(fmt, args);
     va_end(args);
     //warn_rcu_exit(rcu);
+}
+
+/**
+ * print_tainted - return a string to represent the kernel taint state.
+ *
+ * For individual taint flag meanings, see Documentation/admin-guide/sysctl/kernel.rst
+ *
+ * The string is overwritten by the next call to print_tainted(),
+ * but is always NULL terminated.
+ */
+const char *print_tainted(void)
+{
+    //return _print_tainted(false);
+    return "[No impl.]";
 }

@@ -72,7 +72,7 @@ fn main() {
 
     println!("wait for one second ..");
     // Let's fly for a while and jbd2 may write journal.
-    std::thread::sleep(std::time::Duration::new(10, 0));
+    std::thread::sleep(std::time::Duration::new(1, 0));
 
     println!("fstest ok!");
 }
