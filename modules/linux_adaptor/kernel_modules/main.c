@@ -38,24 +38,9 @@ extern int cl_journal_init(void);
 extern int cl_ext4_init_fs(void);
 
 extern void cl_invoke_softirq(void);
+extern void cl_blk_timeout_init(void);
 
 extern void test_block(void);
-
-#if 0
-extern int cl_ext2_fs_init(void);
-
-extern int cl_read(struct inode *inode, void *buf, size_t count, loff_t *pos);
-
-/* Stuff needed by irq-sifive-plic */
-unsigned long boot_cpu_hartid;
-
-extern struct dentry *call_mount(const char *name);
-extern int lookup(struct file *dir, const char *target, u64 *ret_ino);
-
-extern ssize_t new_sync_read(struct file *filp, char *buf, size_t len, loff_t *ppos);
-static void test_ext2(void);
-#endif
-
 extern void test_ext4();
 
 int clinux_starting = 0;
@@ -69,6 +54,8 @@ int clinux_init(void)
 
     random_init_early("");
     vfs_caches_init_early();
+
+    cl_blk_timeout_init();
 
     cl_crc32_mod_init();
     cl_crc32c_mod_init();
