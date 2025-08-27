@@ -323,7 +323,7 @@ static inline void __forward_timer_base(struct timer_base *base,
             return;
         base->clk = base->next_expiry;
     }
-    printk("%s: basej(%lu) timer(%lu)\n", __func__, basej, base->clk);
+    pr_debug("%s: basej(%lu) timer(%lu)\n", __func__, basej, base->clk);
 
 }
 
@@ -437,7 +437,7 @@ trigger_dyntick_cpu(struct timer_base *base, struct timer_list *timer)
 static void enqueue_timer(struct timer_base *base, struct timer_list *timer,
               unsigned int idx, unsigned long bucket_expiry)
 {
-    printk("%s: ...\n", __func__);
+    pr_debug("%s: ...\n", __func__);
     hlist_add_head(&timer->entry, base->vectors + idx);
     __set_bit(idx, base->pending_map);
     timer_set_idx(timer, idx);
@@ -933,7 +933,6 @@ static void process_timeout(struct timer_list *t)
 {
     struct process_timer *timeout = from_timer(timeout, t, timer);
 
-    printk("%s: step1\n", __func__);
     wake_up_process(timeout->task);
 }
 
@@ -973,7 +972,7 @@ signed long __sched schedule_timeout(signed long timeout)
     struct process_timer timer;
     unsigned long expire;
 
-    pr_err("%s: =================> timeout(%ld)", __func__, timeout);
+    pr_debug("%s: =================> timeout(%ld)", __func__, timeout);
     switch (timeout)
     {
     case MAX_SCHEDULE_TIMEOUT:
@@ -1008,9 +1007,7 @@ signed long __sched schedule_timeout(signed long timeout)
     timer.task = current;
     timer_setup_on_stack(&timer.timer, process_timeout, 0);
     __mod_timer(&timer.timer, expire, MOD_TIMER_NOTPENDING);
-    printk("=========> %s: step1\n", __func__);
     schedule();
-    printk("=========> %s: step2\n", __func__);
     del_timer_sync(&timer.timer);
 
     /* Remove the timer from the object tracker */
@@ -1019,7 +1016,6 @@ signed long __sched schedule_timeout(signed long timeout)
     timeout = expire - jiffies;
 
  out:
-    printk("=========> %s: step3 timeout(%ld)\n", __func__, timeout);
     return timeout < 0 ? 0 : timeout;
 }
 
@@ -1291,7 +1287,7 @@ static inline void __run_timers(struct timer_base *base)
     while (time_after_eq(jiffies, base->clk) &&
            time_after_eq(jiffies, base->next_expiry)) {
         levels = collect_expired_timers(base, heads);
-        printk("%s: levels(%u)\n", __func__, levels);
+        pr_debug("%s: levels(%u)\n", __func__, levels);
         /*
          * The two possible reasons for not finding any expired
          * timer at this clk are that all matching timers have been
@@ -1315,8 +1311,8 @@ static inline void __run_timers(struct timer_base *base)
 
 static void __run_timer_base(struct timer_base *base)
 {
-    printk("%s: jiffies(%lu) next_expiry(%lu)\n",
-           __func__, jiffies, base->next_expiry);
+    pr_debug("%s: jiffies(%lu) next_expiry(%lu)\n",
+             __func__, jiffies, base->next_expiry);
 
     /* Can race against a remote CPU updating next_expiry under the lock */
     if (time_before(jiffies, READ_ONCE(base->next_expiry)))
@@ -1394,8 +1390,8 @@ static void run_local_timers(void)
          * Possible remote writers are using WRITE_ONCE(). Local reader
          * uses therefore READ_ONCE().
          */
-        printk("%s: jiffies(%lu) next_expiry(%lu)\n",
-               __func__, jiffies, READ_ONCE(base->next_expiry));
+        pr_debug("%s: jiffies(%lu) next_expiry(%lu)\n",
+                 __func__, jiffies, READ_ONCE(base->next_expiry));
 
         if (time_after_eq(jiffies, READ_ONCE(base->next_expiry)) ||
             (i == BASE_DEF && tmigr_requires_handle_remote())) {

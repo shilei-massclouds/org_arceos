@@ -78,7 +78,7 @@ static struct fs_context *alloc_fs_context(struct file_system_type *fs_type,
 
     switch (purpose) {
     case FS_CONTEXT_FOR_MOUNT:
-        pr_err("%s: No user_ns.", __func__);
+        pr_notice("%s: No user_ns.", __func__);
         //fc->user_ns = get_user_ns(fc->cred->user_ns);
         break;
     case FS_CONTEXT_FOR_SUBMOUNT:
@@ -152,7 +152,7 @@ void put_fs_context(struct fs_context *fc)
     if (fc->need_free && fc->ops && fc->ops->free)
         fc->ops->free(fc);
 
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 #if 0
     security_free_mnt_opts(&fc->security);
     put_net(fc->net_ns);

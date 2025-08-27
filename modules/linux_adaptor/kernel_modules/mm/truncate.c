@@ -102,11 +102,9 @@ static void truncate_cleanup_folio(struct folio *folio)
     if (folio_mapped(folio))
         unmap_mapping_folio(folio);
 
-    printk("%s: ======== step1 (%lx)\n", __func__, folio->mapping);
     if (folio_needs_release(folio))
         folio_invalidate(folio, 0, folio_size(folio));
 
-    printk("%s: ======== step2\n", __func__);
     /*
      * Some filesystems seem to re-dirty the page even after
      * the VM has canceled the dirty bit (eg ext3 journaling).
@@ -192,14 +190,11 @@ void truncate_inode_pages_range(struct address_space *mapping,
 
     folio_batch_init(&fbatch);
     index = start;
-    printk("%s: ======== step0\n", __func__);
     while (index < end && find_lock_entries(mapping, &index, end - 1,
             &fbatch, indices)) {
         truncate_folio_batch_exceptionals(mapping, &fbatch, indices);
-    printk("%s: ======== step1\n", __func__);
         for (i = 0; i < folio_batch_count(&fbatch); i++)
             truncate_cleanup_folio(fbatch.folios[i]);
-    printk("%s: ======== step2\n", __func__);
         delete_from_page_cache_batch(mapping, &fbatch);
         for (i = 0; i < folio_batch_count(&fbatch); i++)
             folio_unlock(fbatch.folios[i]);
@@ -280,10 +275,8 @@ void truncate_inode_pages_range(struct address_space *mapping,
  */
 void folio_invalidate(struct folio *folio, size_t offset, size_t length)
 {
-    printk("%s: ======== step0 (%lx)\n", __func__, folio->mapping);
     const struct address_space_operations *aops = folio->mapping->a_ops;
 
-    printk("%s: ======== step1\n", __func__);
     if (aops->invalidate_folio)
         aops->invalidate_folio(folio, offset, length);
 }

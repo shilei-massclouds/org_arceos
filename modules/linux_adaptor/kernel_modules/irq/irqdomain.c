@@ -116,7 +116,7 @@ static int alloc_fwnode_name(struct irq_domain *domain, const struct fwnode_hand
     const char *suf = suffix ? : "";
     char *name;
 
-    pr_err("%s: Note: restore old NAME\n", __func__);
+    pr_notice("%s: Note: restore old NAME\n", __func__);
     if (bus_token == DOMAIN_BUS_ANY)
         //name = kasprintf(GFP_KERNEL, "%pfw%s%s", fwnode, sep, suf);
         name = kasprintf(GFP_KERNEL, "%lx%s%s", fwnode, sep, suf);

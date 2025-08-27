@@ -184,7 +184,6 @@ int __filemap_fdatawrite_range(struct address_space *mapping, loff_t start,
         .range_end = end,
     };
 
-    printk("%s: step1 sync_mode(%d)\n", __func__, sync_mode);
     return filemap_fdatawrite_wbc(mapping, &wbc);
 }
 
@@ -203,17 +202,13 @@ int filemap_fdatawrite_wbc(struct address_space *mapping,
 {
     int ret;
 
-    printk("%s: step0\n", __func__);
     if (!mapping_can_writeback(mapping) ||
         !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
         return 0;
 
-    printk("%s: step1\n", __func__);
     wbc_attach_fdatawrite_inode(wbc, mapping->host);
     ret = do_writepages(mapping, wbc);
-    printk("%s: step2\n", __func__);
     wbc_detach_inode(wbc);
-    printk("%s: step3\n", __func__);
     return ret;
 }
 
@@ -1109,7 +1104,7 @@ bool filemap_release_folio(struct folio *folio, gfp_t gfp)
 static void filemap_unaccount_folio(struct address_space *mapping,
         struct folio *folio)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /*
@@ -1282,7 +1277,6 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
     size_t count = iov_iter_count(iter);
     ssize_t retval = 0;
 
-    printk("%s: step1\n", __func__);
     if (!count)
         return 0; /* skip atime */
 
@@ -1530,7 +1524,6 @@ ssize_t filemap_read(struct kiocb *iocb, struct iov_iter *iter,
     loff_t isize, end_offset;
     loff_t last_pos = ra->prev_pos;
 
-    printk("%s: step1\n", __func__);
     if (unlikely(iocb->ki_pos >= inode->i_sb->s_maxbytes))
         return 0;
     if (unlikely(!iov_iter_count(iter)))
@@ -1604,14 +1597,12 @@ ssize_t filemap_read(struct kiocb *iocb, struct iov_iter *iter,
             if (writably_mapped)
                 flush_dcache_folio(folio);
 
-    printk("%s: step2 offset(%u) bytes(%u)\n", __func__, offset, bytes);
             copied = copy_folio_to_iter(folio, offset, bytes, iter);
 
             already_read += copied;
             iocb->ki_pos += copied;
             last_pos = iocb->ki_pos;
 
-    printk("%s: step3 copied(%u) bytes(%u)\n", __func__, copied, bytes);
             if (copied < bytes) {
                 error = -EFAULT;
                 break;
@@ -1625,7 +1616,6 @@ put_folios:
 
     file_accessed(filp);
     ra->prev_pos = last_pos;
-    printk("%s: stepN already_read(%u)\n", __func__, already_read);
     return already_read ? already_read : error;
 }
 
@@ -1692,7 +1682,6 @@ retry:
         }
         cond_resched();
 
-    printk("%s: step3\n", __func__);
         if (unlikely(status == 0)) {
             /*
              * A short copy made ->write_end() reject the
@@ -1748,7 +1737,6 @@ int file_check_and_advance_wb_err(struct file *file)
     errseq_t old = READ_ONCE(file->f_wb_err);
     struct address_space *mapping = file->f_mapping;
 
-    printk("%s: step1\n", __func__);
     /* Locklessly handle the common case where nothing has changed */
     if (errseq_check(&mapping->wb_err, old)) {
         /* Something changed, must use slow path */
@@ -1794,7 +1782,6 @@ int file_write_and_wait_range(struct file *file, loff_t lstart, loff_t lend)
     if (lend < lstart)
         return 0;
 
-    printk("%s: step1\n", __func__);
     if (mapping_needs_writeback(mapping)) {
         err = __filemap_fdatawrite_range(mapping, lstart, lend,
                          WB_SYNC_ALL);
@@ -1802,9 +1789,7 @@ int file_write_and_wait_range(struct file *file, loff_t lstart, loff_t lend)
         if (err != -EIO)
             __filemap_fdatawait_range(mapping, lstart, lend);
     }
-    printk("%s: step2\n", __func__);
     err2 = file_check_and_advance_wb_err(file);
-    printk("%s: step3\n", __func__);
     if (!err)
         err = err2;
     return err;
@@ -1883,7 +1868,6 @@ void folio_end_writeback(struct folio *folio)
 {
     VM_BUG_ON_FOLIO(!folio_test_writeback(folio), folio);
 
-    printk("%s: step1\n", __func__);
     /*
      * folio_test_clear_reclaim() could be used here but it is an
      * atomic operation and overkill in this particular case. Failing

@@ -77,7 +77,6 @@ pub(crate) fn check_interruptible() {
     */
 
     for tid in tid_array {
-        error!("try to wake tid: {}", tid);
         crate::__wake_up(tid);
     }
 }
@@ -328,7 +327,7 @@ impl<G: BaseGuard> CurrentRunQueueRef<'_, G> {
     /// Now it's only useful under the feature [linux adaptor].
     pub fn __resched(&mut self, interruptible: bool) {
         let curr = &self.current_task;
-        error!("task resched: {}", curr.id_name());
+        trace!("task resched: {}", curr.id_name());
         curr.set_state(TaskState::Blocked);
         if interruptible {
             LINUX_INTERRUPTIBLE_TASKS.lock().insert(curr.id().as_u64(), curr.clone());
@@ -350,7 +349,7 @@ impl<G: BaseGuard> CurrentRunQueueRef<'_, G> {
             self.inner
                 .put_task_with_state(task, TaskState::Blocked, true);
         } else {
-            error!("No task which id is {}.", tid);
+            debug!("No task which id is {}.", tid);
         }
     }
 

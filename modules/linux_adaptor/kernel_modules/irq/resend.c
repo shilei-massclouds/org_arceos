@@ -14,6 +14,6 @@ void irq_resend_init(struct irq_desc *desc)
  */
 int check_irq_resend(struct irq_desc *desc, bool inject)
 {
-    pr_err("%s: No impl.\n", __func__);
+    pr_notice("%s: No impl.\n", __func__);
     return 0;
 }

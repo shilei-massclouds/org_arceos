@@ -524,10 +524,10 @@ impl CurrentTask {
         if next.private() != 0 {
             // Note: just for linux-adaptor.
             axhal::arch::write_thread_pointer(next.private() as usize);
-            error!("========================== ArceOS-Thread({}) kthread({:x})",
+            trace!("========================== ArceOS-Thread({}) kthread({:x})",
                 next.id_name(), next.private());
         } else {
-            error!("Next: {}", next.id_name());
+            trace!("Next: {}", next.id_name());
         }
 
         let ptr = Arc::into_raw(next);
@@ -557,6 +557,6 @@ extern "C" fn task_entry() -> ! {
     if let Some(entry) = task.entry {
         unsafe { Box::from_raw(entry)() };
     }
-    error!("Just exit ..");
+    trace!("Just exit ..");
     crate::exit(0);
 }

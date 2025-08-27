@@ -6162,7 +6162,6 @@ ext4_fsblk_t ext4_mb_new_blocks(handle_t *handle,
 		 * there is enough free blocks to do block allocation
 		 * and verify allocation doesn't exceed the quota limits.
 		 */
-    printk("%s: step1 ar->len(%u)\n", __func__, ar->len);
 		while (ar->len &&
 			ext4_claim_free_clusters(sbi, ar->len, ar->flags)) {
 
@@ -6171,9 +6170,7 @@ ext4_fsblk_t ext4_mb_new_blocks(handle_t *handle,
 			ar->len = ar->len >> 1;
 		}
 		if (!ar->len) {
-    printk("%s: step1.1\n", __func__);
 			ext4_mb_show_pa(sb);
-    printk("%s: step2\n", __func__);
 			*errp = -ENOSPC;
 			return 0;
 		}

@@ -223,7 +223,7 @@ pub fn run_idle() -> ! {
     loop {
         check_interruptible();
         yield_now();
-        error!("idle task: waiting for IRQs...");
+        trace!("idle task: waiting for IRQs...");
         #[cfg(feature = "irq")]
         axhal::arch::wait_for_irqs();
 

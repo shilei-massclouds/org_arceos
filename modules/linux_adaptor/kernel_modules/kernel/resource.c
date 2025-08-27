@@ -35,7 +35,6 @@ __devm_request_region(struct device *dev, struct resource *parent,
     struct region_devres *dr = NULL;
     struct resource *res;
 
-    printk("%s: parent(%lx) range(%lx - %lx): %s\n", __func__, parent, start, n, name);
     dr = devres_alloc(devm_region_release, sizeof(struct region_devres),
               GFP_KERNEL);
     if (!dr)
@@ -46,12 +45,10 @@ __devm_request_region(struct device *dev, struct resource *parent,
     dr->n = n;
 
     res = __request_region(parent, start, n, name, 0);
-#if 0
     if (res)
         devres_add(dev, dr);
     else
         devres_free(dr);
-#endif
 
     return res;
 }

@@ -49,6 +49,6 @@ struct mb_cache {
  */
 struct mb_cache *mb_cache_create(int bucket_bits)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return kmalloc(sizeof(struct mb_cache), 0);
 }

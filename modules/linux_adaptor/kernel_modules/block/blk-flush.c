@@ -215,7 +215,7 @@ static void blk_kick_flush(struct request_queue *q, struct blk_flush_queue *fq,
     list_add_tail(&flush_rq->queuelist, &q->flush_list);
     spin_unlock(&q->requeue_lock);
 
-    printk("%s: \n", __func__);
+    pr_debug("%s: \n", __func__);
     blk_mq_kick_requeue_list(q);
 }
 
@@ -249,7 +249,7 @@ static void blk_flush_complete_seq(struct request *rq,
     else
         seq = REQ_FSEQ_DONE;
 
-    printk("%s: seq(%u)\n", __func__, seq);
+    pr_debug("%s: seq(%u)\n", __func__, seq);
     switch (seq) {
     case REQ_FSEQ_PREFLUSH:
     case REQ_FSEQ_POSTFLUSH:
@@ -257,7 +257,6 @@ static void blk_flush_complete_seq(struct request *rq,
         if (list_empty(pending))
             fq->flush_pending_since = jiffies;
         list_add_tail(&rq->queuelist, pending);
-        printk("%s: REQ_FSEQ_POSTFLUSH(%u)\n", __func__, REQ_FSEQ_POSTFLUSH);
         break;
 
     case REQ_FSEQ_DATA:
@@ -265,7 +264,6 @@ static void blk_flush_complete_seq(struct request *rq,
         spin_lock(&q->requeue_lock);
         list_move(&rq->queuelist, &q->requeue_list);
         spin_unlock(&q->requeue_lock);
-        printk("%s: REQ_FSEQ_DATA\n", __func__);
         blk_mq_kick_requeue_list(q);
         break;
 
@@ -277,7 +275,6 @@ static void blk_flush_complete_seq(struct request *rq,
          * normal completion and end it.
          */
         list_del_init(&rq->queuelist);
-        printk("%s: REQ_FSEQ_DONE\n", __func__);
         blk_flush_restore_request(rq);
         blk_mq_end_request(rq, error);
         break;
@@ -314,12 +311,11 @@ static enum rq_end_io_ret mq_flush_data_end_io(struct request *rq,
      * re-initialize rq->queuelist before reusing it here.
      */
     INIT_LIST_HEAD(&rq->queuelist);
-    printk("%s: ...\n", __func__);
+    pr_debug("%s: ...\n", __func__);
     blk_flush_complete_seq(rq, fq, REQ_FSEQ_DATA, error);
     spin_unlock_irqrestore(&fq->mq_flush_lock, flags);
 
     blk_mq_sched_restart(hctx);
-    printk("%s: ok!\n", __func__);
     return RQ_END_IO_NONE;
 }
 
@@ -329,7 +325,6 @@ static void blk_rq_init_flush(struct request *rq)
     rq->rq_flags |= RQF_FLUSH_SEQ;
     rq->flush.saved_end_io = rq->end_io; /* Usually NULL */
     rq->end_io = mq_flush_data_end_io;
-    printk("%s: saved_end_io(%lx)\n", __func__, rq->flush.saved_end_io);
 }
 
 /*
@@ -375,7 +370,7 @@ bool blk_insert_flush(struct request *rq)
      */
     rq->cmd_flags |= REQ_SYNC;
 
-    printk("%s: policy(%u)\n", __func__, policy);
+    pr_debug("%s: policy(%u)\n", __func__, policy);
     switch (policy) {
     case 0:
         /*
@@ -394,7 +389,6 @@ bool blk_insert_flush(struct request *rq)
          */
         return false;
     case REQ_FSEQ_DATA | REQ_FSEQ_POSTFLUSH:
-        printk("%s: REQ_FSEQ_DATA | REQ_FSEQ_POSTFLUSH\n", __func__);
         /*
          * Initialize the flush fields and completion handler to trigger
          * the post flush, and then just pass the command on.
@@ -429,7 +423,7 @@ int blkdev_issue_flush(struct block_device *bdev)
 {
     struct bio bio;
 
-    printk("%s: step1\n", __func__);
+    pr_debug("%s: ..\n", __func__);
     bio_init(&bio, bdev, NULL, 0, REQ_OP_WRITE | REQ_PREFLUSH);
     return submit_bio_wait(&bio);
 }

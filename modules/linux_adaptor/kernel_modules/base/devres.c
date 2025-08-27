@@ -162,7 +162,7 @@ static void devres_log(struct device *dev, struct devres_node *node,
 {
     //trace_devres_log(dev, op, node, node->name, node->size);
     //devres_dbg(dev, node, op);
-    pr_err("DEVRES %3s %p %s (%zu bytes)\n", op, node, node->name, node->size);
+    pr_notice("DEVRES %3s %p %s (%zu bytes)\n", op, node, node->name, node->size);
 }
 
 static void add_dr(struct device *dev, struct devres_node *node)

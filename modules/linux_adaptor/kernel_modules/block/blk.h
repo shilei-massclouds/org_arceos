@@ -677,7 +677,7 @@ static inline u64 blk_time_get_ns(void)
 	}
 	return plug->cur_ktime;
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 0;
 }
 

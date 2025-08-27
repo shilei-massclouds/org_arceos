@@ -1211,23 +1211,6 @@ static void __end_buffer_read_notouch(struct buffer_head *bh, int uptodate)
     unlock_buffer(bh);
 }
 
-/*
- * Default synchronous end-of-IO handler..  Just mark it up-to-date and
- * unlock the buffer. This is what ll_rw_block uses too.
- */
-void end_buffer_read_sync(struct buffer_head *bh, int uptodate)
-{
-    printk("%s: ...\n", __func__);
-    __end_buffer_read_notouch(bh, uptodate);
-    put_bh(bh);
-}
-
-void invalidate_bh_lrus(void)
-{
-    log_error("%s: No impl.\n", __func__);
-    //on_each_cpu_cond(has_bh_in_lru, invalidate_bh_lru, NULL, 1);
-}
-
 static void discard_buffer(struct buffer_head * bh)
 {
     unsigned long b_state, b_state_old;

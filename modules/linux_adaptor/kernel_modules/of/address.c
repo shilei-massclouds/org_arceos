@@ -5,7 +5,7 @@
 static int __of_address_to_resource(struct device_node *dev, int index, int bar_no,
         struct resource *r)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 
     if (dev && dev->name && !strcmp(dev->name, "plic")) {
         r->start = 0xc000000;
@@ -50,9 +50,8 @@ void __iomem *of_iomap(struct device_node *np, int index)
     if (of_address_to_resource(np, index, &res))
         return NULL;
 
-    printk("%s: (%s) res [%lx,%lx](%lx)\n", __func__, np->name, res.start, res.end, res.flags);
+    pr_debug("%s: (%s) res [%lx,%lx](%lx)\n", __func__, np->name, res.start, res.end, res.flags);
 
     ret = __va(res.start);
-    printk("%s: (0x%lx)\n", __func__, (unsigned long)ret);
     return ret;
 }

@@ -323,7 +323,7 @@ void __init files_maxfiles_init(void)
 
     files_stat.max_files = max_t(unsigned long, n, NR_FILE);
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /* Find an unused file structure and return a pointer to it.

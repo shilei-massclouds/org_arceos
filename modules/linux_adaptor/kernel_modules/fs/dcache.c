@@ -1034,10 +1034,8 @@ void dput(struct dentry *dentry)
     while (lock_for_kill(dentry)) {
         rcu_read_unlock();
         dentry = __dentry_kill(dentry);
-        printk("%s: step1\n", __func__);
         if (!dentry)
             return;
-        printk("%s: step2\n", __func__);
         if (retain_dentry(dentry, true)) {
             spin_unlock(&dentry->d_lock);
             return;
@@ -1320,7 +1318,6 @@ struct dentry *d_splice_alias(struct inode *inode, struct dentry *dentry)
 
     BUG_ON(!d_unhashed(dentry));
 
-    printk("%s: step1\n", __func__);
     if (!inode)
         goto out;
 

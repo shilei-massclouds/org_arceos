@@ -18,7 +18,7 @@ unsigned long __per_cpu_offset[NR_CPUS] __read_mostly;
 
 void __init setup_per_cpu_areas(void)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_err("%s: !!!IMPORTANT!!! No impl.", __func__);
 }
 
 #endif

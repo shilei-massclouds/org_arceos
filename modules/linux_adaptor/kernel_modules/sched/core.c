@@ -156,8 +156,8 @@ int wake_up_process(struct task_struct *p)
 
 asmlinkage __visible void __sched schedule(void)
 {
-    printk("%s: current(0x%lx) state(%u)\n",
-           __func__, current, READ_ONCE(current->__state));
+    pr_debug("%s: current(0x%lx) state(%u)\n",
+             __func__, current, READ_ONCE(current->__state));
 
     cl_resched(READ_ONCE(current->__state));
 }
@@ -174,8 +174,8 @@ int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
     if (p == NULL) {
         PANIC("bad task pointer.");
     }
-    printk("%s: task_ptr(%lx:%u) tid(%lu) current(%lx:%u)\n",
-           __func__, p, p->__state, p->pid, current, current->__state);
+    pr_debug("%s: task_ptr(%lx:%u) tid(%lu) current(%lx:%u)\n",
+             __func__, p, p->__state, p->pid, current, current->__state);
     if (p == current) {
         ttwu_do_wakeup(p);
         return 0;

@@ -89,9 +89,8 @@ struct vfsmount *vfs_kern_mount(struct file_system_type *type,
     else
         mnt = ERR_PTR(ret);
 
-    printk("%s: name: %s, ret: %d\n", __func__, name, ret);
     put_fs_context(fc);
-    printk("%s: ok\n", __func__);
+    pr_debug("%s: name: %s, ret: %d\n", __func__, name, ret);
     return mnt;
 }
 
@@ -612,7 +611,7 @@ void dissolve_on_fput(struct vfsmount *mnt)
  */
 bool __is_local_mountpoint(struct dentry *dentry)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return false;
 }
 
@@ -623,7 +622,7 @@ void __init mnt_init(void)
     mnt_cache = kmem_cache_create("mnt_cache", sizeof(struct mount),
             0, SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT, NULL);
 
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 #if 0
     mount_hashtable = alloc_large_system_hash("Mount-cache",
                 sizeof(struct hlist_head),

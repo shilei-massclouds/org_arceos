@@ -28,18 +28,18 @@
 
 ktime_t ktime_get(void)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 0;
 }
 
 void ktime_get_coarse_real_ts64(struct timespec64 *ts)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 ktime_t ktime_get_with_offset(enum tk_offsets offs)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 0;
 }
 

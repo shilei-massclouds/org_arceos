@@ -21,13 +21,13 @@ struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...)
     if (!shrinker)
         return NULL;
 
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return shrinker;
 }
 
 void set_shrinker_bit(struct mem_cgroup *memcg, int nid, int shrinker_id)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 void shrinker_register(struct shrinker *shrinker)
@@ -60,5 +60,5 @@ void shrinker_free(struct shrinker *shrinker)
     if (!shrinker)
         return;
 
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }

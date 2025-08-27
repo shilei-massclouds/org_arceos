@@ -103,7 +103,6 @@ int clinux_init(void)
         if (handle_arch_irq == NULL) {
             PANIC("No handle_arch_irq.");
         }
-        printk("%s: handle_arch_irq(%lx)\n", __func__, handle_arch_irq);
     }
 
     clinux_started = 1;
@@ -154,8 +153,8 @@ void call_handle_arch_irq(unsigned long cause)
 // Refer to "__irq_exit_rcu" in [softirq.c]
 void cl_handle_softirq(unsigned long irqnum)
 {
-    printk("%s: irqnum(%u) clinux starting(%d)\n",
-           __func__, irqnum, clinux_starting);
+    pr_debug("%s: irqnum(%u) clinux starting(%d)\n",
+             __func__, irqnum, clinux_starting);
     if (clinux_started == 0) {
         return;
     }

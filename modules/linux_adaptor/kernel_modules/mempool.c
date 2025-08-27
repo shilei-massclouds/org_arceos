@@ -177,40 +177,6 @@ void mempool_destroy(mempool_t *pool)
 }
 EXPORT_SYMBOL(mempool_destroy);
 
-int mempool_init_node(mempool_t *pool, int min_nr, mempool_alloc_t *alloc_fn,
-		      mempool_free_t *free_fn, void *pool_data,
-		      gfp_t gfp_mask, int node_id)
-{
-	spin_lock_init(&pool->lock);
-	pool->min_nr	= min_nr;
-	pool->pool_data = pool_data;
-	pool->alloc	= alloc_fn;
-	pool->free	= free_fn;
-	init_waitqueue_head(&pool->wait);
-
-	pool->elements = kmalloc_array_node(min_nr, sizeof(void *),
-					    gfp_mask, node_id);
-	if (!pool->elements)
-		return -ENOMEM;
-
-	/*
-	 * First pre-allocate the guaranteed number of buffers.
-	 */
-	while (pool->curr_nr < pool->min_nr) {
-		void *element;
-
-		element = pool->alloc(gfp_mask, pool->pool_data);
-		if (unlikely(!element)) {
-			mempool_exit(pool);
-			return -ENOMEM;
-		}
-		add_element(pool, element);
-	}
-
-	return 0;
-}
-EXPORT_SYMBOL(mempool_init_node);
-
 /**
  * mempool_init - initialize a memory pool
  * @pool:      pointer to the memory pool that should be initialized

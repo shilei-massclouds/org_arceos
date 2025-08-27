@@ -476,7 +476,7 @@ int of_phandle_iterator_args(struct of_phandle_iterator *it,
  */
 struct device_node *of_find_node_by_phandle(phandle handle)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 
     if (handle >= OF_PHANDLE_CACHE_SZ) {
         PANIC("Too big 'handle'.");

@@ -887,7 +887,7 @@ static struct worker_pool *get_work_pool(struct work_struct *work)
 		return work_struct_pwq(data)->pool;
 
 	pool_id = data >> WORK_OFFQ_POOL_SHIFT;
-    printk("%s: 1 pool_id(%u)\n", __func__, pool_id);
+    pr_debug("%s: pool_id(%u)\n", __func__, pool_id);
 	if (pool_id == WORK_OFFQ_POOL_NONE)
 		return NULL;
 
@@ -2585,9 +2585,7 @@ bool mod_delayed_work_on(int cpu, struct workqueue_struct *wq,
 	unsigned long irq_flags;
 	bool ret;
 
-    printk("%s: 1\n", __func__);
 	ret = work_grab_pending(&dwork->work, WORK_CANCEL_DELAYED, &irq_flags);
-    printk("%s: 2\n", __func__);
 
 	if (!clear_pending_if_disabled(&dwork->work))
 		__queue_delayed_work(cpu, wq, dwork, delay);
@@ -7874,7 +7872,6 @@ void __init workqueue_init(void)
 	struct worker_pool *pool;
 	int cpu, bkt;
 
-    printk("%s: ...\n", __func__);
 	wq_cpu_intensive_thresh_init();
 
 	mutex_lock(&wq_pool_mutex);
@@ -7920,7 +7917,6 @@ void __init workqueue_init(void)
 
 	wq_online = true;
 	wq_watchdog_init();
-    printk("%s: OK!\n", __func__);
 }
 
 /*

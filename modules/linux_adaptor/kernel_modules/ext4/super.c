@@ -4030,7 +4030,7 @@ int ext4_register_li_request(struct super_block *sb,
 	 */
 	elr = NULL;
 
-    pr_err("%s: No impl for EXT4_LAZYINIT_RUNNING.", __func__);
+    pr_notice("%s: No impl for EXT4_LAZYINIT_RUNNING.", __func__);
 #if 0
 	if (!(ext4_li_info->li_state & EXT4_LAZYINIT_RUNNING)) {
 		ret = ext4_run_lazyinit_thread();
@@ -6213,9 +6213,7 @@ static int ext4_commit_super(struct super_block *sb)
 	sbh->b_end_io = end_buffer_write_sync;
 	submit_bh(REQ_OP_WRITE | REQ_SYNC |
 		  (test_opt(sb, BARRIER) ? REQ_FUA : 0), sbh);
-    printk("%s: ============== wait on buffer ...\n", __func__);
 	wait_on_buffer(sbh);
-    printk("%s: ============== got buffer\n", __func__);
 	if (buffer_write_io_error(sbh)) {
 		ext4_msg(sb, KERN_ERR, "I/O error while writing "
 		       "superblock");

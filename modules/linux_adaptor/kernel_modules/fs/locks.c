@@ -46,7 +46,7 @@ int __break_lease(struct inode *inode, unsigned int mode, unsigned int type)
  */
 void locks_remove_posix(struct file *filp, fl_owner_t owner)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /*
@@ -54,5 +54,5 @@ void locks_remove_posix(struct file *filp, fl_owner_t owner)
  */
 void locks_remove_file(struct file *filp)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }

@@ -67,7 +67,7 @@ int __cpuhp_state_add_instance(enum cpuhp_state state, struct hlist_node *node,
     cpus_read_unlock();
     return ret;
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 int __cpuhp_setup_state(enum cpuhp_state state,
@@ -76,7 +76,7 @@ int __cpuhp_setup_state(enum cpuhp_state state,
             int (*teardown)(unsigned int cpu),
             bool multi_instance)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 
     if (startup) {
         startup(0);

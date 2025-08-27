@@ -67,14 +67,14 @@ struct irq_data *irq_get_irq_data(unsigned int irq)
 
 void irq_modify_status(unsigned int irq, unsigned long clr, unsigned long set)
 {
-    pr_err("%s: No impl.\n", __func__);
+    pr_notice("%s: No impl.\n", __func__);
 }
 
 static void
 __irq_do_set_handler(struct irq_desc *desc, irq_flow_handler_t handle,
              int is_chained, const char *name)
 {
-    pr_err("%s: No impl.\n", __func__);
+    pr_notice("%s: No impl.\n", __func__);
     if (!handle) {
         PANIC("No handle.");
     }
@@ -128,7 +128,7 @@ int irq_set_handler_data(unsigned int irq, void *data)
  */
 int irq_chip_pm_get(struct irq_data *data)
 {
-    pr_err("%s: No impl.\n", __func__);
+    pr_notice("%s: No impl.\n", __func__);
     return 0;
 #if 0
     struct device *dev = irq_get_pm_device(data);
@@ -152,7 +152,7 @@ int irq_chip_pm_get(struct irq_data *data)
  */
 int irq_chip_pm_put(struct irq_data *data)
 {
-    pr_err("%s: No impl.\n", __func__);
+    pr_notice("%s: No impl.\n", __func__);
     return 0;
 #if 0
     struct device *dev = irq_get_pm_device(data);
@@ -214,7 +214,7 @@ int irq_startup(struct irq_desc *desc, bool resend, bool force)
  */
 int irq_setup_affinity(struct irq_desc *desc)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 0;
 }
 #endif
@@ -295,7 +295,7 @@ static bool irq_may_run(struct irq_desc *desc)
     if (!irqd_has_set(&desc->irq_data, mask))
         return true;
 
-    pr_err("%s: No impl for irq_pm_check_wakeup.", __func__);
+    pr_notice("%s: No impl for irq_pm_check_wakeup.", __func__);
 #if 0
     /*
      * If the interrupt is an armed wakeup source, mark it pending

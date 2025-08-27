@@ -624,8 +624,6 @@ int setup_bdev_super(struct super_block *sb, int sb_flags,
     struct file *bdev_file;
     blk_mode_t mode = sb_open_mode(sb_flags);
 
-    printk("%s: bdev(%x)\n", __func__, sb->s_dev);
-
     bdev_file = bdev_file_open_by_dev(sb->s_dev, mode, sb, &fs_holder_ops);
     if (IS_ERR(bdev_file)) {
         if (fc)

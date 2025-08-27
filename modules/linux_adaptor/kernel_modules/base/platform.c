@@ -135,8 +135,7 @@ int __platform_driver_register(struct platform_driver *drv,
     int ret;
     static struct platform_device *ppdev;
 
-    pr_err("%s: No impl.", __func__);
-    printk("%s: name(%s)\n", __func__, drv->driver.name);
+    pr_debug("%s: name(%s)\n", __func__, drv->driver.name);
     if (!drv || !drv->driver.name) {
         PANIC("Bad driver.");
     }
@@ -183,7 +182,6 @@ devm_platform_get_and_ioremap_resource(struct platform_device *pdev,
     r = platform_get_resource(pdev, IORESOURCE_MEM, index);
     if (res)
         *res = r;
-    printk("%s: ...\n", __func__);
     return devm_ioremap_resource(&pdev->dev, r);
 }
 
@@ -217,7 +215,6 @@ struct resource *platform_get_resource(struct platform_device *dev,
 {
     u32 i;
 
-    printk("%s: num_resources(%u)\n", __func__, dev->num_resources);
     for (i = 0; i < dev->num_resources; i++) {
         struct resource *r = &dev->resource[i];
 

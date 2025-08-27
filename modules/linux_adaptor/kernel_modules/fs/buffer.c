@@ -143,7 +143,6 @@ void __brelse(struct buffer_head *bh)
  */
 void end_buffer_read_sync(struct buffer_head *bh, int uptodate)
 {
-    printk("%s: step1\n", __func__);
     __end_buffer_read_notouch(bh, uptodate);
     put_bh(bh);
 }
@@ -785,7 +784,7 @@ static void invalidate_bh_lru(void *arg)
 
 void invalidate_bh_lrus(void)
 {
-    pr_err("%s: No impl\n", __func__);
+    pr_notice("%s: No impl\n", __func__);
     //on_each_cpu_cond(has_bh_in_lru, invalidate_bh_lru, NULL, 1);
 }
 
@@ -1269,7 +1268,7 @@ void mark_buffer_write_io_error(struct buffer_head *bh)
 
 void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
 {
-    printk("%s: step1 uptodate(%d) bio_list(%lx)\n", __func__, uptodate, current->bio_list);
+    pr_debug("%s: uptodate(%d) bio_list(%lx)\n", __func__, uptodate, current->bio_list);
     if (uptodate) {
         set_buffer_uptodate(bh);
     } else {
@@ -1277,11 +1276,8 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
         mark_buffer_write_io_error(bh);
         clear_buffer_uptodate(bh);
     }
-    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
     unlock_buffer(bh);
-    printk("%s: step3 bio_list(%lx)\n", __func__, current->bio_list);
     put_bh(bh);
-    printk("%s: stepN bio_list(%lx)\n", __func__, current->bio_list);
 }
 
 static void __block_commit_write(struct folio *folio, size_t from, size_t to)

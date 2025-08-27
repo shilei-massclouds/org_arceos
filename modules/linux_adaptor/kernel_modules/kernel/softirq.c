@@ -238,7 +238,7 @@ void raise_softirq(unsigned int nr)
 {
     unsigned long flags;
 
-    printk("%s: ...\n", __func__);
+    pr_debug("%s: ...\n", __func__);
     local_irq_save(flags);
     raise_softirq_irqoff(nr);
     local_irq_restore(flags);

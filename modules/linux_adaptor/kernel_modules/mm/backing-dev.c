@@ -90,7 +90,7 @@ static int wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi,
     if (err)
         fprop_local_destroy_percpu(&wb->completions);
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 
     return err;
 }
@@ -109,7 +109,7 @@ static int cgwb_bdi_init(struct backing_dev_info *bdi)
         bdi->wb.memcg_css = &root_mem_cgroup->css;
         bdi->wb.blkcg_css = blkcg_root_css;
 #endif
-        pr_err("%s: No impl.", __func__);
+        pr_notice("%s: No impl.", __func__);
     }
     return ret;
 }
@@ -199,7 +199,7 @@ static void wb_exit(struct bdi_writeback *wb)
 #if 0
     fprop_local_destroy_percpu(&wb->completions);
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 static void release_bdi(struct kref *ref)

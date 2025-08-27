@@ -83,9 +83,8 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
                                        (unsigned long)data);
 
     vscnprintf(name, sizeof(name), namefmt, args);
-    printk("%s: curr(%lx:%u) tid[%lu] name[%s]\n",
-           __func__, current, current->__state, tid, name);
-    printk("%s: ioc(%lx)\n", __func__, task->io_context);
+    pr_debug("%s: curr(%lx:%u) tid[%lu] name[%s]\n",
+             __func__, current, current->__state, tid, name);
     task->pid = tid;
     task->flags |= PF_KTHREAD;
     WRITE_ONCE(task->__state, TASK_RUNNING);
@@ -231,9 +230,7 @@ int kthread_worker_fn(void *worker_ptr)
 repeat:
     set_current_state(TASK_INTERRUPTIBLE);  /* mb paired w/ kthread_stop */
 
-    printk("%s: step1\n", __func__);
     if (kthread_should_stop()) {
-    printk("%s: step2\n", __func__);
         __set_current_state(TASK_RUNNING);
         raw_spin_lock_irq(&worker->lock);
         worker->task = NULL;
@@ -305,7 +302,7 @@ static void __kthread_bind_mask(struct task_struct *p, const struct cpumask *mas
 #if 0
     do_set_cpus_allowed(p, mask);
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     p->flags |= PF_NO_SETAFFINITY;
     raw_spin_unlock_irqrestore(&p->pi_lock, flags);
 }

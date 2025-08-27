@@ -47,5 +47,5 @@ bool irq_wait_for_poll(struct irq_desc *desc)
 
 void note_interrupt(struct irq_desc *desc, irqreturn_t action_ret)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }

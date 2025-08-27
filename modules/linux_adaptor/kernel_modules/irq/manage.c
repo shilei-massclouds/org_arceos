@@ -70,7 +70,7 @@ static int irq_setup_forced_threading(struct irqaction *new)
 
 void enable_percpu_irq(unsigned int irq, unsigned int type)
 {
-    pr_err("%s: No impl. irq(%u) type(%u)\n", __func__, irq, type);
+    pr_notice("%s: No impl. irq(%u) type(%u)\n", __func__, irq, type);
 }
 
 static int __irq_set_affinity(unsigned int irq, const struct cpumask *mask,
@@ -106,7 +106,6 @@ static bool irq_set_affinity_deactivated(struct irq_data *data,
 {
     struct irq_desc *desc = irq_data_to_desc(data);
 
-    printk("%s: step0\n", __func__);
     /*
      * Handle irq chips which can handle affinity only in activated
      * state correctly
@@ -121,7 +120,6 @@ static bool irq_set_affinity_deactivated(struct irq_data *data,
         return false;
 
     cpumask_copy(desc->irq_common_data.affinity, mask);
-    printk("%s: step1\n", __func__);
     irq_data_update_effective_affinity(data, mask);
     irqd_set(data, IRQD_AFFINITY_SET);
     return true;
@@ -243,7 +241,7 @@ int irq_set_affinity_locked(struct irq_data *data, const struct cpumask *mask,
         irq_copy_pending(desc, mask);
     }
 
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 #if 0
     if (desc->affinity_notify) {
         kref_get(&desc->affinity_notify->kref);

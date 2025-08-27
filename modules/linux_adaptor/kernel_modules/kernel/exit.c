@@ -76,7 +76,7 @@ int rcuwait_wake_up(struct rcuwait *w)
     int ret = 0;
     struct task_struct *task;
 
-    printk("%s: Note: w(%lx)\n", __func__, w);
+    pr_debug("%s: Note: w(%lx)\n", __func__, w);
 
     rcu_read_lock();
 

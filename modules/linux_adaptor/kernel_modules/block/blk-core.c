@@ -170,12 +170,9 @@ fail_q:
 
 static void bio_set_ioprio(struct bio *bio)
 {
-    printk("%s: step1\n", __func__);
     /* Nobody set ioprio so far? Initialize it based on task's nice value */
     if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) == IOPRIO_CLASS_NONE) {
-    printk("%s: step2 current(%lx)\n", __func__, current);
         bio->bi_ioprio = get_current_ioprio();
-    printk("%s: step3\n", __func__);
     }
     blkcg_set_ioprio(bio);
 }
@@ -310,7 +307,6 @@ void submit_bio_noacct(struct bio *bio)
     struct request_queue *q = bdev_get_queue(bdev);
     blk_status_t status = BLK_STS_IOERR;
 
-    printk("%s: step1\n", __func__);
     might_sleep();
 
     /*
@@ -348,7 +344,6 @@ void submit_bio_noacct(struct bio *bio)
         }
     }
 
-    printk("%s: step2 op(%u)\n", __func__, bio_op(bio));
     switch (bio_op(bio)) {
     case REQ_OP_READ:
         break;
@@ -404,7 +399,6 @@ void submit_bio_noacct(struct bio *bio)
     if (blk_throtl_bio(bio))
         return;
     submit_bio_noacct_nocheck(bio);
-    printk("%s: stepN\n", __func__);
     return;
 
 not_supported:
@@ -417,7 +411,7 @@ end_io:
 
 void blk_queue_exit(struct request_queue *q)
 {
-    pr_err("%s: No impl", __func__);
+    pr_notice("%s: No impl", __func__);
     //percpu_ref_put(&q->q_usage_counter);
 }
 
@@ -624,7 +618,6 @@ static void __submit_bio_noacct_mq(struct bio *bio)
 {
     struct bio_list bio_list[2] = { };
 
-    printk("---> %s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     current->bio_list = bio_list;
 
     do {
@@ -632,7 +625,6 @@ static void __submit_bio_noacct_mq(struct bio *bio)
     } while ((bio = bio_list_pop(&bio_list[0])));
 
     current->bio_list = NULL;
-    printk("---> %s: step2 bio_list(%lx)\n", __func__, current->bio_list);
 }
 
 /*

@@ -23,7 +23,7 @@ static struct posix_acl *__get_acl(struct mnt_idmap *idmap,
                    struct dentry *dentry, struct inode *inode,
                    int type)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return posix_acl_alloc(1, 0);
 }
 
@@ -60,7 +60,7 @@ int
 posix_acl_create(struct inode *dir, umode_t *mode,
         struct posix_acl **default_acl, struct posix_acl **acl)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     *default_acl = NULL;
     *acl = NULL;
     return 0;

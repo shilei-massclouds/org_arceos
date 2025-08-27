@@ -76,13 +76,13 @@ pub extern "C" fn cl_kthread_run(
 ) -> u64 {
     let task = axtask::spawn_raw(
         move || {
-            error!("linux kthread: fn {:#?} {:#x}", threadfn, arg);
+            debug!("linux kthread: fn {:#?} {:#x}", threadfn, arg);
             threadfn(arg);
         },
         "linux kthread".into(),
         0x2000,     // KThread stack size must be compatible with linux.
     );
-    error!("Kthread task pointer({:#x})", task_ptr);
+    debug!("Kthread task pointer({:#x})", task_ptr);
     task.set_private(task_ptr);
     task.id().as_u64()
 }
@@ -90,7 +90,7 @@ pub extern "C" fn cl_kthread_run(
 /// Reschedule.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_resched(state: usize) {
-    error!("resched current .. state {}(origin:{}); curr {}",
+    debug!("resched current .. state {}(origin:{}); curr {}",
         state & CL_TASK_STATE_MASK, state, current().id_name());
 
     match state & CL_TASK_STATE_MASK {
@@ -104,6 +104,6 @@ pub extern "C" fn cl_resched(state: usize) {
 /// Reschedule.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_wake_up(tid: u64) {
-    error!("wake up thread: {}", tid);
+    debug!("wake up thread: {}", tid);
     axtask::__wake_up(tid)
 }

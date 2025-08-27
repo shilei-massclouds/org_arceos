@@ -220,7 +220,7 @@ static int blkdev_get_whole(struct block_device *bdev, blk_mode_t mode)
         set_init_blocksize(bdev);
     atomic_inc(&bdev->bd_openers);
     if (test_bit(GD_NEED_PART_SCAN, &disk->state)) {
-        pr_err("%s: GD_NEED_PART_SCAN\n", __func__);
+        pr_notice("%s: GD_NEED_PART_SCAN\n", __func__);
 #if 0
         /*
          * Only return scanning errors if we are called from contexts
@@ -443,7 +443,7 @@ struct block_device *blkdev_get_no_open(dev_t dev)
  */
 int lookup_bdev(const char *pathname, dev_t *dev)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     if (strcmp(pathname, "/dev/root") == 0) {
         *dev = MKDEV(0xFE, 0x00);
         return 0;

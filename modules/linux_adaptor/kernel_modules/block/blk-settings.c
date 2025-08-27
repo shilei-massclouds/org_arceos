@@ -21,7 +21,7 @@
  */
 static int blk_validate_limits(struct queue_limits *lim)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /*

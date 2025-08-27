@@ -28,7 +28,7 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
                         struct kmem_cache_args *args,
                         slab_flags_t flags)
 {
-    pr_err("%s: No impl. object_size(%u) align(%u)\n", __func__, object_size, args->align);
+    pr_notice("%s: No impl. object_size(%u) align(%u)\n", __func__, object_size, args->align);
 
     struct kmem_cache *cache = kmalloc(sizeof(struct kmem_cache), 0);
     memset(cache, 0, sizeof(struct kmem_cache));
@@ -50,8 +50,8 @@ size_t kmalloc_size_roundup(size_t size)
         return kmalloc_slab(size, NULL, GFP_KERNEL, 0)->object_size;
 #else
         size_t ret = ALIGN(size, 8);
-        pr_err("%s: No impl for kmalloc_slab. size(%u -> %u)",
-               __func__, size, ret);
+        pr_notice("%s: No impl for kmalloc_slab. size(%u -> %u)",
+                  __func__, size, ret);
         return ret;
 #endif
     }
@@ -69,7 +69,7 @@ size_t kmalloc_size_roundup(size_t size)
 
 bool slab_is_available(void)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return true;
     //return slab_state >= UP;
 }

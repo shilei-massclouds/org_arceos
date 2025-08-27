@@ -51,7 +51,6 @@ static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
 		addr = ioremap_np(offset, size);
 		break;
 	}
-    printk("%s: step2\n", __func__);
 
 	if (addr) {
 		*ptr = addr;
@@ -165,7 +164,6 @@ __devm_ioremap_resource(struct device *dev, const struct resource *res,
 		return IOMEM_ERR_PTR(ret);
 	}
 
-    printk("%s: OK dest_ptr(0x%lx)\n", __func__, dest_ptr);
 	return dest_ptr;
 }
 

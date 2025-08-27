@@ -189,24 +189,18 @@ static void wb_queue_work(struct bdi_writeback *wb,
 {
     trace_writeback_queue(wb, work);
 
-    printk("%s: step1\n", __func__);
     if (work->done)
         atomic_inc(&work->done->cnt);
 
     spin_lock_irq(&wb->work_lock);
 
-    printk("%s: step2\n", __func__);
     if (test_bit(WB_registered, &wb->state)) {
         list_add_tail(&work->list, &wb->work_list);
-    printk("%s: step2.1\n", __func__);
         mod_delayed_work(bdi_wq, &wb->dwork, 0);
-    printk("%s: step2.2\n", __func__);
     } else
         finish_writeback_work(work);
-    printk("%s: step3\n", __func__);
 
     spin_unlock_irq(&wb->work_lock);
-    printk("%s: stepN\n", __func__);
 }
 
 /**
@@ -285,9 +279,7 @@ restart:
             *work = *base_work;
             work->nr_pages = nr_pages;
             work->auto_free = 1;
-    printk("%s: step1\n", __func__);
             wb_queue_work(wb, work);
-    printk("%s: step2\n", __func__);
             continue;
         }
 
@@ -313,7 +305,6 @@ restart:
 
         rcu_read_unlock();
         wb_wait_for_completion(&fallback_work_done);
-    printk("%s: step3\n", __func__);
         goto restart;
     }
     rcu_read_unlock();
@@ -329,9 +320,9 @@ void __inode_attach_wb(struct inode *inode, struct folio *folio)
     struct backing_dev_info *bdi = inode_to_bdi(inode);
     struct bdi_writeback *wb = NULL;
 
-    pr_err("%s: inode_cgwb_enabled\n", __func__);
-#if 0
     if (inode_cgwb_enabled(inode)) {
+        pr_notice("%s: inode_cgwb_enabled\n", __func__);
+#if 0
         struct cgroup_subsys_state *memcg_css;
 
         if (folio) {
@@ -343,8 +334,8 @@ void __inode_attach_wb(struct inode *inode, struct folio *folio)
             wb = wb_get_create(bdi, memcg_css, GFP_ATOMIC);
             css_put(memcg_css);
         }
-    }
 #endif
+    }
 
     if (!wb)
         wb = &bdi->wb;
@@ -414,10 +405,8 @@ static bool inode_io_list_move_locked(struct inode *inode,
     assert_spin_locked(&inode->i_lock);
     WARN_ON_ONCE(inode->i_state & I_FREEING);
 
-    printk("%s: step1 inode(%lx)\n", __func__, inode);
     list_move(&inode->i_io_list, head);
 
-    printk("%s: step2\n", __func__);
     /* dirty_time doesn't count as dirty_io until expiration */
     if (head != &wb->b_dirty_time)
         return wb_io_lists_populated(wb);
@@ -1572,7 +1561,7 @@ void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
     wbc->wb = inode_to_wb(inode);
     wbc->inode = inode;
 
-    printk("%s: No impl for wb_id.\n", __func__);
+    pr_notice("%s: No impl for wb_id.\n", __func__);
     //wbc->wb_id = wbc->wb->memcg_css->id;
     wbc->wb_lcand_id = inode->i_wb_frn_winner;
     wbc->wb_tcand_id = 0;
@@ -1625,7 +1614,7 @@ void sb_mark_inode_writeback(struct inode *inode)
 void wbc_account_cgroup_owner(struct writeback_control *wbc, struct folio *folio,
                   size_t bytes)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /*
@@ -1855,11 +1844,8 @@ static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
         return;
     WARN_ON(!rwsem_is_locked(&sb->s_umount));
 
-    printk("%s: step1\n", __func__);
     bdi_split_work_to_wbs(sb->s_bdi, &work, skip_if_busy);
-    printk("%s: step2\n", __func__);
     wb_wait_for_completion(&done);
-    printk("%s: step3\n", __func__);
 }
 
 /**
@@ -1982,7 +1968,7 @@ void wakeup_flusher_threads(enum wb_reason reason)
 {
     struct backing_dev_info *bdi;
 
-    printk("%s: ..\n", __func__);
+    pr_debug("%s: ..\n", __func__);
     /*
      * If we are expecting writeback progress we must submit plugged IO.
      */

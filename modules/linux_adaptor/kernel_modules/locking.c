@@ -125,42 +125,6 @@ void __lockfunc _raw_read_unlock(rwlock_t *lock)
 }
 
 /*
- * lock for reading
- */
-void __sched down_read(struct rw_semaphore *sem)
-{
-    log_debug("%s: ===> WARN: impl it.\n", __func__);
-}
-
-void __lockfunc _raw_write_lock(rwlock_t *lock)
-{
-    log_debug("%s: ===> WARN: impl it.\n", __func__);
-}
-
-void __lockfunc _raw_write_unlock(rwlock_t *lock)
-{
-    log_debug("%s: ===> WARN: impl it.\n", __func__);
-}
-
-/*
- * release a read lock
- */
-void up_read(struct rw_semaphore *sem)
-{
-    log_debug("%s: ===> WARN: impl it.\n", __func__);
-}
-
-void __sched mutex_lock(struct mutex *lock)
-{
-    log_error("%s: ===> WARN: impl it.\n", __func__);
-}
-
-void __sched mutex_unlock(struct mutex *lock)
-{
-    log_error("%s: ===> WARN: impl it.\n", __func__);
-}
-
-/*
  * Initialize an rwsem:
  */
 void __init_rwsem(struct rw_semaphore *sem, const char *name,

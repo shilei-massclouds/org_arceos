@@ -8,13 +8,13 @@ bool dma_default_coherent = IS_ENABLED(CONFIG_ARCH_DMA_DEFAULT_COHERENT);
 
 static int dma_supported(struct device *dev, u64 mask)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 1;
 }
 
 static void dma_setup_need_sync(struct device *dev)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 int dma_set_mask(struct device *dev, u64 mask)

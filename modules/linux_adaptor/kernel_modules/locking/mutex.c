@@ -29,17 +29,17 @@
 void
 __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
 {
-    pr_err("%s: No impl.\n", __func__);
+    pr_notice("%s: No impl.\n", __func__);
 }
 
 void __sched mutex_lock(struct mutex *lock)
 {
-    pr_err("%s: No impl.\n", __func__);
+    pr_notice("%s: No impl.\n", __func__);
 }
 
 void __sched mutex_unlock(struct mutex *lock)
 {
-    pr_err("%s: No impl.\n", __func__);
+    pr_notice("%s: No impl.\n", __func__);
 }
 
 /**
@@ -63,7 +63,7 @@ void __sched mutex_lock_io(struct mutex *lock)
 
 bool mutex_is_locked(struct mutex *lock)
 {
-    pr_err("=== NOTE ===: %s: No impl.\n", __func__);
+    pr_notice("=== NOTE ===: %s: No impl.\n", __func__);
     return true;
     //return __mutex_owner(lock) != NULL;
 }
@@ -95,6 +95,6 @@ int __sched mutex_trylock(struct mutex *lock)
 
     return locked;
 #endif
-    pr_err("=== NOTE ===: %s: No impl.\n", __func__);
+    pr_notice("=== NOTE ===: %s: No impl.\n", __func__);
     return true;
 }

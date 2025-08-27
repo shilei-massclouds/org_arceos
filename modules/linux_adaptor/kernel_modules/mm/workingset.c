@@ -29,5 +29,5 @@ struct list_lru shadow_nodes;
 
 void workingset_update_node(struct xa_node *node)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }

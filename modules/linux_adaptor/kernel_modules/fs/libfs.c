@@ -92,7 +92,7 @@ struct timespec64 simple_inode_init_ts(struct inode *inode)
 #endif
     struct timespec64 ts;
     memset(&ts, 0, sizeof(ts));
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return ts;
 }
 

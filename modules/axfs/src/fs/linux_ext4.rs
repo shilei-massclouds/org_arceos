@@ -93,7 +93,7 @@ impl DirNode {
 
     /// Checks whether a node with the given name exists in this directory.
     pub fn exist(&self, path: &str) -> Option<(VfsNodeType, usize)> {
-        error!("exist at ext4: {path}");
+        debug!("exist at ext4: {path}");
         let c_path = CString::new(path).unwrap();
         let mut ty = 0;
         let mut size = 0;
@@ -132,7 +132,7 @@ impl VfsNodeOps for DirNode {
     }
 
     fn parent(&self) -> Option<VfsNodeRef> {
-        error!("parent of {} ..", self.path);
+        debug!("parent of {} ..", self.path);
         let (prefix, _self) = split_path_reverse(&self.path);
         let prefix = prefix?;
         let parent = if prefix.len() == 0 {
@@ -140,13 +140,13 @@ impl VfsNodeOps for DirNode {
         } else {
             prefix
         };
-        error!("parent of {}: {}", self.path, parent);
+        debug!("parent of {}: {}", self.path, parent);
         Some(DirNode::new(parent) as VfsNodeRef)
     }
 
     fn lookup(self: Arc<Self>, path: &str) -> VfsResult<VfsNodeRef> {
         let path = self.full_path(path);
-        error!("lookup at ext4: {}", path);
+        debug!("lookup at ext4: {}", path);
         if let Some((ty, _sz)) = self.exist(&path) {
             match ty {
                 VfsNodeType::File => Ok(FileNode::new(&path) as VfsNodeRef),
@@ -156,40 +156,11 @@ impl VfsNodeOps for DirNode {
         } else {
             Err(VfsError::NotFound)
         }
-        /*
-        let (name, rest) = split_path(path);
-        let node = match name {
-            "" | "." => Ok(self.clone() as VfsNodeRef),
-            ".." => self.parent().ok_or(VfsError::NotFound),
-            _ => {
-                let c_name = CString::new(name).unwrap();
-                let mut d_type: u8 = 0;
-                let handle = unsafe {
-                    cl_vfs_lookup(self.handle, c_name.as_ptr(), &mut d_type)
-                };
-                if handle == 0 {
-                    return Err(VfsError::NotFound);
-                }
-                error!("lookup {:#X} type {}", handle, d_type);
-                match d_type {
-                    DT_REG => Ok(FileNode::new(handle) as VfsNodeRef),
-                    DT_DIR => Ok(DirNode::new(handle) as VfsNodeRef),
-                    _ => unimplemented!("{}", d_type),
-                }
-            },
-        }?;
-
-        if let Some(rest) = rest {
-            node.lookup(rest)
-        } else {
-            Ok(node)
-        }
-        */
     }
 
     fn create(&self, path: &str, ty: VfsNodeType) -> VfsResult {
         let path = self.full_path(path);
-        error!("create {ty:?} at ext4: {path}");
+        debug!("create {ty:?} at ext4: {path}");
 
         let c_path = CString::new(path).unwrap();
         match ty {
@@ -218,7 +189,7 @@ impl VfsNodeOps for DirNode {
 
     fn remove(&self, path: &str) -> VfsResult {
         let path = self.full_path(path);
-        error!("remove at ext4: {path}");
+        debug!("remove at ext4: {path}");
         let c_path = CString::new(path.clone()).unwrap();
 
         if let Some((ty, _sz)) = self.exist(&path) {
@@ -240,11 +211,11 @@ impl VfsNodeOps for DirNode {
     }
 
     fn read_dir(&self, start_idx: usize, dirents: &mut [VfsDirEntry]) -> VfsResult<usize> {
-        error!("read_dir: start_idx[{start_idx}] path: {}", self.path);
+        debug!("read_dir: start_idx[{start_idx}] path: {}", self.path);
         let last_count = self.last_count.load(Ordering::Relaxed);
         assert!(start_idx == 0 || start_idx == last_count);
         if start_idx != 0 {
-            error!("Note: alread used all entries and reset 'last_count' to zero.");
+            debug!("Note: alread used all entries and reset 'last_count' to zero.");
             self.last_count.store(0, Ordering::Relaxed);
             return Ok(0);
         }
@@ -266,13 +237,13 @@ impl VfsNodeOps for DirNode {
 
         let mut count = count as usize;
         assert!(count < buf.len());
-        error!("sizeof {}", mem::size_of::<LinuxDirent64>());
+        debug!("sizeof {}", mem::size_of::<LinuxDirent64>());
         let mut idx = 0;
         let mut ptr = buf.as_ptr();
         while count > 0 {
             let de_ptr = ptr as *const LinuxDirent64;
             unsafe {
-                error!("LinuxDirent64: ino {}, off {:#x}, reclen {}, type {}",
+                debug!("LinuxDirent64: ino {}, off {:#x}, reclen {}, type {}",
                    (*de_ptr).d_ino,
                    (*de_ptr).d_off,
                    (*de_ptr).d_reclen,
@@ -285,7 +256,7 @@ impl VfsNodeOps for DirNode {
                 CStr::from_ptr(d_name)
             };
 
-            error!("name: {}", d_name.to_str().unwrap());
+            debug!("name: {}", d_name.to_str().unwrap());
             let r_type = match d_type {
                 DT_REG => VfsNodeType::File,
                 DT_DIR => VfsNodeType::Dir,
@@ -326,7 +297,7 @@ impl FileNode {
 
 impl VfsNodeOps for FileNode {
     fn get_attr(&self) -> VfsResult<VfsNodeAttr> {
-        error!("get_attr path {}", self.path);
+        debug!("get_attr path {}", self.path);
         let c_path = CString::new(self.path.clone()).unwrap();
         let mut _ty = 0;
         let mut size = 0;
@@ -338,7 +309,7 @@ impl VfsNodeOps for FileNode {
     }
 
     fn truncate(&self, size: u64) -> VfsResult {
-        error!("truncate '{}' to {}", self.path, size);
+        debug!("truncate '{}' to {}", self.path, size);
         let c_path = CString::new(self.path.clone()).unwrap();
         let ret = unsafe {
             cl_sys_truncate(c_path.as_ptr(), size as usize)
@@ -348,7 +319,7 @@ impl VfsNodeOps for FileNode {
     }
 
     fn read_at(&self, offset: u64, buf: &mut [u8]) -> VfsResult<usize> {
-        error!("read '{}'", self.path);
+        debug!("read '{}'", self.path);
         let c_path = CString::new(self.path.clone()).unwrap();
         let fd = unsafe {
             cl_sys_open(c_path.as_ptr(), O_RDONLY, 0)
@@ -369,7 +340,7 @@ impl VfsNodeOps for FileNode {
     }
 
     fn write_at(&self, offset: u64, buf: &[u8]) -> VfsResult<usize> {
-        error!("write '{}'", self.path);
+        debug!("write '{}'", self.path);
         let c_path = CString::new(self.path.clone()).unwrap();
         let fd = unsafe {
             cl_sys_open(c_path.as_ptr(), O_WRONLY, 0)

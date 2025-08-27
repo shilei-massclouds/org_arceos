@@ -188,7 +188,6 @@ static int kjournald2(void *arg)
 	write_lock(&journal->j_state_lock);
 
 loop:
-    printk("---> %s: step1 curr(%lx)\n", __func__, current);
 	if (journal->j_flags & JBD2_UNMOUNT)
 		goto end_loop;
 
@@ -199,9 +198,7 @@ loop:
 		jbd2_debug(1, "OK, requests differ\n");
 		write_unlock(&journal->j_state_lock);
 		del_timer_sync(&journal->j_commit_timer);
-    printk("---> %s: step1.1 curr(%lx) bio_list(%lx)\n", __func__, current, current->bio_list);
 		jbd2_journal_commit_transaction(journal);
-    printk("---> %s: step1.2 curr(%lx)\n", __func__, current);
 		write_lock(&journal->j_state_lock);
 		goto loop;
 	}
@@ -230,9 +227,7 @@ loop:
 		if (transaction == NULL ||
 		    time_before(jiffies, transaction->t_expires)) {
 			write_unlock(&journal->j_state_lock);
-    printk("---> %s: step2.1 curr(%lx)\n", __func__, current);
 			schedule();
-    printk("---> %s: step2.2 curr(%lx)\n", __func__, current);
 			write_lock(&journal->j_state_lock);
 		}
 		finish_wait(&journal->j_wait_commit, &wait);
@@ -248,7 +243,6 @@ loop:
 		journal->j_commit_request = transaction->t_tid;
 		jbd2_debug(1, "woke because of timeout\n");
 	}
-    printk("---> %s: step3 curr(%lx)\n", __func__, current);
 	goto loop;
 
 end_loop:

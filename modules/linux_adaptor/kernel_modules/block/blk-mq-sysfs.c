@@ -14,6 +14,6 @@
 
 void blk_mq_hctx_kobj_init(struct blk_mq_hw_ctx *hctx)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     //kobject_init(&hctx->kobj, &blk_mq_hw_ktype);
 }

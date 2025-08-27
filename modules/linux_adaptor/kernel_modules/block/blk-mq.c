@@ -1366,7 +1366,7 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
 int blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
         struct request_queue *q)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 
     /* mark the queue as mq asap */
     q->mq_ops = set->ops;
@@ -1812,7 +1812,7 @@ void blk_mq_submit_bio(struct bio *bio)
         if (unlikely(bio_queue_enter(bio)))
             return;
 #endif
-        pr_err("%s: No bio_queue_enter\n", __func__);
+        pr_notice("%s: No bio_queue_enter\n", __func__);
     }
 
     /*
@@ -1870,14 +1870,11 @@ new_request:
     if (bio_zone_write_plugging(bio))
         blk_zone_write_plug_init_request(rq);
 
-    printk("%s: step1\n", __func__);
     if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq))
         return;
 
-    printk("%s: step2 current(%lx) plug(%lx)\n", __func__, current, current->plug);
     if (plug) {
         blk_add_rq_to_plug(plug, rq);
-        printk("%s: step3\n", __func__);
         return;
     }
 
@@ -2013,7 +2010,7 @@ void blk_mq_start_request(struct request *rq)
  **/
 void blk_mq_complete_request(struct request *rq)
 {
-    printk("%s: ... bio_list(%lx)\n", __func__, current->bio_list);
+    pr_debug("%s: ... bio_list(%lx)\n", __func__, current->bio_list);
     if (!blk_mq_complete_request_remote(rq))
         rq->q->mq_ops->complete(rq);
 }
@@ -2049,12 +2046,9 @@ bool blk_mq_complete_request_remote(struct request *rq)
 
 void blk_mq_end_request(struct request *rq, blk_status_t error)
 {
-    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     if (blk_update_request(rq, error, blk_rq_bytes(rq)))
         BUG();
-    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
     __blk_mq_end_request(rq, error);
-    printk("%s: step3 bio_list(%lx)\n", __func__, current->bio_list);
 }
 
 static void blk_print_req_error(struct request *req, blk_status_t status)
@@ -2114,7 +2108,6 @@ bool blk_update_request(struct request *req, blk_status_t error,
     bool quiet = req->rq_flags & RQF_QUIET;
     int total_bytes;
 
-    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
     trace_block_rq_complete(req, error, nr_bytes);
 
     if (!req->bio)
@@ -2189,7 +2182,6 @@ bool blk_update_request(struct request *req, blk_status_t error,
          * later.
          */
         req->__data_len = 0;
-    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
         return false;
     }
 
@@ -2225,7 +2217,7 @@ bool blk_update_request(struct request *req, blk_status_t error,
 
 static inline void blk_account_io_done(struct request *req, u64 now)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 static inline void __blk_mq_end_request_acct(struct request *rq, u64 now)
@@ -2334,7 +2326,7 @@ void blk_mq_start_stopped_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
 
 void blk_mq_kick_requeue_list(struct request_queue *q)
 {
-    printk("%s: ...\n", __func__);
+    pr_debug("%s: ...\n", __func__);
     kblockd_mod_delayed_work_on(WORK_CPU_UNBOUND, &q->requeue_work, 0);
 }
 
@@ -2522,9 +2514,7 @@ bool blk_mq_dispatch_rq_list(struct blk_mq_hw_ctx *hctx, struct list_head *list,
         if (nr_budgets)
             nr_budgets--;
 
-    printk("%s: step1\n", __func__);
         ret = q->mq_ops->queue_rq(hctx, &bd);
-    printk("%s: step2\n", __func__);
         switch (ret) {
         case BLK_STS_OK:
             queued++;
@@ -2554,9 +2544,7 @@ out:
         PANIC("stage1");
     }
 
-    printk("%s: step3\n", __func__);
     blk_mq_update_dispatch_busy(hctx, false);
-    printk("%s: stepN\n", __func__);
     return true;
 }
 

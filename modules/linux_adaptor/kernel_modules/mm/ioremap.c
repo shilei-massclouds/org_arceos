@@ -27,7 +27,7 @@ void __iomem *generic_ioremap_prot(phys_addr_t phys_addr, size_t size,
     size = PAGE_ALIGN(size + offset);
 
     vaddr = phys_addr + kernel_map.va_pa_offset;
-    printk("%s: VA: %lx -> PA: %lx\n", __func__, vaddr, phys_addr);
+    pr_info("%s: VA: %lx -> PA: %lx\n", __func__, vaddr, phys_addr);
 
     pr_info("%s: Use linear mapping in ArceOS to handle ioremap.\n", __func__);
     /* Use linear mapping in ArceOS to handle ioremap. */

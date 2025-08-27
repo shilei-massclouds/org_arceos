@@ -59,7 +59,8 @@ int laptop_mode;
 void laptop_io_completion(struct backing_dev_info *info)
 {
     //mod_timer(&info->laptop_mode_wb_timer, jiffies + laptop_mode);
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
+    PANIC("");
 }
 
 static pgoff_t wbc_end(struct writeback_control *wbc)
@@ -105,7 +106,7 @@ void __init page_writeback_init(void)
     register_sysctl_init("vm", vm_page_writeback_sysctls);
 #endif
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /**
@@ -122,7 +123,7 @@ void __init page_writeback_init(void)
  */
 void balance_dirty_pages_ratelimited(struct address_space *mapping)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     //balance_dirty_pages_ratelimited_flags(mapping, 0);
 }
 
@@ -155,7 +156,7 @@ void folio_wait_stable(struct folio *folio)
 static void folio_account_dirtied(struct folio *folio,
         struct address_space *mapping)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /*
@@ -191,7 +192,7 @@ void __folio_mark_dirty(struct folio *folio, struct address_space *mapping,
 
 static void wb_bandwidth_estimate_start(struct bdi_writeback *wb)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 static int writeback_use_writepage(struct address_space *mapping,
@@ -207,7 +208,7 @@ void wb_update_bandwidth(struct bdi_writeback *wb)
 
     __wb_update_bandwidth(&gdtc, NULL, false);
 #endif
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
@@ -215,13 +216,12 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
     int ret;
     struct bdi_writeback *wb;
 
-    printk("%s: nr_to_write(%lx)\n", __func__, wbc->nr_to_write);
+    pr_debug("%s: nr_to_write(%lx)\n", __func__, wbc->nr_to_write);
     if (wbc->nr_to_write <= 0)
         return 0;
     wb = inode_to_wb_wbc(mapping->host, wbc);
     wb_bandwidth_estimate_start(wb);
     while (1) {
-        printk("%s: step1\n", __func__);
         if (mapping->a_ops->writepages) {
             ret = mapping->a_ops->writepages(mapping, wbc);
         } else if (mapping->a_ops->writepage) {
@@ -230,7 +230,6 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
             /* deal with chardevs and other special files */
             ret = 0;
         }
-        printk("%s: step2\n", __func__);
         if (ret != -ENOMEM || wbc->sync_mode != WB_SYNC_ALL)
             break;
 
@@ -459,7 +458,7 @@ void __folio_start_writeback(struct folio *folio, bool keep_write)
  */
 static inline void __wb_writeout_add(struct bdi_writeback *wb, long nr)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 #if 0
     struct wb_domain *cgdom;
 

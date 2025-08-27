@@ -83,7 +83,7 @@ int mempool_init_node(mempool_t *pool, int min_nr, mempool_alloc_t *alloc_fn,
               mempool_free_t *free_fn, void *pool_data,
               gfp_t gfp_mask, int node_id)
 {
-    printk("%s: pool(%lx) alloc_fn(%lx)\n", __func__, pool, alloc_fn);
+    pr_debug("%s: pool(%lx) alloc_fn(%lx)\n", __func__, pool, alloc_fn);
     spin_lock_init(&pool->lock);
     pool->min_nr    = min_nr;
     pool->pool_data = pool_data;
@@ -197,9 +197,7 @@ void *mempool_alloc_noprof(mempool_t *pool, gfp_t gfp_mask)
 
 repeat_alloc:
 
-    printk("%s: step1 pool(%lx) alloc(%lx)\n", __func__, pool, pool->alloc);
     element = pool->alloc(gfp_temp, pool->pool_data);
-    printk("%s: step2\n", __func__);
     if (likely(element != NULL))
         return element;
 

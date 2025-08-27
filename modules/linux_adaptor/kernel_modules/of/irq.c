@@ -9,14 +9,11 @@ int of_irq_count(struct device_node *dev)
     struct of_phandle_args irq;
     int nr = 0;
 
-    printk("%s: ..\n", __func__);
-
     while (of_irq_parse_one(dev, nr, &irq) == 0) {
         of_node_put(irq.np);
         nr++;
     }
 
-    printk("%s: irq_count(%u)\n", __func__, nr);
     return nr;
 }
 
@@ -39,7 +36,6 @@ struct device_node *of_irq_find_parent(struct device_node *child)
         if (of_property_read_u32(child, "interrupt-parent", &parent)) {
             p = of_get_parent(child);
         } else  {
-            printk("%s: parent(%u)\n", __func__, parent);
             if (of_irq_workarounds & OF_IMAP_NO_PHANDLE)
                 p = of_node_get(of_irq_dflt_pic);
             else
@@ -73,7 +69,6 @@ int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_ar
     __be32 addr_buf[3] = { 0 };
 
     pr_debug("of_irq_parse_one: dev=%pOF, index=%d\n", device, index);
-    printk("of_irq_parse_one: dev=%s, index=%d\n", device->name, index);
 
     /* OldWorld mac stuff is "special", handle out of line */
     if (of_irq_workarounds & OF_IMAP_OLDWORLD_MAC)
@@ -93,18 +88,15 @@ int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_ar
     res = of_parse_phandle_with_args(device, "interrupts-extended",
                     "#interrupt-cells", index, out_irq);
     if (!res) {
-        printk("%s: ok dev(%s)\n", __func__, device->name);
         p = out_irq->np;
     } else {
         /* Look for the interrupt parent. */
-        printk("%s: ... dev(%s)\n", __func__, device->name);
         p = of_irq_find_parent(device);
         /* Get size of interrupt specifier */
         if (!p || of_property_read_u32(p, "#interrupt-cells", &intsize))
             return -EINVAL;
 
         pr_debug(" parent=%pOF, intsize=%d\n", p, intsize);
-        printk(" parent=%pOF, intsize=%d\n", p, intsize);
 
         /* Copy intspec into irq structure */
         out_irq->np = p;
@@ -118,7 +110,6 @@ int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_ar
         }
 
         pr_debug(" intspec=%d\n", *out_irq->args);
-        printk(" intspec=%d\n", *out_irq->args);
     }
 
     /* Check if there are any interrupt-map translations to process */
@@ -143,8 +134,8 @@ int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_ar
  */
 int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
 {
-    pr_err("%s: No impl. args_count(%u) args(%u)",
-           __func__, out_irq->args_count, out_irq->args[0]);
+    pr_notice("%s: No impl. args_count(%u) args(%u)",
+              __func__, out_irq->args_count, out_irq->args[0]);
     return 0;
 }
 

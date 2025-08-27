@@ -8,6 +8,6 @@ EXPORT_SYMBOL(nr_cpu_ids);
 
 int riscv_hartid_to_cpuid(unsigned long hartid)
 {
-    pr_err("%s: No impl. hartid(%lu)", __func__, hartid);
+    pr_notice("%s: No impl. hartid(%lu)", __func__, hartid);
     return 0;
 }

@@ -327,7 +327,6 @@ int inode_init_always_gfp(struct super_block *sb, struct inode *inode, gfp_t gfp
  */
 void __insert_inode_hash(struct inode *inode, unsigned long hashval)
 {
-    printk("%s: step1\n", __func__);
     struct hlist_head *b = inode_hashtable + hash(inode->i_sb, hashval);
 
     spin_lock(&inode_hash_lock);
@@ -335,7 +334,6 @@ void __insert_inode_hash(struct inode *inode, unsigned long hashval)
     hlist_add_head_rcu(&inode->i_hash, b);
     spin_unlock(&inode->i_lock);
     spin_unlock(&inode_hash_lock);
-    printk("%s: step2\n", __func__);
 }
 
 /*
@@ -776,7 +774,7 @@ void set_nlink(struct inode *inode, unsigned int nlink)
  */
 static int file_modified_flags(struct file *file, int flags)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return 0;
 }
 
@@ -867,7 +865,7 @@ int bmap(struct inode *inode, sector_t *block)
 
 void touch_atime(const struct path *path)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 #if 0
     struct vfsmount *mnt = path->mnt;
     struct inode *inode = d_inode(path->dentry);

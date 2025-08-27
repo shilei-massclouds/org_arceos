@@ -187,7 +187,7 @@ static int device_private_init(struct device *dev)
 static struct kobject *get_device_parent(struct device *dev,
                      struct device *parent)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
     return NULL;
 }
 
@@ -203,7 +203,7 @@ static void cleanup_glue_dir(struct device *dev, struct kobject *glue_dir)
 
 void bus_notify(struct device *dev, enum bus_notifier_event value)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 
 /**
@@ -273,7 +273,6 @@ int device_add(struct device *dev)
         goto name_error;
 
     pr_debug("device: '%s': %s\n", dev_name(dev), __func__);
-    printk("device: '%s': %s\n", dev_name(dev), __func__);
 
     parent = get_device(dev->parent);
     kobj = get_device_parent(dev, parent);
@@ -387,7 +386,6 @@ int device_add(struct device *dev)
         subsys_put(sp);
     }
 #endif
-    printk("%s: ok!\n", __func__);
 done:
     put_device(dev);
     return error;
@@ -512,7 +510,7 @@ int device_create_file(struct device *dev,
             attr->attr.name);
         error = sysfs_create_file(&dev->kobj, &attr->attr);
 #endif
-        pr_err("%s: No impl.", __func__);
+        pr_notice("%s: No impl.", __func__);
     }
 
     return error;

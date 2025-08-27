@@ -59,7 +59,7 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
     desc->tot_count = 0;
     desc->name = NULL;
     desc->owner = owner;
-    pr_err("%s: No [percpu] desc->kstat_irqs\n", __func__);
+    pr_notice("%s: No [percpu] desc->kstat_irqs\n", __func__);
     /*
     for_each_possible_cpu(cpu)
         *per_cpu_ptr(desc->kstat_irqs, cpu) = (struct irqstat) { };
@@ -98,7 +98,7 @@ static int init_desc(struct irq_desc *desc, int irq, int node,
              const struct cpumask *affinity,
              struct module *owner)
 {
-    pr_err("%s: No [percpu] desc->kstat_irqs\n", __func__);
+    pr_notice("%s: No [percpu] desc->kstat_irqs\n", __func__);
     /*
     desc->kstat_irqs = alloc_percpu(struct irqstat);
     if (!desc->kstat_irqs)
@@ -154,7 +154,7 @@ static void irq_insert_desc(unsigned int irq, struct irq_desc *desc)
 #ifdef CONFIG_SYSFS
 static void irq_sysfs_add(int irq, struct irq_desc *desc)
 {
-    pr_err("%s: No impl.", __func__);
+    pr_notice("%s: No impl.", __func__);
 }
 #endif /* CONFIG_SYSFS */
 
@@ -248,7 +248,6 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
 {
     int start, ret;
 
-    printk("%s: 1\n", __func__);
     if (!cnt)
         return -EINVAL;
 

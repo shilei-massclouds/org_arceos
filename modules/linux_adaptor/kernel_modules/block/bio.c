@@ -143,7 +143,7 @@ void guard_bio_eod(struct bio *bio)
 {
     sector_t maxsector = bdev_nr_sectors(bio->bi_bdev);
 
-    printk("%s: maxsector(%lu)\n", __func__, maxsector);
+    pr_debug("%s: maxsector(%lu)\n", __func__, maxsector);
     if (!maxsector)
         return;
 
@@ -306,7 +306,7 @@ int bioset_init(struct bio_set *bs,
     if (!bs->bio_slab)
         return -ENOMEM;
 
-    printk("%s: bs(%lx) pool(%lx)\n", __func__, bs, &bs->bio_pool);
+    pr_debug("%s: bs(%lx) pool(%lx)\n", __func__, bs, &bs->bio_pool);
     if (mempool_init_slab_pool(&bs->bio_pool, pool_size, bs->bio_slab))
         goto bad;
 
@@ -423,7 +423,6 @@ struct bio *bio_alloc_bioset(struct block_device *bdev, unsigned short nr_vecs,
     struct bio *bio;
     void *p;
 
-    printk("%s: step1 current(%lx)\n", __func__, current);
     /* should not use nobvec bioset for nr_vecs > 0 */
     if (WARN_ON_ONCE(!mempool_initialized(&bs->bvec_pool) && nr_vecs > 0))
         return NULL;
@@ -461,14 +460,13 @@ struct bio *bio_alloc_bioset(struct block_device *bdev, unsigned short nr_vecs,
      * blocking to the rescuer workqueue before we retry with the original
      * gfp_flags.
      */
-    printk("%s: step2 bio_list(%lx) bs(%lx)\n", __func__, current->bio_list, bs);
     if (current->bio_list &&
         (!bio_list_empty(&current->bio_list[0]) ||
          !bio_list_empty(&current->bio_list[1])) &&
         bs->rescue_workqueue)
         gfp_mask &= ~__GFP_DIRECT_RECLAIM;
 
-    printk("%s: bs(%lx) pool(%lx)\n", __func__, bs, &bs->bio_pool);
+    pr_debug("%s: bs(%lx) pool(%lx)\n", __func__, bs, &bs->bio_pool);
     p = mempool_alloc(&bs->bio_pool, gfp_mask);
     if (!p && gfp_mask != saved_gfp) {
         punt_bios_to_rescuer(bs);
@@ -501,7 +499,6 @@ struct bio *bio_alloc_bioset(struct block_device *bdev, unsigned short nr_vecs,
     }
 
     bio->bi_pool = bs;
-    printk("%s: stepN\n", __func__);
     return bio;
 
 err_free:
@@ -533,7 +530,6 @@ struct bio_vec *bvec_alloc(mempool_t *pool, unsigned short *nr_vecs,
      */
     *nr_vecs = bvs->nr_vecs;
 
-    printk("nr_vecs(%u)\n", bvs->nr_vecs);
     /*
      * Try a slab allocation first for all smaller allocations.  If that
      * fails and __GFP_DIRECT_RECLAIM is set retry with the mempool.
@@ -862,7 +858,6 @@ int bio_add_page(struct bio *bio, struct page *page,
 
 static void submit_bio_wait_endio(struct bio *bio)
 {
-    printk("%s: step1\n", __func__);
     complete(bio->bi_private);
 }
 
@@ -879,7 +874,6 @@ static void submit_bio_wait_endio(struct bio *bio)
  */
 int submit_bio_wait(struct bio *bio)
 {
-    printk("%s: step1\n", __func__);
     DECLARE_COMPLETION_ONSTACK_MAP(done,
             bio->bi_bdev->bd_disk->lockdep_map);
 

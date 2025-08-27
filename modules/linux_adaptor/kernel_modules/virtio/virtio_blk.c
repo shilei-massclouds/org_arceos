@@ -334,7 +334,6 @@ static inline u8 virtblk_vbr_status(struct virtblk_req *vbr)
 
 static inline void virtblk_request_done(struct request *req)
 {
-    printk("%s: step0 bio_list(%lx)\n", __func__, current->bio_list);
 	struct virtblk_req *vbr = blk_mq_rq_to_pdu(req);
 	blk_status_t status = virtblk_result(virtblk_vbr_status(vbr));
 	struct virtio_blk *vblk = req->mq_hctx->queue->queuedata;
@@ -346,7 +345,6 @@ static inline void virtblk_request_done(struct request *req)
 		req->__sector = virtio64_to_cpu(vblk->vdev,
 						vbr->in_hdr.zone_append.sector);
 
-    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
 	blk_mq_end_request(req, status);
 }
 
@@ -442,9 +440,7 @@ static blk_status_t virtio_queue_rq(struct blk_mq_hw_ctx *hctx,
 	if (unlikely(status))
 		return status;
 
-    printk("%s: step1\n", __func__);
 	spin_lock_irqsave(&vblk->vqs[qid].lock, flags);
-    printk("%s: step2\n", __func__);
 	err = virtblk_add_req(vblk->vqs[qid].vq, vbr);
 	if (err) {
 		virtqueue_kick(vblk->vqs[qid].vq);
@@ -458,7 +454,6 @@ static blk_status_t virtio_queue_rq(struct blk_mq_hw_ctx *hctx,
 		return virtblk_fail_to_queue(req, err);
 	}
 
-    printk("%s: step3\n", __func__);
 	if (bd->last && virtqueue_kick_prepare(vblk->vqs[qid].vq))
 		notify = true;
 	spin_unlock_irqrestore(&vblk->vqs[qid].lock, flags);

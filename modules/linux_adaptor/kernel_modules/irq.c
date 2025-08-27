@@ -75,21 +75,6 @@ void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
     plic_chip = chip;
 }
 
-int of_irq_parse_one(struct device_node *device, int index,
-                     struct of_phandle_args *out_irq)
-{
-    if (strcmp(device->name, "plic") != 0) {
-        booter_panic("bad plic_node.");
-    }
-    out_irq->args_count = 1;
-    if (index == 1) {
-        out_irq->args[0] = 9;
-    } else {
-        out_irq->args[0] = 0xb;
-    }
-    return 0;
-}
-
 struct irq_domain *__irq_domain_add(struct fwnode_handle *fwnode, int size,
                     irq_hw_number_t hwirq_max, int direct_max,
                     const struct irq_domain_ops *ops,
