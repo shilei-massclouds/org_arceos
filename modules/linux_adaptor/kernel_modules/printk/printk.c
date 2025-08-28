@@ -44,6 +44,12 @@
 
 #include "../adaptor.h"
 
+/*
+ * Low level drivers may need that to know if they can schedule in
+ * their unblank() callback or not. So let's export it.
+ */
+int oops_in_progress;
+
 int _vprintk(const char *fmt, va_list args)
 {
     int n;
