@@ -154,3 +154,8 @@ void cl_handle_softirq(unsigned long irqnum)
     // Note: consider to handle tick_irq_exit in future.
     // tick_irq_exit();
 }
+
+unsigned long cl_preemptible(void)
+{
+    return preemptible();
+}

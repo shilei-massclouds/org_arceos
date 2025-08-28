@@ -368,8 +368,15 @@ impl TaskInner {
 
     #[inline]
     #[cfg(feature = "preempt")]
+    fn cl_can_preemptible(&self) -> bool {
+        (self.private() == 0) || unsafe { cl_preemptible() != 0 }
+    }
+
+    #[inline]
+    #[cfg(feature = "preempt")]
     pub(crate) fn can_preempt(&self, current_disable_count: usize) -> bool {
-        self.preempt_disable_count.load(Ordering::Acquire) == current_disable_count
+        self.cl_can_preemptible() &&
+            (self.preempt_disable_count.load(Ordering::Acquire) == current_disable_count)
     }
 
     #[inline]
@@ -559,4 +566,8 @@ extern "C" fn task_entry() -> ! {
     }
     trace!("Just exit ..");
     crate::exit(0);
+}
+
+unsafe extern "C" {
+    fn cl_preemptible() -> usize;
 }
