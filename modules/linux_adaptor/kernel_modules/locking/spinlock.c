@@ -56,22 +56,22 @@ noinline void __lockfunc _raw_spin_unlock_bh(raw_spinlock_t *lock)
     __raw_spin_unlock_bh(lock);
 }
 
-void __lockfunc _raw_write_lock(rwlock_t *lock)
+noinline void __lockfunc _raw_write_lock(rwlock_t *lock)
 {
-    pr_notice("%s: ===> WARN: impl it.\n", __func__);
+    __raw_write_lock(lock);
 }
 
-void __lockfunc _raw_write_unlock(rwlock_t *lock)
+noinline void __lockfunc _raw_write_unlock(rwlock_t *lock)
 {
-    pr_notice("%s: ===> WARN: impl it.\n", __func__);
+    __raw_write_unlock(lock);
 }
 
 noinline void __lockfunc _raw_read_lock(rwlock_t *lock)
 {
-    pr_notice("%s: ===> WARN: impl it.\n", __func__);
+    __raw_read_lock(lock);
 }
 
 noinline void __lockfunc _raw_read_unlock(rwlock_t *lock)
 {
-    pr_notice("%s: ===> WARN: impl it.\n", __func__);
+    __raw_read_unlock(lock);
 }

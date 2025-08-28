@@ -568,6 +568,7 @@ extern "C" fn task_entry() -> ! {
     crate::exit(0);
 }
 
+#[cfg(feature = "preempt")]
 unsafe extern "C" {
     fn cl_preemptible() -> usize;
 }
