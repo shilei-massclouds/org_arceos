@@ -238,49 +238,6 @@ struct page *read_cache_page(struct address_space *mapping,
 }
 */
 
-/**
- * filemap_write_and_wait_range - write out & wait on a file range
- * @mapping:    the address_space for the pages
- * @lstart: offset in bytes where the range starts
- * @lend:   offset in bytes where the range ends (inclusive)
- *
- * Write out and wait upon file offsets lstart->lend, inclusive.
- *
- * Note that @lend is inclusive (describes the last byte to be written) so
- * that this function can be used to write to the very end-of-file (end = -1).
- *
- * Return: error status of the address space.
- */
-int filemap_write_and_wait_range(struct address_space *mapping,
-                 loff_t lstart, loff_t lend)
-{
-    int err = 0;
-
-    printk("%s: step1\n", __func__);
-    if (mapping_needs_writeback(mapping)) {
-        err = __filemap_fdatawrite_range(mapping, lstart, lend,
-                         WB_SYNC_ALL);
-        /*
-         * Even if the above returned error, the pages may be
-         * written partially (e.g. -ENOSPC), so we wait for it.
-         * But the -EIO is special case, it may indicate the worst
-         * thing (e.g. bug) happened, so we avoid waiting for it.
-         */
-        if (err != -EIO) {
-            int err2 = filemap_fdatawait_range(mapping,
-                        lstart, lend);
-            if (!err)
-                err = err2;
-        } else {
-            /* Clear any previously stored errors */
-            filemap_check_errors(mapping);
-        }
-    } else {
-        err = filemap_check_errors(mapping);
-    }
-    return err;
-}
-
 int filemap_check_errors(struct address_space *mapping)
 {
     int ret = 0;

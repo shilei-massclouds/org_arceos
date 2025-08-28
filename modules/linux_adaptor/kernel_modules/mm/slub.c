@@ -4,12 +4,7 @@
 #include "slab.h"
 #include "../adaptor.h"
 
-void *__kmalloc_cache_noprof(struct kmem_cache *s, gfp_t gfpflags, size_t size)
-{
-    return cl_rust_alloc(size, 8);
-}
-
-void *__kmalloc_noprof(size_t size, gfp_t flags)
+static void *cl_kmalloc(size_t size, gfp_t flags)
 {
     unsigned char *ret = cl_rust_alloc(size, 8);
     if (flags & __GFP_ZERO) {
@@ -18,21 +13,31 @@ void *__kmalloc_noprof(size_t size, gfp_t flags)
     return (void *) ret;
 }
 
+void *__kmalloc_cache_noprof(struct kmem_cache *s, gfp_t gfpflags, size_t size)
+{
+    return cl_kmalloc(size, gfpflags);
+}
+
+void *__kmalloc_noprof(size_t size, gfp_t flags)
+{
+    return cl_kmalloc(size, flags);
+}
+
 void *__kmalloc_node_noprof(DECL_BUCKET_PARAMS(size, b), gfp_t flags, int node)
 {
-    return cl_rust_alloc(size, 8);
+    return cl_kmalloc(size, flags);
 }
 
 void *__kmalloc_node_track_caller_noprof(DECL_BUCKET_PARAMS(size, b), gfp_t flags,
                      int node, unsigned long caller)
 {
-    return cl_rust_alloc(size, 8);
+    return cl_kmalloc(size, flags);
 }
 
 void *__kmalloc_cache_node_noprof(struct kmem_cache *s, gfp_t gfpflags,
                   int node, size_t size)
 {
-    return cl_rust_alloc(size, 8);
+    return cl_kmalloc(size, gfpflags);
 }
 
 void *kmem_cache_alloc_node_noprof(struct kmem_cache *s, gfp_t gfpflags, int node)

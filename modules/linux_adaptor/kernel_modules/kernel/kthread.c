@@ -77,7 +77,7 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
                             va_list args)
 {
     char name[512];
-    struct task_struct *task = kmalloc(sizeof(struct task_struct), 0);
+    struct task_struct *task = kzalloc(sizeof(struct task_struct), 0);
     unsigned long tid = cl_kthread_run((unsigned long)task,
                                        (unsigned long)threadfn,
                                        (unsigned long)data);

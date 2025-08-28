@@ -522,3 +522,4 @@ CL_MINE(__audit_reusename)
 
 CL_MINE(security_inode_need_killpriv)
 CL_MINE(security_inode_killpriv)
+CL_MINE(laptop_sync_completion)
