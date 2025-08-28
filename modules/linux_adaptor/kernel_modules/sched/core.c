@@ -354,6 +354,11 @@ void cl_set_task_state(struct task_struct *p, unsigned int state)
     WRITE_ONCE(p->__state, state);
 }
 
+void wake_up_q(struct wake_q_head *head)
+{
+    PANIC("");
+}
+
 void __init sched_init(void)
 {
     wait_bit_init();
