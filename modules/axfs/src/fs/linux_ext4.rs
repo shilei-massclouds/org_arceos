@@ -9,7 +9,7 @@ use alloc::ffi::CString;
 use alloc::string::String;
 use alloc::format;
 use axerrno::ax_err;
-use axerrno::LinuxError;
+use axerrno::{AxError, LinuxError};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 #[repr(C)]
@@ -180,6 +180,10 @@ impl VfsNodeOps for DirNode {
                     cl_sys_mkdir(c_path.as_ptr(), 0o700)
                 };
                 if ret < 0 {
+                    error!("create dir err {}", ret);
+                    if -ret == LinuxError::EEXIST as i32 {
+                        return Err(AxError::AlreadyExists);
+                    }
                     return ax_err!(Io);
                 }
                 return Ok(());

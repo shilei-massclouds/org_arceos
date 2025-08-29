@@ -31,12 +31,16 @@ fn main() {
     }
 
     // Check dir which has been created last time.
-    if !check_dir("dir2") {
-        println!("No 'dir2' found which has been created last time.");
+    if check_dir("last_dir") {
+        remove_dir("last_dir");
+    } else {
+        panic!("No 'last_dir' found which has been created last time.");
     }
 
-    if !check_file("last_file") {
-        println!("No 'last_file' found which has been created last time.");
+    if check_file("last_file") {
+        remove_file("last_file");
+    } else {
+        panic!("No 'last_file' found which has been created last time.");
     }
 
     // List all at root directory.
@@ -54,10 +58,10 @@ fn main() {
     remove_dir("dir1");
 
     // Create an extra directory.
-    create_dir("dir2");
+    create_dir("last_dir");
 
-    if !check_dir("dir2") {
-        panic!("No 'dir2' found.");
+    if !check_dir("last_dir") {
+        panic!("No 'last_dir' found.");
     }
 
     create_file("last_file");
@@ -72,7 +76,7 @@ fn main() {
 
     println!("wait for one second ..");
     // Let's fly for a while and jbd2 may write journal.
-    std::thread::sleep(std::time::Duration::new(1, 0));
+    std::thread::sleep(std::time::Duration::new(10, 0));
 
     println!("fstest ok!");
 }

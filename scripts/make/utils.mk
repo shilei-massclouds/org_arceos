@@ -36,14 +36,15 @@ define make_disk_image_ext4
   @printf "    $(GREEN_C)Creating$(END_C) Ext4 disk image \"$(1)\" ...\n"
   @dd if=/dev/zero of=$(1) bs=1M count=64
   @mkfs.ext4 $(1)
-  @echo "abc" > /tmp/ext4.txt
+  @echo "abc" > /tmp/last_file
   @mkdir -p ./mnt
   @sudo mount $(1) ./mnt
   @sudo mkdir -p ./mnt/lib
-  @sudo cp /tmp/ext4.txt ./mnt/
+  @sudo mkdir -p ./mnt/last_dir
+  @sudo cp /tmp/last_file ./mnt/
   @sudo umount ./mnt
   @rm -rf mnt
-  @rm -f /tmp/ext4.txt
+  @rm -f /tmp/last_file
 endef
 
 define make_disk_image

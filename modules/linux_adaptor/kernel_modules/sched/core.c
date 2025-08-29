@@ -585,6 +585,7 @@ void __might_sleep(const char *file, int line)
             (void *)current->task_state_change,
             (void *)current->task_state_change);
 #endif
+    pr_notice("%s: No impl.", __func__);
 
     __might_resched(file, line, 0);
 }

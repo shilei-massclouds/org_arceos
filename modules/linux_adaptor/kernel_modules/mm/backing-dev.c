@@ -46,7 +46,7 @@ static void wb_update_bandwidth_workfn(struct work_struct *work)
 
     wb_update_bandwidth(wb);
 #endif
-    PANIC("");
+    pr_notice("%s: No impl.", __func__);
 }
 
 /*

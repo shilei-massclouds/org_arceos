@@ -2160,7 +2160,6 @@ unlock:
         mnt_drop_write(path->mnt);
 out:
     path_put(path);
-    PANIC("fail");
     return dentry;
 }
 
