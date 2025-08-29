@@ -8,10 +8,6 @@ use axtask::current;
 
 const CL_TASK_STATE_MASK:   usize = 0x00000003;
 
-const TASK_RUNNING:         usize = 0x00000000;
-const TASK_INTERRUPTIBLE:   usize = 0x00000001;
-const TASK_UNINTERRUPTIBLE: usize = 0x00000002;
-
 /// Alloc bytes.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_rust_alloc(size: usize, align: usize) -> usize {
@@ -93,17 +89,5 @@ pub extern "C" fn cl_resched(state: usize) {
     debug!("resched current .. state {}(origin:{}); curr {}",
         state & CL_TASK_STATE_MASK, state, current().id_name());
 
-    match state & CL_TASK_STATE_MASK {
-        TASK_RUNNING => axtask::yield_now(),
-        TASK_INTERRUPTIBLE => axtask::__resched(true),
-        TASK_UNINTERRUPTIBLE => axtask::__resched(false),
-        _ => panic!("bad task state: {}", state),
-    }
-}
-
-/// Reschedule.
-#[unsafe(no_mangle)]
-pub extern "C" fn cl_wake_up(tid: u64) {
-    debug!("wake up thread: {}", tid);
-    axtask::__wake_up(tid)
+    axtask::yield_now()
 }

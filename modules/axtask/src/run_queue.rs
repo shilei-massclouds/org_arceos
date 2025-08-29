@@ -1,6 +1,5 @@
-use alloc::collections::{BTreeMap, VecDeque};
+use alloc::collections::VecDeque;
 use alloc::sync::Arc;
-use alloc::vec::Vec;
 use core::mem::MaybeUninit;
 
 #[cfg(feature = "smp")]
@@ -16,8 +15,6 @@ use axhal::cpu::this_cpu_id;
 use crate::task::{CurrentTask, TaskState};
 use crate::wait_queue::WaitQueueGuard;
 use crate::{AxCpuMask, AxTaskRef, Scheduler, TaskInner, WaitQueue};
-
-const TASK_RUNNING: usize = 0;
 
 macro_rules! percpu_static {
     ($(
@@ -55,31 +52,6 @@ static mut RUN_QUEUES: [MaybeUninit<&'static mut AxRunQueue>; axconfig::SMP] =
     [ARRAY_REPEAT_VALUE; axconfig::SMP];
 #[allow(clippy::declare_interior_mutable_const)] // It's ok because it's used only for initialization `RUN_QUEUES`.
 const ARRAY_REPEAT_VALUE: MaybeUninit<&'static mut AxRunQueue> = MaybeUninit::uninit();
-
-/// Maintain all interruptible tasks by `__resched()`.
-/// Now it's just to maintain tasks for Linux KThread.
-static LINUX_INTERRUPTIBLE_TASKS: SpinRaw<BTreeMap<u64, AxTaskRef>> = SpinRaw::new(BTreeMap::new());
-
-/// Maintain all uninterruptible tasks by `__resched()`.
-/// Now it's just to maintain tasks for Linux KThread.
-static LINUX_UNINTERRUPTIBLE_TASKS: SpinRaw<BTreeMap<u64, AxTaskRef>> = SpinRaw::new(BTreeMap::new());
-
-pub(crate) fn check_interruptible() {
-    let tid_array: Vec<u64> = LINUX_INTERRUPTIBLE_TASKS
-        .lock().iter().map(|(tid, _)| *tid).collect();
-
-    /*
-    {
-        let _array: Vec<u64> = LINUX_UNINTERRUPTIBLE_TASKS
-            .lock().iter().map(|(tid, _)| *tid).collect();
-        error!("UNINTERRUPTIBLE: {:?}", _array);
-    }
-    */
-
-    for tid in tid_array {
-        crate::__wake_up(tid);
-    }
-}
 
 /// Returns a reference to the current run queue in [`CurrentRunQueueRef`].
 ///
@@ -319,38 +291,6 @@ impl<G: BaseGuard> CurrentRunQueueRef<'_, G> {
             .put_task_with_state(curr.clone(), TaskState::Running, false);
 
         self.inner.resched();
-    }
-
-    /// Request to reschedule and current task will be put to sleeping-task queues.
-    /// Switch to the next task on this run-queue, but current task will NOT be put back
-    /// to run-queue. `LINUX_[INTERRUPTIBLE|UNINTERRUPTIBLE]_TASKS` will hold its refcount.
-    /// Now it's only useful under the feature [linux adaptor].
-    pub fn __resched(&mut self, interruptible: bool) {
-        let curr = &self.current_task;
-        trace!("task resched: {}", curr.id_name());
-        curr.set_state(TaskState::Blocked);
-        if interruptible {
-            LINUX_INTERRUPTIBLE_TASKS.lock().insert(curr.id().as_u64(), curr.clone());
-        } else {
-            LINUX_UNINTERRUPTIBLE_TASKS.lock().insert(curr.id().as_u64(), curr.clone());
-        }
-
-        self.inner.resched();
-    }
-
-    /// Wake up interruptible task which is for Linux.
-    pub fn __wake_up(&mut self, tid: u64) {
-        if let Some(task) = LINUX_INTERRUPTIBLE_TASKS.lock().remove(&tid) {
-            unsafe { cl_set_task_state(task.private() as usize, TASK_RUNNING) };
-            self.inner
-                .put_task_with_state(task, TaskState::Blocked, true);
-        } else if let Some(task) = LINUX_UNINTERRUPTIBLE_TASKS.lock().remove(&tid) {
-            unsafe { cl_set_task_state(task.private() as usize, TASK_RUNNING) };
-            self.inner
-                .put_task_with_state(task, TaskState::Blocked, true);
-        } else {
-            debug!("No task which id is {}.", tid);
-        }
     }
 
     /// Migrate the current task to a new run queue matching its CPU affinity and reschedule.
@@ -724,8 +664,4 @@ pub(crate) fn init_secondary() {
     unsafe {
         RUN_QUEUES[cpu_id].write(RUN_QUEUE.current_ref_mut_raw());
     }
-}
-
-unsafe extern "C" {
-    fn cl_set_task_state(task_ptr: usize, state: usize);
 }
