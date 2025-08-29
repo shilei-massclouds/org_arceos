@@ -50,6 +50,9 @@ void *kmem_cache_alloc_noprof(struct kmem_cache *s, gfp_t gfpflags)
     if (!s) {
         PANIC("Bad kmem_cache");
     }
+    if (s->ctor && (gfpflags & __GFP_ZERO)) {
+        PANIC("kmem_cache ctor conflicts with GFP_ZERO.");
+    }
     pr_debug("%s: object_size(%u, %u) align(%u)",
              __func__, s->object_size, s->size, s->align);
 
@@ -60,6 +63,9 @@ void *kmem_cache_alloc_noprof(struct kmem_cache *s, gfp_t gfpflags)
     void *ret = cl_rust_alloc(s->size, align);
     if (s->ctor) {
         s->ctor(ret);
+    }
+    if (gfpflags & __GFP_ZERO) {
+        memset(ret, 0, s->size);
     }
     return ret;
 }

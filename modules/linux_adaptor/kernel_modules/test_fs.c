@@ -446,8 +446,29 @@ test_file_common(const char *path, off_t offset)
     test_file_remove(path);
 }
 
+static void test_simple(void)
+{
+    char fname[] = "/testf.txt";
+
+    if (_exists(fname)) {
+        panic("Success for '%s'!", fname);
+    }
+
+    int fd = cl_sys_open(fname, O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+    if (fd < 0) {
+        PANIC("bad file fd.");
+    }
+    printk("create '%s' for write ok!\n", fname);
+}
+
 void test_ext4(void)
 {
+    test_simple();
+    for (int i = 0; i < 100; i++) {
+        cl_resched(TASK_RUNNING);
+    }
+    PANIC("[Simple]: Reach here!");
+
     test_getdents64();
 
     test_file_common("/f1.txt", 0);

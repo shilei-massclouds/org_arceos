@@ -118,10 +118,11 @@ impl DirNode {
 
     /// Construct full path based on 'self.path'
     fn full_path(&self, path: &str) -> String {
+        let formal_path = path.trim_start_matches('/');
         if self.path == "/" {
-            format!("/{}", path)
+            format!("/{}", formal_path)
         } else {
-            format!("{}/{}", self.path, path)
+            format!("{}/{}", self.path, formal_path)
         }
     }
 }
