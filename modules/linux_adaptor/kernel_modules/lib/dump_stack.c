@@ -28,15 +28,11 @@
  */
 void dump_stack_print_info(const char *log_lvl)
 {
-    printk("%sCPU: %d UID: %u PID: %d Comm: %.20s %s " BUILD_ID_FMT "\n",
+    printk("\n%sCPU: %d UID: %u PID: %d Comm: %.20s " BUILD_ID_FMT "\n",
            log_lvl, raw_smp_processor_id(),
            __kuid_val(current_real_cred()->euid),
            current->pid, current->comm,
            kexec_crash_loaded() ? "Kdump: loaded " : "",
-           print_tainted(),
-           //init_utsname()->release,
-           //(int)strcspn(init_utsname()->version, " "),
-           //init_utsname()->version,
            BUILD_ID_VAL);
 
 #if 0

@@ -7,7 +7,8 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
     -fno-asynchronous-unwind-tables -fno-unwind-tables \
     -fno-common -fno-stack-protector -mcmodel=medany -D__KERNEL__ \
     -O2 -Wno-stringop-overflow -Wno-format-truncation -Wno-format-security \
-    -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration
+    -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration \
+    -fno-omit-frame-pointer -Wno-frame-address -Wframe-larger-than=2048
 
 ifeq ("$(LOG)", "debug")
 CFLAGS += -DDEBUG
@@ -57,6 +58,7 @@ OBJS += dma/mapping.o dma/swiotlb.o
 OBJS += kernel/resource.o kernel/workqueue.o kernel/kthread.o
 OBJS += kernel/nsproxy.o kernel/cpu.o kernel/user_namespace.o
 OBJS += kernel/panic.o kernel/exit.o kernel/cred.o kernel/softirq.o
+OBJS += kernel/extable.o
 OBJS += kernel/stacktrace.o		# for arch/riscv/kernel
 OBJS += block/genhd.o block/blk-mq.o block/blk-mq-virtio.o
 OBJS += block/blk-mq-cpumap.o block/blk-mq-tag.o block/blk-core.o

@@ -549,10 +549,4 @@ int debug_locks_off(void)
     return 0;
 }
 
-int __kernel_text_address(unsigned long addr)
-{
-    pr_notice("%s: No impl. addr(%lx)", __func__, addr);
-    return 1;
-}
-
 int debug_locks_silent __read_mostly;

@@ -15,6 +15,10 @@ SECTIONS
         *(.text.boot)
         *(.text .text.*)
         . = ALIGN(4K);
+        _sinittext = .;
+        *(.init.text .init.text.*) *(.text.startup)
+        _einittext = .;
+        . = ALIGN(4K);
         _etext = .;
     }
 

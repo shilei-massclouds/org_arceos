@@ -467,6 +467,20 @@ void test_ext4(void)
     for (int i = 0; i < 100; i++) {
         cl_resched(TASK_RUNNING);
     }
+    {
+        // Note: test dump_stack().
+        int old_cpu, this_cpu;
+        old_cpu = PANIC_CPU_INVALID;
+        this_cpu = raw_smp_processor_id();
+
+        /* atomic_try_cmpxchg updates old_cpu on failure */
+        if (atomic_try_cmpxchg(&panic_cpu, &old_cpu, this_cpu)) {
+            /* go ahead */
+        } else if (old_cpu != this_cpu) {
+            PANIC("INVALID panic cpu.");
+        }
+        dump_stack();
+    }
     PANIC("[Simple]: Reach here!");
 
     test_getdents64();
