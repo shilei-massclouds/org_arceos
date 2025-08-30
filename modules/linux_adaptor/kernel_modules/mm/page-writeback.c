@@ -276,7 +276,7 @@ void tag_pages_for_writeback(struct address_space *mapping,
     unsigned int tagged = 0;
     void *page;
 
-    printk("%s: step1 (%lx,%lx)\n", __func__, start, end);
+    pr_debug("%s: (%lx,%lx)", __func__, start, end);
     xas_lock_irq(&xas);
     xas_for_each_marked(&xas, page, end, PAGECACHE_TAG_DIRTY) {
         xas_set_mark(&xas, PAGECACHE_TAG_TOWRITE);
@@ -398,7 +398,7 @@ void __folio_start_writeback(struct folio *folio, bool keep_write)
     struct address_space *mapping = folio_mapping(folio);
     int access_ret;
 
-    printk("%s: step1 keep_write(%d)\n", __func__, keep_write);
+    pr_debug("%s: keep_write(%d)", __func__, keep_write);
     VM_BUG_ON_FOLIO(folio_test_writeback(folio), folio);
 
     folio_memcg_lock(folio);
@@ -620,7 +620,6 @@ retry:
 struct folio *writeback_iter(struct address_space *mapping,
         struct writeback_control *wbc, struct folio *folio, int *error)
 {
-    printk("%s: ...\n", __func__);
     if (!folio) {
         folio_batch_init(&wbc->fbatch);
         wbc->saved_err = *error = 0;

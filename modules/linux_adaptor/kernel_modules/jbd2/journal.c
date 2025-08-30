@@ -1829,11 +1829,8 @@ static int jbd2_write_superblock(journal_t *journal, blk_opf_t write_flags)
 		sb->s_checksum = jbd2_superblock_csum(journal, sb);
 	get_bh(bh);
 	bh->b_end_io = end_buffer_write_sync;
-    printk("%s: step0 bio_list(%lx)\n", __func__, current->bio_list);
 	submit_bh(REQ_OP_WRITE | write_flags, bh);
-    printk("%s: step1 bio_list(%lx)\n", __func__, current->bio_list);
 	wait_on_buffer(bh);
-    printk("%s: step2 bio_list(%lx)\n", __func__, current->bio_list);
 	if (buffer_write_io_error(bh)) {
 		clear_buffer_write_io_error(bh);
 		set_buffer_uptodate(bh);

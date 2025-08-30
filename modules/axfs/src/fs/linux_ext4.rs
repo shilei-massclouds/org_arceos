@@ -180,7 +180,7 @@ impl VfsNodeOps for DirNode {
                     cl_sys_mkdir(c_path.as_ptr(), 0o700)
                 };
                 if ret < 0 {
-                    error!("create dir err {}", ret);
+                    debug!("create dir err {}", ret);
                     if -ret == LinuxError::EEXIST as i32 {
                         return Err(AxError::AlreadyExists);
                     }

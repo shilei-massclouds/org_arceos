@@ -107,7 +107,6 @@ static void folio_batch_move_lru(struct folio_batch *fbatch, move_fn_t move_fn)
     struct lruvec *lruvec = NULL;
     unsigned long flags = 0;
 
-    printk("%s: step1\n", __func__);
     for (i = 0; i < folio_batch_count(fbatch); i++) {
         struct folio *folio = fbatch->folios[i];
 

@@ -38,7 +38,7 @@ static inline long __sched
 __wait_for_common(struct completion *x,
           long (*action)(long), long timeout, int state)
 {
-    printk("%s: timeout(%lu)\n", __func__, timeout);
+    pr_debug("%s: timeout(%lu)", __func__, timeout);
     might_sleep();
 
     complete_acquire(x);
@@ -102,7 +102,6 @@ void complete_all(struct completion *x)
 unsigned long __sched
 wait_for_completion_io_timeout(struct completion *x, unsigned long timeout)
 {
-    printk("%s: step1\n", __func__);
     return wait_for_common_io(x, timeout, TASK_UNINTERRUPTIBLE);
 }
 

@@ -703,7 +703,7 @@ split:
 
 static struct bio *bio_submit_split(struct bio *bio, int split_sectors)
 {
-    printk("%s: split_sectors(%d)\n", __func__, split_sectors);
+    pr_debug("%s: split_sectors(%d)", __func__, split_sectors);
     if (unlikely(split_sectors < 0)) {
         bio->bi_status = errno_to_blk_status(split_sectors);
         bio_endio(bio);
