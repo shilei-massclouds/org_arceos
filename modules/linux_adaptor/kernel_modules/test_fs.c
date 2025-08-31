@@ -6,188 +6,6 @@
 #include "adaptor.h"
 #include "cl_syscalls.h"
 
-static struct dentry *
-lookup(struct dentry *parent, const char *name)
-{
-    /* Lookup inode by name in parent dir. */
-    struct dentry *ret;
-    struct inode *parent_inode = parent->d_inode;
-    unsigned int lookup_flags = 0;
-    struct qstr qname = QSTR(name);
-    struct dentry *target = d_alloc(parent, &qname);
-
-    printk("------> %s: step1 parent(%lx) name(%s)\n",
-           __func__, parent, name);
-    ret = parent_inode->i_op->lookup(parent_inode, target, lookup_flags);
-    if (IS_ERR(ret)) {
-        printk("%s: err(%d)\n", __func__, PTR_ERR(ret));
-        PANIC("lookup error.");
-    }
-    printk("%s: step2 inode(%lx)\n", __func__, target->d_inode);
-    if (target->d_inode) {
-        return target;
-    }
-    dput(target);
-    return NULL;
-}
-
-/**
- * cl_vfs_file_size - get size of file
- * @dentry: file dentry pointer
- *
- * Return: size of the file
- */
-unsigned long
-cl_vfs_file_size(struct dentry *dentry)
-{
-    if (dentry == NULL || dentry->d_inode == NULL) {
-        PANIC("bad dentry without inode.");
-    }
-    return (unsigned long) dentry->d_inode->i_size;
-}
-
-/**
- * cl_vfs_exists - check whether a file or dir exists
- * @parent: parent dir of the file or dir
- * @name: name of this file or dir
- *
- * Return: 1 on existence, 0 on none-existence.
- */
-unsigned long
-cl_vfs_exists(struct dentry *parent, const char *name)
-{
-    printk("%s: name '%s' len %d\n", __func__, name, strlen(name));
-    struct dentry *target = lookup(parent, name);
-    if (target) {
-        dput(target);
-        return 1;
-    }
-    return 0;
-}
-
-/**
- * cl_vfs_lookup - lookup a file or dir at parent dir
- * @parent: parent dir
- * @name: name of target file or dir
- * @ret_type: pointer to the node's type
- *
- * Return: target entry ptr on success, NULL(0) on failure.
- */
-unsigned long
-cl_vfs_lookup(struct dentry *parent, const char *name, unsigned char *ret_type)
-{
-    struct dentry *dentry = lookup(parent, name);
-    if (dentry == NULL) {
-        return 0;
-    }
-
-    if (dentry->d_inode == NULL) {
-        PANIC("bad dentry without inode.");
-    }
-
-    unsigned char d_type = 0;
-    struct inode *inode = dentry->d_inode;
-    if (S_ISREG(inode->i_mode)) {
-        d_type = DT_REG;
-    } else if (S_ISDIR(inode->i_mode)) {
-        d_type = DT_DIR;
-    } else {
-        PANIC("bad type.");
-    }
-    *ret_type = d_type;
-
-    printk("%s: name '%s' len %d type %u\n", __func__, name, strlen(name), d_type);
-    return (unsigned long) dentry;
-}
-
-/**
- * cl_vfs_parent - lookup parent of the file or dir
- * @curr: curr file or dir
- *
- * Return: parent entry ptr
- */
-unsigned long
-cl_vfs_parent(struct dentry *curr)
-{
-    return (unsigned long) curr->d_parent;
-}
-
-#if 0
-unsigned long
-cl_vfs_create_dir(struct dentry *parent, const char *dname)
-{
-    PANIC("");
-#if 0
-    struct dentry *ret = create_dir(parent, dname);
-    if (IS_ERR(ret)) {
-        return PTR_ERR(ret);
-    }
-    dput(ret);
-    return 0;
-#endif
-}
-#endif
-
-static struct dentry *
-create_file(struct dentry *parent, const char *fname)
-{
-    struct inode *parent_inode = parent->d_inode;
-    struct qstr qname = QSTR(fname);
-    struct dentry *target = d_alloc(parent, &qname);
-
-    if (parent_inode->i_op->create(&nop_mnt_idmap, parent_inode, target, 0777|S_IFREG, false)) {
-        PANIC("create file error.");
-    }
-    if (target->d_inode == NULL) {
-        PANIC("bad dentry for no inode.");
-    }
-
-    printk("%s: create '%s' ok!\n", __func__, fname);
-    return target;
-}
-
-unsigned long
-cl_vfs_create_file(struct dentry *parent, const char *fname)
-{
-    struct dentry *ret = create_file(parent, fname);
-    if (IS_ERR(ret)) {
-        return PTR_ERR(ret);
-    }
-    dput(ret);
-    return 0;
-}
-
-unsigned long
-cl_vfs_remove(struct dentry *parent, const char *name)
-{
-    struct inode *parent_inode = parent->d_inode;
-    if (parent_inode == NULL) {
-        PANIC("No parent inode.");
-    }
-
-    printk("%s: remove '%s' ...\n", __func__, name);
-    struct dentry *target = lookup(parent, name);
-    if (target == NULL) {
-        PANIC("No target dentry.");
-    }
-    struct inode *inode = target->d_inode;
-    if (S_ISREG(inode->i_mode)) {
-        if (parent_inode->i_op->unlink(parent_inode, target)) {
-            PANIC("unlink dir error.");
-        }
-        printk("%s: remove file '%s' ok!\n", __func__, name);
-    } else if (S_ISDIR(inode->i_mode)) {
-        if (parent_inode->i_op->rmdir(parent_inode, target)) {
-            PANIC("delete dir error.");
-        }
-        printk("%s: remove dir '%s' ok!\n", __func__, name);
-    } else {
-        PANIC("bad type.");
-    }
-    dput(target);
-    return 0;
-}
-
 /*
  * Utilities
  */
@@ -218,7 +36,7 @@ _exists(const char *fname)
 static void
 test_getdents64(void)
 {
-    printk("\n============== getdents64 ... =============\n");
+    printk("\n============== getdents64 ... =============\n\n");
 
     int fd = cl_sys_open("/", O_DIRECTORY, 0);
     if (fd < 0) {
@@ -252,7 +70,7 @@ test_getdents64(void)
 static void
 test_file_create(const char *fname)
 {
-    printk("\n============== file create ... =============\n");
+    printk("\n============== file create ... =============\n\n");
 
     int fd = cl_sys_open(fname, O_CREAT, S_IRUSR|S_IWUSR);
     if (fd < 0) {
@@ -272,7 +90,7 @@ test_file_create(const char *fname)
 static void
 test_dir_create(const char *dname)
 {
-    printk("\n============== dir create ... =============\n");
+    printk("\n============== dir create ... =============\n\n");
 
     CL_ASSERT(!_exists(dname), "dir already exists.");
 
@@ -291,7 +109,7 @@ test_dir_create(const char *dname)
 static void
 test_dir_remove(const char *dname)
 {
-    printk("\n============== dir remove ... =============\n");
+    printk("\n============== dir remove ... =============\n\n");
 
     CL_ASSERT(_exists(dname), "No dir.");
 
@@ -310,7 +128,7 @@ test_dir_remove(const char *dname)
 static void
 test_file_remove(const char *fname)
 {
-    printk("\n============== file remove ... =============\n");
+    printk("\n============== file remove ... =============\n\n");
 
     int err = cl_sys_unlink(fname);
     if (err < 0) {
@@ -325,7 +143,7 @@ test_file_remove(const char *fname)
 static void
 test_stat(const char *path)
 {
-    printk("\n============== stat ... =============\n");
+    printk("\n============== stat ... =============\n\n");
 
     struct stat buf;
     int err = cl_sys_newstat(path, &buf);
@@ -354,7 +172,7 @@ test_stat(const char *path)
 static int
 test_file_read(const char *fname, char *buf, size_t len, off_t offset)
 {
-    printk("\n============== file read ... =============\n");
+    printk("\n============== file read ... =============\n\n");
 
     int fd = cl_sys_open(fname, O_RDONLY, 0);
     if (fd < 0) {
@@ -387,7 +205,7 @@ test_file_read(const char *fname, char *buf, size_t len, off_t offset)
 static void
 test_file_write(const char *fname, const char *buf, size_t len, off_t offset)
 {
-    printk("\n============== file write ... =============\n");
+    printk("\n============== file write ... =============\n\n");
 
     int fd = cl_sys_open(fname, O_WRONLY, 0);
     if (fd < 0) {
@@ -415,7 +233,7 @@ test_file_write(const char *fname, const char *buf, size_t len, off_t offset)
 static void
 test_file_truncate(const char *fname, long len)
 {
-    printk("\n============== file truncate ... =============\n");
+    printk("\n============== file truncate ... =============\n\n");
 
     int err = cl_sys_truncate(fname, len);
     if (err < 0) {

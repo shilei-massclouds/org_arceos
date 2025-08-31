@@ -82,7 +82,6 @@ asmlinkage __visible void dump_stack_lvl(const char *log_lvl)
 
     if (!in_panic)
         printk_cpu_sync_put_irqrestore(flags);
-    PANIC("");
 }
 
 asmlinkage __visible void dump_stack(void)

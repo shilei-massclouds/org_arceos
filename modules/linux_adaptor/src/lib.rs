@@ -54,7 +54,6 @@ fn prepare_ext_interrupt() {
     });
 }
 
-#[link(name = "clinux", kind = "static")]
 unsafe extern "C" {
     fn init_current(tid: u64) -> u64;
     fn clinux_init() -> i32;
