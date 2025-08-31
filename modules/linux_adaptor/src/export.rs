@@ -5,6 +5,7 @@ use alloc::alloc::{alloc, Layout};
 use axalloc::global_allocator;
 use axhal::mem::PAGE_SIZE_4K;
 use axtask::current;
+use crate::kallsyms::get_ksym;
 
 const CL_TASK_STATE_MASK:   usize = 0x00000003;
 
@@ -44,7 +45,6 @@ pub extern "C" fn cl_free_pages(addr: usize, count: usize) {
 /// Printk
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_printk(level: u8, ptr: *const c_char) {
-    /* Note: 'error!' can destroy current int linux. WHY? */
     let c_str = unsafe { CStr::from_ptr(ptr) };
     let rust_str = c_str.to_str().expect("Bad encoding");
     match level as char {
@@ -90,4 +90,14 @@ pub extern "C" fn cl_resched(state: usize) {
         state & CL_TASK_STATE_MASK, state, current().id_name());
 
     axtask::yield_now()
+}
+
+/// Reschedule.
+#[unsafe(no_mangle)]
+pub extern "C" fn cl_get_ksym(addr: usize, s: *mut u8, size: usize) {
+    let name = get_ksym(addr).unwrap_or("[unknown]");
+    unsafe {
+        let dst = core::slice::from_raw_parts_mut(s, size);
+        dst[..name.len()].copy_from_slice(name.as_bytes());
+    }
 }

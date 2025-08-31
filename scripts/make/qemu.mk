@@ -46,6 +46,9 @@ qemu_args-loongarch64 := \
 
 qemu_args-y := -m $(MEM) -smp $(SMP) $(qemu_args-$(ARCH))
 
+qemu_args-$(PFLASH) += \
+  -drive if=pflash,file=$(CURDIR)/$(PFLASH_IMG),format=raw,unit=1
+
 qemu_args-$(BLK) += \
   -device virtio-blk-$(vdev-suffix),drive=disk0 \
   -drive id=disk0,if=none,format=raw,file=$(DISK_IMG)

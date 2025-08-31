@@ -52,3 +52,14 @@ define make_disk_image
   $(if $(filter $(1),ext2), $(call make_disk_image_ext2,$(2)))
   $(if $(filter $(1),ext4), $(call make_disk_image_ext4,$(2)))
 endef
+
+define mk_pflash
+  ls -l $(2)
+  @printf "kall" > /tmp/kallsyms.bin
+  @printf "%08x" `stat -c "%s" $(2)` | xxd -r -ps >> /tmp/kallsyms.bin
+  @cat $(2) >> /tmp/kallsyms.bin
+  @printf "syms" >> /tmp/kallsyms.bin
+
+  @dd if=/dev/zero of=./$(1) bs=1M count=32
+  @dd if=/tmp/kallsyms.bin of=./$(1) conv=notrunc
+endef

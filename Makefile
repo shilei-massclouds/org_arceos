@@ -57,6 +57,12 @@ GRAPHIC ?= n
 BUS ?= mmio
 MEM ?= 128M
 ACCEL ?=
+PFLASH ?= y
+ifeq ($(PFLASH), y)
+  PFLASH_IMG := kallsys.img
+else
+  PFLASH_IMG :=
+endif
 
 DISK_IMG ?= disk.img
 # Filesystem type: fat32, ext2, ext4

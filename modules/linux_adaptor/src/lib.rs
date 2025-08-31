@@ -5,20 +5,27 @@
 //! - 'linux_adaptor': Enable this module
 
 #![no_std]
+#![allow(static_mut_refs)]
+#![feature(new_range_api)]
+#![feature(btree_cursors)]
 
 #[macro_use]
 extern crate axlog;
 extern crate alloc;
 
 mod export;
+mod kallsyms;
 
 use axhal::mem::virt_to_phys;
 use memory_addr::{pa, MemoryAddr};
 use axconfig::plat::{PHYS_MEMORY_BASE, PHYS_MEMORY_SIZE, PHYS_VIRT_OFFSET};
+use crate::kallsyms::init_kallsyms;
 
 /// Initialize Linux modules.
 pub fn init_linux_modules() {
     info!("Initialize Linux modules...");
+
+    init_kallsyms();
 
     /* Offset between VirtAddr and PhysAddr in kernel aspace. */
     unsafe { setup_paging(PHYS_VIRT_OFFSET) };

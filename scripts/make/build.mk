@@ -49,8 +49,13 @@ endif
 $(OUT_DIR):
 	$(call run_cmd,mkdir,-p $@)
 
-$(OUT_BIN): _cargo_build $(OUT_ELF)
+$(OUT_BIN): _cargo_build $(PFLASH_IMG) $(OUT_ELF)
 	$(call run_cmd,$(OBJCOPY),$(OUT_ELF) --strip-all -O binary $@)
+
+$(PFLASH_IMG): $(OUT_ELF)
+	@printf " Building $@\n"
+	@riscv64-linux-gnu-nm --numeric-sort --defined-only $(OUT_ELF) | grep "\( [Tt] \)" | awk -F " " '{print $$1,$$3}' > $@.syms
+	$(call mk_pflash,$@,$@.syms)
 
 ifeq ($(ARCH), aarch64)
   uimg_arch := arm64

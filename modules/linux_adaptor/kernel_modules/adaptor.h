@@ -24,6 +24,9 @@ cl_kthread_run(unsigned long task_ptr,
                unsigned long threadfn_ptr,
                unsigned long arg_ptr);
 
+extern void
+cl_get_ksym(unsigned long addr, char *name, unsigned long size);
+
 extern int clinux_starting;
 extern int clinux_started;
 

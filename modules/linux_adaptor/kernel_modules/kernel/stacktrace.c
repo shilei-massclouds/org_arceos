@@ -68,9 +68,11 @@ void notrace walk_stackframe(struct task_struct *task, struct pt_regs *regs,
 static bool print_trace_address(void *arg, unsigned long pc)
 {
     const char *loglvl = arg;
+    char name[256] = {0};
 
+    cl_get_ksym(pc, name, sizeof(name));
     //print_ip_sym(loglvl, pc);
-    printk("%s[<%lx>] %lx\n", loglvl, (void *) pc, (void *) pc);
+    printk("%s[<%lx>] %s\n", loglvl, (void *) pc, name);
     return true;
 }
 
