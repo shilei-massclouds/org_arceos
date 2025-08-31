@@ -1,4 +1,12 @@
 #include <linux/device.h>
+#include <linux/module.h>
+#include <linux/slab.h>
+#include <linux/percpu.h>
+
+#include <asm/sections.h>
+
+#include "base.h"
+#include "trace.h"
 
 struct devres_node {
     struct list_head        entry;
@@ -160,7 +168,7 @@ void *devm_kmalloc(struct device *dev, size_t size, gfp_t gfp)
 static void devres_log(struct device *dev, struct devres_node *node,
                const char *op)
 {
-    //trace_devres_log(dev, op, node, node->name, node->size);
+    trace_devres_log(dev, op, node, node->name, node->size);
     //devres_dbg(dev, node, op);
     pr_notice("DEVRES %3s %p %s (%zu bytes)\n", op, node, node->name, node->size);
 }

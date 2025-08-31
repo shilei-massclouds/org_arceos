@@ -58,14 +58,11 @@ unsafe extern "C" {
     fn init_current(tid: u64) -> u64;
     fn clinux_init() -> i32;
     fn init_mem_map(pa_start: usize, pa_end: usize) -> i32;
+    fn _skernel();
 }
 
 #[cfg(target_arch = "riscv64")]
 unsafe extern "C" {
     fn call_handle_arch_irq(cause: usize);
     fn setup_paging(va_pa_offset: usize);
-}
-
-unsafe extern "C" {
-    fn _skernel();
 }
