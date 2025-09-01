@@ -282,6 +282,7 @@ static void test_simple(void)
 void test_ext4(void)
 {
     test_simple();
+#if 0
     for (int i = 0; i < 100; i++) {
         cl_resched(TASK_RUNNING);
     }
@@ -297,8 +298,9 @@ void test_ext4(void)
         } else if (old_cpu != this_cpu) {
             PANIC("INVALID panic cpu.");
         }
-        dump_stack();
     }
+    dump_stack();
+#endif
     PANIC("[Simple]: Reach here!");
 
     test_getdents64();

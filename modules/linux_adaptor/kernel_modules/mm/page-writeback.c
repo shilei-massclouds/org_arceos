@@ -45,6 +45,8 @@ unsigned int dirty_writeback_interval = 5 * 100; /* centiseconds */
  */
 unsigned int dirty_expire_interval = 30 * 100; /* centiseconds */
 
+struct wb_domain global_wb_domain;
+
 /*
  * Flag that puts the machine in "laptop mode". Doubles as a timeout in jiffies:
  * a full sync is triggered after this time elapses without any disk activity.

@@ -15,52 +15,12 @@
 #include <linux/memcontrol.h>
 #include "internal.h"
 
-/*
- * Include the creation of the trace points after defining the
- * wb_writeback_work structure and inline functions so that the definition
- * remains local to this file.
- */
-#define CREATE_TRACE_POINTS
-#include <trace/events/writeback.h>
-
 #include "../adaptor.h"
 
 /*
  * 4MB minimal write chunk size
  */
 #define MIN_WRITEBACK_PAGES (4096UL >> (PAGE_SHIFT - 10))
-
-/*
- * If an inode is constantly having its pages dirtied, but then the
- * updates stop dirtytime_expire_interval seconds in the past, it's
- * possible for the worst case time between when an inode has its
- * timestamps updated and when they finally get written out to be two
- * dirtytime_expire_intervals.  We set the default to 12 hours (in
- * seconds), which means most of the time inodes will have their
- * timestamps written to disk after 12 hours, but in the worst case a
- * few inodes might not their timestamps updated for 24 hours.
- */
-unsigned int dirtytime_expire_interval = 12 * 60 * 60;
-
-static inline struct inode *wb_inode(struct list_head *head)
-{
-    return list_entry(head, struct inode, i_io_list);
-}
-
-static bool inode_dirtied_after(struct inode *inode, unsigned long t)
-{
-    bool ret = time_after(inode->dirtied_when, t);
-#ifndef CONFIG_64BIT
-    /*
-     * For inodes being constantly redirtied, dirtied_when can get stuck.
-     * It _appears_ to be in the future, but is actually in distant past.
-     * This test is necessary to prevent such wrapped-around relative times
-     * from permanently stopping the whole bdi writeback.
-     */
-    ret = ret && time_before_eq(inode->dirtied_when, jiffies);
-#endif
-    return ret;
-}
 
 /*
  * Passed into wb_writeback(), essentially a subset of writeback_control
@@ -80,6 +40,46 @@ struct wb_writeback_work {
     struct list_head list;      /* pending work list */
     struct wb_completion *done; /* set if the caller waits */
 };
+
+/*
+ * If an inode is constantly having its pages dirtied, but then the
+ * updates stop dirtytime_expire_interval seconds in the past, it's
+ * possible for the worst case time between when an inode has its
+ * timestamps updated and when they finally get written out to be two
+ * dirtytime_expire_intervals.  We set the default to 12 hours (in
+ * seconds), which means most of the time inodes will have their
+ * timestamps written to disk after 12 hours, but in the worst case a
+ * few inodes might not their timestamps updated for 24 hours.
+ */
+unsigned int dirtytime_expire_interval = 12 * 60 * 60;
+
+static inline struct inode *wb_inode(struct list_head *head)
+{
+    return list_entry(head, struct inode, i_io_list);
+}
+
+/*
+ * Include the creation of the trace points after defining the
+ * wb_writeback_work structure and inline functions so that the definition
+ * remains local to this file.
+ */
+#define CREATE_TRACE_POINTS
+#include <trace/events/writeback.h>
+
+static bool inode_dirtied_after(struct inode *inode, unsigned long t)
+{
+    bool ret = time_after(inode->dirtied_when, t);
+#ifndef CONFIG_64BIT
+    /*
+     * For inodes being constantly redirtied, dirtied_when can get stuck.
+     * It _appears_ to be in the future, but is actually in distant past.
+     * This test is necessary to prevent such wrapped-around relative times
+     * from permanently stopping the whole bdi writeback.
+     */
+    ret = ret && time_before_eq(inode->dirtied_when, jiffies);
+#endif
+    return ret;
+}
 
 /*
  * Parameters for foreign inode detection, see wbc_detach_inode() to see

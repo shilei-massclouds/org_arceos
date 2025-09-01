@@ -48,7 +48,7 @@ DEFINE_EVENT(devres, devres_log,
 /* this part has to be here */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../base
 
 #undef TRACE_INCLUDE_FILE
 #define TRACE_INCLUDE_FILE trace

@@ -51,10 +51,15 @@ SECTIONS
         __stop___bug_table = .;
         *(.sdata .sdata.*)
         *(.got .got.*)
+        *(.ref.data)
+        *(__tracepoints)
     }
 
     .init.data : ALIGN(4K) {
         *(.init.data .init.data.*)
+        __start_ftrace_events = .;
+        KEEP(*(_ftrace_events))
+        __stop_ftrace_events = .;
     }
 
     .tdata : ALIGN(0x10) {
