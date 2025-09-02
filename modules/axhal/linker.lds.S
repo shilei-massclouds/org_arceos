@@ -28,6 +28,11 @@ SECTIONS
         *(.rodata .rodata.*)
         *(.srodata .srodata.*)
         *(.sdata2 .sdata2.*)
+        . = ALIGN(8);
+        __start___tracepoints_ptrs = .;
+        KEEP(*(__tracepoints_ptrs))
+        __stop___tracepoints_ptrs = .;
+        *(__tracepoints_strings)
     }
 
     .init_array : ALIGN(0x10) {

@@ -299,9 +299,9 @@ void test_ext4(void)
             PANIC("INVALID panic cpu.");
         }
     }
-    dump_stack();
 #endif
-    PANIC("[Simple]: Reach here!");
+    dump_stack();
+    //PANIC("[Simple]: Reach here!");
 
     test_getdents64();
 
