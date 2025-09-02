@@ -373,3 +373,51 @@ char *strstr(const char *s1, const char *s2)
 }
 EXPORT_SYMBOL(strstr);
 #endif
+
+#ifndef __HAVE_ARCH_STRPBRK
+/**
+ * strpbrk - Find the first occurrence of a set of characters
+ * @cs: The string to be searched
+ * @ct: The characters to search for
+ */
+char *strpbrk(const char *cs, const char *ct)
+{
+    const char *sc;
+
+    for (sc = cs; *sc != '\0'; ++sc) {
+        if (strchr(ct, *sc))
+            return (char *)sc;
+    }
+    return NULL;
+}
+EXPORT_SYMBOL(strpbrk);
+#endif
+
+#ifndef __HAVE_ARCH_STRSEP
+/**
+ * strsep - Split a string into tokens
+ * @s: The string to be searched
+ * @ct: The characters to search for
+ *
+ * strsep() updates @s to point after the token, ready for the next call.
+ *
+ * It returns empty tokens, too, behaving exactly like the libc function
+ * of that name. In fact, it was stolen from glibc2 and de-fancy-fied.
+ * Same semantics, slimmer shape. ;)
+ */
+char *strsep(char **s, const char *ct)
+{
+    char *sbegin = *s;
+    char *end;
+
+    if (sbegin == NULL)
+        return NULL;
+
+    end = strpbrk(sbegin, ct);
+    if (end)
+        *end++ = '\0';
+    *s = end;
+    return sbegin;
+}
+EXPORT_SYMBOL(strsep);
+#endif

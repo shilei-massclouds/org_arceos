@@ -29,6 +29,10 @@ SECTIONS
         *(.srodata .srodata.*)
         *(.sdata2 .sdata2.*)
         . = ALIGN(8);
+        __start___jump_table = .;
+        KEEP(*(__jump_table))
+        __stop___jump_table = .;
+        . = ALIGN(8);
         __start___tracepoints_ptrs = .;
         KEEP(*(__tracepoints_ptrs))
         __stop___tracepoints_ptrs = .;

@@ -71,6 +71,11 @@ __init static void enable_instances(void)
 __init static int tracer_alloc_buffers(void)
 {
     global_trace.flags = TRACE_ARRAY_FL_GLOBAL;
+
+    INIT_LIST_HEAD(&global_trace.systems);
+    INIT_LIST_HEAD(&global_trace.events);
+    INIT_LIST_HEAD(&global_trace.hist_vars);
+    INIT_LIST_HEAD(&global_trace.err_log);
     list_add(&global_trace.list, &ftrace_trace_arrays);
 }
 

@@ -74,7 +74,7 @@ fn main() {
         cl_wakeup_flusher_threads();
     }
 
-    println!("wait for one second ..");
+    println!("wait for ten seconds ..");
     // Let's fly for a while and jbd2 may write journal.
     std::thread::sleep(std::time::Duration::new(10, 0));
 

@@ -58,7 +58,7 @@ OBJS += dma/mapping.o dma/swiotlb.o
 OBJS += kernel/resource.o kernel/workqueue.o kernel/kthread.o
 OBJS += kernel/nsproxy.o kernel/cpu.o kernel/user_namespace.o
 OBJS += kernel/panic.o kernel/exit.o kernel/cred.o kernel/softirq.o
-OBJS += kernel/extable.o
+OBJS += kernel/extable.o kernel/tracepoint.o kernel/jump_label.o
 OBJS += kernel/stacktrace.o		# for arch/riscv/kernel
 OBJS += block/genhd.o block/blk-mq.o block/blk-mq-virtio.o
 OBJS += block/blk-mq-cpumap.o block/blk-mq-tag.o block/blk-core.o
@@ -75,7 +75,7 @@ OBJS += fs/fs_struct.o fs/locks.o fs/d_path.o fs/attr.o
 OBJS += char/random.o
 OBJS += proc/generic.o
 OBJS += trace/trace_syscalls.o trace/trace.o trace/trace_events.o
-OBJS += trace/trace_output.o
+OBJS += trace/trace_output.o trace/pid_list.o trace/trace_events_filter.o
 
 #OBJS += fs_types.o
 #OBJS += mpage.o
