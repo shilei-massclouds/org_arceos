@@ -1,1 +1,1 @@
-#define UTS_VERSION "#134 SMP Mon Sep  1 10:41:20 UTC 2025"
+#define UTS_VERSION "#138 SMP Tue Sep  2 00:24:42 UTC 2025"
