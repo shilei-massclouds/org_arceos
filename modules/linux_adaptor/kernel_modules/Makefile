@@ -37,7 +37,7 @@ OBJS += lib/devres.o lib/hweight.o lib/errname.o lib/idr.o lib/xarray.o
 OBJS += lib/sort.o lib/sbitmap.o lib/lockref.o lib/rbtree.o lib/dec_and_lock.o
 OBJS += lib/find_bit.o lib/sg_pool.o lib/scatterlist.o lib/errseq.o lib/llist.o
 OBJS += lib/crc32.o lib/iov_iter.o lib/irq_regs.o lib/dump_stack.o
-OBJS += lib/percpu_counter.o lib/strncpy_from_user.o
+OBJS += lib/percpu_counter.o lib/strncpy_from_user.o lib/ctype.o
 OBJS += math/reciprocal_div.o
 OBJS += crypto/api.o crypto/algapi.o crypto/blake2s.o crypto/blake2s-generic.o
 OBJS += crypto/chacha.o
@@ -74,7 +74,8 @@ OBJS += fs/stat.o fs/char_dev.o fs/open.o fs/namei.o fs/file.o fs/exec.o
 OBJS += fs/fs_struct.o fs/locks.o fs/d_path.o fs/attr.o
 OBJS += char/random.o
 OBJS += proc/generic.o
-OBJS += trace/trace_syscalls.o
+OBJS += trace/trace_syscalls.o trace/trace.o trace/trace_events.o
+OBJS += trace/trace_output.o
 
 #OBJS += fs_types.o
 #OBJS += mpage.o
@@ -105,7 +106,7 @@ OBJS += cl_mine.o main.o smp.o softirq.o panic.o \
 		cl_dummy.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
-		#ctype.o kstrtox.o \
+		#kstrtox.o \
 		#signal.o \
 
 CROSS_ = $(ARCH)-linux-musl-

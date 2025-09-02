@@ -6,6 +6,7 @@
 #include <linux/buffer_head.h>
 #include <linux/of.h>
 #include <linux/cpu.h>
+#include <linux/ftrace.h>
 
 #include "mm/slab.h"
 #include "base/base.h"
@@ -14,7 +15,7 @@
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-#define TEST_EXT4
+//#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
@@ -67,9 +68,11 @@ int clinux_init(void)
     setup_per_cpu_areas();
     boot_cpu_init();
     pagecache_init();
+    early_trace_init();
     sched_init();
     radix_tree_init();
     maple_tree_init();
+    trace_init();
     buses_init();
     buffer_init();
     vfs_caches_init();

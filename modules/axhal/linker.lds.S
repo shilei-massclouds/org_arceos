@@ -57,11 +57,13 @@ SECTIONS
         *(.sdata .sdata.*)
         *(.got .got.*)
         *(.ref.data)
+        . = ALIGN(32);
         *(__tracepoints)
     }
 
     .init.data : ALIGN(4K) {
         *(.init.data .init.data.*)
+        . = ALIGN(8);
         __start_ftrace_events = .;
         KEEP(*(_ftrace_events))
         __stop_ftrace_events = .;

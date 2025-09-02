@@ -19,8 +19,35 @@
     .size = sizeof(_type), .align = __alignof__(_type),     \
     .is_signed = is_signed_type(_type), .filter_type = FILTER_OTHER }
 
+static DEFINE_XARRAY(syscalls_metadata_sparse);
+static struct syscall_metadata **syscalls_metadata;
+
 static int __init init_syscall_trace(struct trace_event_call *call)
 {
+    int id;
+    int num;
+
+    num = ((struct syscall_metadata *)call->data)->syscall_nr;
+    if (num < 0 || num >= NR_syscalls) {
+        pr_debug("syscall %s metadata not mapped, disabling ftrace event\n",
+                ((struct syscall_metadata *)call->data)->name);
+        return -ENOSYS;
+    }
+
+#if 0
+    if (set_syscall_print_fmt(call) < 0)
+        return -ENOMEM;
+
+    id = trace_event_raw_init(call);
+
+    if (id < 0) {
+        free_syscall_print_fmt(call);
+        return id;
+    }
+
+    return id;
+#endif
+
     PANIC("");
 }
 
@@ -97,3 +124,43 @@ struct trace_event_class __refdata event_class_syscall_exit = {
     .fields     = LIST_HEAD_INIT(event_class_syscall_exit.fields),
     .raw_init   = init_syscall_trace,
 };
+
+void __init init_ftrace_syscalls(void)
+{
+#if 0
+    struct syscall_metadata *meta;
+    unsigned long addr;
+    int i;
+    void *ret;
+
+    if (!IS_ENABLED(CONFIG_HAVE_SPARSE_SYSCALL_NR)) {
+        syscalls_metadata = kcalloc(NR_syscalls,
+                    sizeof(*syscalls_metadata),
+                    GFP_KERNEL);
+        if (!syscalls_metadata) {
+            WARN_ON(1);
+            return;
+        }
+    }
+
+    for (i = 0; i < NR_syscalls; i++) {
+        addr = arch_syscall_addr(i);
+        meta = find_syscall_meta(addr);
+        if (!meta)
+            continue;
+
+        meta->syscall_nr = i;
+
+        if (!IS_ENABLED(CONFIG_HAVE_SPARSE_SYSCALL_NR)) {
+            syscalls_metadata[i] = meta;
+        } else {
+            ret = xa_store(&syscalls_metadata_sparse, i, meta,
+                    GFP_KERNEL);
+            WARN(xa_is_err(ret),
+                "Syscall memory allocation failed\n");
+        }
+
+    }
+#endif
+    pr_notice("%s: No impl.", __func__);
+}
