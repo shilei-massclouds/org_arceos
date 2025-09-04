@@ -579,3 +579,111 @@ void call_srcu(struct srcu_struct *ssp, struct rcu_head *rhp,
 {
     pr_notice("%s: No impl.", __func__);
 }
+
+int patch_insn_write(void *addr, const void *insn, size_t len)
+{
+    pr_warn("%s: No impl. We should deal with it.", __func__);
+    return 0;
+}
+
+/*
+ * For flush_icache_all.
+ */
+#include <linux/acpi.h>
+#include <linux/of.h>
+#include <linux/prctl.h>
+#include <asm/acpi.h>
+#include <asm/cacheflush.h>
+#include <asm/sbi.h>
+
+static void ipi_remote_fence_i(void *info)
+{
+    return local_flush_icache_all();
+}
+
+void flush_icache_all(void)
+{
+    local_flush_icache_all();
+
+    if (num_online_cpus() < 2)
+        return;
+
+    /*
+     * Make sure all previous writes to the D$ are ordered before making
+     * the IPI. The RISC-V spec states that a hart must execute a data fence
+     * before triggering a remote fence.i in order to make the modification
+     * visable for remote harts.
+     *
+     * IPIs on RISC-V are triggered by MMIO writes to either CLINT or
+     * S-IMSIC, so the fence ensures previous data writes "happen before"
+     * the MMIO.
+     */
+    RISCV_FENCE(w, o);
+
+#if 0
+    if (riscv_use_sbi_for_rfence())
+        sbi_remote_fence_i(NULL);
+    else
+        on_each_cpu(ipi_remote_fence_i, NULL, 1);
+#endif
+    sbi_remote_fence_i(NULL);
+    pr_notice("%s: No impl.", __func__);
+}
+
+static int __sbi_rfence_v01(int fid, const struct cpumask *cpu_mask,
+                unsigned long start, unsigned long size,
+                unsigned long arg4, unsigned long arg5)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+/**
+ * sbi_remote_fence_i() - Execute FENCE.I instruction on given remote harts.
+ * @cpu_mask: A cpu mask containing all the target harts.
+ *
+ * Return: 0 on success, appropriate linux error code otherwise.
+ */
+int sbi_remote_fence_i(const struct cpumask *cpu_mask)
+{
+    return __sbi_rfence_v01(SBI_EXT_RFENCE_REMOTE_FENCE_I,
+                cpu_mask, 0, 0, 0, 0);
+}
+
+/*
+ * trace_clock_local(): the simplest and least coherent tracing clock.
+ *
+ * Useful for tracing that does not cross to other CPUs nor
+ * does it go through idle events.
+ */
+u64 notrace trace_clock_local(void)
+{
+#if 0
+    u64 clock;
+
+    /*
+     * sched_clock() is an architecture implemented, fast, scalable,
+     * lockless clock. It is not guaranteed to be coherent across
+     * CPUs, nor across CPU idle events.
+     */
+    preempt_disable_notrace();
+    clock = sched_clock();
+    preempt_enable_notrace();
+
+    return clock;
+#endif
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+long si_mem_available(void)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0xFFFFFFFF;
+}
+
+int trace_create_savedcmd(void)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}

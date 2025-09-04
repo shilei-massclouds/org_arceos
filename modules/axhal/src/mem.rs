@@ -79,13 +79,13 @@ fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
         MemRegion {
             paddr: virt_to_phys((_stext as usize).into()),
             size: _etext as usize - _stext as usize,
-            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE,
+            // For linux_adaptor, some code may be fixed by jump_label.
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE | MemRegionFlags::WRITE,
             name: ".text",
         },
         MemRegion {
             paddr: virt_to_phys((_srodata as usize).into()),
             size: _erodata as usize - _srodata as usize,
-            // For linux_adaptor, some text code is in rodata.
             flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE,
             name: ".rodata",
         },

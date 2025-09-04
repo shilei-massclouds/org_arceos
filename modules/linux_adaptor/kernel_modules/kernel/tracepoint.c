@@ -263,7 +263,9 @@ static int tracepoint_add_func(struct tracepoint *tp,
         tracepoint_update_call(tp, tp_funcs);
         /* Both iterator and static call handle NULL tp->funcs */
         rcu_assign_pointer(tp->funcs, tp_funcs);
+    printk("%s: front name(%s) enabled(%u)\n", __func__, tp->name, static_key_enabled(&tp->key));
         static_key_enable(&tp->key);
+    printk("%s: back name(%s) enabled(%u)\n", __func__, tp->name, static_key_enabled(&tp->key));
         break;
     case TP_FUNC_2:     /* 1->2 */
         /* Set iterator static call */

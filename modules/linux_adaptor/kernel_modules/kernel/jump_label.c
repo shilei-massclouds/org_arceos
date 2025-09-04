@@ -31,6 +31,26 @@ static inline struct jump_entry *static_key_entries(struct static_key *key)
     return (struct jump_entry *)(key->type & ~JUMP_TYPE_MASK);
 }
 
+/***
+ * A 'struct static_key' uses a union such that it either points directly
+ * to a table of 'struct jump_entry' or to a linked list of modules which in
+ * turn point to 'struct jump_entry' tables.
+ *
+ * The two lower bits of the pointer are used to keep track of which pointer
+ * type is in use and to store the initial branch direction, we use an access
+ * function which preserves these bits.
+ */
+static void static_key_set_entries(struct static_key *key,
+                   struct jump_entry *entries)
+{
+    unsigned long type;
+
+    WARN_ON_ONCE((unsigned long)entries & JUMP_TYPE_MASK);
+    type = key->type & JUMP_TYPE_MASK;
+    key->entries = entries;
+    key->type |= type;
+}
+
 static enum jump_label_type jump_label_type(struct jump_entry *entry)
 {
     struct static_key *key = jump_entry_key(entry);
@@ -174,5 +194,120 @@ void static_key_enable(struct static_key *key)
 {
     cpus_read_lock();
     static_key_enable_cpuslocked(key);
+    cpus_read_unlock();
+}
+
+static int jump_label_cmp(const void *a, const void *b)
+{
+    const struct jump_entry *jea = a;
+    const struct jump_entry *jeb = b;
+
+    /*
+     * Entrires are sorted by key.
+     */
+    if (jump_entry_key(jea) < jump_entry_key(jeb))
+        return -1;
+
+    if (jump_entry_key(jea) > jump_entry_key(jeb))
+        return 1;
+
+    /*
+     * In the batching mode, entries should also be sorted by the code
+     * inside the already sorted list of entries, enabling a bsearch in
+     * the vector.
+     */
+    if (jump_entry_code(jea) < jump_entry_code(jeb))
+        return -1;
+
+    if (jump_entry_code(jea) > jump_entry_code(jeb))
+        return 1;
+
+    return 0;
+}
+
+static void jump_label_swap(void *a, void *b, int size)
+{
+    long delta = (unsigned long)a - (unsigned long)b;
+    struct jump_entry *jea = a;
+    struct jump_entry *jeb = b;
+    struct jump_entry tmp = *jea;
+
+    jea->code   = jeb->code - delta;
+    jea->target = jeb->target - delta;
+    jea->key    = jeb->key - delta;
+
+    jeb->code   = tmp.code + delta;
+    jeb->target = tmp.target + delta;
+    jeb->key    = tmp.key + delta;
+}
+
+static void
+jump_label_sort_entries(struct jump_entry *start, struct jump_entry *stop)
+{
+    unsigned long size;
+    void *swapfn = NULL;
+
+    if (IS_ENABLED(CONFIG_HAVE_ARCH_JUMP_LABEL_RELATIVE))
+        swapfn = jump_label_swap;
+
+    size = (((unsigned long)stop - (unsigned long)start)
+                    / sizeof(struct jump_entry));
+    sort(start, size, sizeof(struct jump_entry), jump_label_cmp, swapfn);
+}
+
+#ifndef arch_jump_label_transform_static
+static void arch_jump_label_transform_static(struct jump_entry *entry,
+                         enum jump_label_type type)
+{
+    /* nothing to do on most architectures */
+}
+#endif
+
+void __init jump_label_init(void)
+{
+    struct jump_entry *iter_start = __start___jump_table;
+    struct jump_entry *iter_stop = __stop___jump_table;
+    struct static_key *key = NULL;
+    struct jump_entry *iter;
+
+    /*
+     * Since we are initializing the static_key.enabled field with
+     * with the 'raw' int values (to avoid pulling in atomic.h) in
+     * jump_label.h, let's make sure that is safe. There are only two
+     * cases to check since we initialize to 0 or 1.
+     */
+    BUILD_BUG_ON((int)ATOMIC_INIT(0) != 0);
+    BUILD_BUG_ON((int)ATOMIC_INIT(1) != 1);
+
+    if (static_key_initialized)
+        return;
+
+    cpus_read_lock();
+    jump_label_lock();
+    jump_label_sort_entries(iter_start, iter_stop);
+
+    for (iter = iter_start; iter < iter_stop; iter++) {
+        struct static_key *iterk;
+        bool in_init;
+
+        /* rewrite NOPs */
+        if (jump_label_type(iter) == JUMP_LABEL_NOP)
+            arch_jump_label_transform_static(iter, JUMP_LABEL_NOP);
+
+        //in_init = init_section_contains((void *)jump_entry_code(iter), 1);
+        in_init = false;
+        pr_notice("%s: No impl for 'in_init'.", __func__);
+        jump_entry_set_init(iter, in_init);
+
+        iterk = jump_entry_key(iter);
+        if (iterk == key)
+            continue;
+
+        key = iterk;
+        static_key_set_entries(key, iter);
+    }
+
+    static_key_initialized = true;
+    jump_label_unlock();
     cpus_read_unlock();
 }

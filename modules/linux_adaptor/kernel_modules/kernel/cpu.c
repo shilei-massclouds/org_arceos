@@ -56,6 +56,8 @@ struct cpumask __cpu_dying_mask __read_mostly;
 
 atomic_t __num_online_cpus __read_mostly;
 
+const DECLARE_BITMAP(cpu_all_bits, NR_CPUS) = CPU_BITS_ALL;
+
 int __cpuhp_state_add_instance(enum cpuhp_state state, struct hlist_node *node,
                    bool invoke)
 {
@@ -113,6 +115,11 @@ void set_cpu_online(unsigned int cpu, bool online)
         if (cpumask_test_and_clear_cpu(cpu, &__cpu_online_mask))
             atomic_dec(&__num_online_cpus);
     }
+}
+
+void __cpuhp_remove_state(enum cpuhp_state state, bool invoke)
+{
+    pr_notice("%s: No impl.", __func__);
 }
 
 /*

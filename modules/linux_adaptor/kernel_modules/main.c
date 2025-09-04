@@ -47,12 +47,16 @@ extern void test_ext4();
 int clinux_starting = 0;
 int clinux_started = 0;
 
+bool static_key_initialized __read_mostly;
+
 int clinux_init(void)
 {
     printk("cLinux base is starting ...\n");
 
     clinux_starting = 1;
 
+    /* Static keys and static calls are needed by LSMs */
+    jump_label_init();
     random_init_early("");
     vfs_caches_init_early();
 

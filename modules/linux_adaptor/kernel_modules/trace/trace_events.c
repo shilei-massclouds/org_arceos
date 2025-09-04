@@ -190,7 +190,6 @@ event_define_fields(struct trace_event_call *call)
                 break;
             }
 
-            printk("%s: type(%s)\n", __func__, field->type);
             offset = ALIGN(offset, field->align);
             ret = trace_define_field_ext(call, field->type, field->name,
                          offset, field->size,
@@ -320,6 +319,7 @@ static __init int event_trace_enable(void)
 #endif
     pr_warn("%s: Enable trace event here! [", __func__);
     {
+        //char filter[] = "ext4_writepages";
         char filter[] = "mm_filemap_get_pages";
         early_enable_events(tr, filter, false);
     }
@@ -805,11 +805,9 @@ __ftrace_set_clr_event_nolock(struct trace_array *tr, const char *match,
     printk("%s: match(%s) sub(%s) event(%s) set(%d)\n", __func__, match, sub, event, set);
     list_for_each_entry(file, &tr->events, list) {
 
-    printk("%s: step0 call(%lx)\n", __func__, file);
         call = file->event_call;
         name = trace_event_name(call);
 
-    printk("%s: step1 name(%s)\n", __func__, name);
         if (!name || !call->class || !call->class->reg)
             continue;
 
@@ -900,6 +898,8 @@ int trace_event_reg(struct trace_event_call *call,
 {
     struct trace_event_file *file = data;
 
+    dump_stack();
+    printk("%s: ...\n", __func__);
     WARN_ON(!(call->flags & TRACE_EVENT_FL_TRACEPOINT));
     switch (type) {
     case TRACE_REG_REGISTER:
@@ -930,6 +930,55 @@ int trace_event_reg(struct trace_event_call *call,
 #endif
     }
     return 0;
+}
+
+bool trace_event_ignore_this_pid(struct trace_event_file *trace_file)
+{
+    struct trace_array *tr = trace_file->tr;
+    struct trace_array_cpu *data;
+    struct trace_pid_list *no_pid_list;
+    struct trace_pid_list *pid_list;
+
+    pid_list = rcu_dereference_raw(tr->filtered_pids);
+    no_pid_list = rcu_dereference_raw(tr->filtered_no_pids);
+
+    if (!pid_list && !no_pid_list)
+        return false;
+
+    data = this_cpu_ptr(tr->array_buffer.data);
+
+    return data->ignore_pid;
+}
+
+void *trace_event_buffer_reserve(struct trace_event_buffer *fbuffer,
+                 struct trace_event_file *trace_file,
+                 unsigned long len)
+{
+    struct trace_event_call *event_call = trace_file->event_call;
+
+    if ((trace_file->flags & EVENT_FILE_FL_PID_FILTER) &&
+        trace_event_ignore_this_pid(trace_file))
+        return NULL;
+
+    /*
+     * If CONFIG_PREEMPTION is enabled, then the tracepoint itself disables
+     * preemption (adding one to the preempt_count). Since we are
+     * interested in the preempt_count at the time the tracepoint was
+     * hit, we need to subtract one to offset the increment.
+     */
+    fbuffer->trace_ctx = tracing_gen_ctx_dec();
+    fbuffer->trace_file = trace_file;
+
+    fbuffer->event =
+        trace_event_buffer_lock_reserve(&fbuffer->buffer, trace_file,
+                        event_call->event.type, len,
+                        fbuffer->trace_ctx);
+    if (!fbuffer->event)
+        return NULL;
+
+    fbuffer->regs = NULL;
+    fbuffer->entry = ring_buffer_event_data(fbuffer->event);
+    return fbuffer->entry;
 }
 
 int trace_event_raw_init(struct trace_event_call *call)

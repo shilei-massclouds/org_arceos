@@ -61,6 +61,7 @@ static int alloc_trace_event_type(void)
 enum print_line_t trace_nop_print(struct trace_iterator *iter, int flags,
                   struct trace_event *event)
 {
+    printk("%s: ...\n", __func__);
     trace_seq_printf(&iter->seq, "type: %d\n", iter->ent->type);
 
     return trace_handle_return(&iter->seq);

@@ -13,6 +13,16 @@
 
 #include "../adaptor.h"
 
+/*
+ * mutex protecting text section modification (dynamic code patching).
+ * some users need to sleep (allocating memory...) while they hold this lock.
+ *
+ * Note: Also protects SMP-alternatives modification on x86.
+ *
+ * NOT exported to modules - patching kernel text is a really delicate matter.
+ */
+DEFINE_MUTEX(text_mutex);
+
 int notrace core_kernel_text(unsigned long addr)
 {
     if (is_kernel_text(addr))
