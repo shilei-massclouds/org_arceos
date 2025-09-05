@@ -22,6 +22,8 @@ use cmd::{
     remove_file, create_dir, remove_dir, check_dir, check_file,
 };
 
+const DUMP_ALL: usize = 1;
+
 #[cfg_attr(feature = "axstd", unsafe(no_mangle))]
 fn main() {
     println!("fstest ..");
@@ -78,11 +80,17 @@ fn main() {
     // Let's fly for a while and jbd2 may write journal.
     std::thread::sleep(std::time::Duration::new(10, 0));
 
+    // Check ftrace events
+    unsafe {
+        ftrace_dump(DUMP_ALL);
+    }
+
     println!("fstest ok!");
 }
 
 unsafe extern "C" {
     fn cl_wakeup_flusher_threads();
+    fn ftrace_dump(mode: usize);
 }
 
 fn do_file_test(path: &str) {
