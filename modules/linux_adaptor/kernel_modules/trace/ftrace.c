@@ -39,6 +39,12 @@
 #endif
 
 /*
+ * ftrace_disabled is set when an anomaly is discovered.
+ * ftrace_disabled is much stronger than ftrace_enabled.
+ */
+static int ftrace_disabled __read_mostly;
+
+/*
  * We make these constant because no one should touch them,
  * but they are used as the default "empty hash", to avoid allocating
  * it all the time. These are in a read only section such that if
@@ -72,4 +78,14 @@ __init void ftrace_init_global_array_ops(struct trace_array *tr)
     tr->ops->private = tr;
     ftrace_init_trace_array(tr);
     init_array_fgraph_ops(tr, tr->ops);
+}
+
+/**
+ * ftrace_is_dead - Test if ftrace is dead or not.
+ *
+ * Returns: 1 if ftrace is "dead", zero otherwise.
+ */
+int ftrace_is_dead(void)
+{
+    return ftrace_disabled;
 }

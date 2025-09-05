@@ -687,3 +687,18 @@ int trace_create_savedcmd(void)
     pr_notice("%s: No impl.", __func__);
     return 0;
 }
+
+unsigned long lpj_fine;
+
+/* Note: we need time_init for it. */
+unsigned long riscv_timebase __ro_after_init;
+
+void trace_find_cmdline(int pid, char comm[])
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+notrace void touch_softlockup_watchdog(void)
+{
+    pr_notice("%s: No impl.", __func__);
+}

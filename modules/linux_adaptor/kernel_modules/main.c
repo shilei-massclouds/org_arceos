@@ -15,7 +15,7 @@
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-//#define TEST_EXT4
+#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
@@ -131,6 +131,7 @@ int clinux_init(void)
 #ifdef TEST_EXT4
     printk("====== Ext4 test ======\n");
     test_ext4();
+    ftrace_dump(DUMP_ALL);
     PANIC("Reach here!");
 #endif
 

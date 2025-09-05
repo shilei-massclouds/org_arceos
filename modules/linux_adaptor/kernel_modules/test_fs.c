@@ -316,8 +316,6 @@ void test_ext4(void)
 
     test_dir_remove("/dir1");
 
-    PANIC("Reach here!");
-
 #if 0
     /* Note: use 'sync_filesystem' to replace it. */
     printk("=========== %s: flush blkdev ...\n", __func__);
