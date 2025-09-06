@@ -580,12 +580,6 @@ void call_srcu(struct srcu_struct *ssp, struct rcu_head *rhp,
     pr_notice("%s: No impl.", __func__);
 }
 
-int patch_insn_write(void *addr, const void *insn, size_t len)
-{
-    pr_warn("%s: No impl. We should deal with it.", __func__);
-    return 0;
-}
-
 /*
  * For flush_icache_all.
  */

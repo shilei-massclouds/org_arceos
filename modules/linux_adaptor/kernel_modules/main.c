@@ -15,7 +15,7 @@
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-//#define TEST_EXT4
+#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
