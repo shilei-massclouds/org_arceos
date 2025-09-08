@@ -58,7 +58,7 @@ static int event_init(struct trace_event_call *call)
     if (WARN_ON(!name))
         return -EINVAL;
 
-    printk("%s: name(%s)\n", __func__, name);
+    pr_debug("%s: name(%s)", __func__, name);
     if (call->class->raw_init) {
         ret = call->class->raw_init(call);
         if (ret < 0 && ret != -ENOSYS)

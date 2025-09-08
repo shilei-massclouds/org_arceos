@@ -282,8 +282,10 @@ void __init jump_label_init(void)
     if (static_key_initialized)
         return;
 
+#if 0
     cpus_read_lock();
     jump_label_lock();
+#endif
     jump_label_sort_entries(iter_start, iter_stop);
 
     for (iter = iter_start; iter < iter_stop; iter++) {
@@ -308,6 +310,8 @@ void __init jump_label_init(void)
     }
 
     static_key_initialized = true;
+#if 0
     jump_label_unlock();
     cpus_read_unlock();
+#endif
 }

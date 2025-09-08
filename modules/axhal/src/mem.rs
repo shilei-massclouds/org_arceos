@@ -79,8 +79,7 @@ fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
         MemRegion {
             paddr: virt_to_phys((_stext as usize).into()),
             size: _etext as usize - _stext as usize,
-            // For linux_adaptor, some code may be fixed by jump_label.
-            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE | MemRegionFlags::WRITE,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE,
             name: ".text",
         },
         MemRegion {

@@ -1233,6 +1233,7 @@ dependencies = [
  "axconfig",
  "axhal",
  "axlog",
+ "axmm",
  "axtask",
  "memory_addr",
 ]

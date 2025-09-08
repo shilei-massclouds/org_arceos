@@ -22,6 +22,15 @@ SECTIONS
         _etext = .;
     }
 
+    /* we have to discard exit text and such at runtime, not link time */
+    __exittext_begin = .;
+    .exit.text :
+    {
+        *(.exit.text)
+        *(.text.exit)
+    }
+    __exittext_end = .;
+
     _srodata = .;
     __start_rodata = .;
     .rodata : ALIGN(4K) {

@@ -45,6 +45,7 @@ d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
 unsafe extern "C" {
     fn main();
     fn cl_run_local_timers();
+    fn jump_label_init();
 }
 
 struct LogIfImpl;
@@ -144,6 +145,10 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
 
     #[cfg(feature = "alloc")]
     init_allocator();
+
+    // Init 'jump label' for linux_adaptor before re-paging,
+    // because 'axmm::init_memory_management()' will protect text-segment.
+    unsafe { jump_label_init(); }
 
     #[cfg(feature = "paging")]
     axmm::init_memory_management();

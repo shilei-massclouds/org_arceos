@@ -12,6 +12,16 @@
 #include <asm/sections.h>
 #include "../adaptor.h"
 
+extern void *
+cl_set_fixmap(unsigned int idx, phys_addr_t phys, pgprot_t prot);
+
+static inline bool is_kernel_exittext(uintptr_t addr)
+{
+    return system_state < SYSTEM_RUNNING &&
+        addr >= (uintptr_t)__exittext_begin &&
+        addr < (uintptr_t)__exittext_end;
+}
+
 /*
  * The fix_to_virt(, idx) needs a const value (not a dynamic variable of
  * reg-a0) or BUILD_BUG_ON failed with "idx >= __end_of_fixed_addresses".
@@ -19,7 +29,6 @@
  */
 static __always_inline void *patch_map(void *addr, const unsigned int fixmap)
 {
-#if 0
     uintptr_t uintaddr = (uintptr_t) addr;
     struct page *page;
 
@@ -32,17 +41,16 @@ static __always_inline void *patch_map(void *addr, const unsigned int fixmap)
 
     BUG_ON(!page);
 
-    return (void *)set_fixmap_offset(fixmap, page_to_phys(page) +
-                     offset_in_page(addr));
-#endif
-    pr_notice("%s: No impl.", __func__);
-    return addr;
+    printk("%s: addr(%lx) fixmap(%u)\n", __func__, addr, fixmap);
+	return cl_set_fixmap(fixmap,
+                         page_to_phys(page) + offset_in_page(addr),
+                         FIXMAP_PAGE_NORMAL);
 }
 
 static void patch_unmap(int fixmap)
 {
-    //clear_fixmap(fixmap);
-    pr_notice("%s: No impl.", __func__);
+    printk("%s: ..\n", __func__);
+	cl_set_fixmap(fixmap, 0, FIXMAP_PAGE_CLEAR);
 }
 
 static int __patch_insn_write(void *addr, const void *insn, size_t len)

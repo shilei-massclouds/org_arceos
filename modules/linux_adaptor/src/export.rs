@@ -4,8 +4,11 @@ use core::ffi::{c_char, CStr};
 use alloc::alloc::{alloc, Layout};
 use axalloc::global_allocator;
 use axhal::mem::PAGE_SIZE_4K;
+use axhal::mem::MemRegionFlags;
+use memory_addr::align_down_4k;
 use axtask::current;
 use crate::kallsyms::get_ksym;
+use axconfig::plat::{KERNEL_ASPACE_BASE, KERNEL_ASPACE_SIZE};
 
 const CL_TASK_STATE_MASK:   usize = 0x00000003;
 
@@ -100,4 +103,35 @@ pub extern "C" fn cl_get_ksym(addr: usize, s: *mut u8, size: usize) {
         let dst = core::slice::from_raw_parts_mut(s, size);
         dst[..name.len()].copy_from_slice(name.as_bytes());
     }
+}
+
+const FIXADDR_TOP: usize = KERNEL_ASPACE_BASE + KERNEL_ASPACE_SIZE;
+
+/// Set fixmap.
+#[unsafe(no_mangle)]
+pub extern "C" fn cl_set_fixmap(idx: usize, phys: usize, prot: usize) -> usize {
+    let va = FIXADDR_TOP - PAGE_SIZE_4K * idx;
+    error!("FIX_TOP: {:#x}; va: {:#x}", FIXADDR_TOP, va);
+
+    let aspace = axmm::kernel_aspace();
+    if prot == 0 {
+        // Clear fixmap.
+        aspace.lock()
+            .unmap(va.into(), PAGE_SIZE_4K)
+            .unwrap_or_else(|e| {
+                panic!("unmap fixmap area {va:#x} error: {}", e)
+            });
+        return 0;
+    }
+
+    let flags = MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE | MemRegionFlags::EXECUTE;
+
+    aspace.lock()
+        .map_linear(va.into(), align_down_4k(phys).into(), PAGE_SIZE_4K, flags.into())
+        .unwrap_or_else(|e| {
+            panic!("bad fixmap {va:#x} -> {phys:#x}({prot:?}): {}", e)
+        });
+
+    error!("idx({:#x}) phys({:#x}) prot({:#x})", idx, phys, prot);
+    va + (phys & (PAGE_SIZE_4K - 1))
 }
