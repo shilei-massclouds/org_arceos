@@ -18,8 +18,6 @@ SECTIONS
         _sinittext = .;
         *(.init.text .init.text.*) *(.text.startup)
         _einittext = .;
-        . = ALIGN(4K);
-        _etext = .;
     }
 
     /* we have to discard exit text and such at runtime, not link time */
@@ -30,6 +28,9 @@ SECTIONS
         *(.text.exit)
     }
     __exittext_end = .;
+
+    . = ALIGN(4K);
+    _etext = .;
 
     _srodata = .;
     __start_rodata = .;

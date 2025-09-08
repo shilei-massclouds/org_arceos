@@ -85,7 +85,7 @@ fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
         MemRegion {
             paddr: virt_to_phys((_srodata as usize).into()),
             size: _erodata as usize - _srodata as usize,
-            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ,
             name: ".rodata",
         },
         MemRegion {
