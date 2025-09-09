@@ -54,7 +54,7 @@ rtc = ["axhal/rtc", "axruntime/rtc"]
 # Device drivers
 bus-mmio = ["axdriver?/bus-mmio"]
 bus-pci = ["axdriver?/bus-pci"]
-linux-adaptor = ["axdriver?/linux-adaptor", "axhal/linux-adaptor"]
+linux-adaptor = ["axdriver?/linux-adaptor", "axruntime/linux-adaptor", "axhal/linux-adaptor"]
 driver-ramdisk = ["axdriver?/ramdisk", "axfs?/use-ramdisk"]
 driver-ixgbe = ["axdriver?/ixgbe"]
 driver-fxmac = ["axdriver?/fxmac"] # fxmac ethernet driver for PhytiumPi
@@ -79,4 +79,5 @@ axnet = { workspace = true, optional = true }
 axdisplay = { workspace = true, optional = true }
 axsync = { workspace = true, optional = true }
 axtask = { workspace = true, optional = true }
+linux_adaptor = { workspace = true, optional = true }
 kspin = { version = "0.1", optional = true }

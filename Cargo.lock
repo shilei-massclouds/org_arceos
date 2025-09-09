@@ -399,6 +399,7 @@ dependencies = [
  "axsync",
  "axtask",
  "kspin",
+ "linux_adaptor",
 ]
 
 [[package]]
@@ -588,6 +589,7 @@ dependencies = [
  "crate_interface",
  "ctor_bare",
  "kernel_guard",
+ "linux_adaptor",
  "percpu",
 ]
 

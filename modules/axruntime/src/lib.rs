@@ -166,6 +166,9 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         init_interrupt();
     }
 
+    #[cfg(linux_adaptor)]
+    linux_adaptor::init_linux_modules(dtb);
+
     #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
     {
         #[allow(unused_variables)]

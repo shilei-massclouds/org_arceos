@@ -6,12 +6,118 @@
 #define OF_PHANDLE_CACHE_BITS   7
 #define OF_PHANDLE_CACHE_SZ BIT(OF_PHANDLE_CACHE_BITS)
 
+struct device_node *of_root;
+struct device_node *of_chosen;
+struct device_node *of_aliases;
+struct device_node *of_stdout;
+static const char *of_stdout_options;
+
 static struct device_node *phandle_cache[OF_PHANDLE_CACHE_SZ];
+
 
 /* use when traversing tree through the child, sibling,
  * or parent members of struct device_node.
  */
 DEFINE_RAW_SPINLOCK(devtree_lock);
+
+static struct device_node *__of_get_next_child(const struct device_node *node,
+                        struct device_node *prev)
+{
+    struct device_node *next;
+
+    if (!node)
+        return NULL;
+
+    next = prev ? prev->sibling : node->child;
+    of_node_get(next);
+    of_node_put(prev);
+    return next;
+}
+#define __for_each_child_of_node(parent, child) \
+    for (child = __of_get_next_child(parent, NULL); child != NULL; \
+         child = __of_get_next_child(parent, child))
+
+struct device_node *__of_find_node_by_path(struct device_node *parent,
+                        const char *path)
+{
+    struct device_node *child;
+    int len;
+
+    len = strcspn(path, "/:");
+    if (!len)
+        return NULL;
+
+    __for_each_child_of_node(parent, child) {
+        const char *name = kbasename(child->full_name);
+        if (strncmp(path, name, len) == 0 && (strlen(name) == len))
+            return child;
+    }
+    return NULL;
+}
+
+struct device_node *__of_find_node_by_full_path(struct device_node *node,
+                        const char *path)
+{
+    const char *separator = strchr(path, ':');
+
+    while (node && *path == '/') {
+        struct device_node *tmp = node;
+
+        path++; /* Increment past '/' delimiter */
+        node = __of_find_node_by_path(node, path);
+        of_node_put(tmp);
+        path = strchrnul(path, '/');
+        if (separator && separator < path)
+            break;
+    }
+    return node;
+}
+
+/**
+ * of_find_node_opts_by_path - Find a node matching a full OF path
+ * @path: Either the full path to match, or if the path does not
+ *       start with '/', the name of a property of the /aliases
+ *       node (an alias).  In the case of an alias, the node
+ *       matching the alias' value will be returned.
+ * @opts: Address of a pointer into which to store the start of
+ *       an options string appended to the end of the path with
+ *       a ':' separator.
+ *
+ * Valid paths:
+ *  * /foo/bar  Full path
+ *  * foo   Valid alias
+ *  * foo/bar   Valid alias + relative path
+ *
+ * Return: A node pointer with refcount incremented, use
+ * of_node_put() on it when done.
+ */
+struct device_node *of_find_node_opts_by_path(const char *path, const char **opts)
+{
+    struct device_node *np = NULL;
+    struct property *pp;
+    unsigned long flags;
+    const char *separator = strchr(path, ':');
+
+    if (opts)
+        *opts = separator ? separator + 1 : NULL;
+
+    if (strcmp(path, "/") == 0)
+        return of_node_get(of_root);
+
+    /* The path could begin with an alias */
+    if (*path != '/') {
+
+        PANIC("stage1");
+    }
+
+    /* Step down the tree matching path components */
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    if (!np)
+        np = of_node_get(of_root);
+    np = __of_find_node_by_full_path(np, path);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return np;
+}
 
 void cl_set_phandle_cache(phandle phandle, struct device_node *node)
 {
@@ -506,4 +612,47 @@ struct device_node *of_get_parent(const struct device_node *node)
     np = of_node_get(node->parent);
     raw_spin_unlock_irqrestore(&devtree_lock, flags);
     return np;
+}
+
+/**
+ * of_alias_scan - Scan all properties of the 'aliases' node
+ * @dt_alloc:   An allocator that provides a virtual address to memory
+ *      for storing the resulting tree
+ *
+ * The function scans all the properties of the 'aliases' node and populates
+ * the global lookup table with the properties.  It returns the
+ * number of alias properties found, or an error code in case of failure.
+ */
+void of_alias_scan(void * (*dt_alloc)(u64 size, u64 align))
+{
+    struct property *pp;
+
+    of_aliases = of_find_node_by_path("/aliases");
+    of_chosen = of_find_node_by_path("/chosen");
+    if (of_chosen == NULL)
+        of_chosen = of_find_node_by_path("/chosen@0");
+
+    if (of_chosen) {
+        /* linux,stdout-path and /aliases/stdout are for legacy compatibility */
+        const char *name = NULL;
+
+        if (of_property_read_string(of_chosen, "stdout-path", &name))
+            of_property_read_string(of_chosen, "linux,stdout-path",
+                        &name);
+        if (IS_ENABLED(CONFIG_PPC) && !name)
+            of_property_read_string(of_aliases, "stdout", &name);
+        if (name)
+            of_stdout = of_find_node_opts_by_path(name, &of_stdout_options);
+        if (of_stdout)
+            of_stdout->fwnode.flags |= FWNODE_FLAG_BEST_EFFORT;
+    }
+
+    if (!of_aliases)
+        return;
+
+    for_each_property_of_node(of_aliases, pp) {
+
+        PANIC("LOOP");
+    }
+    PANIC("");
 }

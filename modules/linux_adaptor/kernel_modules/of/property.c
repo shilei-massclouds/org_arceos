@@ -134,3 +134,37 @@ int of_property_read_u32_index(const struct device_node *np,
     *out_value = be32_to_cpup(((__be32 *)val) + index);
     return 0;
 }
+
+/**
+ * of_property_read_string - Find and read a string from a property
+ * @np:     device node from which the property value is to be read.
+ * @propname:   name of the property to be searched.
+ * @out_string: pointer to null terminated return string, modified only if
+ *      return value is 0.
+ *
+ * Search for a property in a device tree node and retrieve a null
+ * terminated string value (pointer to data, not a copy).
+ *
+ * Return: 0 on success, -EINVAL if the property does not exist, -ENODATA if
+ * property does not have a value, and -EILSEQ if the string is not
+ * null-terminated within the length of the property data.
+ *
+ * Note that the empty string "" has length of 1, thus -ENODATA cannot
+ * be interpreted as an empty string.
+ *
+ * The out_string pointer is modified only if a valid string can be decoded.
+ */
+int of_property_read_string(const struct device_node *np, const char *propname,
+                const char **out_string)
+{
+    const struct property *prop = of_find_property(np, propname, NULL);
+
+    if (!prop)
+        return -EINVAL;
+    if (!prop->length)
+        return -ENODATA;
+    if (strnlen(prop->value, prop->length) >= prop->length)
+        return -EILSEQ;
+    *out_string = prop->value;
+    return 0;
+}

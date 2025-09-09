@@ -6,6 +6,7 @@
 #include <linux/buffer_head.h>
 #include <linux/of.h>
 #include <linux/cpu.h>
+#include <linux/of_fdt.h>
 #include <linux/ftrace.h>
 
 #include "mm/slab.h"
@@ -15,7 +16,7 @@
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-//#define TEST_EXT4
+#define TEST_EXT4
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
@@ -49,11 +50,13 @@ int clinux_started = 0;
 
 bool static_key_initialized __read_mostly;
 
-int clinux_init(void)
+int clinux_init(phys_addr_t dt_phys)
 {
     printk("cLinux base is starting ...\n");
 
     clinux_starting = 1;
+
+    early_init_dt_verify(__va(dt_phys), dt_phys);
 
     random_init_early("");
     vfs_caches_init_early();
@@ -87,6 +90,9 @@ int clinux_init(void)
     workqueue_init();
     workqueue_init_topology();
     cl_default_bdi_init();
+
+    unflatten_device_tree();
+    //of_platform_default_populate_init();
 
     {
         static struct device_node riscv_intc_node;

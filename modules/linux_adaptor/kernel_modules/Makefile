@@ -52,7 +52,8 @@ OBJS += locking/mutex.o locking/mutex-debug.o
 OBJS += locking/rwsem.o locking/percpu-rwsem.o
 OBJS += base/platform.o base/property.o base/syscore.o base/bus.o
 OBJS += base/core.o base/devres.o base/dd.o base/driver.o base/trace.o
-OBJS += of/base.o of/property.o of/address.o of/irq.o
+OBJS += of/base.o of/property.o of/address.o of/irq.o of/fdt.o
+OBJS += of/of_reserved_mem.o of/kobj.o
 OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o
 OBJS += irq/resend.o irq/chip.o irq/handle.o irq/msi.o irq/spurious.o
 OBJS += dma/mapping.o dma/swiotlb.o
@@ -82,6 +83,7 @@ OBJS += trace/trace_syscalls.o trace/trace.o trace/trace_events.o
 OBJS += trace/trace_output.o trace/pid_list.o trace/trace_events_filter.o
 OBJS += trace/ring_buffer.o trace/ftrace.o trace/trace_seq.o
 OBJS += trace/trace_functions.o trace/trace_nop.o
+OBJS += libfdt/fdt.o libfdt/fdt_ro.o
 
 #OBJS += fs_types.o
 #OBJS += mpage.o

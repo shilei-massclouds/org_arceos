@@ -152,9 +152,6 @@ impl AllDevices {
 
 /// Probes and initializes all device drivers, returns the [`AllDevices`] struct.
 pub fn init_drivers() -> AllDevices {
-    #[cfg(linux_adaptor)]
-    linux_adaptor::init_linux_modules();
-
     info!("Initialize device drivers...");
     info!("  device model: {}", AllDevices::device_model());
 
