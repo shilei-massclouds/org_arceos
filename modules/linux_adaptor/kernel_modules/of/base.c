@@ -1,4 +1,17 @@
+#define pr_fmt(fmt) "OF: " fmt
+
+#include <linux/cleanup.h>
+#include <linux/console.h>
+#include <linux/ctype.h>
+#include <linux/cpu.h>
+#include <linux/module.h>
 #include <linux/of.h>
+#include <linux/of_device.h>
+#include <linux/of_graph.h>
+#include <linux/spinlock.h>
+#include <linux/slab.h>
+#include <linux/string.h>
+#include <linux/proc_fs.h>
 
 #include "of_private.h"
 #include "../adaptor.h"
@@ -14,6 +27,10 @@ static const char *of_stdout_options;
 
 static struct device_node *phandle_cache[OF_PHANDLE_CACHE_SZ];
 
+static u32 of_phandle_cache_hash(phandle handle)
+{
+    return hash_32(handle, OF_PHANDLE_CACHE_BITS);
+}
 
 /* use when traversing tree through the child, sibling,
  * or parent members of struct device_node.
@@ -117,14 +134,6 @@ struct device_node *of_find_node_opts_by_path(const char *path, const char **opt
     np = __of_find_node_by_full_path(np, path);
     raw_spin_unlock_irqrestore(&devtree_lock, flags);
     return np;
-}
-
-void cl_set_phandle_cache(phandle phandle, struct device_node *node)
-{
-    if (phandle >= OF_PHANDLE_CACHE_SZ || phandle_cache[phandle]) {
-        PANIC("Bad or existed phandle.");
-    }
-    phandle_cache[phandle] = node;
 }
 
 static struct property *__of_find_property(const struct device_node *np,
@@ -582,15 +591,33 @@ int of_phandle_iterator_args(struct of_phandle_iterator *it,
  */
 struct device_node *of_find_node_by_phandle(phandle handle)
 {
-    pr_notice("%s: No impl.", __func__);
+    struct device_node *np = NULL;
+    unsigned long flags;
+    u32 handle_hash;
 
-    if (handle >= OF_PHANDLE_CACHE_SZ) {
-        PANIC("Too big 'handle'.");
+    if (!handle)
+        return NULL;
+
+    handle_hash = of_phandle_cache_hash(handle);
+
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+
+    if (phandle_cache[handle_hash] &&
+        handle == phandle_cache[handle_hash]->phandle)
+        np = phandle_cache[handle_hash];
+
+    if (!np) {
+        for_each_of_allnodes(np)
+            if (np->phandle == handle &&
+                !of_node_check_flag(np, OF_DETACHED)) {
+                phandle_cache[handle_hash] = np;
+                break;
+            }
     }
-    if (phandle_cache[handle] == NULL) {
-        PANIC("Bad 'phandle'.");
-    }
-    return phandle_cache[handle];
+
+    of_node_get(np);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return np;
 }
 
 /**
@@ -655,4 +682,189 @@ void of_alias_scan(void * (*dt_alloc)(u64 size, u64 align))
         PANIC("LOOP");
     }
     PANIC("");
+}
+
+/**
+ * of_get_next_child - Iterate a node childs
+ * @node:   parent node
+ * @prev:   previous child of the parent node, or NULL to get first
+ *
+ * Return: A node pointer with refcount incremented, use of_node_put() on
+ * it when done. Returns NULL when prev is the last child. Decrements the
+ * refcount of prev.
+ */
+struct device_node *of_get_next_child(const struct device_node *node,
+    struct device_node *prev)
+{
+    struct device_node *next;
+    unsigned long flags;
+
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    next = __of_get_next_child(node, prev);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return next;
+}
+
+static bool __of_device_is_status(const struct device_node *device,
+                  const char * const*strings)
+{
+    const char *status;
+    int statlen;
+
+    if (!device)
+        return false;
+
+    status = __of_get_property(device, "status", &statlen);
+    if (status == NULL)
+        return false;
+
+    if (statlen > 0) {
+        while (*strings) {
+            unsigned int len = strlen(*strings);
+
+            if ((*strings)[len - 1] == '-') {
+                if (!strncmp(status, *strings, len))
+                    return true;
+            } else {
+                if (!strcmp(status, *strings))
+                    return true;
+            }
+            strings++;
+        }
+    }
+
+    return false;
+}
+
+/**
+ *  __of_device_is_available - check if a device is available for use
+ *
+ *  @device: Node to check for availability, with locks already held
+ *
+ *  Return: True if the status property is absent or set to "okay" or "ok",
+ *  false otherwise
+ */
+static bool __of_device_is_available(const struct device_node *device)
+{
+    static const char * const ok[] = {"okay", "ok", NULL};
+
+    if (!device)
+        return false;
+
+    return !__of_get_property(device, "status", NULL) ||
+        __of_device_is_status(device, ok);
+}
+
+/**
+ *  of_device_is_available - check if a device is available for use
+ *
+ *  @device: Node to check for availability
+ *
+ *  Return: True if the status property is absent or set to "okay" or "ok",
+ *  false otherwise
+ */
+bool of_device_is_available(const struct device_node *device)
+{
+    unsigned long flags;
+    bool res;
+
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    res = __of_device_is_available(device);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return res;
+
+}
+
+int of_bus_n_addr_cells(struct device_node *np)
+{
+    u32 cells;
+
+    for (; np; np = np->parent)
+        if (!of_property_read_u32(np, "#address-cells", &cells))
+            return cells;
+
+    /* No #address-cells property for the root node */
+    return OF_ROOT_NODE_ADDR_CELLS_DEFAULT;
+}
+
+int of_n_addr_cells(struct device_node *np)
+{
+    if (np->parent)
+        np = np->parent;
+
+    return of_bus_n_addr_cells(np);
+}
+
+int of_bus_n_size_cells(struct device_node *np)
+{
+    u32 cells;
+
+    for (; np; np = np->parent)
+        if (!of_property_read_u32(np, "#size-cells", &cells))
+            return cells;
+
+    /* No #size-cells property for the root node */
+    return OF_ROOT_NODE_SIZE_CELLS_DEFAULT;
+}
+
+int of_n_size_cells(struct device_node *np)
+{
+    if (np->parent)
+        np = np->parent;
+
+    return of_bus_n_size_cells(np);
+}
+
+struct device_node *__of_find_all_nodes(struct device_node *prev)
+{
+    struct device_node *np;
+    if (!prev) {
+        np = of_root;
+    } else if (prev->child) {
+        np = prev->child;
+    } else {
+        /* Walk back up looking for a sibling, or the end of the structure */
+        np = prev;
+        while (np->parent && !np->sibling)
+            np = np->parent;
+        np = np->sibling; /* Might be null at the end of the tree */
+    }
+    return np;
+}
+
+static struct device_node *of_get_next_status_child(const struct device_node *node,
+                            struct device_node *prev,
+                            bool (*checker)(const struct device_node *))
+{
+    struct device_node *next;
+    unsigned long flags;
+
+    if (!node)
+        return NULL;
+
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    next = prev ? prev->sibling : node->child;
+    for (; next; next = next->sibling) {
+        if (!checker(next))
+            continue;
+        if (of_node_get(next))
+            break;
+    }
+    of_node_put(prev);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return next;
+}
+
+/**
+ * of_get_next_available_child - Find the next available child node
+ * @node:   parent node
+ * @prev:   previous child of the parent node, or NULL to get first
+ *
+ * This function is like of_get_next_child(), except that it
+ * automatically skips any disabled nodes (i.e. status = "disabled").
+ */
+struct device_node *of_get_next_available_child(const struct device_node *node,
+    struct device_node *prev)
+{
+    return of_get_next_status_child(node, prev, __of_device_is_available);
 }

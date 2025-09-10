@@ -170,3 +170,17 @@ out:
 
     return rc;
 }
+
+/**
+ * of_msi_configure - Set the msi_domain field of a device
+ * @dev: device structure to associate with an MSI irq domain
+ * @np: device node for that device
+ */
+void of_msi_configure(struct device *dev, struct device_node *np)
+{
+#if 0
+    dev_set_msi_domain(dev,
+               of_msi_get_domain(dev, np, DOMAIN_BUS_PLATFORM_MSI));
+#endif
+    pr_notice("%s: No impl.", __func__);
+}

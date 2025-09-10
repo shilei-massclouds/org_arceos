@@ -363,7 +363,6 @@ CL_MINE(irq_domain_free_fwnode)
 // virtio
 CL_MINE(sysfs_emit)
 CL_MINE(sysfs_emit_at)
-CL_MINE(of_get_next_available_child)
 
 // kobject
 CL_MINE(sysfs_remove_groups)

@@ -7,6 +7,7 @@
 
 #include "base.h"
 #include "trace.h"
+#include "../adaptor.h"
 
 struct devres_node {
     struct list_head        entry;
@@ -224,4 +225,37 @@ void *__devres_alloc_node(dr_release_t release, size_t size, gfp_t gfp, int nid,
         return NULL;
     set_node_dbginfo(&dr->node, name, size);
     return dr->data;
+}
+
+/**
+ * devres_release_all - Release all managed resources
+ * @dev: Device to release resources for
+ *
+ * Release all resources associated with @dev.  This function is
+ * called on driver detach.
+ */
+int devres_release_all(struct device *dev)
+{
+    unsigned long flags;
+    LIST_HEAD(todo);
+    int cnt;
+
+    /* Looks like an uninitialized device structure */
+    if (WARN_ON(dev->devres_head.next == NULL))
+        return -ENODEV;
+
+    /* Nothing to release if list is empty */
+    if (list_empty(&dev->devres_head))
+        return 0;
+
+#if 0
+    spin_lock_irqsave(&dev->devres_lock, flags);
+    cnt = remove_nodes(dev, dev->devres_head.next, &dev->devres_head, &todo);
+    spin_unlock_irqrestore(&dev->devres_lock, flags);
+
+    release_nodes(dev, &todo);
+#endif
+    pr_notice("%s: No impl.", __func__);
+    //PANIC("");
+    return cnt;
 }

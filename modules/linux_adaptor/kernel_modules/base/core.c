@@ -1,9 +1,50 @@
+#include <linux/acpi.h>
+#include <linux/blkdev.h>
+#include <linux/cleanup.h>
+#include <linux/cpufreq.h>
 #include <linux/device.h>
+#include <linux/dma-map-ops.h> /* for dma_default_coherent */
+#include <linux/err.h>
+#include <linux/fwnode.h>
+#include <linux/init.h>
+#include <linux/kdev_t.h>
+#include <linux/kstrtox.h>
+#include <linux/module.h>
+#include <linux/mutex.h>
+#include <linux/netdevice.h>
+#include <linux/notifier.h>
+#include <linux/of.h>
+#include <linux/of_device.h>
+#include <linux/pm_runtime.h>
+#include <linux/sched/mm.h>
+#include <linux/sched/signal.h>
+#include <linux/slab.h>
+#include <linux/string_helpers.h>
 #include <linux/swiotlb.h>
-#include <linux/dma-map-ops.h>
+#include <linux/sysfs.h>
 
 #include "base.h"
+#include "physical_location.h"
+//#include "power/power.h"
 #include "../adaptor.h"
+
+/* Device links support. */
+static LIST_HEAD(deferred_sync);
+
+static unsigned int defer_sync_state_count = 1;
+
+static DEFINE_MUTEX(device_links_lock);
+DEFINE_STATIC_SRCU(device_links_srcu);
+
+static inline void device_links_write_lock(void)
+{
+    mutex_lock(&device_links_lock);
+}
+
+static inline void device_links_write_unlock(void)
+{
+    mutex_unlock(&device_links_lock);
+}
 
 // Note: fullfil it.
 static const struct kobj_type device_ktype;
@@ -514,4 +555,97 @@ int device_create_file(struct device *dev,
     }
 
     return error;
+}
+
+void device_links_supplier_sync_state_pause(void)
+{
+    device_links_write_lock();
+    defer_sync_state_count++;
+    device_links_write_unlock();
+}
+
+void device_set_node(struct device *dev, struct fwnode_handle *fwnode)
+{
+    dev->fwnode = fwnode;
+    dev->of_node = to_of_node(fwnode);
+}
+
+/**
+ * __device_links_queue_sync_state - Queue a device for sync_state() callback
+ * @dev: Device to call sync_state() on
+ * @list: List head to queue the @dev on
+ *
+ * Queues a device for a sync_state() callback when the device links write lock
+ * isn't held. This allows the sync_state() execution flow to use device links
+ * APIs.  The caller must ensure this function is called with
+ * device_links_write_lock() held.
+ *
+ * This function does a get_device() to make sure the device is not freed while
+ * on this list.
+ *
+ * So the caller must also ensure that device_links_flush_sync_list() is called
+ * as soon as the caller releases device_links_write_lock().  This is necessary
+ * to make sure the sync_state() is called in a timely fashion and the
+ * put_device() is called on this device.
+ */
+static void __device_links_queue_sync_state(struct device *dev,
+                        struct list_head *list)
+{
+    struct device_link *link;
+
+    if (!dev_has_sync_state(dev))
+        return;
+    if (dev->state_synced)
+        return;
+
+    PANIC("");
+}
+
+/**
+ * device_links_flush_sync_list - Call sync_state() on a list of devices
+ * @list: List of devices to call sync_state() on
+ * @dont_lock_dev: Device for which lock is already held by the caller
+ *
+ * Calls sync_state() on all the devices that have been queued for it. This
+ * function is used in conjunction with __device_links_queue_sync_state(). The
+ * @dont_lock_dev parameter is useful when this function is called from a
+ * context where a device lock is already held.
+ */
+static void device_links_flush_sync_list(struct list_head *list,
+                     struct device *dont_lock_dev)
+{
+    struct device *dev, *tmp;
+
+    list_for_each_entry_safe(dev, tmp, list, links.defer_sync) {
+
+        PANIC("LOOP");
+    }
+}
+
+void device_links_supplier_sync_state_resume(void)
+{
+    struct device *dev, *tmp;
+    LIST_HEAD(sync_list);
+
+    device_links_write_lock();
+    if (!defer_sync_state_count) {
+        WARN(true, "Unmatched sync_state pause/resume!");
+        goto out;
+    }
+    defer_sync_state_count--;
+    if (defer_sync_state_count)
+        goto out;
+
+    list_for_each_entry_safe(dev, tmp, &deferred_sync, links.defer_sync) {
+        /*
+         * Delete from deferred_sync list before queuing it to
+         * sync_list because defer_sync is used for both lists.
+         */
+        list_del_init(&dev->links.defer_sync);
+        __device_links_queue_sync_state(dev, &sync_list);
+    }
+out:
+    device_links_write_unlock();
+
+    device_links_flush_sync_list(&sync_list, NULL);
 }

@@ -188,8 +188,9 @@ static int irq_domain_set_name(struct irq_domain *domain, const struct irq_domai
     if (domain->name)
         return 0;
 
-    if (fwnode)
+    if (fwnode) {
         pr_err("Invalid fwnode type for irqdomain\n");
+    }
     return alloc_unknown_name(domain, bus_token);
 }
 

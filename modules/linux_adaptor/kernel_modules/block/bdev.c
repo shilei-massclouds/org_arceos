@@ -404,6 +404,7 @@ void bdev_add(struct block_device *bdev, dev_t dev)
     inode->i_rdev = dev;
     inode->i_ino = dev;
     insert_inode_hash(inode);
+    printk("%s: dev_t(%x) ok!\n", __func__, dev);
 }
 
 struct block_device *blkdev_get_no_open(dev_t dev)

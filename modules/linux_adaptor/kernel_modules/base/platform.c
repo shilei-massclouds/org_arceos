@@ -1,11 +1,56 @@
-#include <linux/dma-mapping.h>
+#include <linux/string.h>
 #include <linux/platform_device.h>
-#include <linux/of.h>
+#include <linux/of_device.h>
 #include <linux/of_irq.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/interrupt.h>
+#include <linux/ioport.h>
+#include <linux/dma-mapping.h>
+#include <linux/memblock.h>
+#include <linux/err.h>
+#include <linux/slab.h>
+#include <linux/pm_runtime.h>
+#include <linux/pm_domain.h>
+#include <linux/idr.h>
+#include <linux/acpi.h>
+#include <linux/clk/clk-conf.h>
+#include <linux/limits.h>
+#include <linux/property.h>
+#include <linux/kmemleak.h>
+#include <linux/types.h>
+#include <linux/iommu.h>
+#include <linux/dma-map-ops.h>
+
+#include "base.h"
+//#include "power/power.h"
 
 #include "../adaptor.h"
 
-extern void cl_set_phandle_cache(phandle phandle, struct device_node *node);
+struct device platform_bus = {
+    .init_name  = "platform",
+};
+
+struct platform_object {
+    struct platform_device pdev;
+    char name[];
+};
+
+/*
+ * Set up default DMA mask for platform devices if the they weren't
+ * previously set by the architecture / DT.
+ */
+static void setup_pdev_dma_masks(struct platform_device *pdev)
+{
+    pdev->dev.dma_parms = &pdev->dma_parms;
+
+    if (!pdev->dev.coherent_dma_mask)
+        pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+    if (!pdev->dev.dma_mask) {
+        pdev->platform_dma_mask = DMA_BIT_MASK(32);
+        pdev->dev.dma_mask = &pdev->platform_dma_mask;
+    }
+};
 
 static void __add_properties(struct device_node *np,
                              char *key,
@@ -29,6 +74,7 @@ static void __add_properties(struct device_node *np,
     }
 }
 
+#if 0
 static struct platform_device *
 __get_riscv_plic_device(struct device_node *pnode,
                         struct platform_device *ppdev)
@@ -123,6 +169,7 @@ static void __init_riscv_intc_device(void)
 
     cl_set_phandle_cache(node.phandle, &node);
 }
+#endif
 
 /**
  * __platform_driver_register - register a driver for platform-level devices
@@ -132,6 +179,12 @@ static void __init_riscv_intc_device(void)
 int __platform_driver_register(struct platform_driver *drv,
                                struct module *owner)
 {
+    drv->driver.owner = owner;
+    drv->driver.bus = &platform_bus_type;
+
+    return driver_register(&drv->driver);
+
+#if 0
     int ret;
     static struct platform_device *ppdev;
 
@@ -159,6 +212,8 @@ int __platform_driver_register(struct platform_driver *drv,
         PANIC("bad platform dev.");
     }
     return ret;
+#endif
+    PANIC("");
 }
 
 /**
@@ -290,4 +345,220 @@ out:
     if (WARN(!ret, "0 is an invalid IRQ number\n"))
         return -EINVAL;
     return ret;
+}
+
+static void platform_device_release(struct device *dev)
+{
+    struct platform_object *pa = container_of(dev, struct platform_object,
+                          pdev.dev);
+
+    of_node_put(pa->pdev.dev.of_node);
+    kfree(pa->pdev.dev.platform_data);
+    kfree(pa->pdev.mfd_cell);
+    kfree(pa->pdev.resource);
+    kfree(pa->pdev.driver_override);
+    kfree(pa);
+}
+
+/**
+ * platform_device_alloc - create a platform device
+ * @name: base name of the device we're adding
+ * @id: instance id
+ *
+ * Create a platform device object which can have other objects attached
+ * to it, and which will have attached objects freed when it is released.
+ */
+struct platform_device *platform_device_alloc(const char *name, int id)
+{
+    struct platform_object *pa;
+
+    pa = kzalloc(sizeof(*pa) + strlen(name) + 1, GFP_KERNEL);
+    if (pa) {
+        strcpy(pa->name, name);
+        pa->pdev.name = pa->name;
+        pa->pdev.id = id;
+        device_initialize(&pa->pdev.dev);
+        pa->pdev.dev.release = platform_device_release;
+        setup_pdev_dma_masks(&pa->pdev);
+    }
+
+    return pa ? &pa->pdev : NULL;
+}
+
+/**
+ * platform_device_put - destroy a platform device
+ * @pdev: platform device to free
+ *
+ * Free all memory associated with a platform device.  This function must
+ * _only_ be externally called in error cases.  All other usage is a bug.
+ */
+void platform_device_put(struct platform_device *pdev)
+{
+    if (!IS_ERR_OR_NULL(pdev))
+        put_device(&pdev->dev);
+}
+
+static const struct platform_device_id *platform_match_id(
+            const struct platform_device_id *id,
+            struct platform_device *pdev)
+{
+    while (id->name[0]) {
+        if (strcmp(pdev->name, id->name) == 0) {
+            pdev->id_entry = id;
+            return id;
+        }
+        id++;
+    }
+    return NULL;
+}
+
+static int platform_match(struct device *dev, const struct device_driver *drv)
+{
+    struct platform_device *pdev = to_platform_device(dev);
+    struct platform_driver *pdrv = to_platform_driver(drv);
+
+    /* When driver_override is set, only bind to the matching driver */
+    if (pdev->driver_override)
+        return !strcmp(pdev->driver_override, drv->name);
+
+    /* Attempt an OF style match first */
+    if (of_driver_match_device(dev, drv))
+        return 1;
+
+    /* Then try ACPI style match */
+    if (acpi_driver_match_device(dev, drv))
+        return 1;
+
+    /* Then try to match against the id table */
+    if (pdrv->id_table)
+        return platform_match_id(pdrv->id_table, pdev) != NULL;
+
+    /* fall-back to driver name match */
+    return (strcmp(pdev->name, drv->name) == 0);
+}
+
+static int platform_uevent(const struct device *dev, struct kobj_uevent_env *env)
+{
+    PANIC("");
+}
+
+static int platform_probe_fail(struct platform_device *pdev)
+{
+    return -ENXIO;
+}
+
+static int platform_probe(struct device *_dev)
+{
+    struct platform_driver *drv = to_platform_driver(_dev->driver);
+    struct platform_device *dev = to_platform_device(_dev);
+    int ret;
+
+    /*
+     * A driver registered using platform_driver_probe() cannot be bound
+     * again later because the probe function usually lives in __init code
+     * and so is gone. For these drivers .probe is set to
+     * platform_probe_fail in __platform_driver_probe(). Don't even prepare
+     * clocks and PM domains for these to match the traditional behaviour.
+     */
+    if (unlikely(drv->probe == platform_probe_fail))
+        return -ENXIO;
+
+    ret = of_clk_set_defaults(_dev->of_node, false);
+    if (ret < 0)
+        return ret;
+
+    ret = dev_pm_domain_attach(_dev, true);
+    if (ret)
+        goto out;
+
+    if (drv->probe) {
+        ret = drv->probe(dev);
+        if (ret)
+            dev_pm_domain_detach(_dev, true);
+    }
+
+out:
+    if (drv->prevent_deferred_probe && ret == -EPROBE_DEFER) {
+        dev_warn(_dev, "probe deferral not supported\n");
+        ret = -ENXIO;
+    }
+
+    return ret;
+}
+
+static void platform_remove(struct device *_dev)
+{
+    PANIC("");
+}
+
+static void platform_shutdown(struct device *_dev)
+{
+    PANIC("");
+}
+
+static int platform_dma_configure(struct device *dev)
+{
+    struct platform_driver *drv = to_platform_driver(dev->driver);
+    struct fwnode_handle *fwnode = dev_fwnode(dev);
+    enum dev_dma_attr attr;
+    int ret = 0;
+
+    if (is_of_node(fwnode)) {
+        ret = of_dma_configure(dev, to_of_node(fwnode), true);
+    } else if (is_acpi_device_node(fwnode)) {
+#if 0
+        attr = acpi_get_dma_attr(to_acpi_device_node(fwnode));
+        ret = acpi_dma_configure(dev, attr);
+#endif
+        PANIC("No acpi.");
+    }
+    if (ret || drv->driver_managed_dma)
+        return ret;
+
+    ret = iommu_device_use_default_domain(dev);
+    if (ret)
+        arch_teardown_dma_ops(dev);
+
+    return ret;
+}
+
+static void platform_dma_cleanup(struct device *dev)
+{
+    struct platform_driver *drv = to_platform_driver(dev->driver);
+
+    if (!drv->driver_managed_dma)
+        iommu_device_unuse_default_domain(dev);
+}
+
+const struct bus_type platform_bus_type = {
+    .name       = "platform",
+    //.dev_groups = platform_dev_groups,
+    .match      = platform_match,
+    .uevent     = platform_uevent,
+    .probe      = platform_probe,
+    .remove     = platform_remove,
+    .shutdown   = platform_shutdown,
+    .dma_configure  = platform_dma_configure,
+    .dma_cleanup    = platform_dma_cleanup,
+    //.pm     = &platform_dev_pm_ops,
+};
+
+void __weak __init early_platform_cleanup(void) { }
+
+int __init platform_bus_init(void)
+{
+    int error;
+
+    early_platform_cleanup();
+
+    error = device_register(&platform_bus);
+    if (error) {
+        put_device(&platform_bus);
+        return error;
+    }
+    error =  bus_register(&platform_bus_type);
+    if (error)
+        device_unregister(&platform_bus);
+
+    return error;
 }

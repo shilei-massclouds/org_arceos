@@ -16,7 +16,9 @@
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-#define TEST_EXT4
+//#define TEST_EXT4
+
+extern int cl_of_platform_default_populate_init(void);
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
@@ -79,6 +81,7 @@ int clinux_init(phys_addr_t dt_phys)
     maple_tree_init();
     trace_init();
     buses_init();
+    platform_bus_init();
     buffer_init();
     vfs_caches_init();
     workqueue_init_early();
@@ -92,7 +95,7 @@ int clinux_init(phys_addr_t dt_phys)
     cl_default_bdi_init();
 
     unflatten_device_tree();
-    //of_platform_default_populate_init();
+    cl_of_platform_default_populate_init();
 
     {
         static struct device_node riscv_intc_node;
@@ -119,6 +122,7 @@ int clinux_init(phys_addr_t dt_phys)
     cl_virtio_blk_init();
 
 #ifdef TEST_BLOCK
+    printk("====== VirtIoBlock test ======\n");
     test_block();
 #endif
 

@@ -1440,6 +1440,7 @@ static int virtblk_probe(struct virtio_device *vdev)
 	int err, index;
 	unsigned int queue_depth;
 
+    printk("%s: step1\n", __func__);
 	if (!vdev->config->get) {
 		dev_err(&vdev->dev, "%s failure: config access disabled\n",
 			__func__);

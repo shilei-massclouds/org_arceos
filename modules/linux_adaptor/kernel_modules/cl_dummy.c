@@ -11,12 +11,12 @@
 
 #include "../adaptor.h"
 
-// Defined in arch/riscv/mm/dma-noncoherent.c
-int dma_cache_alignment __ro_after_init = ARCH_DMA_MINALIGN;
-
 bool initcall_debug;
 
 bool noirqdebug __read_mostly;
+
+// defined in 'arch/riscv/mm/cacheflush.c'.
+unsigned int riscv_cbom_block_size;
 
 struct net init_net = {
     .ns.count = 1,
@@ -693,6 +693,69 @@ void trace_find_cmdline(int pid, char comm[])
 }
 
 notrace void touch_softlockup_watchdog(void)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode)
+{
+    pr_notice("%s: No impl.", __func__);
+    return NULL;
+}
+
+bool acpi_driver_match_device(struct device *dev,
+                  const struct device_driver *drv)
+{
+    pr_notice("%s: No impl.", __func__);
+    return false;
+}
+
+/*
+ * Returns:
+ *  0 on success, an iommu was configured
+ *  -ENODEV if the device does not have any IOMMU
+ *  -EPROBEDEFER if probing should be tried again
+ *  -errno fatal errors
+ */
+int of_iommu_configure(struct device *dev, struct device_node *master_np,
+               const u32 *id)
+{
+    pr_notice("%s: No impl.", __func__);
+    return -ENODEV;
+}
+
+/**
+ * iommu_device_use_default_domain() - Device driver wants to handle device
+ *                                     DMA through the kernel DMA API.
+ * @dev: The device.
+ *
+ * The device driver about to bind @dev wants to do DMA through the kernel
+ * DMA API. Return 0 if it is allowed, otherwise an error.
+ */
+int iommu_device_use_default_domain(struct device *dev)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+int of_clk_set_defaults(struct device_node *node, bool clk_supplier)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+int dev_pm_domain_attach(struct device *dev, bool power_on)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+void dev_pm_domain_detach(struct device *dev, bool power_off)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void iommu_device_unuse_default_domain(struct device *dev)
 {
     pr_notice("%s: No impl.", __func__);
 }

@@ -1,8 +1,19 @@
+#include <linux/debugfs.h>
 #include <linux/device.h>
+#include <linux/delay.h>
+#include <linux/dma-map-ops.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/kthread.h>
+#include <linux/wait.h>
 #include <linux/async.h>
+#include <linux/pm_runtime.h>
 #include <linux/pinctrl/devinfo.h>
+#include <linux/slab.h>
 
 #include "base.h"
+//#include "power/power.h"
+
 #include "../adaptor.h"
 
 static DEFINE_MUTEX(deferred_probe_mutex);
@@ -233,7 +244,16 @@ static void device_remove(struct device *dev)
 }
 static void device_unbind_cleanup(struct device *dev)
 {
-    PANIC("");
+    devres_release_all(dev);
+    arch_teardown_dma_ops(dev);
+    kfree(dev->dma_range_map);
+    dev->dma_range_map = NULL;
+    device_set_driver(dev, NULL);
+    dev_set_drvdata(dev, NULL);
+    if (dev->pm_domain && dev->pm_domain->dismiss)
+        dev->pm_domain->dismiss(dev);
+    //pm_runtime_reinit(dev);
+    dev_pm_set_driver_flags(dev, 0);
 }
 
 static int call_driver_probe(struct device *dev, const struct device_driver *drv)

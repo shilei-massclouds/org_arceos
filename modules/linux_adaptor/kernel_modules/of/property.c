@@ -168,3 +168,81 @@ int of_property_read_string(const struct device_node *np, const char *propname,
     *out_string = prop->value;
     return 0;
 }
+
+/**
+ * of_property_read_string_helper() - Utility helper for parsing string properties
+ * @np:     device node from which the property value is to be read.
+ * @propname:   name of the property to be searched.
+ * @out_strs:   output array of string pointers.
+ * @sz:     number of array elements to read.
+ * @skip:   Number of strings to skip over at beginning of list.
+ *
+ * Don't call this function directly. It is a utility helper for the
+ * of_property_read_string*() family of functions.
+ */
+int of_property_read_string_helper(const struct device_node *np,
+                   const char *propname, const char **out_strs,
+                   size_t sz, int skip)
+{
+    const struct property *prop = of_find_property(np, propname, NULL);
+    int l = 0, i = 0;
+    const char *p, *end;
+
+    if (!prop)
+        return -EINVAL;
+    if (!prop->value)
+        return -ENODATA;
+    p = prop->value;
+    end = p + prop->length;
+
+    for (i = 0; p < end && (!out_strs || i < skip + sz); i++, p += l) {
+        l = strnlen(p, end - p) + 1;
+        if (p + l > end)
+            return -EILSEQ;
+        if (out_strs && i >= skip)
+            *out_strs++ = p;
+    }
+    i -= skip;
+    return i <= 0 ? -ENODATA : i;
+}
+
+/**
+ * of_property_match_string() - Find string in a list and return index
+ * @np: pointer to the node containing the string list property
+ * @propname: string list property name
+ * @string: pointer to the string to search for in the string list
+ *
+ * Search for an exact match of string in a device node property which is a
+ * string of lists.
+ *
+ * Return: the index of the first occurrence of the string on success, -EINVAL
+ * if the property does not exist, -ENODATA if the property does not have a
+ * value, and -EILSEQ if the string is not null-terminated within the length of
+ * the property data.
+ */
+int of_property_match_string(const struct device_node *np, const char *propname,
+                 const char *string)
+{
+    const struct property *prop = of_find_property(np, propname, NULL);
+    size_t l;
+    int i;
+    const char *p, *end;
+
+    if (!prop)
+        return -EINVAL;
+    if (!prop->value)
+        return -ENODATA;
+
+    p = prop->value;
+    end = p + prop->length;
+
+    for (i = 0; p < end; i++, p += l) {
+        l = strnlen(p, end - p) + 1;
+        if (p + l > end)
+            return -EILSEQ;
+        pr_debug("comparing %s with %s\n", string, p);
+        if (strcmp(string, p) == 0)
+            return i; /* Found it; return index */
+    }
+    return -ENODATA;
+}
