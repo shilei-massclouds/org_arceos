@@ -11,7 +11,10 @@ pub fn init_kallsyms() {
     unsafe {
         let head_ptr = va as *const u32;
         let head_magic = core::mem::transmute::<u32, [u8; 4]>(*head_ptr);
-        assert_eq!(head_magic, [b'k', b'a', b'l', b'l']);
+        if head_magic != [b'k', b'a', b'l', b'l'] {
+            error!("No pflash for kallsyms.");
+            return;
+        }
 
         let size_ptr = head_ptr.add(1);
         let size = u32::from_be(*size_ptr) as usize;

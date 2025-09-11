@@ -13,7 +13,14 @@ endif
 ifeq ($(ARCH), x86_64)
   machine := q35
 else ifeq ($(ARCH), riscv64)
-  machine := virt
+  ifeq ($(PLAT_NAME), riscv64-sifive_u)
+    machine := sifive_u
+    override PFLASH := n
+    override BLK := n
+    override SMP := 2
+  else
+    machine := virt
+  endif
 else ifeq ($(ARCH), aarch64)
   ifeq ($(PLAT_NAME), aarch64-raspi4)
     machine := raspi4b

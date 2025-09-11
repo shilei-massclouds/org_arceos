@@ -16,7 +16,7 @@
 
 //#define TEST_BLOCK
 //#define TEST_EXT2
-//#define TEST_EXT4
+#define TEST_EXT4
 
 extern int cl_of_platform_default_populate_init(void);
 
