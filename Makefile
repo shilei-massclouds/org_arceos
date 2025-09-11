@@ -63,6 +63,7 @@ ifeq ($(PFLASH), y)
 else
   PFLASH_IMG :=
 endif
+MTD ?= y
 
 DISK_IMG ?= disk.img
 # Filesystem type: fat32, ext2, ext4

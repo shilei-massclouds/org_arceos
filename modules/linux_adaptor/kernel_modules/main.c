@@ -23,6 +23,8 @@ extern int cl_of_platform_default_populate_init(void);
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
 
+extern void cl_sifive_spi_driver_init(void);
+
 extern void cl_crc32_mod_init(void);
 extern void cl_crc32c_mod_init(void);
 extern int cl_blake2s_mod_init(void);
@@ -120,6 +122,9 @@ int clinux_init(phys_addr_t dt_phys)
     cl_virtio_init();
     cl_virtio_mmio_init();
     cl_virtio_blk_init();
+
+    // spi/spi-sifive.c
+    cl_sifive_spi_driver_init();
 
 #ifdef TEST_BLOCK
     printk("====== VirtIoBlock test ======\n");

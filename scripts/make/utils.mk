@@ -34,7 +34,7 @@ endef
 
 define make_disk_image_ext4
   @printf "    $(GREEN_C)Creating$(END_C) Ext4 disk image \"$(1)\" ...\n"
-  @dd if=/dev/zero of=$(1) bs=1M count=64
+  @dd if=/dev/zero of=$(1) bs=1M count=32
   @mkfs.ext4 $(1)
   @echo "abc" > /tmp/last_file
   @mkdir -p ./mnt

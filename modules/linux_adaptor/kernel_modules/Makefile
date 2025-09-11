@@ -21,6 +21,7 @@ OBJS := virtio/virtio_blk.o
 OBJS += virtio/virtio.o virtio/virtio_ring.o virtio/virtio_mmio.o
 OBJS += virtio/virtio_anchor.o
 OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
+OBJS += spi/spi-sifive.o spi/spi.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
 OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o mm/swap.o
@@ -37,7 +38,7 @@ OBJS += lib/radix-tree.o lib/maple_tree.o lib/kobject.o lib/klist.o
 OBJS += lib/devres.o lib/hweight.o lib/errname.o lib/idr.o lib/xarray.o
 OBJS += lib/sort.o lib/sbitmap.o lib/lockref.o lib/rbtree.o lib/dec_and_lock.o
 OBJS += lib/find_bit.o lib/sg_pool.o lib/scatterlist.o lib/errseq.o lib/llist.o
-OBJS += lib/crc32.o lib/iov_iter.o lib/irq_regs.o lib/dump_stack.o
+OBJS += lib/crc32.o lib/iov_iter.o lib/irq_regs.o lib/dump_stack.o lib/kstrtox.o
 OBJS += lib/percpu_counter.o lib/strncpy_from_user.o lib/ctype.o lib/seq_buf.o
 OBJS += lib/delay.o	# arch/riscv/lib/delay.c
 OBJS += math/reciprocal_div.o
@@ -115,7 +116,6 @@ OBJS += cl_mine.o main.o smp.o softirq.o panic.o \
 		cl_dummy.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
-		#kstrtox.o \
 		#signal.o \
 
 CROSS_ = $(ARCH)-linux-musl-
