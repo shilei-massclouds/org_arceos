@@ -129,10 +129,33 @@ int device_bind_driver(struct device *dev)
     PANIC("");
 }
 
-static int __device_attach_driver(struct device_driver *drv, void *_data)
+static inline bool cmdline_requested_async_probing(const char *drv_name)
 {
-    PANIC("");
+    pr_notice("%s: No impl.", __func__);
+    return false;
 }
+
+static bool driver_allows_async_probing(const struct device_driver *drv)
+{
+    switch (drv->probe_type) {
+    case PROBE_PREFER_ASYNCHRONOUS:
+        return true;
+
+    case PROBE_FORCE_SYNCHRONOUS:
+        return false;
+
+    default:
+        if (cmdline_requested_async_probing(drv->name))
+            return true;
+
+        if (module_requested_async_probing(drv->owner))
+            return true;
+
+        return false;
+    }
+}
+
+static int __device_attach_driver(struct device_driver *drv, void *_data);
 
 static int __device_attach(struct device *dev, bool allow_async)
 {
@@ -536,6 +559,50 @@ static int driver_probe_device(const struct device_driver *drv, struct device *d
     atomic_dec(&probe_count);
     wake_up_all(&probe_waitqueue);
     return ret;
+}
+
+static int __device_attach_driver(struct device_driver *drv, void *_data)
+{
+    struct device_attach_data *data = _data;
+    struct device *dev = data->dev;
+    bool async_allowed;
+    int ret;
+
+    ret = driver_match_device(drv, dev);
+    if (ret == 0) {
+        /* no match */
+        return 0;
+    } else if (ret == -EPROBE_DEFER) {
+        dev_dbg(dev, "Device match requests probe deferral\n");
+        dev->can_match = true;
+        driver_deferred_probe_add(dev);
+        /*
+         * Device can't match with a driver right now, so don't attempt
+         * to match or bind with other drivers on the bus.
+         */
+        return ret;
+    } else if (ret < 0) {
+        dev_dbg(dev, "Bus failed to match device: %d\n", ret);
+        return ret;
+    } /* ret > 0 means positive match */
+
+    async_allowed = driver_allows_async_probing(drv);
+
+    if (async_allowed)
+        data->have_async = true;
+
+    if (data->check_async && async_allowed != data->want_async)
+        return 0;
+
+    /*
+     * Ignore errors returned by ->probe so that the next driver can try
+     * its luck.
+     */
+    ret = driver_probe_device(drv, dev);
+    if (ret < 0)
+        return ret;
+    PANIC("");
+    return ret == 0;
 }
 
 static int __driver_attach(struct device *dev, void *data)

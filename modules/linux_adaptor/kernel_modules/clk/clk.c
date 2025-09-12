@@ -1563,3 +1563,53 @@ int clk_enable(struct clk *clk)
 
     return clk_core_enable_lock(clk->core);
 }
+
+/**
+ * __clk_recalc_rates
+ * @core: first clk in the subtree
+ * @update_req: Whether req_rate should be updated with the new rate
+ * @msg: notification type (see include/linux/clk.h)
+ *
+ * Walks the subtree of clks starting with clk and recalculates rates as it
+ * goes.  Note that if a clk does not implement the .recalc_rate callback then
+ * it is assumed that the clock will take on the rate of its parent.
+ *
+ * clk_recalc_rates also propagates the POST_RATE_CHANGE notification,
+ * if necessary.
+ */
+static void __clk_recalc_rates(struct clk_core *core, bool update_req,
+                   unsigned long msg)
+{
+    PANIC("");
+}
+
+static unsigned long clk_core_get_rate_recalc(struct clk_core *core)
+{
+    if (core && (core->flags & CLK_GET_RATE_NOCACHE))
+        __clk_recalc_rates(core, false, 0);
+
+    return clk_core_get_rate_nolock(core);
+}
+
+/**
+ * clk_get_rate - return the rate of clk
+ * @clk: the clk whose rate is being returned
+ *
+ * Simply returns the cached rate of the clk, unless CLK_GET_RATE_NOCACHE flag
+ * is set, which means a recalc_rate will be issued. Can be called regardless of
+ * the clock enabledness. If clk is NULL, or if an error occurred, then returns
+ * 0.
+ */
+unsigned long clk_get_rate(struct clk *clk)
+{
+    unsigned long rate;
+
+    if (!clk)
+        return 0;
+
+    clk_prepare_lock();
+    rate = clk_core_get_rate_recalc(clk->core);
+    clk_prepare_unlock();
+
+    return rate;
+}

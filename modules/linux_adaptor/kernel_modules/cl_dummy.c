@@ -8,6 +8,7 @@
 #include <linux/sched/isolation.h>
 #include <linux/swap.h>
 #include <linux/task_work.h>
+#include <linux/gpio/consumer.h>
 
 #include "../adaptor.h"
 
@@ -777,4 +778,34 @@ int __pm_runtime_idle(struct device *dev, int rpmflags)
 {
     pr_err("%s: No impl.", __func__);
     return 0;
+}
+
+int acpi_reconfig_notifier_register(struct notifier_block *nb)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+struct gpio_desc *__must_check devm_gpiod_get_optional(struct device *dev,
+                               const char *con_id,
+                               enum gpiod_flags flags)
+{
+    pr_err("%s: No impl.", __func__);
+    return NULL;
+}
+
+void spi_nor_debugfs_register(struct spi_nor *nor)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+int sysfs_create_files(struct kobject *kobj, const struct attribute * const *ptr)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+void sysfs_remove_files(struct kobject *kobj, const struct attribute * const *ptr)
+{
+    pr_notice("%s: No impl.", __func__);
 }

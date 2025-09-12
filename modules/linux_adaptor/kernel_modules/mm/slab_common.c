@@ -81,3 +81,145 @@ unsigned int kmem_cache_size(struct kmem_cache *s)
 {
     return s->object_size;
 }
+
+static __always_inline __realloc_size(2) void *
+__do_krealloc(const void *p, size_t new_size, gfp_t flags)
+{
+    void *ret;
+    size_t ks;
+
+    /* Check for double-free before calling ksize. */
+    if (likely(!ZERO_OR_NULL_PTR(p))) {
+        if (!kasan_check_byte(p))
+            return NULL;
+        ks = ksize(p);
+    } else
+        ks = 0;
+
+    /* If the object still fits, repoison it precisely. */
+    if (ks >= new_size) {
+        /* Zero out spare memory. */
+        if (want_init_on_alloc(flags)) {
+            kasan_disable_current();
+            memset(kasan_reset_tag(p) + new_size, 0, ks - new_size);
+            kasan_enable_current();
+        }
+
+        p = kasan_krealloc((void *)p, new_size, flags);
+        return (void *)p;
+    }
+
+    ret = kmalloc_node_track_caller_noprof(new_size, flags, NUMA_NO_NODE, _RET_IP_);
+    if (ret && p) {
+        /* Disable KASAN checks as the object's redzone is accessed. */
+        kasan_disable_current();
+        memcpy(ret, kasan_reset_tag(p), ks);
+        kasan_enable_current();
+    }
+
+    return ret;
+}
+
+/**
+ * krealloc - reallocate memory. The contents will remain unchanged.
+ * @p: object to reallocate memory for.
+ * @new_size: how many bytes of memory are required.
+ * @flags: the type of memory to allocate.
+ *
+ * If @p is %NULL, krealloc() behaves exactly like kmalloc().  If @new_size
+ * is 0 and @p is not a %NULL pointer, the object pointed to is freed.
+ *
+ * If __GFP_ZERO logic is requested, callers must ensure that, starting with the
+ * initial memory allocation, every subsequent call to this API for the same
+ * memory allocation is flagged with __GFP_ZERO. Otherwise, it is possible that
+ * __GFP_ZERO is not fully honored by this API.
+ *
+ * This is the case, since krealloc() only knows about the bucket size of an
+ * allocation (but not the exact size it was allocated with) and hence
+ * implements the following semantics for shrinking and growing buffers with
+ * __GFP_ZERO.
+ *
+ *         new             bucket
+ * 0       size             size
+ * |--------|----------------|
+ * |  keep  |      zero      |
+ *
+ * In any case, the contents of the object pointed to are preserved up to the
+ * lesser of the new and old sizes.
+ *
+ * Return: pointer to the allocated memory or %NULL in case of error
+ */
+void *krealloc_noprof(const void *p, size_t new_size, gfp_t flags)
+{
+    void *ret;
+
+    if (unlikely(!new_size)) {
+        kfree(p);
+        return ZERO_SIZE_PTR;
+    }
+
+    ret = __do_krealloc(p, new_size, flags);
+    if (ret && kasan_reset_tag(p) != kasan_reset_tag(ret))
+        kfree(p);
+
+    return ret;
+}
+
+/**
+ * __ksize -- Report full size of underlying allocation
+ * @object: pointer to the object
+ *
+ * This should only be used internally to query the true size of allocations.
+ * It is not meant to be a way to discover the usable size of an allocation
+ * after the fact. Instead, use kmalloc_size_roundup(). Using memory beyond
+ * the originally requested allocation size may trigger KASAN, UBSAN_BOUNDS,
+ * and/or FORTIFY_SOURCE.
+ *
+ * Return: size of the actual memory used by @object in bytes
+ */
+size_t __ksize(const void *object)
+{
+    struct folio *folio;
+
+    if (unlikely(object == ZERO_SIZE_PTR))
+        return 0;
+
+    folio = virt_to_folio(object);
+
+    if (unlikely(!folio_test_slab(folio))) {
+        if (WARN_ON(folio_size(folio) <= KMALLOC_MAX_CACHE_SIZE))
+            return 0;
+        if (WARN_ON(object != folio_address(folio)))
+            return 0;
+        return folio_size(folio);
+    }
+
+#ifdef CONFIG_SLUB_DEBUG
+    skip_orig_size_check(folio_slab(folio)->slab_cache, object);
+#endif
+
+    return slab_ksize(folio_slab(folio)->slab_cache);
+}
+
+size_t ksize(const void *objp)
+{
+    /*
+     * We need to first check that the pointer to the object is valid.
+     * The KASAN report printed from ksize() is more useful, then when
+     * it's printed later when the behaviour could be undefined due to
+     * a potential use-after-free or double-free.
+     *
+     * We use kasan_check_byte(), which is supported for the hardware
+     * tag-based KASAN mode, unlike kasan_check_read/write().
+     *
+     * If the pointed to memory is invalid, we return 0 to avoid users of
+     * ksize() writing to and potentially corrupting the memory region.
+     *
+     * We want to perform the check before __ksize(), to avoid potentially
+     * crashing in __ksize() due to accessing invalid metadata.
+     */
+    if (unlikely(ZERO_OR_NULL_PTR(objp)) || !kasan_check_byte(objp))
+        return 0;
+
+    return kfence_ksize(objp) ?: __ksize(objp);
+}

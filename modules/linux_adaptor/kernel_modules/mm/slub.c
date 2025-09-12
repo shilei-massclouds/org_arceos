@@ -107,3 +107,9 @@ void kmem_cache_free(struct kmem_cache *s, void *x)
 #endif
     pr_notice("%s: No impl.", __func__);
 }
+
+void skip_orig_size_check(struct kmem_cache *s, const void *object)
+{
+    pr_err("%s: No impl.", __func__);
+    //set_orig_size(s, (void *)object, s->object_size);
+}

@@ -23,8 +23,11 @@ extern int cl_of_platform_default_populate_init(void);
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
 
+extern int cl_spi_init(void);
 extern void cl_sifive_spi_driver_init(void);
 extern void cl_sifive_prci_driver_init(void);
+
+extern int cl_spi_nor_module_init(void);
 
 extern void cl_crc32_mod_init(void);
 extern void cl_crc32c_mod_init(void);
@@ -84,6 +87,7 @@ int clinux_init(phys_addr_t dt_phys)
     maple_tree_init();
     trace_init();
     buses_init();
+    classes_init();
     platform_bus_init();
     buffer_init();
     vfs_caches_init();
@@ -126,6 +130,12 @@ int clinux_init(phys_addr_t dt_phys)
 
     // clk/sifive/sifive-prci.c
     cl_sifive_prci_driver_init();
+
+    // spi/spi.c
+    cl_spi_init();
+
+    // mtd/spi-nor/core.c
+    cl_spi_nor_module_init();
 
     // spi/spi-sifive.c
     cl_sifive_spi_driver_init();

@@ -1054,3 +1054,25 @@ int of_alias_from_compatible(const struct device_node *node, char *alias, int le
     strscpy(alias, p ? p + 1 : compatible, len);
     return 0;
 }
+
+/**
+ * of_get_child_by_name - Find the child node by name for a given parent
+ * @node:   parent node
+ * @name:   child name to look for.
+ *
+ * This function looks for child node for given matching name
+ *
+ * Return: A node pointer if found, with refcount incremented, use
+ * of_node_put() on it when done.
+ * Returns NULL if node is not found.
+ */
+struct device_node *of_get_child_by_name(const struct device_node *node,
+                const char *name)
+{
+    struct device_node *child;
+
+    for_each_child_of_node(node, child)
+        if (of_node_name_eq(child, name))
+            break;
+    return child;
+}

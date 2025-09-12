@@ -268,6 +268,24 @@ static void devm_percpu_release(struct device *dev, void *pdata)
     free_percpu(p);
 }
 
+static struct devres *find_dr(struct device *dev, dr_release_t release,
+                  dr_match_t match, void *match_data)
+{
+    struct devres_node *node;
+
+    list_for_each_entry_reverse(node, &dev->devres_head, entry) {
+        struct devres *dr = container_of(node, struct devres, node);
+
+        if (node->release != release)
+            continue;
+        if (match && !match(dev, dr->data, match_data))
+            continue;
+        return dr;
+    }
+
+    return NULL;
+}
+
 /**
  * __devm_alloc_percpu - Resource-managed alloc_percpu
  * @dev: Device to allocate per-cpu memory for
@@ -301,4 +319,189 @@ void __percpu *__devm_alloc_percpu(struct device *dev, size_t size,
     devres_add(dev, p);
 
     return pcpu;
+}
+
+/**
+ * devres_remove - Find a device resource and remove it
+ * @dev: Device to find resource from
+ * @release: Look for resources associated with this release function
+ * @match: Match function (optional)
+ * @match_data: Data for the match function
+ *
+ * Find the latest devres of @dev associated with @release and for
+ * which @match returns 1.  If @match is NULL, it's considered to
+ * match all.  If found, the resource is removed atomically and
+ * returned.
+ *
+ * RETURNS:
+ * Pointer to removed devres on success, NULL if not found.
+ */
+void *devres_remove(struct device *dev, dr_release_t release,
+            dr_match_t match, void *match_data)
+{
+    struct devres *dr;
+    unsigned long flags;
+
+    spin_lock_irqsave(&dev->devres_lock, flags);
+    dr = find_dr(dev, release, match, match_data);
+    if (dr) {
+        list_del_init(&dr->node.entry);
+        devres_log(dev, &dr->node, "REM");
+    }
+    spin_unlock_irqrestore(&dev->devres_lock, flags);
+
+    if (dr)
+        return dr->data;
+    return NULL;
+}
+
+/**
+ * devres_release - Find a device resource and destroy it, calling release
+ * @dev: Device to find resource from
+ * @release: Look for resources associated with this release function
+ * @match: Match function (optional)
+ * @match_data: Data for the match function
+ *
+ * Find the latest devres of @dev associated with @release and for
+ * which @match returns 1.  If @match is NULL, it's considered to
+ * match all.  If found, the resource is removed atomically, the
+ * release function called and the resource freed.
+ *
+ * RETURNS:
+ * 0 if devres is found and freed, -ENOENT if not found.
+ */
+int devres_release(struct device *dev, dr_release_t release,
+           dr_match_t match, void *match_data)
+{
+    void *res;
+
+    res = devres_remove(dev, release, match, match_data);
+    if (unlikely(!res))
+        return -ENOENT;
+
+    (*release)(dev, res);
+    devres_free(res);
+    return 0;
+}
+
+/**
+ * devm_kmemdup - Resource-managed kmemdup
+ * @dev: Device this memory belongs to
+ * @src: Memory region to duplicate
+ * @len: Memory region length
+ * @gfp: GFP mask to use
+ *
+ * Duplicate region of a memory using resource managed kmalloc
+ */
+void *devm_kmemdup(struct device *dev, const void *src, size_t len, gfp_t gfp)
+{
+    void *p;
+
+    p = devm_kmalloc(dev, len, gfp);
+    if (p)
+        memcpy(p, src, len);
+
+    return p;
+}
+
+/**
+ * devm_krealloc - Resource-managed krealloc()
+ * @dev: Device to re-allocate memory for
+ * @ptr: Pointer to the memory chunk to re-allocate
+ * @new_size: New allocation size
+ * @gfp: Allocation gfp flags
+ *
+ * Managed krealloc(). Resizes the memory chunk allocated with devm_kmalloc().
+ * Behaves similarly to regular krealloc(): if @ptr is NULL or ZERO_SIZE_PTR,
+ * it's the equivalent of devm_kmalloc(). If new_size is zero, it frees the
+ * previously allocated memory and returns ZERO_SIZE_PTR. This function doesn't
+ * change the order in which the release callback for the re-alloc'ed devres
+ * will be called (except when falling back to devm_kmalloc() or when freeing
+ * resources when new_size is zero). The contents of the memory are preserved
+ * up to the lesser of new and old sizes.
+ */
+void *devm_krealloc(struct device *dev, void *ptr, size_t new_size, gfp_t gfp)
+{
+    size_t total_new_size, total_old_size;
+    struct devres *old_dr, *new_dr;
+    unsigned long flags;
+
+    if (unlikely(!new_size)) {
+        devm_kfree(dev, ptr);
+        return ZERO_SIZE_PTR;
+    }
+
+#if 0
+    if (unlikely(ZERO_OR_NULL_PTR(ptr)))
+        return devm_kmalloc(dev, new_size, gfp);
+
+    if (WARN_ON(is_kernel_rodata((unsigned long)ptr)))
+        /*
+         * We cannot reliably realloc a const string returned by
+         * devm_kstrdup_const().
+         */
+        return NULL;
+
+    if (!check_dr_size(new_size, &total_new_size))
+        return NULL;
+
+    total_old_size = ksize(container_of(ptr, struct devres, data));
+    if (total_old_size == 0) {
+        WARN(1, "Pointer doesn't point to dynamically allocated memory.");
+        return NULL;
+    }
+
+    /*
+     * If new size is smaller or equal to the actual number of bytes
+     * allocated previously - just return the same pointer.
+     */
+    if (total_new_size <= total_old_size)
+        return ptr;
+
+    /*
+     * Otherwise: allocate new, larger chunk. We need to allocate before
+     * taking the lock as most probably the caller uses GFP_KERNEL.
+     * alloc_dr() will call check_dr_size() to reserve extra memory
+     * for struct devres automatically, so size @new_size user request
+     * is delivered to it directly as devm_kmalloc() does.
+     */
+    new_dr = alloc_dr(devm_kmalloc_release,
+              new_size, gfp, dev_to_node(dev));
+    if (!new_dr)
+        return NULL;
+
+    /*
+     * The spinlock protects the linked list against concurrent
+     * modifications but not the resource itself.
+     */
+    spin_lock_irqsave(&dev->devres_lock, flags);
+
+    old_dr = find_dr(dev, devm_kmalloc_release, devm_kmalloc_match, ptr);
+    if (!old_dr) {
+        spin_unlock_irqrestore(&dev->devres_lock, flags);
+        kfree(new_dr);
+        WARN(1, "Memory chunk not managed or managed by a different device.");
+        return NULL;
+    }
+
+    replace_dr(dev, &old_dr->node, &new_dr->node);
+
+    spin_unlock_irqrestore(&dev->devres_lock, flags);
+
+    /*
+     * We can copy the memory contents after releasing the lock as we're
+     * no longer modifying the list links.
+     */
+    memcpy(new_dr->data, old_dr->data,
+           total_old_size - offsetof(struct devres, data));
+    /*
+     * Same for releasing the old devres - it's now been removed from the
+     * list. This is also the reason why we must not use devm_kfree() - the
+     * links are no longer valid.
+     */
+    kfree(old_dr);
+#endif
+
+    PANIC("");
+    return new_dr->data;
 }
