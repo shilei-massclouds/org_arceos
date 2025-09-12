@@ -259,3 +259,46 @@ int devres_release_all(struct device *dev)
     //PANIC("");
     return cnt;
 }
+
+static void devm_percpu_release(struct device *dev, void *pdata)
+{
+    void __percpu *p;
+
+    p = *(void __percpu **)pdata;
+    free_percpu(p);
+}
+
+/**
+ * __devm_alloc_percpu - Resource-managed alloc_percpu
+ * @dev: Device to allocate per-cpu memory for
+ * @size: Size of per-cpu memory to allocate
+ * @align: Alignment of per-cpu memory to allocate
+ *
+ * Managed alloc_percpu. Per-cpu memory allocated with this function is
+ * automatically freed on driver detach.
+ *
+ * RETURNS:
+ * Pointer to allocated memory on success, NULL on failure.
+ */
+void __percpu *__devm_alloc_percpu(struct device *dev, size_t size,
+        size_t align)
+{
+    void *p;
+    void __percpu *pcpu;
+
+    pcpu = __alloc_percpu(size, align);
+    if (!pcpu)
+        return NULL;
+
+    p = devres_alloc(devm_percpu_release, sizeof(void *), GFP_KERNEL);
+    if (!p) {
+        free_percpu(pcpu);
+        return NULL;
+    }
+
+    *(void __percpu **)p = pcpu;
+
+    devres_add(dev, p);
+
+    return pcpu;
+}

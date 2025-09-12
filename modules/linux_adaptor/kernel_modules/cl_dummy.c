@@ -759,3 +759,22 @@ void iommu_device_unuse_default_domain(struct device *dev)
 {
     pr_notice("%s: No impl.", __func__);
 }
+
+int devm_reset_controller_register(struct device *dev,
+                   struct reset_controller_dev *rcdev)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int __pm_runtime_resume(struct device *dev, int rpmflags)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int __pm_runtime_idle(struct device *dev, int rpmflags)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}

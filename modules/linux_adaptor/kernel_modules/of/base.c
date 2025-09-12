@@ -21,6 +21,14 @@
 
 LIST_HEAD(aliases_lookup);
 
+/*
+ * Used to protect the of_aliases, to hold off addition of nodes to sysfs.
+ * This mutex must be held whenever modifications are being made to the
+ * device tree. The of_{attach,detach}_node() and
+ * of_{add,remove,update}_property() helpers make sure this happens.
+ */
+DEFINE_MUTEX(of_mutex);
+
 struct device_node *of_root;
 struct device_node *of_chosen;
 struct device_node *of_aliases;
@@ -909,4 +917,140 @@ struct device_node *of_get_next_available_child(const struct device_node *node,
     struct device_node *prev)
 {
     return of_get_next_status_child(node, prev, __of_device_is_available);
+}
+
+/**
+ * of_count_phandle_with_args() - Find the number of phandles references in a property
+ * @np:     pointer to a device tree node containing a list
+ * @list_name:  property name that contains a list
+ * @cells_name: property name that specifies phandles' arguments count
+ *
+ * Return: The number of phandle + argument tuples within a property. It
+ * is a typical pattern to encode a list of phandle and variable
+ * arguments into a single property. The number of arguments is encoded
+ * by a property in the phandle-target node. For example, a gpios
+ * property would contain a list of GPIO specifies consisting of a
+ * phandle and 1 or more arguments. The number of arguments are
+ * determined by the #gpio-cells property in the node pointed to by the
+ * phandle.
+ */
+int of_count_phandle_with_args(const struct device_node *np, const char *list_name,
+                const char *cells_name)
+{
+    struct of_phandle_iterator it;
+    int rc, cur_index = 0;
+
+    /*
+     * If cells_name is NULL we assume a cell count of 0. This makes
+     * counting the phandles trivial as each 32bit word in the list is a
+     * phandle and no arguments are to consider. So we don't iterate through
+     * the list but just use the length to determine the phandle count.
+     */
+    if (!cells_name) {
+        const __be32 *list;
+        int size;
+
+        list = of_get_property(np, list_name, &size);
+        if (!list)
+            return -ENOENT;
+
+        return size / sizeof(*list);
+    }
+
+    rc = of_phandle_iterator_init(&it, np, list_name, cells_name, -1);
+    if (rc)
+        return rc;
+
+    while ((rc = of_phandle_iterator_next(&it)) == 0)
+        cur_index += 1;
+
+    if (rc != -ENOENT)
+        return rc;
+
+    return cur_index;
+}
+
+/**
+ * of_alias_get_id - Get alias id for the given device_node
+ * @np:     Pointer to the given device_node
+ * @stem:   Alias stem of the given device_node
+ *
+ * The function travels the lookup table to get the alias id for the given
+ * device_node and alias stem.
+ *
+ * Return: The alias id if found.
+ */
+int of_alias_get_id(struct device_node *np, const char *stem)
+{
+    struct alias_prop *app;
+    int id = -ENODEV;
+
+    mutex_lock(&of_mutex);
+    list_for_each_entry(app, &aliases_lookup, link) {
+        if (strcmp(app->stem, stem) != 0)
+            continue;
+
+        if (np == app->np) {
+            id = app->id;
+            break;
+        }
+    }
+    mutex_unlock(&of_mutex);
+
+    return id;
+}
+
+/**
+ * of_alias_get_highest_id - Get highest alias id for the given stem
+ * @stem:   Alias stem to be examined
+ *
+ * The function travels the lookup table to get the highest alias id for the
+ * given alias stem.  It returns the alias id if found.
+ */
+int of_alias_get_highest_id(const char *stem)
+{
+    struct alias_prop *app;
+    int id = -ENODEV;
+
+    mutex_lock(&of_mutex);
+    list_for_each_entry(app, &aliases_lookup, link) {
+        if (strcmp(app->stem, stem) != 0)
+            continue;
+
+        if (app->id > id)
+            id = app->id;
+    }
+    mutex_unlock(&of_mutex);
+
+    return id;
+}
+
+/**
+ * of_alias_from_compatible - Lookup appropriate alias for a device node
+ *                depending on compatible
+ * @node:   pointer to a device tree node
+ * @alias:  Pointer to buffer that alias value will be copied into
+ * @len:    Length of alias value
+ *
+ * Based on the value of the compatible property, this routine will attempt
+ * to choose an appropriate alias value for a particular device tree node.
+ * It does this by stripping the manufacturer prefix (as delimited by a ',')
+ * from the first entry in the compatible list property.
+ *
+ * Note: The matching on just the "product" side of the compatible is a relic
+ * from I2C and SPI. Please do not add any new user.
+ *
+ * Return: This routine returns 0 on success, <0 on failure.
+ */
+int of_alias_from_compatible(const struct device_node *node, char *alias, int len)
+{
+    const char *compatible, *p;
+    int cplen;
+
+    compatible = of_get_property(node, "compatible", &cplen);
+    if (!compatible || strlen(compatible) > cplen)
+        return -ENODEV;
+    p = strchr(compatible, ',');
+    strscpy(alias, p ? p + 1 : compatible, len);
+    return 0;
 }

@@ -387,9 +387,36 @@ static inline struct task_struct *__mutex_trylock_common(struct mutex *lock, boo
 
     owner = atomic_long_read(&lock->owner);
     for (;;) { /* must loop, can race against a flag */
+        unsigned long flags = __owner_flags(owner);
+        unsigned long task = owner & ~MUTEX_FLAGS;
+
+        if (task) {
+            if (flags & MUTEX_FLAG_PICKUP) {
+                if (task != curr)
+                    break;
+                flags &= ~MUTEX_FLAG_PICKUP;
+            } else if (handoff) {
+                if (flags & MUTEX_FLAG_HANDOFF)
+                    break;
+                flags |= MUTEX_FLAG_HANDOFF;
+            } else {
+                break;
+            }
+        } else {
+            MUTEX_WARN_ON(flags & (MUTEX_FLAG_HANDOFF | MUTEX_FLAG_PICKUP));
+            task = curr;
+        }
+
+        if (atomic_long_try_cmpxchg_acquire(&lock->owner, &owner, task | flags)) {
+            if (task == curr)
+                return NULL;
+            break;
+        }
 
         PANIC("");
     }
+
+    return __owner_task(owner);
 }
 
 /*

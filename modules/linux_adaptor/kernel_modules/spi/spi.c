@@ -3278,6 +3278,7 @@ int spi_register_controller(struct spi_controller *ctlr)
 	if (!dev)
 		return -ENODEV;
 
+    printk("%s: step1\n", __func__);
 	/*
 	 * Make sure all necessary hooks are implemented before registering
 	 * the SPI controller.
@@ -3341,6 +3342,7 @@ int spi_register_controller(struct spi_controller *ctlr)
 	for (idx = 0; idx < SPI_CS_CNT_MAX; idx++)
 		ctlr->last_cs[idx] = SPI_INVALID_CS;
 
+    printk("%s: step2\n", __func__);
 	status = device_add(&ctlr->dev);
 	if (status < 0)
 		goto free_bus_id;
@@ -3370,6 +3372,7 @@ int spi_register_controller(struct spi_controller *ctlr)
 		goto destroy_queue;
 	}
 
+    printk("%s: step3\n", __func__);
 	mutex_lock(&board_lock);
 	list_add_tail(&ctlr->list, &spi_controller_list);
 	list_for_each_entry(bi, &board_list, list)

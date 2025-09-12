@@ -50,6 +50,43 @@ static inline struct kthread *to_kthread(struct task_struct *k)
     return k->worker_private;
 }
 
+/*
+ * Returns true when the work could not be queued at the moment.
+ * It happens when it is already pending in a worker list
+ * or when it is being cancelled.
+ */
+static inline bool queuing_blocked(struct kthread_worker *worker,
+                   struct kthread_work *work)
+{
+    lockdep_assert_held(&worker->lock);
+
+    return !list_empty(&work->node) || work->canceling;
+}
+
+static void kthread_insert_work_sanity_check(struct kthread_worker *worker,
+                         struct kthread_work *work)
+{
+    lockdep_assert_held(&worker->lock);
+    WARN_ON_ONCE(!list_empty(&work->node));
+    /* Do not use a work with >1 worker, see kthread_queue_work() */
+    WARN_ON_ONCE(work->worker && work->worker != worker);
+}
+
+/* insert @work before @pos in @worker */
+static void kthread_insert_work(struct kthread_worker *worker,
+                struct kthread_work *work,
+                struct list_head *pos)
+{
+    kthread_insert_work_sanity_check(worker, work);
+
+    trace_sched_kthread_work_queue_work(worker, work);
+
+    list_add_tail(&work->node, pos);
+    work->worker = worker;
+    if (!worker->current_work && likely(worker->task))
+        wake_up_process(worker->task);
+}
+
 /**
  * kthread_stop_put - stop a thread and put its task struct
  * @k: thread created by kthread_create().
@@ -359,4 +396,31 @@ bool set_kthread_struct(struct task_struct *p)
 void *kthread_data(struct task_struct *task)
 {
     return to_kthread(task)->data;
+}
+
+/**
+ * kthread_queue_work - queue a kthread_work
+ * @worker: target kthread_worker
+ * @work: kthread_work to queue
+ *
+ * Queue @work to work processor @task for async execution.  @task
+ * must have been created with kthread_worker_create().  Returns %true
+ * if @work was successfully queued, %false if it was already pending.
+ *
+ * Reinitialize the work if it needs to be used by another worker.
+ * For example, when the worker was stopped and started again.
+ */
+bool kthread_queue_work(struct kthread_worker *worker,
+            struct kthread_work *work)
+{
+    bool ret = false;
+    unsigned long flags;
+
+    raw_spin_lock_irqsave(&worker->lock, flags);
+    if (!queuing_blocked(worker, work)) {
+        kthread_insert_work(worker, work, &worker->work_list);
+        ret = true;
+    }
+    raw_spin_unlock_irqrestore(&worker->lock, flags);
+    return ret;
 }

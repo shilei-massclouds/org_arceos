@@ -22,6 +22,8 @@ OBJS += virtio/virtio.o virtio/virtio_ring.o virtio/virtio_mmio.o
 OBJS += virtio/virtio_anchor.o
 OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
 OBJS += spi/spi-sifive.o spi/spi.o
+OBJS += clk/clk-devres.o clk/clkdev.o clk/clk.o clk/sifive-prci.o
+OBJS += clk/wrpll-cln28hpc.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
 OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o mm/swap.o
@@ -58,6 +60,7 @@ OBJS += of/base.o of/property.o of/address.o of/irq.o of/fdt.o
 OBJS += of/of_reserved_mem.o of/kobj.o of/platform.o of/device.o
 OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o
 OBJS += irq/resend.o irq/chip.o irq/handle.o irq/msi.o irq/spurious.o
+OBJS += irq/devres.o
 OBJS += dma/mapping.o dma/swiotlb.o
 OBJS += kernel/resource.o kernel/workqueue.o kernel/kthread.o
 OBJS += kernel/nsproxy.o kernel/cpu.o kernel/user_namespace.o
