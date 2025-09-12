@@ -2625,3 +2625,18 @@ void blk_mq_flush_busy_ctxs(struct blk_mq_hw_ctx *hctx, struct list_head *list)
 
     sbitmap_for_each_set(&hctx->ctx_map, flush_busy_ctx, &data);
 }
+
+/* allocate and initialize a tagset for a simple single-queue device */
+int blk_mq_alloc_sq_tag_set(struct blk_mq_tag_set *set,
+        const struct blk_mq_ops *ops, unsigned int queue_depth,
+        unsigned int set_flags)
+{
+    memset(set, 0, sizeof(*set));
+    set->ops = ops;
+    set->nr_hw_queues = 1;
+    set->nr_maps = 1;
+    set->queue_depth = queue_depth;
+    set->numa_node = NUMA_NO_NODE;
+    set->flags = set_flags;
+    return blk_mq_alloc_tag_set(set);
+}

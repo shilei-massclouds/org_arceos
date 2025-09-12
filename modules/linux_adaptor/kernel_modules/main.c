@@ -24,6 +24,7 @@ extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
 
 extern int cl_nvmem_init(void);
+extern void cl_mtdblock_tr_init(void);
 
 extern int cl_spi_init(void);
 extern void cl_sifive_spi_driver_init(void);
@@ -138,6 +139,9 @@ int clinux_init(phys_addr_t dt_phys)
 
     // nvmem/core.c
     cl_nvmem_init();
+
+    // mtd/mtdblock.c
+    cl_mtdblock_tr_init();
 
     // mtd/spi-nor/core.c
     cl_spi_nor_module_init();

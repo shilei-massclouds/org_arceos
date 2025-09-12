@@ -385,7 +385,6 @@ CL_MINE(device_set_deferred_probe_reason)
 
 CL_MINE(async_schedule_node)
 
-CL_MINE(init_srcu_struct)
 CL_MINE(cleanup_srcu_struct)
 CL_MINE(blk_mq_free_map_and_rqs)
 CL_MINE(kvfree)
@@ -643,3 +642,10 @@ CL_MINE(of_get_next_parent)
 CL_MINE(device_add_groups)
 CL_MINE(gpiod_get_optional)
 CL_MINE(device_create_bin_file)
+
+// mtdblock
+CL_MINE(vmalloc_noprof)
+CL_MINE(vfree)
+CL_MINE(sysfs_remove_group)
+CL_MINE(blk_mq_quiesce_queue)
+CL_MINE(sysfs_create_group)
