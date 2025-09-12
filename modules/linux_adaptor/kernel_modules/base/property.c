@@ -54,6 +54,30 @@ unsigned int fwnode_count_parents(const struct fwnode_handle *fwnode)
 }
 
 /**
+ * fwnode_get_next_parent - Iterate to the node's parent
+ * @fwnode: Firmware whose parent is retrieved
+ *
+ * This is like fwnode_get_parent() except that it drops the refcount
+ * on the passed node, making it suitable for iterating through a
+ * node's parents.
+ *
+ * The caller is responsible for calling fwnode_handle_put() on the returned
+ * fwnode pointer. Note that this function also puts a reference to @fwnode
+ * unconditionally.
+ *
+ * Return: parent firmware node of the given node if possible or %NULL if no
+ * parent was available.
+ */
+struct fwnode_handle *fwnode_get_next_parent(struct fwnode_handle *fwnode)
+{
+    struct fwnode_handle *parent = fwnode_get_parent(fwnode);
+
+    fwnode_handle_put(fwnode);
+
+    return parent;
+}
+
+/**
  * fwnode_get_parent - Return parent firwmare node
  * @fwnode: Firmware whose parent is retrieved
  *
@@ -65,9 +89,7 @@ unsigned int fwnode_count_parents(const struct fwnode_handle *fwnode)
  */
 struct fwnode_handle *fwnode_get_parent(const struct fwnode_handle *fwnode)
 {
-    pr_err("%s: No impl.", __func__);
-    return NULL;
-    //return fwnode_call_ptr_op(fwnode, get_parent);
+    return fwnode_call_ptr_op(fwnode, get_parent);
 }
 
 /**
@@ -79,7 +101,47 @@ struct fwnode_handle *fwnode_get_parent(const struct fwnode_handle *fwnode)
  */
 const char *fwnode_get_name_prefix(const struct fwnode_handle *fwnode)
 {
-    pr_err("%s: No impl.", __func__);
-    return "";
-    //return fwnode_call_ptr_op(fwnode, get_name_prefix);
+    return fwnode_call_ptr_op(fwnode, get_name_prefix);
+}
+
+const struct fwnode_handle *__dev_fwnode_const(const struct device *dev)
+{
+    return IS_ENABLED(CONFIG_OF) && dev->of_node ?
+        of_fwnode_handle(dev->of_node) : dev->fwnode;
+}
+
+/**
+ * device_property_present - check if a property of a device is present
+ * @dev: Device whose property is being checked
+ * @propname: Name of the property
+ *
+ * Check if property @propname is present in the device firmware description.
+ *
+ * Return: true if property @propname is present. Otherwise, returns false.
+ */
+bool device_property_present(const struct device *dev, const char *propname)
+{
+    return fwnode_property_present(dev_fwnode(dev), propname);
+}
+
+/**
+ * fwnode_property_present - check if a property of a firmware node is present
+ * @fwnode: Firmware node whose property to check
+ * @propname: Name of the property
+ *
+ * Return: true if property @propname is present. Otherwise, returns false.
+ */
+bool fwnode_property_present(const struct fwnode_handle *fwnode,
+                 const char *propname)
+{
+    bool ret;
+
+    if (IS_ERR_OR_NULL(fwnode))
+        return false;
+
+    ret = fwnode_call_bool_op(fwnode, property_present, propname);
+    if (ret)
+        return ret;
+
+    return fwnode_call_bool_op(fwnode->secondary, property_present, propname);
 }

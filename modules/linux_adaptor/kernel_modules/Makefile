@@ -24,6 +24,7 @@ OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
 OBJS += spi/spi-sifive.o spi/spi.o spi/spi-mem.o
 OBJS += spi-nor/core.o spi-nor/sfdp.o spi-nor/swp.o spi-nor/otp.o
 OBJS += mtd/mtdcore.o mtd/mtdpart.o
+OBJS += nvmem/core.o nvmem/layouts.o
 OBJS += clk/clk-devres.o clk/clkdev.o clk/clk.o clk/sifive-prci.o
 OBJS += clk/wrpll-cln28hpc.o
 
