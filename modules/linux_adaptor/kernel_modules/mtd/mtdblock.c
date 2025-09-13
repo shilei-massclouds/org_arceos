@@ -187,6 +187,7 @@ static int do_cached_read (struct mtdblk_dev *mtdblk, unsigned long pos,
 
 	pr_debug("mtdblock: read on \"%s\" at 0x%lx, size 0x%x\n",
 			mtd->name, pos, len);
+    printk("%s: sect_size(%u)\n", __func__, sect_size);
 
 	if (!sect_size) {
 		ret = mtd_read(mtd, pos, len, &retlen, buf);
@@ -212,6 +213,7 @@ static int do_cached_read (struct mtdblk_dev *mtdblk, unsigned long pos,
 		    mtdblk->cache_offset == sect_start) {
 			memcpy (buf, mtdblk->cache_data + offset, size);
 		} else {
+            printk("%s: 2 sect_size(%u)\n", __func__, sect_size);
 			ret = mtd_read(mtd, pos, size, &retlen, buf);
 			if (ret && !mtd_is_bitflip(ret))
 				return ret;
@@ -230,6 +232,7 @@ static int do_cached_read (struct mtdblk_dev *mtdblk, unsigned long pos,
 static int mtdblock_readsect(struct mtd_blktrans_dev *dev,
 			      unsigned long block, char *buf)
 {
+    printk("%s: ... block(0x%lx)\n", __func__, block);
 	struct mtdblk_dev *mtdblk = container_of(dev, struct mtdblk_dev, mbd);
 	return do_cached_read(mtdblk, block<<9, 512, buf);
 }
@@ -255,6 +258,7 @@ static int mtdblock_open(struct mtd_blktrans_dev *mbd)
 	struct mtdblk_dev *mtdblk = container_of(mbd, struct mtdblk_dev, mbd);
 
 	pr_debug("mtdblock_open\n");
+    printk("%s: ...\n", __func__);
 
 	if (mtdblk->count) {
 		mtdblk->count++;
@@ -304,6 +308,7 @@ static void mtdblock_release(struct mtd_blktrans_dev *mbd)
 
 static int mtdblock_flush(struct mtd_blktrans_dev *dev)
 {
+    printk("%s: ...\n", __func__);
 	struct mtdblk_dev *mtdblk = container_of(dev, struct mtdblk_dev, mbd);
 	int ret;
 

@@ -4512,6 +4512,7 @@ static int __spi_sync(struct spi_device *spi, struct spi_message *message)
 	int status;
 	struct spi_controller *ctlr = spi->controller;
 
+    printk("%s: step1\n", __func__);
 	if (__spi_check_suspended(ctlr)) {
 		dev_warn_once(&spi->dev, "Attempted to sync while suspend\n");
 		return -ESHUTDOWN;
@@ -4541,6 +4542,7 @@ static int __spi_sync(struct spi_device *spi, struct spi_message *message)
 
 		__spi_transfer_message_noqueue(ctlr, message);
 
+        printk("%s: step2 status(%d)\n", __func__, message->status);
 		return message->status;
 	}
 
@@ -4564,6 +4566,7 @@ static int __spi_sync(struct spi_device *spi, struct spi_message *message)
 	message->complete = NULL;
 	message->context = NULL;
 
+    printk("%s: stepN\n", __func__);
 	return status;
 }
 

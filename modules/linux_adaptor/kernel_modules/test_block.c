@@ -8,7 +8,8 @@ prepare_block_dev(void)
 {
     struct block_device *dev;
 
-    dev = blkdev_get_no_open(MKDEV(0xFE, 0x00));
+    //dev = blkdev_get_no_open(MKDEV(0xFE, 0x00));
+    dev = blkdev_get_no_open(0x1f00000);
     if (dev == NULL || dev->bd_mapping == NULL) {
         PANIC("No block device!");
     }

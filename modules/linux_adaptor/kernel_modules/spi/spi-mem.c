@@ -410,6 +410,7 @@ int spi_mem_exec_op(struct spi_mem *mem, const struct spi_mem_op *op)
 
 	spi_message_init(&msg);
 
+    printk("%s: opcode[%u]\n", __func__, op->cmd.opcode);
 	tmpbuf[0] = op->cmd.opcode;
 	xfers[xferpos].tx_buf = tmpbuf;
 	xfers[xferpos].len = op->cmd.nbytes;
@@ -421,6 +422,7 @@ int spi_mem_exec_op(struct spi_mem *mem, const struct spi_mem_op *op)
 	if (op->addr.nbytes) {
 		int i;
 
+    printk("%s: step1 addr(%lx) nbytes(%lu)\n", __func__, op->addr.val, op->addr.nbytes);
 		for (i = 0; i < op->addr.nbytes; i++)
 			tmpbuf[i + 1] = op->addr.val >>
 					(8 * (op->addr.nbytes - i - 1));
@@ -469,6 +471,7 @@ int spi_mem_exec_op(struct spi_mem *mem, const struct spi_mem_op *op)
 	if (msg.actual_length != totalxferlen)
 		return -EIO;
 
+    printk("%s: stepN\n", __func__);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(spi_mem_exec_op);
@@ -545,6 +548,7 @@ static ssize_t spi_mem_no_dirmap_read(struct spi_mem_dirmap_desc *desc,
 	if (ret)
 		return ret;
 
+    printk("%s: step1 addr(%lx) nbytes(%lu) opcode[%u]\n", __func__, op.addr.val, op.data.nbytes, op.cmd.opcode);
 	ret = spi_mem_exec_op(desc->mem, &op);
 	if (ret)
 		return ret;
@@ -742,6 +746,7 @@ ssize_t spi_mem_dirmap_read(struct spi_mem_dirmap_desc *desc,
 	if (!len)
 		return 0;
 
+    printk("%s: step1 offs(0x%lx) len(%lu)\n", __func__, offs, len);
 	if (desc->nodirmap) {
 		ret = spi_mem_no_dirmap_read(desc, offs, len, buf);
 	} else if (ctlr->mem_ops && ctlr->mem_ops->dirmap_read) {
@@ -756,6 +761,7 @@ ssize_t spi_mem_dirmap_read(struct spi_mem_dirmap_desc *desc,
 		ret = -ENOTSUPP;
 	}
 
+    printk("%s: stepN ret(%u)\n", __func__, ret);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(spi_mem_dirmap_read);

@@ -1971,7 +1971,9 @@ static const struct spi_nor_manufacturer *manufacturers[] = {
 	&spi_nor_everspin,
 	&spi_nor_gigadevice,
 	&spi_nor_intel,
+#endif
 	&spi_nor_issi,
+#if 0
 	&spi_nor_macronix,
 	&spi_nor_micron,
 	&spi_nor_st,
@@ -2049,6 +2051,7 @@ static int spi_nor_read(struct mtd_info *mtd, loff_t from, size_t len,
 	ssize_t ret;
 
 	dev_dbg(nor->dev, "from 0x%08x, len %zd\n", (u32)from, len);
+	printk("%s: from 0x%x, len %d\n", __func__, (u32)from, len);
 
 	ret = spi_nor_prep_and_lock_rd(nor, from_lock, len_lock);
 	if (ret)
@@ -2559,6 +2562,7 @@ static int spi_nor_select_erase(struct spi_nor *nor)
 
 static int spi_nor_set_addr_nbytes(struct spi_nor *nor)
 {
+    printk("%s: --------- \n", __func__);
 	if (nor->params->addr_nbytes) {
 		nor->addr_nbytes = nor->params->addr_nbytes;
 	} else if (nor->read_proto == SNOR_PROTO_8_8_8_DTR) {
@@ -2592,6 +2596,9 @@ static int spi_nor_set_addr_nbytes(struct spi_nor *nor)
 		return -EINVAL;
 	}
 
+    printk("%s: stepN addr_nbytes(%u) %u, %u\n",
+           __func__, nor->addr_nbytes, nor->flags & SNOR_F_4B_OPCODES,
+           !(nor->flags & SNOR_F_HAS_4BAIT));
 	/* Set 4byte opcodes when possible. */
 	if (nor->addr_nbytes == 4 && nor->flags & SNOR_F_4B_OPCODES &&
 	    !(nor->flags & SNOR_F_HAS_4BAIT))
@@ -2804,6 +2811,7 @@ static void spi_nor_init_fixup_flags(struct spi_nor *nor)
 	if (fixup_flags & SPI_NOR_4B_OPCODES)
 		nor->flags |= SNOR_F_4B_OPCODES;
 
+    printk("%s: ----- nor->flags(%lx)\n", __func__, nor->flags);
 	if (fixup_flags & SPI_NOR_IO_MODE_EN_VOLATILE)
 		nor->flags |= SNOR_F_IO_MODE_EN_VOLATILE;
 }
@@ -2877,6 +2885,7 @@ static void spi_nor_sfdp_init_params_deprecated(struct spi_nor *nor)
 		memcpy(nor->params, &sfdp_params, sizeof(*nor->params));
 		nor->flags &= ~SNOR_F_4B_OPCODES;
 	}
+    printk("%s: ----- nor->flags(%lx)\n", __func__, nor->flags);
 }
 
 /**

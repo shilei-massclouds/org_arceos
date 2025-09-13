@@ -644,7 +644,6 @@ CL_MINE(gpiod_get_optional)
 CL_MINE(device_create_bin_file)
 
 // mtdblock
-CL_MINE(vmalloc_noprof)
 CL_MINE(vfree)
 CL_MINE(sysfs_remove_group)
 CL_MINE(blk_mq_quiesce_queue)

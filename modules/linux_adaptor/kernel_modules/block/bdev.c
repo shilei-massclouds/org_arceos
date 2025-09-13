@@ -446,7 +446,8 @@ int lookup_bdev(const char *pathname, dev_t *dev)
 {
     pr_notice("%s: No impl.", __func__);
     if (strcmp(pathname, "/dev/root") == 0) {
-        *dev = MKDEV(0xFE, 0x00);
+        //*dev = MKDEV(0xFE, 0x00);
+        *dev = 0x1f00000;
         return 0;
     }
     PANIC("Bad blkdev name.");

@@ -1916,6 +1916,112 @@ static void __blk_mq_flush_plug_list(struct request_queue *q,
     q->mq_ops->queue_rqs(&plug->mq_list);
 }
 
+static bool blk_mq_get_budget_and_tag(struct request *rq)
+{
+    int budget_token;
+
+    budget_token = blk_mq_get_dispatch_budget(rq->q);
+    if (budget_token < 0)
+        return false;
+    blk_mq_set_rq_budget_token(rq, budget_token);
+    if (!blk_mq_get_driver_tag(rq)) {
+        blk_mq_put_dispatch_budget(rq->q, budget_token);
+        return false;
+    }
+    return true;
+}
+
+static void blk_mq_update_dispatch_busy(struct blk_mq_hw_ctx *hctx, bool busy);
+
+static blk_status_t __blk_mq_issue_directly(struct blk_mq_hw_ctx *hctx,
+                        struct request *rq, bool last)
+{
+    struct request_queue *q = rq->q;
+    struct blk_mq_queue_data bd = {
+        .rq = rq,
+        .last = last,
+    };
+    blk_status_t ret;
+
+    /*
+     * For OK queue, we are done. For error, caller may kill it.
+     * Any other error (busy), just add it to our list as we
+     * previously would have done.
+     */
+    ret = q->mq_ops->queue_rq(hctx, &bd);
+    switch (ret) {
+    case BLK_STS_OK:
+        blk_mq_update_dispatch_busy(hctx, false);
+        break;
+    case BLK_STS_RESOURCE:
+    case BLK_STS_DEV_RESOURCE:
+        blk_mq_update_dispatch_busy(hctx, true);
+        __blk_mq_requeue_request(rq);
+        break;
+    default:
+        blk_mq_update_dispatch_busy(hctx, false);
+        break;
+    }
+
+    return ret;
+}
+
+static blk_status_t blk_mq_request_issue_directly(struct request *rq, bool last)
+{
+    struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
+
+    if (blk_mq_hctx_stopped(hctx) || blk_queue_quiesced(rq->q)) {
+        blk_mq_insert_request(rq, 0);
+        blk_mq_run_hw_queue(hctx, false);
+        return BLK_STS_OK;
+    }
+
+    if (!blk_mq_get_budget_and_tag(rq))
+        return BLK_STS_RESOURCE;
+    return __blk_mq_issue_directly(hctx, rq, last);
+}
+
+static void blk_mq_commit_rqs(struct blk_mq_hw_ctx *hctx, int queued, bool from_schedule);
+
+static void blk_mq_plug_issue_direct(struct blk_plug *plug)
+{
+    struct blk_mq_hw_ctx *hctx = NULL;
+    struct request *rq;
+    int queued = 0;
+    blk_status_t ret = BLK_STS_OK;
+
+    while ((rq = rq_list_pop(&plug->mq_list))) {
+        bool last = rq_list_empty(&plug->mq_list);
+
+        if (hctx != rq->mq_hctx) {
+            if (hctx) {
+                blk_mq_commit_rqs(hctx, queued, false);
+                queued = 0;
+            }
+            hctx = rq->mq_hctx;
+        }
+
+        ret = blk_mq_request_issue_directly(rq, last);
+        switch (ret) {
+        case BLK_STS_OK:
+            queued++;
+            break;
+        case BLK_STS_RESOURCE:
+        case BLK_STS_DEV_RESOURCE:
+            blk_mq_request_bypass_insert(rq, 0);
+            blk_mq_run_hw_queue(hctx, false);
+            goto out;
+        default:
+            blk_mq_end_request(rq, ret);
+            break;
+        }
+    }
+
+out:
+    if (ret != BLK_STS_OK)
+        blk_mq_commit_rqs(hctx, queued, false);
+}
+
 void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
 {
     struct request *rq;
@@ -1953,12 +2059,10 @@ void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
                 return;
         }
 
-#if 0
         blk_mq_run_dispatch_ops(q,
                 blk_mq_plug_issue_direct(plug));
         if (rq_list_empty(&plug->mq_list))
             return;
-#endif
 
         PANIC("stage1");
     }

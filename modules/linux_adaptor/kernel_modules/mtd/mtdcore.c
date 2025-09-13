@@ -1510,6 +1510,7 @@ static void mtd_update_ecc_stats(struct mtd_info *mtd, struct mtd_info *master,
 int mtd_read(struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen,
 	     u_char *buf)
 {
+    printk("%s: from(%lx) len(%lu)\n", __func__, from, len);
 	struct mtd_oob_ops ops = {
 		.len = len,
 		.datbuf = buf,
@@ -1612,6 +1613,7 @@ static int mtd_read_oob_std(struct mtd_info *mtd, loff_t from,
 	int ret;
 
 	from = mtd_get_master_ofs(mtd, from);
+    printk("%s: step1 master(%s) (%lx)\n", __func__, master->name, master->_read);
 	if (master->_read_oob)
 		ret = master->_read_oob(master, from, ops);
 	else

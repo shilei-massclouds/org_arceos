@@ -1131,6 +1131,7 @@ static int spi_nor_parse_4bait(struct spi_nor *nor,
 	 */
 	params->addr_nbytes = 4;
 	nor->flags |= SNOR_F_4B_OPCODES | SNOR_F_HAS_4BAIT;
+    printk("%s: flags(%lx)\n", __func__, nor->flags);
 
 	/* fall through */
 out:

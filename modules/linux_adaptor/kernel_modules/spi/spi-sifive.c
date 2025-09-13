@@ -210,7 +210,9 @@ static irqreturn_t sifive_spi_irq(int irq, void *dev_id)
 	struct sifive_spi *spi = dev_id;
 	u32 ip = sifive_spi_read(spi, SIFIVE_SPI_REG_IP);
 
+    printk("%s: step1\n", __func__);
 	if (ip & (SIFIVE_SPI_IP_TXWM | SIFIVE_SPI_IP_RXWM)) {
+    printk("%s: step2\n", __func__);
 		/* Disable interrupts until next transfer */
 		sifive_spi_write(spi, SIFIVE_SPI_REG_IE, 0);
 		complete(&spi->done);
