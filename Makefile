@@ -34,7 +34,7 @@
 
 # General options
 ARCH ?= riscv64
-PLATFORM ?= #riscv64-sifive_u
+PLATFORM ?= riscv64-sifive_u
 SMP ?= 1
 MODE ?= release
 LOG ?= warn

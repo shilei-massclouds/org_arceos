@@ -789,7 +789,11 @@ static void blk_mq_exit_hctx(struct request_queue *q,
 
 static void blk_mq_run_work_fn(struct work_struct *work)
 {
-    PANIC("");
+    struct blk_mq_hw_ctx *hctx =
+        container_of(work, struct blk_mq_hw_ctx, run_work.work);
+
+    blk_mq_run_dispatch_ops(hctx->queue,
+                blk_mq_sched_dispatch_requests(hctx));
 }
 
 static int blk_mq_dispatch_wake(wait_queue_entry_t *wait, unsigned mode,
@@ -1235,6 +1239,15 @@ static bool blk_mq_hctx_has_pending(struct blk_mq_hw_ctx *hctx)
 }
 
 /*
+ * ->next_cpu is always calculated from hctx->cpumask, so simply use
+ * it for speeding up the check
+ */
+static bool blk_mq_hctx_empty_cpumask(struct blk_mq_hw_ctx *hctx)
+{
+        return hctx->next_cpu >= nr_cpu_ids;
+}
+
+/*
  * It'd be great if the workqueue API had a way to pass
  * in a mask and had some smarts for more clever placement.
  * For now we just round-robin here, switching for every
@@ -1242,7 +1255,44 @@ static bool blk_mq_hctx_has_pending(struct blk_mq_hw_ctx *hctx)
  */
 static int blk_mq_hctx_next_cpu(struct blk_mq_hw_ctx *hctx)
 {
+    bool tried = false;
+    int next_cpu = hctx->next_cpu;
+
+    /* Switch to unbound if no allowable CPUs in this hctx */
+    if (hctx->queue->nr_hw_queues == 1 || blk_mq_hctx_empty_cpumask(hctx))
+        return WORK_CPU_UNBOUND;
+
+    if (--hctx->next_cpu_batch <= 0) {
+select_cpu:
+        next_cpu = cpumask_next_and(next_cpu, hctx->cpumask,
+                cpu_online_mask);
+        if (next_cpu >= nr_cpu_ids)
+            next_cpu = blk_mq_first_mapped_cpu(hctx);
+        hctx->next_cpu_batch = BLK_MQ_CPU_WORK_BATCH;
+    }
+
+    /*
+     * Do unbound schedule if we can't find a online CPU for this hctx,
+     * and it should only happen in the path of handling CPU DEAD.
+     */
+    if (!cpu_online(next_cpu)) {
+        if (!tried) {
+            tried = true;
+            goto select_cpu;
+        }
+
+        /*
+         * Make sure to re-select CPU next time once after CPUs
+         * in hctx->cpumask become online again.
+         */
+        hctx->next_cpu = next_cpu;
+        hctx->next_cpu_batch = 1;
+        return WORK_CPU_UNBOUND;
+    }
+
+    hctx->next_cpu = next_cpu;
     PANIC("");
+    return next_cpu;
 }
 
 static inline bool blk_mq_hw_queue_need_run(struct blk_mq_hw_ctx *hctx)
@@ -2022,6 +2072,121 @@ out:
         blk_mq_commit_rqs(hctx, queued, false);
 }
 
+static void blk_mq_try_issue_list_directly(struct blk_mq_hw_ctx *hctx,
+        struct list_head *list)
+{
+    int queued = 0;
+    blk_status_t ret = BLK_STS_OK;
+
+    while (!list_empty(list)) {
+        struct request *rq = list_first_entry(list, struct request,
+                queuelist);
+
+        list_del_init(&rq->queuelist);
+        ret = blk_mq_request_issue_directly(rq, list_empty(list));
+        switch (ret) {
+        case BLK_STS_OK:
+            queued++;
+            break;
+        case BLK_STS_RESOURCE:
+        case BLK_STS_DEV_RESOURCE:
+            blk_mq_request_bypass_insert(rq, 0);
+            if (list_empty(list))
+                blk_mq_run_hw_queue(hctx, false);
+            goto out;
+        default:
+            blk_mq_end_request(rq, ret);
+            break;
+        }
+    }
+
+out:
+    if (ret != BLK_STS_OK)
+        blk_mq_commit_rqs(hctx, queued, false);
+}
+
+static void blk_mq_insert_requests(struct blk_mq_hw_ctx *hctx,
+        struct blk_mq_ctx *ctx, struct list_head *list,
+        bool run_queue_async)
+{
+    struct request *rq;
+    enum hctx_type type = hctx->type;
+
+    /*
+     * Try to issue requests directly if the hw queue isn't busy to save an
+     * extra enqueue & dequeue to the sw queue.
+     */
+    if (!hctx->dispatch_busy && !run_queue_async) {
+        blk_mq_run_dispatch_ops(hctx->queue,
+            blk_mq_try_issue_list_directly(hctx, list));
+        if (list_empty(list))
+            goto out;
+    }
+
+    /*
+     * preemption doesn't flush plug list, so it's possible ctx->cpu is
+     * offline now
+     */
+    list_for_each_entry(rq, list, queuelist) {
+        BUG_ON(rq->mq_ctx != ctx);
+        trace_block_rq_insert(rq);
+        if (rq->cmd_flags & REQ_NOWAIT)
+            run_queue_async = true;
+    }
+
+    spin_lock(&ctx->lock);
+    list_splice_tail_init(list, &ctx->rq_lists[type]);
+    blk_mq_hctx_mark_pending(hctx, ctx);
+    spin_unlock(&ctx->lock);
+out:
+    blk_mq_run_hw_queue(hctx, run_queue_async);
+}
+
+static void blk_mq_dispatch_plug_list(struct blk_plug *plug, bool from_sched)
+{
+    struct blk_mq_hw_ctx *this_hctx = NULL;
+    struct blk_mq_ctx *this_ctx = NULL;
+    struct rq_list requeue_list = {};
+    unsigned int depth = 0;
+    bool is_passthrough = false;
+    LIST_HEAD(list);
+
+    do {
+        struct request *rq = rq_list_pop(&plug->mq_list);
+
+        if (!this_hctx) {
+            this_hctx = rq->mq_hctx;
+            this_ctx = rq->mq_ctx;
+            is_passthrough = blk_rq_is_passthrough(rq);
+        } else if (this_hctx != rq->mq_hctx || this_ctx != rq->mq_ctx ||
+               is_passthrough != blk_rq_is_passthrough(rq)) {
+            rq_list_add_tail(&requeue_list, rq);
+            continue;
+        }
+        list_add_tail(&rq->queuelist, &list);
+        depth++;
+    } while (!rq_list_empty(&plug->mq_list));
+
+    plug->mq_list = requeue_list;
+    trace_block_unplug(this_hctx->queue, depth, !from_sched);
+
+    //percpu_ref_get(&this_hctx->queue->q_usage_counter);
+    /* passthrough requests should never be issued to the I/O scheduler */
+    if (is_passthrough) {
+        spin_lock(&this_hctx->lock);
+        list_splice_tail_init(&list, &this_hctx->dispatch);
+        spin_unlock(&this_hctx->lock);
+        blk_mq_run_hw_queue(this_hctx, from_sched);
+    } else if (this_hctx->queue->elevator) {
+        this_hctx->queue->elevator->type->ops.insert_requests(this_hctx,
+                &list, 0);
+        blk_mq_run_hw_queue(this_hctx, from_sched);
+    } else {
+        blk_mq_insert_requests(this_hctx, this_ctx, &list, from_sched);
+    }
+    //percpu_ref_put(&this_hctx->queue->q_usage_counter);
+}
+
 void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
 {
     struct request *rq;
@@ -2067,12 +2232,9 @@ void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
         PANIC("stage1");
     }
 
-#if 0
     do {
         blk_mq_dispatch_plug_list(plug, from_schedule);
     } while (!rq_list_empty(&plug->mq_list));
-#endif
-    PANIC("");
 }
 
 /**

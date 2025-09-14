@@ -122,12 +122,47 @@ unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data)
          */
         blk_mq_run_hw_queue(data->hctx, false);
 
-        PANIC("LOOP");
+        /*
+         * Retry tag allocation after running the hardware queue,
+         * as running the queue may also have found completions.
+         */
+        tag = __blk_mq_get_tag(data, bt);
+        if (tag != BLK_MQ_NO_TAG)
+            break;
+
+        sbitmap_prepare_to_wait(bt, ws, &wait, TASK_UNINTERRUPTIBLE);
+
+        tag = __blk_mq_get_tag(data, bt);
+        if (tag != BLK_MQ_NO_TAG)
+            break;
+
+        bt_prev = bt;
+        io_schedule();
+
+        sbitmap_finish_wait(bt, ws, &wait);
+
+        data->ctx = blk_mq_get_ctx(data->q);
+        data->hctx = blk_mq_map_queue(data->q, data->cmd_flags,
+                        data->ctx);
+        tags = blk_mq_tags_from_data(data);
+        if (data->flags & BLK_MQ_REQ_RESERVED)
+            bt = &tags->breserved_tags;
+        else
+            bt = &tags->bitmap_tags;
+
+        /*
+         * If destination hw queue is changed, fake wake up on
+         * previous queue for compensating the wake up miss, so
+         * other allocations on previous queue won't be starved.
+         */
+        if (bt != bt_prev)
+            sbitmap_queue_wake_up(bt_prev, 1);
+
+        ws = bt_wait_ptr(bt, data->hctx);
     } while (1);
 
     sbitmap_finish_wait(bt, ws, &wait);
 
-    PANIC("");
 found_tag:
     /*
      * Give up this allocation if the hctx is inactive.  The caller will

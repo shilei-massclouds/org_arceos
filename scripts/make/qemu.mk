@@ -1,6 +1,7 @@
 # QEMU arguments
 
 QEMU := qemu-system-$(ARCH)
+ROOT_DEV ?= vda
 
 ifeq ($(BUS), mmio)
   vdev-suffix := device
@@ -17,6 +18,8 @@ else ifeq ($(ARCH), riscv64)
     machine := sifive_u
     override PFLASH := n
     override BLK := n
+    override MTD := y
+    override ROOT_DEV := mtdblock0
     override SMP := 2
   else
     machine := virt
@@ -96,7 +99,7 @@ ifeq ($(GRAPHIC), n)
 endif
 
 qemu_args-$(APPEND) += \
-  -append "earlycon=sbi root=/dev/vda rw console=ttyS0"
+  -append "earlycon=sbi root=/dev/$(ROOT_DEV) rw console=ttyS0"
 
 ifeq ($(QEMU_LOG), y)
   qemu_args-y += -D qemu.log -d in_asm,int,mmu,pcall,cpu_reset,guest_errors
