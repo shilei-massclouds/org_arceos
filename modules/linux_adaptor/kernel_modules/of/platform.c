@@ -142,7 +142,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
     /* count the io resources */
     num_reg = of_address_count(np);
 
-    printk("%s: num_reg(%u)\n", __func__, num_reg);
     /* Populate the resource table */
     if (num_reg) {
         res = kcalloc(num_reg, sizeof(*res), GFP_KERNEL);
@@ -168,7 +167,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
     else
         of_device_make_bus_id(&dev->dev);
 
-    printk("%s: ok!\n", __func__);
     return dev;
 }
 
@@ -300,7 +298,6 @@ static int of_platform_bus_create(struct device_node *bus,
 
     for_each_child_of_node_scoped(bus, child) {
         pr_debug("   create child: %pOF\n", child);
-        printk("   create child: %lx\n", child);
         rc = of_platform_bus_create(child, matches, lookup, &dev->dev, strict);
         if (rc)
             break;

@@ -1,7 +1,7 @@
 # Available arguments:
 # * General options:
 #     - `ARCH`: Target architecture: x86_64, riscv64, aarch64
-#     - `PLATFORM`: Target platform in the `platforms` directory
+#     - `PLATFORM`: Target platform in the `platforms` directory: riscv64-sifive_u
 #     - `SMP`: Number of CPUs
 #     - `MODE`: Build mode: release, debug
 #     - `LOG:` Logging level: warn, error, info, debug, trace
@@ -34,7 +34,7 @@
 
 # General options
 ARCH ?= riscv64
-PLATFORM ?= riscv64-sifive_u
+PLATFORM ?= #riscv64-sifive_u
 SMP ?= 1
 MODE ?= release
 LOG ?= warn
@@ -54,6 +54,7 @@ APP_FEATURES ?=
 BLK ?= y
 NET ?= n
 GRAPHIC ?= n
+APPEND ?= y
 BUS ?= mmio
 MEM ?= 128M
 ACCEL ?=
@@ -63,7 +64,7 @@ ifeq ($(PFLASH), y)
 else
   PFLASH_IMG :=
 endif
-MTD ?= y
+MTD ?= n
 
 DISK_IMG ?= disk.img
 # Filesystem type: fat32, ext2, ext4

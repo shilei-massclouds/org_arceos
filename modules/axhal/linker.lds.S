@@ -43,6 +43,10 @@ SECTIONS
         KEEP(*(__tracepoints_ptrs))
         __stop___tracepoints_ptrs = .;
         *(__tracepoints_strings)
+        . = ALIGN(16);
+        __setup_start = .;
+        KEEP(*(.init.setup))
+        __setup_end = .;
     }
 
     .init_array : ALIGN(0x10) {

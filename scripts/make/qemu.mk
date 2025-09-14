@@ -95,6 +95,9 @@ ifeq ($(GRAPHIC), n)
   qemu_args-y += -nographic
 endif
 
+qemu_args-$(APPEND) += \
+  -append "earlycon=sbi root=/dev/vda rw console=ttyS0"
+
 ifeq ($(QEMU_LOG), y)
   qemu_args-y += -D qemu.log -d in_asm,int,mmu,pcall,cpu_reset,guest_errors
 endif

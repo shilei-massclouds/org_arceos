@@ -607,3 +607,29 @@ unsigned int part_in_flight(struct block_device *part)
 
     return inflight;
 }
+
+dev_t part_devt(struct gendisk *disk, u8 partno)
+{
+    PANIC("");
+}
+
+static int __init genhd_device_init(void)
+{
+    int error;
+
+    error = class_register(&block_class);
+    if (unlikely(error))
+        return error;
+    blk_dev_init();
+
+    register_blkdev(BLOCK_EXT_MAJOR, "blkext");
+
+    /* create top-level block dir */
+    block_depr = kobject_create_and_add("block", NULL);
+    return 0;
+}
+
+int cl_genhd_device_init(void)
+{
+    return genhd_device_init();
+}

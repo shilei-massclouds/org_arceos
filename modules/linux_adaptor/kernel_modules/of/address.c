@@ -399,7 +399,6 @@ static int __of_address_to_resource(struct device_node *dev, int index, int bar_
     unsigned int    flags;
     const char  *name = NULL;
 
-    printk("%s: step1\n", __func__);
     addrp = __of_get_address(dev, index, bar_no, &size, &flags);
     if (addrp == NULL)
         return -EINVAL;

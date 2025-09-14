@@ -83,6 +83,122 @@ static void klist_class_dev_put(struct klist_node *n)
     put_device(dev);
 }
 
+/**
+ * class_to_subsys - Turn a struct class into a struct subsys_private
+ *
+ * @class: pointer to the struct bus_type to look up
+ *
+ * The driver core internals need to work on the subsys_private structure, not
+ * the external struct class pointer.  This function walks the list of
+ * registered classes in the system and finds the matching one and returns the
+ * internal struct subsys_private that relates to that class.
+ *
+ * Note, the reference count of the return value is INCREMENTED if it is not
+ * NULL.  A call to subsys_put() must be done when finished with the pointer in
+ * order for it to be properly freed.
+ */
+struct subsys_private *class_to_subsys(const struct class *class)
+{
+    struct subsys_private *sp = NULL;
+    struct kobject *kobj;
+
+    if (!class || !class_kset)
+        return NULL;
+
+    spin_lock(&class_kset->list_lock);
+
+    if (list_empty(&class_kset->list))
+        goto done;
+
+    list_for_each_entry(kobj, &class_kset->list, entry) {
+        struct kset *kset = container_of(kobj, struct kset, kobj);
+
+        sp = container_of_const(kset, struct subsys_private, subsys);
+        if (sp->class == class)
+            goto done;
+    }
+    sp = NULL;
+done:
+    sp = subsys_get(sp);
+    spin_unlock(&class_kset->list_lock);
+    return sp;
+}
+
+/**
+ * class_dev_iter_init - initialize class device iterator
+ * @iter: class iterator to initialize
+ * @class: the class we wanna iterate over
+ * @start: the device to start iterating from, if any
+ * @type: device_type of the devices to iterate over, NULL for all
+ *
+ * Initialize class iterator @iter such that it iterates over devices
+ * of @class.  If @start is set, the list iteration will start there,
+ * otherwise if it is NULL, the iteration starts at the beginning of
+ * the list.
+ */
+void class_dev_iter_init(struct class_dev_iter *iter, const struct class *class,
+             const struct device *start, const struct device_type *type)
+{
+    struct subsys_private *sp = class_to_subsys(class);
+    struct klist_node *start_knode = NULL;
+
+    memset(iter, 0, sizeof(*iter));
+    if (!sp) {
+        pr_crit("%s: class %p was not registered yet\n",
+            __func__, class);
+        return;
+    }
+
+    if (start)
+        start_knode = &start->p->knode_class;
+    klist_iter_init_node(&sp->klist_devices, &iter->ki, start_knode);
+    iter->type = type;
+    iter->sp = sp;
+}
+
+/**
+ * class_dev_iter_next - iterate to the next device
+ * @iter: class iterator to proceed
+ *
+ * Proceed @iter to the next device and return it.  Returns NULL if
+ * iteration is complete.
+ *
+ * The returned device is referenced and won't be released till
+ * iterator is proceed to the next device or exited.  The caller is
+ * free to do whatever it wants to do with the device including
+ * calling back into class code.
+ */
+struct device *class_dev_iter_next(struct class_dev_iter *iter)
+{
+    struct klist_node *knode;
+    struct device *dev;
+
+    if (!iter->sp)
+        return NULL;
+
+    while (1) {
+        knode = klist_next(&iter->ki);
+        if (!knode)
+            return NULL;
+        dev = klist_class_to_dev(knode);
+        if (!iter->type || iter->type == dev->type)
+            return dev;
+    }
+}
+
+/**
+ * class_dev_iter_exit - finish iteration
+ * @iter: class iterator to finish
+ *
+ * Finish an iteration.  Always call this function after iteration is
+ * complete whether the iteration ran till the end or not.
+ */
+void class_dev_iter_exit(struct class_dev_iter *iter)
+{
+    klist_iter_exit(&iter->ki);
+    subsys_put(iter->sp);
+}
+
 int class_register(const struct class *cls)
 {
     struct subsys_private *cp;

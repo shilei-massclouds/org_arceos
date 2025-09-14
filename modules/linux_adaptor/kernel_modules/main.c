@@ -53,6 +53,8 @@ extern int cl_ext4_init_fs(void);
 extern void cl_invoke_softirq(void);
 extern void cl_blk_timeout_init(void);
 
+extern int cl_genhd_device_init(void);
+
 extern void test_block(void);
 extern void test_ext4();
 
@@ -68,6 +70,8 @@ int clinux_init(phys_addr_t dt_phys)
     clinux_starting = 1;
 
     early_init_dt_verify(__va(dt_phys), dt_phys);
+    early_init_dt_scan_chosen(boot_command_line);
+    printk("Kernel command line: %s\n", boot_command_line);
 
     random_init_early("");
     vfs_caches_init_early();
@@ -116,13 +120,15 @@ int clinux_init(phys_addr_t dt_phys)
         }
     }
 
+    parse_early_param();
+
     clinux_started = 1;
 
     // Note: Refer to old cl_irq_init in irq.c.
     cl_plic_init();
 
-    // block/blk-core.c
-    blk_dev_init();
+    // block/genhd.c
+    cl_genhd_device_init();
 
     // block/fops.c
     cl_blkdev_init();
@@ -148,6 +154,9 @@ int clinux_init(phys_addr_t dt_phys)
 
     // spi/spi-sifive.c
     cl_sifive_spi_driver_init();
+
+    // Set ROOT_DEV based on linux commandline.
+    prepare_namespace();
 
 #ifdef TEST_BLOCK
     printk("====== VirtIoBlock test ======\n");

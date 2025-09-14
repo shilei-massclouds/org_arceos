@@ -26,5 +26,53 @@
 #include <uapi/linux/mount.h>
 
 #include "do_mounts.h"
+#include "../adaptor.h"
+
+static char __initdata saved_root_name[64];
+static int root_wait;
 
 dev_t ROOT_DEV;
+
+static int __init root_dev_setup(char *line)
+{
+    strscpy(saved_root_name, line, sizeof(saved_root_name));
+    return 0;
+}
+
+early_param("root", root_dev_setup);
+
+static dev_t __init parse_root_device(char *root_device_name)
+{
+    int error;
+    dev_t dev;
+
+    if (!strncmp(root_device_name, "mtd", 3) ||
+        !strncmp(root_device_name, "ubi", 3))
+        return Root_Generic;
+    if (strcmp(root_device_name, "/dev/nfs") == 0)
+        return Root_NFS;
+    if (strcmp(root_device_name, "/dev/cifs") == 0)
+        return Root_CIFS;
+    if (strcmp(root_device_name, "/dev/ram") == 0)
+        return Root_RAM0;
+
+    error = early_lookup_bdev(root_device_name, &dev);
+    if (error) {
+        if (error == -EINVAL && root_wait) {
+            pr_err("Disabling rootwait; root= is invalid.\n");
+            root_wait = 0;
+        }
+        return 0;
+    }
+    return dev;
+}
+
+/*
+ * Prepare the namespace - decide what/where to mount, load ramdisks, etc.
+ */
+void __init prepare_namespace(void)
+{
+    if (saved_root_name[0])
+        ROOT_DEV = parse_root_device(saved_root_name);
+    printk("ROOT_DEV: %x\n", ROOT_DEV);
+}

@@ -463,6 +463,49 @@ bool of_fdt_device_is_available(const void *blob, unsigned long node)
     return false;
 }
 
+int __init early_init_dt_scan_chosen(char *cmdline)
+{
+    int l, node;
+    const char *p;
+    const void *rng_seed;
+    const void *fdt = initial_boot_params;
+
+    node = fdt_path_offset(fdt, "/chosen");
+    if (node < 0)
+        node = fdt_path_offset(fdt, "/chosen@0");
+    if (node < 0)
+        /* Handle the cmdline config options even if no /chosen node */
+        goto handle_cmdline;
+
+    /* Retrieve command line */
+    p = of_get_flat_dt_prop(node, "bootargs", &l);
+    if (p != NULL && l > 0)
+        strscpy(cmdline, p, min(l, COMMAND_LINE_SIZE));
+
+handle_cmdline:
+    /*
+     * CONFIG_CMDLINE is meant to be a default in case nothing else
+     * managed to set the command line, unless CONFIG_CMDLINE_FORCE
+     * is set in which case we override whatever was found earlier.
+     */
+#ifdef CONFIG_CMDLINE
+#if defined(CONFIG_CMDLINE_EXTEND)
+    strlcat(cmdline, " ", COMMAND_LINE_SIZE);
+    strlcat(cmdline, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
+#elif defined(CONFIG_CMDLINE_FORCE)
+    strscpy(cmdline, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
+#else
+    /* No arguments from boot loader, use kernel's  cmdl*/
+    if (!((char *)cmdline)[0])
+        strscpy(cmdline, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
+#endif
+#endif /* CONFIG_CMDLINE */
+
+    pr_debug("Command line is: %s\n", (char *)cmdline);
+
+    return 0;
+}
+
 u64 __init dt_mem_next_cell(int s, const __be32 **cellp)
 {
     const __be32 *p = *cellp;

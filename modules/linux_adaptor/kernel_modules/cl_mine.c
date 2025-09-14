@@ -338,7 +338,6 @@ CL_MINE(vmaflag_names)
 CL_MINE(__devm_add_action)
 
 CL_MINE(memdup_user_nul)
-CL_MINE(get_options)
 CL_MINE(devres_free)
 
 CL_MINE(kmem_cache_free_bulk)

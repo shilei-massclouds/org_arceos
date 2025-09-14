@@ -27,6 +27,8 @@
 
 #include "../adaptor.h"
 
+extern dev_t ROOT_DEV;
+
 /* Should we allow writing to mounted block devices? */
 static bool bdev_allow_write_mounted = IS_ENABLED(CONFIG_BLK_DEV_WRITE_MOUNTED);
 
@@ -34,6 +36,14 @@ struct bdev_inode {
     struct block_device bdev;
     struct inode vfs_inode;
 };
+
+#define CL_NAME_DEVT_MAX_NUM 8
+static struct cl_name_devt {
+    char name[16];
+    dev_t dev;
+} cl_name_devt_array[CL_NAME_DEVT_MAX_NUM];
+
+static int cl_name_devt_idx;
 
 /*
  * pseudo-fs
@@ -405,6 +415,32 @@ void bdev_add(struct block_device *bdev, dev_t dev)
     inode->i_ino = dev;
     insert_inode_hash(inode);
     printk("%s: dev_t(%x) ok!\n", __func__, dev);
+    if (bdev->bd_disk) {
+        printk("%s: name(%s) ok!\n", __func__, bdev->bd_disk->disk_name);
+    }
+
+    if (cl_name_devt_idx >= CL_NAME_DEVT_MAX_NUM) {
+        PANIC("No space in cl_name_devt_array.");
+    }
+    if (bdev->bd_disk == NULL) {
+        PANIC("Bad bd_disk.");
+    }
+    strncpy(cl_name_devt_array[cl_name_devt_idx].name,
+            bdev->bd_disk->disk_name, 16);
+    cl_name_devt_array[cl_name_devt_idx].dev = dev;
+    cl_name_devt_idx++;
+}
+
+int cl_lookup_devt(const char *name)
+{
+    int i;
+    for (i = 0; i < cl_name_devt_idx; i++) {
+        if (strcmp(name, cl_name_devt_array[i].name) == 0) {
+            return cl_name_devt_array[i].dev;
+        }
+    }
+    PANIC("");
+    return -1;
 }
 
 struct block_device *blkdev_get_no_open(dev_t dev)
@@ -446,8 +482,9 @@ int lookup_bdev(const char *pathname, dev_t *dev)
 {
     pr_notice("%s: No impl.", __func__);
     if (strcmp(pathname, "/dev/root") == 0) {
+        *dev = ROOT_DEV;
         //*dev = MKDEV(0xFE, 0x00);
-        *dev = 0x1f00000;
+        //*dev = 0x1f00000;
         return 0;
     }
     PANIC("Bad blkdev name.");
