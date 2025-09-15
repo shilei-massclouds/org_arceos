@@ -34,6 +34,7 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
     int nr_pages = 1 << order;
     void *va = cl_alloc_pages(PAGE_SIZE * nr_pages, PAGE_SIZE);
     struct page *page = virt_to_page(va);
+    memset(page, 0, sizeof(struct page));
     // Note: page_type must be inited with UINT_MAX. Check where set it.
     page->page_type = UINT_MAX;
     set_page_count(page, 1);

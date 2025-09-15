@@ -54,7 +54,6 @@ static int gpio_restart_probe(struct platform_device *pdev)
 	u32 property;
 	int ret;
 
-    printk("++++++++++++ %s: step1\n", __func__);
 	gpio_restart = devm_kzalloc(&pdev->dev, sizeof(*gpio_restart),
 			GFP_KERNEL);
 	if (!gpio_restart)
@@ -62,15 +61,16 @@ static int gpio_restart_probe(struct platform_device *pdev)
 
 	open_source = of_property_read_bool(pdev->dev.of_node, "open-source");
 
+    printk("++++++++++++ %s: step1 (%d)\n", __func__, open_source);
 	gpio_restart->reset_gpio = devm_gpiod_get(&pdev->dev, NULL,
 			open_source ? GPIOD_IN : GPIOD_OUT_LOW);
 	ret = PTR_ERR_OR_ZERO(gpio_restart->reset_gpio);
+    printk("+++++++++++ %s: step2 ret(%d)\n", __func__, ret);
 	if (ret) {
 		if (ret != -EPROBE_DEFER)
 			dev_err(&pdev->dev, "Could not get reset GPIO\n");
 		return ret;
 	}
-    printk("+++++++++++ %s: step2\n", __func__);
 
 	gpio_restart->active_delay_ms = 100;
 	gpio_restart->inactive_delay_ms = 100;

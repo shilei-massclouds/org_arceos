@@ -1,6 +1,7 @@
 #include <linux/blkdev.h>
 #include <linux/pagemap.h>
 #include <linux/reboot.h>
+#include <linux/buffer_head.h>
 
 #include "adaptor.h"
 
@@ -35,6 +36,9 @@ static void test_read(const struct address_space *aspace, int index)
     struct folio *folio = folio_alloc(GFP_KERNEL, 0);
     if (folio == NULL) {
         PANIC("No page.");
+    }
+    if (folio_buffers(folio) != NULL) {
+        PANIC("Bad folio with buffers.");
     }
     folio->mapping = (struct address_space *)aspace;
 

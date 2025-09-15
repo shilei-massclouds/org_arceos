@@ -730,3 +730,8 @@ struct device *device_create(const struct class *class, struct device *parent,
     va_end(vargs);
     return dev;
 }
+
+int device_match_of_node(struct device *dev, const void *np)
+{
+    return dev->of_node == np;
+}

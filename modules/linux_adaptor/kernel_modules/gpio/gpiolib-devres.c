@@ -124,7 +124,6 @@ struct gpio_desc *__must_check devm_gpiod_get_index(struct device *dev,
 		return desc;
 
     printk("++++++++ %s: gdev(%lx) label(%lx) name(%s) flags(%lx)\n", __func__, desc->gdev, desc->label, desc->name, desc->flags);
-    PANIC("");
 	/*
 	 * For non-exclusive GPIO descriptors, check if this descriptor is
 	 * already under resource management by this device.

@@ -412,6 +412,9 @@ static struct gpio_desc *of_get_named_gpiod_flags(const struct device_node *np,
 		return ERR_PTR(ret);
 	}
 
+    printk("%s: step1 (%d)(%s)\n",
+           __func__, gpiospec.args_count, gpiospec.np->name);
+
 	struct gpio_device *gdev __free(gpio_device_put) =
 				of_find_gpio_device_by_xlate(&gpiospec);
 	if (!gdev) {
@@ -419,6 +422,7 @@ static struct gpio_desc *of_get_named_gpiod_flags(const struct device_node *np,
 		goto out;
 	}
 
+    printk("%s: step2 (%s)(%s)\n", __func__, propname, np->name);
 	desc = of_xlate_and_get_gpiod_flags(gpio_device_get_chip(gdev),
 					    &gpiospec, flags);
 	if (IS_ERR(desc))
@@ -705,6 +709,7 @@ struct gpio_desc *of_find_gpio(struct device_node *np, const char *con_id,
 
 	/* Try GPIO property "foo-gpios" and "foo-gpio" */
 	for_each_gpio_property_name(propname, con_id) {
+    printk("%s: step1 (%s)(%s)\n", __func__, propname, con_id);
 		desc = of_get_named_gpiod_flags(np, propname, idx, &of_flags);
 		if (!gpiod_not_found(desc))
 			break;

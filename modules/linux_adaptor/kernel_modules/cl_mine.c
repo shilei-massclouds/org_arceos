@@ -334,9 +334,6 @@ CL_MINE(sprint_symbol_no_offset)
 CL_MINE(time64_to_tm)
 CL_MINE(vmaflag_names)
 
-// bitmap
-CL_MINE(__devm_add_action)
-
 CL_MINE(memdup_user_nul)
 CL_MINE(devres_free)
 
@@ -627,7 +624,6 @@ CL_MINE(of_get_compatible_child)
 CL_MINE(register_reboot_notifier)
 
 // nvmem
-CL_MINE(device_match_of_node)
 CL_MINE(device_match_name)
 CL_MINE(device_remove_bin_file)
 CL_MINE(of_get_next_parent)
@@ -640,19 +636,13 @@ CL_MINE(sysfs_remove_group)
 CL_MINE(blk_mq_quiesce_queue)
 CL_MINE(sysfs_create_group)
 
-CL_MINE(do_kernel_restart)
-CL_MINE(devm_register_sys_off_handler)
-
 // gpio
 CL_MINE(acpi_find_gpio)
 CL_MINE(acpi_gpiochip_free_interrupts)
 CL_MINE(acpi_gpiochip_remove)
 CL_MINE(acpi_gpio_count)
-CL_MINE(alloc_chrdev_region)
 CL_MINE(debugfs_create_file)
 CL_MINE(device_match_fwnode)
-CL_MINE(gpiolib_cdev_register)
-CL_MINE(gpiolib_cdev_unregister)
 CL_MINE(irq_dispose_mapping)
 CL_MINE(__irq_domain_alloc_irqs)
 CL_MINE(irq_domain_alloc_irqs_parent)
@@ -706,3 +696,15 @@ CL_MINE(single_open)
 CL_MINE(regcache_get_val)
 CL_MINE(single_release)
 CL_MINE(acpi_irq_get)
+
+CL_MINE(__kfifo_in)
+CL_MINE(__usecs_to_jiffies)
+CL_MINE(anon_inode_getfile)
+CL_MINE(__kfifo_alloc)
+CL_MINE(__kfifo_free)
+CL_MINE(pinctrl_gpio_can_use_line)
+CL_MINE(__kmalloc_large_noprof)
+CL_MINE(nonseekable_open)
+CL_MINE(__kfifo_out)
+CL_MINE(do_wait_intr)
+CL_MINE(cdev_device_del)

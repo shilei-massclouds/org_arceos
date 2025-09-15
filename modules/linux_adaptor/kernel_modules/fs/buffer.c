@@ -293,6 +293,7 @@ static struct buffer_head *folio_create_buffers(struct folio *folio,
 
     BUG_ON(!folio_test_locked(folio));
 
+    printk("%s: step1\n", __func__);
     bh = folio_buffers(folio);
     if (!bh)
         bh = create_empty_buffers(folio,
@@ -502,8 +503,12 @@ int block_read_full_folio(struct folio *folio, get_block_t *get_block)
     i = 0;
 
     do {
-        if (buffer_uptodate(bh))
+    printk("%s: step1 bh(%lx)\n", __func__, bh);
+        if (buffer_uptodate(bh)) {
+    printk("%s: step1.5\n", __func__);
             continue;
+        }
+    printk("%s: step2\n", __func__);
 
         if (!buffer_mapped(bh)) {
             int err = 0;
@@ -577,6 +582,7 @@ struct buffer_head *create_empty_buffers(struct folio *folio,
     struct buffer_head *bh, *head, *tail;
     gfp_t gfp = GFP_NOFS | __GFP_ACCOUNT | __GFP_NOFAIL;
 
+    printk("%s: step1\n", __func__);
     head = folio_alloc_buffers(folio, blocksize, gfp);
     bh = head;
     do {

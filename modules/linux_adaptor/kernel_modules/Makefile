@@ -30,7 +30,7 @@ OBJS += clk/clk-devres.o clk/clkdev.o clk/clk.o clk/sifive-prci.o
 OBJS += clk/wrpll-cln28hpc.o
 OBJS += power/gpio-restart.o power/gpio-poweroff.o
 OBJS += gpio/gpiolib-devres.o gpio/gpiolib.o gpio/gpiolib-of.o
-OBJS += gpio/gpio-sifive.o gpio/gpio-mmio.o
+OBJS += gpio/gpio-sifive.o gpio/gpio-mmio.o gpio/gpiolib-cdev.o
 
 OBJS += init/do_mounts.o init/main.o
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
@@ -65,7 +65,7 @@ OBJS += locking/mutex.o locking/mutex-debug.o
 OBJS += locking/rwsem.o locking/percpu-rwsem.o
 OBJS += base/platform.o base/property.o base/syscore.o base/bus.o
 OBJS += base/core.o base/devres.o base/dd.o base/driver.o base/trace.o
-OBJS += base/class.o
+OBJS += base/class.o base/map.o
 OBJS += of/base.o of/property.o of/address.o of/irq.o of/fdt.o
 OBJS += of/of_reserved_mem.o of/kobj.o of/platform.o of/device.o
 OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o

@@ -16,6 +16,16 @@ struct devres_node {
     size_t              size;
 };
 
+/*
+ * Custom devres actions allow inserting a simple function call
+ * into the teardown sequence.
+ */
+
+struct action_devres {
+    void *data;
+    void (*action)(void *);
+};
+
 struct devres {
     struct devres_node      node;
     /*
@@ -504,4 +514,37 @@ void *devm_krealloc(struct device *dev, void *ptr, size_t new_size, gfp_t gfp)
 
     PANIC("");
     return new_dr->data;
+}
+
+static void devm_action_release(struct device *dev, void *res)
+{
+    struct action_devres *devres = res;
+
+    devres->action(devres->data);
+}
+
+/**
+ * __devm_add_action() - add a custom action to list of managed resources
+ * @dev: Device that owns the action
+ * @action: Function that should be called
+ * @data: Pointer to data passed to @action implementation
+ * @name: Name of the resource (for debugging purposes)
+ *
+ * This adds a custom action to the list of managed resources so that
+ * it gets executed as part of standard resource unwinding.
+ */
+int __devm_add_action(struct device *dev, void (*action)(void *), void *data, const char *name)
+{
+    struct action_devres *devres;
+
+    devres = __devres_alloc_node(devm_action_release, sizeof(struct action_devres),
+                     GFP_KERNEL, NUMA_NO_NODE, name);
+    if (!devres)
+        return -ENOMEM;
+
+    devres->data = data;
+    devres->action = action;
+
+    devres_add(dev, devres);
+    return 0;
 }

@@ -18,6 +18,7 @@
 //#define TEST_EXT2
 //#define TEST_EXT4
 
+extern void cl_gpiolib_dev_init(void);
 extern int cl_of_platform_default_populate_init(void);
 
 extern void cl_riscv_intc_init(struct device_node *node,
@@ -126,6 +127,9 @@ int clinux_init(phys_addr_t dt_phys)
     parse_early_param();
 
     clinux_started = 1;
+
+    // gpio/gpiolib.c
+    cl_gpiolib_dev_init();
 
     // Note: Refer to old cl_irq_init in irq.c.
     cl_plic_init();

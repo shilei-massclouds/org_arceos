@@ -99,3 +99,109 @@ int atomic_notifier_chain_unregister(struct atomic_notifier_head *nh,
 {
     PANIC("");
 }
+
+static int notifier_chain_register(struct notifier_block **nl,
+                   struct notifier_block *n,
+                   bool unique_priority)
+{
+    while ((*nl) != NULL) {
+        if (unlikely((*nl) == n)) {
+            WARN(1, "notifier callback %ps already registered",
+                 n->notifier_call);
+            return -EEXIST;
+        }
+        if (n->priority > (*nl)->priority)
+            break;
+        if (n->priority == (*nl)->priority && unique_priority)
+            return -EBUSY;
+        nl = &((*nl)->next);
+    }
+    n->next = *nl;
+    rcu_assign_pointer(*nl, n);
+    trace_notifier_register((void *)n->notifier_call);
+    return 0;
+}
+
+/**
+ *  atomic_notifier_chain_register - Add notifier to an atomic notifier chain
+ *  @nh: Pointer to head of the atomic notifier chain
+ *  @n: New entry in notifier chain
+ *
+ *  Adds a notifier to an atomic notifier chain.
+ *
+ *  Returns 0 on success, %-EEXIST on error.
+ */
+int atomic_notifier_chain_register(struct atomic_notifier_head *nh,
+        struct notifier_block *n)
+{
+    unsigned long flags;
+    int ret;
+
+    spin_lock_irqsave(&nh->lock, flags);
+    ret = notifier_chain_register(&nh->head, n, false);
+    spin_unlock_irqrestore(&nh->lock, flags);
+    return ret;
+}
+
+/*
+ *  Blocking notifier chain routines.  All access to the chain is
+ *  synchronized by an rwsem.
+ */
+
+static int __blocking_notifier_chain_register(struct blocking_notifier_head *nh,
+                          struct notifier_block *n,
+                          bool unique_priority)
+{
+    int ret;
+
+    /*
+     * This code gets used during boot-up, when task switching is
+     * not yet working and interrupts must remain disabled.  At
+     * such times we must not call down_write().
+     */
+    if (unlikely(system_state == SYSTEM_BOOTING))
+        return notifier_chain_register(&nh->head, n, unique_priority);
+
+    down_write(&nh->rwsem);
+    ret = notifier_chain_register(&nh->head, n, unique_priority);
+    up_write(&nh->rwsem);
+    return ret;
+}
+
+/**
+ *  atomic_notifier_chain_register_unique_prio - Add notifier to an atomic notifier chain
+ *  @nh: Pointer to head of the atomic notifier chain
+ *  @n: New entry in notifier chain
+ *
+ *  Adds a notifier to an atomic notifier chain if there is no other
+ *  notifier registered using the same priority.
+ *
+ *  Returns 0 on success, %-EEXIST or %-EBUSY on error.
+ */
+int atomic_notifier_chain_register_unique_prio(struct atomic_notifier_head *nh,
+                           struct notifier_block *n)
+{
+    unsigned long flags;
+    int ret;
+
+    spin_lock_irqsave(&nh->lock, flags);
+    ret = notifier_chain_register(&nh->head, n, true);
+    spin_unlock_irqrestore(&nh->lock, flags);
+    return ret;
+}
+
+/**
+ *  blocking_notifier_chain_register_unique_prio - Add notifier to a blocking notifier chain
+ *  @nh: Pointer to head of the blocking notifier chain
+ *  @n: New entry in notifier chain
+ *
+ *  Adds a notifier to an blocking notifier chain if there is no other
+ *  notifier registered using the same priority.
+ *
+ *  Returns 0 on success, %-EEXIST or %-EBUSY on error.
+ */
+int blocking_notifier_chain_register_unique_prio(struct blocking_notifier_head *nh,
+                         struct notifier_block *n)
+{
+    return __blocking_notifier_chain_register(nh, n, true);
+}
