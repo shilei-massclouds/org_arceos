@@ -28,6 +28,9 @@ OBJS += mtd/mtdcore.o mtd/mtdpart.o mtd/mtdblock.o mtd/mtd_blkdevs.o
 OBJS += nvmem/core.o nvmem/layouts.o
 OBJS += clk/clk-devres.o clk/clkdev.o clk/clk.o clk/sifive-prci.o
 OBJS += clk/wrpll-cln28hpc.o
+OBJS += power/gpio-restart.o power/gpio-poweroff.o
+OBJS += gpio/gpiolib-devres.o gpio/gpiolib.o gpio/gpiolib-of.o
+OBJS += gpio/gpio-sifive.o gpio/gpio-mmio.o
 
 OBJS += init/do_mounts.o init/main.o
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
@@ -73,10 +76,12 @@ OBJS += kernel/resource.o kernel/workqueue.o kernel/kthread.o
 OBJS += kernel/nsproxy.o kernel/cpu.o kernel/user_namespace.o
 OBJS += kernel/panic.o kernel/exit.o kernel/cred.o kernel/softirq.o
 OBJS += kernel/extable.o kernel/tracepoint.o kernel/jump_label.o
-OBJS += kernel/irq_work.o kernel/params.o
+OBJS += kernel/irq_work.o kernel/params.o kernel/reboot.o
+OBJS += kernel/notifier.o
 OBJS += kernel/stacktrace.o			# for arch/riscv/kernel
 OBJS += kernel/riscv_jump_label.o	# for arch/riscv/kernel
 OBJS += kernel/patch.o				# for arch/riscv/kernel
+OBJS += kernel/reset.o				# for arch/riscv/kernel
 OBJS += block/genhd.o block/blk-mq.o block/blk-mq-virtio.o
 OBJS += block/blk-mq-cpumap.o block/blk-mq-tag.o block/blk-core.o
 OBJS += block/blk-stat.o block/blk-settings.o block/bio.o
@@ -96,6 +101,10 @@ OBJS += trace/trace_output.o trace/pid_list.o trace/trace_events_filter.o
 OBJS += trace/ring_buffer.o trace/ftrace.o trace/trace_seq.o
 OBJS += trace/trace_functions.o trace/trace_nop.o
 OBJS += libfdt/fdt.o libfdt/fdt_ro.o
+OBJS += regmap/regmap-mmio.o regmap/regmap.o regmap/regcache.o
+OBJS += regmap/regcache-rbtree.o
+OBJS += regmap/regcache-maple.o
+OBJS += regmap/regcache-flat.o
 
 #OBJS += fs_types.o
 #OBJS += mpage.o
@@ -140,6 +149,10 @@ $(TARGET): $(OBJS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
+
+# Special action for 'regmap'
+regmap/regmap.o: regmap/regmap.c
+	$(CC) $(CFLAGS) -I./regmap -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
 %/%.o: %/%.c
 	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<

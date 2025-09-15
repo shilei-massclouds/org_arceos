@@ -1035,3 +1035,43 @@ int irq_domain_activate_irq(struct irq_data *irq_data, bool reserve)
         irqd_set_activated(irq_data);
     return ret;
 }
+
+/**
+ * irq_domain_create_hierarchy - Add a irqdomain into the hierarchy
+ * @parent: Parent irq domain to associate with the new domain
+ * @flags:  Irq domain flags associated to the domain
+ * @size:   Size of the domain. See below
+ * @fwnode: Optional fwnode of the interrupt controller
+ * @ops:    Pointer to the interrupt domain callbacks
+ * @host_data:  Controller private data pointer
+ *
+ * If @size is 0 a tree domain is created, otherwise a linear domain.
+ *
+ * If successful the parent is associated to the new domain and the
+ * domain flags are set.
+ * Returns pointer to IRQ domain, or NULL on failure.
+ */
+struct irq_domain *irq_domain_create_hierarchy(struct irq_domain *parent,
+                        unsigned int flags,
+                        unsigned int size,
+                        struct fwnode_handle *fwnode,
+                        const struct irq_domain_ops *ops,
+                        void *host_data)
+{
+    struct irq_domain_info info = {
+        .fwnode     = fwnode,
+        .size       = size,
+        .hwirq_max  = size,
+        .ops        = ops,
+        .host_data  = host_data,
+        .domain_flags   = flags,
+        .parent     = parent,
+    };
+    struct irq_domain *d;
+
+    if (!info.size)
+        info.hwirq_max = ~0U;
+
+    d = irq_domain_instantiate(&info);
+    return IS_ERR(d) ? NULL : d;
+}

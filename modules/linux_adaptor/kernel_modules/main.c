@@ -14,7 +14,7 @@
 #include "block/blk.h"
 #include "adaptor.h"
 
-//#define TEST_BLOCK
+#define TEST_BLOCK
 //#define TEST_EXT2
 //#define TEST_EXT4
 
@@ -22,6 +22,9 @@ extern int cl_of_platform_default_populate_init(void);
 
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
+
+extern void cl_sifive_gpio_driver_init(void);
+extern void cl_gpio_restart_driver_init(void);
 
 extern int cl_nvmem_init(void);
 extern void cl_mtdblock_tr_init(void);
@@ -132,6 +135,12 @@ int clinux_init(phys_addr_t dt_phys)
 
     // block/fops.c
     cl_blkdev_init();
+
+    // gpio/gpio-sifive.c
+    cl_sifive_gpio_driver_init();
+
+    // power/gpio-restart.c
+    cl_gpio_restart_driver_init();
 
     cl_virtio_init();
     cl_virtio_mmio_init();

@@ -1076,3 +1076,102 @@ struct device_node *of_get_child_by_name(const struct device_node *node,
             break;
     return child;
 }
+
+int of_parse_phandle_with_args_map(const struct device_node *np,
+                   const char *list_name,
+                   const char *stem_name,
+                   int index, struct of_phandle_args *out_args)
+{
+    char *cells_name __free(kfree) = kasprintf(GFP_KERNEL, "#%s-cells", stem_name);
+    char *map_name __free(kfree) = kasprintf(GFP_KERNEL, "%s-map", stem_name);
+    char *mask_name __free(kfree) = kasprintf(GFP_KERNEL, "%s-map-mask", stem_name);
+    char *pass_name __free(kfree) = kasprintf(GFP_KERNEL, "%s-map-pass-thru", stem_name);
+    struct device_node *cur, *new = NULL;
+    const __be32 *map, *mask, *pass;
+    static const __be32 dummy_mask[] = { [0 ... MAX_PHANDLE_ARGS] = cpu_to_be32(~0) };
+    static const __be32 dummy_pass[] = { [0 ... MAX_PHANDLE_ARGS] = cpu_to_be32(0) };
+    __be32 initial_match_array[MAX_PHANDLE_ARGS];
+    const __be32 *match_array = initial_match_array;
+    int i, ret, map_len, match;
+    u32 list_size, new_size;
+
+    if (index < 0)
+        return -EINVAL;
+
+    if (!cells_name || !map_name || !mask_name || !pass_name)
+        return -ENOMEM;
+
+    ret = __of_parse_phandle_with_args(np, list_name, cells_name, -1, index,
+                       out_args);
+    if (ret)
+        return ret;
+
+    /* Get the #<list>-cells property */
+    cur = out_args->np;
+    ret = of_property_read_u32(cur, cells_name, &list_size);
+    if (ret < 0)
+        goto put;
+
+    /* Precalculate the match array - this simplifies match loop */
+    for (i = 0; i < list_size; i++)
+        initial_match_array[i] = cpu_to_be32(out_args->args[i]);
+
+    ret = -EINVAL;
+    while (cur) {
+        /* Get the <list>-map property */
+        map = of_get_property(cur, map_name, &map_len);
+        if (!map) {
+            return 0;
+        }
+        map_len /= sizeof(u32);
+
+        /* Get the <list>-map-mask property (optional) */
+        mask = of_get_property(cur, mask_name, NULL);
+        if (!mask)
+            mask = dummy_mask;
+        /* Iterate through <list>-map property */
+        match = 0;
+        while (map_len > (list_size + 1) && !match) {
+            PANIC("LOOP");
+
+        }
+        if (!match) {
+            ret = -ENOENT;
+            goto put;
+        }
+
+        /* Get the <list>-map-pass-thru property (optional) */
+        pass = of_get_property(cur, pass_name, NULL);
+        if (!pass)
+            pass = dummy_pass;
+
+        /*
+         * Successfully parsed a <list>-map translation; copy new
+         * specifier into the out_args structure, keeping the
+         * bits specified in <list>-map-pass-thru.
+         */
+        for (i = 0; i < new_size; i++) {
+            __be32 val = *(map - new_size + i);
+
+            if (i < list_size) {
+                val &= ~pass[i];
+                val |= cpu_to_be32(out_args->args[i]) & pass[i];
+            }
+
+            initial_match_array[i] = val;
+            out_args->args[i] = be32_to_cpu(val);
+        }
+        out_args->args_count = list_size = new_size;
+        /* Iterate again with new provider */
+        out_args->np = new;
+        of_node_put(cur);
+        cur = new;
+        new = NULL;
+
+        PANIC("");
+    }
+put:
+    of_node_put(cur);
+    of_node_put(new);
+    return ret;
+}

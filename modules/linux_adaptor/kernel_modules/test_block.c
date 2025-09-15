@@ -1,15 +1,17 @@
 #include <linux/blkdev.h>
 #include <linux/pagemap.h>
+#include <linux/reboot.h>
 
 #include "adaptor.h"
+
+extern dev_t ROOT_DEV;
 
 static const struct address_space *
 prepare_block_dev(void)
 {
     struct block_device *dev;
 
-    dev = blkdev_get_no_open(MKDEV(0xFE, 0x00));
-    //dev = blkdev_get_no_open(0x1f00000);
+    dev = blkdev_get_no_open(ROOT_DEV);
     if (dev == NULL || dev->bd_mapping == NULL) {
         PANIC("No block device!");
     }
@@ -34,7 +36,7 @@ static void test_read(const struct address_space *aspace, int index)
     if (folio == NULL) {
         PANIC("No page.");
     }
-    folio->mapping = aspace;
+    folio->mapping = (struct address_space *)aspace;
 
     folio->index = index;
     __folio_set_locked(folio);
@@ -63,8 +65,10 @@ static void test_read(const struct address_space *aspace, int index)
                dwords[0], dwords[1], dwords[2], dwords[3]);
     }
 
-    __free_page(folio);
+    __free_page(folio_page(folio, 0));
 
+    //machine_power_off();
+    machine_restart(NULL);
     PANIC("Test block ok!");
 }
 

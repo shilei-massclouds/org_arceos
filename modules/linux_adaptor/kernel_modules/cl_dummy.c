@@ -786,14 +786,6 @@ int acpi_reconfig_notifier_register(struct notifier_block *nb)
     return 0;
 }
 
-struct gpio_desc *__must_check devm_gpiod_get_optional(struct device *dev,
-                               const char *con_id,
-                               enum gpiod_flags flags)
-{
-    pr_err("%s: No impl.", __func__);
-    return NULL;
-}
-
 void spi_nor_debugfs_register(struct spi_nor *nor)
 {
     pr_notice("%s: No impl.", __func__);
@@ -806,6 +798,19 @@ int sysfs_create_files(struct kobject *kobj, const struct attribute * const *ptr
 }
 
 void sysfs_remove_files(struct kobject *kobj, const struct attribute * const *ptr)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void regmap_debugfs_init(struct regmap *map) { }
+void regmap_debugfs_exit(struct regmap *map) { }
+
+void acpi_gpiochip_add(struct gpio_chip *chip)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void acpi_gpiochip_request_interrupts(struct gpio_chip *chip)
 {
     pr_notice("%s: No impl.", __func__);
 }

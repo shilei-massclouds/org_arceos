@@ -293,6 +293,11 @@ static int of_platform_bus_create(struct device_node *bus,
     }
 
     dev = of_platform_device_create_pdata(bus, bus_id, platform_data, parent);
+    if (dev && !strcmp(dev->name, "gpio-restart")) {
+        printk("=================\n", __func__);
+        printk("%s: (%s) num_r(%d)\n", __func__, dev->name, dev->num_resources);
+        printk("=================\n", __func__);
+    }
     if (!dev || !of_match_node(matches, bus))
         return 0;
 

@@ -329,6 +329,13 @@ int platform_get_irq(struct platform_device *dev, unsigned int num)
 int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 {
     int ret;
+#ifdef CONFIG_SPARC
+    /* sparc does not have irqs represented as IORESOURCE_IRQ resources */
+    if (!dev || num >= dev->archdata.num_irqs)
+        goto out_not_found;
+    ret = dev->archdata.irqs[num];
+    goto out;
+#else
     struct fwnode_handle *fwnode = dev_fwnode(&dev->dev);
     struct resource *r;
 
@@ -338,7 +345,50 @@ int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
             goto out;
     }
 
-    PANIC("");
+    r = platform_get_resource(dev, IORESOURCE_IRQ, num);
+    if (is_acpi_device_node(fwnode)) {
+        if (r && r->flags & IORESOURCE_DISABLED) {
+            ret = acpi_irq_get(ACPI_HANDLE_FWNODE(fwnode), num, r);
+            if (ret)
+                goto out;
+        }
+    }
+
+    /*
+     * The resources may pass trigger flags to the irqs that need
+     * to be set up. It so happens that the trigger flags for
+     * IORESOURCE_BITS correspond 1-to-1 to the IRQF_TRIGGER*
+     * settings.
+     */
+    if (r && r->flags & IORESOURCE_BITS) {
+        struct irq_data *irqd;
+
+        irqd = irq_get_irq_data(r->start);
+        if (!irqd)
+            goto out_not_found;
+        irqd_set_trigger_type(irqd, r->flags & IORESOURCE_BITS);
+    }
+
+    if (r) {
+        ret = r->start;
+        goto out;
+    }
+
+    /*
+     * For the index 0 interrupt, allow falling back to GpioInt
+     * resources. While a device could have both Interrupt and GpioInt
+     * resources, making this fallback ambiguous, in many common cases
+     * the device will only expose one IRQ, and this fallback
+     * allows a common code path across either kind of resource.
+     */
+    if (num == 0 && is_acpi_device_node(fwnode)) {
+        ret = acpi_dev_gpio_irq_get(to_acpi_device_node(fwnode), num);
+        /* Our callers expect -ENXIO for missing IRQs. */
+        if (ret >= 0 || ret == -EPROBE_DEFER)
+            goto out;
+    }
+
+#endif
 out_not_found:
     ret = -ENXIO;
 out:

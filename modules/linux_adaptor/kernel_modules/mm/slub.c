@@ -1,8 +1,47 @@
 #include <linux/mm.h>
+#include <linux/swap.h> /* mm_account_reclaimed_pages() */
+#include <linux/module.h>
+#include <linux/bit_spinlock.h>
+#include <linux/interrupt.h>
+#include <linux/swab.h>
+#include <linux/bitops.h>
 #include <linux/slab.h>
-
 #include "slab.h"
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
+#include <linux/kasan.h>
+#include <linux/kmsan.h>
+#include <linux/cpu.h>
+#include <linux/cpuset.h>
+#include <linux/mempolicy.h>
+#include <linux/ctype.h>
+#include <linux/stackdepot.h>
+#include <linux/debugobjects.h>
+#include <linux/kallsyms.h>
+#include <linux/kfence.h>
+#include <linux/memory.h>
+#include <linux/math64.h>
+#include <linux/fault-inject.h>
+#include <linux/kmemleak.h>
+#include <linux/stacktrace.h>
+#include <linux/prefetch.h>
+#include <linux/memcontrol.h>
+#include <linux/random.h>
+#include <kunit/test.h>
+#include <kunit/test-bug.h>
+#include <linux/sort.h>
+
+#include <linux/debugfs.h>
+#include <trace/events/kmem.h>
+
+#include "internal.h"
 #include "../adaptor.h"
+
+#ifndef CONFIG_SLUB_TINY
+#define __fastpath_inline __always_inline
+#else
+#define __fastpath_inline
+#endif
 
 static void *cl_kmalloc(size_t size, gfp_t flags)
 {
@@ -112,4 +151,67 @@ void skip_orig_size_check(struct kmem_cache *s, const void *object)
 {
     pr_err("%s: No impl.", __func__);
     //set_orig_size(s, (void *)object, s->object_size);
+}
+
+static __fastpath_inline
+struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s, gfp_t flags)
+{
+    flags &= gfp_allowed_mask;
+
+    might_alloc(flags);
+
+    if (unlikely(should_failslab(s, flags)))
+        return NULL;
+
+    return s;
+}
+
+static __fastpath_inline
+bool slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+              gfp_t flags, size_t size, void **p, bool init,
+              unsigned int orig_size)
+{
+    pr_notice("%s: No impl.", __func__);
+    return true;
+}
+
+static inline
+int __kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size,
+                void **p)
+{
+    int i;
+    for (i = 0; i < size; i++) {
+        //p[i] = cl_kmalloc(s->object_size, flags);
+        p[i] = kmem_cache_alloc_noprof(s, flags);
+        printk("%s: [%d]\n", __func__, i);
+    }
+    return i;
+}
+
+/* Note that interrupts must be enabled when calling this function. */
+int kmem_cache_alloc_bulk_noprof(struct kmem_cache *s, gfp_t flags, size_t size,
+                 void **p)
+{
+    int i;
+
+    if (!size)
+        return 0;
+
+    s = slab_pre_alloc_hook(s, flags);
+    if (unlikely(!s))
+        return 0;
+
+    i = __kmem_cache_alloc_bulk(s, flags, size, p);
+    if (unlikely(i == 0))
+        return 0;
+
+    /*
+     * memcg and kmem_cache debug support and memory initialization.
+     * Done outside of the IRQ disabled fastpath loop.
+     */
+    if (unlikely(!slab_post_alloc_hook(s, NULL, flags, size, p,
+            slab_want_init_on_alloc(flags, s), s->object_size))) {
+        return 0;
+    }
+    return i;
 }

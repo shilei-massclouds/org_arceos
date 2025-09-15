@@ -145,3 +145,143 @@ bool fwnode_property_present(const struct fwnode_handle *fwnode,
 
     return fwnode_call_bool_op(fwnode->secondary, property_present, propname);
 }
+
+/**
+ * device_property_read_u32_array - return a u32 array property of a device
+ * @dev: Device to get the property of
+ * @propname: Name of the property
+ * @val: The values are stored here or %NULL to return the number of values
+ * @nval: Size of the @val array
+ *
+ * Function reads an array of u32 properties with @propname from the device
+ * firmware description and stores them to @val if found.
+ *
+ * It's recommended to call device_property_count_u32() instead of calling
+ * this function with @val equals %NULL and @nval equals 0.
+ *
+ * Return: number of values if @val was %NULL,
+ *         %0 if the property was found (success),
+ *     %-EINVAL if given arguments are not valid,
+ *     %-ENODATA if the property does not have a value,
+ *     %-EPROTO if the property is not an array of numbers,
+ *     %-EOVERFLOW if the size of the property is not as expected.
+ *     %-ENXIO if no suitable firmware interface is present.
+ */
+int device_property_read_u32_array(const struct device *dev, const char *propname,
+                   u32 *val, size_t nval)
+{
+    return fwnode_property_read_u32_array(dev_fwnode(dev), propname, val, nval);
+}
+
+static int fwnode_property_read_int_array(const struct fwnode_handle *fwnode,
+                      const char *propname,
+                      unsigned int elem_size, void *val,
+                      size_t nval)
+{
+    int ret;
+
+    if (IS_ERR_OR_NULL(fwnode))
+        return -EINVAL;
+
+    ret = fwnode_call_int_op(fwnode, property_read_int_array, propname,
+                 elem_size, val, nval);
+    if (ret != -EINVAL)
+        return ret;
+
+    return fwnode_call_int_op(fwnode->secondary, property_read_int_array, propname,
+                  elem_size, val, nval);
+}
+
+/**
+ * fwnode_property_read_u32_array - return a u32 array property of firmware node
+ * @fwnode: Firmware node to get the property of
+ * @propname: Name of the property
+ * @val: The values are stored here or %NULL to return the number of values
+ * @nval: Size of the @val array
+ *
+ * Read an array of u32 properties with @propname from @fwnode store them to
+ * @val if found.
+ *
+ * It's recommended to call fwnode_property_count_u32() instead of calling
+ * this function with @val equals %NULL and @nval equals 0.
+ *
+ * Return: number of values if @val was %NULL,
+ *         %0 if the property was found (success),
+ *     %-EINVAL if given arguments are not valid,
+ *     %-ENODATA if the property does not have a value,
+ *     %-EPROTO if the property is not an array of numbers,
+ *     %-EOVERFLOW if the size of the property is not as expected,
+ *     %-ENXIO if no suitable firmware interface is present.
+ */
+int fwnode_property_read_u32_array(const struct fwnode_handle *fwnode,
+                   const char *propname, u32 *val, size_t nval)
+{
+    return fwnode_property_read_int_array(fwnode, propname, sizeof(u32),
+                          val, nval);
+}
+
+/**
+ * device_property_read_string_array - return a string array property of device
+ * @dev: Device to get the property of
+ * @propname: Name of the property
+ * @val: The values are stored here or %NULL to return the number of values
+ * @nval: Size of the @val array
+ *
+ * Function reads an array of string properties with @propname from the device
+ * firmware description and stores them to @val if found.
+ *
+ * It's recommended to call device_property_string_array_count() instead of calling
+ * this function with @val equals %NULL and @nval equals 0.
+ *
+ * Return: number of values read on success if @val is non-NULL,
+ *     number of values available on success if @val is NULL,
+ *     %-EINVAL if given arguments are not valid,
+ *     %-ENODATA if the property does not have a value,
+ *     %-EPROTO or %-EILSEQ if the property is not an array of strings,
+ *     %-EOVERFLOW if the size of the property is not as expected.
+ *     %-ENXIO if no suitable firmware interface is present.
+ */
+int device_property_read_string_array(const struct device *dev, const char *propname,
+                      const char **val, size_t nval)
+{
+    return fwnode_property_read_string_array(dev_fwnode(dev), propname, val, nval);
+}
+
+/**
+ * fwnode_property_read_string_array - return string array property of a node
+ * @fwnode: Firmware node to get the property of
+ * @propname: Name of the property
+ * @val: The values are stored here or %NULL to return the number of values
+ * @nval: Size of the @val array
+ *
+ * Read an string list property @propname from the given firmware node and store
+ * them to @val if found.
+ *
+ * It's recommended to call fwnode_property_string_array_count() instead of calling
+ * this function with @val equals %NULL and @nval equals 0.
+ *
+ * Return: number of values read on success if @val is non-NULL,
+ *     number of values available on success if @val is NULL,
+ *     %-EINVAL if given arguments are not valid,
+ *     %-ENODATA if the property does not have a value,
+ *     %-EPROTO or %-EILSEQ if the property is not an array of strings,
+ *     %-EOVERFLOW if the size of the property is not as expected,
+ *     %-ENXIO if no suitable firmware interface is present.
+ */
+int fwnode_property_read_string_array(const struct fwnode_handle *fwnode,
+                      const char *propname, const char **val,
+                      size_t nval)
+{
+    int ret;
+
+    if (IS_ERR_OR_NULL(fwnode))
+        return -EINVAL;
+
+    ret = fwnode_call_int_op(fwnode, property_read_string_array, propname,
+                 val, nval);
+    if (ret != -EINVAL)
+        return ret;
+
+    return fwnode_call_int_op(fwnode->secondary, property_read_string_array, propname,
+                  val, nval);
+}

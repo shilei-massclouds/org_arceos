@@ -216,3 +216,19 @@ struct address_space *folio_mapping(struct folio *folio)
 
     return mapping;
 }
+
+/**
+ * kmemdup_array - duplicate a given array.
+ *
+ * @src: array to duplicate.
+ * @count: number of elements to duplicate from array.
+ * @element_size: size of each element of array.
+ * @gfp: GFP mask to use.
+ *
+ * Return: duplicated array of @src or %NULL in case of error,
+ * result is physically contiguous. Use kfree() to free.
+ */
+void *kmemdup_array(const void *src, size_t count, size_t element_size, gfp_t gfp)
+{
+    return kmemdup(src, size_mul(element_size, count), gfp);
+}
