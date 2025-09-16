@@ -26,6 +26,7 @@ extern void cl_riscv_intc_init(struct device_node *node,
 
 extern void cl_sifive_gpio_driver_init(void);
 extern void cl_gpio_restart_driver_init(void);
+extern void cl_gpio_poweroff_driver_init(void);
 
 extern int cl_nvmem_init(void);
 extern void cl_mtdblock_tr_init(void);
@@ -145,6 +146,9 @@ int clinux_init(phys_addr_t dt_phys)
 
     // power/gpio-restart.c
     cl_gpio_restart_driver_init();
+
+    // power/gpio-poweroff.c
+    cl_gpio_poweroff_driver_init();
 
     cl_virtio_init();
     cl_virtio_mmio_init();

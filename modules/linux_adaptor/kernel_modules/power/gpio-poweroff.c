@@ -110,6 +110,11 @@ static struct platform_driver gpio_poweroff_driver = {
 
 module_platform_driver(gpio_poweroff_driver);
 
+void cl_gpio_poweroff_driver_init(void)
+{
+    gpio_poweroff_driver_init();
+}
+
 MODULE_AUTHOR("Jamie Lentin <jm@lentin.co.uk>");
 MODULE_DESCRIPTION("GPIO poweroff driver");
 MODULE_ALIAS("platform:poweroff-gpio");

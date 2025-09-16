@@ -1106,6 +1106,9 @@ int of_parse_phandle_with_args_map(const struct device_node *np,
     if (ret)
         return ret;
 
+    printk("%s: list(%s) cells(%s)\n", __func__, list_name, cells_name);
+    printk("%s: np(%s) args_count(%u) (%x,%x)\n",
+           __func__, np->name, out_args->args_count, out_args->args[0], out_args->args[1]);
     /* Get the #<list>-cells property */
     cur = out_args->np;
     ret = of_property_read_u32(cur, cells_name, &list_size);
