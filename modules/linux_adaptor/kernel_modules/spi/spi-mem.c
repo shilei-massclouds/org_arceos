@@ -410,7 +410,6 @@ int spi_mem_exec_op(struct spi_mem *mem, const struct spi_mem_op *op)
 
 	spi_message_init(&msg);
 
-    printk("%s: opcode[%u]\n", __func__, op->cmd.opcode);
 	tmpbuf[0] = op->cmd.opcode;
 	xfers[xferpos].tx_buf = tmpbuf;
 	xfers[xferpos].len = op->cmd.nbytes;

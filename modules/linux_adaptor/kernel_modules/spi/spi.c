@@ -3278,7 +3278,6 @@ int spi_register_controller(struct spi_controller *ctlr)
 	if (!dev)
 		return -ENODEV;
 
-    printk("%s: step1\n", __func__);
 	/*
 	 * Make sure all necessary hooks are implemented before registering
 	 * the SPI controller.
@@ -3342,7 +3341,6 @@ int spi_register_controller(struct spi_controller *ctlr)
 	for (idx = 0; idx < SPI_CS_CNT_MAX; idx++)
 		ctlr->last_cs[idx] = SPI_INVALID_CS;
 
-    printk("%s: step2\n", __func__);
 	status = device_add(&ctlr->dev);
 	if (status < 0)
 		goto free_bus_id;
@@ -3372,7 +3370,6 @@ int spi_register_controller(struct spi_controller *ctlr)
 		goto destroy_queue;
 	}
 
-    printk("%s: step3\n", __func__);
 	mutex_lock(&board_lock);
 	list_add_tail(&ctlr->list, &spi_controller_list);
 	list_for_each_entry(bi, &board_list, list)
@@ -4512,7 +4509,6 @@ static int __spi_sync(struct spi_device *spi, struct spi_message *message)
 	int status;
 	struct spi_controller *ctlr = spi->controller;
 
-    printk("%s: step1\n", __func__);
 	if (__spi_check_suspended(ctlr)) {
 		dev_warn_once(&spi->dev, "Attempted to sync while suspend\n");
 		return -ESHUTDOWN;
@@ -4542,7 +4538,6 @@ static int __spi_sync(struct spi_device *spi, struct spi_message *message)
 
 		__spi_transfer_message_noqueue(ctlr, message);
 
-        printk("%s: step2 status(%d)\n", __func__, message->status);
 		return message->status;
 	}
 
@@ -4566,7 +4561,6 @@ static int __spi_sync(struct spi_device *spi, struct spi_message *message)
 	message->complete = NULL;
 	message->context = NULL;
 
-    printk("%s: stepN\n", __func__);
 	return status;
 }
 
