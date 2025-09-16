@@ -18,7 +18,6 @@
 #include "adaptor.h"
 
 //#define TEST_BLOCK
-//#define TEST_EXT2
 //#define TEST_EXT4
 
 extern void cl_gpiolib_dev_init(void);
