@@ -77,11 +77,14 @@ OBJS += kernel/nsproxy.o kernel/cpu.o kernel/user_namespace.o
 OBJS += kernel/panic.o kernel/exit.o kernel/cred.o kernel/softirq.o
 OBJS += kernel/extable.o kernel/tracepoint.o kernel/jump_label.o
 OBJS += kernel/irq_work.o kernel/params.o kernel/reboot.o
-OBJS += kernel/notifier.o
+OBJS += kernel/notifier.o kernel/smp.o
 OBJS += kernel/stacktrace.o			# for arch/riscv/kernel
 OBJS += kernel/riscv_jump_label.o	# for arch/riscv/kernel
 OBJS += kernel/patch.o				# for arch/riscv/kernel
 OBJS += kernel/reset.o				# for arch/riscv/kernel
+OBJS += kernel/riscv_smp.o			# for arch/riscv/kernel
+OBJS += kernel/setup.o				# for arch/riscv/kernel
+OBJS += kernel/sbi.o kernel/sbi_ecall.o kernel/sbi-ipi.o	# for arch/riscv/kernel
 OBJS += block/genhd.o block/blk-mq.o block/blk-mq-virtio.o
 OBJS += block/blk-mq-cpumap.o block/blk-mq-tag.o block/blk-core.o
 OBJS += block/blk-stat.o block/blk-settings.o block/bio.o
@@ -106,14 +109,6 @@ OBJS += regmap/regcache-rbtree.o
 OBJS += regmap/regcache-maple.o
 OBJS += regmap/regcache-flat.o
 
-#OBJS += fs_types.o
-#OBJS += mpage.o
-
-# ext2 fs
-#OBJS += ext2/super.o ext2/balloc.o ext2/dir.o ext2/file.o
-#OBJS += ext2/ialloc.o ext2/inode.o
-#OBJS += ext2/ioctl.o ext2/namei.o ext2/super.o ext2/symlink.o
-
 # ext4 fs
 OBJS += ext4/super.o ext4/balloc.o ext4/bitmap.o ext4/block_validity.o
 OBJS += ext4/ext4_jbd2.o ext4/extents.o ext4/extents_status.o ext4/file.o ext4/dir.o
@@ -130,7 +125,7 @@ OBJS += jbd2/checkpoint.o jbd2/commit.o jbd2/journal.o jbd2/recovery.o
 OBJS += jbd2/revoke.o jbd2/transaction.o
 
 # Adaptor files, we will re-write them in Rust in future.
-OBJS += cl_mine.o main.o smp.o softirq.o panic.o \
+OBJS += cl_mine.o main.o softirq.o panic.o \
 		riscv_irq.o \
 		cl_dummy.o \
 		mount_ops.o cl_syscalls.o \

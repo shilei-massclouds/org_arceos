@@ -9,12 +9,15 @@
 #include <linux/of_fdt.h>
 #include <linux/ftrace.h>
 
+// Only for riscv64
+#include <asm/sbi.h>
+
 #include "mm/slab.h"
 #include "base/base.h"
 #include "block/blk.h"
 #include "adaptor.h"
 
-#define TEST_BLOCK
+//#define TEST_BLOCK
 //#define TEST_EXT2
 //#define TEST_EXT4
 
@@ -73,6 +76,11 @@ int clinux_init(phys_addr_t dt_phys)
     printk("cLinux base is starting ...\n");
 
     clinux_starting = 1;
+
+    smp_setup_processor_id();
+
+    // Only for riscv64
+    sbi_init();
 
     early_init_dt_verify(__va(dt_phys), dt_phys);
     early_init_dt_scan_chosen(boot_command_line);

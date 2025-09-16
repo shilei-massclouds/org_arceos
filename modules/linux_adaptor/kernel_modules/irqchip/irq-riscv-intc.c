@@ -227,6 +227,7 @@ static int __init riscv_intc_init(struct device_node *node,
 	 * for the INTC DT node belonging to boot CPU (or boot HART).
 	 */
 	if (riscv_hartid_to_cpuid(hartid) != smp_processor_id()) {
+    printk("%s: %lu\n", __func__, riscv_hartid_to_cpuid(hartid));
 		/*
 		 * The INTC nodes of each CPU are suppliers for downstream
 		 * interrupt controllers (such as PLIC, IMSIC and APLIC

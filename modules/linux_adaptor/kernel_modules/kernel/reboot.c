@@ -311,3 +311,8 @@ int devm_register_sys_off_handler(struct device *dev,
     return devm_add_action_or_reset(dev, devm_unregister_sys_off_handler,
                     handler);
 }
+
+int register_restart_handler(struct notifier_block *nb)
+{
+    return atomic_notifier_chain_register(&restart_handler_list, nb);
+}

@@ -71,7 +71,6 @@ static void test_read(const struct address_space *aspace, int index)
 
     __free_page(folio_page(folio, 0));
 
-    //machine_power_off();
     PANIC("Test block ok!");
 }
 

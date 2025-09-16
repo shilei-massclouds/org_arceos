@@ -615,34 +615,10 @@ void flush_icache_all(void)
      */
     RISCV_FENCE(w, o);
 
-#if 0
     if (riscv_use_sbi_for_rfence())
         sbi_remote_fence_i(NULL);
     else
         on_each_cpu(ipi_remote_fence_i, NULL, 1);
-#endif
-    sbi_remote_fence_i(NULL);
-    pr_notice("%s: No impl.", __func__);
-}
-
-static int __sbi_rfence_v01(int fid, const struct cpumask *cpu_mask,
-                unsigned long start, unsigned long size,
-                unsigned long arg4, unsigned long arg5)
-{
-    pr_notice("%s: No impl.", __func__);
-    return 0;
-}
-
-/**
- * sbi_remote_fence_i() - Execute FENCE.I instruction on given remote harts.
- * @cpu_mask: A cpu mask containing all the target harts.
- *
- * Return: 0 on success, appropriate linux error code otherwise.
- */
-int sbi_remote_fence_i(const struct cpumask *cpu_mask)
-{
-    return __sbi_rfence_v01(SBI_EXT_RFENCE_REMOTE_FENCE_I,
-                cpu_mask, 0, 0, 0, 0);
 }
 
 /*
