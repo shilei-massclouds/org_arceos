@@ -2051,7 +2051,6 @@ static int spi_nor_read(struct mtd_info *mtd, loff_t from, size_t len,
 	ssize_t ret;
 
 	dev_dbg(nor->dev, "from 0x%08x, len %zd\n", (u32)from, len);
-	printk("%s: from 0x%x, len %d\n", __func__, (u32)from, len);
 
 	ret = spi_nor_prep_and_lock_rd(nor, from_lock, len_lock);
 	if (ret)
@@ -2596,9 +2595,6 @@ static int spi_nor_set_addr_nbytes(struct spi_nor *nor)
 		return -EINVAL;
 	}
 
-    printk("%s: stepN addr_nbytes(%u) %u, %u\n",
-           __func__, nor->addr_nbytes, nor->flags & SNOR_F_4B_OPCODES,
-           !(nor->flags & SNOR_F_HAS_4BAIT));
 	/* Set 4byte opcodes when possible. */
 	if (nor->addr_nbytes == 4 && nor->flags & SNOR_F_4B_OPCODES &&
 	    !(nor->flags & SNOR_F_HAS_4BAIT))
@@ -3611,7 +3607,6 @@ static int spi_nor_probe(struct spi_mem *spimem)
 	if (!nor->mtd.name)
 		nor->mtd.name = spi_mem_get_name(spimem);
 
-    printk("%s: step1\n", __func__);
 	/*
 	 * For some (historical?) reason many platforms provide two different
 	 * names in flash_platform_data: "name" and "type". Quite often name is
@@ -3629,10 +3624,8 @@ static int spi_nor_probe(struct spi_mem *spimem)
 	if (ret)
 		return ret;
 
-    printk("%s: step2\n", __func__);
 	spi_nor_debugfs_register(nor);
 
-    printk("%s: step3\n", __func__);
 	/*
 	 * None of the existing parts have > 512B pages, but let's play safe
 	 * and add this logic so that if anyone ever adds support for such

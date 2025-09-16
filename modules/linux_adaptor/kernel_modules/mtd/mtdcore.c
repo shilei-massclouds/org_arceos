@@ -751,20 +751,17 @@ int add_mtd_device(struct mtd_info *mtd)
 		goto fail_added;
 	}
 
-    printk("%s: step1\n", __func__);
 	/* Add the nvmem provider */
 	error = mtd_nvmem_add(mtd);
 	if (error)
 		goto fail_nvmem_add;
 
-    printk("%s: step2\n", __func__);
 	mtd_debugfs_populate(mtd);
 
 	device_create(&mtd_class, mtd->dev.parent, MTD_DEVT(i) + 1, NULL,
 		      "mtd%dro", i);
 
 	pr_debug("mtd: Giving out device %d to %s\n", i, mtd->name);
-	printk("---------- mtd: Giving out device %d to %s\n", i, mtd->name);
 	/* No need to get a refcount on the module containing
 	   the notifier, since we hold the mtd_table_mutex */
 	list_for_each_entry(not, &mtd_notifiers, list)
@@ -772,7 +769,6 @@ int add_mtd_device(struct mtd_info *mtd)
 
 	mutex_unlock(&mtd_table_mutex);
 
-    printk("%s: step3\n", __func__);
 	if (of_property_read_bool(mtd_get_of_node(mtd), "linux,rootfs")) {
 		if (IS_BUILTIN(CONFIG_MTD)) {
 			pr_info("mtd: setting mtd%d (%s) as root device\n", mtd->index, mtd->name);
@@ -1085,7 +1081,6 @@ int mtd_device_parse_register(struct mtd_info *mtd, const char * const *types,
 	else
 		ret = 0;
 
-    printk("%s: step1\n", __func__);
 	if (ret)
 		goto out;
 
@@ -1510,7 +1505,7 @@ static void mtd_update_ecc_stats(struct mtd_info *mtd, struct mtd_info *master,
 int mtd_read(struct mtd_info *mtd, loff_t from, size_t len, size_t *retlen,
 	     u_char *buf)
 {
-    printk("%s: from(%lx) len(%lu)\n", __func__, from, len);
+    pr_debug("%s: from(%lx) len(%lu)", __func__, from, len);
 	struct mtd_oob_ops ops = {
 		.len = len,
 		.datbuf = buf,
@@ -1613,7 +1608,6 @@ static int mtd_read_oob_std(struct mtd_info *mtd, loff_t from,
 	int ret;
 
 	from = mtd_get_master_ofs(mtd, from);
-    printk("%s: step1 master(%s) (%lx)\n", __func__, master->name, master->_read);
 	if (master->_read_oob)
 		ret = master->_read_oob(master, from, ops);
 	else

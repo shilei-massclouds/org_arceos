@@ -809,8 +809,6 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
 
 	dev_dbg(&gdev->dev, "registered GPIOs %u to %u on %s\n", gdev->base,
 		gdev->base + gdev->ngpio - 1, gdev->label);
-	printk("registered GPIOs %u to %u on %s\n",
-           gdev->base, gdev->base + gdev->ngpio - 1, gdev->label);
 
 	return 0;
 
@@ -1235,13 +1233,10 @@ struct gpio_device *gpio_device_find(const void *data,
 
 	guard(srcu)(&gpio_devices_srcu);
 
-    printk("%s: step1\n", __func__);
 	list_for_each_entry_srcu(gdev, &gpio_devices, list,
 				 srcu_read_lock_held(&gpio_devices_srcu)) {
-    printk("%s: step2 (%s)\n", __func__, dev_name(&gdev->dev));
 		if (!device_is_registered(&gdev->dev))
 			continue;
-    printk("%s: step3\n", __func__);
 
 		guard(srcu)(&gdev->srcu);
 
@@ -4312,7 +4307,6 @@ static struct gpio_desc *gpiod_find_by_fwnode(struct fwnode_handle *fwnode,
 		dev_dbg(consumer, "using DT '%pfw' for '%s' GPIO lookup\n", fwnode, name);
 		desc = of_find_gpio(to_of_node(fwnode), con_id, idx, lookupflags);
 	} else if (is_acpi_node(fwnode)) {
-    printk("%s: step3\n", __func__);
 		dev_dbg(consumer, "using ACPI '%pfw' for '%s' GPIO lookup\n", fwnode, name);
 		desc = acpi_find_gpio(fwnode, con_id, idx, flags, lookupflags);
 	} else if (is_software_node(fwnode)) {
@@ -4340,8 +4334,6 @@ struct gpio_desc *gpiod_find_and_request(struct device *consumer,
 	struct gpio_desc *desc = NULL;
 	int ret = 0;
 
-    printk("%s: step1 name(%s) consumer(%s)\n",
-           __func__, name, dev_name(consumer));
 	scoped_guard(srcu, &gpio_devices_srcu) {
 		desc = gpiod_find_by_fwnode(fwnode, consumer, con_id, idx,
 					    &flags, &lookupflags);
@@ -4358,7 +4350,6 @@ struct gpio_desc *gpiod_find_and_request(struct device *consumer,
 
 		if (IS_ERR(desc)) {
 			dev_dbg(consumer, "No GPIO consumer %s found\n", name);
-			printk("No GPIO consumer %s found\n", name);
 			return desc;
 		}
 

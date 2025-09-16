@@ -1479,11 +1479,6 @@ retry:
             goto err;
     }
 
-    {
-        pr_err("%s: enabled [%d]", __func__, trace_mm_filemap_get_pages_enabled());
-        pr_err("%s: enabled [%d]", __func__, static_key_enabled(&__tracepoint_mm_filemap_get_pages.key));
-        pr_err("%s: funcs_ptr (%lx)", __func__, __tracepoint_mm_filemap_get_pages.funcs);
-    }
     trace_mm_filemap_get_pages(mapping, index, last_index - 1);
     return 0;
 err:

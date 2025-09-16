@@ -2579,11 +2579,6 @@ static int ext4_do_writepages(struct mpage_da_data *mpd)
 	struct blk_plug plug;
 	bool give_up_on_write = false;
 
-    {
-        pr_err("%s: enabled [%d]", __func__, trace_ext4_writepages_enabled());
-        pr_err("%s: enabled [%d]", __func__, static_key_enabled(&__tracepoint_ext4_writepages.key));
-        pr_err("%s: funcs_ptr (%lx)", __func__, __tracepoint_ext4_writepages.funcs);
-    }
 	trace_ext4_writepages(inode, wbc);
 
 	/*

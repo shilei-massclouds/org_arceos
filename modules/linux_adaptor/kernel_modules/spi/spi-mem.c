@@ -212,10 +212,6 @@ static int spi_mem_check_op(const struct spi_mem_op *op)
 	    !spi_mem_buswidth_is_valid(op->data.buswidth))
 		return -EINVAL;
 
-    {
-        printk("-------- %s: object_is_on_stack(%u)\n",
-               __func__, object_is_on_stack(op->data.buf.in));
-    }
 #if 0
 	/* Buffers must be DMA-able. */
 	if (WARN_ON_ONCE(op->data.dir == SPI_MEM_DATA_IN &&
@@ -226,7 +222,7 @@ static int spi_mem_check_op(const struct spi_mem_op *op)
 			 object_is_on_stack(op->data.buf.out)))
 		return -EINVAL;
 #endif
-    pr_err("%s: Disable check!", __func__);
+    pr_notice("%s: Disable check!", __func__);
 
 	return 0;
 }
