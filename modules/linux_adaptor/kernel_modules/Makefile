@@ -37,6 +37,7 @@ OBJS += pci/slot.o pci/quirks.o pci/host-bridge.o pci/vc.o pci/vpd.o
 OBJS += pci/setup-res.o
 OBJS += pcie/aspm.o pcie/rcec.o
 OBJS += pci-controller/pci-host-generic.o pci-controller/pci-host-common.o
+OBJS += nvme_host/pci.o
 
 OBJS += init/do_mounts.o init/main.o
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o

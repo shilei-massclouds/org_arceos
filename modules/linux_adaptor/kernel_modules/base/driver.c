@@ -36,6 +36,7 @@ int driver_register(struct device_driver *drv)
         return -EBUSY;
     }
 
+    printk("%s: ...\n", __func__);
     ret = bus_add_driver(drv);
     if (ret)
         return ret;
@@ -50,14 +51,4 @@ int driver_register(struct device_driver *drv)
 #endif
 
     return ret;
-
-#if 0
-    int error;
-    printk("%s: drv [%s] bus [%s]\n", __func__, drv->name, drv->bus->name);
-    error = driver_attach(drv);
-    if (error) {
-        booter_panic("driver attaches device error!");
-    }
-    return 0;
-#endif
 }

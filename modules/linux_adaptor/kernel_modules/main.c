@@ -26,6 +26,7 @@ extern int cl_of_platform_default_populate_init(void);
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
 
+extern int cl_pci_driver_init(void);
 extern void cl_gen_pci_driver_init(void);
 
 extern void cl_sifive_gpio_driver_init(void);
@@ -34,6 +35,7 @@ extern void cl_gpio_poweroff_driver_init(void);
 
 extern int cl_nvmem_init(void);
 extern void cl_mtdblock_tr_init(void);
+extern int cl_nvme_init(void);
 
 extern int cl_spi_init(void);
 extern void cl_sifive_spi_driver_init(void);
@@ -166,6 +168,9 @@ int clinux_init(phys_addr_t dt_phys)
     // power/gpio-poweroff.c
     cl_gpio_poweroff_driver_init();
 
+    // pci/pci-driver.c
+    cl_pci_driver_init();
+
     cl_virtio_init();
     cl_virtio_mmio_init();
     cl_virtio_blk_init();
@@ -187,6 +192,9 @@ int clinux_init(phys_addr_t dt_phys)
 
     // spi/spi-sifive.c
     cl_sifive_spi_driver_init();
+
+    // nvme/host/pci.c
+    cl_nvme_init();
 
     // Set ROOT_DEV based on linux commandline.
     prepare_namespace();

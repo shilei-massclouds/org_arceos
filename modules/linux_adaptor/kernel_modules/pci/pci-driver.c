@@ -1732,3 +1732,8 @@ static int __init pci_driver_init(void)
 	return 0;
 }
 postcore_initcall(pci_driver_init);
+
+int cl_pci_driver_init(void)
+{
+    return pci_driver_init();
+}
