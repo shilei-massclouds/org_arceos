@@ -184,3 +184,30 @@ void of_msi_configure(struct device *dev, struct device_node *np)
 #endif
     pr_notice("%s: No impl.", __func__);
 }
+
+/**
+ * of_msi_get_domain - Use msi-parent to find the relevant MSI domain
+ * @dev: device for which the domain is requested
+ * @np: device node for @dev
+ * @token: bus type for this domain
+ *
+ * Parse the msi-parent property and returns the corresponding MSI domain.
+ *
+ * Returns: the MSI domain for this device (or NULL on failure).
+ */
+struct irq_domain *of_msi_get_domain(struct device *dev,
+                     struct device_node *np,
+                     enum irq_domain_bus_token token)
+{
+    struct of_phandle_iterator it;
+    struct irq_domain *d;
+    int err;
+
+    of_for_each_phandle(&it, err, np, "msi-parent", "#msi-cells", 0) {
+        d = irq_find_matching_host(it.node, token);
+        if (d)
+            return d;
+    }
+
+    return NULL;
+}

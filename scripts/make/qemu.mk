@@ -23,6 +23,10 @@ else ifeq ($(ARCH), riscv64)
     override SMP := 2
   else
     machine := virt
+    ifeq ($(NVME), y)
+      override BLK := n
+      override ROOT_DEV := nvme0n1
+    endif
   endif
 else ifeq ($(ARCH), aarch64)
   ifeq ($(PLAT_NAME), aarch64-raspi4)
@@ -61,6 +65,10 @@ qemu_args-$(PFLASH) += \
 
 qemu_args-$(MTD) += \
   -drive if=mtd,file=$(DISK_IMG),format=raw
+
+qemu_args-$(NVME) += \
+  -device nvme,serial=deadbeef,drive=nvme0 \
+  -drive if=none,file=$(DISK_IMG),id=nvme0,format=raw
 
 qemu_args-$(BLK) += \
   -device virtio-blk-$(vdev-suffix),drive=disk0 \

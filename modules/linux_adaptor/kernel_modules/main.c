@@ -26,6 +26,8 @@ extern int cl_of_platform_default_populate_init(void);
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
 
+extern void cl_gen_pci_driver_init(void);
+
 extern void cl_sifive_gpio_driver_init(void);
 extern void cl_gpio_restart_driver_init(void);
 extern void cl_gpio_poweroff_driver_init(void);
@@ -70,9 +72,12 @@ int clinux_started = 0;
 
 bool static_key_initialized __read_mostly;
 
+unsigned long cl_fixaddr_start;
+
 int clinux_init(phys_addr_t dt_phys)
 {
     printk("cLinux base is starting ...\n");
+    cl_fixaddr_start = FIXADDR_START;
 
     clinux_starting = 1;
 
@@ -105,12 +110,13 @@ int clinux_init(phys_addr_t dt_phys)
     radix_tree_init();
     maple_tree_init();
     trace_init();
+    workqueue_init_early();
+    devices_init();
     buses_init();
     classes_init();
     platform_bus_init();
     buffer_init();
     vfs_caches_init();
-    workqueue_init_early();
 
     cl_init_bio();
     cl_sg_pool_init();
@@ -122,6 +128,9 @@ int clinux_init(phys_addr_t dt_phys)
 
     unflatten_device_tree();
     cl_of_platform_default_populate_init();
+
+    // pci/controller/pci-host-generic.c
+    cl_gen_pci_driver_init();
 
     {
         static struct device_node riscv_intc_node;

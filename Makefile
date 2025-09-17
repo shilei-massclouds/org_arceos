@@ -65,6 +65,7 @@ else
   PFLASH_IMG :=
 endif
 MTD ?= n
+NVME ?= y
 
 DISK_IMG ?= disk.img
 # Filesystem type: fat32, ext2, ext4

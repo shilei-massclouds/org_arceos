@@ -1178,3 +1178,60 @@ put:
     of_node_put(new);
     return ret;
 }
+
+/**
+ * of_find_node_by_type - Find a node by its "device_type" property
+ * @from:   The node to start searching from, or NULL to start searching
+ *      the entire device tree. The node you pass will not be
+ *      searched, only the next one will; typically, you pass
+ *      what the previous call returned. of_node_put() will be
+ *      called on from for you.
+ * @type:   The type string to match against
+ *
+ * Return: A node pointer with refcount incremented, use
+ * of_node_put() on it when done.
+ */
+struct device_node *of_find_node_by_type(struct device_node *from,
+    const char *type)
+{
+    struct device_node *np;
+    unsigned long flags;
+
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    for_each_of_allnodes_from(from, np)
+        if (__of_node_is_type(np, type) && of_node_get(np))
+            break;
+    of_node_put(from);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return np;
+}
+
+/**
+ * of_find_compatible_node - Find a node based on type and one of the
+ *                                tokens in its "compatible" property
+ * @from:   The node to start searching from or NULL, the node
+ *      you pass will not be searched, only the next one
+ *      will; typically, you pass what the previous call
+ *      returned. of_node_put() will be called on it
+ * @type:   The type string to match "device_type" or NULL to ignore
+ * @compatible: The string to match to one of the tokens in the device
+ *      "compatible" list.
+ *
+ * Return: A node pointer with refcount incremented, use
+ * of_node_put() on it when done.
+ */
+struct device_node *of_find_compatible_node(struct device_node *from,
+    const char *type, const char *compatible)
+{
+    struct device_node *np;
+    unsigned long flags;
+
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    for_each_of_allnodes_from(from, np)
+        if (__of_device_is_compatible(np, compatible, type, NULL) &&
+            of_node_get(np))
+            break;
+    of_node_put(from);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return np;
+}

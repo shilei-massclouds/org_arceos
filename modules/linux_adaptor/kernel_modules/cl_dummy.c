@@ -674,12 +674,6 @@ notrace void touch_softlockup_watchdog(void)
     pr_notice("%s: No impl.", __func__);
 }
 
-struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode)
-{
-    pr_notice("%s: No impl.", __func__);
-    return NULL;
-}
-
 bool acpi_driver_match_device(struct device *dev,
                   const struct device_driver *drv)
 {
@@ -789,4 +783,77 @@ void acpi_gpiochip_add(struct gpio_chip *chip)
 void acpi_gpiochip_request_interrupts(struct gpio_chip *chip)
 {
     pr_notice("%s: No impl.", __func__);
+}
+
+struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus)
+{
+    pr_err("%s: No impl.", __func__);
+    return NULL;
+}
+
+bool pci_acpi_preserve_config(struct pci_host_bridge *host_bridge)
+{
+    pr_err("%s: No impl.", __func__);
+    return false;
+}
+
+void pci_set_acpi_fwnode(struct pci_dev *dev)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int pci_acpi_program_hp_params(struct pci_dev *dev)
+{
+    pr_err("%s: No impl.", __func__);
+    return -ENODEV;
+}
+
+void pci_msi_init(struct pci_dev *dev)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+void pci_msix_init(struct pci_dev *dev)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+void pm_runtime_forbid(struct device *dev)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int __pm_runtime_set_status(struct device *dev, unsigned int status)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+void pm_runtime_enable(struct device *dev)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int pci_dev_acpi_reset(struct pci_dev *dev, bool probe)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+{
+    pr_err("%s: No impl.", __func__);
+    return NULL;
+}
+
+int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+int pci_proc_attach_device(struct pci_dev *dev)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
 }

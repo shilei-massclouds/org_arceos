@@ -47,3 +47,24 @@ void *vmalloc_noprof(unsigned long size)
                 __builtin_return_address(0));
 #endif
 }
+
+extern void *
+cl_vmap_range(unsigned long addr, phys_addr_t phys, unsigned long size, pgprot_t prot);
+
+int vmap_page_range(unsigned long addr, unsigned long end,
+            phys_addr_t phys_addr, pgprot_t prot)
+{
+    printk("%s: (%lx,%lx) -> %lx [%x]\n", __func__, addr, end, phys_addr, prot);
+    return cl_vmap_range(addr, phys_addr, end - addr, prot);
+#if 0
+    int err;
+
+    err = vmap_range_noflush(addr, end, phys_addr, pgprot_nx(prot),
+                 ioremap_max_page_shift);
+    flush_cache_vmap(addr, end);
+    if (!err)
+        err = kmsan_ioremap_page_range(addr, end, phys_addr, prot,
+                           ioremap_max_page_shift);
+    return err;
+#endif
+}

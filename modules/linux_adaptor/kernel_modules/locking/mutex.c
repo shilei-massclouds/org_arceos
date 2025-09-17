@@ -453,3 +453,31 @@ int __sched mutex_trylock(struct mutex *lock)
 
     return locked;
 }
+
+static noinline int __sched
+__mutex_lock_killable_slowpath(struct mutex *lock)
+{
+    return __mutex_lock(lock, TASK_KILLABLE, 0, NULL, _RET_IP_);
+}
+
+/**
+ * mutex_lock_killable() - Acquire the mutex, interruptible by fatal signals.
+ * @lock: The mutex to be acquired.
+ *
+ * Lock the mutex like mutex_lock().  If a signal which will be fatal to
+ * the current process is delivered while the process is sleeping, this
+ * function will return without acquiring the mutex.
+ *
+ * Context: Process context.
+ * Return: 0 if the lock was successfully acquired or %-EINTR if a
+ * fatal signal arrived.
+ */
+int __sched mutex_lock_killable(struct mutex *lock)
+{
+    might_sleep();
+
+    if (__mutex_trylock_fast(lock))
+        return 0;
+
+    return __mutex_lock_killable_slowpath(lock);
+}

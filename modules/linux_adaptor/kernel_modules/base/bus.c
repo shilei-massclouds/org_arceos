@@ -8,6 +8,9 @@
 /* /sys/bus */
 static struct kset *bus_kset;
 
+/* /sys/devices/system */
+static struct kset *system_kset;
+
 // Note: fulfill it.
 static const struct kobj_type bus_ktype = {
     /*
@@ -474,6 +477,20 @@ out_put_bus:
     return error;
 }
 
+struct kset *bus_get_kset(const struct bus_type *bus)
+{
+    struct subsys_private *sp = bus_to_subsys(bus);
+    struct kset *kset;
+
+    if (!sp)
+        return NULL;
+
+    kset = &sp->subsys;
+    subsys_put(sp);
+
+    return kset;
+}
+
 static const struct kset_uevent_ops bus_uevent_ops = {
     .filter = bus_uevent_filter,
 };
@@ -484,7 +501,6 @@ int __init buses_init(void)
     if (!bus_kset)
         return -ENOMEM;
 
-#if 0
     system_kset = kset_create_and_add("system", NULL, &devices_kset->kobj);
     if (!system_kset) {
         /* Do error handling here as devices_init() do */
@@ -493,7 +509,6 @@ int __init buses_init(void)
         pr_err("%s: failed to create and add kset 'bus'\n", __func__);
         return -ENOMEM;
     }
-#endif
 
     return 0;
 }

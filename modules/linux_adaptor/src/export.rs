@@ -5,10 +5,9 @@ use alloc::alloc::{alloc, Layout};
 use axalloc::global_allocator;
 use axhal::mem::PAGE_SIZE_4K;
 use axhal::mem::MemRegionFlags;
-use memory_addr::align_down_4k;
+use memory_addr::{align_down_4k, is_aligned_4k};
 use axtask::current;
 use crate::kallsyms::get_ksym;
-use axconfig::plat::{KERNEL_ASPACE_BASE, KERNEL_ASPACE_SIZE};
 
 const CL_TASK_STATE_MASK:   usize = 0x00000003;
 
@@ -105,13 +104,16 @@ pub extern "C" fn cl_get_ksym(addr: usize, s: *mut u8, size: usize) {
     }
 }
 
-const FIXADDR_TOP: usize = KERNEL_ASPACE_BASE + KERNEL_ASPACE_SIZE;
+unsafe extern "C" {
+    static cl_fixaddr_start: usize;
+}
 
 /// Set fixmap.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_set_fixmap(idx: usize, phys: usize, prot: usize) -> usize {
-    let va = FIXADDR_TOP - PAGE_SIZE_4K * idx;
-    error!("FIX_TOP: {:#x}; va: {:#x}", FIXADDR_TOP, va);
+    let fixaddr_start = unsafe { cl_fixaddr_start };
+    let va = fixaddr_start - PAGE_SIZE_4K * idx;
+    error!("FIXADDR_START: {:#x}; va: {:#x}", fixaddr_start, va);
 
     let aspace = axmm::kernel_aspace();
     if prot == 0 {
@@ -134,4 +136,35 @@ pub extern "C" fn cl_set_fixmap(idx: usize, phys: usize, prot: usize) -> usize {
 
     error!("idx({:#x}) phys({:#x}) prot({:#x})", idx, phys, prot);
     va + (phys & (PAGE_SIZE_4K - 1))
+}
+
+const _PAGE_READ : usize = 1 << 1;
+const _PAGE_WRITE: usize = 1 << 2;
+const _PAGE_EXEC : usize = 1 << 3;
+
+/// VMalloc range linear-map
+#[unsafe(no_mangle)]
+pub extern "C" fn cl_vmap_range(va: usize, pa: usize, size: usize, prot: usize) -> usize {
+    assert!(is_aligned_4k(va));
+    assert!(is_aligned_4k(pa));
+    assert!(is_aligned_4k(size));
+
+    let mut flags: MemRegionFlags = MemRegionFlags::RESERVED;
+    if (prot & _PAGE_READ) != 0 {
+        flags |= MemRegionFlags::READ;
+    }
+    if (prot & _PAGE_WRITE) != 0 {
+        flags |= MemRegionFlags::WRITE;
+    }
+    if (prot & _PAGE_EXEC) != 0 {
+        flags |= MemRegionFlags::EXECUTE;
+    }
+
+    let aspace = axmm::kernel_aspace();
+    aspace.lock()
+        .map_linear(va.into(), pa.into(), size, flags.into())
+        .unwrap_or_else(|e| {
+            panic!("bad fixmap {va:#x} -> {pa:#x}({prot:#x}): {}", e)
+        });
+    0
 }
