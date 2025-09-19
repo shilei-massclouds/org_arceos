@@ -717,7 +717,26 @@ static bool bvec_split_segs(const struct queue_limits *lim,
         const struct bio_vec *bv, unsigned *nsegs, unsigned *bytes,
         unsigned max_segs, unsigned max_bytes)
 {
-    PANIC("");
+    unsigned max_len = min(max_bytes, UINT_MAX) - *bytes;
+    unsigned len = min(bv->bv_len, max_len);
+    unsigned total_len = 0;
+    unsigned seg_size = 0;
+
+    while (len && *nsegs < max_segs) {
+        seg_size = get_max_segment_size(lim, bvec_phys(bv) + total_len, len);
+
+        (*nsegs)++;
+        total_len += seg_size;
+        len -= seg_size;
+
+        if ((bv->bv_offset + total_len) & lim->virt_boundary_mask)
+            break;
+    }
+
+    *bytes += total_len;
+
+    /* tell the caller to split the bvec if it is too big to fit */
+    return len > 0 || bv->bv_len > max_len;
 }
 
 /**
@@ -831,4 +850,37 @@ struct bio *bio_split_rw(struct bio *bio, const struct queue_limits *lim,
     return bio_submit_split(bio,
         bio_split_rw_at(bio, lim, nr_segs,
             get_max_io_size(bio, lim) << SECTOR_SHIFT));
+}
+
+unsigned int blk_recalc_rq_segments(struct request *rq)
+{
+    unsigned int nr_phys_segs = 0;
+    unsigned int bytes = 0;
+    struct req_iterator iter;
+    struct bio_vec bv;
+
+    if (!rq->bio)
+        return 0;
+
+    switch (bio_op(rq->bio)) {
+    case REQ_OP_DISCARD:
+    case REQ_OP_SECURE_ERASE:
+        if (queue_max_discard_segments(rq->q) > 1) {
+            struct bio *bio = rq->bio;
+
+            for_each_bio(bio)
+                nr_phys_segs++;
+            return nr_phys_segs;
+        }
+        return 1;
+    case REQ_OP_WRITE_ZEROES:
+        return 0;
+    default:
+        break;
+    }
+
+    rq_for_each_bvec(bv, rq, iter)
+        bvec_split_segs(&rq->q->limits, &bv, &nr_phys_segs, &bytes,
+                UINT_MAX, UINT_MAX);
+    return nr_phys_segs;
 }

@@ -295,7 +295,6 @@ CL_MINE(wait_for_completion_io)
 CL_MINE(__page_file_index)
 
 CL_MINE(rotate_reclaimable_page)
-CL_MINE(blk_recalc_rq_segments)
 CL_MINE(blk_dump_rq_flags)
 CL_MINE(bio_truncate)
 

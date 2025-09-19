@@ -19,6 +19,7 @@ else ifeq ($(ARCH), riscv64)
     override PFLASH := n
     override BLK := n
     override MTD := y
+    override NVME := n
     override ROOT_DEV := mtdblock0
     override SMP := 2
   else

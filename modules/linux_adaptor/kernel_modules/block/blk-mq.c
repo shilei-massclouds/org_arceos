@@ -2542,7 +2542,6 @@ bool blk_update_request(struct request *req, blk_status_t error,
         req->nr_phys_segments = blk_recalc_rq_segments(req);
     }
 
-    PANIC("");
     return true;
 }
 
