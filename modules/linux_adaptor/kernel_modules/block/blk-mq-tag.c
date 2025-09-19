@@ -187,3 +187,9 @@ void blk_mq_put_tag(struct blk_mq_tags *tags, struct blk_mq_ctx *ctx,
         sbitmap_queue_clear(&tags->breserved_tags, tag, ctx->cpu);
     }
 }
+
+void blk_mq_put_tags(struct blk_mq_tags *tags, int *tag_array, int nr_tags)
+{
+    sbitmap_queue_clear_batch(&tags->bitmap_tags, tags->nr_reserved_tags,
+                    tag_array, nr_tags);
+}

@@ -28,6 +28,7 @@
  */
 void dump_stack_print_info(const char *log_lvl)
 {
+#if 0
     printk("\n%sCPU: %d UID: %u PID: %d Comm: %.20s " BUILD_ID_FMT "\n",
            log_lvl, raw_smp_processor_id(),
            __kuid_val(current_real_cred()->euid),
@@ -35,7 +36,6 @@ void dump_stack_print_info(const char *log_lvl)
            kexec_crash_loaded() ? "Kdump: loaded " : "",
            BUILD_ID_VAL);
 
-#if 0
     if (get_taint())
         printk("%s%s\n", log_lvl, print_tainted_verbose());
 

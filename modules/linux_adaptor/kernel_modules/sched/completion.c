@@ -58,6 +58,12 @@ wait_for_common_io(struct completion *x, long timeout, int state)
     return __wait_for_common(x, io_schedule_timeout, timeout, state);
 }
 
+static long __sched
+wait_for_common(struct completion *x, long timeout, int state)
+{
+    return __wait_for_common(x, schedule_timeout, timeout, state);
+}
+
 /**
  * complete_all: - signals all threads waiting on this completion
  * @x:  holds the state of this particular completion
@@ -145,4 +151,45 @@ static void complete_with_flags(struct completion *x, int wake_flags)
 void complete(struct completion *x)
 {
     complete_with_flags(x, 0);
+}
+
+/**
+ *  completion_done - Test to see if a completion has any waiters
+ *  @x: completion structure
+ *
+ *  Return: 0 if there are waiters (wait_for_completion() in progress)
+ *       1 if there are no waiters.
+ *
+ *  Note, this will always return true if complete_all() was called on @X.
+ */
+bool completion_done(struct completion *x)
+{
+    unsigned long flags;
+
+    if (!READ_ONCE(x->done))
+        return false;
+
+    /*
+     * If ->done, we need to wait for complete() to release ->wait.lock
+     * otherwise we can end up freeing the completion before complete()
+     * is done referencing it.
+     */
+    raw_spin_lock_irqsave(&x->wait.lock, flags);
+    raw_spin_unlock_irqrestore(&x->wait.lock, flags);
+    return true;
+}
+
+/**
+ * wait_for_completion: - waits for completion of a task
+ * @x:  holds the state of this particular completion
+ *
+ * This waits to be signaled for completion of a specific task. It is NOT
+ * interruptible and there is no timeout.
+ *
+ * See also similar routines (i.e. wait_for_completion_timeout()) with timeout
+ * and interrupt capability. Also see complete().
+ */
+void __sched wait_for_completion(struct completion *x)
+{
+    wait_for_common(x, MAX_SCHEDULE_TIMEOUT, TASK_UNINTERRUPTIBLE);
 }

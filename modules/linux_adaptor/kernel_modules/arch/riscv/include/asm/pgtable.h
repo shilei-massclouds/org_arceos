@@ -40,7 +40,9 @@
 //#define VMALLOC_END      PAGE_OFFSET
 //#define VMALLOC_START    (PAGE_OFFSET - VMALLOC_SIZE)
 //
+// ####################################
 // Note: Fix it at top of address space
+// ####################################
 //
 #define VMALLOC_END      ALIGN_DOWN(ADDRESS_SPACE_END, PAGE_SIZE)
 #define VMALLOC_START    ALIGN((ADDRESS_SPACE_END - VMALLOC_SIZE), PAGE_SIZE)

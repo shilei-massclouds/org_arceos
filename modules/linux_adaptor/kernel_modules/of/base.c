@@ -1235,3 +1235,63 @@ struct device_node *of_find_compatible_node(struct device_node *from,
     raw_spin_unlock_irqrestore(&devtree_lock, flags);
     return np;
 }
+
+/**
+ * of_find_matching_node_and_match - Find a node based on an of_device_id
+ *                   match table.
+ * @from:   The node to start searching from or NULL, the node
+ *      you pass will not be searched, only the next one
+ *      will; typically, you pass what the previous call
+ *      returned. of_node_put() will be called on it
+ * @matches:    array of of device match structures to search in
+ * @match:  Updated to point at the matches entry which matched
+ *
+ * Return: A node pointer with refcount incremented, use
+ * of_node_put() on it when done.
+ */
+struct device_node *of_find_matching_node_and_match(struct device_node *from,
+                    const struct of_device_id *matches,
+                    const struct of_device_id **match)
+{
+    struct device_node *np;
+    const struct of_device_id *m;
+    unsigned long flags;
+
+    if (match)
+        *match = NULL;
+
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    for_each_of_allnodes_from(from, np) {
+        m = __of_match_node(matches, np);
+        if (m && of_node_get(np)) {
+            if (match)
+                *match = m;
+            break;
+        }
+    }
+    of_node_put(from);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return np;
+}
+
+/** Checks if the device is compatible with any of the entries in
+ *  a NULL terminated array of strings. Returns the best match
+ *  score or 0.
+ */
+int of_device_compatible_match(const struct device_node *device,
+                   const char *const *compat)
+{
+    unsigned int tmp, score = 0;
+
+    if (!compat)
+        return 0;
+
+    while (*compat) {
+        tmp = of_device_is_compatible(device, *compat);
+        if (tmp > score)
+            score = tmp;
+        compat++;
+    }
+
+    return score;
+}

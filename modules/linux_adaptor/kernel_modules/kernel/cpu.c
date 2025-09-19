@@ -42,6 +42,12 @@
 
 int __boot_cpu_id;
 
+/*
+ * If set, cpu_up and cpu_down will return -EBUSY and do nothing.
+ * Should always be manipulated under cpu_add_remove_lock
+ */
+static int cpu_hotplug_disabled;
+
 #ifdef CONFIG_INIT_ALL_POSSIBLE
 struct cpumask __cpu_possible_mask __ro_after_init
     = {CPU_BITS_ALL};
@@ -57,6 +63,23 @@ struct cpumask __cpu_dying_mask __read_mostly;
 atomic_t __num_online_cpus __read_mostly;
 
 const DECLARE_BITMAP(cpu_all_bits, NR_CPUS) = CPU_BITS_ALL;
+
+/* Serializes the updates to cpu_online_mask, cpu_present_mask */
+static DEFINE_MUTEX(cpu_add_remove_lock);
+
+/*
+ * The following two APIs (cpu_maps_update_begin/done) must be used when
+ * attempting to serialize the updates to cpu_online_mask & cpu_present_mask.
+ */
+void cpu_maps_update_begin(void)
+{
+    mutex_lock(&cpu_add_remove_lock);
+}
+
+void cpu_maps_update_done(void)
+{
+    mutex_unlock(&cpu_add_remove_lock);
+}
 
 int __cpuhp_state_add_instance(enum cpuhp_state state, struct hlist_node *node,
                    bool invoke)
@@ -120,6 +143,34 @@ void set_cpu_online(unsigned int cpu, bool online)
 void __cpuhp_remove_state(enum cpuhp_state state, bool invoke)
 {
     pr_notice("%s: No impl.", __func__);
+}
+
+/*
+ * Wait for currently running CPU hotplug operations to complete (if any) and
+ * disable future CPU hotplug (from sysfs). The 'cpu_add_remove_lock' protects
+ * the 'cpu_hotplug_disabled' flag. The same lock is also acquired by the
+ * hotplug path before performing hotplug operations. So acquiring that lock
+ * guarantees mutual exclusion from any currently running hotplug operations.
+ */
+void cpu_hotplug_disable(void)
+{
+    cpu_maps_update_begin();
+    cpu_hotplug_disabled++;
+    cpu_maps_update_done();
+}
+
+static void __cpu_hotplug_enable(void)
+{
+    if (WARN_ONCE(!cpu_hotplug_disabled, "Unbalanced cpu hotplug enable\n"))
+        return;
+    cpu_hotplug_disabled--;
+}
+
+void cpu_hotplug_enable(void)
+{
+    cpu_maps_update_begin();
+    __cpu_hotplug_enable();
+    cpu_maps_update_done();
 }
 
 /*

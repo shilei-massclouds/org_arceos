@@ -29,3 +29,14 @@ int init_srcu_struct(struct srcu_struct *ssp)
     return 0;
     //return init_srcu_struct_fields(ssp, false);
 }
+
+void synchronize_srcu(struct srcu_struct *ssp)
+{
+    pr_err("%s: No impl.", __func__);
+#if 0
+    if (srcu_might_be_idle(ssp) || rcu_gp_is_expedited())
+        synchronize_srcu_expedited(ssp);
+    else
+        __synchronize_srcu(ssp, true);
+#endif
+}

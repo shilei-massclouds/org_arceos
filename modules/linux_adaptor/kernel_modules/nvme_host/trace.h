@@ -164,7 +164,7 @@ TRACE_EVENT(nvme_sq,
 #endif /* _TRACE_NVME_H */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../nvme_host
 #undef TRACE_INCLUDE_FILE
 #define TRACE_INCLUDE_FILE trace
 

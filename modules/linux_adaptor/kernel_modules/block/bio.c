@@ -856,6 +856,136 @@ int bio_add_page(struct bio *bio, struct page *page,
     return len;
 }
 
+/**
+ * bio_add_hw_page - attempt to add a page to a bio with hw constraints
+ * @q: the target queue
+ * @bio: destination bio
+ * @page: page to add
+ * @len: vec entry length
+ * @offset: vec entry offset
+ * @max_sectors: maximum number of sectors that can be added
+ * @same_page: return if the segment has been merged inside the same page
+ *
+ * Add a page to a bio while respecting the hardware max_sectors, max_segment
+ * and gap limitations.
+ */
+int bio_add_hw_page(struct request_queue *q, struct bio *bio,
+        struct page *page, unsigned int len, unsigned int offset,
+        unsigned int max_sectors, bool *same_page)
+{
+    unsigned int max_size = max_sectors << SECTOR_SHIFT;
+
+    if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
+        return 0;
+
+    len = min3(len, max_size, queue_max_segment_size(q));
+    if (len > max_size - bio->bi_iter.bi_size)
+        return 0;
+
+    if (bio->bi_vcnt > 0) {
+        struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+
+        if (bvec_try_merge_hw_page(q, bv, page, len, offset,
+                same_page)) {
+            bio->bi_iter.bi_size += len;
+            return len;
+        }
+
+        if (bio->bi_vcnt >=
+            min(bio->bi_max_vecs, queue_max_segments(q)))
+            return 0;
+
+        /*
+         * If the queue doesn't support SG gaps and adding this segment
+         * would create a gap, disallow it.
+         */
+        if (bvec_gap_to_prev(&q->limits, bv, offset))
+            return 0;
+    }
+
+    bvec_set_page(&bio->bi_io_vec[bio->bi_vcnt], page, len, offset);
+    bio->bi_vcnt++;
+    bio->bi_iter.bi_size += len;
+    return len;
+}
+
+/*
+ * Try to merge a page into a segment, while obeying the hardware segment
+ * size limit.  This is not for normal read/write bios, but for passthrough
+ * or Zone Append operations that we can't split.
+ */
+bool bvec_try_merge_hw_page(struct request_queue *q, struct bio_vec *bv,
+        struct page *page, unsigned len, unsigned offset,
+        bool *same_page)
+{
+    unsigned long mask = queue_segment_boundary(q);
+    phys_addr_t addr1 = bvec_phys(bv);
+    phys_addr_t addr2 = page_to_phys(page) + offset + len - 1;
+
+    if ((addr1 | mask) != (addr2 | mask))
+        return false;
+    if (len > queue_max_segment_size(q) - bv->bv_len)
+        return false;
+    return bvec_try_merge_page(bv, page, len, offset, same_page);
+}
+
+/**
+ * bio_add_pc_page  - attempt to add page to passthrough bio
+ * @q: the target queue
+ * @bio: destination bio
+ * @page: page to add
+ * @len: vec entry length
+ * @offset: vec entry offset
+ *
+ * Attempt to add a page to the bio_vec maplist. This can fail for a
+ * number of reasons, such as the bio being full or target block device
+ * limitations. The target block device must allow bio's up to PAGE_SIZE,
+ * so it is always possible to add a single page to an empty bio.
+ *
+ * This should only be used by passthrough bios.
+ */
+int bio_add_pc_page(struct request_queue *q, struct bio *bio,
+        struct page *page, unsigned int len, unsigned int offset)
+{
+    bool same_page = false;
+    return bio_add_hw_page(q, bio, page, len, offset,
+            queue_max_hw_sectors(q), &same_page);
+}
+
+/**
+ * bio_kmalloc - kmalloc a bio
+ * @nr_vecs:    number of bio_vecs to allocate
+ * @gfp_mask:   the GFP_* mask given to the slab allocator
+ *
+ * Use kmalloc to allocate a bio (including bvecs).  The bio must be initialized
+ * using bio_init() before use.  To free a bio returned from this function use
+ * kfree() after calling bio_uninit().  A bio returned from this function can
+ * be reused by calling bio_uninit() before calling bio_init() again.
+ *
+ * Note that unlike bio_alloc() or bio_alloc_bioset() allocations from this
+ * function are not backed by a mempool can fail.  Do not use this function
+ * for allocations in the file system I/O path.
+ *
+ * Returns: Pointer to new bio on success, NULL on failure.
+ */
+struct bio *bio_kmalloc(unsigned short nr_vecs, gfp_t gfp_mask)
+{
+    struct bio *bio;
+
+    if (nr_vecs > BIO_MAX_INLINE_VECS)
+        return NULL;
+    return kmalloc(struct_size(bio, bi_inline_vecs, nr_vecs), gfp_mask);
+}
+
+void bio_free_pages(struct bio *bio)
+{
+    struct bio_vec *bvec;
+    struct bvec_iter_all iter_all;
+
+    bio_for_each_segment_all(bvec, bio, iter_all)
+        __free_page(bvec->bv_page);
+}
+
 static void submit_bio_wait_endio(struct bio *bio)
 {
     complete(bio->bi_private);

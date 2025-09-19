@@ -638,6 +638,7 @@ struct pci_host_bridge *devm_pci_alloc_host_bridge(struct device *dev,
 	int ret;
 	struct pci_host_bridge *bridge;
 
+    printk("%s: (%s)\n", __func__, dev_name(dev));
 	bridge = pci_alloc_host_bridge(priv);
 	if (!bridge)
 		return NULL;
@@ -3111,9 +3112,7 @@ int pci_host_probe(struct pci_host_bridge *bridge)
 	int ret;
 
 	pci_lock_rescan_remove();
-    printk("%s: step1\n", __func__);
 	ret = pci_scan_root_bus_bridge(bridge);
-    printk("%s: step2\n", __func__);
 	pci_unlock_rescan_remove();
 	if (ret < 0) {
 		dev_err(bridge->dev.parent, "Scanning root bridge failed");
@@ -3126,7 +3125,6 @@ int pci_host_probe(struct pci_host_bridge *bridge)
 	if (bridge->preserve_config)
 		pci_bus_claim_resources(bus);
 
-    printk("%s: step3\n", __func__);
 	/*
 	 * Assign whatever was left unassigned. If we didn't claim above,
 	 * this will reassign everything.
@@ -3137,9 +3135,10 @@ int pci_host_probe(struct pci_host_bridge *bridge)
 		pcie_bus_configure_settings(child);
 
 	pci_lock_rescan_remove();
+    printk("%s: step1\n", __func__);
 	pci_bus_add_devices(bus);
+    printk("%s: step2\n", __func__);
 	pci_unlock_rescan_remove();
-    printk("%s: stepN\n", __func__);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(pci_host_probe);

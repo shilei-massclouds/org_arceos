@@ -728,6 +728,43 @@ blk_status_t errno_to_blk_status(int errno)
     return BLK_STS_IOERR;
 }
 
+/**
+ * blk_queue_enter() - try to increase q->q_usage_counter
+ * @q: request queue pointer
+ * @flags: BLK_MQ_REQ_NOWAIT and/or BLK_MQ_REQ_PM
+ */
+int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
+{
+#if 0
+    const bool pm = flags & BLK_MQ_REQ_PM;
+
+    while (!blk_try_enter_queue(q, pm)) {
+        if (flags & BLK_MQ_REQ_NOWAIT)
+            return -EAGAIN;
+
+        /*
+         * read pair of barrier in blk_freeze_queue_start(), we need to
+         * order reading __PERCPU_REF_DEAD flag of .q_usage_counter and
+         * reading .mq_freeze_depth or queue dying flag, otherwise the
+         * following wait may never return if the two reads are
+         * reordered.
+         */
+        smp_rmb();
+        wait_event(q->mq_freeze_wq,
+               (!q->mq_freeze_depth &&
+                blk_pm_resume_queue(pm, q)) ||
+               blk_queue_dying(q));
+        if (blk_queue_dying(q))
+            return -ENODEV;
+    }
+
+    rwsem_acquire_read(&q->q_lockdep_map, 0, 0, _RET_IP_);
+    rwsem_release(&q->q_lockdep_map, _RET_IP_);
+#endif
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
 int __init blk_dev_init(void)
 {
     BUILD_BUG_ON((__force u32)REQ_OP_LAST >= (1 << REQ_OP_BITS));

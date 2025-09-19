@@ -57,6 +57,7 @@ static void __irq_domain_publish(struct irq_domain *domain)
     mutex_unlock(&irq_domain_mutex);
 
     pr_debug("Added domain %s\n", domain->name);
+    printk("%s: Added domain %s, %lx\n", __func__, domain->name, domain->fwnode);
 }
 
 static void irq_domain_free(struct irq_domain *domain)
@@ -215,6 +216,9 @@ static struct irq_domain *__irq_domain_create(const struct irq_domain_info *info
         return ERR_PTR(err);
     }
 
+    printk("%s: step1 domain(%lx) name(%lx) fwnode(%lx,%lx)\n",
+           __func__, domain, domain->name,
+           domain->fwnode, info->fwnode);
     domain->fwnode = fwnode_handle_get(info->fwnode);
     fwnode_dev_initialized(domain->fwnode, true);
 
@@ -252,10 +256,12 @@ static struct irq_domain *__irq_domain_instantiate(const struct irq_domain_info 
     struct irq_domain *domain;
     int err;
 
+    printk("%s: step1\n", __func__);
     domain = __irq_domain_create(info);
     if (IS_ERR(domain))
         return domain;
 
+    printk("%s: step2 (%s)\n", __func__, domain->name);
     domain->flags |= info->domain_flags;
     domain->exit = info->exit;
 
@@ -655,9 +661,11 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
 {
     struct irq_fwspec fwspec;
 
+    printk("%s: step1\n", __func__);
     of_phandle_args_to_fwspec(irq_data->np, irq_data->args,
                   irq_data->args_count, &fwspec);
 
+    printk("%s: step2\n", __func__);
     return irq_create_fwspec_mapping(&fwspec);
 }
 
@@ -868,10 +876,13 @@ unsigned int irq_create_fwspec_mapping(struct irq_fwspec *fwspec)
     unsigned int type = IRQ_TYPE_NONE;
     int virq;
 
+    printk("%s: step1\n", __func__);
     if (fwspec->fwnode) {
+    printk("%s: step2 fwnode(%lx)\n", __func__, fwspec->fwnode);
         domain = irq_find_matching_fwspec(fwspec, DOMAIN_BUS_WIRED);
         if (!domain)
             domain = irq_find_matching_fwspec(fwspec, DOMAIN_BUS_ANY);
+    printk("%s: step3 (%lx)\n", __func__, domain);
     } else {
         domain = irq_default_domain;
     }
@@ -1074,4 +1085,20 @@ struct irq_domain *irq_domain_create_hierarchy(struct irq_domain *parent,
 
     d = irq_domain_instantiate(&info);
     return IS_ERR(d) ? NULL : d;
+}
+
+/**
+ * irq_domain_deactivate_irq - Call domain_ops->deactivate recursively to
+ *                 deactivate interrupt
+ * @irq_data: outermost irq_data associated with interrupt
+ *
+ * It calls domain_ops->deactivate to program interrupt controllers to disable
+ * interrupt delivery.
+ */
+void irq_domain_deactivate_irq(struct irq_data *irq_data)
+{
+    if (irqd_is_activated(irq_data)) {
+        __irq_domain_deactivate_irq(irq_data);
+        irqd_clr_activated(irq_data);
+    }
 }

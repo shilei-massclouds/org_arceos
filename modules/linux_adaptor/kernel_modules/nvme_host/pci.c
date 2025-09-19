@@ -2421,6 +2421,7 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
 	unsigned long size;
 	int result;
 
+    printk("%s: step1\n", __func__);
 	/*
 	 * Sample the module parameters once at reset time so that we have
 	 * stable values to work with.
@@ -2446,9 +2447,11 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
 	result = nvme_setup_io_queues_trylock(dev);
 	if (result)
 		return result;
+    printk("%s: step1.2\n", __func__);
 	if (test_and_clear_bit(NVMEQ_ENABLED, &adminq->flags))
 		pci_free_irq(pdev, 0, adminq);
 
+    printk("%s: step1.3\n", __func__);
 	if (dev->cmb_use_sqes) {
 		result = nvme_cmb_qdepth(dev, nr_io_queues,
 				sizeof(struct nvme_command));
@@ -2489,6 +2492,7 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
 		goto out_unlock;
 	}
 
+    printk("%s: step2\n", __func__);
 	dev->num_vecs = result;
 	result = max(result - 1, 1);
 	dev->max_qid = result + dev->io_queues[HCTX_TYPE_POLL];
@@ -2509,6 +2513,7 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
 	if (result || dev->online_queues < 2)
 		return result;
 
+    printk("%s: step3\n", __func__);
 	if (dev->online_queues - 1 < dev->max_qid) {
 		nr_io_queues = dev->online_queues - 1;
 		nvme_delete_io_queues(dev);
@@ -2648,6 +2653,7 @@ static int nvme_pci_enable(struct nvme_dev *dev)
 	struct pci_dev *pdev = to_pci_dev(dev->dev);
 	unsigned int flags = PCI_IRQ_ALL_TYPES;
 
+
 	if (pci_enable_device_mem(pdev))
 		return result;
 
@@ -2665,6 +2671,7 @@ static int nvme_pci_enable(struct nvme_dev *dev)
 	 */
 	if (dev->ctrl.quirks & NVME_QUIRK_BROKEN_MSI)
 		flags &= ~PCI_IRQ_MSI;
+    printk("%s: step0\n", __func__);
 	result = pci_alloc_irq_vectors(pdev, 1, 1, flags);
 	if (result < 0)
 		goto disable;
@@ -3173,6 +3180,7 @@ static struct nvme_dev *nvme_pci_alloc_dev(struct pci_dev *pdev,
 			 "platform quirk: setting simple suspend\n");
 		quirks |= NVME_QUIRK_SIMPLE_SUSPEND;
 	}
+    printk("%s: step1\n", __func__);
 	ret = nvme_init_ctrl(&dev->ctrl, &pdev->dev, &nvme_pci_ctrl_ops,
 			     quirks);
 	if (ret)
@@ -3184,6 +3192,7 @@ static struct nvme_dev *nvme_pci_alloc_dev(struct pci_dev *pdev,
 		dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
 	dma_set_min_align_mask(&pdev->dev, NVME_CTRL_PAGE_SIZE - 1);
 	dma_set_max_seg_size(&pdev->dev, 0xffffffff);
+    printk("%s: step2\n", __func__);
 
 	/*
 	 * Limit the max command size to prevent iod->sg allocations going
@@ -3193,6 +3202,7 @@ static struct nvme_dev *nvme_pci_alloc_dev(struct pci_dev *pdev,
 		NVME_MAX_KB_SZ << 1, dma_opt_mapping_size(&pdev->dev) >> 9);
 	dev->ctrl.max_segments = NVME_MAX_SEGS;
 	dev->ctrl.max_integrity_segments = 1;
+    printk("%s: step3\n", __func__);
 	return dev;
 
 out_put_device:
@@ -3208,7 +3218,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	struct nvme_dev *dev;
 	int result = -ENOMEM;
 
-    printk("%s: step1\n", __func__);
+    printk("%s: step1 irq(%d) devfn(%x)\n", __func__, pdev->irq, pdev->devfn);
 	dev = nvme_pci_alloc_dev(pdev, id);
 	if (IS_ERR(dev))
 		return PTR_ERR(dev);
@@ -3290,7 +3300,9 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
 	nvme_start_ctrl(&dev->ctrl);
 	nvme_put_ctrl(&dev->ctrl);
+    printk("%s: step2\n", __func__);
 	flush_work(&dev->ctrl.scan_work);
+    printk("%s: step3\n", __func__);
 	return 0;
 
 out_disable:

@@ -25,6 +25,11 @@ static void irq_state_set_started(struct irq_desc *desc)
     irqd_set(&desc->irq_data, IRQD_IRQ_STARTED);
 }
 
+static void irq_state_clr_started(struct irq_desc *desc)
+{
+    irqd_clear(&desc->irq_data, IRQD_IRQ_STARTED);
+}
+
 #ifdef CONFIG_SMP
 static int
 __irq_startup_managed(struct irq_desc *desc, const struct cpumask *aff,
@@ -56,6 +61,22 @@ static int __irq_startup(struct irq_desc *desc)
     }
     irq_state_set_started(desc);
     return ret;
+}
+
+static void __irq_disable(struct irq_desc *desc, bool mask)
+{
+    if (irqd_irq_disabled(&desc->irq_data)) {
+        if (mask)
+            mask_irq(desc);
+    } else {
+        irq_state_set_disabled(desc);
+        if (desc->irq_data.chip->irq_disable) {
+            desc->irq_data.chip->irq_disable(&desc->irq_data);
+            irq_state_set_masked(desc);
+        } else if (mask) {
+            mask_irq(desc);
+        }
+    }
 }
 
 struct irq_data *irq_get_irq_data(unsigned int irq)
@@ -370,4 +391,20 @@ out:
     if (!(chip->flags & IRQCHIP_EOI_IF_HANDLED))
         chip->irq_eoi(&desc->irq_data);
     raw_spin_unlock(&desc->lock);
+}
+
+void irq_shutdown(struct irq_desc *desc)
+{
+    if (irqd_is_started(&desc->irq_data)) {
+        clear_irq_resend(desc);
+        desc->depth = 1;
+        if (desc->irq_data.chip->irq_shutdown) {
+            desc->irq_data.chip->irq_shutdown(&desc->irq_data);
+            irq_state_set_disabled(desc);
+            irq_state_set_masked(desc);
+        } else {
+            __irq_disable(desc, true);
+        }
+        irq_state_clr_started(desc);
+    }
 }

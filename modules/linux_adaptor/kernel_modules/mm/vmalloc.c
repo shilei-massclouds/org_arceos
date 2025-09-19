@@ -68,3 +68,10 @@ int vmap_page_range(unsigned long addr, unsigned long end,
     return err;
 #endif
 }
+
+bool is_vmalloc_addr(const void *x)
+{
+    unsigned long addr = (unsigned long)kasan_reset_tag(x);
+
+    return addr >= VMALLOC_START && addr < VMALLOC_END;
+}

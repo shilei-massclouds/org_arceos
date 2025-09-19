@@ -56,14 +56,17 @@ int pci_host_common_probe(struct platform_device *pdev)
 	struct pci_config_window *cfg;
 	const struct pci_ecam_ops *ops;
 
+    printk("%s: step1\n", __func__);
 	ops = of_device_get_match_data(&pdev->dev);
 	if (!ops)
 		return -ENODEV;
 
+    printk("%s: step2\n", __func__);
 	bridge = devm_pci_alloc_host_bridge(dev, 0);
 	if (!bridge)
 		return -ENOMEM;
 
+    printk("%s: step3\n", __func__);
 	platform_set_drvdata(pdev, bridge);
 
 	of_pci_check_probe_only();

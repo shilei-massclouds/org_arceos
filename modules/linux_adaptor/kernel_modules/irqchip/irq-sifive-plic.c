@@ -525,6 +525,7 @@ static int plic_probe(struct fwnode_handle *fwnode)
 	int id, context_id;
 	u32 gsi_base;
 
+    printk("%s: step1 fwnode(%lx)\n", __func__, fwnode);
 	if (is_of_node(fwnode)) {
 		const struct of_device_id *id;
 

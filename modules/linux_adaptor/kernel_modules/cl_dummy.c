@@ -1,6 +1,5 @@
 #include <linux/of.h>
 #include <linux/cpumask_types.h>
-
 #include <net/sock.h>
 #include <net/netlink.h>
 #include <net/net_namespace.h>
@@ -9,6 +8,8 @@
 #include <linux/swap.h>
 #include <linux/task_work.h>
 #include <linux/gpio/consumer.h>
+#include <linux/efi.h>
+#include <linux/pci.h>
 
 #include "../adaptor.h"
 
@@ -856,4 +857,105 @@ int pci_proc_attach_device(struct pci_dev *dev)
 {
     pr_err("%s: No impl.", __func__);
     return 0;
+}
+
+struct efi __read_mostly efi = {
+    .runtime_supported_mask = EFI_RT_SUPPORTED_ALL,
+    .acpi           = EFI_INVALID_TABLE_ADDR,
+    .acpi20         = EFI_INVALID_TABLE_ADDR,
+    .smbios         = EFI_INVALID_TABLE_ADDR,
+    .smbios3        = EFI_INVALID_TABLE_ADDR,
+    .esrt           = EFI_INVALID_TABLE_ADDR,
+    .tpm_log        = EFI_INVALID_TABLE_ADDR,
+    .tpm_final_log      = EFI_INVALID_TABLE_ADDR,
+#ifdef CONFIG_LOAD_UEFI_KEYS
+    .mokvar_table       = EFI_INVALID_TABLE_ADDR,
+#endif
+#ifdef CONFIG_EFI_COCO_SECRET
+    .coco_secret        = EFI_INVALID_TABLE_ADDR,
+#endif
+#ifdef CONFIG_UNACCEPTED_MEMORY
+    .unaccepted     = EFI_INVALID_TABLE_ADDR,
+#endif
+};
+
+/**
+ * dump_stack_set_arch_desc - set arch-specific str to show with task dumps
+ * @fmt: printf-style format string
+ * @...: arguments for the format string
+ *
+ * The configured string will be printed right after utsname during task
+ * dumps.  Usually used to add arch-specific system identifiers.  If an
+ * arch wants to make use of such an ID string, it should initialize this
+ * as soon as possible during boot.
+ */
+void __init dump_stack_set_arch_desc(const char *fmt, ...)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+bool acpi_storage_d3(struct device *dev)
+{
+    pr_notice("%s: No impl.", __func__);
+    return false;
+}
+
+int dev_pm_qos_update_user_latency_tolerance(struct device *dev, s32 val)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
+{
+    pr_err("%s: No impl.", __func__);
+    return PCI_UNKNOWN;
+}
+
+enum support_mode {
+    ALLOW_LEGACY,
+    DENY_LEGACY,
+};
+
+bool pci_msi_domain_supports(struct pci_dev *pdev, unsigned int feature_mask,
+                 enum support_mode mode)
+{
+    pr_err("%s: No impl.", __func__);
+    return false;
+}
+
+int sysfs_create_link(struct kobject *kobj, struct kobject *target,
+              const char *name)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+void unregister_handler_proc(unsigned int irq, struct irqaction *action)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+int kobject_uevent_env(struct kobject *kobj, enum kobject_action action,
+               char *envp_ext[])
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+void percpu_ref_kill_and_confirm(struct percpu_ref *ref,
+                 percpu_ref_func_t *confirm_kill)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+bool percpu_ref_is_zero(struct percpu_ref *ref)
+{
+    pr_err("%s: No impl.", __func__);
+    return true;
+}
+
+void percpu_ref_resurrect(struct percpu_ref *ref)
+{
+    pr_notice("%s: No impl.", __func__);
 }

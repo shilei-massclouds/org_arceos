@@ -608,6 +608,37 @@ unsigned int part_in_flight(struct block_device *part)
     return inflight;
 }
 
+static void set_disk_ro_uevent(struct gendisk *gd, int ro)
+{
+    char event[] = "DISK_RO=1";
+    char *envp[] = { event, NULL };
+
+    if (!ro)
+        event[8] = '0';
+    kobject_uevent_env(&disk_to_dev(gd)->kobj, KOBJ_CHANGE, envp);
+}
+
+/**
+ * set_disk_ro - set a gendisk read-only
+ * @disk:   gendisk to operate on
+ * @read_only:  %true to set the disk read-only, %false set the disk read/write
+ *
+ * This function is used to indicate whether a given disk device should have its
+ * read-only flag set. set_disk_ro() is typically used by device drivers to
+ * indicate whether the underlying physical device is write-protected.
+ */
+void set_disk_ro(struct gendisk *disk, bool read_only)
+{
+    if (read_only) {
+        if (test_and_set_bit(GD_READ_ONLY, &disk->state))
+            return;
+    } else {
+        if (!test_and_clear_bit(GD_READ_ONLY, &disk->state))
+            return;
+    }
+    set_disk_ro_uevent(disk, read_only);
+}
+
 dev_t part_devt(struct gendisk *disk, u8 partno)
 {
     PANIC("");

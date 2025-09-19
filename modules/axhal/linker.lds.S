@@ -78,6 +78,10 @@ SECTIONS
         __init_array_start = .;
         *(.init_array .init_array.*)
         __init_array_end = .;
+        . = ALIGN(8);
+        __irqchip_of_table = .;
+        KEEP(*(__irqchip_of_table))
+        KEEP(*(__irqchip_of_table_end))
     }
 
     . = ALIGN(4K);

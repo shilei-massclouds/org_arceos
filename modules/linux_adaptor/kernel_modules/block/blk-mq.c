@@ -37,7 +37,58 @@
 
 #include "../adaptor.h"
 
+#define TAG_COMP_BATCH      32
+
 static DEFINE_MUTEX(blk_mq_cpuhp_lock);
+
+struct blk_rq_wait {
+    struct completion done;
+    blk_status_t ret;
+};
+
+static enum rq_end_io_ret blk_end_sync_rq(struct request *rq, blk_status_t ret)
+{
+    struct blk_rq_wait *wait = rq->end_io_data;
+
+    wait->ret = ret;
+    complete(&wait->done);
+    return RQ_END_IO_NONE;
+}
+
+static int blk_hctx_poll(struct request_queue *q, struct blk_mq_hw_ctx *hctx,
+             struct io_comp_batch *iob, unsigned int flags)
+{
+    long state = get_current_state();
+    int ret;
+
+    do {
+        ret = q->mq_ops->poll(hctx, iob);
+        if (ret > 0) {
+            __set_current_state(TASK_RUNNING);
+            return ret;
+        }
+
+        if (signal_pending_state(state, current))
+            __set_current_state(TASK_RUNNING);
+        if (task_is_running(current))
+            return 1;
+
+        if (ret < 0 || (flags & BLK_POLL_ONESHOT))
+            break;
+        cpu_relax();
+    } while (!need_resched());
+
+    __set_current_state(TASK_RUNNING);
+    return 0;
+}
+
+static void blk_rq_poll_completion(struct request *rq, struct completion *wait)
+{
+    do {
+        blk_hctx_poll(rq->q, rq->mq_hctx, NULL, 0);
+        cond_resched();
+    } while (!completion_done(wait));
+}
 
 static void __blk_mq_requeue_request(struct request *rq)
 {
@@ -59,6 +110,17 @@ static void blk_mq_handle_dev_resource(struct request *rq,
 {
     list_add(&rq->queuelist, list);
     __blk_mq_requeue_request(rq);
+}
+
+static bool blk_freeze_set_owner(struct request_queue *q,
+                 struct task_struct *owner)
+{
+    return false;
+}
+
+static bool blk_unfreeze_check_owner(struct request_queue *q)
+{
+    return false;
 }
 
 enum prep_dispatch {
@@ -2905,4 +2967,331 @@ int blk_mq_alloc_sq_tag_set(struct blk_mq_tag_set *set,
     set->numa_node = NUMA_NO_NODE;
     set->flags = set_flags;
     return blk_mq_alloc_tag_set(set);
+}
+
+static struct request *blk_mq_rq_cache_fill(struct request_queue *q,
+                        struct blk_plug *plug,
+                        blk_opf_t opf,
+                        blk_mq_req_flags_t flags)
+{
+    struct blk_mq_alloc_data data = {
+        .q      = q,
+        .flags      = flags,
+        .cmd_flags  = opf,
+        .nr_tags    = plug->nr_ios,
+        .cached_rqs = &plug->cached_rqs,
+    };
+    struct request *rq;
+
+    if (blk_queue_enter(q, flags))
+        return NULL;
+
+    plug->nr_ios = 1;
+
+    rq = __blk_mq_alloc_requests(&data);
+    if (unlikely(!rq))
+        blk_queue_exit(q);
+    return rq;
+}
+
+static struct request *blk_mq_alloc_cached_request(struct request_queue *q,
+                           blk_opf_t opf,
+                           blk_mq_req_flags_t flags)
+{
+    struct blk_plug *plug = current->plug;
+    struct request *rq;
+
+    if (!plug)
+        return NULL;
+
+    if (rq_list_empty(&plug->cached_rqs)) {
+        if (plug->nr_ios == 1)
+            return NULL;
+        rq = blk_mq_rq_cache_fill(q, plug, opf, flags);
+        if (!rq)
+            return NULL;
+    } else {
+        rq = rq_list_peek(&plug->cached_rqs);
+        if (!rq || rq->q != q)
+            return NULL;
+
+        if (blk_mq_get_hctx_type(opf) != rq->mq_hctx->type)
+            return NULL;
+        if (op_is_flush(rq->cmd_flags) != op_is_flush(opf))
+            return NULL;
+
+        rq_list_pop(&plug->cached_rqs);
+        blk_mq_rq_time_init(rq, 0);
+    }
+
+    rq->cmd_flags = opf;
+    INIT_LIST_HEAD(&rq->queuelist);
+    return rq;
+}
+
+struct request *blk_mq_alloc_request(struct request_queue *q, blk_opf_t opf,
+        blk_mq_req_flags_t flags)
+{
+    struct request *rq;
+
+    rq = blk_mq_alloc_cached_request(q, opf, flags);
+    if (!rq) {
+        struct blk_mq_alloc_data data = {
+            .q      = q,
+            .flags      = flags,
+            .cmd_flags  = opf,
+            .nr_tags    = 1,
+        };
+        int ret;
+
+        ret = blk_queue_enter(q, flags);
+        if (ret)
+            return ERR_PTR(ret);
+
+        rq = __blk_mq_alloc_requests(&data);
+        if (!rq)
+            goto out_queue_exit;
+    }
+    rq->__data_len = 0;
+    rq->__sector = (sector_t) -1;
+    rq->bio = rq->biotail = NULL;
+    return rq;
+out_queue_exit:
+    blk_queue_exit(q);
+    return ERR_PTR(-EWOULDBLOCK);
+}
+
+/**
+ * blk_execute_rq - insert a request into queue for execution
+ * @rq:     request to insert
+ * @at_head:    insert request at head or tail of queue
+ *
+ * Description:
+ *    Insert a fully prepared request at the back of the I/O scheduler queue
+ *    for execution and wait for completion.
+ * Return: The blk_status_t result provided to blk_mq_end_request().
+ */
+blk_status_t blk_execute_rq(struct request *rq, bool at_head)
+{
+    struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
+    struct blk_rq_wait wait = {
+        .done = COMPLETION_INITIALIZER_ONSTACK(wait.done),
+    };
+
+    WARN_ON(irqs_disabled());
+    WARN_ON(!blk_rq_is_passthrough(rq));
+
+    rq->end_io_data = &wait;
+    rq->end_io = blk_end_sync_rq;
+
+    blk_account_io_start(rq);
+    blk_mq_insert_request(rq, at_head ? BLK_MQ_INSERT_AT_HEAD : 0);
+    blk_mq_run_hw_queue(hctx, false);
+
+    if (blk_rq_is_poll(rq))
+        blk_rq_poll_completion(rq, &wait.done);
+    else
+        blk_wait_io(&wait.done);
+
+    return wait.ret;
+}
+
+bool blk_rq_is_poll(struct request *rq)
+{
+    if (!rq->mq_hctx)
+        return false;
+    if (rq->mq_hctx->type != HCTX_TYPE_POLL)
+        return false;
+    return true;
+}
+
+/*
+ * Fully end IO on a request. Does not support partial completions, or
+ * errors.
+ */
+static void blk_complete_request(struct request *req)
+{
+    const bool is_flush = (req->rq_flags & RQF_FLUSH_SEQ) != 0;
+    int total_bytes = blk_rq_bytes(req);
+    struct bio *bio = req->bio;
+
+    trace_block_rq_complete(req, BLK_STS_OK, total_bytes);
+
+    if (!bio)
+        return;
+
+    if (blk_integrity_rq(req) && req_op(req) == REQ_OP_READ)
+        blk_integrity_complete(req, total_bytes);
+
+    /*
+     * Upper layers may call blk_crypto_evict_key() anytime after the last
+     * bio_endio().  Therefore, the keyslot must be released before that.
+     */
+    blk_crypto_rq_put_keyslot(req);
+
+    blk_account_io_completion(req, total_bytes);
+
+    do {
+        struct bio *next = bio->bi_next;
+
+        /* Completion has already been traced */
+        bio_clear_flag(bio, BIO_TRACE_COMPLETION);
+
+        blk_zone_update_request_bio(req, bio);
+
+        if (!is_flush)
+            bio_endio(bio);
+        bio = next;
+    } while (bio);
+
+    /*
+     * Reset counters so that the request stacking driver
+     * can find how many bytes remain in the request
+     * later.
+     */
+    if (!req->end_io) {
+        req->bio = NULL;
+        req->__data_len = 0;
+    }
+}
+
+static inline void blk_mq_flush_tag_batch(struct blk_mq_hw_ctx *hctx,
+                      int *tag_array, int nr_tags)
+{
+    struct request_queue *q = hctx->queue;
+
+    blk_mq_sub_active_requests(hctx, nr_tags);
+
+    blk_mq_put_tags(hctx->tags, tag_array, nr_tags);
+    percpu_ref_put_many(&q->q_usage_counter, nr_tags);
+}
+
+void blk_mq_end_request_batch(struct io_comp_batch *iob)
+{
+    int tags[TAG_COMP_BATCH], nr_tags = 0;
+    struct blk_mq_hw_ctx *cur_hctx = NULL;
+    struct request *rq;
+    u64 now = 0;
+
+    if (iob->need_ts)
+        now = blk_time_get_ns();
+
+    while ((rq = rq_list_pop(&iob->req_list)) != NULL) {
+        prefetch(rq->bio);
+        prefetch(rq->rq_next);
+
+        blk_complete_request(rq);
+        if (iob->need_ts)
+            __blk_mq_end_request_acct(rq, now);
+
+        blk_mq_finish_request(rq);
+
+        rq_qos_done(rq->q, rq);
+
+        /*
+         * If end_io handler returns NONE, then it still has
+         * ownership of the request.
+         */
+        if (rq->end_io && rq->end_io(rq, 0) == RQ_END_IO_NONE)
+            continue;
+
+        WRITE_ONCE(rq->state, MQ_RQ_IDLE);
+        if (!req_ref_put_and_test(rq))
+            continue;
+
+        blk_crypto_free_request(rq);
+        blk_pm_mark_last_busy(rq);
+
+        if (nr_tags == TAG_COMP_BATCH || cur_hctx != rq->mq_hctx) {
+            if (cur_hctx)
+                blk_mq_flush_tag_batch(cur_hctx, tags, nr_tags);
+            nr_tags = 0;
+            cur_hctx = rq->mq_hctx;
+        }
+        tags[nr_tags++] = rq->tag;
+    }
+
+    if (nr_tags)
+        blk_mq_flush_tag_batch(cur_hctx, tags, nr_tags);
+}
+
+/*
+ * Guarantee no request is in use, so we can change any data structure of
+ * the queue afterward.
+ */
+void blk_freeze_queue(struct request_queue *q)
+{
+    /*
+     * In the !blk_mq case we are only calling this to kill the
+     * q_usage_counter, otherwise this increases the freeze depth
+     * and waits for it to return to zero.  For this reason there is
+     * no blk_unfreeze_queue(), and blk_freeze_queue() is not
+     * exported to drivers as the only user for unfreeze is blk_mq.
+     */
+    blk_freeze_queue_start(q);
+    blk_mq_freeze_queue_wait(q);
+}
+
+void blk_mq_freeze_queue(struct request_queue *q)
+{
+    /*
+     * ...just an alias to keep freeze and unfreeze actions balanced
+     * in the blk_mq_* namespace
+     */
+    blk_freeze_queue(q);
+}
+
+bool __blk_freeze_queue_start(struct request_queue *q,
+                  struct task_struct *owner)
+{
+    bool freeze;
+
+    mutex_lock(&q->mq_freeze_lock);
+    freeze = blk_freeze_set_owner(q, owner);
+    if (++q->mq_freeze_depth == 1) {
+        percpu_ref_kill(&q->q_usage_counter);
+        mutex_unlock(&q->mq_freeze_lock);
+        if (queue_is_mq(q))
+            blk_mq_run_hw_queues(q, false);
+    } else {
+        mutex_unlock(&q->mq_freeze_lock);
+    }
+
+    return freeze;
+}
+
+void blk_freeze_queue_start(struct request_queue *q)
+{
+    if (__blk_freeze_queue_start(q, current))
+        blk_freeze_acquire_lock(q, false, false);
+}
+
+void blk_mq_freeze_queue_wait(struct request_queue *q)
+{
+    wait_event(q->mq_freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
+}
+
+bool __blk_mq_unfreeze_queue(struct request_queue *q, bool force_atomic)
+{
+    bool unfreeze;
+
+    mutex_lock(&q->mq_freeze_lock);
+    if (force_atomic)
+        q->q_usage_counter.data->force_atomic = true;
+    q->mq_freeze_depth--;
+    WARN_ON_ONCE(q->mq_freeze_depth < 0);
+    if (!q->mq_freeze_depth) {
+        percpu_ref_resurrect(&q->q_usage_counter);
+        wake_up_all(&q->mq_freeze_wq);
+    }
+    unfreeze = blk_unfreeze_check_owner(q);
+    mutex_unlock(&q->mq_freeze_lock);
+
+    return unfreeze;
+}
+
+void blk_mq_unfreeze_queue(struct request_queue *q)
+{
+    if (__blk_mq_unfreeze_queue(q, false))
+        blk_unfreeze_release_lock(q, false, false);
 }

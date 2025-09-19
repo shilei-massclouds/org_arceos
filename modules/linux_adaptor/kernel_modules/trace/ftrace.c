@@ -44,6 +44,14 @@
  */
 static int ftrace_disabled __read_mostly;
 
+struct ftrace_ops __rcu *ftrace_ops_list __read_mostly = (struct ftrace_ops __rcu *)&ftrace_list_end;
+
+struct ftrace_ops ftrace_list_end __read_mostly = {
+    .func       = ftrace_stub,
+    .flags      = FTRACE_OPS_FL_STUB,
+    INIT_OPS_HASH(ftrace_list_end)
+};
+
 /*
  * We make these constant because no one should touch them,
  * but they are used as the default "empty hash", to avoid allocating
@@ -88,4 +96,46 @@ __init void ftrace_init_global_array_ops(struct trace_array *tr)
 int ftrace_is_dead(void)
 {
     return ftrace_disabled;
+}
+
+/*
+ * Used by the stack unwinder to know about dynamic ftrace trampolines.
+ */
+struct ftrace_ops *ftrace_ops_trampoline(unsigned long addr)
+{
+    struct ftrace_ops *op = NULL;
+
+    /*
+     * Some of the ops may be dynamically allocated,
+     * they are freed after a synchronize_rcu().
+     */
+    preempt_disable_notrace();
+
+    do_for_each_ftrace_op(op, ftrace_ops_list) {
+        /*
+         * This is to check for dynamically allocated trampolines.
+         * Trampolines that are in kernel text will have
+         * core_kernel_text() return true.
+         */
+        if (op->trampoline && op->trampoline_size)
+            if (addr >= op->trampoline &&
+                addr < op->trampoline + op->trampoline_size) {
+                preempt_enable_notrace();
+                return op;
+            }
+    } while_for_each_ftrace_op(op);
+    preempt_enable_notrace();
+
+    return NULL;
+}
+
+/*
+ * This is used by __kernel_text_address() to return true if the
+ * address is on a dynamically allocated trampoline that would
+ * not return true for either core_kernel_text() or
+ * is_module_text_address().
+ */
+bool is_ftrace_trampoline(unsigned long addr)
+{
+    return ftrace_ops_trampoline(addr) != NULL;
 }

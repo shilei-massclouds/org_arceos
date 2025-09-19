@@ -578,10 +578,12 @@ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
 	struct of_phandle_args oirq;
 	int ret;
 
+    printk("%s: step1\n", __func__);
 	ret = of_irq_parse_pci(dev, &oirq);
 	if (ret)
 		return 0; /* Proper return code 0 == NO_IRQ */
 
+    printk("%s: step2\n", __func__);
 	return irq_create_of_mapping(&oirq);
 }
 EXPORT_SYMBOL_GPL(of_irq_parse_and_map_pci);

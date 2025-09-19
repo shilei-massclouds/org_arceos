@@ -331,6 +331,7 @@ void pci_bus_add_device(struct pci_dev *dev)
 	struct device_node *dn = dev->dev.of_node;
 	int retval;
 
+    printk("%s: step1 irq(%d)\n", __func__, dev->irq);
 	/*
 	 * Can not put in pci_device_add yet because resources
 	 * are not assigned yet for some devices.

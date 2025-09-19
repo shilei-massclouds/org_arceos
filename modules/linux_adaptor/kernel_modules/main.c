@@ -8,6 +8,7 @@
 #include <linux/cpu.h>
 #include <linux/of_fdt.h>
 #include <linux/ftrace.h>
+#include <linux/async.h>
 
 // Only for riscv64
 #include <asm/sbi.h>
@@ -17,15 +18,18 @@
 #include "block/blk.h"
 #include "adaptor.h"
 
-//#define TEST_BLOCK
+#define TEST_BLOCK
 //#define TEST_EXT4
 
 extern void cl_gpiolib_dev_init(void);
 extern int cl_of_platform_default_populate_init(void);
 
+/*
 extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
+                               */
 
+extern int cl_nvme_core_init(void);
 extern int cl_pci_driver_init(void);
 extern void cl_gen_pci_driver_init(void);
 
@@ -116,6 +120,7 @@ int clinux_init(phys_addr_t dt_phys)
     devices_init();
     buses_init();
     classes_init();
+    firmware_init();
     platform_bus_init();
     buffer_init();
     vfs_caches_init();
@@ -126,7 +131,14 @@ int clinux_init(phys_addr_t dt_phys)
     init_timers();
     workqueue_init();
     workqueue_init_topology();
+    async_init();
     cl_default_bdi_init();
+
+    // nvme/host/core.c
+    cl_nvme_core_init();
+
+    // pci/pci-driver.c
+    cl_pci_driver_init();
 
     unflatten_device_tree();
     cl_of_platform_default_populate_init();
@@ -134,6 +146,11 @@ int clinux_init(phys_addr_t dt_phys)
     // pci/controller/pci-host-generic.c
     cl_gen_pci_driver_init();
 
+    // NOTE: Impl it.
+    //early_irq_init();
+    init_IRQ();
+
+#if 0
     {
         static struct device_node riscv_intc_node;
         riscv_intc_node.name = "riscv_intc";
@@ -142,6 +159,7 @@ int clinux_init(phys_addr_t dt_phys)
             PANIC("No handle_arch_irq.");
         }
     }
+#endif
 
     parse_early_param();
 
@@ -167,9 +185,6 @@ int clinux_init(phys_addr_t dt_phys)
 
     // power/gpio-poweroff.c
     cl_gpio_poweroff_driver_init();
-
-    // pci/pci-driver.c
-    cl_pci_driver_init();
 
     cl_virtio_init();
     cl_virtio_mmio_init();
