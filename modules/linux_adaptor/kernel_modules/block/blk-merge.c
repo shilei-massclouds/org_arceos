@@ -19,6 +19,37 @@
 
 #include "../adaptor.h"
 
+static inline void bio_get_first_bvec(struct bio *bio, struct bio_vec *bv)
+{
+    *bv = mp_bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
+}
+
+static inline void bio_get_last_bvec(struct bio *bio, struct bio_vec *bv)
+{
+    struct bvec_iter iter = bio->bi_iter;
+    int idx;
+
+    bio_get_first_bvec(bio, bv);
+    if (bv->bv_len == bio->bi_iter.bi_size)
+        return;     /* this bio only has a single bvec */
+
+    bio_advance_iter(bio, &iter, iter.bi_size);
+
+    if (!iter.bi_bvec_done)
+        idx = iter.bi_idx - 1;
+    else    /* in the middle of bvec */
+        idx = iter.bi_idx;
+
+    *bv = bio->bi_io_vec[idx];
+
+    /*
+     * iter.bi_bvec_done records actual length of the last bvec
+     * if this bio ends in the middle of one io vector
+     */
+    if (iter.bi_bvec_done)
+        bv->bv_len = iter.bi_bvec_done;
+}
+
 static bool blk_atomic_write_mergeable_rq_bio(struct request *rq,
                           struct bio *bio)
 {
@@ -46,7 +77,6 @@ static inline bool bio_will_gap(struct request_queue *q,
     if (!bio_has_data(prev) || !queue_virt_boundary(q))
         return false;
 
-#if 0
     /*
      * Don't merge if the 1st bio starts with non-zero offset, otherwise it
      * is quite difficult to respect the sg gap limit.  We work hard to
@@ -73,8 +103,6 @@ static inline bool bio_will_gap(struct request_queue *q,
     if (biovec_phys_mergeable(q, &pb, &nb))
         return false;
     return __bvec_gap_to_prev(&q->limits, &pb, nb.bv_offset);
-#endif
-    PANIC("");
 }
 
 static inline bool req_gap_front_merge(struct request *req, struct bio *bio)
@@ -116,6 +144,65 @@ static inline blk_opf_t bio_failfast(const struct bio *bio)
     return bio->bi_opf & REQ_FAILFAST_MASK;
 }
 
+/**
+ * blk_rq_set_mixed_merge - mark a request as mixed merge
+ * @rq: request to mark as mixed merge
+ *
+ * Description:
+ *     @rq is about to be mixed merged.  Make sure the attributes
+ *     which can be mixed are set in each bio and mark @rq as mixed
+ *     merged.
+ */
+static void blk_rq_set_mixed_merge(struct request *rq)
+{
+    blk_opf_t ff = rq->cmd_flags & REQ_FAILFAST_MASK;
+    struct bio *bio;
+
+    if (rq->rq_flags & RQF_MIXED_MERGE)
+        return;
+
+    /*
+     * @rq will no longer represent mixable attributes for all the
+     * contained bios.  It will just track those of the first one.
+     * Distributes the attributs to each bio.
+     */
+    for (bio = rq->bio; bio; bio = bio->bi_next) {
+        WARN_ON_ONCE((bio->bi_opf & REQ_FAILFAST_MASK) &&
+                 (bio->bi_opf & REQ_FAILFAST_MASK) != ff);
+        bio->bi_opf |= ff;
+    }
+    rq->rq_flags |= RQF_MIXED_MERGE;
+}
+
+/*
+ * After we are marked as MIXED_MERGE, any new RA bio has to be updated
+ * as failfast, and request's failfast has to be updated in case of
+ * front merge.
+ */
+static inline void blk_update_mixed_merge(struct request *req,
+        struct bio *bio, bool front_merge)
+{
+    if (req->rq_flags & RQF_MIXED_MERGE) {
+        if (bio->bi_opf & REQ_RAHEAD)
+            bio->bi_opf |= REQ_FAILFAST_MASK;
+
+        if (front_merge) {
+            req->cmd_flags &= ~REQ_FAILFAST_MASK;
+            req->cmd_flags |= bio->bi_opf & REQ_FAILFAST_MASK;
+        }
+    }
+}
+
+static void blk_account_io_merge_bio(struct request *req)
+{
+    if (!blk_do_io_stat(req))
+        return;
+
+    part_stat_lock();
+    part_stat_inc(req->part, merges[op_stat_group(req_op(req))]);
+    part_stat_unlock();
+}
+
 enum bio_merge_status bio_attempt_back_merge(struct request *req,
         struct bio *bio, unsigned int nr_segs)
 {
@@ -124,7 +211,6 @@ enum bio_merge_status bio_attempt_back_merge(struct request *req,
     if (!ll_back_merge_fn(req, bio, nr_segs))
         return BIO_MERGE_FAILED;
 
-#if 0
     trace_block_bio_backmerge(bio);
     rq_qos_merge(req->q, req, bio);
 
@@ -143,8 +229,6 @@ enum bio_merge_status bio_attempt_back_merge(struct request *req,
     bio_crypt_free_ctx(bio);
 
     blk_account_io_merge_bio(req);
-#endif
-    PANIC("");
     return BIO_MERGE_OK;
 }
 
@@ -219,10 +303,7 @@ int ll_back_merge_fn(struct request *req, struct bio *bio, unsigned int nr_segs)
         return 0;
     }
 
-#if 0
     return ll_new_hw_segment(req, bio, nr_segs);
-#endif
-    PANIC("");
 }
 
 static int ll_front_merge_fn(struct request *req, struct bio *bio,
@@ -449,7 +530,21 @@ static inline bool
 __blk_segment_map_sg_merge(struct request_queue *q, struct bio_vec *bvec,
                struct bio_vec *bvprv, struct scatterlist **sg)
 {
-    PANIC("");
+
+    int nbytes = bvec->bv_len;
+
+    if (!*sg)
+        return false;
+
+    if ((*sg)->length + nbytes > queue_max_segment_size(q))
+        return false;
+
+    if (!biovec_phys_mergeable(q, bvprv, bvec))
+        return false;
+
+    (*sg)->length += nbytes;
+
+    return true;
 }
 
 static unsigned blk_bvec_map_sg(struct request_queue *q,

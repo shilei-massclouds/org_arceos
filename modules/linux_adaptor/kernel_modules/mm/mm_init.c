@@ -31,6 +31,7 @@
 #include "../adaptor.h"
 
 DEFINE_STATIC_KEY_MAYBE(CONFIG_INIT_ON_ALLOC_DEFAULT_ON, init_on_alloc);
+DEFINE_STATIC_KEY_MAYBE(CONFIG_INIT_ON_FREE_DEFAULT_ON, init_on_free);
 
 /*
  * Adaptive scale is meant to reduce sizes of hash tables on large memory

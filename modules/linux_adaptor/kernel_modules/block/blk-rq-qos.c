@@ -53,3 +53,13 @@ void __rq_qos_requeue(struct rq_qos *rqos, struct request *rq)
         rqos = rqos->next;
     } while (rqos);
 }
+
+
+void __rq_qos_merge(struct rq_qos *rqos, struct request *rq, struct bio *bio)
+{
+    do {
+        if (rqos->ops->merge)
+            rqos->ops->merge(rqos, rq, bio);
+        rqos = rqos->next;
+    } while (rqos);
+}

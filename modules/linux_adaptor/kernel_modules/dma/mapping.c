@@ -253,3 +253,91 @@ bool dma_pci_p2pdma_supported(struct device *dev)
     /* if ops is not set, dma direct and default IOMMU support P2PDMA */
     return !ops;
 }
+
+static int __dma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
+     int nents, enum dma_data_direction dir, unsigned long attrs)
+{
+    const struct dma_map_ops *ops = get_dma_ops(dev);
+    int ents;
+
+    BUG_ON(!valid_dma_direction(dir));
+
+    if (WARN_ON_ONCE(!dev->dma_mask))
+        return 0;
+
+    if (dma_map_direct(dev, ops) ||
+        arch_dma_map_sg_direct(dev, sg, nents))
+        ents = dma_direct_map_sg(dev, sg, nents, dir, attrs);
+    else if (use_dma_iommu(dev))
+        ents = iommu_dma_map_sg(dev, sg, nents, dir, attrs);
+    else
+        ents = ops->map_sg(dev, sg, nents, dir, attrs);
+
+    if (ents > 0) {
+        kmsan_handle_dma_sg(sg, nents, dir);
+        trace_dma_map_sg(dev, sg, nents, ents, dir, attrs);
+        debug_dma_map_sg(dev, sg, nents, ents, dir, attrs);
+    } else if (WARN_ON_ONCE(ents != -EINVAL && ents != -ENOMEM &&
+                ents != -EIO && ents != -EREMOTEIO)) {
+        return -EIO;
+    }
+
+    return ents;
+}
+
+/**
+ * dma_map_sgtable - Map the given buffer for DMA
+ * @dev:    The device for which to perform the DMA operation
+ * @sgt:    The sg_table object describing the buffer
+ * @dir:    DMA direction
+ * @attrs:  Optional DMA attributes for the map operation
+ *
+ * Maps a buffer described by a scatterlist stored in the given sg_table
+ * object for the @dir DMA operation by the @dev device. After success, the
+ * ownership for the buffer is transferred to the DMA domain.  One has to
+ * call dma_sync_sgtable_for_cpu() or dma_unmap_sgtable() to move the
+ * ownership of the buffer back to the CPU domain before touching the
+ * buffer by the CPU.
+ *
+ * Returns 0 on success or a negative error code on error. The following
+ * error codes are supported with the given meaning:
+ *
+ *   -EINVAL        An invalid argument, unaligned access or other error
+ *          in usage. Will not succeed if retried.
+ *   -ENOMEM        Insufficient resources (like memory or IOVA space) to
+ *          complete the mapping. Should succeed if retried later.
+ *   -EIO       Legacy error code with an unknown meaning. eg. this is
+ *          returned if a lower level call returned
+ *          DMA_MAPPING_ERROR.
+ *   -EREMOTEIO     The DMA device cannot access P2PDMA memory specified
+ *          in the sg_table. This will not succeed if retried.
+ */
+int dma_map_sgtable(struct device *dev, struct sg_table *sgt,
+            enum dma_data_direction dir, unsigned long attrs)
+{
+    int nents;
+
+    nents = __dma_map_sg_attrs(dev, sgt->sgl, sgt->orig_nents, dir, attrs);
+    if (nents < 0)
+        return nents;
+    sgt->nents = nents;
+    return 0;
+}
+
+void dma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
+                      int nents, enum dma_data_direction dir,
+                      unsigned long attrs)
+{
+    const struct dma_map_ops *ops = get_dma_ops(dev);
+
+    BUG_ON(!valid_dma_direction(dir));
+    trace_dma_unmap_sg(dev, sg, nents, dir, attrs);
+    debug_dma_unmap_sg(dev, sg, nents, dir);
+    if (dma_map_direct(dev, ops) ||
+        arch_dma_unmap_sg_direct(dev, sg, nents))
+        dma_direct_unmap_sg(dev, sg, nents, dir, attrs);
+    else if (use_dma_iommu(dev))
+        iommu_dma_unmap_sg(dev, sg, nents, dir, attrs);
+    else if (ops->unmap_sg)
+        ops->unmap_sg(dev, sg, nents, dir, attrs);
+}

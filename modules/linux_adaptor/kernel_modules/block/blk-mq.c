@@ -2016,8 +2016,6 @@ queue_exit:
      */
     if (!rq)
         blk_queue_exit(q);
-
-    PANIC("ERR");
 }
 
 static void __blk_mq_flush_plug_list(struct request_queue *q,
@@ -3163,7 +3161,8 @@ static inline void blk_mq_flush_tag_batch(struct blk_mq_hw_ctx *hctx,
     blk_mq_sub_active_requests(hctx, nr_tags);
 
     blk_mq_put_tags(hctx->tags, tag_array, nr_tags);
-    percpu_ref_put_many(&q->q_usage_counter, nr_tags);
+    //percpu_ref_put_many(&q->q_usage_counter, nr_tags);
+    pr_notice("%s: No impl for percpu_ref_put_many.", __func__);
 }
 
 void blk_mq_end_request_batch(struct io_comp_batch *iob)

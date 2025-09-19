@@ -169,3 +169,158 @@ struct dma_pool *dma_pool_create(const char *name, struct device *dev,
     mutex_unlock(&pools_reg_lock);
     return retval;
 }
+
+static struct dma_block *pool_block_pop(struct dma_pool *pool)
+{
+    struct dma_block *block = pool->next_block;
+
+    if (block) {
+        pool->next_block = block->next_block;
+        pool->nr_active++;
+    }
+    return block;
+}
+
+static void pool_check_block(struct dma_pool *pool, struct dma_block *block,
+                 gfp_t mem_flags)
+{
+}
+
+static bool pool_block_err(struct dma_pool *pool, void *vaddr, dma_addr_t dma)
+{
+    if (want_init_on_free())
+        memset(vaddr, 0, pool->size);
+    return false;
+}
+
+static void pool_init_page(struct dma_pool *pool, struct dma_page *page)
+{
+}
+
+static void pool_block_push(struct dma_pool *pool, struct dma_block *block,
+                dma_addr_t dma)
+{
+    block->dma = dma;
+    block->next_block = pool->next_block;
+    pool->next_block = block;
+}
+
+static void pool_initialise_page(struct dma_pool *pool, struct dma_page *page)
+{
+    unsigned int next_boundary = pool->boundary, offset = 0;
+    struct dma_block *block, *first = NULL, *last = NULL;
+
+    pool_init_page(pool, page);
+    while (offset + pool->size <= pool->allocation) {
+        if (offset + pool->size > next_boundary) {
+            offset = next_boundary;
+            next_boundary += pool->boundary;
+            continue;
+        }
+
+        block = page->vaddr + offset;
+        block->dma = page->dma + offset;
+        block->next_block = NULL;
+
+        if (last)
+            last->next_block = block;
+        else
+            first = block;
+        last = block;
+
+        offset += pool->size;
+        pool->nr_blocks++;
+    }
+
+    last->next_block = pool->next_block;
+    pool->next_block = first;
+
+    list_add(&page->page_list, &pool->page_list);
+    pool->nr_pages++;
+}
+
+static struct dma_page *pool_alloc_page(struct dma_pool *pool, gfp_t mem_flags)
+{
+    struct dma_page *page;
+
+    page = kmalloc(sizeof(*page), mem_flags);
+    if (!page)
+        return NULL;
+
+    page->vaddr = dma_alloc_coherent(pool->dev, pool->allocation,
+                     &page->dma, mem_flags);
+    if (!page->vaddr) {
+        kfree(page);
+        return NULL;
+    }
+
+    return page;
+}
+
+/**
+ * dma_pool_alloc - get a block of consistent memory
+ * @pool: dma pool that will produce the block
+ * @mem_flags: GFP_* bitmask
+ * @handle: pointer to dma address of block
+ *
+ * Return: the kernel virtual address of a currently unused block,
+ * and reports its dma address through the handle.
+ * If such a memory block can't be allocated, %NULL is returned.
+ */
+void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
+             dma_addr_t *handle)
+{
+    struct dma_block *block;
+    struct dma_page *page;
+    unsigned long flags;
+
+    might_alloc(mem_flags);
+
+    spin_lock_irqsave(&pool->lock, flags);
+    block = pool_block_pop(pool);
+    if (!block) {
+        /*
+         * pool_alloc_page() might sleep, so temporarily drop
+         * &pool->lock
+         */
+        spin_unlock_irqrestore(&pool->lock, flags);
+
+        page = pool_alloc_page(pool, mem_flags & (~__GFP_ZERO));
+        if (!page)
+            return NULL;
+
+        spin_lock_irqsave(&pool->lock, flags);
+        pool_initialise_page(pool, page);
+        block = pool_block_pop(pool);
+    }
+    spin_unlock_irqrestore(&pool->lock, flags);
+
+    *handle = block->dma;
+    pool_check_block(pool, block, mem_flags);
+    if (want_init_on_alloc(mem_flags))
+        memset(block, 0, pool->size);
+
+    return block;
+}
+
+/**
+ * dma_pool_free - put block back into dma pool
+ * @pool: the dma pool holding the block
+ * @vaddr: virtual address of block
+ * @dma: dma address of block
+ *
+ * Caller promises neither device nor driver will again touch this block
+ * unless it is first re-allocated.
+ */
+void dma_pool_free(struct dma_pool *pool, void *vaddr, dma_addr_t dma)
+{
+    struct dma_block *block = vaddr;
+    unsigned long flags;
+
+    spin_lock_irqsave(&pool->lock, flags);
+    if (!pool_block_err(pool, vaddr, dma)) {
+        pool_block_push(pool, block, dma);
+        pool->nr_active--;
+    }
+    spin_unlock_irqrestore(&pool->lock, flags);
+}
