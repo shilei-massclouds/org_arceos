@@ -205,3 +205,19 @@ int blocking_notifier_chain_register_unique_prio(struct blocking_notifier_head *
 {
     return __blocking_notifier_chain_register(nh, n, true);
 }
+
+/**
+ *  raw_notifier_chain_register - Add notifier to a raw notifier chain
+ *  @nh: Pointer to head of the raw notifier chain
+ *  @n: New entry in notifier chain
+ *
+ *  Adds a notifier to a raw notifier chain.
+ *  All locking must be provided by the caller.
+ *
+ *  Returns 0 on success, %-EEXIST on error.
+ */
+int raw_notifier_chain_register(struct raw_notifier_head *nh,
+        struct notifier_block *n)
+{
+    return notifier_chain_register(&nh->head, n, false);
+}

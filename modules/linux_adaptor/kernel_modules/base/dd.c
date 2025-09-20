@@ -18,10 +18,17 @@
 
 static DEFINE_MUTEX(deferred_probe_mutex);
 static LIST_HEAD(deferred_probe_pending_list);
+static LIST_HEAD(deferred_probe_active_list);
 static atomic_t deferred_trigger_count = ATOMIC_INIT(0);
 
 static atomic_t probe_count = ATOMIC_INIT(0);
 static DECLARE_WAIT_QUEUE_HEAD(probe_waitqueue);
+
+#ifdef CONFIG_MODULES
+static int driver_deferred_probe_timeout = 10;
+#else
+static int driver_deferred_probe_timeout;
+#endif
 
 /*
  * In some cases, like suspend to RAM or hibernation, It might be reasonable
@@ -29,6 +36,8 @@ static DECLARE_WAIT_QUEUE_HEAD(probe_waitqueue);
  * Once defer_all_probes is true all drivers probes will be forcibly deferred.
  */
 static bool defer_all_probes;
+
+static bool initcalls_done;
 
 struct device_attach_data {
     struct device *dev;
@@ -63,32 +72,6 @@ struct device_attach_data {
     bool have_async;
 };
 
-static bool driver_deferred_probe_enable;
-/**
- * driver_deferred_probe_trigger() - Kick off re-probing deferred devices
- *
- * This functions moves all devices from the pending list to the active
- * list and schedules the deferred probe workqueue to process them.  It
- * should be called anytime a driver is successfully bound to a device.
- *
- * Note, there is a race condition in multi-threaded probe. In the case where
- * more than one device is probing at the same time, it is possible for one
- * probe to complete successfully while another is about to defer. If the second
- * depends on the first, then it will get put on the pending list after the
- * trigger event has already occurred and will be stuck there.
- *
- * The atomic 'deferred_trigger_count' is used to determine if a successful
- * trigger has occurred in the midst of probing a driver. If the trigger count
- * changes in the midst of a probe, then deferred processing should be triggered
- * again.
- */
-void driver_deferred_probe_trigger(void)
-{
-    if (!driver_deferred_probe_enable)
-        return;
-
-    PANIC("");
-}
 
 static void __device_attach_async_helper(void *_dev, async_cookie_t cookie)
 {
@@ -718,3 +701,185 @@ int device_attach(struct device *dev)
 {
     return __device_attach(dev, false);
 }
+
+static void __device_set_deferred_probe_reason(const struct device *dev, char *reason)
+{
+    kfree(dev->p->deferred_probe_reason);
+    dev->p->deferred_probe_reason = reason;
+}
+
+/**
+ * device_set_deferred_probe_reason() - Set defer probe reason message for device
+ * @dev: the pointer to the struct device
+ * @vaf: the pointer to va_format structure with message
+ */
+void device_set_deferred_probe_reason(const struct device *dev, struct va_format *vaf)
+{
+    const char *drv = dev_driver_string(dev);
+    char *reason;
+
+    mutex_lock(&deferred_probe_mutex);
+
+    reason = kasprintf(GFP_KERNEL, "%s: %pV", drv, vaf);
+    __device_set_deferred_probe_reason(dev, reason);
+
+    mutex_unlock(&deferred_probe_mutex);
+}
+
+/*
+ * deferred_probe_work_func() - Retry probing devices in the active list.
+ */
+static void deferred_probe_work_func(struct work_struct *work)
+{
+    struct device *dev;
+    struct device_private *private;
+    /*
+     * This block processes every device in the deferred 'active' list.
+     * Each device is removed from the active list and passed to
+     * bus_probe_device() to re-attempt the probe.  The loop continues
+     * until every device in the active list is removed and retried.
+     *
+     * Note: Once the device is removed from the list and the mutex is
+     * released, it is possible for the device get freed by another thread
+     * and cause a illegal pointer dereference.  This code uses
+     * get/put_device() to ensure the device structure cannot disappear
+     * from under our feet.
+     */
+    mutex_lock(&deferred_probe_mutex);
+    while (!list_empty(&deferred_probe_active_list)) {
+        private = list_first_entry(&deferred_probe_active_list,
+                    typeof(*dev->p), deferred_probe);
+        dev = private->device;
+        list_del_init(&private->deferred_probe);
+
+        get_device(dev);
+
+        __device_set_deferred_probe_reason(dev, NULL);
+
+        /*
+         * Drop the mutex while probing each device; the probe path may
+         * manipulate the deferred list
+         */
+        mutex_unlock(&deferred_probe_mutex);
+
+        /*
+         * Force the device to the end of the dpm_list since
+         * the PM code assumes that the order we add things to
+         * the list is a good order for suspend but deferred
+         * probe makes that very unsafe.
+         */
+        device_pm_move_to_tail(dev);
+
+        dev_dbg(dev, "Retrying from deferred list\n");
+        bus_probe_device(dev);
+        mutex_lock(&deferred_probe_mutex);
+
+        put_device(dev);
+    }
+    mutex_unlock(&deferred_probe_mutex);
+}
+
+static DECLARE_WORK(deferred_probe_work, deferred_probe_work_func);
+
+static bool driver_deferred_probe_enable;
+/**
+ * driver_deferred_probe_trigger() - Kick off re-probing deferred devices
+ *
+ * This functions moves all devices from the pending list to the active
+ * list and schedules the deferred probe workqueue to process them.  It
+ * should be called anytime a driver is successfully bound to a device.
+ *
+ * Note, there is a race condition in multi-threaded probe. In the case where
+ * more than one device is probing at the same time, it is possible for one
+ * probe to complete successfully while another is about to defer. If the second
+ * depends on the first, then it will get put on the pending list after the
+ * trigger event has already occurred and will be stuck there.
+ *
+ * The atomic 'deferred_trigger_count' is used to determine if a successful
+ * trigger has occurred in the midst of probing a driver. If the trigger count
+ * changes in the midst of a probe, then deferred processing should be triggered
+ * again.
+ */
+void driver_deferred_probe_trigger(void)
+{
+    if (!driver_deferred_probe_enable)
+        return;
+
+    /*
+     * A successful probe means that all the devices in the pending list
+     * should be triggered to be reprobed.  Move all the deferred devices
+     * into the active list so they can be retried by the workqueue
+     */
+    mutex_lock(&deferred_probe_mutex);
+    atomic_inc(&deferred_trigger_count);
+    list_splice_tail_init(&deferred_probe_pending_list,
+                  &deferred_probe_active_list);
+    mutex_unlock(&deferred_probe_mutex);
+
+    /*
+     * Kick the re-probe thread.  It may already be scheduled, but it is
+     * safe to kick it again.
+     */
+    queue_work(system_unbound_wq, &deferred_probe_work);
+}
+
+static void deferred_probe_timeout_work_func(struct work_struct *work)
+{
+    struct device_private *p;
+
+    fw_devlink_drivers_done();
+
+    driver_deferred_probe_timeout = 0;
+    driver_deferred_probe_trigger();
+    flush_work(&deferred_probe_work);
+
+    mutex_lock(&deferred_probe_mutex);
+    list_for_each_entry(p, &deferred_probe_pending_list, deferred_probe)
+        dev_warn(p->device, "deferred probe pending: %s", p->deferred_probe_reason ?: "(reason unknown)\n");
+    mutex_unlock(&deferred_probe_mutex);
+
+    fw_devlink_probing_done();
+}
+static DECLARE_DELAYED_WORK(deferred_probe_timeout_work, deferred_probe_timeout_work_func);
+
+/**
+ * deferred_probe_initcall() - Enable probing of deferred devices
+ *
+ * We don't want to get in the way when the bulk of drivers are getting probed.
+ * Instead, this initcall makes sure that deferred probing is delayed until
+ * late_initcall time.
+ */
+static int deferred_probe_initcall(void)
+{
+#if 0
+    debugfs_create_file("devices_deferred", 0444, NULL, NULL,
+                &deferred_devs_fops);
+#endif
+
+    driver_deferred_probe_enable = true;
+    driver_deferred_probe_trigger();
+    /* Sort as many dependencies as possible before exiting initcalls */
+    flush_work(&deferred_probe_work);
+    initcalls_done = true;
+
+    if (!IS_ENABLED(CONFIG_MODULES))
+        fw_devlink_drivers_done();
+
+    /*
+     * Trigger deferred probe again, this time we won't defer anything
+     * that is optional
+     */
+    driver_deferred_probe_trigger();
+    flush_work(&deferred_probe_work);
+
+    if (driver_deferred_probe_timeout > 0) {
+        schedule_delayed_work(&deferred_probe_timeout_work,
+            driver_deferred_probe_timeout * HZ);
+    }
+
+    if (!IS_ENABLED(CONFIG_MODULES))
+        fw_devlink_probing_done();
+
+    return 0;
+}
+late_initcall(deferred_probe_initcall);

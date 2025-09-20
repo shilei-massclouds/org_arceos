@@ -959,3 +959,57 @@ void percpu_ref_resurrect(struct percpu_ref *ref)
 {
     pr_notice("%s: No impl.", __func__);
 }
+
+struct dentry *debugfs_create_file(const char *name, umode_t mode,
+                   struct dentry *parent, void *data,
+                   const struct file_operations *fops)
+{
+    pr_err("%s: No impl.", __func__);
+    return NULL;
+}
+
+struct dentry *debugfs_create_dir(const char *name, struct dentry *parent)
+{
+    pr_err("%s: No impl.", __func__);
+    return NULL;
+}
+
+void debugfs_create_bool(const char *name, umode_t mode, struct dentry *parent,
+             bool *value)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+void __init __register_sysctl_init(const char *path, struct ctl_table *table,
+                 const char *table_name, size_t table_size)
+{
+    pr_err("%s: No impl.", __func__);
+}
+
+int kobject_synth_uevent(struct kobject *kobj, const char *buf, size_t count)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+int sysfs_create_file_ns(struct kobject *kobj, const struct attribute *attr,
+             const void *ns)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+void __init crypto_init_proc(void)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void device_pm_lock(void)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void device_pm_unlock(void)
+{
+    pr_notice("%s: No impl.", __func__);
+}

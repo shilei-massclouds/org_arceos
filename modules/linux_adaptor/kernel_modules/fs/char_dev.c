@@ -378,6 +378,110 @@ static struct kobject *base_probe(dev_t dev, int *part, void *data)
     return NULL;
 }
 
+static void cdev_dynamic_release(struct kobject *kobj)
+{
+    struct cdev *p = container_of(kobj, struct cdev, kobj);
+    struct kobject *parent = kobj->parent;
+
+    cdev_purge(p);
+    kfree(p);
+    kobject_put(parent);
+}
+
+static struct kobj_type ktype_cdev_dynamic = {
+    .release    = cdev_dynamic_release,
+};
+
+/**
+ * cdev_alloc() - allocate a cdev structure
+ *
+ * Allocates and returns a cdev structure, or NULL on failure.
+ */
+struct cdev *cdev_alloc(void)
+{
+    struct cdev *p = kzalloc(sizeof(struct cdev), GFP_KERNEL);
+    if (p) {
+        INIT_LIST_HEAD(&p->list);
+        kobject_init(&p->kobj, &ktype_cdev_dynamic);
+    }
+    return p;
+}
+
+static struct char_device_struct *
+__unregister_chrdev_region(unsigned major, unsigned baseminor, int minorct)
+{
+    struct char_device_struct *cd = NULL, **cp;
+    int i = major_to_index(major);
+
+    mutex_lock(&chrdevs_lock);
+    for (cp = &chrdevs[i]; *cp; cp = &(*cp)->next)
+        if ((*cp)->major == major &&
+            (*cp)->baseminor == baseminor &&
+            (*cp)->minorct == minorct)
+            break;
+    if (*cp) {
+        cd = *cp;
+        *cp = cd->next;
+    }
+    mutex_unlock(&chrdevs_lock);
+    return cd;
+}
+
+/**
+ * __register_chrdev() - create and register a cdev occupying a range of minors
+ * @major: major device number or 0 for dynamic allocation
+ * @baseminor: first of the requested range of minor numbers
+ * @count: the number of minor numbers required
+ * @name: name of this range of devices
+ * @fops: file operations associated with this devices
+ *
+ * If @major == 0 this functions will dynamically allocate a major and return
+ * its number.
+ *
+ * If @major > 0 this function will attempt to reserve a device with the given
+ * major number and will return zero on success.
+ *
+ * Returns a -ve errno on failure.
+ *
+ * The name of this device has nothing to do with the name of the device in
+ * /dev. It only helps to keep track of the different owners of devices. If
+ * your module name has only one type of devices it's ok to use e.g. the name
+ * of the module here.
+ */
+int __register_chrdev(unsigned int major, unsigned int baseminor,
+              unsigned int count, const char *name,
+              const struct file_operations *fops)
+{
+    struct char_device_struct *cd;
+    struct cdev *cdev;
+    int err = -ENOMEM;
+
+    cd = __register_chrdev_region(major, baseminor, count, name);
+    if (IS_ERR(cd))
+        return PTR_ERR(cd);
+
+    cdev = cdev_alloc();
+    if (!cdev)
+        goto out2;
+
+    cdev->owner = fops->owner;
+    cdev->ops = fops;
+    kobject_set_name(&cdev->kobj, "%s", name);
+
+    err = cdev_add(cdev, MKDEV(cd->major, baseminor), count);
+    if (err)
+        goto out;
+
+    cd->cdev = cdev;
+
+    return major ? 0 : cd->major;
+out:
+    kobject_put(&cdev->kobj);
+out2:
+    kfree(__unregister_chrdev_region(cd->major, baseminor, count));
+    return err;
+}
+
 void __init chrdev_init(void)
 {
     cdev_map = kobj_map_init(base_probe, &chrdevs_lock);

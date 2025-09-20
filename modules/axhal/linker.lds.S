@@ -82,6 +82,7 @@ SECTIONS
         __irqchip_of_table = .;
         KEEP(*(__irqchip_of_table))
         KEEP(*(__irqchip_of_table_end))
+        __irqchip_of_table_end__ = .;
     }
 
     . = ALIGN(4K);
@@ -106,6 +107,10 @@ SECTIONS
         *(.ref.data)
         . = ALIGN(32);
         *(__tracepoints)
+        . = ALIGN(32);
+        __start__bpf_raw_tp = .;
+        KEEP(*(__bpf_raw_tp_map))
+        __stop__bpf_raw_tp = .;
     }
 
     .init.data : ALIGN(4K) {
@@ -114,6 +119,31 @@ SECTIONS
         __start_ftrace_events = .;
         KEEP(*(_ftrace_events))
         __stop_ftrace_events = .;
+        __start_ftrace_eval_maps = .;
+        KEEP(*(_ftrace_eval_map))
+        __stop_ftrace_eval_maps = .;
+        . = ALIGN(16);
+        __initcall_start = .;
+        KEEP(*(.initcallearly.init))
+        __initcall0_start = .;
+        KEEP(*(.initcall0.init)) KEEP(*(.initcall0s.init))
+        __initcall1_start = .;
+        KEEP(*(.initcall1.init)) KEEP(*(.initcall1s.init))
+        __initcall2_start = .;
+        KEEP(*(.initcall2.init)) KEEP(*(.initcall2s.init))
+        __initcall3_start = .;
+        KEEP(*(.initcall3.init)) KEEP(*(.initcall3s.init))
+        __initcall4_start = .;
+        KEEP(*(.initcall4.init)) KEEP(*(.initcall4s.init))
+        __initcall5_start = .;
+        KEEP(*(.initcall5.init)) KEEP(*(.initcall5s.init))
+        __initcallrootfs_start = .;
+        KEEP(*(.initcallrootfs.init)) KEEP(*(.initcallrootfss.init))
+        __initcall6_start = .;
+        KEEP(*(.initcall6.init)) KEEP(*(.initcall6s.init))
+        __initcall7_start = .;
+        KEEP(*(.initcall7.init)) KEEP(*(.initcall7s.init))
+        __initcall_end = .;
     }
 
     .tdata : ALIGN(0x10) {
@@ -160,7 +190,7 @@ SECTIONS
     _ekernel = .;
 
 	/DISCARD/ : {
-        *(.comment) *(.gnu*) *(.note*) *(.eh_frame*)
+        *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) *(.discard) *(.discard.*)
     }
 }
 

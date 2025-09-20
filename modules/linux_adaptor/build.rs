@@ -18,7 +18,6 @@ fn main() {
     }
 
     println!("cargo::rustc-link-search=native={}", cwd);
-    println!("cargo::rustc-link-lib=static=clinux");
-    //println!("cargo::rustc-link-arg=--no-gc-sections");
+    println!("cargo::rustc-link-lib=static:+whole-archive=clinux");
     println!("cargo::rerun-if-changed=kernel_modules");
 }

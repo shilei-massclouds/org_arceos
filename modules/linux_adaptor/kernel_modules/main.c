@@ -21,7 +21,9 @@
 //#define TEST_BLOCK
 //#define TEST_EXT4
 
-extern void cl_gpiolib_dev_init(void);
+extern void cl_do_initcalls(void);
+
+//extern void cl_gpiolib_dev_init(void);
 extern int cl_of_platform_default_populate_init(void);
 
 /*
@@ -29,41 +31,47 @@ extern void cl_riscv_intc_init(struct device_node *node,
                                struct device_node *parent);
                                */
 
-extern int cl_nvme_core_init(void);
-extern int cl_pci_driver_init(void);
-extern void cl_gen_pci_driver_init(void);
+//extern int cl_nvme_core_init(void);
+//extern int cl_pci_driver_init(void);
+//extern void cl_gen_pci_driver_init(void);
 
+/*
 extern void cl_sifive_gpio_driver_init(void);
 extern void cl_gpio_restart_driver_init(void);
 extern void cl_gpio_poweroff_driver_init(void);
+*/
 
-extern int cl_nvmem_init(void);
-extern void cl_mtdblock_tr_init(void);
-extern int cl_nvme_init(void);
+//extern int cl_nvmem_init(void);
+//extern void cl_mtdblock_tr_init(void);
+//extern int cl_nvme_init(void);
 
-extern int cl_spi_init(void);
-extern void cl_sifive_spi_driver_init(void);
-extern void cl_sifive_prci_driver_init(void);
+//extern int cl_spi_init(void);
+//extern void cl_sifive_spi_driver_init(void);
+//extern void cl_sifive_prci_driver_init(void);
 
-extern int cl_spi_nor_module_init(void);
+//extern int cl_spi_nor_module_init(void);
 
+/*
 extern void cl_crc32_mod_init(void);
 extern void cl_crc32c_mod_init(void);
 extern int cl_blake2s_mod_init(void);
+*/
 
-extern int cl_plic_init(void);
+//extern int cl_plic_init(void);
 
+/*
 extern void cl_virtio_init();
 extern void cl_virtio_mmio_init();
 extern void cl_virtio_blk_init();
+*/
 
-extern void cl_blkdev_init(void);
-extern void cl_init_bio(void);
-extern void cl_sg_pool_init(void);
+//extern void cl_blkdev_init(void);
+//extern void cl_init_bio(void);
+//extern void cl_sg_pool_init(void);
 extern int cl_default_bdi_init(void);
 
-extern int cl_journal_init(void);
-extern int cl_ext4_init_fs(void);
+//extern int cl_journal_init(void);
+//extern int cl_ext4_init_fs(void);
 
 extern void cl_invoke_softirq(void);
 extern void cl_blk_timeout_init(void);
@@ -101,9 +109,11 @@ int clinux_init(phys_addr_t dt_phys)
 
     cl_blk_timeout_init();
 
+    /*
     cl_crc32_mod_init();
     cl_crc32c_mod_init();
     cl_blake2s_mod_init();
+    */
 
     random_init();
 
@@ -125,8 +135,8 @@ int clinux_init(phys_addr_t dt_phys)
     buffer_init();
     vfs_caches_init();
 
-    cl_init_bio();
-    cl_sg_pool_init();
+    //cl_init_bio();
+    //cl_sg_pool_init();
 
     init_timers();
     workqueue_init();
@@ -135,81 +145,73 @@ int clinux_init(phys_addr_t dt_phys)
     cl_default_bdi_init();
 
     // nvme/host/core.c
-    cl_nvme_core_init();
+    //cl_nvme_core_init();
 
     // pci/pci-driver.c
-    cl_pci_driver_init();
+    //cl_pci_driver_init();
 
     unflatten_device_tree();
     cl_of_platform_default_populate_init();
 
     // pci/controller/pci-host-generic.c
-    cl_gen_pci_driver_init();
+    //cl_gen_pci_driver_init();
 
     // NOTE: Impl it.
     //early_irq_init();
     init_IRQ();
-
-#if 0
-    {
-        static struct device_node riscv_intc_node;
-        riscv_intc_node.name = "riscv_intc";
-        cl_riscv_intc_init(&riscv_intc_node, NULL);
-        if (handle_arch_irq == NULL) {
-            PANIC("No handle_arch_irq.");
-        }
-    }
-#endif
 
     parse_early_param();
 
     clinux_started = 1;
 
     // gpio/gpiolib.c
-    cl_gpiolib_dev_init();
+    //cl_gpiolib_dev_init();
 
     // Note: Refer to old cl_irq_init in irq.c.
-    cl_plic_init();
+    //cl_plic_init();
 
     // block/genhd.c
     cl_genhd_device_init();
 
     // block/fops.c
-    cl_blkdev_init();
+    //cl_blkdev_init();
 
     // gpio/gpio-sifive.c
-    cl_sifive_gpio_driver_init();
+    //cl_sifive_gpio_driver_init();
 
     // power/gpio-restart.c
-    cl_gpio_restart_driver_init();
+    //cl_gpio_restart_driver_init();
 
     // power/gpio-poweroff.c
-    cl_gpio_poweroff_driver_init();
+    //cl_gpio_poweroff_driver_init();
 
+    /*
     cl_virtio_init();
     cl_virtio_mmio_init();
     cl_virtio_blk_init();
+    */
+    cl_do_initcalls();
 
     // clk/sifive/sifive-prci.c
-    cl_sifive_prci_driver_init();
+    //cl_sifive_prci_driver_init();
 
     // spi/spi.c
-    cl_spi_init();
+    //cl_spi_init();
 
     // nvmem/core.c
-    cl_nvmem_init();
+    //cl_nvmem_init();
 
     // mtd/mtdblock.c
-    cl_mtdblock_tr_init();
+    //cl_mtdblock_tr_init();
 
     // mtd/spi-nor/core.c
-    cl_spi_nor_module_init();
+    //cl_spi_nor_module_init();
 
     // spi/spi-sifive.c
-    cl_sifive_spi_driver_init();
+    //cl_sifive_spi_driver_init();
 
     // nvme/host/pci.c
-    cl_nvme_init();
+    //cl_nvme_init();
 
     // Set ROOT_DEV based on linux commandline.
     prepare_namespace();
@@ -220,9 +222,9 @@ int clinux_init(phys_addr_t dt_phys)
 #endif
 
     printk("====== Journal init ======\n");
-    cl_journal_init();
+    //cl_journal_init();
     printk("====== Ext4 init ======\n");
-    cl_ext4_init_fs();
+    //cl_ext4_init_fs();
 
     printk("====== Ext4 mount ======\n");
     if (cl_mount("ext4", "/dev/root") < 0) {

@@ -26,6 +26,32 @@ static const struct kobj_type driver_ktype = {
     */
 };
 
+static ssize_t bus_uevent_store(const struct bus_type *bus,
+                const char *buf, size_t count)
+{
+    struct subsys_private *sp = bus_to_subsys(bus);
+    int ret;
+
+    if (!sp)
+        return -EINVAL;
+
+    ret = kobject_synth_uevent(&sp->subsys.kobj, buf, count);
+    subsys_put(sp);
+
+    if (ret)
+        return ret;
+    return count;
+}
+
+/*
+ * "open code" the old BUS_ATTR() macro here.  We want to use BUS_ATTR_WO()
+ * here, but can not use it as earlier in the file we have
+ * DEVICE_ATTR_WO(uevent), which would cause a clash with the with the store
+ * function name.
+ */
+static struct bus_attribute bus_attr_uevent = __ATTR(uevent, 0200, NULL,
+                             bus_uevent_store);
+
 static void klist_devices_get(struct klist_node *n)
 {
     struct device_private *dev_prv = to_device_private_bus(n);
@@ -78,11 +104,9 @@ int bus_register(const struct bus_type *bus)
     if (retval)
         goto out;
 
-#if 0
     retval = bus_create_file(bus, &bus_attr_uevent);
     if (retval)
         goto bus_uevent_fail;
-#endif
 
     priv->devices_kset = kset_create_and_add("devices", NULL, bus_kobj);
     if (!priv->devices_kset) {
@@ -477,6 +501,86 @@ out_put_bus:
     return error;
 }
 
+static void system_root_device_release(struct device *dev)
+{
+    kfree(dev);
+}
+
+static int subsys_register(const struct bus_type *subsys,
+               const struct attribute_group **groups,
+               struct kobject *parent_of_root)
+{
+    struct subsys_private *sp;
+    struct device *dev;
+    int err;
+
+    err = bus_register(subsys);
+    if (err < 0)
+        return err;
+
+    sp = bus_to_subsys(subsys);
+    if (!sp) {
+        err = -EINVAL;
+        goto err_sp;
+    }
+
+    dev = kzalloc(sizeof(struct device), GFP_KERNEL);
+    if (!dev) {
+        err = -ENOMEM;
+        goto err_dev;
+    }
+
+    err = dev_set_name(dev, "%s", subsys->name);
+    if (err < 0)
+        goto err_name;
+
+    dev->kobj.parent = parent_of_root;
+    dev->groups = groups;
+    dev->release = system_root_device_release;
+
+    err = device_register(dev);
+    if (err < 0)
+        goto err_dev_reg;
+
+    sp->dev_root = dev;
+    subsys_put(sp);
+    return 0;
+
+err_dev_reg:
+    put_device(dev);
+    dev = NULL;
+err_name:
+    kfree(dev);
+err_dev:
+    subsys_put(sp);
+err_sp:
+    bus_unregister(subsys);
+    return err;
+}
+
+/**
+ * subsys_virtual_register - register a subsystem at /sys/devices/virtual/
+ * @subsys: virtual subsystem
+ * @groups: default attributes for the root device
+ *
+ * All 'virtual' subsystems have a /sys/devices/system/<name> root device
+ * with the name of the subystem.  The root device can carry subsystem-wide
+ * attributes.  All registered devices are below this single root device.
+ * There's no restriction on device naming.  This is for kernel software
+ * constructs which need sysfs interface.
+ */
+int subsys_virtual_register(const struct bus_type *subsys,
+                const struct attribute_group **groups)
+{
+    struct kobject *virtual_dir;
+
+    virtual_dir = virtual_device_parent();
+    if (!virtual_dir)
+        return -ENOMEM;
+
+    return subsys_register(subsys, groups, virtual_dir);
+}
+
 struct kset *bus_get_kset(const struct bus_type *bus)
 {
     struct subsys_private *sp = bus_to_subsys(bus);
@@ -489,6 +593,56 @@ struct kset *bus_get_kset(const struct bus_type *bus)
     subsys_put(sp);
 
     return kset;
+}
+
+/**
+ * bus_find_device - device iterator for locating a particular device.
+ * @bus: bus type
+ * @start: Device to begin with
+ * @data: Data to pass to match function
+ * @match: Callback function to check device
+ *
+ * This is similar to the bus_for_each_dev() function above, but it
+ * returns a reference to a device that is 'found' for later use, as
+ * determined by the @match callback.
+ *
+ * The callback should return 0 if the device doesn't match and non-zero
+ * if it does.  If the callback returns non-zero, this function will
+ * return to the caller and not iterate over any more devices.
+ */
+struct device *bus_find_device(const struct bus_type *bus,
+                   struct device *start, const void *data,
+                   device_match_t match)
+{
+    struct subsys_private *sp = bus_to_subsys(bus);
+    struct klist_iter i;
+    struct device *dev;
+
+    if (!sp)
+        return NULL;
+
+    klist_iter_init_node(&sp->klist_devices, &i,
+                 (start ? &start->p->knode_bus : NULL));
+    while ((dev = next_device(&i)))
+        if (match(dev, data) && get_device(dev))
+            break;
+    klist_iter_exit(&i);
+    subsys_put(sp);
+    return dev;
+}
+
+int bus_create_file(const struct bus_type *bus, struct bus_attribute *attr)
+{
+    struct subsys_private *sp = bus_to_subsys(bus);
+    int error;
+
+    if (!sp)
+        return -EINVAL;
+
+    error = sysfs_create_file(&sp->subsys.kobj, &attr->attr);
+
+    subsys_put(sp);
+    return error;
 }
 
 static const struct kset_uevent_ops bus_uevent_ops = {

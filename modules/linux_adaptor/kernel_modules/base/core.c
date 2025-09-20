@@ -25,8 +25,16 @@
 
 #include "base.h"
 #include "physical_location.h"
-//#include "power/power.h"
+#include "../power/power.h"
 #include "../adaptor.h"
+
+#define DL_MARKER_FLAGS     (DL_FLAG_INFERRED | \
+                 DL_FLAG_CYCLE | \
+                 DL_FLAG_MANAGED)
+static inline bool device_link_flag_is_sync_state_only(u32 flags)
+{
+    return (flags & ~DL_MARKER_FLAGS) == DL_FLAG_SYNC_STATE_ONLY;
+}
 
 /* /sys/devices/ */
 struct kset *devices_kset;
@@ -764,6 +772,174 @@ static const char *dev_uevent_name(const struct kobject *kobj)
 static int dev_uevent(const struct kobject *kobj, struct kobj_uevent_env *env)
 {
     PANIC("");
+}
+
+struct kobject *virtual_device_parent(void)
+{
+    static struct kobject *virtual_dir = NULL;
+
+    if (!virtual_dir)
+        virtual_dir = kobject_create_and_add("virtual",
+                             &devices_kset->kobj);
+
+    return virtual_dir;
+}
+
+/**
+ * dev_driver_string - Return a device's driver name, if at all possible
+ * @dev: struct device to get the name of
+ *
+ * Will return the device's driver's name if it is bound to a device.  If
+ * the device is not bound to a driver, it will return the name of the bus
+ * it is attached to.  If it is not attached to a bus either, an empty
+ * string will be returned.
+ */
+const char *dev_driver_string(const struct device *dev)
+{
+    struct device_driver *drv;
+
+    /* dev->driver can change to NULL underneath us because of unbinding,
+     * so be careful about accessing it.  dev->bus and dev->class should
+     * never change once they are set, so they don't need special care.
+     */
+    drv = READ_ONCE(dev->driver);
+    return drv ? drv->name : dev_bus_name(dev);
+}
+
+void fw_devlink_drivers_done(void)
+{
+#if 0
+    fw_devlink_drv_reg_done = true;
+    device_links_write_lock();
+    class_for_each_device(&devlink_class, NULL, NULL,
+                  fw_devlink_no_driver);
+    device_links_write_unlock();
+#endif
+    pr_err("%s: No impl.", __func__);
+}
+
+void fw_devlink_probing_done(void)
+{
+#if 0
+    LIST_HEAD(sync_list);
+
+    device_links_write_lock();
+    class_for_each_device(&devlink_class, NULL, &sync_list,
+                  fw_devlink_dev_sync_state);
+    device_links_write_unlock();
+    device_links_flush_sync_list(&sync_list, NULL);
+#endif
+    pr_err("%s: No impl.", __func__);
+}
+
+static int device_reorder_to_tail(struct device *dev, void *not_used)
+{
+    struct device_link *link;
+
+    /*
+     * Devices that have not been registered yet will be put to the ends
+     * of the lists during the registration, so skip them here.
+     */
+    if (device_is_registered(dev))
+        devices_kset_move_last(dev);
+
+    if (device_pm_initialized(dev))
+        device_pm_move_last(dev);
+
+    device_for_each_child(dev, NULL, device_reorder_to_tail);
+    list_for_each_entry(link, &dev->links.consumers, s_node) {
+        if (device_link_flag_is_sync_state_only(link->flags))
+            continue;
+        device_reorder_to_tail(link->consumer, NULL);
+    }
+
+    return 0;
+}
+
+static struct device *next_device(struct klist_iter *i)
+{
+    struct klist_node *n = klist_next(i);
+    struct device *dev = NULL;
+    struct device_private *p;
+
+    if (n) {
+        p = to_device_private_parent(n);
+        dev = p->device;
+    }
+    return dev;
+}
+
+/**
+ * device_for_each_child - device child iterator.
+ * @parent: parent struct device.
+ * @fn: function to be called for each device.
+ * @data: data for the callback.
+ *
+ * Iterate over @parent's child devices, and call @fn for each,
+ * passing it @data.
+ *
+ * We check the return of @fn each time. If it returns anything
+ * other than 0, we break out and return that value.
+ */
+int device_for_each_child(struct device *parent, void *data,
+              int (*fn)(struct device *dev, void *data))
+{
+    struct klist_iter i;
+    struct device *child;
+    int error = 0;
+
+    if (!parent || !parent->p)
+        return 0;
+
+    klist_iter_init(&parent->p->klist_children, &i);
+    while (!error && (child = next_device(&i)))
+        error = fn(child, data);
+    klist_iter_exit(&i);
+    return error;
+}
+
+/**
+ * device_pm_move_to_tail - Move set of devices to the end of device lists
+ * @dev: Device to move
+ *
+ * This is a device_reorder_to_tail() wrapper taking the requisite locks.
+ *
+ * It moves the @dev along with all of its children and all of its consumers
+ * to the ends of the device_kset and dpm_list, recursively.
+ */
+void device_pm_move_to_tail(struct device *dev)
+{
+    int idx;
+
+    idx = device_links_read_lock();
+    device_pm_lock();
+    device_reorder_to_tail(dev, NULL);
+    device_pm_unlock();
+    device_links_read_unlock(idx);
+}
+
+int device_links_read_lock(void) __acquires(&device_links_srcu)
+{
+    return srcu_read_lock(&device_links_srcu);
+}
+
+void device_links_read_unlock(int idx) __releases(&device_links_srcu)
+{
+    srcu_read_unlock(&device_links_srcu, idx);
+}
+
+/**
+ * devices_kset_move_last - move the device to the end of devices_kset's list.
+ * @dev: device to move
+ */
+void devices_kset_move_last(struct device *dev)
+{
+    if (!devices_kset)
+        return;
+    pr_debug("devices_kset: Moving %s to end of list\n", dev_name(dev));
+    spin_lock(&devices_kset->list_lock);
+    list_move_tail(&dev->kobj.entry, &devices_kset->list);
+    spin_unlock(&devices_kset->list_lock);
 }
 
 static const struct kset_uevent_ops device_uevent_ops = {

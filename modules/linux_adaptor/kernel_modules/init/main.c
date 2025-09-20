@@ -126,6 +126,88 @@ static int __init do_early_param(char *param, char *val,
     return 0;
 }
 
+static __init_or_module void
+trace_initcall_start_cb(void *data, initcall_t fn)
+{
+    ktime_t *calltime = data;
+
+    printk(KERN_DEBUG "calling  %pS @ %i\n", fn, task_pid_nr(current));
+    *calltime = ktime_get();
+}
+
+static __init_or_module void
+trace_initcall_finish_cb(void *data, initcall_t fn, int ret)
+{
+    ktime_t rettime, *calltime = data;
+
+    rettime = ktime_get();
+    printk(KERN_DEBUG "initcall %pS returned %d after %lld usecs\n",
+         fn, ret, (unsigned long long)ktime_us_delta(rettime, *calltime));
+}
+
+static ktime_t initcall_calltime;
+
+#ifdef TRACEPOINTS_ENABLED
+static void __init initcall_debug_enable(void)
+{
+    int ret;
+
+    ret = register_trace_initcall_start(trace_initcall_start_cb,
+                        &initcall_calltime);
+    ret |= register_trace_initcall_finish(trace_initcall_finish_cb,
+                          &initcall_calltime);
+    WARN(ret, "Failed to register initcall tracepoints\n");
+}
+# define do_trace_initcall_start    trace_initcall_start
+# define do_trace_initcall_finish   trace_initcall_finish
+#endif
+
+static initcall_entry_t *initcall_levels[] __initdata = {
+    __initcall0_start,
+    __initcall1_start,
+    __initcall2_start,
+    __initcall3_start,
+    __initcall4_start,
+    __initcall5_start,
+    __initcall6_start,
+    __initcall7_start,
+    __initcall_end,
+};
+
+/* Keep these in sync with initcalls in include/linux/init.h */
+static const char *initcall_level_names[] __initdata = {
+    "pure",
+    "core",
+    "postcore",
+    "arch",
+    "subsys",
+    "fs",
+    "device",
+    "late",
+};
+
+static void __init do_initcall_level(int level)
+{
+    initcall_entry_t *fn;
+
+    trace_initcall_level(initcall_level_names[level]);
+    for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
+        do_one_initcall(initcall_from_entry(fn));
+}
+
+static void __init do_initcalls(void)
+{
+    int level;
+    for (level = 0; level < ARRAY_SIZE(initcall_levels) - 1; level++) {
+        do_initcall_level(level);
+    }
+}
+
+void cl_do_initcalls(void)
+{
+    do_initcalls();
+}
+
 void __init parse_early_options(char *cmdline)
 {
     parse_args("early options", cmdline, NULL, 0, 0, 0, NULL,
@@ -145,4 +227,35 @@ void __init parse_early_param(void)
     strscpy(tmp_cmdline, boot_command_line, COMMAND_LINE_SIZE);
     parse_early_options(tmp_cmdline);
     done = 1;
+}
+
+int __init_or_module do_one_initcall(initcall_t fn)
+{
+    int count = preempt_count();
+    char msgbuf[64];
+    int ret;
+
+#if 0
+    if (initcall_blacklisted(fn))
+        return -EPERM;
+#endif
+
+    do_trace_initcall_start(fn);
+    ret = fn();
+    do_trace_initcall_finish(fn, ret);
+
+    msgbuf[0] = 0;
+
+    if (preempt_count() != count) {
+        sprintf(msgbuf, "preemption imbalance ");
+        preempt_count_set(count);
+    }
+    if (irqs_disabled()) {
+        strlcat(msgbuf, "disabled interrupts ", sizeof(msgbuf));
+        local_irq_enable();
+    }
+    WARN(msgbuf[0], "initcall %pS returned with %s\n", fn, msgbuf);
+
+    add_latent_entropy();
+    return ret;
 }
