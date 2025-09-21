@@ -39,7 +39,7 @@ OBJS += pci/slot.o pci/quirks.o pci/host-bridge.o pci/vc.o pci/vpd.o
 OBJS += pci/setup-res.o pci/irq.o
 OBJS += pcie/aspm.o pcie/rcec.o
 OBJS += pci-controller/pci-host-generic.o pci-controller/pci-host-common.o
-OBJS += nvme_host/pci.o nvme_host/core.o nvme_host/trace.o nvme_host/sysfs.o
+OBJS += nvme_host/core.o nvme_host/pci.o nvme_host/trace.o nvme_host/sysfs.o
 OBJS += firmware/dmi_scan.o
 
 OBJS += pci_msi/api.o pci_msi/msi.o
