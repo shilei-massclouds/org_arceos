@@ -441,21 +441,21 @@ static int pci_device_probe(struct device *dev)
 	if (!pci_device_can_probe(pci_dev))
 		return -ENODEV;
 
-    printk("%s: step2\n", __func__);
 	pci_assign_irq(pci_dev);
 
-    printk("%s: step3\n", __func__);
 	error = pcibios_alloc_irq(pci_dev);
 	if (error < 0)
 		return error;
 
 	pci_dev_get(pci_dev);
+    printk("%s: step1 [%u]\n", __func__, current->pid);
 	error = __pci_device_probe(drv, pci_dev);
 	if (error) {
 		pcibios_free_irq(pci_dev);
 		pci_dev_put(pci_dev);
 	}
 
+    printk("%s: step2 err(%d)\n", __func__, error);
 	return error;
 }
 

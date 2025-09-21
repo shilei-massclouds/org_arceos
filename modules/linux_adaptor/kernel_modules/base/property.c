@@ -285,3 +285,66 @@ int fwnode_property_read_string_array(const struct fwnode_handle *fwnode,
     return fwnode_call_int_op(fwnode->secondary, property_read_string_array, propname,
                   val, nval);
 }
+
+/**
+ * fwnode_device_is_available - check if a device is available for use
+ * @fwnode: Pointer to the fwnode of the device.
+ *
+ * Return: true if device is available for use. Otherwise, returns false.
+ *
+ * For fwnode node types that don't implement the .device_is_available()
+ * operation, this function returns true.
+ */
+bool fwnode_device_is_available(const struct fwnode_handle *fwnode)
+{
+    if (IS_ERR_OR_NULL(fwnode))
+        return false;
+
+    if (!fwnode_has_op(fwnode, device_is_available))
+        return true;
+
+    return fwnode_call_bool_op(fwnode, device_is_available);
+}
+
+/**
+ * fwnode_get_next_child_node - Return the next child node handle for a node
+ * @fwnode: Firmware node to find the next child node for.
+ * @child: Handle to one of the node's child nodes or a %NULL handle.
+ *
+ * The caller is responsible for calling fwnode_handle_put() on the returned
+ * fwnode pointer. Note that this function also puts a reference to @child
+ * unconditionally.
+ */
+struct fwnode_handle *
+fwnode_get_next_child_node(const struct fwnode_handle *fwnode,
+               struct fwnode_handle *child)
+{
+    return fwnode_call_ptr_op(fwnode, get_next_child_node, child);
+}
+
+/**
+ * fwnode_get_next_available_child_node - Return the next available child node handle for a node
+ * @fwnode: Firmware node to find the next child node for.
+ * @child: Handle to one of the node's child nodes or a %NULL handle.
+ *
+ * The caller is responsible for calling fwnode_handle_put() on the returned
+ * fwnode pointer. Note that this function also puts a reference to @child
+ * unconditionally.
+ */
+struct fwnode_handle *
+fwnode_get_next_available_child_node(const struct fwnode_handle *fwnode,
+                     struct fwnode_handle *child)
+{
+    struct fwnode_handle *next_child = child;
+
+    if (IS_ERR_OR_NULL(fwnode))
+        return NULL;
+
+    do {
+        next_child = fwnode_get_next_child_node(fwnode, next_child);
+        if (!next_child)
+            return NULL;
+    } while (!fwnode_device_is_available(next_child));
+
+    return next_child;
+}

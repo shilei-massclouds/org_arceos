@@ -530,7 +530,7 @@ static int driver_probe_device(const struct device_driver *drv, struct device *d
     int trigger_count = atomic_read(&deferred_trigger_count);
     int ret;
 
-    printk("%s: step1 drv(%s)\n", __func__, drv->name);
+    printk("%s: step1 drv(%s) [%u]\n", __func__, drv->name, current->pid);
     atomic_inc(&probe_count);
     ret = __driver_probe_device(drv, dev);
     if (ret == -EPROBE_DEFER || ret == EPROBE_DEFER) {
@@ -598,6 +598,7 @@ static void __driver_attach_async_helper(void *_dev, async_cookie_t cookie)
     const struct device_driver *drv;
     int ret;
 
+    printk("%s: step1 [%u]\n", __func__, current->pid);
     __device_driver_lock(dev, dev->parent);
     drv = dev->p->async_driver;
     dev->p->async_driver = NULL;
@@ -605,6 +606,7 @@ static void __driver_attach_async_helper(void *_dev, async_cookie_t cookie)
     __device_driver_unlock(dev, dev->parent);
 
     dev_dbg(dev, "driver %s async attach completed: %d\n", drv->name, ret);
+    printk("%s: driver %s async attach completed: %d\n", __func__, drv->name, ret);
 
     put_device(dev);
 }
@@ -774,7 +776,7 @@ static void deferred_probe_work_func(struct work_struct *work)
         list_del_init(&private->deferred_probe);
 
         get_device(dev);
-    printk("%s: step1 dev(%s)\n", __func__, dev_name(dev));
+    printk("%s: step1 dev(%s) [%u]\n", __func__, dev_name(dev), current->pid);
 
         __device_set_deferred_probe_reason(dev, NULL);
 
@@ -824,7 +826,7 @@ static bool driver_deferred_probe_enable;
  */
 void driver_deferred_probe_trigger(void)
 {
-    printk("%s: step1\n", __func__);
+    printk("%s: step1 [%u]\n", __func__, current->pid);
     if (!driver_deferred_probe_enable)
         return;
 
@@ -907,3 +909,17 @@ static int deferred_probe_initcall(void)
     return 0;
 }
 late_initcall(deferred_probe_initcall);
+
+/**
+ * wait_for_device_probe
+ * Wait for device probing to be completed.
+ */
+void wait_for_device_probe(void)
+{
+    /* wait for the deferred probe workqueue to finish */
+    flush_work(&deferred_probe_work);
+
+    /* wait for the known devices to complete their probing */
+    wait_event(probe_waitqueue, atomic_read(&probe_count) == 0);
+    async_synchronize_full();
+}

@@ -72,6 +72,15 @@ static dev_t __init parse_root_device(char *root_device_name)
  */
 void __init prepare_namespace(void)
 {
+    /*
+     * wait for the known devices to complete their probing
+     *
+     * Note: this is a potential source of long boot delays.
+     * For example, it is not atypical to wait 5 seconds here
+     * for the touchpad of a laptop to initialize.
+     */
+    wait_for_device_probe();
+
     if (saved_root_name[0])
         ROOT_DEV = parse_root_device(saved_root_name);
     printk("ROOT_DEV: %x\n", ROOT_DEV);

@@ -645,6 +645,31 @@ int bus_create_file(const struct bus_type *bus, struct bus_attribute *attr)
     return error;
 }
 
+/**
+ * bus_get_dev_root - return a pointer to the "device root" of a bus
+ * @bus: bus to return the device root of.
+ *
+ * If a bus has a "device root" structure, return it, WITH THE REFERENCE
+ * COUNT INCREMENTED.
+ *
+ * Note, when finished with the device, a call to put_device() is required.
+ *
+ * If the device root is not present (or bus is not a valid pointer), NULL
+ * will be returned.
+ */
+struct device *bus_get_dev_root(const struct bus_type *bus)
+{
+    struct subsys_private *sp = bus_to_subsys(bus);
+    struct device *dev_root;
+
+    if (!sp)
+        return NULL;
+
+    dev_root = get_device(sp->dev_root);
+    subsys_put(sp);
+    return dev_root;
+}
+
 static const struct kset_uevent_ops bus_uevent_ops = {
     .filter = bus_uevent_filter,
 };

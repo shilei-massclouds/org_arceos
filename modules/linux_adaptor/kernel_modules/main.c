@@ -204,7 +204,7 @@ int clinux_init(phys_addr_t dt_phys)
     //cl_nvme_init();
 
     // Set ROOT_DEV based on linux commandline.
-    printk("====== Prepare namespace ======\n");
+    printk("====== Prepare namespace ====== [%u]\n", current->pid);
     prepare_namespace();
 
 #ifdef TEST_BLOCK

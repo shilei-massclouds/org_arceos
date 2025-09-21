@@ -253,6 +253,85 @@ err_out:
     return error;
 }
 
+/**
+ * class_for_each_device - device iterator
+ * @class: the class we're iterating
+ * @start: the device to start with in the list, if any.
+ * @data: data for the callback
+ * @fn: function to be called for each device
+ *
+ * Iterate over @class's list of devices, and call @fn for each,
+ * passing it @data.  If @start is set, the list iteration will start
+ * there, otherwise if it is NULL, the iteration starts at the
+ * beginning of the list.
+ *
+ * We check the return of @fn each time. If it returns anything
+ * other than 0, we break out and return that value.
+ *
+ * @fn is allowed to do anything including calling back into class
+ * code.  There's no locking restriction.
+ */
+int class_for_each_device(const struct class *class, const struct device *start,
+              void *data, int (*fn)(struct device *, void *))
+{
+    struct subsys_private *sp = class_to_subsys(class);
+    struct class_dev_iter iter;
+    struct device *dev;
+    int error = 0;
+
+    if (!class)
+        return -EINVAL;
+    if (!sp) {
+        WARN(1, "%s called for class '%s' before it was initialized",
+             __func__, class->name);
+        return -EINVAL;
+    }
+
+    class_dev_iter_init(&iter, class, start, NULL);
+    while ((dev = class_dev_iter_next(&iter))) {
+        error = fn(dev, data);
+        if (error)
+            break;
+    }
+    class_dev_iter_exit(&iter);
+    subsys_put(sp);
+
+    return error;
+}
+
+int class_interface_register(struct class_interface *class_intf)
+{
+    struct subsys_private *sp;
+    const struct class *parent;
+    struct class_dev_iter iter;
+    struct device *dev;
+
+    if (!class_intf || !class_intf->class)
+        return -ENODEV;
+
+    parent = class_intf->class;
+    sp = class_to_subsys(parent);
+    if (!sp)
+        return -EINVAL;
+
+    /*
+     * Reference in sp is now incremented and will be dropped when
+     * the interface is removed in the call to class_interface_unregister()
+     */
+
+    mutex_lock(&sp->mutex);
+    list_add_tail(&class_intf->node, &sp->interfaces);
+    if (class_intf->add_dev) {
+        class_dev_iter_init(&iter, parent, NULL, NULL);
+        while ((dev = class_dev_iter_next(&iter)))
+            class_intf->add_dev(dev);
+        class_dev_iter_exit(&iter);
+    }
+    mutex_unlock(&sp->mutex);
+
+    return 0;
+}
+
 int __init classes_init(void)
 {
     class_kset = kset_create_and_add("class", NULL, NULL);

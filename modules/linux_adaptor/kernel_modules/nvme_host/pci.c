@@ -3261,12 +3261,12 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 		goto out_disable;
 	}
 
-    printk("------------- %s: step1.1\n", __func__);
+    printk("------------- %s: step1.1 [%u]\n", __func__, current->pid);
 	result = nvme_init_ctrl_finish(&dev->ctrl, false);
+    printk("------------- %s: step1.2 result(%d)\n", __func__, result);
 	if (result)
 		goto out_disable;
 
-    printk("------------- %s: step1.2\n", __func__);
 	if (nvme_ctrl_meta_sgl_supported(&dev->ctrl))
 		dev->ctrl.max_integrity_segments = NVME_MAX_META_SEGS;
 	else

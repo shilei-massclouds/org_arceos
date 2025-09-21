@@ -233,6 +233,16 @@ async_cookie_t async_schedule_node(async_func_t func, void *data, int node)
     return async_schedule_node_domain(func, data, node, &async_dfl_domain);
 }
 
+/**
+ * async_synchronize_full - synchronize all asynchronous function calls
+ *
+ * This function waits until all asynchronous function calls have been done.
+ */
+void async_synchronize_full(void)
+{
+    async_synchronize_full_domain(NULL);
+}
+
 void __init async_init(void)
 {
     /*

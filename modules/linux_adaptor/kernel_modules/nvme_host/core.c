@@ -1148,15 +1148,16 @@ int __nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
 	if (flags & NVME_SUBMIT_RETRY)
 		req->cmd_flags &= ~REQ_FAILFAST_DRIVER;
 
-	if (buffer && bufflen) {
     printk("%s: step1\n", __func__);
+	if (buffer && bufflen) {
 		ret = blk_rq_map_kern(q, req, buffer, bufflen, GFP_KERNEL);
-    printk("%s: step2 ret(%d)\n", __func__, ret);
 		if (ret)
 			goto out;
 	}
 
+    printk("%s: step2 ret(%d) [%u]\n", __func__, ret, current->pid);
 	ret = nvme_execute_rq(req, flags & NVME_SUBMIT_AT_HEAD);
+    printk("%s: step3 ret(%d) [%u]\n", __func__, ret, current->pid);
 	if (result && ret >= 0)
 		*result = nvme_req(req)->result;
  out:
@@ -3468,10 +3469,10 @@ int nvme_init_ctrl_finish(struct nvme_ctrl *ctrl, bool was_suspended)
 
     printk("------------- %s: step1\n", __func__);
 	ret = nvme_configure_host_options(ctrl);
+    printk("------------- %s: step2\n", __func__);
 	if (ret < 0)
 		return ret;
 
-    printk("------------- %s: step2\n", __func__);
 	nvme_configure_opal(ctrl, was_suspended);
 
 	if (!ctrl->identified && !nvme_discovery_ctrl(ctrl)) {
@@ -3489,6 +3490,7 @@ int nvme_init_ctrl_finish(struct nvme_ctrl *ctrl, bool was_suspended)
 
 	nvme_start_keep_alive(ctrl);
 
+    printk("------------- %s: step3\n", __func__);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(nvme_init_ctrl_finish);
