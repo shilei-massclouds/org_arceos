@@ -75,3 +75,33 @@ bool is_vmalloc_addr(const void *x)
 
     return addr >= VMALLOC_START && addr < VMALLOC_END;
 }
+
+/**
+ * vunmap - release virtual mapping obtained by vmap()
+ * @addr:   memory base address
+ *
+ * Free the virtually contiguous memory area starting at @addr,
+ * which was created from the page array passed to vmap().
+ *
+ * Must not be called in interrupt context.
+ */
+void vunmap(const void *addr)
+{
+    struct vm_struct *vm;
+
+#if 0
+    BUG_ON(in_interrupt());
+    might_sleep();
+
+    if (!addr)
+        return;
+    vm = remove_vm_area(addr);
+    if (unlikely(!vm)) {
+        WARN(1, KERN_ERR "Trying to vunmap() nonexistent vm area (%p)\n",
+                addr);
+        return;
+    }
+    kfree(vm);
+#endif
+    PANIC("");
+}

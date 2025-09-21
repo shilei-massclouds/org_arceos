@@ -56,3 +56,19 @@ void __iomem *ioremap_prot(phys_addr_t phys_addr, size_t size,
 }
 EXPORT_SYMBOL(ioremap_prot);
 #endif
+
+void generic_iounmap(volatile void __iomem *addr)
+{
+    void *vaddr = (void *)((unsigned long)addr & PAGE_MASK);
+
+    if (is_ioremap_addr(vaddr))
+        vunmap(vaddr);
+}
+
+#ifndef iounmap
+void iounmap(volatile void __iomem *addr)
+{
+    generic_iounmap(addr);
+}
+EXPORT_SYMBOL(iounmap);
+#endif

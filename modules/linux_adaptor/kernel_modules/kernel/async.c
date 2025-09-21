@@ -215,6 +215,24 @@ void async_synchronize_cookie_domain(async_cookie_t cookie, struct async_domain 
          microseconds_since(starttime));
 }
 
+/**
+ * async_schedule_node - NUMA specific version of async_schedule
+ * @func: function to execute asynchronously
+ * @data: data pointer to pass to the function
+ * @node: NUMA node that we want to schedule this on or close to
+ *
+ * Returns an async_cookie_t that may be used for checkpointing later.
+ * Note: This function may be called from atomic or non-atomic contexts.
+ *
+ * The node requested will be honored on a best effort basis. If the node
+ * has no CPUs associated with it then the work is distributed among all
+ * available CPUs.
+ */
+async_cookie_t async_schedule_node(async_func_t func, void *data, int node)
+{
+    return async_schedule_node_domain(func, data, node, &async_dfl_domain);
+}
+
 void __init async_init(void)
 {
     /*

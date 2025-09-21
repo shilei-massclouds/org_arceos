@@ -36,7 +36,7 @@ int driver_register(struct device_driver *drv)
         return -EBUSY;
     }
 
-    printk("%s: ...\n", __func__);
+    printk("%s: ... (%s)\n", __func__, drv->name);
     ret = bus_add_driver(drv);
     if (ret)
         return ret;

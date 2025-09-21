@@ -88,6 +88,7 @@ static int __init of_platform_default_populate_init(void)
 
     return 0;
 }
+arch_initcall_sync(of_platform_default_populate_init);
 
 int of_platform_default_populate(struct device_node *root,
                  const struct of_dev_auxdata *lookup,

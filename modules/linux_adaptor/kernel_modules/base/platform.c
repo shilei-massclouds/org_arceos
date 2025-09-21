@@ -179,6 +179,7 @@ static void __init_riscv_intc_device(void)
 int __platform_driver_register(struct platform_driver *drv,
                                struct module *owner)
 {
+    printk("%s: step1 (%s)\n", __func__, drv->driver.name);
     drv->driver.owner = owner;
     drv->driver.bus = &platform_bus_type;
 

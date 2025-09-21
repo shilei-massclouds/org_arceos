@@ -86,7 +86,4 @@ static int __init blk_timeout_init(void)
     return 0;
 }
 
-void cl_blk_timeout_init(void)
-{
-    blk_timeout_init();
-}
+late_initcall(blk_timeout_init);

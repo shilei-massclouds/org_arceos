@@ -44,7 +44,6 @@ CL_MINE(file_path)
 
 // plic
 CL_MINE(disable_percpu_irq)
-CL_MINE(iounmap)
 CL_MINE(irq_domain_free_irqs_top)
 
 CL_MINE(acpi_dev_clear_dependencies)
@@ -316,7 +315,6 @@ CL_MINE(time64_to_tm)
 CL_MINE(vmaflag_names)
 
 CL_MINE(memdup_user_nul)
-CL_MINE(devres_free)
 
 CL_MINE(kmem_cache_free_bulk)
 CL_MINE(irq_free_descs)
@@ -356,8 +354,6 @@ CL_MINE(devres_destroy)
 CL_MINE(mem_cgroup_kmem_disabled)
 CL_MINE(add_wait_queue)
 CL_MINE(remove_wait_queue)
-
-CL_MINE(async_schedule_node)
 
 CL_MINE(cleanup_srcu_struct)
 CL_MINE(blk_mq_free_map_and_rqs)
@@ -799,3 +795,4 @@ CL_MINE(ipi_mux_create)
 CL_MINE(riscv_ipi_set_virq_range)
 CL_MINE(read_cache_folio)
 CL_MINE(device_pm_move_last)
+CL_MINE(_dev_printk)

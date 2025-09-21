@@ -268,6 +268,7 @@ struct clk_hw *of_clk_get_hw(struct device_node *np, int index,
     if (ret)
         return ERR_PTR(ret);
 
+    printk("%s: np(%s)\n", __func__, clkspec.np->name);
     hw = of_clk_get_hw_from_clkspec(&clkspec);
     of_node_put(clkspec.np);
 

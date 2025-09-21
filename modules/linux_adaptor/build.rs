@@ -10,6 +10,7 @@ fn main() {
         .current_dir(&cwd)
         .env("ARCH", arch)
         .env("LOG", log_level)
+        .arg("-j4")
         .output()
         .expect("Make error.");
     if !output.status.success() {

@@ -297,8 +297,4 @@ static int __init default_bdi_init(void)
         return -ENOMEM;
     return 0;
 }
-
-int cl_default_bdi_init(void)
-{
-    return default_bdi_init();
-}
+subsys_initcall(default_bdi_init);

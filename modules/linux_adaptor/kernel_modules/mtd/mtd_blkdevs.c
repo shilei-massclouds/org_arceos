@@ -500,9 +500,11 @@ int register_mtd_blktrans(struct mtd_blktrans_ops *tr)
 	mutex_lock(&mtd_table_mutex);
 	list_add(&tr->list, &blktrans_majors);
     printk("----------------- %s: step1\n", __func__);
-	mtd_for_each_device(mtd)
+	mtd_for_each_device(mtd) {
+    printk("%s: mtd(%s)\n", __func__, mtd->name);
 		if (mtd->type != MTD_ABSENT && mtd->type != MTD_UBIVOLUME)
 			tr->add_mtd(tr, mtd);
+    }
     printk("----------------- %s: step2\n", __func__);
 	mutex_unlock(&mtd_table_mutex);
 	return 0;

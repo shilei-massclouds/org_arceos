@@ -28,6 +28,13 @@
 #include "../power/power.h"
 #include "../adaptor.h"
 
+#define FW_DEVLINK_FLAGS_PERMISSIVE (DL_FLAG_INFERRED | \
+                     DL_FLAG_SYNC_STATE_ONLY)
+#define FW_DEVLINK_FLAGS_ON     (DL_FLAG_INFERRED | \
+                     DL_FLAG_AUTOPROBE_CONSUMER)
+#define FW_DEVLINK_FLAGS_RPM        (FW_DEVLINK_FLAGS_ON | \
+                     DL_FLAG_PM_RUNTIME)
+
 #define DL_MARKER_FLAGS     (DL_FLAG_INFERRED | \
                  DL_FLAG_CYCLE | \
                  DL_FLAG_MANAGED)
@@ -38,6 +45,11 @@ static inline bool device_link_flag_is_sync_state_only(u32 flags)
 
 /* /sys/devices/ */
 struct kset *devices_kset;
+
+static u32 fw_devlink_flags = FW_DEVLINK_FLAGS_RPM;
+static bool fw_devlink_best_effort;
+
+static DEFINE_MUTEX(fwnode_link_lock);
 
 /* Device links support end. */
 
@@ -69,8 +81,77 @@ static inline void device_links_write_unlock(void)
     mutex_unlock(&device_links_lock);
 }
 
-// Note: fullfil it.
-static const struct kobj_type device_ktype;
+static ssize_t dev_attr_show(struct kobject *kobj, struct attribute *attr,
+                 char *buf)
+{
+    PANIC("");
+}
+
+static ssize_t dev_attr_store(struct kobject *kobj, struct attribute *attr,
+                  const char *buf, size_t count)
+{
+    PANIC("");
+}
+
+static const struct sysfs_ops dev_sysfs_ops = {
+    .show   = dev_attr_show,
+    .store  = dev_attr_store,
+};
+
+static const void *device_namespace(const struct kobject *kobj)
+{
+    PANIC("");
+}
+
+static void device_get_ownership(const struct kobject *kobj, kuid_t *uid, kgid_t *gid)
+{
+    PANIC("");
+}
+
+/**
+ * device_release - free device structure.
+ * @kobj: device's kobject.
+ *
+ * This is called once the reference count for the object
+ * reaches 0. We forward the call to the device's release
+ * method, which should handle actually freeing the structure.
+ */
+static void device_release(struct kobject *kobj)
+{
+    struct device *dev = kobj_to_dev(kobj);
+    struct device_private *p = dev->p;
+
+    /*
+     * Some platform devices are driven without driver attached
+     * and managed resources may have been acquired.  Make sure
+     * all resources are released.
+     *
+     * Drivers still can add resources into device after device
+     * is deleted but alive, so release devres here to avoid
+     * possible memory leak.
+     */
+    devres_release_all(dev);
+
+    kfree(dev->dma_range_map);
+
+    if (dev->release)
+        dev->release(dev);
+    else if (dev->type && dev->type->release)
+        dev->type->release(dev);
+    else if (dev->class && dev->class->dev_release)
+        dev->class->dev_release(dev);
+    else
+        WARN(1, KERN_ERR "Device '%s' does not have a release() function, it is broken and must be fixed. See Documentation/core-api/kobject.rst.\n",
+            dev_name(dev));
+    kfree(p);
+}
+
+static const struct kobj_type device_ktype = {
+    .release    = device_release,
+    .sysfs_ops  = &dev_sysfs_ops,
+    .namespace  = device_namespace,
+    .get_ownership  = device_get_ownership,
+};
 
 /**
  * get_device - increment reference count for device.
@@ -940,6 +1021,117 @@ void devices_kset_move_last(struct device *dev)
     spin_lock(&devices_kset->list_lock);
     list_move_tail(&dev->kobj.entry, &devices_kset->list);
     spin_unlock(&devices_kset->list_lock);
+}
+
+static bool fw_devlink_is_permissive(void)
+{
+    return fw_devlink_flags == FW_DEVLINK_FLAGS_PERMISSIVE;
+}
+
+static void device_links_missing_supplier(struct device *dev)
+{
+    struct device_link *link;
+
+    list_for_each_entry(link, &dev->links.suppliers, c_node) {
+        if (link->status != DL_STATE_CONSUMER_PROBE)
+            continue;
+
+        if (link->supplier->links.status == DL_DEV_DRIVER_BOUND) {
+            WRITE_ONCE(link->status, DL_STATE_AVAILABLE);
+        } else {
+            WARN_ON(!(link->flags & DL_FLAG_SYNC_STATE_ONLY));
+            WRITE_ONCE(link->status, DL_STATE_DORMANT);
+        }
+    }
+}
+
+static bool dev_is_best_effort(struct device *dev)
+{
+    return (fw_devlink_best_effort && dev->can_match) ||
+        (dev->fwnode && (dev->fwnode->flags & FWNODE_FLAG_BEST_EFFORT));
+}
+
+static struct fwnode_handle *fwnode_links_check_suppliers(
+                        struct fwnode_handle *fwnode)
+{
+    struct fwnode_link *link;
+
+    if (!fwnode || fw_devlink_is_permissive())
+        return NULL;
+
+    list_for_each_entry(link, &fwnode->suppliers, c_hook)
+        if (!(link->flags &
+              (FWLINK_FLAG_CYCLE | FWLINK_FLAG_IGNORE)))
+            return link->supplier;
+
+    return NULL;
+}
+
+/**
+ * device_links_check_suppliers - Check presence of supplier drivers.
+ * @dev: Consumer device.
+ *
+ * Check links from this device to any suppliers.  Walk the list of the device's
+ * links to suppliers and see if all of them are available.  If not, simply
+ * return -EPROBE_DEFER.
+ *
+ * We need to guarantee that the supplier will not go away after the check has
+ * been positive here.  It only can go away in __device_release_driver() and
+ * that function  checks the device's links to consumers.  This means we need to
+ * mark the link as "consumer probe in progress" to make the supplier removal
+ * wait for us to complete (or bad things may happen).
+ *
+ * Links without the DL_FLAG_MANAGED flag set are ignored.
+ */
+int device_links_check_suppliers(struct device *dev)
+{
+    struct device_link *link;
+    int ret = 0, fwnode_ret = 0;
+    struct fwnode_handle *sup_fw;
+
+    /*
+     * Device waiting for supplier to become available is not allowed to
+     * probe.
+     */
+    scoped_guard(mutex, &fwnode_link_lock) {
+        sup_fw = fwnode_links_check_suppliers(dev->fwnode);
+        if (sup_fw) {
+            if (dev_is_best_effort(dev))
+                fwnode_ret = -EAGAIN;
+            else
+                return dev_err_probe(dev, -EPROBE_DEFER,
+                             "wait for supplier %pfwf\n", sup_fw);
+        }
+    }
+
+    device_links_write_lock();
+
+    list_for_each_entry(link, &dev->links.suppliers, c_node) {
+        if (!(link->flags & DL_FLAG_MANAGED))
+            continue;
+
+        if (link->status != DL_STATE_AVAILABLE &&
+            !(link->flags & DL_FLAG_SYNC_STATE_ONLY)) {
+
+            if (dev_is_best_effort(dev) &&
+                link->flags & DL_FLAG_INFERRED &&
+                !link->supplier->can_match) {
+                ret = -EAGAIN;
+                continue;
+            }
+
+            device_links_missing_supplier(dev);
+            ret = dev_err_probe(dev, -EPROBE_DEFER,
+                        "supplier %s not ready\n", dev_name(link->supplier));
+            break;
+        }
+        WRITE_ONCE(link->status, DL_STATE_CONSUMER_PROBE);
+    }
+    dev->links.status = DL_DEV_PROBING;
+
+    device_links_write_unlock();
+
+    return ret ? ret : fwnode_ret;
 }
 
 static const struct kset_uevent_ops device_uevent_ops = {

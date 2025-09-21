@@ -314,12 +314,14 @@ static int sifive_spi_probe(struct platform_device *pdev)
 		goto put_host;
 	}
 
+    printk("%s: step1\n", __func__);
 	spi->clk = devm_clk_get(&pdev->dev, NULL);
 	if (IS_ERR(spi->clk)) {
 		dev_err(&pdev->dev, "Unable to find bus clock\n");
 		ret = PTR_ERR(spi->clk);
 		goto put_host;
 	}
+    printk("%s: step2\n", __func__);
 
 	irq = platform_get_irq(pdev, 0);
 	if (irq < 0) {

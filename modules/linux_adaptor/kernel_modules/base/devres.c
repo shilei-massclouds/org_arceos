@@ -38,6 +38,13 @@ struct devres {
     u8 __aligned(ARCH_DMA_MINALIGN) data[];
 };
 
+struct devres_group {
+    struct devres_node      node[2];
+    void                *id;
+    int             color;
+    /* -- 8 pointers */
+};
+
 static void set_node_dbginfo(struct devres_node *node, const char *name,
                  size_t size)
 {
@@ -210,6 +217,29 @@ void devres_add(struct device *dev, void *res)
     spin_unlock_irqrestore(&dev->devres_lock, flags);
 }
 
+/*
+ * Release functions for devres group.  These callbacks are used only
+ * for identification.
+ */
+static void group_open_release(struct device *dev, void *res)
+{
+    /* noop */
+}
+
+static void group_close_release(struct device *dev, void *res)
+{
+    /* noop */
+}
+
+static struct devres_group *node_to_group(struct devres_node *node)
+{
+    if (node->release == &group_open_release)
+        return container_of(node, struct devres_group, node[0]);
+    if (node->release == &group_close_release)
+        return container_of(node, struct devres_group, node[1]);
+    return NULL;
+}
+
 /**
  * __devres_alloc_node - Allocate device resource data
  * @release: Release function devres will be associated with
@@ -237,6 +267,84 @@ void *__devres_alloc_node(dr_release_t release, size_t size, gfp_t gfp, int nid,
     return dr->data;
 }
 
+static int remove_nodes(struct device *dev,
+            struct list_head *first, struct list_head *end,
+            struct list_head *todo)
+{
+    struct devres_node *node, *n;
+    int cnt = 0, nr_groups = 0;
+
+    /* First pass - move normal devres entries to @todo and clear
+     * devres_group colors.
+     */
+    node = list_entry(first, struct devres_node, entry);
+    list_for_each_entry_safe_from(node, n, end, entry) {
+        struct devres_group *grp;
+
+        grp = node_to_group(node);
+        if (grp) {
+            /* clear color of group markers in the first pass */
+            grp->color = 0;
+            nr_groups++;
+        } else {
+            /* regular devres entry */
+            if (&node->entry == first)
+                first = first->next;
+            list_move_tail(&node->entry, todo);
+            cnt++;
+        }
+    }
+
+    if (!nr_groups)
+        return cnt;
+
+    /* Second pass - Scan groups and color them.  A group gets
+     * color value of two iff the group is wholly contained in
+     * [current node, end). That is, for a closed group, both opening
+     * and closing markers should be in the range, while just the
+     * opening marker is enough for an open group.
+     */
+    node = list_entry(first, struct devres_node, entry);
+#if 0
+    list_for_each_entry_safe_from(node, n, end, entry) {
+        struct devres_group *grp;
+
+        grp = node_to_group(node);
+        BUG_ON(!grp || list_empty(&grp->node[0].entry));
+
+        grp->color++;
+        if (list_empty(&grp->node[1].entry))
+            grp->color++;
+
+        BUG_ON(grp->color <= 0 || grp->color > 2);
+        if (grp->color == 2) {
+            /* No need to update current node or end. The removed
+             * nodes are always before both.
+             */
+            list_move_tail(&grp->node[0].entry, todo);
+            list_del_init(&grp->node[1].entry);
+        }
+    }
+
+    return cnt;
+#endif
+    PANIC("");
+}
+
+static void release_nodes(struct device *dev, struct list_head *todo)
+{
+    struct devres *dr, *tmp;
+
+    /* Release.  Note that both devres and devres_group are
+     * handled as devres in the following loop.  This is safe.
+     */
+    list_for_each_entry_safe_reverse(dr, tmp, todo, node.entry) {
+        devres_log(dev, &dr->node, "REL");
+        dr->node.release(dev, dr->data);
+        kfree(dr);
+    }
+}
+
 /**
  * devres_release_all - Release all managed resources
  * @dev: Device to release resources for
@@ -258,15 +366,11 @@ int devres_release_all(struct device *dev)
     if (list_empty(&dev->devres_head))
         return 0;
 
-#if 0
     spin_lock_irqsave(&dev->devres_lock, flags);
     cnt = remove_nodes(dev, dev->devres_head.next, &dev->devres_head, &todo);
     spin_unlock_irqrestore(&dev->devres_lock, flags);
 
     release_nodes(dev, &todo);
-#endif
-    pr_notice("%s: No impl.", __func__);
-    //PANIC("");
     return cnt;
 }
 
@@ -547,4 +651,20 @@ int __devm_add_action(struct device *dev, void (*action)(void *), void *data, co
 
     devres_add(dev, devres);
     return 0;
+}
+
+/**
+ * devres_free - Free device resource data
+ * @res: Pointer to devres data to free
+ *
+ * Free devres created with devres_alloc().
+ */
+void devres_free(void *res)
+{
+    if (res) {
+        struct devres *dr = container_of(res, struct devres, data);
+
+        BUG_ON(!list_empty(&dr->node.entry));
+        kfree(dr);
+    }
 }

@@ -266,6 +266,7 @@ static int call_driver_probe(struct device *dev, const struct device_driver *drv
 {
     int ret = 0;
 
+    printk("%s: step1\n", __func__);
     if (dev->bus->probe)
         ret = dev->bus->probe(dev);
     else if (drv->probe)
@@ -335,14 +336,14 @@ static int really_probe(struct device *dev, const struct device_driver *drv)
         return -EPROBE_DEFER;
     }
 
-#if 0
     link_ret = device_links_check_suppliers(dev);
     if (link_ret == -EPROBE_DEFER)
         return link_ret;
-#endif
 
     dev_dbg(dev, "bus: '%s': %s: probing driver %s with device\n",
         drv->bus->name, __func__, drv->name);
+    printk("%s: bus: '%s': %s: probing driver %s with device\n",
+           __func__, drv->bus->name, __func__, drv->name);
     if (!list_empty(&dev->devres_head)) {
         dev_crit(dev, "Resources present before probing\n");
         ret = -EBUSY;
@@ -485,6 +486,8 @@ static int __driver_probe_device(const struct device_driver *drv, struct device 
     dev->can_match = true;
     dev_dbg(dev, "bus: '%s': %s: matched device with driver %s\n",
         drv->bus->name, __func__, drv->name);
+    printk("%s: bus: '%s': %s: matched device with driver %s\n",
+           __func__, drv->bus->name, __func__, drv->name);
 
 #if 0
     pm_runtime_get_suppliers(dev);
@@ -527,6 +530,7 @@ static int driver_probe_device(const struct device_driver *drv, struct device *d
     int trigger_count = atomic_read(&deferred_trigger_count);
     int ret;
 
+    printk("%s: step1 drv(%s)\n", __func__, drv->name);
     atomic_inc(&probe_count);
     ret = __driver_probe_device(drv, dev);
     if (ret == -EPROBE_DEFER || ret == EPROBE_DEFER) {
@@ -551,6 +555,7 @@ static int __device_attach_driver(struct device_driver *drv, void *_data)
     bool async_allowed;
     int ret;
 
+    printk("%s: step1\n", __func__);
     ret = driver_match_device(drv, dev);
     if (ret == 0) {
         /* no match */
@@ -585,6 +590,23 @@ static int __device_attach_driver(struct device_driver *drv, void *_data)
     if (ret < 0)
         return ret;
     return ret == 0;
+}
+
+static void __driver_attach_async_helper(void *_dev, async_cookie_t cookie)
+{
+    struct device *dev = _dev;
+    const struct device_driver *drv;
+    int ret;
+
+    __device_driver_lock(dev, dev->parent);
+    drv = dev->p->async_driver;
+    dev->p->async_driver = NULL;
+    ret = driver_probe_device(drv, dev);
+    __device_driver_unlock(dev, dev->parent);
+
+    dev_dbg(dev, "driver %s async attach completed: %d\n", drv->name, ret);
+
+    put_device(dev);
 }
 
 static int __driver_attach(struct device *dev, void *data)
@@ -625,7 +647,6 @@ static int __driver_attach(struct device *dev, void *data)
         return 0;
     } /* ret > 0 means positive match */
 
-#if 0
     if (driver_allows_async_probing(drv)) {
         /*
          * Instead of probing the device synchronously we will
@@ -646,7 +667,6 @@ static int __driver_attach(struct device *dev, void *data)
             async_schedule_dev(__driver_attach_async_helper, dev);
         return 0;
     }
-#endif
 
     __device_driver_lock(dev, dev->parent);
     driver_probe_device(drv, dev);
@@ -678,6 +698,7 @@ void driver_deferred_probe_add(struct device *dev)
     mutex_lock(&deferred_probe_mutex);
     if (list_empty(&dev->p->deferred_probe)) {
         dev_dbg(dev, "Added to deferred list\n");
+        printk("%s: Added to deferred list (%s)\n", __func__, dev_name(dev));
         list_add_tail(&dev->p->deferred_probe, &deferred_probe_pending_list);
     }
     mutex_unlock(&deferred_probe_mutex);
@@ -753,6 +774,7 @@ static void deferred_probe_work_func(struct work_struct *work)
         list_del_init(&private->deferred_probe);
 
         get_device(dev);
+    printk("%s: step1 dev(%s)\n", __func__, dev_name(dev));
 
         __device_set_deferred_probe_reason(dev, NULL);
 
@@ -802,6 +824,7 @@ static bool driver_deferred_probe_enable;
  */
 void driver_deferred_probe_trigger(void)
 {
+    printk("%s: step1\n", __func__);
     if (!driver_deferred_probe_enable)
         return;
 
@@ -856,6 +879,7 @@ static int deferred_probe_initcall(void)
                 &deferred_devs_fops);
 #endif
 
+    printk("%s: step1\n", __func__);
     driver_deferred_probe_enable = true;
     driver_deferred_probe_trigger();
     /* Sort as many dependencies as possible before exiting initcalls */

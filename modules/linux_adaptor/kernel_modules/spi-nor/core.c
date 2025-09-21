@@ -3591,6 +3591,7 @@ static int spi_nor_probe(struct spi_mem *spimem)
 	char *flash_name;
 	int ret;
 
+    printk("%s: step1\n", __func__);
 	nor = devm_kzalloc(&spi->dev, sizeof(*nor), GFP_KERNEL);
 	if (!nor)
 		return -ENOMEM;
@@ -3758,6 +3759,7 @@ static struct spi_mem_driver spi_nor_driver = {
 
 static int __init spi_nor_module_init(void)
 {
+    printk("%s: step1\n", __func__);
 	return spi_mem_driver_register(&spi_nor_driver);
 }
 module_init(spi_nor_module_init);

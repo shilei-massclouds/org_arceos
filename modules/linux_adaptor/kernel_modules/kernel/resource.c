@@ -203,6 +203,40 @@ struct resource *__request_region(struct resource *parent,
 void __release_region(struct resource *parent, resource_size_t start,
               resource_size_t n)
 {
+    struct resource **p;
+    resource_size_t end;
+
+    p = &parent->child;
+    end = start + n - 1;
+
+    write_lock(&resource_lock);
+
+    for (;;) {
+        struct resource *res = *p;
+
+        if (!res)
+            break;
+        if (res->start <= start && res->end >= end) {
+            if (!(res->flags & IORESOURCE_BUSY)) {
+                p = &res->child;
+                continue;
+            }
+            if (res->start != start || res->end != end)
+                break;
+            *p = res->sibling;
+            write_unlock(&resource_lock);
+            if (res->flags & IORESOURCE_MUXED)
+                wake_up(&muxed_resource_wait);
+            free_resource(res);
+            return;
+        }
+        p = &res->sibling;
+    }
+
+    write_unlock(&resource_lock);
+
+    pr_warn("Trying to free nonexistent resource <%pa-%pa>\n", &start, &end);
+
     PANIC("");
 }
 

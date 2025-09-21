@@ -24,7 +24,7 @@
 extern void cl_do_initcalls(void);
 
 //extern void cl_gpiolib_dev_init(void);
-extern int cl_of_platform_default_populate_init(void);
+//extern int cl_of_platform_default_populate_init(void);
 
 /*
 extern void cl_riscv_intc_init(struct device_node *node,
@@ -68,15 +68,11 @@ extern void cl_virtio_blk_init();
 //extern void cl_blkdev_init(void);
 //extern void cl_init_bio(void);
 //extern void cl_sg_pool_init(void);
-extern int cl_default_bdi_init(void);
 
 //extern int cl_journal_init(void);
 //extern int cl_ext4_init_fs(void);
 
 extern void cl_invoke_softirq(void);
-extern void cl_blk_timeout_init(void);
-
-extern int cl_genhd_device_init(void);
 
 extern void test_block(void);
 extern void test_ext4();
@@ -106,8 +102,6 @@ int clinux_init(phys_addr_t dt_phys)
 
     random_init_early("");
     vfs_caches_init_early();
-
-    cl_blk_timeout_init();
 
     /*
     cl_crc32_mod_init();
@@ -142,7 +136,6 @@ int clinux_init(phys_addr_t dt_phys)
     workqueue_init();
     workqueue_init_topology();
     async_init();
-    cl_default_bdi_init();
 
     // nvme/host/core.c
     //cl_nvme_core_init();
@@ -151,7 +144,7 @@ int clinux_init(phys_addr_t dt_phys)
     //cl_pci_driver_init();
 
     unflatten_device_tree();
-    cl_of_platform_default_populate_init();
+    //cl_of_platform_default_populate_init();
 
     // pci/controller/pci-host-generic.c
     //cl_gen_pci_driver_init();
@@ -169,9 +162,6 @@ int clinux_init(phys_addr_t dt_phys)
 
     // Note: Refer to old cl_irq_init in irq.c.
     //cl_plic_init();
-
-    // block/genhd.c
-    cl_genhd_device_init();
 
     // block/fops.c
     //cl_blkdev_init();
@@ -214,6 +204,7 @@ int clinux_init(phys_addr_t dt_phys)
     //cl_nvme_init();
 
     // Set ROOT_DEV based on linux commandline.
+    printk("====== Prepare namespace ======\n");
     prepare_namespace();
 
 #ifdef TEST_BLOCK

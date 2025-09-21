@@ -234,6 +234,7 @@ int __register_blkdev(unsigned int major, const char *name,
     }
 out:
     mutex_unlock(&major_names_lock);
+    printk("%s: ret(%d)\n", __func__, ret);
     return ret;
 }
 
@@ -659,8 +660,4 @@ static int __init genhd_device_init(void)
     block_depr = kobject_create_and_add("block", NULL);
     return 0;
 }
-
-int cl_genhd_device_init(void)
-{
-    return genhd_device_init();
-}
+subsys_initcall(genhd_device_init);

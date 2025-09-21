@@ -3261,10 +3261,12 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 		goto out_disable;
 	}
 
+    printk("------------- %s: step1.1\n", __func__);
 	result = nvme_init_ctrl_finish(&dev->ctrl, false);
 	if (result)
 		goto out_disable;
 
+    printk("------------- %s: step1.2\n", __func__);
 	if (nvme_ctrl_meta_sgl_supported(&dev->ctrl))
 		dev->ctrl.max_integrity_segments = NVME_MAX_META_SEGS;
 	else
@@ -3276,6 +3278,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	if (result < 0)
 		goto out_disable;
 
+    printk("------------- %s: step1.3\n", __func__);
 	result = nvme_setup_io_queues(dev);
 	if (result)
 		goto out_disable;

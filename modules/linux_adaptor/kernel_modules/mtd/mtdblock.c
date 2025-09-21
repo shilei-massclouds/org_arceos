@@ -255,6 +255,7 @@ static int mtdblock_open(struct mtd_blktrans_dev *mbd)
 	struct mtdblk_dev *mtdblk = container_of(mbd, struct mtdblk_dev, mbd);
 
 	pr_debug("mtdblock_open\n");
+	printk("mtdblock_open\n");
 
 	if (mtdblk->count) {
 		mtdblk->count++;
@@ -318,6 +319,7 @@ static void mtdblock_add_mtd(struct mtd_blktrans_ops *tr, struct mtd_info *mtd)
 {
 	struct mtdblk_dev *dev = kzalloc(sizeof(*dev), GFP_KERNEL);
 
+    printk("%s: step1\n", __func__);
 	if (!dev)
 		return;
 
@@ -332,6 +334,7 @@ static void mtdblock_add_mtd(struct mtd_blktrans_ops *tr, struct mtd_info *mtd)
 
 	if (add_mtd_blktrans_dev(&dev->mbd))
 		kfree(dev);
+    printk("%s: step2\n", __func__);
 }
 
 static void mtdblock_remove_dev(struct mtd_blktrans_dev *dev)

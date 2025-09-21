@@ -2578,6 +2578,7 @@ static int nvme_configure_host_options(struct nvme_ctrl *ctrl)
 	if (!host)
 		return 0;
 
+    printk("------------- %s: step1\n", __func__);
 	host->acre = acre;
 	host->lbafee = lbafee;
 	ret = nvme_set_features(ctrl, NVME_FEAT_HOST_BEHAVIOR, 0,
@@ -3465,10 +3466,12 @@ int nvme_init_ctrl_finish(struct nvme_ctrl *ctrl, bool was_suspended)
 	if (ret < 0)
 		return ret;
 
+    printk("------------- %s: step1\n", __func__);
 	ret = nvme_configure_host_options(ctrl);
 	if (ret < 0)
 		return ret;
 
+    printk("------------- %s: step2\n", __func__);
 	nvme_configure_opal(ctrl, was_suspended);
 
 	if (!ctrl->identified && !nvme_discovery_ctrl(ctrl)) {
