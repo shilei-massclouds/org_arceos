@@ -573,7 +573,7 @@ out:
 void __might_sleep(const char *file, int line)
 {
     unsigned int state = get_current_state();
-#if 0
+#if 1
     /*
      * Blocking primitives will set (and therefore destroy) current->state,
      * since we will exit with TASK_RUNNING make sure we enter with it,
@@ -739,6 +739,24 @@ void cl_set_task_state(struct task_struct *p, unsigned int state)
 void wake_up_q(struct wake_q_head *head)
 {
     PANIC("");
+}
+
+void cl_ttwu_do_wakeup(struct task_struct *p)
+{
+    if (p == NULL) {
+        PANIC("NULL tp");
+    }
+
+    int state = p->__state & 0x3;
+    if (state == TASK_INTERRUPTIBLE) {
+        ttwu_do_wakeup(p);
+    } else if (state == TASK_UNINTERRUPTIBLE) {
+        ttwu_do_wakeup(p);
+    } else if (state == TASK_RUNNING) {
+        /* No-op */
+    } else {
+        printk("%s: task: (%lx), state(%u)\n", __func__, p, p->__state);
+    }
 }
 
 void __init sched_init(void)

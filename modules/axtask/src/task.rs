@@ -533,6 +533,7 @@ impl CurrentTask {
             axhal::arch::write_thread_pointer(next.private() as usize);
             trace!("========================== ArceOS-Thread({}) kthread({:x})",
                 next.id_name(), next.private());
+            unsafe { cl_ttwu_do_wakeup(next.private() as usize) };
         } else {
             trace!("Next: {}", next.id_name());
         }
@@ -571,4 +572,8 @@ extern "C" fn task_entry() -> ! {
 #[cfg(feature = "preempt")]
 unsafe extern "C" {
     fn cl_preemptible() -> usize;
+}
+
+unsafe extern "C" {
+    fn cl_ttwu_do_wakeup(tp: usize);
 }
