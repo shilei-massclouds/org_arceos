@@ -407,6 +407,43 @@ void ring_buffer_normalize_time_stamp(struct trace_buffer *buffer,
     *ts >>= DEBUG_SHIFT;
 }
 
+static inline unsigned long rb_page_entries(struct buffer_page *bpage)
+{
+    return local_read(&bpage->entries) & RB_WRITE_MASK;
+}
+
+static int rb_head_page_set(struct ring_buffer_per_cpu *cpu_buffer,
+                struct buffer_page *head,
+                struct buffer_page *prev,
+                int old_flag, int new_flag)
+{
+    struct list_head *list;
+    unsigned long val = (unsigned long)&head->list;
+    unsigned long ret;
+
+    list = &prev->list;
+
+    val &= ~RB_FLAG_MASK;
+
+    ret = cmpxchg((unsigned long *)&list->next,
+              val | old_flag, val | new_flag);
+
+    /* check if the reader took the page */
+    if ((ret & ~RB_FLAG_MASK) != val)
+        return RB_PAGE_MOVED;
+
+    return ret & RB_FLAG_MASK;
+}
+
+static int rb_head_page_set_update(struct ring_buffer_per_cpu *cpu_buffer,
+                   struct buffer_page *head,
+                   struct buffer_page *prev,
+                   int old_flag)
+{
+    return rb_head_page_set(cpu_buffer, head, prev,
+                old_flag, RB_PAGE_UPDATE);
+}
+
 /*
  * rb_list_head - remove any bit
  */
@@ -632,6 +669,13 @@ static void rb_update_meta_head(struct ring_buffer_per_cpu *cpu_buffer,
     (void)cmpxchg(&meta->head_buffer, old_head, new_head);
 }
 
+static void rb_event_set_padding(struct ring_buffer_event *event)
+{
+    /* padding has a NULL time_delta */
+    event->type_len = RINGBUF_TYPE_PADDING;
+    event->time_delta = 0;
+}
+
 static void rb_update_meta_reader(struct ring_buffer_per_cpu *cpu_buffer,
                   struct buffer_page *reader)
 {
@@ -649,6 +693,84 @@ static void rb_update_meta_reader(struct ring_buffer_per_cpu *cpu_buffer,
 
     /* The head pointer is the one after the reader */
     rb_update_meta_head(cpu_buffer, reader);
+}
+
+static inline void
+rb_reset_tail(struct ring_buffer_per_cpu *cpu_buffer,
+          unsigned long tail, struct rb_event_info *info)
+{
+    unsigned long bsize = READ_ONCE(cpu_buffer->buffer->subbuf_size);
+    struct buffer_page *tail_page = info->tail_page;
+    struct ring_buffer_event *event;
+    unsigned long length = info->length;
+
+    /*
+     * Only the event that crossed the page boundary
+     * must fill the old tail_page with padding.
+     */
+    if (tail >= bsize) {
+        /*
+         * If the page was filled, then we still need
+         * to update the real_end. Reset it to zero
+         * and the reader will ignore it.
+         */
+        if (tail == bsize)
+            tail_page->real_end = 0;
+
+        local_sub(length, &tail_page->write);
+        return;
+    }
+
+    event = __rb_page_index(tail_page, tail);
+
+    /*
+     * Save the original length to the meta data.
+     * This will be used by the reader to add lost event
+     * counter.
+     */
+    tail_page->real_end = tail;
+
+    /*
+     * If this event is bigger than the minimum size, then
+     * we need to be careful that we don't subtract the
+     * write counter enough to allow another writer to slip
+     * in on this page.
+     * We put in a discarded commit instead, to make sure
+     * that this space is not used again, and this space will
+     * not be accounted into 'entries_bytes'.
+     *
+     * If we are less than the minimum size, we don't need to
+     * worry about it.
+     */
+    if (tail > (bsize - RB_EVNT_MIN_SIZE)) {
+        /* No room for any events */
+
+        /* Mark the rest of the page with padding */
+        rb_event_set_padding(event);
+
+        /* Make sure the padding is visible before the write update */
+        smp_wmb();
+
+        /* Set the write back to the previous setting */
+        local_sub(length, &tail_page->write);
+        return;
+    }
+
+    /* Put in a discarded event */
+    event->array[0] = (bsize - tail) - RB_EVNT_HDR_SIZE;
+    event->type_len = RINGBUF_TYPE_PADDING;
+    /* time delta must be non zero */
+    event->time_delta = 1;
+
+    /* account for padding bytes */
+    local_add(bsize - tail, &cpu_buffer->entries_bytes);
+
+    /* Make sure the padding is visible before the tail_page->write update */
+    smp_wmb();
+
+    /* Set write to end of buffer */
+    length = (tail + length) - bsize;
+    local_sub(length, &tail_page->write);
 }
 
 static struct buffer_page *
@@ -1893,6 +2015,24 @@ static void rb_time_set(rb_time_t *t, u64 val)
     local64_set(&t->time, val);
 }
 
+static int rb_head_page_set_head(struct ring_buffer_per_cpu *cpu_buffer,
+                 struct buffer_page *head,
+                 struct buffer_page *prev,
+                 int old_flag)
+{
+    return rb_head_page_set(cpu_buffer, head, prev,
+                old_flag, RB_PAGE_HEAD);
+}
+
+static int rb_head_page_set_normal(struct ring_buffer_per_cpu *cpu_buffer,
+                   struct buffer_page *head,
+                   struct buffer_page *prev,
+                   int old_flag)
+{
+    return rb_head_page_set(cpu_buffer, head, prev,
+                old_flag, RB_PAGE_NORMAL);
+}
+
 /* Special value to validate all deltas on a page. */
 #define CHECK_FULL_PAGE     1L
 
@@ -1900,6 +2040,234 @@ static inline void check_buffer(struct ring_buffer_per_cpu *cpu_buffer,
              struct rb_event_info *info,
              unsigned long tail)
 {
+}
+
+/*
+ * rb_handle_head_page - writer hit the head page
+ *
+ * Returns: +1 to retry page
+ *           0 to continue
+ *          -1 on error
+ */
+static int
+rb_handle_head_page(struct ring_buffer_per_cpu *cpu_buffer,
+            struct buffer_page *tail_page,
+            struct buffer_page *next_page)
+{
+    struct buffer_page *new_head;
+    int entries;
+    int type;
+    int ret;
+
+    entries = rb_page_entries(next_page);
+
+    /*
+     * The hard part is here. We need to move the head
+     * forward, and protect against both readers on
+     * other CPUs and writers coming in via interrupts.
+     */
+    type = rb_head_page_set_update(cpu_buffer, next_page, tail_page,
+                       RB_PAGE_HEAD);
+
+    /*
+     * type can be one of four:
+     *  NORMAL - an interrupt already moved it for us
+     *  HEAD   - we are the first to get here.
+     *  UPDATE - we are the interrupt interrupting
+     *           a current move.
+     *  MOVED  - a reader on another CPU moved the next
+     *           pointer to its reader page. Give up
+     *           and try again.
+     */
+
+    switch (type) {
+    case RB_PAGE_HEAD:
+        /*
+         * We changed the head to UPDATE, thus
+         * it is our responsibility to update
+         * the counters.
+         */
+        local_add(entries, &cpu_buffer->overrun);
+        local_sub(rb_page_commit(next_page), &cpu_buffer->entries_bytes);
+        local_inc(&cpu_buffer->pages_lost);
+
+        if (cpu_buffer->ring_meta)
+            rb_update_meta_head(cpu_buffer, next_page);
+        /*
+         * The entries will be zeroed out when we move the
+         * tail page.
+         */
+
+        /* still more to do */
+        break;
+
+    case RB_PAGE_UPDATE:
+        /*
+         * This is an interrupt that interrupt the
+         * previous update. Still more to do.
+         */
+        break;
+    case RB_PAGE_NORMAL:
+        /*
+         * An interrupt came in before the update
+         * and processed this for us.
+         * Nothing left to do.
+         */
+        return 1;
+    case RB_PAGE_MOVED:
+        /*
+         * The reader is on another CPU and just did
+         * a swap with our next_page.
+         * Try again.
+         */
+        return 1;
+    default:
+        RB_WARN_ON(cpu_buffer, 1); /* WTF??? */
+        return -1;
+    }
+
+    /*
+     * Now that we are here, the old head pointer is
+     * set to UPDATE. This will keep the reader from
+     * swapping the head page with the reader page.
+     * The reader (on another CPU) will spin till
+     * we are finished.
+     *
+     * We just need to protect against interrupts
+     * doing the job. We will set the next pointer
+     * to HEAD. After that, we set the old pointer
+     * to NORMAL, but only if it was HEAD before.
+     * otherwise we are an interrupt, and only
+     * want the outer most commit to reset it.
+     */
+    new_head = next_page;
+    rb_inc_page(&new_head);
+
+    ret = rb_head_page_set_head(cpu_buffer, new_head, next_page,
+                    RB_PAGE_NORMAL);
+
+    /*
+     * Valid returns are:
+     *  HEAD   - an interrupt came in and already set it.
+     *  NORMAL - One of two things:
+     *            1) We really set it.
+     *            2) A bunch of interrupts came in and moved
+     *               the page forward again.
+     */
+    switch (ret) {
+    case RB_PAGE_HEAD:
+    case RB_PAGE_NORMAL:
+        /* OK */
+        break;
+    default:
+        RB_WARN_ON(cpu_buffer, 1);
+        return -1;
+    }
+
+    /*
+     * It is possible that an interrupt came in,
+     * set the head up, then more interrupts came in
+     * and moved it again. When we get back here,
+     * the page would have been set to NORMAL but we
+     * just set it back to HEAD.
+     *
+     * How do you detect this? Well, if that happened
+     * the tail page would have moved.
+     */
+    if (ret == RB_PAGE_NORMAL) {
+        struct buffer_page *buffer_tail_page;
+
+        buffer_tail_page = READ_ONCE(cpu_buffer->tail_page);
+        /*
+         * If the tail had moved passed next, then we need
+         * to reset the pointer.
+         */
+        if (buffer_tail_page != tail_page &&
+            buffer_tail_page != next_page)
+            rb_head_page_set_normal(cpu_buffer, new_head,
+                        next_page,
+                        RB_PAGE_HEAD);
+    }
+
+    /*
+     * If this was the outer most commit (the one that
+     * changed the original pointer from HEAD to UPDATE),
+     * then it is up to us to reset it to NORMAL.
+     */
+    if (type == RB_PAGE_HEAD) {
+        ret = rb_head_page_set_normal(cpu_buffer, next_page,
+                          tail_page,
+                          RB_PAGE_UPDATE);
+        if (RB_WARN_ON(cpu_buffer,
+                   ret != RB_PAGE_UPDATE))
+            return -1;
+    }
+
+    return 0;
+}
+
+/*
+ * rb_tail_page_update - move the tail page forward
+ */
+static void rb_tail_page_update(struct ring_buffer_per_cpu *cpu_buffer,
+                   struct buffer_page *tail_page,
+                   struct buffer_page *next_page)
+{
+    unsigned long old_entries;
+    unsigned long old_write;
+
+    /*
+     * The tail page now needs to be moved forward.
+     *
+     * We need to reset the tail page, but without messing
+     * with possible erasing of data brought in by interrupts
+     * that have moved the tail page and are currently on it.
+     *
+     * We add a counter to the write field to denote this.
+     */
+    old_write = local_add_return(RB_WRITE_INTCNT, &next_page->write);
+    old_entries = local_add_return(RB_WRITE_INTCNT, &next_page->entries);
+
+    /*
+     * Just make sure we have seen our old_write and synchronize
+     * with any interrupts that come in.
+     */
+    barrier();
+
+    /*
+     * If the tail page is still the same as what we think
+     * it is, then it is up to us to update the tail
+     * pointer.
+     */
+    if (tail_page == READ_ONCE(cpu_buffer->tail_page)) {
+        /* Zero the write counter */
+        unsigned long val = old_write & ~RB_WRITE_MASK;
+        unsigned long eval = old_entries & ~RB_WRITE_MASK;
+
+        /*
+         * This will only succeed if an interrupt did
+         * not come in and change it. In which case, we
+         * do not want to modify it.
+         *
+         * We add (void) to let the compiler know that we do not care
+         * about the return value of these functions. We use the
+         * cmpxchg to only update if an interrupt did not already
+         * do it for us. If the cmpxchg fails, we don't care.
+         */
+        (void)local_cmpxchg(&next_page->write, old_write, val);
+        (void)local_cmpxchg(&next_page->entries, old_entries, eval);
+
+        /*
+         * No need to worry about races with clearing out the commit.
+         * it only can increment when a commit takes place. But that
+         * only happens in the outer most nested commit.
+         */
+        local_set(&next_page->page->commit, 0);
+
+        /* Either we update tail_page or an interrupt does */
+        if (try_cmpxchg(&cpu_buffer->tail_page, &tail_page, next_page))
+            local_inc(&cpu_buffer->pages_touched);
+    }
 }
 
 /*
@@ -1919,8 +2287,93 @@ rb_move_tail(struct ring_buffer_per_cpu *cpu_buffer,
 
     rb_inc_page(&next_page);
 
+    /*
+     * If for some reason, we had an interrupt storm that made
+     * it all the way around the buffer, bail, and warn
+     * about it.
+     */
+    if (unlikely(next_page == commit_page)) {
+        local_inc(&cpu_buffer->commit_overrun);
+        goto out_reset;
+    }
 
-    PANIC("");
+    /*
+     * This is where the fun begins!
+     *
+     * We are fighting against races between a reader that
+     * could be on another CPU trying to swap its reader
+     * page with the buffer head.
+     *
+     * We are also fighting against interrupts coming in and
+     * moving the head or tail on us as well.
+     *
+     * If the next page is the head page then we have filled
+     * the buffer, unless the commit page is still on the
+     * reader page.
+     */
+    if (rb_is_head_page(next_page, &tail_page->list)) {
+
+        /*
+         * If the commit is not on the reader page, then
+         * move the header page.
+         */
+        if (!rb_is_reader_page(cpu_buffer->commit_page)) {
+            /*
+             * If we are not in overwrite mode,
+             * this is easy, just stop here.
+             */
+            if (!(buffer->flags & RB_FL_OVERWRITE)) {
+                local_inc(&cpu_buffer->dropped_events);
+                goto out_reset;
+            }
+
+            ret = rb_handle_head_page(cpu_buffer,
+                          tail_page,
+                          next_page);
+            if (ret < 0)
+                goto out_reset;
+            if (ret)
+                goto out_again;
+        } else {
+            /*
+             * We need to be careful here too. The
+             * commit page could still be on the reader
+             * page. We could have a small buffer, and
+             * have filled up the buffer with events
+             * from interrupts and such, and wrapped.
+             *
+             * Note, if the tail page is also on the
+             * reader_page, we let it move out.
+             */
+            if (unlikely((cpu_buffer->commit_page !=
+                      cpu_buffer->tail_page) &&
+                     (cpu_buffer->commit_page ==
+                      cpu_buffer->reader_page))) {
+                local_inc(&cpu_buffer->commit_overrun);
+                goto out_reset;
+            }
+        }
+    }
+
+    rb_tail_page_update(cpu_buffer, tail_page, next_page);
+
+ out_again:
+
+    rb_reset_tail(cpu_buffer, tail, info);
+
+    /* Commit what we have for now. */
+    rb_end_commit(cpu_buffer);
+    /* rb_end_commit() decs committing */
+    local_inc(&cpu_buffer->committing);
+
+    /* fail and let the caller try again */
+    return ERR_PTR(-EAGAIN);
+
+ out_reset:
+    /* reset write */
+    rb_reset_tail(cpu_buffer, tail, info);
+
+    return NULL;
 }
 
 static void rb_add_timestamp(struct ring_buffer_per_cpu *cpu_buffer,

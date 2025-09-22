@@ -490,7 +490,6 @@ __trace_buffer_lock_reserve(struct trace_buffer *buffer,
 {
     struct ring_buffer_event *event;
 
-    printk("%s: type(%d) len(%lu)\n", __func__, type, len);
     event = ring_buffer_lock_reserve(buffer, len);
     if (event != NULL)
         trace_event_setup(event, type, trace_ctx);
