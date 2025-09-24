@@ -193,6 +193,211 @@ static inline void blk_update_mixed_merge(struct request *req,
     }
 }
 
+static bool blk_atomic_write_mergeable_rqs(struct request *rq,
+                       struct request *next)
+{
+    return (rq->cmd_flags & REQ_ATOMIC) == (next->cmd_flags & REQ_ATOMIC);
+}
+
+static enum elv_merge blk_try_req_merge(struct request *req,
+                    struct request *next)
+{
+    if (blk_discard_mergable(req))
+        return ELEVATOR_DISCARD_MERGE;
+    else if (blk_rq_pos(req) + blk_rq_sectors(req) == blk_rq_pos(next))
+        return ELEVATOR_BACK_MERGE;
+
+    return ELEVATOR_NO_MERGE;
+}
+
+static bool req_attempt_discard_merge(struct request_queue *q, struct request *req,
+        struct request *next)
+{
+#if 0
+    unsigned short segments = blk_rq_nr_discard_segments(req);
+
+    if (segments >= queue_max_discard_segments(q))
+        goto no_merge;
+    if (blk_rq_sectors(req) + bio_sectors(next->bio) >
+        blk_rq_get_max_sectors(req, blk_rq_pos(req)))
+        goto no_merge;
+
+    req->nr_phys_segments = segments + blk_rq_nr_discard_segments(next);
+#endif
+    PANIC("");
+    return true;
+no_merge:
+    req_set_nomerge(q, req);
+    return false;
+}
+
+static int ll_merge_requests_fn(struct request_queue *q, struct request *req,
+                struct request *next)
+{
+    int total_phys_segments;
+
+    if (req_gap_back_merge(req, next->bio))
+        return 0;
+
+#if 0
+    /*
+     * Will it become too large?
+     */
+    if ((blk_rq_sectors(req) + blk_rq_sectors(next)) >
+        blk_rq_get_max_sectors(req, blk_rq_pos(req)))
+        return 0;
+
+    total_phys_segments = req->nr_phys_segments + next->nr_phys_segments;
+    if (total_phys_segments > blk_rq_get_max_segments(req))
+        return 0;
+
+    if (!blk_cgroup_mergeable(req, next->bio))
+        return 0;
+
+    if (blk_integrity_merge_rq(q, req, next) == false)
+        return 0;
+
+    if (!bio_crypt_ctx_merge_rq(req, next))
+        return 0;
+
+    /* Merge is OK... */
+    req->nr_phys_segments = total_phys_segments;
+    req->nr_integrity_segments += next->nr_integrity_segments;
+#endif
+    PANIC("");
+    return 1;
+}
+
+/*
+ * For non-mq, this has to be called with the request spinlock acquired.
+ * For mq with scheduling, the appropriate queue wide lock should be held.
+ */
+static struct request *attempt_merge(struct request_queue *q,
+                     struct request *req, struct request *next)
+{
+    if (!rq_mergeable(req) || !rq_mergeable(next))
+        return NULL;
+
+    if (req_op(req) != req_op(next))
+        return NULL;
+
+    if (rq_data_dir(req) != rq_data_dir(next))
+        return NULL;
+
+    if (req->bio && next->bio) {
+        /* Don't merge requests with different write hints. */
+        if (req->bio->bi_write_hint != next->bio->bi_write_hint)
+            return NULL;
+        if (req->bio->bi_ioprio != next->bio->bi_ioprio)
+            return NULL;
+    }
+
+    if (!blk_atomic_write_mergeable_rqs(req, next))
+        return NULL;
+
+    /*
+     * If we are allowed to merge, then append bio list
+     * from next to rq and release next. merge_requests_fn
+     * will have updated segment counts, update sector
+     * counts here. Handle DISCARDs separately, as they
+     * have separate settings.
+     */
+
+    switch (blk_try_req_merge(req, next)) {
+    case ELEVATOR_DISCARD_MERGE:
+        if (!req_attempt_discard_merge(q, req, next))
+            return NULL;
+        break;
+    case ELEVATOR_BACK_MERGE:
+        if (!ll_merge_requests_fn(q, req, next))
+            return NULL;
+        break;
+    default:
+        return NULL;
+    }
+
+#if 0
+    /*
+     * If failfast settings disagree or any of the two is already
+     * a mixed merge, mark both as mixed before proceeding.  This
+     * makes sure that all involved bios have mixable attributes
+     * set properly.
+     */
+    if (((req->rq_flags | next->rq_flags) & RQF_MIXED_MERGE) ||
+        (req->cmd_flags & REQ_FAILFAST_MASK) !=
+        (next->cmd_flags & REQ_FAILFAST_MASK)) {
+        blk_rq_set_mixed_merge(req);
+        blk_rq_set_mixed_merge(next);
+    }
+
+    /*
+     * At this point we have either done a back merge or front merge. We
+     * need the smaller start_time_ns of the merged requests to be the
+     * current request for accounting purposes.
+     */
+    if (next->start_time_ns < req->start_time_ns)
+        req->start_time_ns = next->start_time_ns;
+
+    req->biotail->bi_next = next->bio;
+    req->biotail = next->biotail;
+
+    req->__data_len += blk_rq_bytes(next);
+
+    if (!blk_discard_mergable(req))
+        elv_merge_requests(q, req, next);
+
+    blk_crypto_rq_put_keyslot(next);
+
+    /*
+     * 'next' is going away, so update stats accordingly
+     */
+    blk_account_io_merge_request(next);
+
+    trace_block_rq_merge(next);
+
+    /*
+     * ownership of bio passed from next to req, return 'next' for
+     * the caller to free
+     */
+    next->bio = NULL;
+#endif
+    PANIC("");
+    return next;
+}
+
+/*
+ * Try to merge 'next' into 'rq'. Return true if the merge happened, false
+ * otherwise. The caller is responsible for freeing 'next' if the merge
+ * happened.
+ */
+bool blk_attempt_req_merge(struct request_queue *q, struct request *rq,
+               struct request *next)
+{
+    return attempt_merge(q, rq, next);
+}
+
+static struct request *attempt_back_merge(struct request_queue *q,
+        struct request *rq)
+{
+    struct request *next = elv_latter_request(q, rq);
+
+    if (next)
+        return attempt_merge(q, rq, next);
+
+    return NULL;
+}
+
+static struct request *attempt_front_merge(struct request_queue *q,
+        struct request *rq)
+{
+    struct request *prev = elv_former_request(q, rq);
+
+    if (prev)
+        return attempt_merge(q, prev, rq);
+
+    return NULL;
+}
+
 static void blk_account_io_merge_bio(struct request *req)
 {
     if (!blk_do_io_stat(req))
@@ -883,4 +1088,35 @@ unsigned int blk_recalc_rq_segments(struct request *rq)
         bvec_split_segs(&rq->q->limits, &bv, &nr_phys_segs, &bytes,
                 UINT_MAX, UINT_MAX);
     return nr_phys_segs;
+}
+
+bool blk_mq_sched_try_merge(struct request_queue *q, struct bio *bio,
+        unsigned int nr_segs, struct request **merged_request)
+{
+    struct request *rq;
+
+    switch (elv_merge(q, &rq, bio)) {
+    case ELEVATOR_BACK_MERGE:
+        if (!blk_mq_sched_allow_merge(q, rq, bio))
+            return false;
+        if (bio_attempt_back_merge(rq, bio, nr_segs) != BIO_MERGE_OK)
+            return false;
+        *merged_request = attempt_back_merge(q, rq);
+        if (!*merged_request)
+            elv_merged_request(q, rq, ELEVATOR_BACK_MERGE);
+        return true;
+    case ELEVATOR_FRONT_MERGE:
+        if (!blk_mq_sched_allow_merge(q, rq, bio))
+            return false;
+        if (bio_attempt_front_merge(rq, bio, nr_segs) != BIO_MERGE_OK)
+            return false;
+        *merged_request = attempt_front_merge(q, rq);
+        if (!*merged_request)
+            elv_merged_request(q, rq, ELEVATOR_FRONT_MERGE);
+        return true;
+    case ELEVATOR_DISCARD_MERGE:
+        return bio_attempt_discard_merge(q, rq, bio) == BIO_MERGE_OK;
+    default:
+        return false;
+    }
 }

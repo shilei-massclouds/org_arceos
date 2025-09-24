@@ -193,3 +193,9 @@ void blk_mq_put_tags(struct blk_mq_tags *tags, int *tag_array, int nr_tags)
     sbitmap_queue_clear_batch(&tags->bitmap_tags, tags->nr_reserved_tags,
                     tag_array, nr_tags);
 }
+
+void blk_mq_tag_update_sched_shared_tags(struct request_queue *q)
+{
+    sbitmap_queue_resize(&q->sched_shared_tags->bitmap_tags,
+                 q->nr_requests - q->tag_set->reserved_tags);
+}

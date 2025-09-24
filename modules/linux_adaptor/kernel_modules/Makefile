@@ -105,6 +105,7 @@ OBJS += block/blk-stat.o block/blk-settings.o block/bio.o
 OBJS += block/bdev.o block/fops.o block/blk-merge.o block/blk-mq-sched.o
 OBJS += block/blk-flush.o block/blk-mq-sysfs.o block/blk-rq-qos.o
 OBJS += block/blk-timeout.o block/early-lookup.o block/blk-map.o
+OBJS += block/elevator.o block/mq-deadline.o
 OBJS += fs/inode.o fs/libfs.o fs/filesystems.o fs/dcache.o fs/sync.o
 OBJS += fs/namespace.o fs/fs_context.o fs/super.o fs/mnt_idmapping.o
 OBJS += fs/buffer.o fs/file_table.o fs/bad_inode.o fs/mbcache.o

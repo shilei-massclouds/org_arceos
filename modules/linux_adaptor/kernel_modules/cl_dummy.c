@@ -1013,3 +1013,14 @@ void device_pm_unlock(void)
 {
     pr_notice("%s: No impl.", __func__);
 }
+
+void blk_mq_debugfs_register_sched(struct request_queue *q)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void blk_mq_debugfs_register_sched_hctx(struct request_queue *q,
+                    struct blk_mq_hw_ctx *hctx)
+{
+    pr_notice("%s: No impl.", __func__);
+}

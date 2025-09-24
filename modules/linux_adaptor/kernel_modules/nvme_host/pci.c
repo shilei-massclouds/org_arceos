@@ -31,6 +31,7 @@
 
 #include "trace.h"
 #include "nvme.h"
+#include "../adaptor.h"
 
 #define SQ_SIZE(q)	((q)->q_depth << (q)->sqes)
 #define CQ_SIZE(q)	((q)->q_depth * sizeof(struct nvme_completion))
@@ -1020,6 +1021,7 @@ static void nvme_queue_rqs(struct rq_list *rqlist)
 	struct nvme_queue *nvmeq = NULL;
 	struct request *req;
 
+    PANIC("");
 	while ((req = rq_list_pop(rqlist))) {
 		if (nvmeq && nvmeq != req->mq_hctx->driver_data)
 			nvme_submit_cmds(nvmeq, &submit_list);

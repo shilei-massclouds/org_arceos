@@ -796,3 +796,18 @@ CL_MINE(read_cache_folio)
 CL_MINE(device_pm_move_last)
 CL_MINE(_dev_printk)
 CL_MINE(pm_runtime_drop_link)
+
+// block/mq-deadline.c
+CL_MINE(seq_list_next)
+CL_MINE(seq_list_start)
+CL_MINE(__blk_mq_debugfs_rq_show)
+CL_MINE(elv_bio_merge_ok)
+CL_MINE(elv_rb_former_request)
+CL_MINE(elv_rb_latter_request)
+CL_MINE(blk_mq_debugfs_rq_show)
+CL_MINE(blk_mq_debugfs_unregister_sched_hctx)
+CL_MINE(blk_mq_debugfs_unregister_sched)
+
+CL_MINE(elv_latter_request)
+CL_MINE(elv_merged_request)
+CL_MINE(elv_former_request)

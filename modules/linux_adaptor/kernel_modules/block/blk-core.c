@@ -729,6 +729,16 @@ blk_status_t errno_to_blk_status(int errno)
 }
 
 /**
+ * blk_queue_flag_set - atomically set a queue flag
+ * @flag: flag to be set
+ * @q: request queue
+ */
+void blk_queue_flag_set(unsigned int flag, struct request_queue *q)
+{
+    set_bit(flag, &q->queue_flags);
+}
+
+/**
  * blk_queue_enter() - try to increase q->q_usage_counter
  * @q: request queue pointer
  * @flags: BLK_MQ_REQ_NOWAIT and/or BLK_MQ_REQ_PM

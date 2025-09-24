@@ -2265,6 +2265,7 @@ void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
     plug->rq_count = 0;
 
     if (!plug->multiple_queues && !plug->has_elevator && !from_schedule) {
+        PANIC("has_elevator");
         struct request_queue *q;
 
         rq = rq_list_peek(&plug->mq_list);
@@ -2700,7 +2701,6 @@ bool __blk_mq_alloc_driver_tag(struct request *rq)
     unsigned int tag_offset = rq->mq_hctx->tags->nr_reserved_tags;
     int tag;
 
-#if 0
     blk_mq_tag_busy(rq->mq_hctx);
 
     if (blk_mq_tag_is_reserved(rq->mq_hctx->sched_tags, rq->internal_tag)) {
@@ -2718,8 +2718,6 @@ bool __blk_mq_alloc_driver_tag(struct request *rq)
     rq->tag = tag + tag_offset;
     blk_mq_inc_active_requests(rq->mq_hctx);
     return true;
-#endif
-    PANIC("");
 }
 
 static enum prep_dispatch blk_mq_prep_dispatch_rq(struct request *rq,
@@ -3292,4 +3290,33 @@ void blk_mq_unfreeze_queue(struct request_queue *q)
 {
     if (__blk_mq_unfreeze_queue(q, false))
         blk_unfreeze_release_lock(q, false, false);
+}
+
+/*
+ * non_owner variant of blk_freeze_queue_start
+ *
+ * Unlike blk_freeze_queue_start, the queue doesn't need to be unfrozen
+ * by the same task.  This is fragile and should not be used if at all
+ * possible.
+ */
+void blk_freeze_queue_start_non_owner(struct request_queue *q)
+{
+    __blk_freeze_queue_start(q, NULL);
+}
+
+void blk_mq_cancel_work_sync(struct request_queue *q)
+{
+    struct blk_mq_hw_ctx *hctx;
+    unsigned long i;
+
+    cancel_delayed_work_sync(&q->requeue_work);
+
+    queue_for_each_hw_ctx(q, hctx, i)
+        cancel_delayed_work_sync(&hctx->run_work);
+}
+
+/* non_owner variant of blk_mq_unfreeze_queue */
+void blk_mq_unfreeze_queue_non_owner(struct request_queue *q)
+{
+    __blk_mq_unfreeze_queue(q, false);
 }
