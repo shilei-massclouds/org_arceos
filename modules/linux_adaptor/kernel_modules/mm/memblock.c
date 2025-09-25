@@ -15,6 +15,8 @@
 #include "internal.h"
 #include "../adaptor.h"
 
+struct pglist_data __refdata contig_page_data;
+
 /**
  * memblock_alloc_try_nid - allocate boot memory block
  * @size: size of memory block to be allocated in bytes
