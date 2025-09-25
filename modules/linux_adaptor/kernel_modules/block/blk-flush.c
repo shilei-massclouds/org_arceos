@@ -427,3 +427,8 @@ int blkdev_issue_flush(struct block_device *bdev)
     bio_init(&bio, bdev, NULL, 0, REQ_OP_WRITE | REQ_PREFLUSH);
     return submit_bio_wait(&bio);
 }
+
+bool is_flush_rq(struct request *rq)
+{
+    return rq->end_io == flush_end_io;
+}

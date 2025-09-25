@@ -1105,3 +1105,92 @@ const void *free_irq(unsigned int irq, void *dev_id)
     kfree(action);
     return devname;
 }
+
+void __disable_irq(struct irq_desc *desc)
+{
+    if (!desc->depth++)
+        irq_disable(desc);
+}
+
+static int __disable_irq_nosync(unsigned int irq)
+{
+    unsigned long flags;
+    struct irq_desc *desc = irq_get_desc_buslock(irq, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
+
+    if (!desc)
+        return -EINVAL;
+    __disable_irq(desc);
+    irq_put_desc_busunlock(desc, flags);
+    return 0;
+}
+
+/**
+ *  disable_irq - disable an irq and wait for completion
+ *  @irq: Interrupt to disable
+ *
+ *  Disable the selected interrupt line.  Enables and Disables are
+ *  nested.
+ *  This function waits for any pending IRQ handlers for this interrupt
+ *  to complete before returning. If you use this function while
+ *  holding a resource the IRQ handler may need you will deadlock.
+ *
+ *  Can only be called from preemptible code as it might sleep when
+ *  an interrupt thread is associated to @irq.
+ *
+ */
+void disable_irq(unsigned int irq)
+{
+    might_sleep();
+    if (!__disable_irq_nosync(irq))
+        synchronize_irq(irq);
+}
+
+/**
+ *  enable_irq - enable handling of an irq
+ *  @irq: Interrupt to enable
+ *
+ *  Undoes the effect of one call to disable_irq().  If this
+ *  matches the last disable, processing of interrupts on this
+ *  IRQ line is re-enabled.
+ *
+ *  This function may be called from IRQ context only when
+ *  desc->irq_data.chip->bus_lock and desc->chip->bus_sync_unlock are NULL !
+ */
+void enable_irq(unsigned int irq)
+{
+    unsigned long flags;
+    struct irq_desc *desc = irq_get_desc_buslock(irq, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
+
+    if (!desc)
+        return;
+    if (WARN(!desc->irq_data.chip,
+         KERN_ERR "enable_irq before setup/request_irq: irq %u\n", irq))
+        goto out;
+
+    __enable_irq(desc);
+out:
+    irq_put_desc_busunlock(desc, flags);
+}
+
+/**
+ *  synchronize_irq - wait for pending IRQ handlers (on other CPUs)
+ *  @irq: interrupt number to wait for
+ *
+ *  This function waits for any pending IRQ handlers for this interrupt
+ *  to complete before returning. If you use this function while
+ *  holding a resource the IRQ handler may need you will deadlock.
+ *
+ *  Can only be called from preemptible code as it might sleep when
+ *  an interrupt thread is associated to @irq.
+ *
+ *  It optionally makes sure (when the irq chip supports that method)
+ *  that the interrupt is not pending in any CPU and waiting for
+ *  service.
+ */
+void synchronize_irq(unsigned int irq)
+{
+    struct irq_desc *desc = irq_to_desc(irq);
+
+    if (desc)
+        __synchronize_irq(desc);
+}

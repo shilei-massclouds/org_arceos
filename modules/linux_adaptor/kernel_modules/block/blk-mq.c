@@ -1475,16 +1475,143 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
                 blk_mq_sched_dispatch_requests(hctx));
 }
 
+struct blk_expired_data {
+    bool has_timedout_rq;
+    unsigned long next;
+    unsigned long timeout_start;
+};
+
+static bool blk_mq_req_expired(struct request *rq, struct blk_expired_data *expired)
+{
+    unsigned long deadline;
+
+    if (blk_mq_rq_state(rq) != MQ_RQ_IN_FLIGHT)
+        return false;
+    if (rq->rq_flags & RQF_TIMED_OUT)
+        return false;
+
+    deadline = READ_ONCE(rq->deadline);
+    pr_err("%s: cur(%lu) dl(%lu)", __func__, expired->timeout_start, deadline);
+    if (time_after_eq(expired->timeout_start, deadline))
+        return true;
+
+    if (expired->next == 0)
+        expired->next = deadline;
+    else if (time_after(expired->next, deadline))
+        expired->next = deadline;
+    return false;
+}
+
+static bool blk_mq_check_expired(struct request *rq, void *priv)
+{
+    struct blk_expired_data *expired = priv;
+
+    /*
+     * blk_mq_queue_tag_busy_iter() has locked the request, so it cannot
+     * be reallocated underneath the timeout handler's processing, then
+     * the expire check is reliable. If the request is not expired, then
+     * it was completed and reallocated as a new request after returning
+     * from blk_mq_check_expired().
+     */
+    if (blk_mq_req_expired(rq, expired)) {
+        expired->has_timedout_rq = true;
+        return false;
+    }
+    return true;
+}
+
+static void blk_mq_rq_timed_out(struct request *req)
+{
+    pr_err("%s: step1", __func__);
+
+    req->rq_flags |= RQF_TIMED_OUT;
+    if (req->q->mq_ops->timeout) {
+        enum blk_eh_timer_return ret;
+
+        pr_err("%s: step2", __func__);
+        ret = req->q->mq_ops->timeout(req);
+        if (ret == BLK_EH_DONE)
+            return;
+        WARN_ON_ONCE(ret != BLK_EH_RESET_TIMER);
+    }
+
+    blk_add_timer(req);
+}
+
+static bool blk_mq_handle_expired(struct request *rq, void *priv)
+{
+    struct blk_expired_data *expired = priv;
+
+    pr_err("%s: ...", __func__);
+    if (blk_mq_req_expired(rq, expired))
+        blk_mq_rq_timed_out(rq);
+    return true;
+}
+
 static void blk_mq_timeout_work(struct work_struct *work)
 {
-    PANIC("");
+    struct request_queue *q =
+        container_of(work, struct request_queue, timeout_work);
+    struct blk_expired_data expired = {
+        .timeout_start = jiffies,
+    };
+    struct blk_mq_hw_ctx *hctx;
+    unsigned long i;
+
+#if 0
+    /* A deadlock might occur if a request is stuck requiring a
+     * timeout at the same time a queue freeze is waiting
+     * completion, since the timeout code would not be able to
+     * acquire the queue reference here.
+     *
+     * That's why we don't use blk_queue_enter here; instead, we use
+     * percpu_ref_tryget directly, because we need to be able to
+     * obtain a reference even in the short window between the queue
+     * starting to freeze, by dropping the first reference in
+     * blk_freeze_queue_start, and the moment the last request is
+     * consumed, marked by the instant q_usage_counter reaches
+     * zero.
+     */
+    if (!percpu_ref_tryget(&q->q_usage_counter))
+        return;
+#endif
+    /* check if there is any timed-out request */
+    blk_mq_queue_tag_busy_iter(q, blk_mq_check_expired, &expired);
+    if (expired.has_timedout_rq) {
+        /*
+         * Before walking tags, we must ensure any submit started
+         * before the current time has finished. Since the submit
+         * uses srcu or rcu, wait for a synchronization point to
+         * ensure all running submits have finished
+         */
+        blk_mq_wait_quiesce_done(q->tag_set);
+
+        expired.next = 0;
+        blk_mq_queue_tag_busy_iter(q, blk_mq_handle_expired, &expired);
+    }
+
+    if (expired.next != 0) {
+        mod_timer(&q->timeout, expired.next);
+    } else {
+        /*
+         * Request timeouts are handled as a forward rolling timer. If
+         * we end up here it means that no requests are pending and
+         * also that no request has been pending for a while. Mark
+         * each hctx as idle.
+         */
+        queue_for_each_hw_ctx(q, hctx, i) {
+            /* the hctx may be unmapped, so check it here */
+            if (blk_mq_hw_queue_mapped(hctx))
+                blk_mq_tag_idle(hctx);
+        }
+    }
+    blk_queue_exit(q);
+    pr_err("%s: NOTE! Timeout!", __func__);
 }
 
 int blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
         struct request_queue *q)
 {
-    pr_notice("%s: No impl.", __func__);
-
     /* mark the queue as mq asap */
     q->mq_ops = set->ops;
 
@@ -1509,10 +1636,8 @@ int blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
     if (!q->nr_hw_queues)
         goto err_hctxs;
 
-#if 1
     INIT_WORK(&q->timeout_work, blk_mq_timeout_work);
     blk_queue_rq_timeout(q, set->timeout ? set->timeout : 30 * HZ);
-#endif
 
     q->queue_flags |= QUEUE_FLAG_MQ_DEFAULT;
 
@@ -3319,4 +3444,31 @@ void blk_mq_cancel_work_sync(struct request_queue *q)
 void blk_mq_unfreeze_queue_non_owner(struct request_queue *q)
 {
     __blk_mq_unfreeze_queue(q, false);
+}
+
+void blk_mq_put_rq_ref(struct request *rq)
+{
+    if (is_flush_rq(rq)) {
+        if (rq->end_io(rq, 0) == RQ_END_IO_FREE)
+            blk_mq_free_request(rq);
+    } else if (req_ref_put_and_test(rq)) {
+        __blk_mq_free_request(rq);
+    }
+}
+
+/**
+ * blk_mq_wait_quiesce_done() - wait until in-progress quiesce is done
+ * @set: tag_set to wait on
+ *
+ * Note: it is driver's responsibility for making sure that quiesce has
+ * been started on or more of the request_queues of the tag_set.  This
+ * function only waits for the quiesce on those request_queues that had
+ * the quiesce flag set using blk_mq_quiesce_queue_nowait.
+ */
+void blk_mq_wait_quiesce_done(struct blk_mq_tag_set *set)
+{
+    if (set->flags & BLK_MQ_F_BLOCKING)
+        synchronize_srcu(set->srcu);
+    else
+        synchronize_rcu();
 }

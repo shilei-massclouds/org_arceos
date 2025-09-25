@@ -37,3 +37,8 @@ notrace bool rcu_is_watching(void)
 #endif
     return true;
 }
+
+void synchronize_rcu(void)
+{
+    pr_notice("%s: No impl.", __func__);
+}

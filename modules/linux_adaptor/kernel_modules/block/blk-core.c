@@ -88,6 +88,22 @@ static const struct {
     [BLK_STS_IOERR]     = { -EIO,   "I/O" },
 };
 
+int kblockd_schedule_work(struct work_struct *work)
+{
+    return queue_work(kblockd_workqueue, work);
+}
+
+static void blk_rq_timed_out_timer(struct timer_list *t)
+{
+    struct request_queue *q = from_timer(q, t, timeout);
+
+    kblockd_schedule_work(&q->timeout_work);
+}
+
+static void blk_timeout_work(struct work_struct *work)
+{
+}
+
 struct request_queue *blk_alloc_queue(struct queue_limits *lim, int node_id)
 {
     struct request_queue *q;
@@ -121,10 +137,8 @@ struct request_queue *blk_alloc_queue(struct queue_limits *lim, int node_id)
 
     atomic_set(&q->nr_active_requests_shared_tags, 0);
 
-#if 0
     timer_setup(&q->timeout, blk_rq_timed_out_timer, 0);
     INIT_WORK(&q->timeout_work, blk_timeout_work);
-#endif
     INIT_LIST_HEAD(&q->icq_list);
 
     refcount_set(&q->refs, 1);
