@@ -158,6 +158,8 @@ LIST_HEAD(ftrace_trace_arrays);
  */
 static struct trace_array global_trace = {
     .trace_flags = TRACE_DEFAULT_FLAGS,
+	.range_addr_start = 0xffffffc006000000,
+	.range_addr_size = 0x160000,
 };
 
 static void ftrace_exports(struct ring_buffer_event *event, int flag)

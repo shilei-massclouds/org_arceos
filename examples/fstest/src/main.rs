@@ -86,6 +86,12 @@ fn main() {
     }
 
     println!("fstest ok!");
+
+    /*
+    loop {
+        axstd::thread::yield_now();
+    }
+    */
 }
 
 unsafe extern "C" {

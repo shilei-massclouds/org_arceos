@@ -1249,6 +1249,20 @@ static void rb_init_page(struct buffer_data_page *bpage)
 }
 
 /*
+ * Take an address, add the meta data size as well as the array of
+ * array subbuffer indexes, then align it to a subbuffer size.
+ *
+ * This is used to help find the next per cpu subbuffer within a mapped range.
+ */
+static unsigned long
+rb_range_align_subbuf(unsigned long addr, int subbuf_size, int nr_subbufs)
+{
+    addr += sizeof(struct ring_buffer_meta) +
+        sizeof(int) * nr_subbufs;
+    return ALIGN(addr, subbuf_size);
+}
+
+/*
  * Return the ring_buffer_meta for a given @cpu.
  */
 static void *rb_range_meta(struct trace_buffer *buffer, int nr_pages, int cpu)
@@ -1261,7 +1275,52 @@ static void *rb_range_meta(struct trace_buffer *buffer, int nr_pages, int cpu)
     if (!ptr)
         return NULL;
 
-    PANIC("");
+    /* When nr_pages passed in is zero, the first meta has already been initialized */
+    if (!nr_pages) {
+        meta = (struct ring_buffer_meta *)ptr;
+        nr_subbufs = meta->nr_subbufs;
+    } else {
+        meta = NULL;
+        /* Include the reader page */
+        nr_subbufs = nr_pages + 1;
+    }
+
+    /*
+     * The first chunk may not be subbuffer aligned, where as
+     * the rest of the chunks are.
+     */
+    if (cpu) {
+        ptr = rb_range_align_subbuf(ptr, subbuf_size, nr_subbufs);
+        ptr += subbuf_size * nr_subbufs;
+
+        /* We can use multiplication to find chunks greater than 1 */
+        if (cpu > 1) {
+            unsigned long size;
+            unsigned long p;
+
+            /* Save the beginning of this CPU chunk */
+            p = ptr;
+            ptr = rb_range_align_subbuf(ptr, subbuf_size, nr_subbufs);
+            ptr += subbuf_size * nr_subbufs;
+
+            /* Now all chunks after this are the same size */
+            size = ptr - p;
+            ptr += size * (cpu - 2);
+        }
+    }
+    return (void *)ptr;
+}
+
+/* Return the start of subbufs given the meta pointer */
+static void *rb_subbufs_from_meta(struct ring_buffer_meta *meta)
+{
+    int subbuf_size = meta->subbuf_size;
+    unsigned long ptr;
+
+    ptr = (unsigned long)meta;
+    ptr = rb_range_align_subbuf(ptr, subbuf_size, meta->nr_subbufs);
+
+    return (void *)ptr;
 }
 
 /*
@@ -1273,7 +1332,25 @@ static void *rb_range_buffer(struct ring_buffer_per_cpu *cpu_buffer, int idx)
     unsigned long ptr;
     int subbuf_size;
 
-    PANIC("");
+    meta = rb_range_meta(cpu_buffer->buffer, 0, cpu_buffer->cpu);
+    if (!meta)
+        return NULL;
+
+    if (WARN_ON_ONCE(idx >= meta->nr_subbufs))
+        return NULL;
+
+    subbuf_size = meta->subbuf_size;
+
+    /* Map this buffer to the order that's in meta->buffers[] */
+    idx = meta->buffers[idx];
+
+    ptr = (unsigned long)rb_subbufs_from_meta(meta);
+
+    ptr += subbuf_size * idx;
+    if (ptr + subbuf_size > cpu_buffer->buffer->range_addr_end)
+        return NULL;
+
+    return (void *)ptr;
 }
 
 /* Map the buffer_pages to the previous head and commit pages */
@@ -1412,6 +1489,68 @@ static void rb_head_page_activate(struct ring_buffer_per_cpu *cpu_buffer)
     }
 }
 
+static int rb_read_data_buffer(struct buffer_data_page *dpage, int tail, int cpu,
+                   unsigned long long *timestamp, u64 *delta_ptr)
+{
+    struct ring_buffer_event *event;
+    u64 ts, delta;
+    int events = 0;
+    int e;
+
+    *delta_ptr = 0;
+    *timestamp = 0;
+
+    ts = dpage->time_stamp;
+
+    for (e = 0; e < tail; e += rb_event_length(event)) {
+
+        event = (struct ring_buffer_event *)(dpage->data + e);
+
+        switch (event->type_len) {
+
+        case RINGBUF_TYPE_TIME_EXTEND:
+            delta = rb_event_time_stamp(event);
+            ts += delta;
+            break;
+
+        case RINGBUF_TYPE_TIME_STAMP:
+            delta = rb_event_time_stamp(event);
+            delta = rb_fix_abs_ts(delta, ts);
+            if (delta < ts) {
+                *delta_ptr = delta;
+                *timestamp = ts;
+                return -1;
+            }
+            ts = delta;
+            break;
+
+        case RINGBUF_TYPE_PADDING:
+            if (event->time_delta == 1)
+                break;
+            fallthrough;
+        case RINGBUF_TYPE_DATA:
+            events++;
+            ts += event->time_delta;
+            break;
+
+        default:
+            return -1;
+        }
+    }
+    *timestamp = ts;
+    return events;
+}
+
+static int rb_validate_buffer(struct buffer_data_page *dpage, int cpu)
+{
+    unsigned long long ts;
+    u64 delta;
+    int tail;
+
+    tail = local_read(&dpage->commit);
+    return rb_read_data_buffer(dpage, tail, cpu, &ts, &delta);
+}
+
 /* If the meta data has been validated, now validate the events */
 static void rb_meta_validate_events(struct ring_buffer_per_cpu *cpu_buffer)
 {
@@ -1425,6 +1564,57 @@ static void rb_meta_validate_events(struct ring_buffer_per_cpu *cpu_buffer)
     if (!meta || !meta->head_buffer)
         return;
 
+    /* Do the reader page first */
+    ret = rb_validate_buffer(cpu_buffer->reader_page->page, cpu_buffer->cpu);
+    if (ret < 0) {
+        pr_info("Ring buffer reader page is invalid\n");
+        goto invalid;
+    }
+    entries += ret;
+    entry_bytes += local_read(&cpu_buffer->reader_page->page->commit);
+    local_set(&cpu_buffer->reader_page->entries, ret);
+
+    head_page = cpu_buffer->head_page;
+
+    /* If the commit_buffer is the reader page, update the commit page */
+    if (meta->commit_buffer == (unsigned long)cpu_buffer->reader_page->page) {
+        cpu_buffer->commit_page = cpu_buffer->reader_page;
+        /* Nothing more to do, the only page is the reader page */
+        goto done;
+    }
+
+    /* Iterate until finding the commit page */
+    for (i = 0; i < meta->nr_subbufs + 1; i++, rb_inc_page(&head_page)) {
+
+        PANIC("LOOP");
+    }
+
+    if (head_page != cpu_buffer->commit_page) {
+        pr_info("Ring buffer meta [%d] commit page not found\n",
+            cpu_buffer->cpu);
+        goto invalid;
+    }
+ done:
+    local_set(&cpu_buffer->entries, entries);
+    local_set(&cpu_buffer->entries_bytes, entry_bytes);
+
+    pr_info("Ring buffer meta [%d] is from previous boot!\n", cpu_buffer->cpu);
+    return;
+
+ invalid:
+    /* The content of the buffers are invalid, reset the meta data */
+    meta->head_buffer = 0;
+    meta->commit_buffer = 0;
+
+    /* Reset the reader page */
+    local_set(&cpu_buffer->reader_page->entries, 0);
+    local_set(&cpu_buffer->reader_page->page->commit, 0);
+
+    /* Reset all the subbuffers */
+    for (i = 0; i < meta->nr_subbufs - 1; i++, rb_inc_page(&head_page)) {
+        local_set(&head_page->entries, 0);
+        local_set(&head_page->page->commit, 0);
+    }
     PANIC("");
 }
 
@@ -1574,7 +1764,6 @@ rb_allocate_cpu_buffer(struct trace_buffer *buffer, long nr_pages, int cpu)
     cpu_buffer->reader_page = bpage;
 
     if (buffer->range_addr_start) {
-#if 0
         /*
          * Range mapped buffers have the same restrictions as memory
          * mapped ones do.
@@ -1587,8 +1776,6 @@ rb_allocate_cpu_buffer(struct trace_buffer *buffer, long nr_pages, int cpu)
         if (cpu_buffer->ring_meta->head_buffer)
             rb_meta_buffer_update(cpu_buffer, bpage);
         bpage->range = 1;
-#endif
-        PANIC("1");
     } else {
         page = alloc_pages_node(cpu_to_node(cpu),
                     GFP_KERNEL | __GFP_COMP | __GFP_ZERO,
@@ -1646,6 +1833,161 @@ rb_allocate_cpu_buffer(struct trace_buffer *buffer, long nr_pages, int cpu)
     return NULL;
 }
 
+/*
+ * See if the existing memory contains valid ring buffer data.
+ * As the previous kernel must be the same as this kernel, all
+ * the calculations (size of buffers and number of buffers)
+ * must be the same.
+ */
+static bool rb_meta_valid(struct ring_buffer_meta *meta, int cpu,
+              struct trace_buffer *buffer, int nr_pages,
+              unsigned long *subbuf_mask)
+{
+    int subbuf_size = PAGE_SIZE;
+    struct buffer_data_page *subbuf;
+    unsigned long buffers_start;
+    unsigned long buffers_end;
+    int i;
+
+    if (!subbuf_mask)
+        return false;
+
+    /* Check the meta magic and meta struct size */
+    if (meta->magic != RING_BUFFER_META_MAGIC ||
+        meta->struct_size != sizeof(*meta)) {
+        pr_info("Ring buffer boot meta[%d] mismatch of magic or struct size\n", cpu);
+        return false;
+    }
+
+    /* The subbuffer's size and number of subbuffers must match */
+    if (meta->subbuf_size != subbuf_size ||
+        meta->nr_subbufs != nr_pages + 1) {
+        pr_info("Ring buffer boot meta [%d] mismatch of subbuf_size/nr_pages\n", cpu);
+        return false;
+    }
+
+    buffers_start = meta->first_buffer;
+    buffers_end = meta->first_buffer + (subbuf_size * meta->nr_subbufs);
+
+    /* Is the head and commit buffers within the range of buffers? */
+    if (meta->head_buffer < buffers_start ||
+        meta->head_buffer >= buffers_end) {
+        pr_info("Ring buffer boot meta [%d] head buffer out of range\n", cpu);
+        return false;
+    }
+
+    if (meta->commit_buffer < buffers_start ||
+        meta->commit_buffer >= buffers_end) {
+        pr_info("Ring buffer boot meta [%d] commit buffer out of range\n", cpu);
+        return false;
+    }
+
+    subbuf = rb_subbufs_from_meta(meta);
+
+    bitmap_clear(subbuf_mask, 0, meta->nr_subbufs);
+
+    /* Is the meta buffers and the subbufs themselves have correct data? */
+    for (i = 0; i < meta->nr_subbufs; i++) {
+        if (meta->buffers[i] < 0 ||
+            meta->buffers[i] >= meta->nr_subbufs) {
+            pr_info("Ring buffer boot meta [%d] array out of range\n", cpu);
+            return false;
+        }
+
+        if ((unsigned)local_read(&subbuf->commit) > subbuf_size) {
+            pr_info("Ring buffer boot meta [%d] buffer invalid commit\n", cpu);
+            return false;
+        }
+
+        if (test_bit(meta->buffers[i], subbuf_mask)) {
+            pr_info("Ring buffer boot meta [%d] array has duplicates\n", cpu);
+            return false;
+        }
+
+        set_bit(meta->buffers[i], subbuf_mask);
+        subbuf = (void *)subbuf + subbuf_size;
+    }
+
+    return true;
+}
+
+/* Used to calculate data delta */
+static char rb_data_ptr[] = "";
+
+#define THIS_TEXT_PTR       ((unsigned long)rb_meta_init_text_addr)
+#define THIS_DATA_PTR       ((unsigned long)rb_data_ptr)
+
+static void rb_meta_init_text_addr(struct ring_buffer_meta *meta)
+{
+    meta->text_addr = THIS_TEXT_PTR;
+    meta->data_addr = THIS_DATA_PTR;
+}
+
+static void rb_range_meta_init(struct trace_buffer *buffer, int nr_pages)
+{
+    struct ring_buffer_meta *meta;
+    unsigned long *subbuf_mask;
+    unsigned long delta;
+    void *subbuf;
+    int cpu;
+    int i;
+
+    /* Create a mask to test the subbuf array */
+    subbuf_mask = bitmap_alloc(nr_pages + 1, GFP_KERNEL);
+    /* If subbuf_mask fails to allocate, then rb_meta_valid() will return false */
+
+    for (cpu = 0; cpu < nr_cpu_ids; cpu++) {
+        void *next_meta;
+
+        meta = rb_range_meta(buffer, nr_pages, cpu);
+
+        if (rb_meta_valid(meta, cpu, buffer, nr_pages, subbuf_mask)) {
+            /* Make the mappings match the current address */
+            subbuf = rb_subbufs_from_meta(meta);
+            delta = (unsigned long)subbuf - meta->first_buffer;
+            meta->first_buffer += delta;
+            meta->head_buffer += delta;
+            meta->commit_buffer += delta;
+            buffer->last_text_delta = THIS_TEXT_PTR - meta->text_addr;
+            buffer->last_data_delta = THIS_DATA_PTR - meta->data_addr;
+            continue;
+        }
+
+        if (cpu < nr_cpu_ids - 1)
+            next_meta = rb_range_meta(buffer, nr_pages, cpu + 1);
+        else
+            next_meta = (void *)buffer->range_addr_end;
+
+        memset(meta, 0, next_meta - (void *)meta);
+
+        meta->magic = RING_BUFFER_META_MAGIC;
+        meta->struct_size = sizeof(*meta);
+
+        meta->nr_subbufs = nr_pages + 1;
+        meta->subbuf_size = PAGE_SIZE;
+
+        subbuf = rb_subbufs_from_meta(meta);
+
+        meta->first_buffer = (unsigned long)subbuf;
+        rb_meta_init_text_addr(meta);
+
+        /*
+         * The buffers[] array holds the order of the sub-buffers
+         * that are after the meta data. The sub-buffers may
+         * be swapped out when read and inserted into a different
+         * location of the ring buffer. Although their addresses
+         * remain the same, the buffers[] array contains the
+         * index into the sub-buffers holding their actual order.
+         */
+        for (i = 0; i < meta->nr_subbufs; i++) {
+            meta->buffers[i] = i;
+            rb_init_page(subbuf);
+            subbuf += meta->subbuf_size;
+        }
+    }
+    bitmap_free(subbuf_mask);
+}
+
 static struct trace_buffer *alloc_buffer(unsigned long size, unsigned flags,
                      int order, unsigned long start,
                      unsigned long end,
@@ -1691,7 +2033,47 @@ static struct trace_buffer *alloc_buffer(unsigned long size, unsigned flags,
 
     /* If start/end are specified, then that overrides size */
     if (start && end) {
-        PANIC("stage1");
+        printk("%s: start(%lx) end(%lx)\n", __func__, start, end);
+        unsigned long ptr;
+        int n;
+
+        size = end - start;
+        size = size / nr_cpu_ids;
+
+        /*
+         * The number of sub-buffers (nr_pages) is determined by the
+         * total size allocated minus the meta data size.
+         * Then that is divided by the number of per CPU buffers
+         * needed, plus account for the integer array index that
+         * will be appended to the meta data.
+         */
+        nr_pages = (size - sizeof(struct ring_buffer_meta)) /
+            (subbuf_size + sizeof(int));
+        /* Need at least two pages plus the reader page */
+        if (nr_pages < 3)
+            goto fail_free_buffers;
+
+ again:
+        /* Make sure that the size fits aligned */
+        for (n = 0, ptr = start; n < nr_cpu_ids; n++) {
+            ptr += sizeof(struct ring_buffer_meta) +
+                sizeof(int) * nr_pages;
+            ptr = ALIGN(ptr, subbuf_size);
+            ptr += subbuf_size * nr_pages;
+        }
+        if (ptr > end) {
+            if (nr_pages <= 3)
+                goto fail_free_buffers;
+            nr_pages--;
+            goto again;
+        }
+
+        /* nr_pages should not count the reader page */
+        nr_pages--;
+        buffer->range_addr_start = start;
+        buffer->range_addr_end = end;
+
+        rb_range_meta_init(buffer, nr_pages);
     } else {
 
         /* need at least two pages */
