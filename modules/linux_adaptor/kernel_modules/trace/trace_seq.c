@@ -101,3 +101,30 @@ void trace_seq_vprintf(struct trace_seq *s, const char *fmt, va_list args)
         s->full = 1;
     }
 }
+
+/**
+ * trace_seq_puts - trace sequence printing of simple string
+ * @s: trace sequence descriptor
+ * @str: simple string to record
+ *
+ * The tracer may use either the sequence operations or its own
+ * copy to user routines. This function records a simple string
+ * into a special buffer (@s) for later retrieval by a sequencer
+ * or other mechanism.
+ */
+void trace_seq_puts(struct trace_seq *s, const char *str)
+{
+    unsigned int len = strlen(str);
+
+    if (s->full)
+        return;
+
+    __trace_seq_init(s);
+
+    if (len > TRACE_SEQ_BUF_LEFT(s)) {
+        s->full = 1;
+        return;
+    }
+
+    seq_buf_putmem(&s->seq, str, len);
+}
