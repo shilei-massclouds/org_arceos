@@ -320,7 +320,8 @@ static __init int event_trace_enable(void)
     pr_warn("%s: Enable trace event here! [", __func__);
     {
         //char filter[] = "ext4_writepages";
-        char filter[] = "mm_filemap_get_pages";
+        //char filter[] = "mm_filemap_get_pages";
+        char filter[] = "ext4";
         early_enable_events(tr, filter, false);
     }
     pr_warn("] %s: Enable trace event here!", __func__);
@@ -898,7 +899,6 @@ int trace_event_reg(struct trace_event_call *call,
 {
     struct trace_event_file *file = data;
 
-    dump_stack();
     printk("%s: ...\n", __func__);
     WARN_ON(!(call->flags & TRACE_EVENT_FL_TRACEPOINT));
     switch (type) {

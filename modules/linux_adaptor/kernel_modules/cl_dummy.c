@@ -250,7 +250,7 @@ unsigned long __msecs_to_jiffies(const unsigned int m)
 
 int sprint_symbol(char *buffer, unsigned long address)
 {
-    pr_notice("%s: [%s] addr[0x%lx]\n", __func__, buffer, address);
+    buffer[0] = '\0';
     return 0;
 }
 
@@ -668,6 +668,7 @@ unsigned long riscv_timebase __ro_after_init;
 void trace_find_cmdline(int pid, char comm[])
 {
     pr_notice("%s: No impl.", __func__);
+    comm[0] = '\0';
 }
 
 notrace void touch_softlockup_watchdog(void)

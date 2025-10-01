@@ -61,7 +61,6 @@ static int alloc_trace_event_type(void)
 enum print_line_t trace_nop_print(struct trace_iterator *iter, int flags,
                   struct trace_event *event)
 {
-    printk("%s: ...\n", __func__);
     trace_seq_printf(&iter->seq, "type: %d\n", iter->ent->type);
 
     return trace_handle_return(&iter->seq);
@@ -418,6 +417,7 @@ enum print_line_t print_event_fields(struct trace_iterator *iter,
 
     trace_seq_printf(&iter->seq, "%s:", trace_event_name(call));
 
+    printk("%s: event name(%s)(%u)\n", __func__, trace_event_name(call), call->event.type);
     if (head && !list_empty(head))
         print_fields(iter, call, head);
     else
@@ -562,6 +562,67 @@ trace_print_array_seq(struct trace_seq *p, const void *buf, int count,
     }
 
     trace_seq_putc(p, '}');
+    trace_seq_putc(p, 0);
+
+    return ret;
+}
+
+const char *
+trace_print_flags_seq(struct trace_seq *p, const char *delim,
+              unsigned long flags,
+              const struct trace_print_flags *flag_array)
+{
+    unsigned long mask;
+    const char *str;
+    const char *ret = trace_seq_buffer_ptr(p);
+    int i, first = 1;
+
+    for (i = 0;  flag_array[i].name && flags; i++) {
+
+        mask = flag_array[i].mask;
+        if ((flags & mask) != mask)
+            continue;
+
+        str = flag_array[i].name;
+        flags &= ~mask;
+        if (!first && delim)
+            trace_seq_puts(p, delim);
+        else
+            first = 0;
+        trace_seq_puts(p, str);
+    }
+
+    /* check for left over flags */
+    if (flags) {
+        if (!first && delim)
+            trace_seq_puts(p, delim);
+        trace_seq_printf(p, "0x%lx", flags);
+    }
+
+    trace_seq_putc(p, 0);
+
+    return ret;
+}
+
+const char *
+trace_print_symbols_seq(struct trace_seq *p, unsigned long val,
+            const struct trace_print_flags *symbol_array)
+{
+    int i;
+    const char *ret = trace_seq_buffer_ptr(p);
+
+    for (i = 0;  symbol_array[i].name; i++) {
+
+        if (val != symbol_array[i].mask)
+            continue;
+
+        trace_seq_puts(p, symbol_array[i].name);
+        break;
+    }
+
+    if (ret == (const char *)(trace_seq_buffer_ptr(p)))
+        trace_seq_printf(p, "0x%lx", val);
+
     trace_seq_putc(p, 0);
 
     return ret;

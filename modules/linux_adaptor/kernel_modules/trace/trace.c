@@ -1118,11 +1118,8 @@ peek_next_entry(struct trace_iterator *iter, int cpu, u64 *ts,
         iter->ent_size = ring_buffer_event_length(event);
         return ring_buffer_event_data(event);
     }
-#if 0
     iter->ent_size = 0;
     return NULL;
-#endif
-    PANIC("");
 }
 
 static struct trace_entry *
@@ -1252,6 +1249,8 @@ static void trace_consume(struct trace_iterator *iter)
 void
 trace_printk_seq(struct trace_seq *s)
 {
+    char *p;
+
     /* Probably should print a warning here. */
     if (s->seq.len >= TRACE_MAX_PRINT)
         s->seq.len = TRACE_MAX_PRINT;
@@ -1261,8 +1260,10 @@ trace_printk_seq(struct trace_seq *s)
      * PAGE_SIZE, and TRACE_MAX_PRINT is 1000, this is just
      * an extra layer of protection.
      */
-    if (WARN_ON_ONCE(s->seq.len >= s->seq.size))
+    if (s->seq.len >= s->seq.size) {
+        printk("WARN! seq len(%u) >= size(%u)\n", s->seq.len, s->seq.size);
         s->seq.len = s->seq.size - 1;
+    }
 
     /* should be zero ended, but we are paranoid. */
     s->buffer[s->seq.len] = 0;
