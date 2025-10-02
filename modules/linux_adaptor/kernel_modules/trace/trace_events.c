@@ -49,6 +49,50 @@ static int nr_boot_triggers;
 extern struct trace_event_call *__start_ftrace_events[];
 extern struct trace_event_call *__stop_ftrace_events[];
 
+struct event_type_entry {
+    int name_offset;
+    int type;
+};
+
+/* Init head of event types area */
+static void init_event_types_area(void)
+{
+    char *p = (char *) CL_TRACE_REG_START;
+    char magic[] = {'T', 'Y', 'P', 'E'};
+    memcpy(p, magic, 4);
+    p += 4;
+
+    /* Zero count field of head */
+    *((int *)p) = 0;
+}
+
+void inc_event_types_count(void)
+{
+    int *count = (int *) (CL_TRACE_REG_START + 4);
+    (*count)++;
+}
+
+static int register_event_type(const char *name, int type)
+{
+    /* skip magic field (4 bytes) and count field (4 bytes) */
+    static struct event_type_entry *entry = (struct event_type_entry *) (CL_TRACE_REG_START + 8);
+    static char *str_pos = (char *) (CL_TRACE_REG_START + CL_TRACE_REG_SIZE);
+
+    int name_len = strlen(name) + 1;
+    str_pos -= name_len;
+    if ((unsigned long)str_pos < (unsigned long)(entry + 1)) {
+        return -ENOMEM;
+    }
+    strncpy(str_pos, name, name_len);
+
+    entry->name_offset = (int) ((unsigned long)str_pos - CL_TRACE_REG_START);
+    entry->type = type;
+    printk("%s: name(%s) type(%u)\n", __func__, name, type);
+    entry++;
+    inc_event_types_count();
+    return 0;
+}
+
 static int event_init(struct trace_event_call *call)
 {
     int ret = 0;
@@ -63,6 +107,9 @@ static int event_init(struct trace_event_call *call)
         ret = call->class->raw_init(call);
         if (ret < 0 && ret != -ENOSYS)
             pr_warn("Could not initialize trace events/%s\n", name);
+        if (!ret) {
+            register_event_type(name, call->event.type);
+        }
     }
 
     return ret;
@@ -292,6 +339,8 @@ static __init int event_trace_enable(void)
     if (!tr)
         return -ENODEV;
 
+    init_event_types_area();
+
     for_each_event(iter, __start_ftrace_events, __stop_ftrace_events) {
 
         call = *iter;
@@ -321,7 +370,8 @@ static __init int event_trace_enable(void)
     {
         //char filter[] = "ext4_writepages";
         //char filter[] = "mm_filemap_get_pages";
-        char filter[] = "ext4";
+        //char filter[] = "ext4";
+        char filter[] = "mm_filemap_get_pages";
         early_enable_events(tr, filter, false);
     }
     pr_warn("] %s: Enable trace event here!", __func__);

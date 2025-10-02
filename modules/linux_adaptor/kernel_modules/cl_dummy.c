@@ -668,7 +668,7 @@ unsigned long riscv_timebase __ro_after_init;
 void trace_find_cmdline(int pid, char comm[])
 {
     pr_notice("%s: No impl.", __func__);
-    comm[0] = '\0';
+    strcpy(comm, "<...>");
 }
 
 notrace void touch_softlockup_watchdog(void)

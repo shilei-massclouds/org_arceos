@@ -52,4 +52,24 @@ do {                        \
 #define CL_MINE(name) \
     void name() { PANIC("No impl."); }
 
+/*
+ * Trace Buffer
+ *
+ * Map of Share Memory for trace buffer. There're two parts:
+ * 1) Trace Events Channel
+ *   Kernel writes trace events through this channel to qemu's host.
+ *   User tool at host can read these events from channel.
+ * 2) Trace Events Registration Area
+ *   Kernel registers event type and name into this area.
+ *   User tool at host builds a map between event'name and event's type.
+ *
+ */
+#define CL_TRACE_BUFFER_START   0xffffffc006000000
+
+#define CL_TRACE_CHANNEL_START  CL_TRACE_BUFFER_START
+#define CL_TRACE_CHANNEL_SIZE   0x160000
+
+#define CL_TRACE_REG_START  (CL_TRACE_CHANNEL_START + CL_TRACE_CHANNEL_SIZE)
+#define CL_TRACE_REG_SIZE   0x40000
+
 #endif /* _ADAPTOR_H_ */
