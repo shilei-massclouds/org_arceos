@@ -54,28 +54,33 @@ struct event_type_entry {
     int type;
 };
 
+struct event_types_meta {
+    char magic[4];
+    u32 nr_cpu_ids;
+    u32 count;
+    struct event_type_entry entries[];
+};
+
 /* Init head of event types area */
 static void init_event_types_area(void)
 {
-    char *p = (char *) CL_TRACE_REG_START;
+    struct event_types_meta *meta = (struct event_types_meta *) CL_TRACE_REG_START;
     char magic[] = {'T', 'Y', 'P', 'E'};
-    memcpy(p, magic, 4);
-    p += 4;
-
-    /* Zero count field of head */
-    *((int *)p) = 0;
+    memcpy(meta->magic, magic, sizeof(meta->magic));
+    meta->nr_cpu_ids = nr_cpu_ids;
+    meta->count = 0;
 }
 
-void inc_event_types_count(void)
+static void inc_event_types_count(void)
 {
-    int *count = (int *) (CL_TRACE_REG_START + 4);
-    (*count)++;
+    struct event_types_meta *meta = (struct event_types_meta *) CL_TRACE_REG_START;
+    meta->count++;
 }
 
 static int register_event_type(const char *name, int type)
 {
-    /* skip magic field (4 bytes) and count field (4 bytes) */
-    static struct event_type_entry *entry = (struct event_type_entry *) (CL_TRACE_REG_START + 8);
+    static struct event_type_entry *entry =
+        (struct event_type_entry *) (CL_TRACE_REG_START + offsetof(struct event_types_meta, entries));
     static char *str_pos = (char *) (CL_TRACE_REG_START + CL_TRACE_REG_SIZE);
 
     int name_len = strlen(name) + 1;
@@ -370,8 +375,8 @@ static __init int event_trace_enable(void)
     {
         //char filter[] = "ext4_writepages";
         //char filter[] = "mm_filemap_get_pages";
-        //char filter[] = "ext4";
-        char filter[] = "mm_filemap_get_pages";
+        //char filter[] = "filemap,ext4";
+        char filter[] = "ext4";
         early_enable_events(tr, filter, false);
     }
     pr_warn("] %s: Enable trace event here!", __func__);

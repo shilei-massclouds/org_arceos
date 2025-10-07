@@ -225,7 +225,7 @@ int clinux_init(phys_addr_t dt_phys)
 #ifdef TEST_EXT4
     printk("====== Ext4 test ======\n");
     test_ext4();
-    ftrace_dump(DUMP_ALL);
+    //ftrace_dump(DUMP_ALL);
     PANIC("Reach here!");
 #endif
 
