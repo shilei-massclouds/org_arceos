@@ -27,6 +27,8 @@ cl_kthread_run(unsigned long task_ptr,
 extern void
 cl_get_ksym(unsigned long addr, char *name, unsigned long size);
 
+extern void end_global_trace(void);
+
 extern int clinux_starting;
 extern int clinux_started;
 
@@ -36,6 +38,7 @@ do { \
     printk("\nPANIC: %s(%s:%d) %s\n", __FUNCTION__, __FILE__, __LINE__, args); \
     printk("\n########################\n"); \
     dump_stack(); \
+    end_global_trace(); \
     cl_terminate(); \
 } while (0)
 

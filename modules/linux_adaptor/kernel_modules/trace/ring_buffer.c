@@ -3578,3 +3578,20 @@ void ring_buffer_iter_advance(struct ring_buffer_iter *iter)
 
     raw_spin_unlock_irqrestore(&cpu_buffer->reader_lock, flags);
 }
+
+void end_all_ring_buffers(struct trace_buffer *buffer)
+{
+    if (!buffer || !buffer->buffers) {
+        return;
+    }
+
+    /* Note: Now only support CPU-0 */
+    struct ring_buffer_per_cpu *cpu_buffer = buffer->buffers[0];
+    if (get_reader_index() == CL_TRACE_READER_READY) {
+        if (cpu_buffer->head_page) {
+            struct ring_buffer_meta *meta = cpu_buffer->ring_meta;
+            u32 index = ((unsigned long)cpu_buffer->head_page->page - (unsigned long)meta->first_buffer) >> PAGE_SHIFT;
+            set_reader_index(index);
+        }
+    }
+}

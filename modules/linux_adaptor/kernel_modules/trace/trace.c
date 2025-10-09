@@ -1441,6 +1441,11 @@ unsigned long long ns2usecs(u64 nsec)
     return nsec;
 }
 
+void end_global_trace(void)
+{
+    end_all_ring_buffers(global_trace.array_buffer.buffer);
+}
+
 void __init early_trace_init(void)
 {
     /*
@@ -1448,7 +1453,7 @@ void __init early_trace_init(void)
      * [CL_TRACE_CHANNEL_START,CL_TRACE_CHANNEL_SIZE]
      * NOTE: Now just clear the first PAGE.
      */
-    memset(CL_TRACE_CHANNEL_START, 0, PAGE_SIZE);
+    memset((void *)CL_TRACE_CHANNEL_START, 0, PAGE_SIZE);
 
 #if 0
     if (tracepoint_printk) {

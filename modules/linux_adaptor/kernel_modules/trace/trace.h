@@ -2188,4 +2188,6 @@ static inline int rv_init_interface(void)
 extern u32 get_reader_index(void);
 extern void set_reader_index(u32 index);
 
+extern void end_all_ring_buffers(struct trace_buffer *buffer);
+
 #endif /* _LINUX_KERNEL_TRACE_H */
