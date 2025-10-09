@@ -2183,4 +2183,9 @@ static inline int rv_init_interface(void)
  */
 #define FTRACE_TRAMPOLINE_MARKER  ((unsigned long) INT_MAX)
 
+#define CL_TRACE_READER_READY ((u32) -1)
+
+extern u32 get_reader_index(void);
+extern void set_reader_index(u32 index);
+
 #endif /* _LINUX_KERNEL_TRACE_H */

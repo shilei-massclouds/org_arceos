@@ -56,10 +56,25 @@ struct event_type_entry {
 
 struct event_types_meta {
     char magic[4];
+    u32 reader_index;
     u32 nr_cpu_ids;
     u32 count;
     struct event_type_entry entries[];
 };
+
+#define CL_READER_INDEX (CL_TRACE_REG_START + offsetof(struct event_types_meta, reader_index))
+
+u32 get_reader_index(void)
+{
+    const volatile u32 *p = (const volatile u32 *) CL_READER_INDEX;
+    return *p;
+}
+
+void set_reader_index(u32 index)
+{
+    volatile u32 *p = (volatile u32 *) CL_READER_INDEX;
+    *p = index;
+}
 
 /* Init head of event types area */
 static void init_event_types_area(void)
@@ -67,6 +82,7 @@ static void init_event_types_area(void)
     struct event_types_meta *meta = (struct event_types_meta *) CL_TRACE_REG_START;
     char magic[] = {'T', 'Y', 'P', 'E'};
     memcpy(meta->magic, magic, sizeof(meta->magic));
+    meta->reader_index = CL_TRACE_READER_READY;
     meta->nr_cpu_ids = nr_cpu_ids;
     meta->count = 0;
 }
@@ -1011,6 +1027,8 @@ void *trace_event_buffer_reserve(struct trace_event_buffer *fbuffer,
 {
     struct trace_event_call *event_call = trace_file->event_call;
 
+    /* Note: reserve this line to be verified with cl_trace. */
+    printk("[TRACE]: name(%s)\n", trace_event_name(event_call));
     if ((trace_file->flags & EVENT_FILE_FL_PID_FILTER) &&
         trace_event_ignore_this_pid(trace_file))
         return NULL;

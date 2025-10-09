@@ -282,26 +282,6 @@ static void test_simple(void)
 void test_ext4(void)
 {
     test_simple();
-#if 0
-    for (int i = 0; i < 100; i++) {
-        cl_resched(TASK_RUNNING);
-    }
-    {
-        // Note: test dump_stack().
-        int old_cpu, this_cpu;
-        old_cpu = PANIC_CPU_INVALID;
-        this_cpu = raw_smp_processor_id();
-
-        /* atomic_try_cmpxchg updates old_cpu on failure */
-        if (atomic_try_cmpxchg(&panic_cpu, &old_cpu, this_cpu)) {
-            /* go ahead */
-        } else if (old_cpu != this_cpu) {
-            PANIC("INVALID panic cpu.");
-        }
-    }
-#endif
-    dump_stack();
-    //PANIC("[Simple]: Reach here!");
 
     test_getdents64();
 
@@ -315,11 +295,4 @@ void test_ext4(void)
     test_stat("/dir1");
 
     test_dir_remove("/dir1");
-
-#if 0
-    /* Note: use 'sync_filesystem' to replace it. */
-    printk("=========== %s: flush blkdev ...\n", __func__);
-    int err = blkdev_issue_flush(root_inode->i_sb->s_bdev);
-    printk("=========== %s: flush blkdev OK! err(%d)\n", __func__, err);
-#endif
 }

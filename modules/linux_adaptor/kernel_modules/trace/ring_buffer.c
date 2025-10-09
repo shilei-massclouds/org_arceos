@@ -2305,6 +2305,11 @@ rb_set_commit_to_write(struct ring_buffer_per_cpu *cpu_buffer)
 {
     unsigned long max_count;
 
+    pr_debug("%s: head(%lx) commit(%lx) tail(%lx); reader(%lx)\n",
+           __func__, cpu_buffer->head_page,
+           cpu_buffer->commit_page, cpu_buffer->tail_page,
+           cpu_buffer->reader_page);
+
     /*
      * We only race with interrupts and NMIs on this CPU.
      * If we own the commit event, then we can commit
@@ -2390,6 +2395,22 @@ static __always_inline void rb_end_commit(struct ring_buffer_per_cpu *cpu_buffer
         !local_read(&cpu_buffer->committing)) {
         local_inc(&cpu_buffer->committing);
         goto again;
+    }
+
+    /* wait for trace reader to be ready */
+    if (get_reader_index() == CL_TRACE_READER_READY) {
+        /* swap reader and head as soon as head is full. */
+        if (cpu_buffer->head_page != cpu_buffer->commit_page) {
+            struct ring_buffer_meta *meta = cpu_buffer->ring_meta;
+            struct buffer_page *reader = rb_get_reader_page(cpu_buffer);
+            if (reader) {
+                u32 index = ((unsigned long)reader->page - (unsigned long)meta->first_buffer) >> PAGE_SHIFT;
+                set_reader_index(index);
+
+                /* Preset 'read' == 'commit' to indicate that this buffer has been consumed. */
+                reader->read = rb_page_size(reader);
+            }
+        }
     }
 }
 

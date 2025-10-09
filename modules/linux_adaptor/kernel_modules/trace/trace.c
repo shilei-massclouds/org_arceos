@@ -56,11 +56,12 @@
 #define KERN_TRACE      KERN_EMERG
 
 /* trace_flags holds trace_options default values */
+/* Note: remove TRACE_ITER_OVERWRITE.  */
 #define TRACE_DEFAULT_FLAGS                     \
     (FUNCTION_DEFAULT_FLAGS |                   \
      TRACE_ITER_PRINT_PARENT | TRACE_ITER_PRINTK |          \
      TRACE_ITER_ANNOTATE | TRACE_ITER_CONTEXT_INFO |        \
-     TRACE_ITER_RECORD_CMD | TRACE_ITER_OVERWRITE |         \
+     TRACE_ITER_RECORD_CMD |          \
      TRACE_ITER_IRQ_INFO | TRACE_ITER_MARKERS |         \
      TRACE_ITER_HASH_PTR | TRACE_ITER_TRACE_PRINTK)
 
@@ -576,14 +577,16 @@ __buffer_unlock_commit(struct trace_buffer *buffer, struct ring_buffer_event *ev
 
     /* If this is the temp buffer, we need to commit fully */
     if (this_cpu_read(trace_buffered_event) == event) {
+        PANIC("trace_buffered_event");
         /* Length is in event->array[0] */
         ring_buffer_write(buffer, event->array[0], &event->array[1]);
         /* Release the temp buffer */
         this_cpu_dec(trace_buffered_event_cnt);
         /* ring_buffer_unlock_commit() enables preemption */
         preempt_enable_notrace();
-    } else
+    } else {
         ring_buffer_unlock_commit(buffer);
+    }
 }
 
 static void __ftrace_trace_stack(struct trace_array *tr,
@@ -1440,6 +1443,13 @@ unsigned long long ns2usecs(u64 nsec)
 
 void __init early_trace_init(void)
 {
+    /*
+     * Clear TRACE CHANNEL AREA
+     * [CL_TRACE_CHANNEL_START,CL_TRACE_CHANNEL_SIZE]
+     * NOTE: Now just clear the first PAGE.
+     */
+    memset(CL_TRACE_CHANNEL_START, 0, PAGE_SIZE);
+
 #if 0
     if (tracepoint_printk) {
         tracepoint_print_iter =
