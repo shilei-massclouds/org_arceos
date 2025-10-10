@@ -1444,6 +1444,7 @@ unsigned long long ns2usecs(u64 nsec)
 void end_global_trace(void)
 {
     end_all_ring_buffers(global_trace.array_buffer.buffer);
+    set_trace_status(TRACE_STATUS_EXIT);
 }
 
 void __init early_trace_init(void)

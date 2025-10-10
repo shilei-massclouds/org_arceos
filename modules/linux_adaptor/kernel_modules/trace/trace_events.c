@@ -59,6 +59,7 @@ struct event_type_entry {
 
 struct trace_meta {
     char magic[4];
+    u32 status;
     u32 nr_cpu_ids;
     u32 offset_readers;
     u32 nr_evt_types;
@@ -74,6 +75,7 @@ static void cl_init_trace_meta(void)
     int cpu;
     char magic[] = {'T', 'Y', 'P', 'E'};
     memcpy(global_trace_meta->magic, magic, sizeof(magic));
+    global_trace_meta->status = TRACE_STATUS_NULL;
     global_trace_meta->nr_cpu_ids = nr_cpu_ids;
     global_trace_meta->offset_readers = CL_OFFSET_READERS;
     global_trace_meta->nr_evt_types = 0;
@@ -82,6 +84,11 @@ static void cl_init_trace_meta(void)
     for (cpu = 0; cpu < nr_cpu_ids; cpu++) {
         set_reader_index(cpu, CL_TRACE_NO_READER);
     }
+}
+
+void set_trace_status(u32 status)
+{
+    global_trace_meta->status = status;
 }
 
 u32 get_reader_index(int cpu)
@@ -379,6 +386,7 @@ static __init int event_trace_enable(void)
         if (!ret)
             list_add(&call->list, &ftrace_events);
     }
+    set_trace_status(TRACE_STATUS_READY);
 
     //register_trigger_cmds();
 

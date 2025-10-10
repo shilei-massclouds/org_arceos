@@ -2185,6 +2185,17 @@ static inline int rv_init_interface(void)
 
 #define CL_TRACE_NO_READER UINT_MAX
 
+/* NOTE: consider when to set 'TRACE_STATUS_RUNNING'. */
+/* Or maybe we need to give shm a version to
+ * avoid cl_trace to use outdated shm. */
+enum {
+    TRACE_STATUS_NULL = 0,
+    TRACE_STATUS_READY,
+    TRACE_STATUS_RUNNING,
+    TRACE_STATUS_EXIT,
+};
+
+extern void set_trace_status(u32 status);
 extern u32 get_reader_index(int cpu);
 extern void set_reader_index(int cpu, u32 index);
 
