@@ -49,55 +49,65 @@ static int nr_boot_triggers;
 extern struct trace_event_call *__start_ftrace_events[];
 extern struct trace_event_call *__stop_ftrace_events[];
 
+#define CL_OFFSET_READERS   0x100
+#define CL_OFFSET_EVT_TYPES 0x1000
+
 struct event_type_entry {
     int name_offset;
     int type;
 };
 
-struct event_types_meta {
+struct trace_meta {
     char magic[4];
-    u32 reader_index;
     u32 nr_cpu_ids;
-    u32 count;
-    struct event_type_entry entries[];
+    u32 offset_readers;
+    u32 nr_evt_types;
+    u32 offset_evt_types;
 };
 
-#define CL_READER_INDEX (CL_TRACE_REG_START + offsetof(struct event_types_meta, reader_index))
+static struct trace_meta *
+global_trace_meta = (struct trace_meta *) CL_TRACE_META_START;
 
-u32 get_reader_index(void)
+/* Init head of trace meta area */
+static void cl_init_trace_meta(void)
 {
-    const volatile u32 *p = (const volatile u32 *) CL_READER_INDEX;
-    return *p;
-}
-
-void set_reader_index(u32 index)
-{
-    volatile u32 *p = (volatile u32 *) CL_READER_INDEX;
-    *p = index;
-}
-
-/* Init head of event types area */
-static void init_event_types_area(void)
-{
-    struct event_types_meta *meta = (struct event_types_meta *) CL_TRACE_REG_START;
+    int cpu;
     char magic[] = {'T', 'Y', 'P', 'E'};
-    memcpy(meta->magic, magic, sizeof(meta->magic));
-    meta->reader_index = CL_TRACE_READER_READY;
-    meta->nr_cpu_ids = nr_cpu_ids;
-    meta->count = 0;
+    memcpy(global_trace_meta->magic, magic, sizeof(magic));
+    global_trace_meta->nr_cpu_ids = nr_cpu_ids;
+    global_trace_meta->offset_readers = CL_OFFSET_READERS;
+    global_trace_meta->nr_evt_types = 0;
+    global_trace_meta->offset_evt_types = CL_OFFSET_EVT_TYPES;
+
+    for (cpu = 0; cpu < nr_cpu_ids; cpu++) {
+        set_reader_index(cpu, CL_TRACE_NO_READER);
+    }
+}
+
+u32 get_reader_index(int cpu)
+{
+    u64 offset = CL_TRACE_META_START + CL_OFFSET_READERS;
+    const volatile u32 *readers = (const volatile u32 *) offset;
+    return readers[cpu];
+}
+
+void set_reader_index(int cpu, u32 index)
+{
+    u64 offset = CL_TRACE_META_START + CL_OFFSET_READERS;
+    volatile u32 *readers = (volatile u32 *) offset;
+    readers[cpu] = index;
 }
 
 static void inc_event_types_count(void)
 {
-    struct event_types_meta *meta = (struct event_types_meta *) CL_TRACE_REG_START;
-    meta->count++;
+    global_trace_meta->nr_evt_types++;
 }
 
 static int register_event_type(const char *name, int type)
 {
     static struct event_type_entry *entry =
-        (struct event_type_entry *) (CL_TRACE_REG_START + offsetof(struct event_types_meta, entries));
-    static char *str_pos = (char *) (CL_TRACE_REG_START + CL_TRACE_REG_SIZE);
+        (struct event_type_entry *) (CL_TRACE_META_START + CL_OFFSET_EVT_TYPES);
+    static char *str_pos = (char *) (CL_TRACE_META_START + CL_TRACE_META_SIZE);
 
     int name_len = strlen(name) + 1;
     str_pos -= name_len;
@@ -106,7 +116,7 @@ static int register_event_type(const char *name, int type)
     }
     strncpy(str_pos, name, name_len);
 
-    entry->name_offset = (int) ((unsigned long)str_pos - CL_TRACE_REG_START);
+    entry->name_offset = (int) ((unsigned long)str_pos - (CL_TRACE_META_START + CL_OFFSET_EVT_TYPES));
     entry->type = type;
     printk("%s: name(%s) type(%u)\n", __func__, name, type);
     entry++;
@@ -360,7 +370,7 @@ static __init int event_trace_enable(void)
     if (!tr)
         return -ENODEV;
 
-    init_event_types_area();
+    cl_init_trace_meta();
 
     for_each_event(iter, __start_ftrace_events, __stop_ftrace_events) {
 

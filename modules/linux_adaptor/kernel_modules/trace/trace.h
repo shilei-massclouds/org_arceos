@@ -2183,10 +2183,10 @@ static inline int rv_init_interface(void)
  */
 #define FTRACE_TRAMPOLINE_MARKER  ((unsigned long) INT_MAX)
 
-#define CL_TRACE_READER_READY ((u32) -1)
+#define CL_TRACE_NO_READER UINT_MAX
 
-extern u32 get_reader_index(void);
-extern void set_reader_index(u32 index);
+extern u32 get_reader_index(int cpu);
+extern void set_reader_index(int cpu, u32 index);
 
 extern void end_all_ring_buffers(struct trace_buffer *buffer);
 

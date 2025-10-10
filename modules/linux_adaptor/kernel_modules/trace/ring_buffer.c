@@ -2398,14 +2398,14 @@ static __always_inline void rb_end_commit(struct ring_buffer_per_cpu *cpu_buffer
     }
 
     /* wait for trace reader to be ready */
-    if (get_reader_index() == CL_TRACE_READER_READY) {
+    if (get_reader_index(cpu_buffer->cpu) == CL_TRACE_NO_READER) {
         /* swap reader and head as soon as head is full. */
         if (cpu_buffer->head_page != cpu_buffer->commit_page) {
             struct ring_buffer_meta *meta = cpu_buffer->ring_meta;
             struct buffer_page *reader = rb_get_reader_page(cpu_buffer);
             if (reader) {
                 u32 index = ((unsigned long)reader->page - (unsigned long)meta->first_buffer) >> PAGE_SHIFT;
-                set_reader_index(index);
+                set_reader_index(cpu_buffer->cpu, index);
 
                 /* Preset 'read' == 'commit' to indicate that this buffer has been consumed. */
                 reader->read = rb_page_size(reader);
@@ -3581,17 +3581,19 @@ void ring_buffer_iter_advance(struct ring_buffer_iter *iter)
 
 void end_all_ring_buffers(struct trace_buffer *buffer)
 {
+    int cpu;
     if (!buffer || !buffer->buffers) {
         return;
     }
 
-    /* Note: Now only support CPU-0 */
-    struct ring_buffer_per_cpu *cpu_buffer = buffer->buffers[0];
-    if (get_reader_index() == CL_TRACE_READER_READY) {
-        if (cpu_buffer->head_page) {
-            struct ring_buffer_meta *meta = cpu_buffer->ring_meta;
-            u32 index = ((unsigned long)cpu_buffer->head_page->page - (unsigned long)meta->first_buffer) >> PAGE_SHIFT;
-            set_reader_index(index);
+    for_each_buffer_cpu(buffer, cpu) {
+        if (get_reader_index(cpu) == CL_TRACE_NO_READER) {
+            struct ring_buffer_per_cpu *cpu_buffer = buffer->buffers[cpu];
+            if (cpu_buffer->head_page) {
+                struct ring_buffer_meta *meta = cpu_buffer->ring_meta;
+                u32 index = ((unsigned long)cpu_buffer->head_page->page - (unsigned long)meta->first_buffer) >> PAGE_SHIFT;
+                set_reader_index(cpu, index);
+            }
         }
     }
 }
