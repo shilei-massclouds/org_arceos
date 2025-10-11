@@ -1046,7 +1046,7 @@ void *trace_event_buffer_reserve(struct trace_event_buffer *fbuffer,
     struct trace_event_call *event_call = trace_file->event_call;
 
     /* Note: reserve this line to be verified with cl_trace. */
-    printk("[TRACE]: name(%s)\n", trace_event_name(event_call));
+    pr_debug("[TRACE]: name(%s)\n", trace_event_name(event_call));
     if ((trace_file->flags & EVENT_FILE_FL_PID_FILTER) &&
         trace_event_ignore_this_pid(trace_file))
         return NULL;

@@ -88,3 +88,9 @@ void on_each_cpu_cond_mask(smp_cond_func_t cond_func, smp_call_func_t func,
     smp_call_function_many_cond(mask, func, info, scf_flags, cond_func);
     preempt_enable();
 }
+
+/* An arch may set nr_cpu_ids earlier if needed, so this would be redundant */
+void __init setup_nr_cpu_ids(void)
+{
+    set_nr_cpu_ids(find_last_bit(cpumask_bits(cpu_possible_mask), NR_CPUS) + 1);
+}
