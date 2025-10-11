@@ -958,14 +958,11 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
 	bus->bridge = get_device(&bridge->dev);
 	device_enable_async_suspend(bus->bridge);
 	pci_set_bus_of_node(bus);
-    printk("%s: step1\n", __func__);
 	pci_set_bus_msi_domain(bus);
-    printk("%s: step2\n", __func__);
 	if (bridge->msi_domain && !dev_get_msi_domain(&bus->dev) &&
 	    !pci_host_of_has_msi_map(parent))
 		bus->bus_flags |= PCI_BUS_FLAGS_NO_MSI;
 
-    printk("%s: step3\n", __func__);
 	if (!parent)
 		set_dev_node(bus->bridge, pcibus_to_node(bus));
 
@@ -3135,9 +3132,7 @@ int pci_host_probe(struct pci_host_bridge *bridge)
 		pcie_bus_configure_settings(child);
 
 	pci_lock_rescan_remove();
-    printk("%s: step1\n", __func__);
 	pci_bus_add_devices(bus);
-    printk("%s: step2\n", __func__);
 	pci_unlock_rescan_remove();
 	return 0;
 }

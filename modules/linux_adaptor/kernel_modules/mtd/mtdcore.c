@@ -647,7 +647,6 @@ int add_mtd_device(struct mtd_info *mtd)
 	struct mtd_notifier *not;
 	int i, error, ofidx;
 
-    printk("%s: step1\n", __func__);
 	/*
 	 * May occur, for instance, on buggy drivers which call
 	 * mtd_device_parse_register() multiple times on the same master MTD,
@@ -1056,7 +1055,6 @@ int mtd_device_parse_register(struct mtd_info *mtd, const char * const *types,
 {
 	int ret;
 
-    printk("%s: step1\n", __func__);
 	mtd_set_dev_defaults(mtd);
 
 	ret = mtd_otp_nvmem_add(mtd);
@@ -2523,7 +2521,6 @@ static int __init init_mtd(void)
 {
 	int ret;
 
-    printk("%s: step1\n", __func__);
 	ret = class_register(&mtd_class);
 	if (ret)
 		goto err_reg;
@@ -2540,12 +2537,10 @@ static int __init init_mtd(void)
 	if (ret)
 		goto out_procfs;
 
-    printk("%s: step2\n", __func__);
 	dfs_dir_mtd = debugfs_create_dir("mtd", NULL);
 	debugfs_create_bool("expert_analysis_mode", 0600, dfs_dir_mtd,
 			    &mtd_expert_analysis_mode);
 
-    printk("%s: ok!\n", __func__);
 	return 0;
 
 out_procfs:

@@ -3855,7 +3855,6 @@ cont_thread:
 	}
 
 exit_thread:
-    printk("%s: step2\n", __func__);
 	/*
 	 * It looks like the request list is empty, but we need
 	 * to check it under the li_list_mtx lock, to prevent any
@@ -5009,7 +5008,6 @@ static int ext4_load_super(struct super_block *sb, ext4_fsblk_t *lsb,
 	int ret = -EINVAL;
 	int blocksize;
 
-    printk("======== %s: step1\n", __func__);
 	blocksize = sb_min_blocksize(sb, EXT4_MIN_BLOCK_SIZE);
 	if (!blocksize) {
 		ext4_msg(sb, KERN_ERR, "unable to set blocksize");
@@ -5060,7 +5058,6 @@ static int ext4_load_super(struct super_block *sb, ext4_fsblk_t *lsb,
 		goto out;
 	}
 
-    printk("======== %s: step2\n", __func__);
 	blocksize = EXT4_MIN_BLOCK_SIZE << le32_to_cpu(es->s_log_block_size);
 
 	/*
@@ -5104,7 +5101,6 @@ static int ext4_load_super(struct super_block *sb, ext4_fsblk_t *lsb,
 	}
 	*lsb = logical_sb_block;
 	sbi->s_sbh = bh;
-    printk("======== %s: stepN\n", __func__);
 	return 0;
 out:
 	brelse(bh);

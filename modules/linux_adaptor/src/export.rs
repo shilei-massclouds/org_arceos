@@ -113,7 +113,7 @@ unsafe extern "C" {
 pub extern "C" fn cl_set_fixmap(idx: usize, phys: usize, prot: usize) -> usize {
     let fixaddr_start = unsafe { cl_fixaddr_start };
     let va = fixaddr_start - PAGE_SIZE_4K * idx;
-    error!("FIXADDR_START: {:#x}; va: {:#x}", fixaddr_start, va);
+    debug!("FIXADDR_START: {:#x}; va: {:#x}", fixaddr_start, va);
 
     let aspace = axmm::kernel_aspace();
     if prot == 0 {
@@ -134,7 +134,7 @@ pub extern "C" fn cl_set_fixmap(idx: usize, phys: usize, prot: usize) -> usize {
             panic!("bad fixmap {va:#x} -> {phys:#x}({prot:?}): {}", e)
         });
 
-    error!("idx({:#x}) phys({:#x}) prot({:#x})", idx, phys, prot);
+    debug!("idx({:#x}) phys({:#x}) prot({:#x})", idx, phys, prot);
     va + (phys & (PAGE_SIZE_4K - 1))
 }
 

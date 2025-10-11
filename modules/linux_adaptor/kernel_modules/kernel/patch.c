@@ -41,7 +41,7 @@ static __always_inline void *patch_map(void *addr, const unsigned int fixmap)
 
     BUG_ON(!page);
 
-    printk("%s: addr(%lx) fixmap(%u)\n", __func__, addr, fixmap);
+    pr_debug("%s: addr(%lx) fixmap(%u)\n", __func__, addr, fixmap);
 	return cl_set_fixmap(fixmap,
                          page_to_phys(page) + offset_in_page(addr),
                          FIXMAP_PAGE_NORMAL);
@@ -49,7 +49,6 @@ static __always_inline void *patch_map(void *addr, const unsigned int fixmap)
 
 static void patch_unmap(int fixmap)
 {
-    printk("%s: ..\n", __func__);
 	cl_set_fixmap(fixmap, 0, FIXMAP_PAGE_CLEAR);
 }
 
@@ -59,7 +58,7 @@ static int __patch_insn_write(void *addr, const void *insn, size_t len)
     void *waddr = addr;
     int ret;
 
-    printk("%s: addr(%lx) insn(%lx) len(%u)\n", __func__, addr, insn, len);
+    pr_debug("%s: addr(%lx) insn(%lx) len(%u)\n", __func__, addr, insn, len);
     /*
      * Only two pages can be mapped at a time for writing.
      */

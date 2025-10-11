@@ -414,10 +414,7 @@ void bdev_add(struct block_device *bdev, dev_t dev)
     inode->i_rdev = dev;
     inode->i_ino = dev;
     insert_inode_hash(inode);
-    printk("%s: dev_t(%x) ok!\n", __func__, dev);
-    if (bdev->bd_disk) {
-        printk("%s: name(%s) ok!\n", __func__, bdev->bd_disk->disk_name);
-    }
+    pr_debug("%s: dev_t(%x) ok!\n", __func__, dev);
 
     if (cl_name_devt_idx >= CL_NAME_DEVT_MAX_NUM) {
         PANIC("No space in cl_name_devt_array.");

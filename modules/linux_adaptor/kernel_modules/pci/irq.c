@@ -173,7 +173,6 @@ void pci_assign_irq(struct pci_dev *dev)
 		 * ignore slot.
 		 */
 		irq = (*(hbrg->map_irq))(dev, slot, pin);
-    printk("%s: step1 irq(%d)\n", __func__, irq);
 		if (irq == -1)
 			irq = 0;
 	}

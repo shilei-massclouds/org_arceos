@@ -328,13 +328,11 @@ int add_mtd_blktrans_dev(struct mtd_blktrans_dev *new)
 	if (!new->tag_set)
 		goto out_list_del;
 
-    printk("------ %s: step1\n", __func__);
 	ret = blk_mq_alloc_sq_tag_set(new->tag_set, &mtd_mq_ops, 2,
 			BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_BLOCKING);
 	if (ret)
 		goto out_kfree_tag_set;
-	
-    printk("------ %s: step2\n", __func__);
+
 	lim.logical_block_size = tr->blksize;
 	if (tr->discard)
 		lim.max_hw_discard_sectors = UINT_MAX;
@@ -381,7 +379,6 @@ int add_mtd_blktrans_dev(struct mtd_blktrans_dev *new)
 	if (new->readonly)
 		set_disk_ro(gd, 1);
 
-    printk("------ %s: step3\n", __func__);
 	ret = device_add_disk(&new->mtd->dev, gd, NULL);
 	if (ret)
 		goto out_cleanup_disk;
@@ -462,7 +459,6 @@ static void blktrans_notify_add(struct mtd_info *mtd)
 	if (mtd->type == MTD_ABSENT || mtd->type == MTD_UBIVOLUME)
 		return;
 
-    printk("----------------- %s: step1\n", __func__);
 	list_for_each_entry(tr, &blktrans_majors, list)
 		tr->add_mtd(tr, mtd);
 }
@@ -499,13 +495,10 @@ int register_mtd_blktrans(struct mtd_blktrans_ops *tr)
 
 	mutex_lock(&mtd_table_mutex);
 	list_add(&tr->list, &blktrans_majors);
-    printk("----------------- %s: step1\n", __func__);
 	mtd_for_each_device(mtd) {
-    printk("%s: mtd(%s)\n", __func__, mtd->name);
 		if (mtd->type != MTD_ABSENT && mtd->type != MTD_UBIVOLUME)
 			tr->add_mtd(tr, mtd);
     }
-    printk("----------------- %s: step2\n", __func__);
 	mutex_unlock(&mtd_table_mutex);
 	return 0;
 }

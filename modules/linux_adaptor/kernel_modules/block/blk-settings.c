@@ -226,7 +226,6 @@ static int blk_validate_limits(struct queue_limits *lim)
      */
     if (!lim->max_hw_sectors)
         lim->max_hw_sectors = BLK_SAFE_MAX_SECTORS;
-    printk("%s: step1 max_hw_sectors(0x%x)\n", __func__, lim->max_hw_sectors);
     if (WARN_ON_ONCE(lim->max_hw_sectors < PAGE_SECTORS))
         return -EINVAL;
     logical_block_sectors = lim->logical_block_size >> SECTOR_SHIFT;
@@ -234,7 +233,6 @@ static int blk_validate_limits(struct queue_limits *lim)
         return -EINVAL;
     lim->max_hw_sectors = round_down(lim->max_hw_sectors,
             logical_block_sectors);
-    printk("%s: step2 max_hw_sectors(0x%x)\n", __func__, lim->max_hw_sectors);
 
     /*
      * The actual max_sectors value is a complex beast and also takes the

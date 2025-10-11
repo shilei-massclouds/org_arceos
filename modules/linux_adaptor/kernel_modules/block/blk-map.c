@@ -203,13 +203,10 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
     struct bio *bio;
     int ret;
 
-    printk("%s: step1 len(%u) max(%u)\n", __func__, len, queue_max_hw_sectors(q) << 9);
     if (len > (queue_max_hw_sectors(q) << 9))
         return -EINVAL;
-    printk("%s: step2\n", __func__);
     if (!len || !kbuf)
         return -EINVAL;
-    printk("%s: step3\n", __func__);
 
     if (!blk_rq_aligned(q, addr, len) || object_is_on_stack(kbuf) ||
         blk_queue_may_bounce(q))

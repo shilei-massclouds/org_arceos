@@ -1148,16 +1148,13 @@ int __nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
 	if (flags & NVME_SUBMIT_RETRY)
 		req->cmd_flags &= ~REQ_FAILFAST_DRIVER;
 
-    printk("%s: step1\n", __func__);
 	if (buffer && bufflen) {
 		ret = blk_rq_map_kern(q, req, buffer, bufflen, GFP_KERNEL);
 		if (ret)
 			goto out;
 	}
 
-    printk("%s: step2 ret(%d) [%u]\n", __func__, ret, current->pid);
 	ret = nvme_execute_rq(req, flags & NVME_SUBMIT_AT_HEAD);
-    printk("%s: step3 ret(%d) [%u]\n", __func__, ret, current->pid);
 	if (result && ret >= 0)
 		*result = nvme_req(req)->result;
  out:
@@ -1443,10 +1440,8 @@ static int nvme_identify_ctrl(struct nvme_ctrl *dev, struct nvme_id_ctrl **id)
 	if (!*id)
 		return -ENOMEM;
 
-    printk("%s: step1 \n", __func__);
 	error = nvme_submit_sync_cmd(dev->admin_q, &c, *id,
 			sizeof(struct nvme_id_ctrl));
-    printk("%s: step2 err(%d) \n", __func__, error);
 	if (error) {
 		kfree(*id);
 		*id = NULL;
@@ -2579,7 +2574,6 @@ static int nvme_configure_host_options(struct nvme_ctrl *ctrl)
 	if (!host)
 		return 0;
 
-    printk("------------- %s: step1\n", __func__);
 	host->acre = acre;
 	host->lbafee = lbafee;
 	ret = nvme_set_features(ctrl, NVME_FEAT_HOST_BEHAVIOR, 0,
@@ -3467,9 +3461,7 @@ int nvme_init_ctrl_finish(struct nvme_ctrl *ctrl, bool was_suspended)
 	if (ret < 0)
 		return ret;
 
-    printk("------------- %s: step1\n", __func__);
 	ret = nvme_configure_host_options(ctrl);
-    printk("------------- %s: step2\n", __func__);
 	if (ret < 0)
 		return ret;
 
@@ -3490,7 +3482,6 @@ int nvme_init_ctrl_finish(struct nvme_ctrl *ctrl, bool was_suspended)
 
 	nvme_start_keep_alive(ctrl);
 
-    printk("------------- %s: step3\n", __func__);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(nvme_init_ctrl_finish);

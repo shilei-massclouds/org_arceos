@@ -216,9 +216,9 @@ static struct irq_domain *__irq_domain_create(const struct irq_domain_info *info
         return ERR_PTR(err);
     }
 
-    printk("%s: step1 domain(%lx) name(%lx) fwnode(%lx,%lx)\n",
-           __func__, domain, domain->name,
-           domain->fwnode, info->fwnode);
+    pr_debug("%s: step1 domain(%lx) name(%lx) fwnode(%lx,%lx)\n",
+             __func__, domain, domain->name, domain->fwnode, info->fwnode);
+
     domain->fwnode = fwnode_handle_get(info->fwnode);
     fwnode_dev_initialized(domain->fwnode, true);
 

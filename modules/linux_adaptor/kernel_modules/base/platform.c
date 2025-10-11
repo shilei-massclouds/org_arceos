@@ -179,7 +179,6 @@ static void __init_riscv_intc_device(void)
 int __platform_driver_register(struct platform_driver *drv,
                                struct module *owner)
 {
-    printk("%s: step1 (%s)\n", __func__, drv->driver.name);
     drv->driver.owner = owner;
     drv->driver.bus = &platform_bus_type;
 
@@ -340,7 +339,6 @@ int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
     struct fwnode_handle *fwnode = dev_fwnode(&dev->dev);
     struct resource *r;
 
-    printk("%s: step1\n", __func__);
     if (is_of_node(fwnode)) {
         ret = of_irq_get(to_of_node(fwnode), num);
         if (ret > 0 || ret == -EPROBE_DEFER)

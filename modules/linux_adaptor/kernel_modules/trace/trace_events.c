@@ -125,7 +125,7 @@ static int register_event_type(const char *name, int type)
 
     entry->name_offset = (int) ((unsigned long)str_pos - (CL_TRACE_META_START + CL_OFFSET_EVT_TYPES));
     entry->type = type;
-    printk("%s: name(%s) type(%u)\n", __func__, name, type);
+    pr_debug("%s: name(%s) type(%u)\n", __func__, name, type);
     entry++;
     inc_event_types_count();
     return 0;
@@ -892,7 +892,7 @@ __ftrace_set_clr_event_nolock(struct trace_array *tr, const char *match,
     int ret = -EINVAL;
     int eret = 0;
 
-    printk("%s: match(%s) sub(%s) event(%s) set(%d)\n", __func__, match, sub, event, set);
+    pr_debug("%s: match(%s) sub(%s) event(%s) set(%d)\n", __func__, match, sub, event, set);
     list_for_each_entry(file, &tr->events, list) {
 
         call = file->event_call;
@@ -988,7 +988,7 @@ int trace_event_reg(struct trace_event_call *call,
 {
     struct trace_event_file *file = data;
 
-    printk("%s: ...\n", __func__);
+    pr_debug("%s: ...\n", __func__);
     WARN_ON(!(call->flags & TRACE_EVENT_FL_TRACEPOINT));
     switch (type) {
     case TRACE_REG_REGISTER:

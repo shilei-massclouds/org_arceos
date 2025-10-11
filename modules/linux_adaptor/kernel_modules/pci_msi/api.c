@@ -90,11 +90,8 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
 			return nvecs;
 	}
 
-    printk("-------- %s: step1 flags(%x)\n", __func__, flags);
 	/* use INTx IRQ if allowed */
 	if (flags & PCI_IRQ_INTX) {
-    printk("-------- %s: step2 min_vecs(%d)\n", __func__, min_vecs);
-    printk("-------- %s: step3 irq(%x)\n", __func__, dev->irq);
 		if (min_vecs == 1 && dev->irq) {
 			/*
 			 * Invoke the affinity spreading logic to ensure that
@@ -104,7 +101,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
 			if (affd)
 				irq_create_affinity_masks(1, affd);
 			pci_intx(dev, 1);
-    printk("-------- %s: step1.3 dev->irq(%u)\n", __func__, dev->irq);
 			return 1;
 		}
 	}
