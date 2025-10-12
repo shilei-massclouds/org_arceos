@@ -1,35 +1,24 @@
-subdir := $(dir $(target))
+# Makefile for buildging subdirs
+
+subdir := $(dir $(obj))
+$(info --- $(obj) ---)
 
 obj-y :=
 
-obj-y += do_mounts.o
-obj-y += main.o
+include $(CURDIR)/scripts/Makefile.include
+include $(subdir)Makefile
 
-OBJS := init/do_mounts.o init/main.o
+obj-y := $(addprefix $(subdir), $(obj-y))
 
-$(_OBJS) += $(OBJS)
-#OBJS := $(addprefix $(subdir), $(obj-y))
+_build: $(obj)
 
-CC = $(CROSS_)gcc
-
-CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
-	-I./arch/riscv/include -I./arch/riscv/include/generated \
-	-I./include \
-	-I./arch/riscv/include/uapi -I./arch/riscv/include/generated/uapi -I./include/uapi -I./include/generated/uapi \
-	-include ./include/linux/kconfig.h -include ./include/linux/compiler_types.h \
-	-nostdinc -fno-PIE -mabi=lp64d -march=rv64imafdc \
-    -fno-asynchronous-unwind-tables -fno-unwind-tables \
-    -fno-common -fno-stack-protector -mcmodel=medany -D__KERNEL__ \
-    -O2 -Wno-stringop-overflow -Wno-format-truncation -Wno-format-security \
-    -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration \
-    -fno-omit-frame-pointer -Wno-frame-address -Wframe-larger-than=2048
-
-_build: $(OBJS)
-
-#$(target): $(_OBJS)
-	#$(AR) r $@ $(OBJS)
+$(obj): $(obj-y) FORCE
+	$(Q)rm -f $@
+	$(Q)echo $(obj-y) > $@
 
 $(subdir)%.o: $(subdir)%.c
-	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
+	$(Q)$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
-.PHONY: _build
+FORCE:
+
+.PHONY: _build FORCE

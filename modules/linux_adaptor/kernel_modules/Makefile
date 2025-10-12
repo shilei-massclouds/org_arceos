@@ -32,7 +32,6 @@ OBJS += firmware/dmi_scan.o
 
 OBJS += pci_msi/api.o pci_msi/msi.o
 
-OBJS += init/do_mounts.o init/main.o
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
 OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o mm/swap.o
 OBJS += mm/debug_page_alloc.o mm/debug.o mm/ioremap.o mm/mempool.o
@@ -100,7 +99,6 @@ OBJS += fs/buffer.o fs/file_table.o fs/bad_inode.o fs/mbcache.o
 OBJS += fs/read_write.o fs/fs-writeback.o fs/readdir.o fs/posix_acl.o
 OBJS += fs/stat.o fs/char_dev.o fs/open.o fs/namei.o fs/file.o fs/exec.o
 OBJS += fs/fs_struct.o fs/locks.o fs/d_path.o fs/attr.o
-OBJS += char/random.o
 OBJS += proc/generic.o
 OBJS += trace/trace_syscalls.o trace/trace.o trace/trace_events.o
 OBJS += trace/trace_output.o trace/pid_list.o trace/trace_events_filter.o
@@ -133,13 +131,21 @@ OBJS += cl_mine.o main.o softirq.o \
 		cl_dummy.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
-		#signal.o \
+
+obj-y := init/ char/
+
+OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
+
+_OBJS = $(shell cat $(OBJ_LIST) | xargs)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	rm -f $@
-	$(AR) r $@ $(OBJS)
+$(TARGET): $(OBJS) $(OBJ_LIST)
+	$(Q)rm -f $@
+	$(Q)$(AR) r $@ $(OBJS) $(_OBJS)
+
+$(OBJ_LIST): FORCE
+	$(Q)$(MAKE) --no-print-directory -f ./scripts/Makefile.build obj=$@
 
 %.o: %.c
 	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
@@ -154,4 +160,6 @@ regmap/regmap.o: regmap/regmap.c
 clean:
 	rm -f *.o */*.o libclinux.a
 
-.PHONY: all clean
+FORCE:
+
+.PHONY: all clean FORCE
