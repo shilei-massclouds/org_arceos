@@ -1,22 +1,36 @@
 # Makefile for buildging subdirs
 
-subdir := $(dir $(obj))
+curdir := $(dir $(obj))
 $(info --- $(obj) ---)
 
 obj-y :=
 
 include $(CURDIR)/scripts/Makefile.include
-include $(subdir)Makefile
+include $(curdir)Makefile
 
-obj-y := $(addprefix $(subdir), $(obj-y))
+obj-y := $(addprefix $(curdir), $(obj-y))
+$(info --- obj-y: $(obj-y) ---)
+
+OBJS := $(filter-out %/, $(obj-y))
+$(info --- OBJS: $(OBJS) ---)
+
+OBJ_LIST := $(filter %/, $(obj-y))
+$(info --- OBJ_LIST: $(OBJ_LIST) ---)
+OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(OBJ_LIST))
+$(info --- OBJ_LIST: $(OBJ_LIST) ---)
+
+_OBJS = $(if $(OBJ_LIST), $(shell cat $(OBJ_LIST) | xargs))
 
 _build: $(obj)
 
-$(obj): $(obj-y) FORCE
+$(obj): $(OBJS) $(OBJ_LIST) FORCE
 	$(Q)rm -f $@
-	$(Q)echo $(obj-y) > $@
+	$(Q)echo $(OBJS) $(_OBJS) > $@
 
-$(subdir)%.o: $(subdir)%.c
+$(OBJ_LIST): FORCE
+	$(Q)$(MAKE) -f ./scripts/Makefile.build obj=$@
+
+$(curdir)%.o: $(curdir)%.c
 	$(Q)$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
 FORCE:

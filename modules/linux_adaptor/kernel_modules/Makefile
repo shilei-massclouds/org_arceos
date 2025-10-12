@@ -132,7 +132,7 @@ OBJS += cl_mine.o main.o softirq.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
 
-obj-y := init/ char/
+obj-y := init/ drivers/
 
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
 
@@ -158,7 +158,9 @@ regmap/regmap.o: regmap/regmap.c
 	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
 clean:
-	rm -f *.o */*.o libclinux.a
+	$(Q)rm -f libclinux.a
+	$(Q)find . -name "*.o" | xargs rm -f
+	$(Q)find . -name "*.txt" | xargs rm -f
 
 FORCE:
 
