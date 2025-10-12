@@ -1,18 +1,6 @@
-CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
-	-I./arch/riscv/include -I./arch/riscv/include/generated \
-	-I./include \
-	-I./arch/riscv/include/uapi -I./arch/riscv/include/generated/uapi -I./include/uapi -I./include/generated/uapi \
-	-include ./include/linux/kconfig.h -include ./include/linux/compiler_types.h \
-	-nostdinc -fno-PIE -mabi=lp64d -march=rv64imafdc \
-    -fno-asynchronous-unwind-tables -fno-unwind-tables \
-    -fno-common -fno-stack-protector -mcmodel=medany -D__KERNEL__ \
-    -O2 -Wno-stringop-overflow -Wno-format-truncation -Wno-format-security \
-    -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration \
-    -fno-omit-frame-pointer -Wno-frame-address -Wframe-larger-than=2048
+# Top Makefile
 
-ifeq ("$(LOG)", "debug")
-CFLAGS += -DDEBUG
-endif
+include $(CURDIR)/scripts/Makefile.include
 
 TARGET = libclinux.a
 
@@ -146,10 +134,6 @@ OBJS += cl_mine.o main.o softirq.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
 		#signal.o \
-
-CROSS_ = $(ARCH)-linux-musl-
-CC = $(CROSS_)gcc
-AR = $(CROSS_)ar
 
 all: $(TARGET)
 
