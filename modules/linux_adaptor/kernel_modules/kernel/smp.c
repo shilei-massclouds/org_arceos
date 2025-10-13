@@ -26,7 +26,7 @@
 #undef CREATE_TRACE_POINTS
 
 #include "smpboot.h"
-#include "../sched/smp.h"
+#include "sched/smp.h"
 #include "../adaptor.h"
 
 /*

@@ -13,4 +13,5 @@ obj-y += printk/
 obj-y += irq/
 obj-y += rcu/
 obj-y += dma/
+obj-y += time/
 obj-y += trace/

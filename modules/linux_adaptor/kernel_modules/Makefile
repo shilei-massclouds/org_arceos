@@ -4,25 +4,13 @@ include $(CURDIR)/scripts/Makefile.include
 
 TARGET = libclinux.a
 
-OBJS :=
-# Original linux modules
-
-OBJS += math/reciprocal_div.o
-OBJS += crypto/api.o crypto/algapi.o crypto/blake2s.o crypto/blake2s-generic.o
-OBJS += crypto/chacha.o
-OBJS += crypto/shash.o crypto/crc32_generic.o crypto/crc32c_generic.o
-OBJS += time/timekeeping.o time/timer.o time/hrtimer.o time/time.o
-OBJS += of/base.o of/property.o of/address.o of/irq.o of/fdt.o
-OBJS += of/of_reserved_mem.o of/kobj.o of/platform.o of/device.o
-OBJS += proc/generic.o
-
 # Adaptor files, we will re-write them in Rust in future.
-OBJS += cl_mine.o main.o softirq.o \
+OBJS := cl_mine.o main.o softirq.o \
 		cl_dummy.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
 
-obj-y := init/ arch/ kernel/ mm/ fs/ block/ lib/ libfdt/ drivers/
+obj-y := init/ arch/ kernel/ mm/ fs/ crypto/ block/ lib/ libfdt/ drivers/
 
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
 

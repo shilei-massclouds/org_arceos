@@ -9,3 +9,5 @@ obj-y += find_bit.o sg_pool.o scatterlist.o errseq.o llist.o
 obj-y += crc32.o iov_iter.o irq_regs.o dump_stack.o kstrtox.o
 obj-y += percpu_counter.o strncpy_from_user.o ctype.o seq_buf.o
 obj-y += cmdline.o logic_pio.o
+
+obj-y += math/
