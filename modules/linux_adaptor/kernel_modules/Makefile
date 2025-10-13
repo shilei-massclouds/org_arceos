@@ -9,16 +9,6 @@ OBJS :=
 
 OBJS += iomap/fiemap.o iomap/iter.o iomap/trace.o
 OBJS += printk/printk.o
-OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o lib/ratelimit.o
-OBJS += lib/bitmap.o lib/kasprintf.o lib/string_helpers.o lib/list_debug.o
-OBJS += lib/radix-tree.o lib/maple_tree.o lib/kobject.o lib/klist.o
-OBJS += lib/devres.o lib/hweight.o lib/errname.o lib/idr.o lib/xarray.o
-OBJS += lib/sort.o lib/sbitmap.o lib/lockref.o lib/rbtree.o lib/dec_and_lock.o
-OBJS += lib/find_bit.o lib/sg_pool.o lib/scatterlist.o lib/errseq.o lib/llist.o
-OBJS += lib/crc32.o lib/iov_iter.o lib/irq_regs.o lib/dump_stack.o lib/kstrtox.o
-OBJS += lib/percpu_counter.o lib/strncpy_from_user.o lib/ctype.o lib/seq_buf.o
-OBJS += lib/cmdline.o lib/logic_pio.o
-OBJS += lib/delay.o	# arch/riscv/lib/delay.c
 OBJS += math/reciprocal_div.o
 OBJS += crypto/api.o crypto/algapi.o crypto/blake2s.o crypto/blake2s-generic.o
 OBJS += crypto/chacha.o
@@ -37,27 +27,6 @@ OBJS += irq/resend.o irq/chip.o irq/handle.o irq/msi.o irq/spurious.o
 OBJS += irq/devres.o irq/pm.o irq/affinity.o
 OBJS += dma/mapping.o dma/swiotlb.o dma/direct.o dma/coherent.o
 OBJS += dma/pool.o
-OBJS += kernel/resource.o kernel/workqueue.o kernel/kthread.o
-OBJS += kernel/nsproxy.o kernel/cpu.o kernel/user_namespace.o
-OBJS += kernel/panic.o kernel/exit.o kernel/cred.o kernel/softirq.o
-OBJS += kernel/extable.o kernel/tracepoint.o kernel/jump_label.o
-OBJS += kernel/irq_work.o kernel/params.o kernel/reboot.o
-OBJS += kernel/notifier.o kernel/smp.o kernel/async.o
-OBJS += kernel/stacktrace.o			# for arch/riscv/kernel
-OBJS += kernel/riscv_jump_label.o	# for arch/riscv/kernel
-OBJS += kernel/patch.o				# for arch/riscv/kernel
-OBJS += kernel/reset.o				# for arch/riscv/kernel
-OBJS += kernel/riscv_smp.o			# for arch/riscv/kernel
-OBJS += kernel/setup.o				# for arch/riscv/kernel
-OBJS += kernel/irq.o				# for arch/riscv/kernel
-OBJS += kernel/sbi.o kernel/sbi_ecall.o kernel/sbi-ipi.o	# for arch/riscv/kernel
-OBJS += block/genhd.o block/blk-mq.o block/blk-mq-virtio.o
-OBJS += block/blk-mq-cpumap.o block/blk-mq-tag.o block/blk-core.o
-OBJS += block/blk-stat.o block/blk-settings.o block/bio.o
-OBJS += block/bdev.o block/fops.o block/blk-merge.o block/blk-mq-sched.o
-OBJS += block/blk-flush.o block/blk-mq-sysfs.o block/blk-rq-qos.o
-OBJS += block/blk-timeout.o block/early-lookup.o block/blk-map.o
-OBJS += block/elevator.o block/mq-deadline.o
 OBJS += proc/generic.o
 OBJS += trace/trace_syscalls.o trace/trace.o trace/trace_events.o
 OBJS += trace/trace_output.o trace/pid_list.o trace/trace_events_filter.o
@@ -67,12 +36,11 @@ OBJS += libfdt/fdt.o libfdt/fdt_ro.o
 
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o softirq.o \
-		riscv_irq.o \
 		cl_dummy.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
 
-obj-y := init/ arch/ mm/ fs/ drivers/
+obj-y := init/ arch/ kernel/ mm/ fs/ block/ lib/ drivers/
 
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
 
