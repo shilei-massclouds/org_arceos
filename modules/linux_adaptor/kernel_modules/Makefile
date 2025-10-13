@@ -4,10 +4,8 @@ include $(CURDIR)/scripts/Makefile.include
 
 TARGET = libclinux.a
 
+OBJS :=
 # Original linux modules
-OBJS := virtio/virtio_blk.o
-OBJS += virtio/virtio.o virtio/virtio_ring.o virtio/virtio_mmio.o
-OBJS += virtio/virtio_anchor.o
 OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
 OBJS += irqchip/irqchip.o
 OBJS += spi/spi.o spi/spi-mem.o spi/spi-sifive.o
