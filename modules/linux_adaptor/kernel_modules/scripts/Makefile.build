@@ -1,7 +1,6 @@
 # Makefile for buildging subdirs
 
 curdir := $(dir $(obj))
-$(info --- $(obj) ---)
 
 obj-y :=
 
@@ -9,15 +8,11 @@ include $(CURDIR)/scripts/Makefile.include
 include $(curdir)Makefile
 
 obj-y := $(addprefix $(curdir), $(obj-y))
-$(info --- obj-y: $(obj-y) ---)
 
 OBJS := $(filter-out %/, $(obj-y))
-$(info --- OBJS: $(OBJS) ---)
 
 OBJ_LIST := $(filter %/, $(obj-y))
-$(info --- OBJ_LIST: $(OBJ_LIST) ---)
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(OBJ_LIST))
-$(info --- OBJ_LIST: $(OBJ_LIST) ---)
 
 _OBJS = $(if $(OBJ_LIST), $(shell cat $(OBJ_LIST) | xargs))
 

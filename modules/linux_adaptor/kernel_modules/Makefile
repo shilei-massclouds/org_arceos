@@ -90,33 +90,12 @@ OBJS += block/bdev.o block/fops.o block/blk-merge.o block/blk-mq-sched.o
 OBJS += block/blk-flush.o block/blk-mq-sysfs.o block/blk-rq-qos.o
 OBJS += block/blk-timeout.o block/early-lookup.o block/blk-map.o
 OBJS += block/elevator.o block/mq-deadline.o
-OBJS += fs/inode.o fs/libfs.o fs/filesystems.o fs/dcache.o fs/sync.o
-OBJS += fs/namespace.o fs/fs_context.o fs/super.o fs/mnt_idmapping.o
-OBJS += fs/buffer.o fs/file_table.o fs/bad_inode.o fs/mbcache.o
-OBJS += fs/read_write.o fs/fs-writeback.o fs/readdir.o fs/posix_acl.o
-OBJS += fs/stat.o fs/char_dev.o fs/open.o fs/namei.o fs/file.o fs/exec.o
-OBJS += fs/fs_struct.o fs/locks.o fs/d_path.o fs/attr.o
 OBJS += proc/generic.o
 OBJS += trace/trace_syscalls.o trace/trace.o trace/trace_events.o
 OBJS += trace/trace_output.o trace/pid_list.o trace/trace_events_filter.o
 OBJS += trace/ring_buffer.o trace/ftrace.o trace/trace_seq.o
 OBJS += trace/trace_functions.o trace/trace_nop.o
 OBJS += libfdt/fdt.o libfdt/fdt_ro.o
-
-# ext4 fs
-OBJS += ext4/super.o ext4/balloc.o ext4/bitmap.o ext4/block_validity.o
-OBJS += ext4/ext4_jbd2.o ext4/extents.o ext4/extents_status.o ext4/file.o ext4/dir.o
-OBJS += ext4/fsmap.o ext4/fsync.o ext4/hash.o ext4/ialloc.o ext4/indirect.o
-OBJS += ext4/inline.o ext4/inode.o ext4/inode-test.o ext4/ioctl.o ext4/mballoc.o
-OBJS += ext4/migrate.o ext4/mmp.o ext4/move_extent.o ext4/namei.o ext4/page-io.o
-OBJS += ext4/readpage.o ext4/resize.o ext4/symlink.o ext4/sysfs.o
-OBJS += ext4/verity.o ext4/xattr.o ext4/xattr_hurd.o ext4/orphan.o ext4/acl.o
-OBJS += ext4/xattr_trusted.o ext4/xattr_user.o ext4/fast_commit.o
-OBJS += ext4/xattr_security.o
-
-# jbd2
-OBJS += jbd2/checkpoint.o jbd2/commit.o jbd2/journal.o jbd2/recovery.o
-OBJS += jbd2/revoke.o jbd2/transaction.o
 
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o softirq.o \
@@ -125,7 +104,7 @@ OBJS += cl_mine.o main.o softirq.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
 
-obj-y := init/ drivers/
+obj-y := init/ drivers/ fs/
 
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
 
