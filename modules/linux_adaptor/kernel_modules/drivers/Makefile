@@ -8,6 +8,7 @@ obj-y += virtio/
 obj-y += char/
 obj-y += base/
 obj-y += block/
+obj-y += nvme/
 obj-y += mtd/
 obj-y += spi/
 obj-y += power/

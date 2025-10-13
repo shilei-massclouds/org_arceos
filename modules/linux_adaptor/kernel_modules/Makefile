@@ -6,7 +6,6 @@ TARGET = libclinux.a
 
 OBJS :=
 # Original linux modules
-OBJS += nvme_host/core.o nvme_host/pci.o nvme_host/trace.o nvme_host/sysfs.o
 OBJS += firmware/dmi_scan.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o

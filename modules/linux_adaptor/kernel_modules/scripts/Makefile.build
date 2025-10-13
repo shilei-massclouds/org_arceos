@@ -27,7 +27,7 @@ $(OBJ_LIST): FORCE
 
 $(curdir)%.o: $(curdir)%.c
 	$(Q)printf "CC $@\n"
-	$(Q)$(CC) $(CFLAGS) $(CFLAGS_$(target-stem).o) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
+	$(Q)$(CC) $(CFLAGS) $(ccflags-y) $(CFLAGS_$(target-stem).o) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
 FORCE:
 
