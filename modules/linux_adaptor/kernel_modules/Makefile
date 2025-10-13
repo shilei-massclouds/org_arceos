@@ -7,13 +7,6 @@ TARGET = libclinux.a
 OBJS :=
 # Original linux modules
 
-OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
-OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o mm/swap.o
-OBJS += mm/debug_page_alloc.o mm/debug.o mm/ioremap.o mm/mempool.o
-OBJS += mm/backing-dev.o mm/list_lru.o mm/shrinker.o mm/memblock.o
-OBJS += mm/truncate.o mm/workingset.o mm/readahead.o mm/memory.o
-OBJS += mm/rmap.o mm/vmstat.o mm/maccess.o mm/vmalloc.o mm/dmapool.o
-OBJS += mm/dma-noncoherent.o	# /arch/riscv/mm/dma-noncoherent.c
 OBJS += iomap/fiemap.o iomap/iter.o iomap/trace.o
 OBJS += printk/printk.o
 OBJS += lib/vsprintf.o lib/string.o lib/hexdump.o lib/ratelimit.o
@@ -79,7 +72,7 @@ OBJS += cl_mine.o main.o softirq.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
 
-obj-y := init/ drivers/ fs/
+obj-y := init/ mm/ fs/ drivers/
 
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
 

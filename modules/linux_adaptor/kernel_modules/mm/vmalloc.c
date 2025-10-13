@@ -48,7 +48,7 @@ void *vmalloc_noprof(unsigned long size)
 #endif
 }
 
-extern void *
+extern int
 cl_vmap_range(unsigned long addr, phys_addr_t phys, unsigned long size, pgprot_t prot);
 
 int vmap_page_range(unsigned long addr, unsigned long end,

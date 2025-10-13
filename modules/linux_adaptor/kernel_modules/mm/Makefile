@@ -1,0 +1,9 @@
+# Makefile for `mm`
+
+obj-y += mm_init.o page_alloc.o filemap.o page-writeback.o
+obj-y += slub.o percpu.o slab_common.o util.o swap.o
+obj-y += debug_page_alloc.o debug.o ioremap.o mempool.o
+obj-y += backing-dev.o list_lru.o shrinker.o memblock.o
+obj-y += truncate.o workingset.o readahead.o memory.o
+obj-y += rmap.o vmstat.o maccess.o vmalloc.o dmapool.o
+obj-y += dma-noncoherent.o	# /arch/riscv/dma-noncoherent.c
