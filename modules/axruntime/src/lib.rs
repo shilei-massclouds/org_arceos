@@ -46,6 +46,7 @@ unsafe extern "C" {
     fn main();
     fn cl_run_local_timers();
     fn jump_label_init();
+    fn end_global_trace();
 }
 
 struct LogIfImpl;
@@ -203,6 +204,9 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     }
 
     unsafe { main() };
+
+    #[cfg(linux_adaptor)]
+    unsafe { end_global_trace() };
 
     #[cfg(feature = "multitask")]
     axtask::exit(0);
