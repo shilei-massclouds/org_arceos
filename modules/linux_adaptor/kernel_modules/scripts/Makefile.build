@@ -31,7 +31,8 @@ $(OBJ_LIST): FORCE
 	$(Q)$(MAKE) -f ./scripts/Makefile.build obj=$@
 
 $(curdir)%.o: $(curdir)%.c
-	$(Q)$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
+	$(Q)printf "CC $@\n"
+	$(Q)$(CC) $(CFLAGS) $(CFLAGS_$(target-stem).o) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
 FORCE:
 
