@@ -179,7 +179,7 @@ static int __init riscv_intc_init_common(struct fwnode_handle *fn, struct irq_ch
 {
 	int rc;
 
-    printk("============== %s (%lx)\n", __func__, fn);
+    printk("============== %s (%s)(%lx)\n", __func__, chip->name, fn);
 	intc_domain = irq_domain_create_tree(fn, &riscv_intc_domain_ops, chip);
     printk("============== %s\n", __func__);
 	if (!intc_domain) {
@@ -216,6 +216,7 @@ static int __init riscv_intc_init(struct device_node *node,
 	unsigned long hartid;
 	int rc;
 
+    printk("%s: ...\n", __func__);
 	rc = riscv_of_parent_hartid(node, &hartid);
 	if (rc < 0) {
 		pr_warn("unable to find hart id for %pOF\n", node);
@@ -247,12 +248,6 @@ static int __init riscv_intc_init(struct device_node *node,
 	}
 
 	return riscv_intc_init_common(of_node_to_fwnode(node), chip);
-}
-
-void cl_riscv_intc_init(struct device_node *node,
-                        struct device_node *parent)
-{
-    riscv_intc_init(node, parent);
 }
 
 IRQCHIP_DECLARE(riscv, "riscv,cpu-intc", riscv_intc_init);

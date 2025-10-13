@@ -6,19 +6,13 @@ TARGET = libclinux.a
 
 OBJS :=
 # Original linux modules
-OBJS += irqchip/irq-sifive-plic.o irqchip/irq-riscv-intc.o
-OBJS += irqchip/irqchip.o
 OBJS += spi/spi.o spi/spi-mem.o spi/spi-sifive.o
 OBJS += spi-nor/core.o spi-nor/sfdp.o spi-nor/swp.o spi-nor/otp.o
 OBJS += spi-nor/issi.o
-OBJS += mtd/mtdcore.o mtd/mtdpart.o mtd/mtdchar.o
-OBJS += mtd/mtd_blkdevs.o mtd/mtdblock.o
 OBJS += nvmem/core.o nvmem/layouts.o
 OBJS += clk/clk-devres.o clk/clkdev.o clk/clk.o clk/sifive-prci.o
 OBJS += clk/wrpll-cln28hpc.o
 OBJS += power/gpio-restart.o power/gpio-poweroff.o
-OBJS += gpio/gpiolib-devres.o gpio/gpiolib.o gpio/gpiolib-of.o
-OBJS += gpio/gpio-sifive.o gpio/gpio-mmio.o gpio/gpiolib-cdev.o
 OBJS += pci/ecam.o pci/access.o pci/probe.o pci/pci.o pci/search.o
 OBJS += pci/pci-driver.o pci/of.o pci/bus.o pci/devres.o pci/setup-bus.o
 OBJS += pci/slot.o pci/quirks.o pci/host-bridge.o pci/vc.o pci/vpd.o
