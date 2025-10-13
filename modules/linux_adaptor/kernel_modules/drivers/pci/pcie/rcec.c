@@ -13,7 +13,7 @@
 #include <linux/pci.h>
 #include <linux/pci_regs.h>
 
-#include "../pci/pci.h"
+#include "../pci.h"
 
 struct walk_rcec_data {
 	struct pci_dev *rcec;

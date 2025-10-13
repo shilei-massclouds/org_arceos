@@ -22,7 +22,7 @@
 #include <linux/dma-map-ops.h>
 #include <linux/iommu.h>
 #include "pci.h"
-#include "../pcie/portdrv.h"
+#include "pcie/portdrv.h"
 
 struct pci_dynid {
 	struct list_head node;

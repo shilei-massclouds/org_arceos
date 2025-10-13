@@ -24,7 +24,7 @@
 #include <linux/slab.h>
 #include <linux/time.h>
 
-#include "../pci/pci.h"
+#include "../pci.h"
 
 void pci_save_ltr_state(struct pci_dev *dev)
 {

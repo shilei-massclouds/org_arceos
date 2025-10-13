@@ -6,23 +6,8 @@ TARGET = libclinux.a
 
 OBJS :=
 # Original linux modules
-OBJS += spi/spi.o spi/spi-mem.o spi/spi-sifive.o
-OBJS += spi-nor/core.o spi-nor/sfdp.o spi-nor/swp.o spi-nor/otp.o
-OBJS += spi-nor/issi.o
-OBJS += nvmem/core.o nvmem/layouts.o
-OBJS += clk/clk-devres.o clk/clkdev.o clk/clk.o clk/sifive-prci.o
-OBJS += clk/wrpll-cln28hpc.o
-OBJS += power/gpio-restart.o power/gpio-poweroff.o
-OBJS += pci/ecam.o pci/access.o pci/probe.o pci/pci.o pci/search.o
-OBJS += pci/pci-driver.o pci/of.o pci/bus.o pci/devres.o pci/setup-bus.o
-OBJS += pci/slot.o pci/quirks.o pci/host-bridge.o pci/vc.o pci/vpd.o
-OBJS += pci/setup-res.o pci/irq.o
-OBJS += pcie/aspm.o pcie/rcec.o
-OBJS += pci-controller/pci-host-generic.o pci-controller/pci-host-common.o
 OBJS += nvme_host/core.o nvme_host/pci.o nvme_host/trace.o nvme_host/sysfs.o
 OBJS += firmware/dmi_scan.o
-
-OBJS += pci_msi/api.o pci_msi/msi.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
 OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o mm/swap.o

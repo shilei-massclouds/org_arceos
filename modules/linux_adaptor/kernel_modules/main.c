@@ -19,7 +19,7 @@
 #include "adaptor.h"
 
 //#define TEST_BLOCK
-//#define TEST_EXT4
+#define TEST_EXT4
 
 extern void cl_do_initcalls(void);
 extern void cl_invoke_softirq(void);

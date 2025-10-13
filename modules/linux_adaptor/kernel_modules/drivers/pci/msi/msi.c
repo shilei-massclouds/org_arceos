@@ -4,7 +4,7 @@
 #include <linux/irq.h>
 #include <linux/irqdomain.h>
 
-#include "../pci/pci.h"
+#include "../pci.h"
 #include "msi.h"
 #include "../adaptor.h"
 
