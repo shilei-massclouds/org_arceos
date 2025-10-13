@@ -102,10 +102,6 @@ OBJS += trace/trace_output.o trace/pid_list.o trace/trace_events_filter.o
 OBJS += trace/ring_buffer.o trace/ftrace.o trace/trace_seq.o
 OBJS += trace/trace_functions.o trace/trace_nop.o
 OBJS += libfdt/fdt.o libfdt/fdt_ro.o
-OBJS += regmap/regmap-mmio.o regmap/regmap.o regmap/regcache.o
-OBJS += regmap/regcache-rbtree.o
-OBJS += regmap/regcache-maple.o
-OBJS += regmap/regcache-flat.o
 
 # ext4 fs
 OBJS += ext4/super.o ext4/balloc.o ext4/bitmap.o ext4/block_validity.o
@@ -146,10 +142,6 @@ $(OBJ_LIST): FORCE
 
 %.o: %.c
 	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
-
-# Special action for 'regmap'
-regmap/regmap.o: regmap/regmap.c
-	$(CC) $(CFLAGS) -I./regmap -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
 %/%.o: %/%.c
 	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
