@@ -5,7 +5,7 @@ include $(CURDIR)/scripts/Makefile.include
 TARGET = libclinux.a
 
 # Adaptor files, we will re-write them in Rust in future.
-OBJS := cl_mine.o main.o softirq.o \
+OBJS := cl_mine.o main.o \
 		cl_dummy.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o

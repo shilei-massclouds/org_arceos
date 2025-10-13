@@ -315,3 +315,8 @@ void do_softirq_own_stack(void)
         __do_softirq();
     }
 }
+
+unsigned int __weak arch_dynirq_lower_bound(unsigned int from)
+{
+    return from;
+}
