@@ -6,7 +6,6 @@ TARGET = libclinux.a
 
 OBJS :=
 # Original linux modules
-OBJS += firmware/dmi_scan.o
 
 OBJS += mm/mm_init.o mm/page_alloc.o mm/filemap.o mm/page-writeback.o
 OBJS += mm/slub.o mm/percpu.o mm/slab_common.o mm/util.o mm/swap.o

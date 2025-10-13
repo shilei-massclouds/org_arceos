@@ -11,5 +11,6 @@ obj-y += block/
 obj-y += nvme/
 obj-y += mtd/
 obj-y += spi/
+obj-y += firmware/
 obj-y += power/
 obj-y += nvmem/
