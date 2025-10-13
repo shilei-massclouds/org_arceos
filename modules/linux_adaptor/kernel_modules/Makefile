@@ -30,9 +30,6 @@ $(OBJ_LIST): FORCE
 %.o: %.c
 	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
-%/%.o: %/%.c
-	$(CC) $(CFLAGS) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
-
 clean:
 	$(Q)rm -f libclinux.a
 	$(Q)find . -name "*.o" | xargs rm -f
