@@ -6,3 +6,11 @@ obj-y += panic.o exit.o cred.o softirq.o
 obj-y += extable.o tracepoint.o jump_label.o
 obj-y += irq_work.o params.o reboot.o
 obj-y += notifier.o smp.o async.o
+
+obj-y += sched/
+obj-y += locking/
+obj-y += printk/
+obj-y += irq/
+obj-y += rcu/
+obj-y += dma/
+obj-y += trace/

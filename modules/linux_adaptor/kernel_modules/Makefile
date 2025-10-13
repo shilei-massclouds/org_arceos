@@ -7,32 +7,14 @@ TARGET = libclinux.a
 OBJS :=
 # Original linux modules
 
-OBJS += iomap/fiemap.o iomap/iter.o iomap/trace.o
-OBJS += printk/printk.o
 OBJS += math/reciprocal_div.o
 OBJS += crypto/api.o crypto/algapi.o crypto/blake2s.o crypto/blake2s-generic.o
 OBJS += crypto/chacha.o
 OBJS += crypto/shash.o crypto/crc32_generic.o crypto/crc32c_generic.o
 OBJS += time/timekeeping.o time/timer.o time/hrtimer.o time/time.o
-OBJS += rcu/tree.o rcu/sync.o rcu/srcutree.o
-OBJS += sched/core.o sched/wait.o sched/wait_bit.o
-OBJS += sched/swait.o sched/completion.o
-OBJS += locking/spinlock.o locking/spinlock_debug.o locking/qrwlock.o
-OBJS += locking/mutex.o locking/mutex-debug.o
-OBJS += locking/rwsem.o locking/percpu-rwsem.o
 OBJS += of/base.o of/property.o of/address.o of/irq.o of/fdt.o
 OBJS += of/of_reserved_mem.o of/kobj.o of/platform.o of/device.o
-OBJS += irq/irqdomain.o irq/irqdesc.o irq/manage.o irq/dummychip.o
-OBJS += irq/resend.o irq/chip.o irq/handle.o irq/msi.o irq/spurious.o
-OBJS += irq/devres.o irq/pm.o irq/affinity.o
-OBJS += dma/mapping.o dma/swiotlb.o dma/direct.o dma/coherent.o
-OBJS += dma/pool.o
 OBJS += proc/generic.o
-OBJS += trace/trace_syscalls.o trace/trace.o trace/trace_events.o
-OBJS += trace/trace_output.o trace/pid_list.o trace/trace_events_filter.o
-OBJS += trace/ring_buffer.o trace/ftrace.o trace/trace_seq.o
-OBJS += trace/trace_functions.o trace/trace_nop.o
-OBJS += libfdt/fdt.o libfdt/fdt_ro.o
 
 # Adaptor files, we will re-write them in Rust in future.
 OBJS += cl_mine.o main.o softirq.o \
@@ -40,7 +22,7 @@ OBJS += cl_mine.o main.o softirq.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
 
-obj-y := init/ arch/ kernel/ mm/ fs/ block/ lib/ drivers/
+obj-y := init/ arch/ kernel/ mm/ fs/ block/ lib/ libfdt/ drivers/
 
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
 
