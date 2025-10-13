@@ -72,11 +72,13 @@ OBJS += cl_mine.o main.o softirq.o \
 		mount_ops.o cl_syscalls.o \
 		test_block.o test_fs.o
 
-obj-y := init/ mm/ fs/ drivers/
+obj-y := init/ arch/ mm/ fs/ drivers/
 
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
 
 _OBJS = $(shell cat $(OBJ_LIST) | xargs)
+
+include include/config/auto.conf
 
 all: $(TARGET)
 

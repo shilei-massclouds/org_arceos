@@ -5,6 +5,7 @@ curdir := $(dir $(obj))
 obj-y :=
 
 include $(CURDIR)/scripts/Makefile.include
+-include include/config/auto.conf
 include $(curdir)Makefile
 
 obj-y := $(addprefix $(curdir), $(obj-y))
