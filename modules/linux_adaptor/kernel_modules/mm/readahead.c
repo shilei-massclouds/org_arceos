@@ -16,7 +16,7 @@
 
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Initialise a struct file's readahead state.  Assumes that the caller has

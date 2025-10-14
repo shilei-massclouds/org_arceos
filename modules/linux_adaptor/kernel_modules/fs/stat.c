@@ -18,7 +18,7 @@
 
 #include "internal.h"
 #include "mount.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* Caller is here responsible for sufficient locking (ie. inode->i_lock) */
 void __inode_add_bytes(struct inode *inode, loff_t bytes)

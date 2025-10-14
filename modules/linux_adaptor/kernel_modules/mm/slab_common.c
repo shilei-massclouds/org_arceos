@@ -1,7 +1,7 @@
 #include <linux/slab.h>
 
 #include "slab.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 enum slab_state slab_state;
 

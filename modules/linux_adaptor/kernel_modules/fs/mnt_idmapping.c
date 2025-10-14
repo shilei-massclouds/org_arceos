@@ -5,7 +5,7 @@
 #include <linux/user_namespace.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct mnt_idmap {
     struct uid_gid_map uid_map;

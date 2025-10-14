@@ -15,7 +15,7 @@
 #include <linux/gpio/consumer.h>
 
 #include "gpiolib.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct fwnode_handle;
 struct lock_class_key;

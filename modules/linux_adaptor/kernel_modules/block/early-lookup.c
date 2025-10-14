@@ -1,7 +1,7 @@
 #include <linux/blkdev.h>
 #include <linux/ctype.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  * devt_from_partuuid - looks up the dev_t of a partition by its UUID

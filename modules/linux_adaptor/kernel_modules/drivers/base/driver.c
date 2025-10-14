@@ -1,7 +1,7 @@
 #include <linux/device/driver.h>
 #include <linux/device.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 #include "base.h"
 
 /**

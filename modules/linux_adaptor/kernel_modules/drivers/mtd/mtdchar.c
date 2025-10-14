@@ -21,7 +21,7 @@
 #include <linux/uaccess.h>
 
 #include "mtdcore.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Data structure to hold the pointer to the mtd device as well

@@ -19,7 +19,7 @@
 #include <trace/events/writeback.h>
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static DEFINE_PER_CPU(unsigned long, nr_inodes);
 static DEFINE_PER_CPU(unsigned long, nr_unused);

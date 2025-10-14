@@ -6,7 +6,7 @@
 #include "blk-mq.h"
 #include "blk-mq-sched.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Recalculate wakeup batch when tag is shared by hctx.

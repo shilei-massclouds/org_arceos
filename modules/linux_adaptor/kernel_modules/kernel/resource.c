@@ -3,7 +3,7 @@
 #include <linux/resource_ext.h>
 #include <asm/io.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct resource ioport_resource = {
     .name   = "PCI IO",

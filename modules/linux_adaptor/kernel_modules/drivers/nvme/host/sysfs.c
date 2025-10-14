@@ -2,7 +2,7 @@
 
 #include "nvme.h"
 #include "fabrics.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static struct attribute *nvme_ns_attrs[] = {
 #if 0

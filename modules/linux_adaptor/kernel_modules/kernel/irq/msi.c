@@ -3,7 +3,7 @@
 #include <linux/irqdomain.h>
 #include <linux/msi.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  * msi_device_domain_alloc_wired - Allocate a "wired" interrupt on @domain

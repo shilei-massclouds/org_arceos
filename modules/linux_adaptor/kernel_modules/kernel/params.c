@@ -11,7 +11,7 @@
 #include <linux/slab.h>
 #include <linux/string.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* Protects all built-in parameters, modules use their own param_lock */
 static DEFINE_MUTEX(param_lock);

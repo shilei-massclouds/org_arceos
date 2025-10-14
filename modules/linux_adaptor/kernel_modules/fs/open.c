@@ -28,7 +28,7 @@
 #include <linux/filelock.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define WILL_CREATE(flags)  (flags & (O_CREAT | __O_TMPFILE))
 #define O_PATH_FLAGS        (O_DIRECTORY | O_NOFOLLOW | O_PATH | O_CLOEXEC)

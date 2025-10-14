@@ -7,7 +7,7 @@
 #include <linux/swab.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct regmap_mmio_context {
     void __iomem *regs;

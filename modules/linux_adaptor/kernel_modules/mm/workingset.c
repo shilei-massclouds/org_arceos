@@ -11,7 +11,7 @@
 #include <linux/mm.h>
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Shadow entries reflect the share of the working set that does not

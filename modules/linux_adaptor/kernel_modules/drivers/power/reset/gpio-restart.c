@@ -14,7 +14,7 @@
 #include <linux/gpio/consumer.h>
 #include <linux/module.h>
 #include <linux/of.h>
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct gpio_restart {
 	struct gpio_desc *reset_gpio;

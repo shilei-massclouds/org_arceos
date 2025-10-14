@@ -7,7 +7,7 @@
 #include <linux/prefetch.h>
 #include "mount.h"
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct prepend_buffer {
     char *buf;

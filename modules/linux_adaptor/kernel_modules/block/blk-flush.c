@@ -9,7 +9,7 @@
 #include "blk-mq.h"
 #include "blk-mq-sched.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static void blk_flush_complete_seq(struct request *rq,
                    struct blk_flush_queue *fq,

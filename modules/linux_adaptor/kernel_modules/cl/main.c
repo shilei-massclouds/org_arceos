@@ -13,9 +13,9 @@
 // Only for riscv64
 #include <asm/sbi.h>
 
-#include "mm/slab.h"
-#include "drivers/base/base.h"
-#include "block/blk.h"
+//#include "mm/slab.h"
+#include "../drivers/base/base.h"
+//#include "block/blk.h"
 #include "adaptor.h"
 
 //#define TEST_BLOCK

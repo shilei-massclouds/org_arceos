@@ -10,7 +10,7 @@
 #include <linux/vmalloc.h>
 #include "debug.h"
 #include "direct.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/dma.h>

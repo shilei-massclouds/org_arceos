@@ -89,7 +89,7 @@
 //#include "../../io_uring/io-wq.h"
 //#include "../smpboot.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static struct signal_struct __init_signal = {
     .rlim = INIT_RLIMITS

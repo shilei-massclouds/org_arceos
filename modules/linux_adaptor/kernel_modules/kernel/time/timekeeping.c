@@ -24,7 +24,7 @@
 #include "ntp_internal.h"
 #include "timekeeping_internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 ktime_t ktime_get(void)
 {

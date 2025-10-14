@@ -26,7 +26,7 @@
 #include <uapi/linux/mount.h>
 
 #include "do_mounts.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static char __initdata saved_root_name[64];
 static int root_wait;

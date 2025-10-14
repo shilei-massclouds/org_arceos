@@ -27,7 +27,7 @@
 
 #include "smpboot.h"
 #include "sched/smp.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Flags to be used as scf_flags argument of smp_call_function_many_cond().

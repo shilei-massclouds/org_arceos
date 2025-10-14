@@ -14,7 +14,7 @@
 #include <linux/proc_fs.h>
 
 #include "of_private.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define OF_PHANDLE_CACHE_BITS   7
 #define OF_PHANDLE_CACHE_SZ BIT(OF_PHANDLE_CACHE_BITS)

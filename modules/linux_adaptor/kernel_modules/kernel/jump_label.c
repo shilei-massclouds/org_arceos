@@ -10,7 +10,7 @@
 #include <linux/bug.h>
 #include <linux/cpu.h>
 #include <asm/sections.h>
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* mutex to protect coming/going of the jump_label table */
 static DEFINE_MUTEX(jump_label_mutex);

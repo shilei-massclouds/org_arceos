@@ -14,7 +14,7 @@
 #include <linux/io_uring/cmd.h>
 #include "blk.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct blkdev_dio {
     union {

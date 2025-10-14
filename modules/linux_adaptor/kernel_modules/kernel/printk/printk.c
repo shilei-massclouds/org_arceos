@@ -42,7 +42,7 @@
 #include "braille.h"
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Low level drivers may need that to know if they can schedule in

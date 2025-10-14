@@ -8,7 +8,7 @@
 #include <linux/slab.h>
 #include <linux/workqueue.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static struct gen_pool *atomic_pool_dma __ro_after_init;
 static unsigned long pool_size_dma;

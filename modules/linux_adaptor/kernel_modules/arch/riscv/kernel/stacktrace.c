@@ -8,7 +8,7 @@
 
 #include <asm/stacktrace.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static inline int fp_is_valid(unsigned long fp, unsigned long sp)
 {

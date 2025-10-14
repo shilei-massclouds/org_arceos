@@ -16,7 +16,7 @@
 #include <uapi/linux/mount.h>
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static LIST_HEAD(super_blocks);
 static DEFINE_SPINLOCK(sb_lock);

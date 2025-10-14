@@ -14,7 +14,7 @@
 #include <asm/errno.h>
 #include "of_private.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  * of_match_device - Tell if a struct device matches an of_device_id list

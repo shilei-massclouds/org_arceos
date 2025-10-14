@@ -12,7 +12,7 @@
 
 #include "trace_output.h"
 #include "trace.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define SYSCALL_FIELD(_type, _name) {                   \
     .type = #_type, .name = #_name,                 \

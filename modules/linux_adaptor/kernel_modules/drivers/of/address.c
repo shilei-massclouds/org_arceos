@@ -16,7 +16,7 @@
 #include <linux/dma-direct.h> /* for bus_dma_region */
 
 #include "of_private.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* Max address size we deal with */
 #define OF_MAX_ADDR_CELLS   4

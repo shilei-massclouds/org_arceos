@@ -7,7 +7,7 @@
 
 #include "base.h"
 #include "trace.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct devres_node {
     struct list_head        entry;

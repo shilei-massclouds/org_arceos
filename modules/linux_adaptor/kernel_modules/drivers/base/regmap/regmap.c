@@ -15,7 +15,7 @@
 #include "trace.h"
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static inline bool regmap_should_log(struct regmap *map) { return false; }
 

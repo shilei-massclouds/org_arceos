@@ -6,7 +6,7 @@
 
 #include "../pci.h"
 #include "msi.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 int pci_msi_enable = 1;
 

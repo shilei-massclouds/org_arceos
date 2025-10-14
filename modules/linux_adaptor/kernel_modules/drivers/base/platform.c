@@ -25,7 +25,7 @@
 #include "base.h"
 //#include "power/power.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct device platform_bus = {
     .init_name  = "platform",

@@ -4,7 +4,7 @@
 #include <linux/cpu.h>
 #include <linux/group_cpus.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static void default_calc_sets(struct irq_affinity *affd, unsigned int affvecs)
 {

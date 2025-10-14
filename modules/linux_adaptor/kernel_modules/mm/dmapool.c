@@ -15,7 +15,7 @@
 #include <linux/types.h>
 #include <linux/wait.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #ifdef CONFIG_SLUB_DEBUG_ON
 #define DMAPOOL_DEBUG 1

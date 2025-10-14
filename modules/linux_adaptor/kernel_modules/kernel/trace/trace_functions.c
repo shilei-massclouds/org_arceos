@@ -6,7 +6,7 @@
 #include <linux/fs.h>
 
 #include "trace.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* Our option */
 enum {

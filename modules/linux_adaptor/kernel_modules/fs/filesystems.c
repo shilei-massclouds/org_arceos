@@ -9,7 +9,7 @@
 #include <linux/uaccess.h>
 #include <linux/fs_parser.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Handling of filesystem drivers list.

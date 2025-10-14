@@ -13,7 +13,7 @@
 #include <linux/io.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct pglist_data __refdata contig_page_data;
 

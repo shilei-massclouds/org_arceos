@@ -13,7 +13,7 @@
 #include <linux/quotaops.h>
 #include <linux/backing-dev.h>
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Write out and wait upon all dirty data associated with this

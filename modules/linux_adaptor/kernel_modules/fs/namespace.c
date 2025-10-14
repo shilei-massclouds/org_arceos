@@ -27,7 +27,7 @@
 #include "pnode.h"
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static struct kmem_cache *mnt_cache __ro_after_init;
 

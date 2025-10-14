@@ -2,7 +2,7 @@
 #include <linux/irqdomain.h>
 
 #include "internals.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * lockdep: we want to handle all irq_desc locks as a single lock-class:

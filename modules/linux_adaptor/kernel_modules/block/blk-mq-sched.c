@@ -15,7 +15,7 @@
 #include "blk-mq-sched.h"
 #include "blk-wbt.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Mark a hardware queue as needing a restart.

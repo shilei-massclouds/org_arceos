@@ -8,7 +8,7 @@
 #include "slab.h"
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static DEFINE_MUTEX(list_lrus_mutex);
 

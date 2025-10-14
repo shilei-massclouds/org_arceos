@@ -4,7 +4,7 @@
 #include <linux/module.h>
 #include <linux/dma-direct.h>
 #include <linux/dma-map-ops.h>
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static inline struct dma_coherent_mem *dev_get_coherent_memory(struct device *dev)
 {

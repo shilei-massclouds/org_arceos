@@ -9,7 +9,7 @@
 #include <linux/workqueue.h>
 
 #include "workqueue_internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static async_cookie_t next_cookie = 1;
 

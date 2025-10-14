@@ -9,7 +9,7 @@
 #include <linux/filelock.h>
 #include <linux/security.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  * chown_ok - verify permissions to chown inode

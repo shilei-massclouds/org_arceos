@@ -15,7 +15,7 @@
 #include <linux/init_task.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 unsigned int sysctl_nr_open __read_mostly = 1024*1024;
 unsigned int sysctl_nr_open_min = BITS_PER_LONG;

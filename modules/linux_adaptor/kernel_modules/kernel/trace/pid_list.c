@@ -2,7 +2,7 @@
 #include <linux/irq_work.h>
 #include <linux/slab.h>
 #include "trace.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  * trace_pid_list_next - return the next pid in the list

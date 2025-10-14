@@ -11,7 +11,7 @@
 #include <linux/efi.h>
 #include <linux/pci.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 bool initcall_debug;
 

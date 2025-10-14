@@ -30,7 +30,7 @@
 #include "internal.h"
 #include "swap.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  * kfree_const - conditionally free memory

@@ -26,7 +26,7 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/irq.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static inline bool lockdep_softirq_start(void) { return false; }
 static inline void lockdep_softirq_end(bool in_hardirq) { }

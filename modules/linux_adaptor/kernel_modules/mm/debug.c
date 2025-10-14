@@ -1,6 +1,6 @@
 #include <linux/mm.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 void dump_page(const struct page *page, const char *reason)
 {

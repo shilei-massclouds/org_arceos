@@ -32,7 +32,7 @@
 
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define BH_LRU_SIZE 16
 

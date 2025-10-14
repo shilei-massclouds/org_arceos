@@ -15,7 +15,7 @@
 #include <linux/compat.h>
 #include <linux/uaccess.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct getdents_callback64 {
     struct dir_context ctx;

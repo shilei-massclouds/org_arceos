@@ -15,7 +15,7 @@
 #include <linux/kasan.h>
 
 #include <trace/events/ipi.h>
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* Enqueue the irq work @work on the current CPU */
 bool irq_work_queue(struct irq_work *work)

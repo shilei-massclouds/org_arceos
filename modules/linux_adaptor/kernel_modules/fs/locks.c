@@ -19,7 +19,7 @@
 
 #include <linux/uaccess.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  *  __break_lease   -   revoke all outstanding leases on file

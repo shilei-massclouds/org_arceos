@@ -12,7 +12,7 @@
 #include <linux/irq.h>
 
 #include "msi.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  * pci_alloc_irq_vectors() - Allocate multiple device interrupt vectors

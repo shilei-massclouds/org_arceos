@@ -15,7 +15,7 @@
 #include <linux/memcontrol.h>
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * 4MB minimal write chunk size

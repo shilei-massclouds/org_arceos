@@ -3,7 +3,7 @@
 #include <linux/slab.h>
 #include <linux/acpi.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static LIST_HEAD(irq_domain_list);
 static DEFINE_MUTEX(irq_domain_mutex);

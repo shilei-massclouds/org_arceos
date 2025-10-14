@@ -18,7 +18,7 @@
 #include <linux/uaccess.h>
 #include <asm/unistd.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static inline bool unsigned_offsets(struct file *file)
 {

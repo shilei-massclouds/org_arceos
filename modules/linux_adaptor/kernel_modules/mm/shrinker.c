@@ -5,7 +5,7 @@
 #include <trace/events/vmscan.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 LIST_HEAD(shrinker_list);
 DEFINE_MUTEX(shrinker_mutex);

@@ -28,7 +28,7 @@
 
 #include <asm/setup.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 DEFINE_STATIC_KEY_MAYBE(CONFIG_INIT_ON_ALLOC_DEFAULT_ON, init_on_alloc);
 DEFINE_STATIC_KEY_MAYBE(CONFIG_INIT_ON_FREE_DEFAULT_ON, init_on_free);

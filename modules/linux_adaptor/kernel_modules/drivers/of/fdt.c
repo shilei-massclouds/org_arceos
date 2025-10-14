@@ -23,7 +23,7 @@
 
 #include "of_private.h"
 #include "../libfdt/libfdt.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 void *initial_boot_params __ro_after_init;
 phys_addr_t initial_boot_params_pa __ro_after_init;

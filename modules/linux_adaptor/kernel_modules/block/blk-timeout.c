@@ -9,7 +9,7 @@
 #include "blk.h"
 #include "blk-mq.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static unsigned long blk_timeout_mask __read_mostly;
 

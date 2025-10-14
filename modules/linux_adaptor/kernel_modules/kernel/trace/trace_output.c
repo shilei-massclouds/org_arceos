@@ -7,7 +7,7 @@
 #include <linux/idr.h>
 
 #include "trace_output.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* must be a power of 2 */
 #define EVENT_HASHSIZE  128

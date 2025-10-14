@@ -10,7 +10,7 @@
 
 #include "internals.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #ifdef CONFIG_GENERIC_IRQ_MULTI_HANDLER
 void (*handle_arch_irq)(struct pt_regs *) __ro_after_init;

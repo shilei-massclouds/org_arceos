@@ -14,7 +14,7 @@
 #include "base.h"
 //#include "power/power.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static DEFINE_MUTEX(deferred_probe_mutex);
 static LIST_HEAD(deferred_probe_pending_list);

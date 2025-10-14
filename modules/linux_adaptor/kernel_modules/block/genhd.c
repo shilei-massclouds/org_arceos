@@ -26,7 +26,7 @@
 #include "blk-rq-qos.h"
 #include "blk-cgroup.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static struct kobject *block_depr;
 

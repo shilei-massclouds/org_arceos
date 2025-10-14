@@ -40,7 +40,7 @@
 
 #include "trace.h"
 #include "trace_output.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * printk is set to max of 1024, we really don't need it that big.

@@ -6,7 +6,7 @@
 #include <linux/uio.h>
 
 #include "blk.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static void bio_copy_kern_endio(struct bio *bio)
 {

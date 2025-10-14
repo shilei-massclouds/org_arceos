@@ -38,7 +38,7 @@
 #include <trace/events/cpuhp.h>
 
 #include "smpboot.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 int __boot_cpu_id;
 

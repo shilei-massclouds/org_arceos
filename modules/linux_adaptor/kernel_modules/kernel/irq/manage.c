@@ -16,7 +16,7 @@
 
 #include "internals.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 cpumask_var_t irq_default_affinity;
 

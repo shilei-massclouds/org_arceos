@@ -27,7 +27,7 @@
 #include <asm/local.h>
 
 #include "trace.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * The "absolute" timestamp in the buffer is only 59 bits.

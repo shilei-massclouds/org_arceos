@@ -2,7 +2,7 @@
 #include <linux/of.h>
 #include <linux/of_irq.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct of_intc_desc {
     struct list_head    list;

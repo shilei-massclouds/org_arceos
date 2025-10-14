@@ -1,7 +1,7 @@
 #include <linux/mm.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK;
 

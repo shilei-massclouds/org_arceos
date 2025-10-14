@@ -8,7 +8,7 @@
 #include <linux/writeback.h>
 #include "slab.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static inline void check_element(mempool_t *pool, void *element)
 {

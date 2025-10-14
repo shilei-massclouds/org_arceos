@@ -2,7 +2,7 @@
 #include <linux/mm.h>
 #include <linux/uaccess.h>
 #include <asm/tlb.h>
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define copy_to_kernel_nofault_loop(dst, src, len, type, err_label) \
     while (len >= sizeof(type)) {                   \

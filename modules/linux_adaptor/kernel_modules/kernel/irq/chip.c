@@ -2,7 +2,7 @@
 #include <linux/irqdomain.h>
 
 #include "internals.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 enum {
     IRQ_STARTUP_NORMAL,

@@ -18,7 +18,7 @@
 #include <asm/setup.h>
 
 #include "trace_output.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM "TRACE_SYSTEM"

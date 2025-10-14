@@ -7,7 +7,7 @@
 #include "trace.h"
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static const struct regcache_ops *cache_types[] = {
     &regcache_rbtree_ops,

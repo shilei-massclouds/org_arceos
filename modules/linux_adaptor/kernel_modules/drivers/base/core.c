@@ -26,7 +26,7 @@
 #include "base.h"
 #include "physical_location.h"
 #include "power/power.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define FW_DEVLINK_FLAGS_PERMISSIVE (DL_FLAG_INFERRED | \
                      DL_FLAG_SYNC_STATE_ONLY)

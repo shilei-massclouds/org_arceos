@@ -9,7 +9,7 @@
 #include <linux/slab.h>
 #include "direct.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Most architectures use ZONE_DMA for the first 16 Megabytes, but some use

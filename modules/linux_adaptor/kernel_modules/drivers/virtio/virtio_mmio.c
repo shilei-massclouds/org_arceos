@@ -71,7 +71,7 @@
 #include <uapi/linux/virtio_mmio.h>
 #include <linux/virtio_ring.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 
 /* The alignment to use between consumer and producer parts of vring.

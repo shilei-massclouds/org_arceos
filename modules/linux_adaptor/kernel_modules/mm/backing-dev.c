@@ -16,7 +16,7 @@
 #include <trace/events/writeback.h>
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static const char *bdi_unknown_name = "(unknown)";
 

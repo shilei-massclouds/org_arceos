@@ -30,7 +30,7 @@
 
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw)
 {

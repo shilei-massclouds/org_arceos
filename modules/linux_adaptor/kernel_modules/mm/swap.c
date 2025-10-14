@@ -27,7 +27,7 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/pagemap.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 typedef void (*move_fn_t)(struct lruvec *lruvec, struct folio *folio);
 

@@ -3,7 +3,7 @@
 
 #include "base.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* /sys/bus */
 static struct kset *bus_kset;

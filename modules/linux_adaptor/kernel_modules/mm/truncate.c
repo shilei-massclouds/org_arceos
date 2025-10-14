@@ -13,7 +13,7 @@
 #include <linux/rmap.h>
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Regular page slots are stabilized by the page lock even without the tree

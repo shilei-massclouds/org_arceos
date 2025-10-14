@@ -31,7 +31,7 @@
 
 #include "trace.h"
 #include "nvme.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define SQ_SIZE(q)	((q)->q_depth << (q)->sqes)
 #define CQ_SIZE(q)	((q)->q_depth * sizeof(struct nvme_completion))

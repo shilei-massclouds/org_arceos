@@ -14,7 +14,7 @@
 #include <trace/events/lock.h>
 
 #include "mutex.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #ifdef CONFIG_DEBUG_MUTEXES
 # define MUTEX_WARN_ON(cond) DEBUG_LOCKS_WARN_ON(cond)

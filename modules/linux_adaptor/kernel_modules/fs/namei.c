@@ -26,7 +26,7 @@
 
 #include "internal.h"
 #include "mount.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define ND_ROOT_PRESET 1
 #define ND_ROOT_GRABBED 2

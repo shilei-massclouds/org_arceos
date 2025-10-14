@@ -12,7 +12,7 @@
 #include <linux/of.h>
 
 #include "clk.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static LIST_HEAD(clocks);
 static DEFINE_MUTEX(clocks_mutex);

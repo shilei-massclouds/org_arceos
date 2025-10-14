@@ -5,7 +5,7 @@
 
 #include "sched.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static inline long __sched
 do_wait_for_common(struct completion *x,

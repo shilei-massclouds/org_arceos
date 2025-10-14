@@ -25,7 +25,7 @@
 #include <asm/tlbflush.h>
 #include <asm/mmu_context.h>
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  * vmalloc - allocate virtually contiguous memory

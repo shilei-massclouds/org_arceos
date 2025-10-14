@@ -16,7 +16,7 @@
 #include "mount.h"
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static char *vfs_parse_comma_sep(char **s)
 {

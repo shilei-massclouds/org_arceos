@@ -52,7 +52,7 @@
 
 #include "swap.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * A choice of three behaviors for folio_wait_bit_common():

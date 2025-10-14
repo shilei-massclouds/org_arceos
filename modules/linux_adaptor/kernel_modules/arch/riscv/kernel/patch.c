@@ -10,7 +10,7 @@
 #include <asm/ftrace.h>
 #include <asm/patch.h>
 #include <asm/sections.h>
-#include "../adaptor.h"
+#include "adaptor.h"
 
 extern void *
 cl_set_fixmap(unsigned int idx, phys_addr_t phys, pgprot_t prot);

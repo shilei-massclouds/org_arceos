@@ -28,7 +28,7 @@
 
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Estimate write bandwidth at 200ms intervals.

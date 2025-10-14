@@ -21,7 +21,7 @@
 #include <linux/sched/isolation.h>
 #include <trace/events/sched.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 struct kthread {
     unsigned long flags;

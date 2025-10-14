@@ -5,7 +5,7 @@
 #include <linux/syscore_ops.h>
 
 #include "internals.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Called from __free_irq() with desc->lock held after @action has

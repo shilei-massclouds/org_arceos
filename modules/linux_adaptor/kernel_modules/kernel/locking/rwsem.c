@@ -13,7 +13,7 @@
 #include <trace/events/lock.h>
 
 #include "lock_events.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * The least significant 2 bits of the owner value has the following

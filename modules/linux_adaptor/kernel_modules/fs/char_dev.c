@@ -17,7 +17,7 @@
 #include <linux/tty.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static struct kobj_map *cdev_map __ro_after_init;
 

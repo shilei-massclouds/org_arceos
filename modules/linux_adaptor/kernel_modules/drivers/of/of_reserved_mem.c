@@ -15,7 +15,7 @@
 #include <linux/cma.h>
 
 #include "of_private.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static struct reserved_mem reserved_mem[MAX_RESERVED_REGIONS];
 static int reserved_mem_count;

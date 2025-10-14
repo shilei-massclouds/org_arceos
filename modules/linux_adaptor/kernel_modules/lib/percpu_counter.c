@@ -5,7 +5,7 @@
 #include <linux/module.h>
 #include <linux/debugobjects.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #ifdef CONFIG_HOTPLUG_CPU
 static LIST_HEAD(percpu_counters);

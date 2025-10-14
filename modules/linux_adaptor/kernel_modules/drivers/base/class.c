@@ -10,7 +10,7 @@
 #include <linux/mutex.h>
 #include "base.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* /sys/class */
 static struct kset *class_kset;

@@ -3,7 +3,7 @@
 #include <linux/io.h>
 #include <linux/ioremap.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 void __iomem *generic_ioremap_prot(phys_addr_t phys_addr, size_t size,
                    pgprot_t prot)

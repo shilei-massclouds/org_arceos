@@ -25,7 +25,7 @@
 #include "../fs/internal.h"
 #include "blk.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 extern dev_t ROOT_DEV;
 

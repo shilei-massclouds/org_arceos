@@ -20,7 +20,7 @@
 
 #include <asm/runtime-const.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 __cacheline_aligned_in_smp DEFINE_SEQLOCK(rename_lock);
 

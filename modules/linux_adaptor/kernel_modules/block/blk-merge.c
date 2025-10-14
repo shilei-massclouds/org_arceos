@@ -17,7 +17,7 @@
 #include "blk-rq-qos.h"
 #include "blk-throttle.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static inline void bio_get_first_bvec(struct bio *bio, struct bio_vec *bv)
 {

@@ -12,7 +12,7 @@
 #include <linux/syscore_ops.h>
 #include <linux/uaccess.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #if defined(CONFIG_ARM)
 #define DEFAULT_REBOOT_MODE     = REBOOT_HARD

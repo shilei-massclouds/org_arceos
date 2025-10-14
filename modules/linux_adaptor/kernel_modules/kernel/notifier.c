@@ -9,7 +9,7 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/notifier.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /**
  * notifier_call_chain - Informs the registered notifiers about an event.

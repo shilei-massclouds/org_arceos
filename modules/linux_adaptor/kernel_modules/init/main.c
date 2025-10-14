@@ -102,7 +102,7 @@
 
 #include <kunit/test.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* Untouched command line saved by arch-specific code. */
 char __initdata boot_command_line[COMMAND_LINE_SIZE];

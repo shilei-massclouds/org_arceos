@@ -3,8 +3,8 @@
 #include <linux/fs_struct.h>
 #include <linux/mount.h>
 
-#include "fs/mount.h"
-#include "fs/internal.h"
+#include "../fs/mount.h"
+#include "../fs/internal.h"
 
 #include "adaptor.h"
 

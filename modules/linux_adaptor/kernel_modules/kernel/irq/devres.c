@@ -6,7 +6,7 @@
 #include <linux/irq.h>
 
 #include "internals.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * Device resource management aware IRQ request/free implementation.

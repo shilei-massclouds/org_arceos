@@ -11,7 +11,7 @@
 #include <asm/sections.h>
 #include <linux/uaccess.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * mutex protecting text section modification (dynamic code patching).

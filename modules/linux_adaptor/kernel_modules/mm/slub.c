@@ -35,7 +35,7 @@
 #include <trace/events/kmem.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #ifndef CONFIG_SLUB_TINY
 #define __fastpath_inline __always_inline

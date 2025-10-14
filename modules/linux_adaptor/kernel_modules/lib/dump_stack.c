@@ -9,7 +9,7 @@
 #include <linux/utsname.h>
 #include <linux/stop_machine.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #if IS_ENABLED(CONFIG_STACKTRACE_BUILD_ID)
 #define BUILD_ID_FMT " %20phN"

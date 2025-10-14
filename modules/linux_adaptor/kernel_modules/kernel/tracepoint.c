@@ -11,7 +11,7 @@
 #include <linux/sched/task.h>
 #include <linux/static_key.h>
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 enum tp_func_state {
     TP_FUNC_0,

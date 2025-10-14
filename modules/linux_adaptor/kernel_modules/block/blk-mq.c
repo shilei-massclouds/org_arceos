@@ -35,7 +35,7 @@
 #include "blk-mq-sched.h"
 #include "blk-rq-qos.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 #define TAG_COMP_BATCH      32
 

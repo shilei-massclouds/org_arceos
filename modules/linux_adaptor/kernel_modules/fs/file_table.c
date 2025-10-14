@@ -25,7 +25,7 @@
 
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /* sysctl tunables... */
 static struct files_stat_struct files_stat = {

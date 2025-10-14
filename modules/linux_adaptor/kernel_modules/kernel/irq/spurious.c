@@ -7,7 +7,7 @@
 
 #include "internals.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 /*
  * We wait here for a poller to finish.

@@ -17,7 +17,7 @@
 #include <linux/filelock.h>
 
 #include "internal.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static struct posix_acl *__get_acl(struct mnt_idmap *idmap,
                    struct dentry *dentry, struct inode *inode,

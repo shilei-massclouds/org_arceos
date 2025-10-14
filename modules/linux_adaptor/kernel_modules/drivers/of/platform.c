@@ -14,7 +14,7 @@
 #include <linux/sysfb.h>
 
 #include "of_private.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 const struct of_device_id of_default_bus_match_table[] = {
     { .compatible = "simple-bus", },

@@ -15,7 +15,7 @@
 #include <linux/clkdev.h>
 
 #include "clk.h"
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static HLIST_HEAD(clk_root_list);
 static HLIST_HEAD(clk_orphan_list);

@@ -23,7 +23,7 @@
 
 #include "internal.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 int simple_statfs(struct dentry *dentry, struct kstatfs *buf)
 {

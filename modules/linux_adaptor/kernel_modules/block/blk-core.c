@@ -40,7 +40,7 @@
 #include "blk-throttle.h"
 #include "blk-ioprio.h"
 
-#include "../adaptor.h"
+#include "adaptor.h"
 
 static DEFINE_IDA(blk_queue_ida);
 
