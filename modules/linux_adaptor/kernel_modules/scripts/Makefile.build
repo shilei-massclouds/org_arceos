@@ -15,8 +15,6 @@ OBJS := $(filter-out %/, $(obj-y))
 OBJ_LIST := $(filter %/, $(obj-y))
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(OBJ_LIST))
 
-_OBJS = $(if $(OBJ_LIST), $(shell cat $(OBJ_LIST) | xargs))
-
 _build: $(obj)
 
 $(obj): $(OBJS) $(OBJ_LIST) FORCE

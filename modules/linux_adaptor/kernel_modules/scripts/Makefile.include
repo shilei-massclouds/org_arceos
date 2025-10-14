@@ -25,4 +25,6 @@ ifeq ("$(LOG)", "debug")
 CFLAGS += -DDEBUG
 endif
 
+_OBJS = $(if $(OBJ_LIST), $(shell cat $(OBJ_LIST) | xargs))
+
 target-stem = $(basename $(patsubst $(curdir)%,%,$@))
