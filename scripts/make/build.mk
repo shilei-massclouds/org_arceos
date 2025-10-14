@@ -49,13 +49,19 @@ endif
 $(OUT_DIR):
 	$(call run_cmd,mkdir,-p $@)
 
-$(OUT_BIN): _cargo_build $(PFLASH_IMG) $(OUT_ELF)
-	$(call run_cmd,$(OBJCOPY),$(OUT_ELF) --strip-all -O binary $@)
-
-$(PFLASH_IMG): $(OUT_ELF)
+$(OUT_BIN): _cargo_build $(OUT_ELF).final
 	@printf " Building $@\n"
-	@riscv64-linux-gnu-nm --numeric-sort --defined-only $(OUT_ELF) | grep "\( [Tt] \)" | awk -F " " '{print $$1,$$3}' > $@.syms
-	$(call mk_pflash,$@,$@.syms)
+	$(call run_cmd,$(OBJCOPY),$(OUT_ELF).final --strip-all -O binary $@)
+
+$(OUT_ELF).final: kallsyms.img
+	@printf " Building $@\n"
+	$(ORIG_OBJCOPY) --update-section .kallsyms=$< $@
+
+kallsyms.img: $(OUT_ELF)
+	@printf " Building $@\n"
+	@riscv64-linux-gnu-nm --numeric-sort --defined-only $(OUT_ELF) | grep "\( [Tt] \)" | awk -F " " '{print $$1,$$3}' > $@.tmp
+	$(call mk_kallsyms,$@,$@.tmp)
+	@cp $(OUT_ELF) $(OUT_ELF).final
 
 ifeq ($(ARCH), aarch64)
   uimg_arch := arm64

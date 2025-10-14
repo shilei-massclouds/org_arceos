@@ -44,10 +44,6 @@ SECTIONS
         __stop___tracepoints_ptrs = .;
         *(__tracepoints_strings)
         . = ALIGN(16);
-        __setup_start = .;
-        KEEP(*(.init.setup))
-        __setup_end = .;
-        . = ALIGN(16);
         __start_pci_fixups_early = .;
         KEEP(*(.pci_fixup_early))
         __end_pci_fixups_early = .;
@@ -115,6 +111,7 @@ SECTIONS
 
     .init.data : ALIGN(4K) {
         *(.init.data .init.data.*)
+        *(.init.rodata .init.rodata.*)
         . = ALIGN(8);
         __start_ftrace_events = .;
         KEEP(*(_ftrace_events))
@@ -123,6 +120,9 @@ SECTIONS
         KEEP(*(_ftrace_eval_map))
         __stop_ftrace_eval_maps = .;
         . = ALIGN(16);
+        __setup_start = .;
+        KEEP(*(.init.setup))
+        __setup_end = .;
         __initcall_start = .;
         KEEP(*(.initcallearly.init))
         __initcall0_start = .;
@@ -188,6 +188,14 @@ SECTIONS
     }
 
     _ekernel = .;
+
+    /*
+     * Put kallsyms segment _OUT_ of [_skernel, _ekernel).
+     * Build-Scripts use `objcopy --update-section` to fill in this segment
+     * and will not change all symbols' addresses include '_ekernel'.
+     */
+    _kallsyms = .;
+    .kallsyms : { KEEP(*(.kallsyms)) }
 
 	/DISCARD/ : {
         *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) *(.discard) *(.discard.*)

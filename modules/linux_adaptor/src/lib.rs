@@ -25,8 +25,6 @@ use crate::kallsyms::init_kallsyms;
 pub fn init_linux_modules(dtb: usize) {
     info!("Initialize Linux modules...");
 
-    init_kallsyms();
-
     /* Offset between VirtAddr and PhysAddr in kernel aspace. */
     unsafe { setup_paging(PHYS_VIRT_OFFSET) };
 
@@ -43,6 +41,8 @@ pub fn init_linux_modules(dtb: usize) {
     };
     axtask::current().set_private(task_ptr);
     info!("Linux init task set pointer({:#x})", task_ptr);
+
+    init_kallsyms();
 
     let ret = unsafe { clinux_init(dtb) };
     info!("cLinux init [{}].", ret);

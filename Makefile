@@ -58,9 +58,9 @@ APPEND ?= y
 BUS ?= mmio
 MEM ?= 128M
 ACCEL ?=
-PFLASH ?= y
+PFLASH ?= n
 ifeq ($(PFLASH), y)
-  PFLASH_IMG := kallsys.img
+  PFLASH_IMG := pflash.img
 else
   PFLASH_IMG :=
 endif
@@ -134,6 +134,7 @@ CROSS_COMPILE ?= $(ARCH)-linux-musl-
 CC := $(CROSS_COMPILE)gcc
 AR := $(CROSS_COMPILE)ar
 RANLIB := $(CROSS_COMPILE)ranlib
+ORIG_OBJCOPY := $(CROSS_COMPILE)objcopy
 LD := rust-lld -flavor gnu
 
 OBJDUMP ?= rust-objdump -d --print-imm-hex --x86-asm-syntax=intel

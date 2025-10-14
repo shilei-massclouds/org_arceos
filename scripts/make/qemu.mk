@@ -16,7 +16,6 @@ ifeq ($(ARCH), x86_64)
 else ifeq ($(ARCH), riscv64)
   ifeq ($(PLAT_NAME), riscv64-sifive_u)
     machine := sifive_u
-    override PFLASH := n
     override BLK := n
     override MTD := y
     override NVME := n
