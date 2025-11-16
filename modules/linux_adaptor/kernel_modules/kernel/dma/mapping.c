@@ -21,6 +21,24 @@
 bool dma_default_coherent = IS_ENABLED(CONFIG_ARCH_DMA_DEFAULT_COHERENT);
 #endif
 
+/*
+ * Managed DMA API
+ */
+struct dma_devres {
+    size_t      size;
+    void        *vaddr;
+    dma_addr_t  dma_handle;
+    unsigned long   attrs;
+};
+
+static void dmam_release(struct device *dev, void *res)
+{
+    struct dma_devres *this = res;
+
+    dma_free_attrs(dev, this->size, this->vaddr, this->dma_handle,
+            this->attrs);
+}
+
 static int dma_supported(struct device *dev, u64 mask)
 {
     pr_notice("%s: No impl.", __func__);
@@ -340,4 +358,76 @@ void dma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
         iommu_dma_unmap_sg(dev, sg, nents, dir, attrs);
     else if (ops->unmap_sg)
         ops->unmap_sg(dev, sg, nents, dir, attrs);
+}
+
+/**
+ * dmam_alloc_attrs - Managed dma_alloc_attrs()
+ * @dev: Device to allocate non_coherent memory for
+ * @size: Size of allocation
+ * @dma_handle: Out argument for allocated DMA handle
+ * @gfp: Allocation flags
+ * @attrs: Flags in the DMA_ATTR_* namespace.
+ *
+ * Managed dma_alloc_attrs().  Memory allocated using this function will be
+ * automatically released on driver detach.
+ *
+ * RETURNS:
+ * Pointer to allocated memory on success, NULL on failure.
+ */
+void *dmam_alloc_attrs(struct device *dev, size_t size, dma_addr_t *dma_handle,
+        gfp_t gfp, unsigned long attrs)
+{
+    struct dma_devres *dr;
+    void *vaddr;
+
+    dr = devres_alloc(dmam_release, sizeof(*dr), gfp);
+    if (!dr)
+        return NULL;
+
+    vaddr = dma_alloc_attrs(dev, size, dma_handle, gfp, attrs);
+    if (!vaddr) {
+        devres_free(dr);
+        return NULL;
+    }
+
+    dr->vaddr = vaddr;
+    dr->dma_handle = *dma_handle;
+    dr->size = size;
+    dr->attrs = attrs;
+
+    devres_add(dev, dr);
+
+    return vaddr;
+}
+
+void dma_free_attrs(struct device *dev, size_t size, void *cpu_addr,
+        dma_addr_t dma_handle, unsigned long attrs)
+{
+    pr_notice("%s: No impl.\n", __func__);
+#if 0
+    const struct dma_map_ops *ops = get_dma_ops(dev);
+
+    if (dma_release_from_dev_coherent(dev, get_order(size), cpu_addr))
+        return;
+    /*
+     * On non-coherent platforms which implement DMA-coherent buffers via
+     * non-cacheable remaps, ops->free() may call vunmap(). Thus getting
+     * this far in IRQ context is a) at risk of a BUG_ON() or trying to
+     * sleep on some machines, and b) an indication that the driver is
+     * probably misusing the coherent API anyway.
+     */
+    WARN_ON(irqs_disabled());
+
+    if (!cpu_addr)
+        return;
+
+    trace_dma_free(dev, cpu_addr, dma_handle, size, attrs);
+    debug_dma_free_coherent(dev, size, cpu_addr, dma_handle);
+    if (dma_alloc_direct(dev, ops))
+        dma_direct_free(dev, size, cpu_addr, dma_handle, attrs);
+    else if (use_dma_iommu(dev))
+        iommu_dma_free(dev, size, cpu_addr, dma_handle, attrs);
+    else if (ops->free)
+        ops->free(dev, size, cpu_addr, dma_handle, attrs);
+#endif
 }

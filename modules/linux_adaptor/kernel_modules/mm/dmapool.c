@@ -324,3 +324,16 @@ void dma_pool_free(struct dma_pool *pool, void *vaddr, dma_addr_t dma)
     }
     spin_unlock_irqrestore(&pool->lock, flags);
 }
+
+/**
+ * dma_pool_destroy - destroys a pool of dma memory blocks.
+ * @pool: dma pool that will be destroyed
+ * Context: !in_interrupt()
+ *
+ * Caller guarantees that no more memory from the pool is in use,
+ * and that nothing will try to use the pool after this call.
+ */
+void dma_pool_destroy(struct dma_pool *pool)
+{
+    pr_notice("%s: No impl.\n", __func__);
+}

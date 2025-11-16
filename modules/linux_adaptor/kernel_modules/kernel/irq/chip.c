@@ -4,6 +4,20 @@
 #include "internals.h"
 #include "adaptor.h"
 
+static irqreturn_t bad_chained_irq(int irq, void *dev_id)
+{
+    WARN_ONCE(1, "Chained irq %d should not call an action\n", irq);
+    return IRQ_NONE;
+}
+
+/*
+ * Chained handlers should never call action on their IRQ. This default
+ * action will emit warning if such thing happens.
+ */
+struct irqaction chained_action = {
+    .handler = bad_chained_irq,
+};
+
 enum {
     IRQ_STARTUP_NORMAL,
     IRQ_STARTUP_MANAGED,
@@ -86,25 +100,101 @@ struct irq_data *irq_get_irq_data(unsigned int irq)
     return desc ? &desc->irq_data : NULL;
 }
 
+int irq_activate_and_startup(struct irq_desc *desc, bool resend)
+{
+    if (WARN_ON(irq_activate(desc)))
+        return 0;
+    return irq_startup(desc, resend, IRQ_START_FORCE);
+}
+
 void irq_modify_status(unsigned int irq, unsigned long clr, unsigned long set)
 {
     pr_notice("%s: No impl.\n", __func__);
+}
+
+static inline void mask_ack_irq(struct irq_desc *desc)
+{
+    if (desc->irq_data.chip->irq_mask_ack) {
+        desc->irq_data.chip->irq_mask_ack(&desc->irq_data);
+        irq_state_set_masked(desc);
+    } else {
+        mask_irq(desc);
+        if (desc->irq_data.chip->irq_ack)
+            desc->irq_data.chip->irq_ack(&desc->irq_data);
+    }
 }
 
 static void
 __irq_do_set_handler(struct irq_desc *desc, irq_flow_handler_t handle,
              int is_chained, const char *name)
 {
-    pr_notice("%s: No impl.\n", __func__);
     if (!handle) {
-        PANIC("No handle.");
-    }
-    if (!desc) {
-        PANIC("No desc.");
+        handle = handle_bad_irq;
+    } else {
+        struct irq_data *irq_data = &desc->irq_data;
+#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
+        /*
+         * With hierarchical domains we might run into a
+         * situation where the outermost chip is not yet set
+         * up, but the inner chips are there.  Instead of
+         * bailing we install the handler, but obviously we
+         * cannot enable/startup the interrupt at this point.
+         */
+        while (irq_data) {
+            if (irq_data->chip != &no_irq_chip)
+                break;
+            /*
+             * Bail out if the outer chip is not set up
+             * and the interrupt supposed to be started
+             * right away.
+             */
+            if (WARN_ON(is_chained))
+                return;
+            /* Try the parent */
+            irq_data = irq_data->parent_data;
+        }
+#endif
+        if (WARN_ON(!irq_data || irq_data->chip == &no_irq_chip))
+            return;
     }
 
+    /* Uninstall? */
+    if (handle == handle_bad_irq) {
+        if (desc->irq_data.chip != &no_irq_chip)
+            mask_ack_irq(desc);
+        irq_state_set_disabled(desc);
+        if (is_chained) {
+            desc->action = NULL;
+            WARN_ON(irq_chip_pm_put(irq_desc_get_irq_data(desc)));
+        }
+        desc->depth = 1;
+    }
     desc->handle_irq = handle;
     desc->name = name;
+
+    if (handle != handle_bad_irq && is_chained) {
+        unsigned int type = irqd_get_trigger_type(&desc->irq_data);
+
+        /*
+         * We're about to start this interrupt immediately,
+         * hence the need to set the trigger configuration.
+         * But the .set_type callback may have overridden the
+         * flow handler, ignoring that we're dealing with a
+         * chained interrupt. Reset it immediately because we
+         * do know better.
+         */
+        if (type != IRQ_TYPE_NONE) {
+            __irq_set_trigger(desc, type);
+            desc->handle_irq = handle;
+        }
+
+        irq_settings_set_noprobe(desc);
+        irq_settings_set_norequest(desc);
+        irq_settings_set_nothread(desc);
+        desc->action = &chained_action;
+        WARN_ON(irq_chip_pm_get(irq_desc_get_irq_data(desc)));
+        irq_activate_and_startup(desc, IRQ_RESEND);
+    }
 }
 
 void
@@ -432,4 +522,45 @@ void irq_shutdown(struct irq_desc *desc)
 void irq_disable(struct irq_desc *desc)
 {
     __irq_disable(desc, irq_settings_disable_unlazy(desc));
+}
+
+/**
+ * irq_chip_compose_msi_msg - Compose msi message for a irq chip
+ * @data:   Pointer to interrupt specific data
+ * @msg:    Pointer to the MSI message
+ *
+ * For hierarchical domains we find the first chip in the hierarchy
+ * which implements the irq_compose_msi_msg callback. For non
+ * hierarchical we use the top level chip.
+ */
+int irq_chip_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+{
+    struct irq_data *pos;
+
+    for (pos = NULL; !pos && data; data = irqd_get_parent_data(data)) {
+        if (data->chip && data->chip->irq_compose_msi_msg)
+            pos = data;
+    }
+
+    if (!pos)
+        return -ENOSYS;
+
+    pos->chip->irq_compose_msi_msg(pos, msg);
+    return 0;
+}
+
+void
+irq_set_chained_handler_and_data(unsigned int irq, irq_flow_handler_t handle,
+                 void *data)
+{
+    unsigned long flags;
+    struct irq_desc *desc = irq_get_desc_buslock(irq, &flags, 0);
+
+    if (!desc)
+        return;
+
+    desc->irq_common_data.handler_data = data;
+    __irq_do_set_handler(desc, handle, 1, NULL);
+
+    irq_put_desc_busunlock(desc, flags);
 }

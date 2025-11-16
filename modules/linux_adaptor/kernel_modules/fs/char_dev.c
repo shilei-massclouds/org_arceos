@@ -427,6 +427,13 @@ __unregister_chrdev_region(unsigned major, unsigned baseminor, int minorct)
     return cd;
 }
 
+void cdev_device_del(struct cdev *cdev, struct device *dev)
+{
+    device_del(dev);
+    if (dev->devt)
+        cdev_del(cdev);
+}
+
 /**
  * __register_chrdev() - create and register a cdev occupying a range of minors
  * @major: major device number or 0 for dynamic allocation

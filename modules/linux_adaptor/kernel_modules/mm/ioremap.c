@@ -28,8 +28,10 @@ void __iomem *generic_ioremap_prot(phys_addr_t phys_addr, size_t size,
 
     vaddr = phys_addr + kernel_map.va_pa_offset;
     pr_info("%s: VA: %lx -> PA: %lx\n", __func__, vaddr, phys_addr);
+    printk("%s: VA: %lx -> PA: %lx\n", __func__, vaddr, phys_addr);
 
     pr_info("%s: Use linear mapping in ArceOS to handle ioremap.\n", __func__);
+    printk("%s: -------------------------------------\n", __func__);
     /* Use linear mapping in ArceOS to handle ioremap. */
 #if 0
     area = __get_vm_area_caller(size, VM_IOREMAP, IOREMAP_START,

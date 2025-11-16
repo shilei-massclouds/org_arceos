@@ -98,3 +98,29 @@ irq_create_affinity_masks(unsigned int nvecs, struct irq_affinity *affd)
     PANIC("");
     return masks;
 }
+
+/**
+ * irq_calc_affinity_vectors - Calculate the optimal number of vectors
+ * @minvec: The minimum number of vectors available
+ * @maxvec: The maximum number of vectors available
+ * @affd:   Description of the affinity requirements
+ */
+unsigned int irq_calc_affinity_vectors(unsigned int minvec, unsigned int maxvec,
+                       const struct irq_affinity *affd)
+{
+    unsigned int resv = affd->pre_vectors + affd->post_vectors;
+    unsigned int set_vecs;
+
+    if (resv > minvec)
+        return 0;
+
+    if (affd->calc_sets) {
+        set_vecs = maxvec - resv;
+    } else {
+        cpus_read_lock();
+        set_vecs = cpumask_weight(cpu_possible_mask);
+        cpus_read_unlock();
+    }
+
+    return resv + min(set_vecs, maxvec - resv);
+}

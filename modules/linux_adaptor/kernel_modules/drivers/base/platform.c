@@ -572,6 +572,66 @@ static int platform_dma_configure(struct device *dev)
     return ret;
 }
 
+/**
+ * platform_get_resource_byname - get a resource for a device by name
+ * @dev: platform device
+ * @type: resource type
+ * @name: resource name
+ */
+struct resource *platform_get_resource_byname(struct platform_device *dev,
+                          unsigned int type,
+                          const char *name)
+{
+    u32 i;
+
+    for (i = 0; i < dev->num_resources; i++) {
+        struct resource *r = &dev->resource[i];
+
+        if (unlikely(!r->name))
+            continue;
+
+        if (type == resource_type(r) && !strcmp(r->name, name))
+            return r;
+    }
+    return NULL;
+}
+
+static int __platform_get_irq_byname(struct platform_device *dev,
+                     const char *name)
+{
+    struct resource *r;
+    int ret;
+
+    ret = fwnode_irq_get_byname(dev_fwnode(&dev->dev), name);
+    if (ret > 0 || ret == -EPROBE_DEFER)
+        return ret;
+
+    r = platform_get_resource_byname(dev, IORESOURCE_IRQ, name);
+    if (r) {
+        if (WARN(!r->start, "0 is an invalid IRQ number\n"))
+            return -EINVAL;
+        return r->start;
+    }
+
+    return -ENXIO;
+}
+
+/**
+ * platform_get_irq_byname_optional - get an optional IRQ for a device by name
+ * @dev: platform device
+ * @name: IRQ name
+ *
+ * Get an optional IRQ by name like platform_get_irq_byname(). Except that it
+ * does not print an error message if an IRQ can not be obtained.
+ *
+ * Return: non-zero IRQ number on success, negative error number on failure.
+ */
+int platform_get_irq_byname_optional(struct platform_device *dev,
+                     const char *name)
+{
+    return __platform_get_irq_byname(dev, name);
+}
+
 static void platform_dma_cleanup(struct device *dev)
 {
     struct platform_driver *drv = to_platform_driver(dev->driver);

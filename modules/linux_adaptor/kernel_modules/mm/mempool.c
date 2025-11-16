@@ -348,3 +348,20 @@ mempool_t *mempool_create_node_noprof(int min_nr, mempool_alloc_t *alloc_fn,
 
     return pool;
 }
+
+/**
+ * mempool_destroy - deallocate a memory pool
+ * @pool:      pointer to the memory pool which was allocated via
+ *             mempool_create().
+ *
+ * Free all reserved elements in @pool and @pool itself.  This function
+ * only sleeps if the free_fn() function sleeps.
+ */
+void mempool_destroy(mempool_t *pool)
+{
+    if (unlikely(!pool))
+        return;
+
+    mempool_exit(pool);
+    kfree(pool);
+}

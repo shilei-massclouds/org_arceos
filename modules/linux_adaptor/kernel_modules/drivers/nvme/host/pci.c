@@ -1856,6 +1856,8 @@ static int nvme_remap_bar(struct nvme_dev *dev, unsigned long size)
 		return -ENOMEM;
 	if (dev->bar)
 		iounmap(dev->bar);
+    printk("--- %s: bar (%lx:%lx)\n",
+           __func__, pci_resource_start(pdev, 0), pci_resource_len(pdev, 0));
 	dev->bar = ioremap(pci_resource_start(pdev, 0), size);
 	if (!dev->bar) {
 		dev->bar_mapped_size = 0;
@@ -2652,16 +2654,26 @@ static int nvme_pci_enable(struct nvme_dev *dev)
 	struct pci_dev *pdev = to_pci_dev(dev->dev);
 	unsigned int flags = PCI_IRQ_ALL_TYPES;
 
-
 	if (pci_enable_device_mem(pdev))
 		return result;
 
 	pci_set_master(pdev);
 
+    {
+        // REMOVE
+        // NOTE: do some tests.
+        unsigned int *data = 0xffffffc040000000;
+        printk("%s: print data\n", __func__);
+        printk("print [%x]\n", *data);
+        printk("print data ok!\n");
+    }
+    printk("%s: step1 bar(%lx)\n", __func__, dev->bar);
 	if (readl(dev->bar + NVME_REG_CSTS) == -1) {
+    printk("%s: return ENODEV\n", __func__);
 		result = -ENODEV;
 		goto disable;
 	}
+    printk("%s: step2 bar(%lx)\n", __func__, dev->bar);
 
 	/*
 	 * Some devices and/or platforms don't advertise or work with INTx
@@ -2680,6 +2692,8 @@ static int nvme_pci_enable(struct nvme_dev *dev)
 				io_queue_depth);
 	dev->db_stride = 1 << NVME_CAP_STRIDE(dev->ctrl.cap);
 	dev->dbs = dev->bar + 4096;
+
+    printk("%s: step3 ...\n", __func__);
 
 	/*
 	 * Some Apple controllers require a non-standard SQE size.
@@ -2901,6 +2915,7 @@ static void nvme_reset_work(struct work_struct *work)
 		nvme_dev_disable(dev, false);
 	nvme_sync_queues(&dev->ctrl);
 
+    printk("%s: ...\n", __func__);
 	mutex_lock(&dev->shutdown_lock);
 	result = nvme_pci_enable(dev);
 	if (result)
@@ -3225,6 +3240,11 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	if (result)
 		goto out_uninit_ctrl;
 
+#if 0
+    printk("%s: step0 NVME_REG_CSTS(%d)\n",
+           __func__, readl(dev->bar + NVME_REG_CSTS));
+#endif
+
 	result = nvme_setup_prp_pools(dev);
 	if (result)
 		goto out_dev_unmap;
@@ -3235,10 +3255,12 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
 	dev_info(dev->ctrl.device, "pci function %s\n", dev_name(&pdev->dev));
 
+    printk("%s: step1\n", __func__);
 	result = nvme_pci_enable(dev);
 	if (result)
 		goto out_release_iod_mempool;
 
+    printk("%s: step2\n", __func__);
 	result = nvme_alloc_admin_tag_set(&dev->ctrl, &dev->admin_tagset,
 				&nvme_mq_admin_ops, sizeof(struct nvme_iod));
 	if (result)
@@ -3255,6 +3277,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 		goto out_disable;
 	}
 
+    printk("%s: step2\n", __func__);
 	result = nvme_init_ctrl_finish(&dev->ctrl, false);
 	if (result)
 		goto out_disable;
@@ -3292,6 +3315,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
 	pci_set_drvdata(pdev, dev);
 
+    printk("%s: step3 ...\n", __func__);
 	nvme_start_ctrl(&dev->ctrl);
 	nvme_put_ctrl(&dev->ctrl);
 	flush_work(&dev->ctrl.scan_work);

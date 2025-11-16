@@ -62,7 +62,11 @@ static void __irq_domain_publish(struct irq_domain *domain)
 
 static void irq_domain_free(struct irq_domain *domain)
 {
-    PANIC("");
+    fwnode_dev_initialized(domain->fwnode, false);
+    fwnode_handle_put(domain->fwnode);
+    if (domain->flags & IRQ_DOMAIN_NAME_ALLOCATED)
+        kfree(domain->name);
+    kfree(domain);
 }
 
 static void irq_domain_instantiate_descs(const struct irq_domain_info *info)
@@ -1094,4 +1098,70 @@ void irq_domain_deactivate_irq(struct irq_data *irq_data)
         __irq_domain_deactivate_irq(irq_data);
         irqd_clr_activated(irq_data);
     }
+}
+
+void irq_domain_update_bus_token(struct irq_domain *domain,
+                 enum irq_domain_bus_token bus_token)
+{
+    char *name;
+
+    if (domain->bus_token == bus_token)
+        return;
+
+    mutex_lock(&irq_domain_mutex);
+
+    domain->bus_token = bus_token;
+
+    name = kasprintf(GFP_KERNEL, "%s-%d", domain->name, bus_token);
+    if (!name) {
+        mutex_unlock(&irq_domain_mutex);
+        return;
+    }
+
+    debugfs_remove_domain_dir(domain);
+
+    if (domain->flags & IRQ_DOMAIN_NAME_ALLOCATED)
+        kfree(domain->name);
+    else
+        domain->flags |= IRQ_DOMAIN_NAME_ALLOCATED;
+
+    domain->name = name;
+    debugfs_add_domain_dir(domain);
+
+    mutex_unlock(&irq_domain_mutex);
+}
+
+/**
+ * irq_domain_remove() - Remove an irq domain.
+ * @domain: domain to remove
+ *
+ * This routine is used to remove an irq domain. The caller must ensure
+ * that all mappings within the domain have been disposed of prior to
+ * use, depending on the revmap type.
+ */
+void irq_domain_remove(struct irq_domain *domain)
+{
+    if (domain->exit)
+        domain->exit(domain);
+
+    mutex_lock(&irq_domain_mutex);
+    debugfs_remove_domain_dir(domain);
+
+    WARN_ON(!radix_tree_empty(&domain->revmap_tree));
+
+    list_del(&domain->link);
+
+    /*
+     * If the going away domain is the default one, reset it.
+     */
+    if (unlikely(irq_default_domain == domain))
+        irq_set_default_host(NULL);
+
+    mutex_unlock(&irq_domain_mutex);
+
+    if (domain->flags & IRQ_DOMAIN_FLAG_DESTROY_GC)
+        irq_domain_remove_generic_chips(domain);
+
+    pr_debug("Removed domain %s\n", domain->name);
+    irq_domain_free(domain);
 }

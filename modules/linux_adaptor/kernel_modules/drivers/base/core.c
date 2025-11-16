@@ -916,7 +916,7 @@ void bus_probe_device(struct device *dev)
  */
 void device_del(struct device *dev)
 {
-    PANIC("");
+    pr_err("%s: No impl.\n", __func__);
 }
 
 /**

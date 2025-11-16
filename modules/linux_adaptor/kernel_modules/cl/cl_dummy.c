@@ -46,12 +46,6 @@ bool __riscv_isa_extension_available(const unsigned long *isa_bitmap, unsigned i
     return false;
 }
 
-bool is_acpi_device_node(const struct fwnode_handle *fwnode)
-{
-    pr_notice("%s: No impl.", __func__);
-    return false;
-}
-
 bool is_software_node(const struct fwnode_handle *fwnode)
 {
     pr_notice("%s: No impl.", __func__);
@@ -676,13 +670,6 @@ notrace void touch_softlockup_watchdog(void)
     pr_notice("%s: No impl.", __func__);
 }
 
-bool acpi_driver_match_device(struct device *dev,
-                  const struct device_driver *drv)
-{
-    pr_notice("%s: No impl.", __func__);
-    return false;
-}
-
 /*
  * Returns:
  *  0 on success, an iommu was configured
@@ -752,12 +739,6 @@ int __pm_runtime_idle(struct device *dev, int rpmflags)
     return 0;
 }
 
-int acpi_reconfig_notifier_register(struct notifier_block *nb)
-{
-    pr_notice("%s: No impl.", __func__);
-    return 0;
-}
-
 void spi_nor_debugfs_register(struct spi_nor *nor)
 {
     pr_notice("%s: No impl.", __func__);
@@ -785,12 +766,6 @@ void acpi_gpiochip_add(struct gpio_chip *chip)
 void acpi_gpiochip_request_interrupts(struct gpio_chip *chip)
 {
     pr_notice("%s: No impl.", __func__);
-}
-
-struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus)
-{
-    pr_err("%s: No impl.", __func__);
-    return NULL;
 }
 
 bool pci_acpi_preserve_config(struct pci_host_bridge *host_bridge)
@@ -895,22 +870,10 @@ void __init dump_stack_set_arch_desc(const char *fmt, ...)
     pr_notice("%s: No impl.", __func__);
 }
 
-bool acpi_storage_d3(struct device *dev)
-{
-    pr_notice("%s: No impl.", __func__);
-    return false;
-}
-
 int dev_pm_qos_update_user_latency_tolerance(struct device *dev, s32 val)
 {
     pr_err("%s: No impl.", __func__);
     return 0;
-}
-
-pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
-{
-    pr_err("%s: No impl.", __func__);
-    return PCI_UNKNOWN;
 }
 
 enum support_mode {
@@ -1024,4 +987,44 @@ void blk_mq_debugfs_register_sched_hctx(struct request_queue *q,
                     struct blk_mq_hw_ctx *hctx)
 {
     pr_notice("%s: No impl.", __func__);
+}
+
+int sysfs_update_group(struct kobject *kobj,
+               const struct attribute_group *grp)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+void dev_pm_qos_hide_latency_tolerance(struct device *dev)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void usleep_range_state(unsigned long min, unsigned long max,
+                unsigned int state)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void device_set_wakeup_capable(struct device *dev, bool capable)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void msleep(unsigned int msecs)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+struct device_link *device_link_add(struct device *consumer,
+                    struct device *supplier, u32 flags)
+{
+    pr_err("%s: No impl.", __func__);
+    return NULL;
+}
+
+void pm_runtime_allow(struct device *dev)
+{
+    pr_err("%s: No impl.", __func__);
 }

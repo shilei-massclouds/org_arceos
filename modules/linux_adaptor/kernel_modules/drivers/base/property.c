@@ -348,3 +348,94 @@ fwnode_get_next_available_child_node(const struct fwnode_handle *fwnode,
 
     return next_child;
 }
+
+/**
+ * fwnode_property_match_string - find a string in an array and return index
+ * @fwnode: Firmware node to get the property of
+ * @propname: Name of the property holding the array
+ * @string: String to look for
+ *
+ * Find a given string in a string array and if it is found return the
+ * index back.
+ *
+ * Return: index, starting from %0, if the property was found (success),
+ *     %-EINVAL if given arguments are not valid,
+ *     %-ENODATA if the property does not have a value,
+ *     %-EPROTO if the property is not an array of strings,
+ *     %-ENXIO if no suitable firmware interface is present.
+ */
+int fwnode_property_match_string(const struct fwnode_handle *fwnode,
+    const char *propname, const char *string)
+{
+    const char **values;
+    int nval, ret;
+
+    nval = fwnode_property_string_array_count(fwnode, propname);
+    if (nval < 0)
+        return nval;
+
+    if (nval == 0)
+        return -ENODATA;
+
+    values = kcalloc(nval, sizeof(*values), GFP_KERNEL);
+    if (!values)
+        return -ENOMEM;
+
+    ret = fwnode_property_read_string_array(fwnode, propname, values, nval);
+    if (ret < 0)
+        goto out_free;
+
+    ret = match_string(values, nval, string);
+    if (ret < 0)
+        ret = -ENODATA;
+
+out_free:
+    kfree(values);
+    return ret;
+}
+
+/**
+ * fwnode_irq_get - Get IRQ directly from a fwnode
+ * @fwnode: Pointer to the firmware node
+ * @index:  Zero-based index of the IRQ
+ *
+ * Return: Linux IRQ number on success. Negative errno on failure.
+ */
+int fwnode_irq_get(const struct fwnode_handle *fwnode, unsigned int index)
+{
+    int ret;
+
+    ret = fwnode_call_int_op(fwnode, irq_get, index);
+    /* We treat mapping errors as invalid case */
+    if (ret == 0)
+        return -EINVAL;
+
+    return ret;
+}
+
+/**
+ * fwnode_irq_get_byname - Get IRQ from a fwnode using its name
+ * @fwnode: Pointer to the firmware node
+ * @name:   IRQ name
+ *
+ * Description:
+ * Find a match to the string @name in the 'interrupt-names' string array
+ * in _DSD for ACPI, or of_node for Device Tree. Then get the Linux IRQ
+ * number of the IRQ resource corresponding to the index of the matched
+ * string.
+ *
+ * Return: Linux IRQ number on success, or negative errno otherwise.
+ */
+int fwnode_irq_get_byname(const struct fwnode_handle *fwnode, const char *name)
+{
+    int index;
+
+    if (!name)
+        return -EINVAL;
+
+    index = fwnode_property_match_string(fwnode, "interrupt-names",  name);
+    if (index < 0)
+        return index;
+
+    return fwnode_irq_get(fwnode, index);
+}

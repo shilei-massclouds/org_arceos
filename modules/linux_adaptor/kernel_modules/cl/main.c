@@ -18,6 +18,8 @@
 //#include "block/blk.h"
 #include "adaptor.h"
 
+#define DP1000
+
 //#define TEST_BLOCK
 #define TEST_EXT4
 
@@ -62,7 +64,9 @@ int clinux_init(phys_addr_t dt_phys)
 
     //kmem_cache_init();
     pagecache_init();
+#ifndef DP1000
     early_trace_init();
+#endif
     sched_init();
     radix_tree_init();
     maple_tree_init();

@@ -105,3 +105,22 @@ void vunmap(const void *addr)
 #endif
     PANIC("");
 }
+
+/**
+ * vunmap_range - unmap kernel virtual addresses
+ * @addr: start of the VM area to unmap
+ * @end: end of the VM area to unmap (non-inclusive)
+ *
+ * Clears any present PTEs in the virtual address range, flushes TLBs and
+ * caches. Any subsequent access to the address before it has been re-mapped
+ * is a kernel bug.
+ */
+void vunmap_range(unsigned long addr, unsigned long end)
+{
+    pr_notice("%s: No impl.\n", __func__);
+#if 0
+    flush_cache_vunmap(addr, end);
+    vunmap_range_noflush(addr, end);
+    flush_tlb_kernel_range(addr, end);
+#endif
+}
