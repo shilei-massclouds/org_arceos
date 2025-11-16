@@ -384,7 +384,6 @@ static int __msi_domain_alloc_irqs(struct device *dev, struct irq_domain *domain
         }
         allocated++;
     }
-    PANIC("");
     return 0;
 }
 
@@ -585,6 +584,19 @@ static int msi_domain_ops_init(struct irq_domain *domain,
     return 0;
 }
 
+static void msi_check_level(struct irq_domain *domain, struct msi_msg *msg)
+{
+    struct msi_domain_info *info = domain->host_data;
+
+    /*
+     * If the MSI provider has messed with the second message and
+     * not advertized that it is level-capable, signal the breakage.
+     */
+    WARN_ON(!((info->flags & MSI_FLAG_LEVEL_CAPABLE) &&
+          (info->chip->flags & IRQCHIP_SUPPORTS_LEVEL_MSI)) &&
+        (msg[1].address_lo || msg[1].address_hi || msg[1].data));
+}
+
 static struct msi_domain_ops msi_domain_ops_default = {
     .get_hwirq      = msi_domain_ops_get_hwirq,
     .msi_init       = msi_domain_ops_init,
@@ -595,7 +607,33 @@ static struct msi_domain_ops msi_domain_ops_default = {
 static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
                 unsigned int nr_irqs, void *arg)
 {
-    PANIC("");
+    struct msi_domain_info *info = domain->host_data;
+    struct msi_domain_ops *ops = info->ops;
+    irq_hw_number_t hwirq = ops->get_hwirq(info, arg);
+    int i, ret;
+
+    if (irq_find_mapping(domain, hwirq) > 0)
+        return -EEXIST;
+
+    if (domain->parent) {
+        ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
+        if (ret < 0)
+            return ret;
+    }
+
+    for (i = 0; i < nr_irqs; i++) {
+        ret = ops->msi_init(domain, info, virq + i, hwirq + i, arg);
+        if (ret < 0) {
+            if (ops->msi_free) {
+                for (i--; i >= 0; i--)
+                    ops->msi_free(domain, info, virq + i);
+            }
+            irq_domain_free_irqs_top(domain, virq, nr_irqs);
+            return ret;
+        }
+    }
+
+    return 0;
 }
 
 static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
@@ -604,10 +642,21 @@ static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
     PANIC("");
 }
 
+static inline void irq_chip_write_msi_msg(struct irq_data *data,
+                      struct msi_msg *msg)
+{
+    data->chip->irq_write_msi_msg(data, msg);
+}
+
 static int msi_domain_activate(struct irq_domain *domain,
                    struct irq_data *irq_data, bool early)
 {
-    PANIC("");
+    struct msi_msg msg[2] = { [1] = { }, };
+
+    BUG_ON(irq_chip_compose_msi_msg(irq_data, msg));
+    msi_check_level(irq_data->domain, msg);
+    irq_chip_write_msi_msg(irq_data, msg);
+    return 0;
 }
 
 static void msi_domain_deactivate(struct irq_domain *domain,
@@ -708,25 +757,6 @@ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
                      struct irq_domain *parent)
 {
     return __msi_create_irq_domain(fwnode, info, 0, parent);
-}
-
-static inline void irq_chip_write_msi_msg(struct irq_data *data,
-                      struct msi_msg *msg)
-{
-    data->chip->irq_write_msi_msg(data, msg);
-}
-
-static void msi_check_level(struct irq_domain *domain, struct msi_msg *msg)
-{
-    struct msi_domain_info *info = domain->host_data;
-
-    /*
-     * If the MSI provider has messed with the second message and
-     * not advertized that it is level-capable, signal the breakage.
-     */
-    WARN_ON(!((info->flags & MSI_FLAG_LEVEL_CAPABLE) &&
-          (info->chip->flags & IRQCHIP_SUPPORTS_LEVEL_MSI)) &&
-        (msg[1].address_lo || msg[1].address_hi || msg[1].data));
 }
 
 /**
@@ -1278,4 +1308,50 @@ void msi_domain_free_irqs_range_locked(struct device *dev, unsigned int domid,
         .last   = last,
     };
     msi_domain_free_locked(dev, &ctrl);
+}
+
+/**
+ * msi_domain_get_virq - Lookup the Linux interrupt number for a MSI index on a interrupt domain
+ * @dev:    Device to operate on
+ * @domid:  Domain ID of the interrupt domain associated to the device
+ * @index:  MSI interrupt index to look for (0-based)
+ *
+ * Return: The Linux interrupt number on success (> 0), 0 if not found
+ */
+unsigned int msi_domain_get_virq(struct device *dev, unsigned int domid, unsigned int index)
+{
+    struct msi_desc *desc;
+    unsigned int ret = 0;
+    bool pcimsi = false;
+    struct xarray *xa;
+
+    if (!dev->msi.data)
+        return 0;
+
+    if (WARN_ON_ONCE(index > MSI_MAX_INDEX || domid >= MSI_MAX_DEVICE_IRQDOMAINS))
+        return 0;
+
+    /* This check is only valid for the PCI default MSI domain */
+    if (dev_is_pci(dev) && domid == MSI_DEFAULT_DOMAIN)
+        pcimsi = to_pci_dev(dev)->msi_enabled;
+
+    msi_lock_descs(dev);
+    xa = &dev->msi.data->__domains[domid].store;
+    desc = xa_load(xa, pcimsi ? 0 : index);
+    if (desc && desc->irq) {
+        /*
+         * PCI-MSI has only one descriptor for multiple interrupts.
+         * PCI-MSIX and platform MSI use a descriptor per
+         * interrupt.
+         */
+        if (pcimsi) {
+            if (index < desc->nvec_used)
+                ret = desc->irq + index;
+        } else {
+            ret = desc->irq;
+        }
+    }
+
+    msi_unlock_descs(dev);
+    return ret;
 }

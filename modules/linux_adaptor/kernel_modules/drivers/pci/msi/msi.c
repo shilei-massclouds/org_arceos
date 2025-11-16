@@ -503,9 +503,60 @@ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
     return to_pci_dev(desc->dev);
 }
 
+static inline void pci_write_msg_msix(struct msi_desc *desc, struct msi_msg *msg)
+{
+    void __iomem *base = pci_msix_desc_addr(desc);
+    u32 ctrl = desc->pci.msix_ctrl;
+    bool unmasked = !(ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT);
+
+    if (desc->pci.msi_attrib.is_virtual)
+        return;
+    /*
+     * The specification mandates that the entry is masked
+     * when the message is modified:
+     *
+     * "If software changes the Address or Data value of an
+     * entry while the entry is unmasked, the result is
+     * undefined."
+     */
+    if (unmasked)
+        pci_msix_write_vector_ctrl(desc, ctrl | PCI_MSIX_ENTRY_CTRL_MASKBIT);
+
+    writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
+    writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
+    writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
+
+    if (unmasked)
+        pci_msix_write_vector_ctrl(desc, ctrl);
+
+    /* Ensure that the writes are visible in the device */
+    readl(base + PCI_MSIX_ENTRY_DATA);
+}
+
+static inline void pci_write_msg_msi(struct pci_dev *dev, struct msi_desc *desc,
+                     struct msi_msg *msg)
+{
+    int pos = dev->msi_cap;
+    u16 msgctl;
+
+    pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
+    msgctl &= ~PCI_MSI_FLAGS_QSIZE;
+    msgctl |= FIELD_PREP(PCI_MSI_FLAGS_QSIZE, desc->pci.msi_attrib.multiple);
+    pci_write_config_word(dev, pos + PCI_MSI_FLAGS, msgctl);
+
+    pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_LO, msg->address_lo);
+    if (desc->pci.msi_attrib.is_64) {
+        pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,  msg->address_hi);
+        pci_write_config_word(dev, pos + PCI_MSI_DATA_64, msg->data);
+    } else {
+        pci_write_config_word(dev, pos + PCI_MSI_DATA_32, msg->data);
+    }
+    /* Ensure that the writes are visible in the device */
+    pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
+}
+
 void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
 {
-#if 0
     struct pci_dev *dev = msi_desc_to_pci_dev(entry);
 
     if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
@@ -520,8 +571,6 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
 
     if (entry->write_msi_msg)
         entry->write_msi_msg(entry, entry->write_msi_msg_data);
-#endif
-    PANIC("");
 }
 
 /**
@@ -573,4 +622,46 @@ void pci_free_msi_irqs(struct pci_dev *dev)
         iounmap(dev->msix_base);
         dev->msix_base = NULL;
     }
+}
+
+/**
+ * pci_msi_mask_irq - Generic IRQ chip callback to mask PCI/MSI interrupts
+ * @data:   pointer to irqdata associated to that interrupt
+ */
+void pci_msi_mask_irq(struct irq_data *data)
+{
+    struct msi_desc *desc = irq_data_get_msi_desc(data);
+
+    __pci_msi_mask_desc(desc, BIT(data->irq - desc->irq));
+}
+
+/**
+ * pci_msi_unmask_irq - Generic IRQ chip callback to unmask PCI/MSI interrupts
+ * @data:   pointer to irqdata associated to that interrupt
+ */
+void pci_msi_unmask_irq(struct irq_data *data)
+{
+    struct msi_desc *desc = irq_data_get_msi_desc(data);
+
+    __pci_msi_unmask_desc(desc, BIT(data->irq - desc->irq));
+}
+
+/*
+ * Helper functions for mask/unmask and MSI message handling
+ */
+
+void pci_msi_update_mask(struct msi_desc *desc, u32 clear, u32 set)
+{
+    raw_spinlock_t *lock = &to_pci_dev(desc->dev)->msi_lock;
+    unsigned long flags;
+
+    if (!desc->pci.msi_attrib.can_mask)
+        return;
+
+    raw_spin_lock_irqsave(lock, flags);
+    desc->pci.msi_mask &= ~clear;
+    desc->pci.msi_mask |= set;
+    pci_write_config_dword(msi_desc_to_pci_dev(desc), desc->pci.mask_pos,
+                   desc->pci.msi_mask);
+    raw_spin_unlock_irqrestore(lock, flags);
 }

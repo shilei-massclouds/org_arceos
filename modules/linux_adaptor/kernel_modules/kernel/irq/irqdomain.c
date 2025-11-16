@@ -1257,3 +1257,63 @@ void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs)
     irq_domain_free_irq_data(virq, nr_irqs);
     irq_free_descs(virq, nr_irqs);
 }
+
+/**
+ * __irq_domain_alloc_irqs - Allocate IRQs from domain
+ * @domain: domain to allocate from
+ * @irq_base:   allocate specified IRQ number if irq_base >= 0
+ * @nr_irqs:    number of IRQs to allocate
+ * @node:   NUMA node id for memory allocation
+ * @arg:    domain specific argument
+ * @realloc:    IRQ descriptors have already been allocated if true
+ * @affinity:   Optional irq affinity mask for multiqueue devices
+ *
+ * Allocate IRQ numbers and initialized all data structures to support
+ * hierarchy IRQ domains.
+ * Parameter @realloc is mainly to support legacy IRQs.
+ * Returns error code or allocated IRQ number
+ *
+ * The whole process to setup an IRQ has been split into two steps.
+ * The first step, __irq_domain_alloc_irqs(), is to allocate IRQ
+ * descriptor and required hardware resources. The second step,
+ * irq_domain_activate_irq(), is to program the hardware with preallocated
+ * resources. In this way, it's easier to rollback when failing to
+ * allocate resources.
+ */
+int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
+                unsigned int nr_irqs, int node, void *arg,
+                bool realloc, const struct irq_affinity_desc *affinity)
+{
+    int ret;
+
+    if (domain == NULL) {
+        domain = irq_default_domain;
+        if (WARN(!domain, "domain is NULL; cannot allocate IRQ\n"))
+            return -EINVAL;
+    }
+
+    mutex_lock(&domain->root->mutex);
+    ret = irq_domain_alloc_irqs_locked(domain, irq_base, nr_irqs, node, arg,
+                       realloc, affinity);
+    mutex_unlock(&domain->root->mutex);
+
+    return ret;
+}
+
+/**
+ * irq_domain_alloc_irqs_parent - Allocate interrupts from parent domain
+ * @domain: Domain below which interrupts must be allocated
+ * @irq_base:   Base IRQ number
+ * @nr_irqs:    Number of IRQs to allocate
+ * @arg:    Allocation data (arch/domain specific)
+ */
+int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
+                 unsigned int irq_base, unsigned int nr_irqs,
+                 void *arg)
+{
+    if (!domain->parent)
+        return -ENOSYS;
+
+    return irq_domain_alloc_irqs_hierarchy(domain->parent, irq_base,
+                           nr_irqs, arg);
+}

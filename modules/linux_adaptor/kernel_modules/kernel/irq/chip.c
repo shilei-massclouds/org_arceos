@@ -603,3 +603,13 @@ int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
     irq_put_desc_unlock(desc, flags);
     return 0;
 }
+
+/**
+ * irq_chip_unmask_parent - Unmask the parent interrupt
+ * @data:   Pointer to interrupt specific data
+ */
+void irq_chip_unmask_parent(struct irq_data *data)
+{
+    data = data->parent_data;
+    data->chip->irq_unmask(data);
+}
