@@ -1165,3 +1165,95 @@ void irq_domain_remove(struct irq_domain *domain)
     pr_debug("Removed domain %s\n", domain->name);
     irq_domain_free(domain);
 }
+
+/**
+ * irq_domain_free_irqs_top - Clear handler and handler data, clear irqdata and free parent
+ * @domain: Interrupt domain to match
+ * @virq:   IRQ number to start with
+ * @nr_irqs:    The number of irqs to free
+ */
+void irq_domain_free_irqs_top(struct irq_domain *domain, unsigned int virq,
+                  unsigned int nr_irqs)
+{
+    int i;
+
+    for (i = 0; i < nr_irqs; i++) {
+        irq_set_handler_data(virq + i, NULL);
+        irq_set_handler(virq + i, NULL);
+    }
+    irq_domain_free_irqs_common(domain, virq, nr_irqs);
+}
+
+static void irq_domain_clear_mapping(struct irq_domain *domain,
+                     irq_hw_number_t hwirq)
+{
+    lockdep_assert_held(&domain->root->mutex);
+
+    if (irq_domain_is_nomap(domain))
+        return;
+
+    if (hwirq < domain->revmap_size)
+        rcu_assign_pointer(domain->revmap[hwirq], NULL);
+    else
+        radix_tree_delete(&domain->revmap_tree, hwirq);
+}
+
+static void irq_domain_remove_irq(int virq)
+{
+    struct irq_data *data;
+
+    irq_set_status_flags(virq, IRQ_NOREQUEST);
+    irq_set_chip_and_handler(virq, NULL, NULL);
+    synchronize_irq(virq);
+    smp_mb();
+
+    for (data = irq_get_irq_data(virq); data; data = data->parent_data) {
+        struct irq_domain *domain = data->domain;
+        irq_hw_number_t hwirq = data->hwirq;
+
+        domain->mapcount--;
+        irq_domain_clear_mapping(domain, hwirq);
+    }
+}
+
+static void irq_domain_free_irqs_hierarchy(struct irq_domain *domain,
+                       unsigned int irq_base,
+                       unsigned int nr_irqs)
+{
+    unsigned int i;
+
+    if (!domain->ops->free)
+        return;
+
+    for (i = 0; i < nr_irqs; i++) {
+        if (irq_domain_get_irq_data(domain, irq_base + i))
+            domain->ops->free(domain, irq_base + i, 1);
+    }
+}
+
+/**
+ * irq_domain_free_irqs - Free IRQ number and associated data structures
+ * @virq:   base IRQ number
+ * @nr_irqs:    number of IRQs to free
+ */
+void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs)
+{
+    struct irq_data *data = irq_get_irq_data(virq);
+    struct irq_domain *domain;
+    int i;
+
+    if (WARN(!data || !data->domain || !data->domain->ops->free,
+         "NULL pointer, cannot free irq\n"))
+        return;
+
+    domain = data->domain;
+
+    mutex_lock(&domain->root->mutex);
+    for (i = 0; i < nr_irqs; i++)
+        irq_domain_remove_irq(virq + i);
+    irq_domain_free_irqs_hierarchy(domain, virq, nr_irqs);
+    mutex_unlock(&domain->root->mutex);
+
+    irq_domain_free_irq_data(virq, nr_irqs);
+    irq_free_descs(virq, nr_irqs);
+}

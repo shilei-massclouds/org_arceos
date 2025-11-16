@@ -44,7 +44,6 @@ CL_MINE(file_path)
 
 // plic
 CL_MINE(disable_percpu_irq)
-CL_MINE(irq_domain_free_irqs_top)
 
 CL_MINE(acpi_dev_clear_dependencies)
 CL_MINE(acpi_disabled)
@@ -601,7 +600,6 @@ CL_MINE(acpi_gpiochip_remove)
 CL_MINE(acpi_gpio_count)
 CL_MINE(device_match_fwnode)
 CL_MINE(irq_dispose_mapping)
-CL_MINE(__irq_domain_alloc_irqs)
 CL_MINE(irq_domain_alloc_irqs_parent)
 CL_MINE(irq_domain_create_simple)
 CL_MINE(irq_domain_free_irqs_common)

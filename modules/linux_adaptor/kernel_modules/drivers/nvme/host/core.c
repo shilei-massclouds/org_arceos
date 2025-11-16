@@ -1111,6 +1111,7 @@ int nvme_execute_rq(struct request *rq, bool at_head)
 {
 	blk_status_t status;
 
+    printk("%s: req_op(%u)\n", __func__, req_op(rq));
 	status = blk_execute_rq(rq, at_head);
 	if (nvme_req(rq)->flags & NVME_REQ_CANCELLED)
 		return -EINTR;
@@ -1154,6 +1155,7 @@ int __nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
 			goto out;
 	}
 
+    printk("%s: step0\n", __func__);
 	ret = nvme_execute_rq(req, flags & NVME_SUBMIT_AT_HEAD);
 	if (result && ret >= 0)
 		*result = nvme_req(req)->result;
@@ -3295,12 +3297,14 @@ static int nvme_init_identify(struct nvme_ctrl *ctrl)
 	bool prev_apst_enabled;
 	int ret;
 
+    printk("%s: step0\n", __func__);
 	ret = nvme_identify_ctrl(ctrl, &id);
 	if (ret) {
 		dev_err(ctrl->device, "Identify Controller failed (%d)\n", ret);
 		return -EIO;
 	}
 
+    printk("%s: step1\n", __func__);
 	if (!(ctrl->ops->flags & NVME_F_FABRICS))
 		ctrl->cntlid = le16_to_cpu(id->cntlid);
 
@@ -3331,6 +3335,7 @@ static int nvme_init_identify(struct nvme_ctrl *ctrl)
 	memcpy(ctrl->subsys->firmware_rev, id->fr,
 	       sizeof(ctrl->subsys->firmware_rev));
 
+    printk("%s: step2\n", __func__);
 	if (force_apst && (ctrl->quirks & NVME_QUIRK_NO_DEEPEST_PS)) {
 		dev_warn(ctrl->device, "forcibly allowing all power states due to nvme_core.force_apst -- use at your own risk\n");
 		ctrl->quirks &= ~NVME_QUIRK_NO_DEEPEST_PS;
@@ -3362,6 +3367,7 @@ static int nvme_init_identify(struct nvme_ctrl *ctrl)
 	if (ret)
 		goto out_free;
 
+    printk("%s: step3\n", __func__);
 	ctrl->sgls = le32_to_cpu(id->sgls);
 	ctrl->kas = le16_to_cpu(id->kas);
 	ctrl->max_namespaces = le32_to_cpu(id->mnan);
@@ -3449,14 +3455,18 @@ int nvme_init_ctrl_finish(struct nvme_ctrl *ctrl, bool was_suspended)
 	if (ctrl->vs >= NVME_VS(1, 1, 0))
 		ctrl->subsystem = NVME_CAP_NSSRC(ctrl->cap);
 
+    printk("%s: step0\n", __func__);
 	ret = nvme_init_identify(ctrl);
 	if (ret)
 		return ret;
 
+    printk("%s: step1\n", __func__);
 	ret = nvme_configure_apst(ctrl);
 	if (ret < 0)
 		return ret;
 
+    printk("%s: step2\n", __func__);
+    printk("%s: step3\n", __func__);
 	ret = nvme_configure_timestamp(ctrl);
 	if (ret < 0)
 		return ret;

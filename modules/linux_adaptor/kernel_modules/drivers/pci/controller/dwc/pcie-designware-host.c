@@ -578,7 +578,6 @@ static void __iomem *dw_pcie_other_conf_map_bus(struct pci_bus *bus,
 	int type, ret;
 	u32 busdev;
 
-    //printk("%s: devfn(%u)\n", __func__, devfn);
 	/*
 	 * Checking whether the link is up here is a last line of defense
 	 * against platforms that forward errors on the system bus as
@@ -603,7 +602,6 @@ static void __iomem *dw_pcie_other_conf_map_bus(struct pci_bus *bus,
 	if (ret)
 		return NULL;
 
-    //printk("%s: base(%lx) where(%u)\n", __func__, pp->va_cfg0_base, where);
 	return pp->va_cfg0_base + where;
 }
 
@@ -662,7 +660,6 @@ void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn, 
 	struct dw_pcie_rp *pp = bus->sysdata;
 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
 
-    //printk("%s: PCI_SLOT(devfn) (%u)\n", __func__, PCI_SLOT(devfn));
 	if (PCI_SLOT(devfn) > 0)
 		return NULL;
 
@@ -751,34 +748,14 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
 		if (pci->num_ob_windows <= ++i)
 			break;
 
-    printk("%s: +++++++++++++++++ POSITION step1 [%d]\n", __func__, i);
-
 		ret = dw_pcie_prog_outbound_atu_dp1000(pci, entry, &i);
 		if (ret) {
 			dev_err(pci->dev, "Failed to set MEM range %pr\n",
 				entry->res);
 			return ret;
 		}
-    printk("%s: +++++++++++++++++ POSITION step2 [%d]\n", __func__, i);
-    {
-        // REMOVE
-        // NOTE: do some tests.
-        unsigned int *data = 0xffffffc040000000;
-        printk("%s: stepXXX print data\n", __func__);
-        printk("print [%x]\n", *data);
-        printk("print data ok!\n");
-    }
 	}
 
-    printk("%s: +++++++++++++++++ POSITION step1.1\n", __func__);
-    {
-        // REMOVE
-        // NOTE: do some tests.
-        unsigned int *data = 0xffffffc040000000;
-        printk("%s: stepXXX print data\n", __func__);
-        printk("print [%x]\n", *data);
-        printk("print data ok!\n");
-    }
 	if (pp->io_size) {
 		if (pci->num_ob_windows > ++i) {
 			ret = dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_IO,

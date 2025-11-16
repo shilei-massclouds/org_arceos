@@ -1,5 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 1992, 1998-2006 Linus Torvalds, Ingo Molnar
+ * Copyright (C) 2005-2006, Thomas Gleixner, Russell King
+ *
+ * This file contains the core interrupt handling code, for irq-chip based
+ * architectures. Detailed information is available in
+ * Documentation/core-api/genericirq.rst
+ */
+
 #include <linux/irq.h>
+#include <linux/msi.h>
+#include <linux/module.h>
+#include <linux/interrupt.h>
+#include <linux/kernel_stat.h>
 #include <linux/irqdomain.h>
+
+#include <trace/events/irq.h>
 
 #include "internals.h"
 #include "adaptor.h"
@@ -563,4 +579,27 @@ irq_set_chained_handler_and_data(unsigned int irq, irq_flow_handler_t handle,
     __irq_do_set_handler(desc, handle, 1, NULL);
 
     irq_put_desc_busunlock(desc, flags);
+}
+
+/**
+ *  irq_set_msi_desc_off - set MSI descriptor data for an irq at offset
+ *  @irq_base:  Interrupt number base
+ *  @irq_offset:    Interrupt number offset
+ *  @entry:     Pointer to MSI descriptor data
+ *
+ *  Set the MSI descriptor entry for an irq at offset
+ */
+int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
+             struct msi_desc *entry)
+{
+    unsigned long flags;
+    struct irq_desc *desc = irq_get_desc_lock(irq_base + irq_offset, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
+
+    if (!desc)
+        return -EINVAL;
+    desc->irq_common_data.msi_desc = entry;
+    if (entry && !irq_offset)
+        entry->irq = irq_base;
+    irq_put_desc_unlock(desc, flags);
+    return 0;
 }

@@ -113,23 +113,12 @@ static int ultrarisc_pcie_probe(struct platform_device *pdev)
 	pp->num_vectors = MAX_MSI_IRQS;
 	pp->ops = &ultrarisc_pcie_host_ops;
 
-    printk("%s: step2\n", __func__);
 	ret = dw_pcie_host_init(pp);
 	if (ret) {
 		dev_err(dev, "Failed to initialize host\n");
 		return ret;
 	}
 
-    {
-        // REMOVE
-        // NOTE: do some tests.
-        unsigned int *data = 0xffffffc040000000;
-        printk("%s: step33 print data [%s]\n", __func__, pdev->name);
-        printk("print [%x]\n", *data);
-        printk("print data ok!\n");
-    }
-
-    printk("%s: step3\n", __func__);
 	return 0;
 }
 

@@ -785,16 +785,6 @@ int pci_acpi_program_hp_params(struct pci_dev *dev)
     return -ENODEV;
 }
 
-void pci_msi_init(struct pci_dev *dev)
-{
-    pr_err("%s: No impl.", __func__);
-}
-
-void pci_msix_init(struct pci_dev *dev)
-{
-    pr_err("%s: No impl.", __func__);
-}
-
 void pm_runtime_forbid(struct device *dev)
 {
     pr_err("%s: No impl.", __func__);
@@ -815,12 +805,6 @@ int pci_dev_acpi_reset(struct pci_dev *dev, bool probe)
 {
     pr_err("%s: No impl.", __func__);
     return 0;
-}
-
-struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
-{
-    pr_err("%s: No impl.", __func__);
-    return NULL;
 }
 
 int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
@@ -880,13 +864,6 @@ enum support_mode {
     ALLOW_LEGACY,
     DENY_LEGACY,
 };
-
-bool pci_msi_domain_supports(struct pci_dev *pdev, unsigned int feature_mask,
-                 enum support_mode mode)
-{
-    pr_err("%s: No impl.", __func__);
-    return false;
-}
 
 int sysfs_create_link(struct kobject *kobj, struct kobject *target,
               const char *name)

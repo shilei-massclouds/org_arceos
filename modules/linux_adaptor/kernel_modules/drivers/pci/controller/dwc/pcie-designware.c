@@ -506,21 +506,7 @@ static int __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
 		val = dw_pcie_enable_ecrc(val);
 	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_REGION_CTRL1, val);
 
-    if (cpu_addr == 0x40000000) {
-        printk("%s: START [%d] (%lx,%lx)\n", __func__, index, cpu_addr, pci_addr);
-    }
 	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_REGION_CTRL2, PCIE_ATU_ENABLE);
-    if (cpu_addr == 0x40000000) {
-        // REMOVE
-        unsigned int *data = 0xffffffc04000001C;
-        printk("print data\n");
-        printk("print [%x]\n", *data);
-        printk("%s: END [%d] (%lx,%lx)\n", __func__, index, cpu_addr, pci_addr);
-#if 0
-        char *p = 0;
-        *p = 0;
-#endif
-    }
 
 	/*
 	 * Make sure ATU enable takes effect before any subsequent config
@@ -542,7 +528,6 @@ static int __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
 int dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
 			      u64 cpu_addr, u64 pci_addr, u64 size)
 {
-    printk("%s: ...\n", __func__);
 	return __dw_pcie_prog_outbound_atu(pci, 0, index, type,
 					   cpu_addr, pci_addr, size);
 }
@@ -551,7 +536,6 @@ int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
 				 int type, u64 cpu_addr, u64 pci_addr,
 				 u64 size)
 {
-    printk("%s: ...\n", __func__);
 	return __dw_pcie_prog_outbound_atu(pci, func_no, index, type,
 					   cpu_addr, pci_addr, size);
 }

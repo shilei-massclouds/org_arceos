@@ -50,6 +50,7 @@ static enum rq_end_io_ret blk_end_sync_rq(struct request *rq, blk_status_t ret)
 {
     struct blk_rq_wait *wait = rq->end_io_data;
 
+    printk("%s: step1\n", __func__);
     wait->ret = ret;
     complete(&wait->done);
     return RQ_END_IO_NONE;
@@ -3208,10 +3209,12 @@ blk_status_t blk_execute_rq(struct request *rq, bool at_head)
     blk_mq_insert_request(rq, at_head ? BLK_MQ_INSERT_AT_HEAD : 0);
     blk_mq_run_hw_queue(hctx, false);
 
+    printk("%s: step1 poll(%d)\n", __func__, blk_rq_is_poll(rq));
     if (blk_rq_is_poll(rq))
         blk_rq_poll_completion(rq, &wait.done);
     else
         blk_wait_io(&wait.done);
+    printk("%s: step2\n", __func__);
 
     return wait.ret;
 }
