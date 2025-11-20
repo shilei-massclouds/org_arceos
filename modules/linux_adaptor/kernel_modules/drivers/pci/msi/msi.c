@@ -392,6 +392,53 @@ int __pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries, int
 	}
 }
 
+static void pci_msi_set_enable(struct pci_dev *dev, int enable)
+{
+    u16 control;
+
+    pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+    control &= ~PCI_MSI_FLAGS_ENABLE;
+    if (enable)
+        control |= PCI_MSI_FLAGS_ENABLE;
+    pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+}
+
+static int msi_setup_msi_desc(struct pci_dev *dev, int nvec,
+                  struct irq_affinity_desc *masks)
+{
+    struct msi_desc desc;
+    u16 control;
+
+    /* MSI Entry Initialization */
+    memset(&desc, 0, sizeof(desc));
+
+    pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+    /* Lies, damned lies, and MSIs */
+    if (dev->dev_flags & PCI_DEV_FLAGS_HAS_MSI_MASKING)
+        control |= PCI_MSI_FLAGS_MASKBIT;
+    if (pci_msi_domain_supports(dev, MSI_FLAG_NO_MASK, DENY_LEGACY))
+        control &= ~PCI_MSI_FLAGS_MASKBIT;
+
+    desc.nvec_used          = nvec;
+    desc.pci.msi_attrib.is_64   = !!(control & PCI_MSI_FLAGS_64BIT);
+    desc.pci.msi_attrib.can_mask    = !!(control & PCI_MSI_FLAGS_MASKBIT);
+    desc.pci.msi_attrib.default_irq = dev->irq;
+    desc.pci.msi_attrib.multi_cap   = FIELD_GET(PCI_MSI_FLAGS_QMASK, control);
+    desc.pci.msi_attrib.multiple    = ilog2(__roundup_pow_of_two(nvec));
+    desc.affinity           = masks;
+
+    if (control & PCI_MSI_FLAGS_64BIT)
+        desc.pci.mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+    else
+        desc.pci.mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
+
+    /* Save the initial mask status */
+    if (desc.pci.msi_attrib.can_mask)
+        pci_read_config_dword(dev, desc.pci.mask_pos, &desc.pci.msi_mask);
+
+    return msi_insert_msi_desc(&dev->dev, &desc);
+}
+
 /**
  * msi_capability_init - configure device's MSI capability structure
  * @dev: pointer to the pci_dev data structure of MSI device function
@@ -407,7 +454,65 @@ int __pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries, int
 static int msi_capability_init(struct pci_dev *dev, int nvec,
                    struct irq_affinity *affd)
 {
-    PANIC("");
+    struct irq_affinity_desc *masks = NULL;
+    struct msi_desc *entry, desc;
+    int ret;
+
+    /* Reject multi-MSI early on irq domain enabled architectures */
+    if (nvec > 1 && !pci_msi_domain_supports(dev, MSI_FLAG_MULTI_PCI_MSI, ALLOW_LEGACY))
+        return 1;
+
+    /*
+     * Disable MSI during setup in the hardware, but mark it enabled
+     * so that setup code can evaluate it.
+     */
+    pci_msi_set_enable(dev, 0);
+    dev->msi_enabled = 1;
+
+    if (affd)
+        masks = irq_create_affinity_masks(nvec, affd);
+
+    msi_lock_descs(&dev->dev);
+    ret = msi_setup_msi_desc(dev, nvec, masks);
+    if (ret)
+        goto fail;
+
+    /* All MSIs are unmasked by default; mask them all */
+    entry = msi_first_desc(&dev->dev, MSI_DESC_ALL);
+    pci_msi_mask(entry, msi_multi_mask(entry));
+    /*
+     * Copy the MSI descriptor for the error path because
+     * pci_msi_setup_msi_irqs() will free it for the hierarchical
+     * interrupt domain case.
+     */
+    memcpy(&desc, entry, sizeof(desc));
+
+    /* Configure MSI capability structure */
+    ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
+    if (ret)
+        goto err;
+
+    ret = msi_verify_entries(dev);
+    if (ret)
+        goto err;
+
+    /* Set MSI enabled bits */
+    pci_intx_for_msi(dev, 0);
+    pci_msi_set_enable(dev, 1);
+
+    pcibios_free_irq(dev);
+    dev->irq = entry->irq;
+    goto unlock;
+
+err:
+    pci_msi_unmask(&desc, msi_multi_mask(&desc));
+    pci_free_msi_irqs(dev);
+fail:
+    dev->msi_enabled = 0;
+unlock:
+    msi_unlock_descs(&dev->dev);
+    kfree(masks);
+    return ret;
 }
 
 /**
@@ -493,7 +598,6 @@ int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
 
 		nvec = rc;
 	}
-    PANIC("");
 }
 
 /* Misc. infrastructure */
