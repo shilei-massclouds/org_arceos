@@ -55,24 +55,15 @@ static void __dma_direct_free_pages(struct device *dev, struct page *page,
     dma_free_contiguous(dev, page, size);
 }
 
-static void *dma_direct_alloc_no_mapping(struct device *dev, size_t size,
-        dma_addr_t *dma_handle, gfp_t gfp)
+static struct page *dma_direct_alloc_swiotlb(struct device *dev, size_t size)
 {
-    struct page *page;
+    struct page *page = swiotlb_alloc(dev, size);
 
-#if 0
-    page = __dma_direct_alloc_pages(dev, size, gfp & ~__GFP_ZERO, true);
-    if (!page)
+    if (page && !dma_coherent_ok(dev, page_to_phys(page), size)) {
+        swiotlb_free(dev, page, size);
         return NULL;
+    }
 
-    /* remove any dirty cache lines on the kernel alias */
-    if (!PageHighMem(page))
-        arch_dma_prep_coherent(page, size);
-
-    /* return the page pointer as the opaque cookie */
-    *dma_handle = phys_to_dma_direct(dev, page_to_phys(page));
-#endif
-    PANIC("");
     return page;
 }
 
@@ -96,52 +87,6 @@ static gfp_t dma_direct_optimal_gfp_mask(struct device *dev, u64 *phys_limit)
     if (*phys_limit <= DMA_BIT_MASK(32))
         return GFP_DMA32;
     return 0;
-}
-
-static int dma_set_decrypted(struct device *dev, void *vaddr, size_t size)
-{
-    if (!force_dma_unencrypted(dev))
-        return 0;
-    return set_memory_decrypted((unsigned long)vaddr, PFN_UP(size));
-}
-
-/*
- * Check if a potentially blocking operations needs to dip into the atomic
- * pools for the given device/gfp.
- */
-static bool dma_direct_use_pool(struct device *dev, gfp_t gfp)
-{
-    return !gfpflags_allow_blocking(gfp) && !is_swiotlb_for_alloc(dev);
-}
-
-static void *dma_direct_alloc_from_pool(struct device *dev, size_t size,
-        dma_addr_t *dma_handle, gfp_t gfp)
-{
-    struct page *page;
-    u64 phys_limit;
-    void *ret;
-
-    if (WARN_ON_ONCE(!IS_ENABLED(CONFIG_DMA_COHERENT_POOL)))
-        return NULL;
-
-    gfp |= dma_direct_optimal_gfp_mask(dev, &phys_limit);
-    page = dma_alloc_from_pool(dev, size, &ret, gfp, dma_coherent_ok);
-    if (!page)
-        return NULL;
-    *dma_handle = phys_to_dma_direct(dev, page_to_phys(page));
-    return ret;
-}
-
-static struct page *dma_direct_alloc_swiotlb(struct device *dev, size_t size)
-{
-    struct page *page = swiotlb_alloc(dev, size);
-
-    if (page && !dma_coherent_ok(dev, page_to_phys(page), size)) {
-        swiotlb_free(dev, page, size);
-        return NULL;
-    }
-
-    return page;
 }
 
 static struct page *__dma_direct_alloc_pages(struct device *dev, size_t size,
@@ -186,6 +131,58 @@ again:
     }
 
     return page;
+}
+
+static void *dma_direct_alloc_no_mapping(struct device *dev, size_t size,
+        dma_addr_t *dma_handle, gfp_t gfp)
+{
+    struct page *page;
+
+    page = __dma_direct_alloc_pages(dev, size, gfp & ~__GFP_ZERO, true);
+    if (!page)
+        return NULL;
+
+    /* remove any dirty cache lines on the kernel alias */
+    if (!PageHighMem(page))
+        arch_dma_prep_coherent(page, size);
+
+    /* return the page pointer as the opaque cookie */
+    *dma_handle = phys_to_dma_direct(dev, page_to_phys(page));
+    return page;
+}
+
+static int dma_set_decrypted(struct device *dev, void *vaddr, size_t size)
+{
+    if (!force_dma_unencrypted(dev))
+        return 0;
+    return set_memory_decrypted((unsigned long)vaddr, PFN_UP(size));
+}
+
+/*
+ * Check if a potentially blocking operations needs to dip into the atomic
+ * pools for the given device/gfp.
+ */
+static bool dma_direct_use_pool(struct device *dev, gfp_t gfp)
+{
+    return !gfpflags_allow_blocking(gfp) && !is_swiotlb_for_alloc(dev);
+}
+
+static void *dma_direct_alloc_from_pool(struct device *dev, size_t size,
+        dma_addr_t *dma_handle, gfp_t gfp)
+{
+    struct page *page;
+    u64 phys_limit;
+    void *ret;
+
+    if (WARN_ON_ONCE(!IS_ENABLED(CONFIG_DMA_COHERENT_POOL)))
+        return NULL;
+
+    gfp |= dma_direct_optimal_gfp_mask(dev, &phys_limit);
+    page = dma_alloc_from_pool(dev, size, &ret, gfp, dma_coherent_ok);
+    if (!page)
+        return NULL;
+    *dma_handle = phys_to_dma_direct(dev, page_to_phys(page));
+    return ret;
 }
 
 void *dma_direct_alloc(struct device *dev, size_t size,

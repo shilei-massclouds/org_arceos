@@ -7,3 +7,4 @@ obj-y += core.o devres.o dd.o driver.o trace.o
 obj-y += class.o map.o firmware.o
 
 obj-y += regmap/
+obj-y += power/

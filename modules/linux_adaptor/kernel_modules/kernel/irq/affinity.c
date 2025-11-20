@@ -95,7 +95,6 @@ irq_create_affinity_masks(unsigned int nvecs, struct irq_affinity *affd)
     for (i = affd->pre_vectors; i < nvecs - affd->post_vectors; i++)
         masks[i].is_managed = 1;
 
-    PANIC("");
     return masks;
 }
 

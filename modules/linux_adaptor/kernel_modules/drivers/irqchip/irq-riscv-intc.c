@@ -194,7 +194,7 @@ static int __init riscv_intc_init_common(struct fwnode_handle *fn, struct irq_ch
 		rc = set_handle_irq(&riscv_intc_irq);
 	}
 	if (rc) {
-		pr_err("failed to set irq handler\n");
+		pr_err("failed to set irq handler(%d)\n", rc);
 		return rc;
 	}
 
@@ -223,6 +223,12 @@ static int __init riscv_intc_init(struct device_node *node,
 		return 0;
 	}
 
+    printk("%s: %lx, %lx, %lx\n",
+           __func__,
+           hartid,
+           riscv_hartid_to_cpuid(hartid),
+           smp_processor_id());
+
 	/*
 	 * The DT will have one INTC DT node under each CPU (or HART)
 	 * DT node so riscv_intc_init() function will be called once
@@ -230,7 +236,6 @@ static int __init riscv_intc_init(struct device_node *node,
 	 * for the INTC DT node belonging to boot CPU (or boot HART).
 	 */
 	if (riscv_hartid_to_cpuid(hartid) != smp_processor_id()) {
-    printk("%s: %lu\n", __func__, riscv_hartid_to_cpuid(hartid));
 		/*
 		 * The INTC nodes of each CPU are suppliers for downstream
 		 * interrupt controllers (such as PLIC, IMSIC and APLIC

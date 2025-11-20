@@ -20,6 +20,9 @@
                  MSI_FLAG_DEV_SYSFS |       \
                  MSI_REACTIVATE)
 
+static bool pci_create_device_domain(struct pci_dev *pdev, const struct msi_domain_template *tmpl,
+                     unsigned int hwsize);
+
 int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 {
     struct irq_domain *domain;
@@ -139,6 +142,71 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
     return msi_create_irq_domain(fwnode, info, parent);
 }
 
+/*
+ * Per device MSI[-X] domain functionality
+ */
+static void pci_device_domain_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+{
+    arg->desc = desc;
+    arg->hwirq = desc->msi_index;
+}
+
+static bool pci_match_device_domain(struct pci_dev *pdev, enum irq_domain_bus_token bus_token)
+{
+    return msi_match_device_irq_domain(&pdev->dev, MSI_DEFAULT_DOMAIN, bus_token);
+}
+
+static __always_inline void cond_mask_parent(struct irq_data *data)
+{
+    struct msi_domain_info *info = data->domain->host_data;
+
+    if (unlikely(info->flags & MSI_FLAG_PCI_MSI_MASK_PARENT))
+        irq_chip_mask_parent(data);
+}
+
+static void pci_irq_mask_msi(struct irq_data *data)
+{
+    struct msi_desc *desc = irq_data_get_msi_desc(data);
+
+    pci_msi_mask(desc, BIT(data->irq - desc->irq));
+    cond_mask_parent(data);
+}
+
+static __always_inline void cond_unmask_parent(struct irq_data *data)
+{
+    struct msi_domain_info *info = data->domain->host_data;
+
+    if (unlikely(info->flags & MSI_FLAG_PCI_MSI_MASK_PARENT))
+        irq_chip_unmask_parent(data);
+}
+
+static void pci_irq_unmask_msi(struct irq_data *data)
+{
+    struct msi_desc *desc = irq_data_get_msi_desc(data);
+
+    cond_unmask_parent(data);
+    pci_msi_unmask(desc, BIT(data->irq - desc->irq));
+}
+
+static const struct msi_domain_template pci_msi_template = {
+    .chip = {
+        .name           = "PCI-MSI",
+        .irq_mask       = pci_irq_mask_msi,
+        .irq_unmask     = pci_irq_unmask_msi,
+        .irq_write_msi_msg  = pci_msi_domain_write_msg,
+        .flags          = IRQCHIP_ONESHOT_SAFE,
+    },
+
+    .ops = {
+        .set_desc       = pci_device_domain_set_desc,
+    },
+
+    .info = {
+        .flags          = MSI_COMMON_FLAGS | MSI_FLAG_MULTI_PCI_MSI,
+        .bus_token      = DOMAIN_BUS_PCI_DEVICE_MSI,
+    },
+};
+
 /**
  * pci_setup_msi_device_domain - Setup a device MSI interrupt domain
  * @pdev:   The PCI device to create the domain on
@@ -160,7 +228,6 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
  */
 bool pci_setup_msi_device_domain(struct pci_dev *pdev)
 {
-#if 0
     if (WARN_ON_ONCE(pdev->msix_enabled))
         return false;
 
@@ -170,8 +237,6 @@ bool pci_setup_msi_device_domain(struct pci_dev *pdev)
         msi_remove_device_irq_domain(&pdev->dev, MSI_DEFAULT_DOMAIN);
 
     return pci_create_device_domain(pdev, &pci_msi_template, 1);
-#endif
-    PANIC("");
 }
 
 /*
@@ -265,22 +330,6 @@ bool pci_msi_domain_supports(struct pci_dev *pdev, unsigned int feature_mask,
     return (supported & feature_mask) == feature_mask;
 }
 
-static __always_inline void cond_mask_parent(struct irq_data *data)
-{
-    struct msi_domain_info *info = data->domain->host_data;
-
-    if (unlikely(info->flags & MSI_FLAG_PCI_MSI_MASK_PARENT))
-        irq_chip_mask_parent(data);
-}
-
-static __always_inline void cond_unmask_parent(struct irq_data *data)
-{
-    struct msi_domain_info *info = data->domain->host_data;
-
-    if (unlikely(info->flags & MSI_FLAG_PCI_MSI_MASK_PARENT))
-        irq_chip_unmask_parent(data);
-}
-
 static void pci_irq_mask_msix(struct irq_data *data)
 {
     pci_msix_mask(irq_data_get_msi_desc(data));
@@ -299,15 +348,6 @@ static void pci_msix_prepare_desc(struct irq_domain *domain, msi_alloc_info_t *a
     /* Don't fiddle with preallocated MSI descriptors */
     if (!desc->pci.mask_base)
         msix_prepare_msi_desc(to_pci_dev(desc->dev), desc);
-}
-
-/*
- * Per device MSI[-X] domain functionality
- */
-static void pci_device_domain_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
-{
-    arg->desc = desc;
-    arg->hwirq = desc->msi_index;
 }
 
 static const struct msi_domain_template pci_msix_template = {
@@ -330,11 +370,6 @@ static const struct msi_domain_template pci_msix_template = {
         .bus_token      = DOMAIN_BUS_PCI_DEVICE_MSIX,
     },
 };
-
-static bool pci_match_device_domain(struct pci_dev *pdev, enum irq_domain_bus_token bus_token)
-{
-    return msi_match_device_irq_domain(&pdev->dev, MSI_DEFAULT_DOMAIN, bus_token);
-}
 
 static bool pci_create_device_domain(struct pci_dev *pdev, const struct msi_domain_template *tmpl,
                      unsigned int hwsize)

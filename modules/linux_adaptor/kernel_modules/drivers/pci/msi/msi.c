@@ -665,3 +665,25 @@ void pci_msi_update_mask(struct msi_desc *desc, u32 clear, u32 set)
                    desc->pci.msi_mask);
     raw_spin_unlock_irqrestore(lock, flags);
 }
+
+void pci_msix_shutdown(struct pci_dev *dev)
+{
+    struct msi_desc *desc;
+
+    if (!pci_msi_enable || !dev || !dev->msix_enabled)
+        return;
+
+    if (pci_dev_is_disconnected(dev)) {
+        dev->msix_enabled = 0;
+        return;
+    }
+
+    /* Return the device with MSI-X masked as initial states */
+    msi_for_each_desc(desc, &dev->dev, MSI_DESC_ALL)
+        pci_msix_mask(desc);
+
+    pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+    pci_intx_for_msi(dev, 1);
+    dev->msix_enabled = 0;
+    pcibios_alloc_irq(dev);
+}

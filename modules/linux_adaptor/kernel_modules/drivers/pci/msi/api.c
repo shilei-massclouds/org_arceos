@@ -148,13 +148,10 @@ void pci_disable_msix(struct pci_dev *dev)
     if (!pci_msi_enabled() || !dev || !dev->msix_enabled)
         return;
 
-#if 0
     msi_lock_descs(&dev->dev);
     pci_msix_shutdown(dev);
     pci_free_msi_irqs(dev);
     msi_unlock_descs(&dev->dev);
-#endif
-    PANIC("");
 }
 
 void pci_disable_msi(struct pci_dev *dev)

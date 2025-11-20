@@ -1334,6 +1334,7 @@ static int adapter_alloc_sq(struct nvme_dev *dev, u16 qid,
 	c.create_sq.sq_flags = cpu_to_le16(flags);
 	c.create_sq.cqid = cpu_to_le16(qid);
 
+    printk("%s: prp1(%lx)\n", __func__, c.create_sq.prp1);
 	return nvme_submit_sync_cmd(dev->ctrl.admin_q, &c, NULL, 0);
 }
 
@@ -1652,6 +1653,7 @@ static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
 		if (nvmeq->sq_cmds) {
 			nvmeq->sq_dma_addr = pci_p2pmem_virt_to_bus(pdev,
 							nvmeq->sq_cmds);
+            printk("%s: step1 sq_dma_addr(%lx)\n", __func__, nvmeq->sq_dma_addr);
 			if (nvmeq->sq_dma_addr) {
 				set_bit(NVMEQ_SQ_CMB, &nvmeq->flags);
 				return 0;
@@ -1663,6 +1665,7 @@ static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
 
 	nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(nvmeq),
 				&nvmeq->sq_dma_addr, GFP_KERNEL);
+    printk("%s: step2 sq_dma_addr(%lx)\n", __func__, nvmeq->sq_dma_addr);
 	if (!nvmeq->sq_cmds)
 		return -ENOMEM;
 	return 0;
@@ -1904,6 +1907,7 @@ static int nvme_pci_configure_admin_queue(struct nvme_dev *dev)
 	aqa |= aqa << 16;
 
 	writel(aqa, dev->bar + NVME_REG_AQA);
+    printk("%s: sq_dma_addr(%lx)\n", __func__, nvmeq->sq_dma_addr);
 	lo_hi_writeq(nvmeq->sq_dma_addr, dev->bar + NVME_REG_ASQ);
 	lo_hi_writeq(nvmeq->cq_dma_addr, dev->bar + NVME_REG_ACQ);
 
@@ -3210,6 +3214,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	struct nvme_dev *dev;
 	int result = -ENOMEM;
 
+    printk("\n\n------------------------ %s: step0\n\n", __func__);
 	dev = nvme_pci_alloc_dev(pdev, id);
 	if (IS_ERR(dev))
 		return PTR_ERR(dev);
@@ -3252,8 +3257,9 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 		goto out_disable;
 	}
 
-    printk("%s: step1\n", __func__);
+    printk("======================== %s: step1\n", __func__);
 	result = nvme_init_ctrl_finish(&dev->ctrl, false);
+    printk("%s: step1.0 result(%d)\n", __func__, result);
 	if (result)
 		goto out_disable;
 

@@ -557,6 +557,9 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
 	u64 limit_addr = pci_addr + size - 1;
 	u32 retries, val;
 
+    printk("%s: (%lx,%lx) limit(%lx)\n",
+           __func__, cpu_addr, pci_addr, limit_addr);
+
 	if ((limit_addr & ~pci->region_limit) != (pci_addr & ~pci->region_limit) ||
 	    !IS_ALIGNED(cpu_addr, pci->region_align) ||
 	    !IS_ALIGNED(pci_addr, pci->region_align) || !size) {
@@ -642,6 +645,11 @@ int dw_pcie_prog_ep_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
 void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index)
 {
 	dw_pcie_writel_atu(pci, dir, index, PCIE_ATU_REGION_CTRL2, 0);
+}
+
+void dw_pcie_enable_atu(struct dw_pcie *pci, u32 dir, int index)
+{
+	dw_pcie_writel_atu(pci, dir, index, PCIE_ATU_REGION_CTRL2, PCIE_ATU_ENABLE);
 }
 
 int dw_pcie_wait_for_link(struct dw_pcie *pci)

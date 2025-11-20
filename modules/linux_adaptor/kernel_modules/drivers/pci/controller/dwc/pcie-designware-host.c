@@ -737,8 +737,14 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
 	for (i = 0; i < pci->num_ob_windows; i++)
 		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_OB, i);
 
-	for (i = 0; i < pci->num_ib_windows; i++)
+	for (i = 0; i < pci->num_ib_windows; i++) {
+        if (i == 0) continue;
 		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_IB, i);
+#if 0
+        extern void dw_pcie_enable_atu(struct dw_pcie *pci, u32 dir, int index);
+		dw_pcie_enable_atu(pci, PCIE_ATU_REGION_DIR_IB, i);
+#endif
+    }
 
 	i = 0;
 	resource_list_for_each_entry(entry, &pp->bridge->windows) {
@@ -777,7 +783,9 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
 			 pci->num_ob_windows);
 
 	i = 0;
+    printk("%s: step1 empty(%d)\n", __func__, list_empty(&pp->bridge->dma_ranges));
 	resource_list_for_each_entry(entry, &pp->bridge->dma_ranges) {
+    printk("%s: step2\n", __func__);
 		if (resource_type(entry->res) != IORESOURCE_MEM)
 			continue;
 
@@ -794,6 +802,14 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
 			return ret;
 		}
 	}
+    printk("%s: step3\n", __func__);
+#if 0
+    {
+    printk("%s: REACH HERE\n", __func__);
+        char *p = 0;
+        *p = 0;
+    }
+#endif
 
 	if (pci->num_ib_windows <= i)
 		dev_warn(pci->dev, "Dma-ranges exceed inbound iATU size (%u)\n",
@@ -855,6 +871,7 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
 	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
 
+    printk("-%s-: step1\n", __func__);
 	/*
 	 * If the platform provides its own child bus config accesses, it means
 	 * the platform uses its own address translation component rather than
@@ -865,6 +882,7 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
 		if (ret)
 			return ret;
 	}
+    printk("-%s-: step2\n", __func__);
 
 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0);
 

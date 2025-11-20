@@ -5,6 +5,7 @@ obj-y += jump_label.o
 obj-y += patch.o
 obj-y += reset.o
 obj-y += smp.o
+obj-y += cpu.o
 obj-y += setup.o
 obj-y += irq.o
 obj-y += acpi.o

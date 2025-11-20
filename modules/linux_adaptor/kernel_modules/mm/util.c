@@ -232,3 +232,23 @@ void *kmemdup_array(const void *src, size_t count, size_t element_size, gfp_t gf
 {
     return kmemdup(src, size_mul(element_size, count), gfp);
 }
+
+/**
+ * kmemdup - duplicate region of memory
+ *
+ * @src: memory region to duplicate
+ * @len: memory region length
+ * @gfp: GFP mask to use
+ *
+ * Return: newly allocated copy of @src or %NULL in case of error,
+ * result is physically contiguous. Use kfree() to free.
+ */
+void *kmemdup_noprof(const void *src, size_t len, gfp_t gfp)
+{
+    void *p;
+
+    p = kmalloc_node_track_caller_noprof(len, gfp, NUMA_NO_NODE, _RET_IP_);
+    if (p)
+        memcpy(p, src, len);
+    return p;
+}

@@ -3209,7 +3209,17 @@ blk_status_t blk_execute_rq(struct request *rq, bool at_head)
     blk_mq_insert_request(rq, at_head ? BLK_MQ_INSERT_AT_HEAD : 0);
     blk_mq_run_hw_queue(hctx, false);
 
-    printk("%s: step1 poll(%d)\n", __func__, blk_rq_is_poll(rq));
+    printk("%s: step0 irq(%d) sie(%lx) sip(%lx)\n",
+           __func__, arch_irqs_disabled(), csr_read(CSR_SIE), csr_read(CSR_SIP));
+
+#if 0
+    for(long i = 0; i < 1000000000; i++) {
+        cpu_relax();
+    }
+#endif
+
+    printk("%s: step1 irq_disabled(%d) pid(%u)\n", __func__, arch_irqs_disabled(), current->pid);
+
     if (blk_rq_is_poll(rq))
         blk_rq_poll_completion(rq, &wait.done);
     else

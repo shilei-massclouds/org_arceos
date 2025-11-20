@@ -903,6 +903,9 @@ late_initcall(deferred_probe_initcall);
  */
 void wait_for_device_probe(void)
 {
+    printk("%s: step1 irq(%d) sie(%lx) sip(%lx)\n",
+           __func__, arch_irqs_disabled(), csr_read(CSR_SIE), csr_read(CSR_SIP));
+
     /* wait for the deferred probe workqueue to finish */
     flush_work(&deferred_probe_work);
 

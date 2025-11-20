@@ -21,3 +21,20 @@ void arch_setup_dma_ops(struct device *dev, bool coherent)
 
     dev->dma_coherent = coherent;
 }
+
+void arch_dma_prep_coherent(struct page *page, size_t size)
+{
+    void *flush_addr = page_address(page);
+
+    pr_err("%s: Fix config 'CONFIG_RISCV_NONSTANDARD_CACHE_OPS'\n", __func__);
+#if 0
+#ifdef CONFIG_RISCV_NONSTANDARD_CACHE_OPS
+    if (unlikely(noncoherent_cache_ops.wback_inv)) {
+        noncoherent_cache_ops.wback_inv(page_to_phys(page), size);
+        return;
+    }
+#endif
+#endif
+
+    ALT_CMO_OP(FLUSH, flush_addr, size, riscv_cbom_block_size);
+}

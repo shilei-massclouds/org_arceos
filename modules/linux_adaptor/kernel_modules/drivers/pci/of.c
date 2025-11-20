@@ -411,6 +411,7 @@ static int devm_of_pci_get_host_bridge_resources(struct device *dev,
 	if (!ib_resources)
 		return 0;
 	err = of_pci_dma_range_parser_init(&parser, dev_node);
+    printk("%s: dma ranges err(%d)\n", __func__, err);
 	if (err)
 		return 0;
 
@@ -597,8 +598,17 @@ static int pci_parse_request_of_pci_ranges(struct device *dev,
 	INIT_LIST_HEAD(&bridge->windows);
 	INIT_LIST_HEAD(&bridge->dma_ranges);
 
+    printk("%s: step1\n", __func__);
 	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &bridge->windows,
 						    &bridge->dma_ranges, &iobase);
+    printk("%s: step2 err(%d) ranges(%d)\n", __func__, err, list_empty(&bridge->dma_ranges));
+#if 0
+    {
+    printk("%s: REACH HERE\n", __func__);
+    char *p = 0;
+    *p = 0;
+    }
+#endif
 	if (err)
 		return err;
 

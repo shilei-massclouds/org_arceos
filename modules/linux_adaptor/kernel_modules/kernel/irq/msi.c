@@ -639,7 +639,14 @@ static int msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
 static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
                 unsigned int nr_irqs)
 {
-    PANIC("");
+    struct msi_domain_info *info = domain->host_data;
+    int i;
+
+    if (info->ops->msi_free) {
+        for (i = 0; i < nr_irqs; i++)
+            info->ops->msi_free(domain, info, virq + i);
+    }
+    irq_domain_free_irqs_top(domain, virq, nr_irqs);
 }
 
 static inline void irq_chip_write_msi_msg(struct irq_data *data,
@@ -662,7 +669,10 @@ static int msi_domain_activate(struct irq_domain *domain,
 static void msi_domain_deactivate(struct irq_domain *domain,
                   struct irq_data *irq_data)
 {
-    PANIC("");
+    struct msi_msg msg[2];
+
+    memset(msg, 0, sizeof(msg));
+    irq_chip_write_msi_msg(irq_data, msg);
 }
 
 static int msi_domain_translate(struct irq_domain *domain, struct irq_fwspec *fwspec,
@@ -1102,7 +1112,7 @@ static void msi_sysfs_remove_desc(struct device *dev, struct msi_desc *desc)
     }
     kfree(attrs);
 #endif
-    PANIC("");
+    pr_notice("%s: No impl.", __func__);
 }
 
 static void __msi_domain_free_irqs(struct device *dev, struct irq_domain *domain,

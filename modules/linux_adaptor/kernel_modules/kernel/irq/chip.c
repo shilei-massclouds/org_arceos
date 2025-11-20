@@ -613,3 +613,124 @@ void irq_chip_unmask_parent(struct irq_data *data)
     data = data->parent_data;
     data->chip->irq_unmask(data);
 }
+
+/**
+ *  handle_edge_irq - edge type IRQ handler
+ *  @desc:  the interrupt description structure for this irq
+ *
+ *  Interrupt occurs on the falling and/or rising edge of a hardware
+ *  signal. The occurrence is latched into the irq controller hardware
+ *  and must be acked in order to be reenabled. After the ack another
+ *  interrupt can happen on the same source even before the first one
+ *  is handled by the associated event handler. If this happens it
+ *  might be necessary to disable (mask) the interrupt depending on the
+ *  controller hardware. This requires to reenable the interrupt inside
+ *  of the loop which handles the interrupts which have arrived while
+ *  the handler was running. If all pending interrupts are handled, the
+ *  loop is left.
+ */
+void handle_edge_irq(struct irq_desc *desc)
+{
+    raw_spin_lock(&desc->lock);
+
+    desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+
+    if (!irq_may_run(desc)) {
+        desc->istate |= IRQS_PENDING;
+        mask_ack_irq(desc);
+        goto out_unlock;
+    }
+
+    /*
+     * If its disabled or no action available then mask it and get
+     * out of here.
+     */
+    if (irqd_irq_disabled(&desc->irq_data) || !desc->action) {
+        desc->istate |= IRQS_PENDING;
+        mask_ack_irq(desc);
+        goto out_unlock;
+    }
+
+#if 0
+    kstat_incr_irqs_this_cpu(desc);
+#endif
+
+    /* Start handling the irq */
+    desc->irq_data.chip->irq_ack(&desc->irq_data);
+
+    do {
+        if (unlikely(!desc->action)) {
+            mask_irq(desc);
+            goto out_unlock;
+        }
+
+        /*
+         * When another irq arrived while we were handling
+         * one, we could have masked the irq.
+         * Reenable it, if it was not disabled in meantime.
+         */
+        if (unlikely(desc->istate & IRQS_PENDING)) {
+            if (!irqd_irq_disabled(&desc->irq_data) &&
+                irqd_irq_masked(&desc->irq_data))
+                unmask_irq(desc);
+        }
+
+        handle_irq_event(desc);
+
+    } while ((desc->istate & IRQS_PENDING) &&
+         !irqd_irq_disabled(&desc->irq_data));
+
+out_unlock:
+    raw_spin_unlock(&desc->lock);
+}
+
+/**
+ * irq_chip_ack_parent - Acknowledge the parent interrupt
+ * @data:   Pointer to interrupt specific data
+ */
+void irq_chip_ack_parent(struct irq_data *data)
+{
+    data = data->parent_data;
+    data->chip->irq_ack(data);
+}
+
+/**
+ * irq_chip_mask_parent - Mask the parent interrupt
+ * @data:   Pointer to interrupt specific data
+ */
+void irq_chip_mask_parent(struct irq_data *data)
+{
+    data = data->parent_data;
+    data->chip->irq_mask(data);
+}
+
+void
+irq_set_chip_and_handler_name(unsigned int irq, const struct irq_chip *chip,
+                  irq_flow_handler_t handle, const char *name)
+{
+    irq_set_chip(irq, chip);
+    __irq_set_handler(irq, handle, 0, name);
+}
+
+/**
+ *  irq_set_chip - set the irq chip for an irq
+ *  @irq:   irq number
+ *  @chip:  pointer to irq chip description structure
+ */
+int irq_set_chip(unsigned int irq, const struct irq_chip *chip)
+{
+    unsigned long flags;
+    struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
+
+    if (!desc)
+        return -EINVAL;
+
+    desc->irq_data.chip = (struct irq_chip *)(chip ?: &no_irq_chip);
+    irq_put_desc_unlock(desc, flags);
+    /*
+     * For !CONFIG_SPARSE_IRQ make the irq show up in
+     * allocated_irqs.
+     */
+    irq_mark_irq(irq);
+    return 0;
+}

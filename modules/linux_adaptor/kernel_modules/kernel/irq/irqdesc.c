@@ -161,7 +161,33 @@ static void irq_sysfs_add(int irq, struct irq_desc *desc)
 #ifdef CONFIG_SPARSE_IRQ
 static void free_desc(unsigned int irq)
 {
-    PANIC("");
+#if 0
+    struct irq_desc *desc = irq_to_desc(irq);
+
+    irq_remove_debugfs_entry(desc);
+    unregister_irq_proc(irq, desc);
+
+    /*
+     * sparse_irq_lock protects also show_interrupts() and
+     * kstat_irq_usr(). Once we deleted the descriptor from the
+     * sparse tree we can free it. Access in proc will fail to
+     * lookup the descriptor.
+     *
+     * The sysfs entry must be serialized against a concurrent
+     * irq_sysfs_init() as well.
+     */
+    irq_sysfs_del(desc);
+    delete_irq_desc(irq);
+
+    /*
+     * We free the descriptor, masks and stat fields via RCU. That
+     * allows demultiplex interrupts to do rcu based management of
+     * the child interrupts.
+     * This also allows us to use rcu in kstat_irqs_usr().
+     */
+    call_rcu(&desc->rcu, delayed_free_desc);
+#endif
+    pr_notice("%s: No impl.", __func__);
 }
 
 static int alloc_descs(unsigned int start, unsigned int cnt, int node,
@@ -372,4 +398,25 @@ int handle_irq_desc(struct irq_desc *desc)
 
     generic_handle_irq_desc(desc);
     return 0;
+}
+
+/* Dynamic interrupt handling */
+
+/**
+ * irq_free_descs - free irq descriptors
+ * @from:   Start of descriptor range
+ * @cnt:    Number of consecutive irqs to free
+ */
+void irq_free_descs(unsigned int from, unsigned int cnt)
+{
+    int i;
+
+    if (from >= nr_irqs || (from + cnt) > nr_irqs)
+        return;
+
+    mutex_lock(&sparse_irq_lock);
+    for (i = 0; i < cnt; i++)
+        free_desc(from + i);
+
+    mutex_unlock(&sparse_irq_lock);
 }

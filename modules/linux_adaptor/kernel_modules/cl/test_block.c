@@ -64,14 +64,13 @@ static void test_read(const struct address_space *aspace, int index)
 
     /* Verify block content. */
     {
-        unsigned int *dwords = (unsigned int *) vaddr;
-        printk("Read: %08lx, %08lx, %08lx, %08lx\n",
+        unsigned int *dwords = (unsigned int *) (vaddr + 512);
+        printk("Read[%u:%u]: %08lx, %08lx, %08lx, %08lx\n",
+               index, 512,
                dwords[0], dwords[1], dwords[2], dwords[3]);
     }
 
     __free_page(folio_page(folio, 0));
-
-    PANIC("Test block ok!");
 }
 
 void test_block(void)
@@ -80,5 +79,8 @@ void test_block(void)
     aspace = prepare_block_dev();
 
     /* Read second block (index = 1 and size = PAGE_SIZE) */
-    test_read(aspace, 1);
+    //test_read(aspace, 1);
+    test_read(aspace, 0);
+
+    PANIC("Test block ok!");
 }

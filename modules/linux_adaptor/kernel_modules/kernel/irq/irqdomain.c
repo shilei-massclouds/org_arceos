@@ -1317,3 +1317,49 @@ int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
     return irq_domain_alloc_irqs_hierarchy(domain->parent, irq_base,
                            nr_irqs, arg);
 }
+
+/**
+ * irq_domain_free_irqs_common - Clear irq_data and free the parent
+ * @domain: Interrupt domain to match
+ * @virq:   IRQ number to start with
+ * @nr_irqs:    The number of irqs to free
+ */
+void irq_domain_free_irqs_common(struct irq_domain *domain, unsigned int virq,
+                 unsigned int nr_irqs)
+{
+    struct irq_data *irq_data;
+    int i;
+
+    for (i = 0; i < nr_irqs; i++) {
+        irq_data = irq_domain_get_irq_data(domain, virq + i);
+        if (irq_data)
+            irq_domain_reset_irq_data(irq_data);
+    }
+    irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+}
+
+/**
+ * irq_domain_reset_irq_data - Clear hwirq, chip and chip_data in @irq_data
+ * @irq_data:   The pointer to irq_data
+ */
+void irq_domain_reset_irq_data(struct irq_data *irq_data)
+{
+    irq_data->hwirq = 0;
+    irq_data->chip = &no_irq_chip;
+    irq_data->chip_data = NULL;
+}
+
+/**
+ * irq_domain_free_irqs_parent - Free interrupts from parent domain
+ * @domain: Domain below which interrupts must be freed
+ * @irq_base:   Base IRQ number
+ * @nr_irqs:    Number of IRQs to free
+ */
+void irq_domain_free_irqs_parent(struct irq_domain *domain,
+                 unsigned int irq_base, unsigned int nr_irqs)
+{
+    if (!domain->parent)
+        return;
+
+    irq_domain_free_irqs_hierarchy(domain->parent, irq_base, nr_irqs);
+}
