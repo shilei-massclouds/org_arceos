@@ -1215,13 +1215,16 @@ static int nvme_poll(struct blk_mq_hw_ctx *hctx, struct io_comp_batch *iob)
 	struct nvme_queue *nvmeq = hctx->driver_data;
 	bool found;
 
+    printk("%s: step1\n", __func__);
 	if (!nvme_cqe_pending(nvmeq))
 		return 0;
 
+    printk("%s: step2\n", __func__);
 	spin_lock(&nvmeq->cq_poll_lock);
 	found = nvme_poll_cq(nvmeq, iob);
 	spin_unlock(&nvmeq->cq_poll_lock);
 
+    printk("%s: step3 found(%d)\n", __func__, found);
 	return found;
 }
 
@@ -1454,7 +1457,7 @@ static enum blk_eh_timer_return nvme_timeout(struct request *req)
 	 */
 	if (test_bit(NVMEQ_POLLED, &nvmeq->flags))
 		nvme_poll(req->mq_hctx, NULL);
-	else
+    else
 		nvme_poll_irqdisable(nvmeq);
 
 	if (blk_mq_rq_state(req) != MQ_RQ_IN_FLIGHT) {
@@ -1815,6 +1818,7 @@ static const struct blk_mq_ops nvme_mq_admin_ops = {
 	.init_hctx	= nvme_admin_init_hctx,
 	.init_request	= nvme_pci_init_request,
 	.timeout	= nvme_timeout,
+	.poll		= nvme_poll,
 };
 
 static const struct blk_mq_ops nvme_mq_ops = {

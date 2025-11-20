@@ -8,6 +8,76 @@
 
 #include "adaptor.h"
 
+static struct request *blk_mq_find_and_get_req(struct blk_mq_tags *tags,
+        unsigned int bitnr);
+
+#define BT_TAG_ITER_RESERVED        (1 << 0)
+#define BT_TAG_ITER_STARTED         (1 << 1)
+#define BT_TAG_ITER_STATIC_RQS      (1 << 2)
+
+struct bt_tags_iter_data {
+    struct blk_mq_tags *tags;
+    busy_tag_iter_fn *fn;
+    void *data;
+    unsigned int flags;
+};
+
+static bool bt_tags_iter(struct sbitmap *bitmap, unsigned int bitnr, void *data)
+{
+    struct bt_tags_iter_data *iter_data = data;
+    struct blk_mq_tags *tags = iter_data->tags;
+    struct request *rq;
+    bool ret = true;
+    bool iter_static_rqs = !!(iter_data->flags & BT_TAG_ITER_STATIC_RQS);
+
+    if (!(iter_data->flags & BT_TAG_ITER_RESERVED))
+        bitnr += tags->nr_reserved_tags;
+
+    /*
+     * We can hit rq == NULL here, because the tagging functions
+     * test and set the bit before assigning ->rqs[].
+     */
+    if (iter_static_rqs)
+        rq = tags->static_rqs[bitnr];
+    else
+        rq = blk_mq_find_and_get_req(tags, bitnr);
+    if (!rq)
+        return true;
+
+    if (!(iter_data->flags & BT_TAG_ITER_STARTED) ||
+        blk_mq_request_started(rq))
+        ret = iter_data->fn(rq, iter_data->data);
+    if (!iter_static_rqs)
+        blk_mq_put_rq_ref(rq);
+    return ret;
+}
+
+/**
+ * bt_tags_for_each - iterate over the requests in a tag map
+ * @tags:   Tag map to iterate over.
+ * @bt:     sbitmap to examine. This is either the breserved_tags member
+ *      or the bitmap_tags member of struct blk_mq_tags.
+ * @fn:     Pointer to the function that will be called for each started
+ *      request. @fn will be called as follows: @fn(rq, @data,
+ *      @reserved) where rq is a pointer to a request. Return true
+ *      to continue iterating tags, false to stop.
+ * @data:   Will be passed as second argument to @fn.
+ * @flags:  BT_TAG_ITER_*
+ */
+static void bt_tags_for_each(struct blk_mq_tags *tags, struct sbitmap_queue *bt,
+                 busy_tag_iter_fn *fn, void *data, unsigned int flags)
+{
+    struct bt_tags_iter_data iter_data = {
+        .tags = tags,
+        .fn = fn,
+        .data = data,
+        .flags = flags,
+    };
+
+    if (tags->rqs)
+        sbitmap_for_each_set(&bt->sb, bt_tags_iter, &iter_data);
+}
+
 /*
  * Recalculate wakeup batch when tag is shared by hctx.
  */
@@ -394,4 +464,72 @@ void blk_mq_tag_wakeup_all(struct blk_mq_tags *tags, bool include_reserve)
     sbitmap_queue_wake_all(&tags->bitmap_tags);
     if (include_reserve)
         sbitmap_queue_wake_all(&tags->breserved_tags);
+}
+
+static void __blk_mq_all_tag_iter(struct blk_mq_tags *tags,
+        busy_tag_iter_fn *fn, void *priv, unsigned int flags)
+{
+    WARN_ON_ONCE(flags & BT_TAG_ITER_RESERVED);
+
+    if (tags->nr_reserved_tags)
+        bt_tags_for_each(tags, &tags->breserved_tags, fn, priv,
+                 flags | BT_TAG_ITER_RESERVED);
+    bt_tags_for_each(tags, &tags->bitmap_tags, fn, priv, flags);
+}
+
+/**
+ * blk_mq_tagset_busy_iter - iterate over all started requests in a tag set
+ * @tagset: Tag set to iterate over.
+ * @fn:     Pointer to the function that will be called for each started
+ *      request. @fn will be called as follows: @fn(rq, @priv,
+ *      reserved) where rq is a pointer to a request. 'reserved'
+ *      indicates whether or not @rq is a reserved request. Return
+ *      true to continue iterating tags, false to stop.
+ * @priv:   Will be passed as second argument to @fn.
+ *
+ * We grab one request reference before calling @fn and release it after
+ * @fn returns.
+ */
+void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
+        busy_tag_iter_fn *fn, void *priv)
+{
+    unsigned int flags = tagset->flags;
+    int i, nr_tags;
+
+    nr_tags = blk_mq_is_shared_tags(flags) ? 1 : tagset->nr_hw_queues;
+
+    for (i = 0; i < nr_tags; i++) {
+        if (tagset->tags && tagset->tags[i])
+            __blk_mq_all_tag_iter(tagset->tags[i], fn, priv,
+                          BT_TAG_ITER_STARTED);
+    }
+}
+
+static bool blk_mq_tagset_count_completed_rqs(struct request *rq, void *data)
+{
+    unsigned *count = data;
+
+    if (blk_mq_request_completed(rq))
+        (*count)++;
+    return true;
+}
+
+/**
+ * blk_mq_tagset_wait_completed_request - Wait until all scheduled request
+ * completions have finished.
+ * @tagset: Tag set to drain completed request
+ *
+ * Note: This function has to be run after all IO queues are shutdown
+ */
+void blk_mq_tagset_wait_completed_request(struct blk_mq_tag_set *tagset)
+{
+    while (true) {
+        unsigned count = 0;
+
+        blk_mq_tagset_busy_iter(tagset,
+                blk_mq_tagset_count_completed_rqs, &count);
+        if (!count)
+            break;
+        msleep(5);
+    }
 }

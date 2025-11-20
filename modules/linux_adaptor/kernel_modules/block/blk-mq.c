@@ -3211,20 +3211,17 @@ blk_status_t blk_execute_rq(struct request *rq, bool at_head)
 
     printk("%s: step0 irq(%d) sie(%lx) sip(%lx)\n",
            __func__, arch_irqs_disabled(), csr_read(CSR_SIE), csr_read(CSR_SIP));
+    printk("%s: step1.1 irq_disabled(%d) pid(%u)\n", __func__, arch_irqs_disabled(), current->pid);
 
-#if 0
-    for(long i = 0; i < 1000000000; i++) {
-        cpu_relax();
-    }
-#endif
-
-    printk("%s: step1 irq_disabled(%d) pid(%u)\n", __func__, arch_irqs_disabled(), current->pid);
-
+//#define BLK_IRQ
+#ifdef BLK_IRQ
     if (blk_rq_is_poll(rq))
         blk_rq_poll_completion(rq, &wait.done);
     else
         blk_wait_io(&wait.done);
-    printk("%s: step2\n", __func__);
+#else
+    blk_rq_poll_completion(rq, &wait.done);
+#endif
 
     return wait.ret;
 }
@@ -3484,4 +3481,35 @@ void blk_mq_wait_quiesce_done(struct blk_mq_tag_set *set)
         synchronize_srcu(set->srcu);
     else
         synchronize_rcu();
+}
+
+/**
+ * blk_mq_quiesce_queue() - wait until all ongoing dispatches have finished
+ * @q: request queue.
+ *
+ * Note: this function does not prevent that the struct request end_io()
+ * callback function is invoked. Once this function is returned, we make
+ * sure no dispatch can happen until the queue is unquiesced via
+ * blk_mq_unquiesce_queue().
+ */
+void blk_mq_quiesce_queue(struct request_queue *q)
+{
+    blk_mq_quiesce_queue_nowait(q);
+    /* nothing to wait for non-mq queues */
+    if (queue_is_mq(q))
+        blk_mq_wait_quiesce_done(q->tag_set);
+}
+
+/*
+ * FIXME: replace the scsi_internal_device_*block_nowait() calls in the
+ * mpt3sas driver such that this function can be removed.
+ */
+void blk_mq_quiesce_queue_nowait(struct request_queue *q)
+{
+    unsigned long flags;
+
+    spin_lock_irqsave(&q->queue_lock, flags);
+    if (!q->quiesce_depth++)
+        blk_queue_flag_set(QUEUE_FLAG_QUIESCED, q);
+    spin_unlock_irqrestore(&q->queue_lock, flags);
 }

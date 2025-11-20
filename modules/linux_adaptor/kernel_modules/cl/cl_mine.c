@@ -19,7 +19,6 @@ CL_MINE(refcount_warn_saturate)
 CL_MINE(unregister_blkdev)
 
 CL_MINE(blk_mq_requeue_request)
-CL_MINE(blk_mq_quiesce_queue_nowait)
 CL_MINE(blk_mq_unquiesce_queue)
 
 // vsprintf
@@ -586,7 +585,6 @@ CL_MINE(device_create_bin_file)
 // mtdblock
 CL_MINE(vfree)
 CL_MINE(sysfs_remove_group)
-CL_MINE(blk_mq_quiesce_queue)
 CL_MINE(sysfs_create_group)
 
 // gpio
@@ -721,8 +719,6 @@ CL_MINE(blk_mark_disk_dead)
 CL_MINE(blk_mq_delay_kick_requeue_list)
 CL_MINE(blk_mq_freeze_queue_wait_timeout)
 CL_MINE(blk_mq_quiesce_tagset)
-CL_MINE(blk_mq_tagset_busy_iter)
-CL_MINE(blk_mq_tagset_wait_completed_request)
 CL_MINE(blk_mq_unquiesce_tagset)
 CL_MINE(blk_sync_queue)
 CL_MINE(nvme_dev_ioctl)
