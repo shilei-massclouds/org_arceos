@@ -546,7 +546,6 @@ static enum bio_merge_status bio_attempt_front_merge(struct request *req,
     if (!ll_front_merge_fn(req, bio, nr_segs))
         return BIO_MERGE_FAILED;
 
-#if 0
     trace_block_bio_frontmerge(bio);
     rq_qos_merge(req->q, req, bio);
 
@@ -565,9 +564,6 @@ static enum bio_merge_status bio_attempt_front_merge(struct request *req,
 
     blk_account_io_merge_bio(req);
     return BIO_MERGE_OK;
-#endif
-
-    PANIC("");
 }
 
 static enum bio_merge_status bio_attempt_discard_merge(struct request_queue *q,

@@ -79,8 +79,7 @@ void test_block(void)
     aspace = prepare_block_dev();
 
     /* Read second block (index = 1 and size = PAGE_SIZE) */
-    //test_read(aspace, 1);
-    test_read(aspace, 0);
+    test_read(aspace, 1);
 
     PANIC("Test block ok!");
 }

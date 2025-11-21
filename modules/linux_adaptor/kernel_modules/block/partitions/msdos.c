@@ -290,6 +290,8 @@ int msdos_partition(struct parsed_partitions *state)
     int slot;
     u32 disksig;
 
+    printk("MSDOC Partition Table is valid!  Yea!\n");
+
     sector_size = queue_logical_block_size(state->disk->queue) / 512;
     data = read_part_sector(state, 0, &sect);
     if (!data)

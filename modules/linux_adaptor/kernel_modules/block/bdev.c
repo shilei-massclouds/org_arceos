@@ -246,7 +246,27 @@ static int blkdev_get_whole(struct block_device *bdev, blk_mode_t mode)
 
 static int blkdev_get_part(struct block_device *part, blk_mode_t mode)
 {
-    PANIC("");
+    struct gendisk *disk = part->bd_disk;
+    int ret;
+
+    ret = blkdev_get_whole(bdev_whole(part), mode);
+    if (ret)
+        return ret;
+
+    ret = -ENXIO;
+    if (!bdev_nr_sectors(part))
+        goto out_blkdev_put;
+
+    if (!atomic_read(&part->bd_openers)) {
+        disk->open_partitions++;
+        set_init_blocksize(part);
+    }
+    atomic_inc(&part->bd_openers);
+    return 0;
+
+out_blkdev_put:
+    blkdev_put_whole(bdev_whole(part));
+    return ret;
 }
 
 static bool bdev_may_open(struct block_device *bdev, blk_mode_t mode)

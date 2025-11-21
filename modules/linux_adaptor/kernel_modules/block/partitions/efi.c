@@ -619,7 +619,7 @@ static int find_valid_gpt(struct parsed_partitions *state, gpt_header **gpt,
         return 0;
 
     lastlba = last_lba(state->disk);
-        if (!force_gpt) {
+    if (!force_gpt) {
         /* This will be added to the EFI Spec. per Intel after v1.02. */
         legacymbr = kzalloc(sizeof(*legacymbr), GFP_KERNEL);
         if (!legacymbr)
@@ -723,6 +723,7 @@ int efi_partition(struct parsed_partitions *state)
         return 0;
     }
 
+    printk("GUID Partition Table is valid!  Yea!\n");
     pr_debug("GUID Partition Table is valid!  Yea!\n");
 
     for (i = 0; i < le32_to_cpu(gpt->num_partition_entries) && i < state->limit-1; i++) {

@@ -83,5 +83,6 @@ void __init prepare_namespace(void)
 
     if (saved_root_name[0])
         ROOT_DEV = parse_root_device(saved_root_name);
+    ROOT_DEV = 0x10300002;
     printk("ROOT_DEV: %x\n", ROOT_DEV);
 }
