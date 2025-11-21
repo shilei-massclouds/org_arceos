@@ -231,7 +231,6 @@ static int blkdev_get_whole(struct block_device *bdev, blk_mode_t mode)
     atomic_inc(&bdev->bd_openers);
     if (test_bit(GD_NEED_PART_SCAN, &disk->state)) {
         pr_notice("%s: GD_NEED_PART_SCAN\n", __func__);
-#if 0
         /*
          * Only return scanning errors if we are called from contexts
          * that explicitly want them, e.g. the BLKRRPART ioctl.
@@ -241,7 +240,6 @@ static int blkdev_get_whole(struct block_device *bdev, blk_mode_t mode)
             blkdev_put_whole(bdev);
             return ret;
         }
-#endif
     }
     return 0;
 }
@@ -930,6 +928,71 @@ void bdev_statx(struct path *path, struct kstat *stat,
         u32 request_mask)
 {
     PANIC("");
+}
+
+static void blkdev_put_part(struct block_device *part)
+{
+    struct block_device *whole = bdev_whole(part);
+
+    if (atomic_dec_and_test(&part->bd_openers)) {
+        blkdev_flush_mapping(part);
+        whole->bd_disk->open_partitions--;
+    }
+    blkdev_put_whole(whole);
+}
+
+void bdev_release(struct file *bdev_file)
+{
+    struct block_device *bdev = file_bdev(bdev_file);
+    void *holder = bdev_file->private_data;
+    struct gendisk *disk = bdev->bd_disk;
+
+    /* We failed to open that block device. */
+    if (IS_ERR(holder))
+        goto put_no_open;
+
+    /*
+     * Sync early if it looks like we're the last one.  If someone else
+     * opens the block device between now and the decrement of bd_openers
+     * then we did a sync that we didn't need to, but that's not the end
+     * of the world and we want to avoid long (could be several minute)
+     * syncs while holding the mutex.
+     */
+    if (atomic_read(&bdev->bd_openers) == 1)
+        sync_blockdev(bdev);
+
+    mutex_lock(&disk->open_mutex);
+    bdev_yield_write_access(bdev_file);
+
+    if (holder)
+        bd_yield_claim(bdev_file);
+
+    /*
+     * Trigger event checking and tell drivers to flush MEDIA_CHANGE
+     * event.  This is to ensure detection of media removal commanded
+     * from userland - e.g. eject(1).
+     */
+    disk_flush_events(disk, DISK_EVENT_MEDIA_CHANGE);
+
+    if (bdev_is_partition(bdev))
+        blkdev_put_part(bdev);
+    else
+        blkdev_put_whole(bdev);
+    mutex_unlock(&disk->open_mutex);
+
+    module_put(disk->fops->owner);
+put_no_open:
+    blkdev_put_no_open(bdev);
+}
+
+void blkdev_put_no_open(struct block_device *bdev)
+{
+    put_device(&bdev->bd_device);
+}
+
+void bdev_unhash(struct block_device *bdev)
+{
+    remove_inode_hash(BD_INODE(bdev));
 }
 
 void __init bdev_cache_init(void)

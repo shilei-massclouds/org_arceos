@@ -7,3 +7,4 @@ obj-y += bdev.o fops.o blk-merge.o blk-mq-sched.o
 obj-y += blk-flush.o blk-mq-sysfs.o blk-rq-qos.o
 obj-y += blk-timeout.o early-lookup.o blk-map.o
 obj-y += elevator.o mq-deadline.o
+obj-y += partitions/

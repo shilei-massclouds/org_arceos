@@ -106,7 +106,8 @@ static int blkdev_open(struct inode *inode, struct file *filp)
 
 static int blkdev_release(struct inode *inode, struct file *filp)
 {
-    PANIC("");
+    bdev_release(filp);
+    return 0;
 }
 
 /*

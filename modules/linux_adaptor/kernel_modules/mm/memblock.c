@@ -39,8 +39,13 @@ void * __init memblock_alloc_try_nid(
             phys_addr_t min_addr, phys_addr_t max_addr,
             int nid)
 {
+    void *ret;
     if (align == 0) {
         align = 8;
     }
-    return cl_rust_alloc(size, align);
+    ret = cl_rust_alloc(size, align);
+    if (ret) {
+        memset(ret, 0, size);
+    }
+    return ret;
 }

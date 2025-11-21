@@ -69,6 +69,88 @@ int vmap_page_range(unsigned long addr, unsigned long end,
 #endif
 }
 
+/**
+ * __vmalloc_node_range - allocate virtually contiguous memory
+ * @size:         allocation size
+ * @align:        desired alignment
+ * @start:        vm area range start
+ * @end:          vm area range end
+ * @gfp_mask:         flags for the page level allocator
+ * @prot:         protection mask for the allocated pages
+ * @vm_flags:         additional vm area flags (e.g. %VM_NO_GUARD)
+ * @node:         node to use for allocation or NUMA_NO_NODE
+ * @caller:       caller's return address
+ *
+ * Allocate enough pages to cover @size from the page level
+ * allocator with @gfp_mask flags. Please note that the full set of gfp
+ * flags are not supported. GFP_KERNEL, GFP_NOFS and GFP_NOIO are all
+ * supported.
+ * Zone modifiers are not supported. From the reclaim modifiers
+ * __GFP_DIRECT_RECLAIM is required (aka GFP_NOWAIT is not supported)
+ * and only __GFP_NOFAIL is supported (i.e. __GFP_NORETRY and
+ * __GFP_RETRY_MAYFAIL are not supported).
+ *
+ * __GFP_NOWARN can be used to suppress failures messages.
+ *
+ * Map them into contiguous kernel virtual space, using a pagetable
+ * protection of @prot.
+ *
+ * Return: the address of the area or %NULL on failure
+ */
+void *__vmalloc_node_range_noprof(unsigned long size, unsigned long align,
+            unsigned long start, unsigned long end, gfp_t gfp_mask,
+            pgprot_t prot, unsigned long vm_flags, int node,
+            const void *caller)
+{
+    pr_err("%s: NOTICE!!! implemente it!\n", __func__);
+    return __kmalloc_noprof(size, 0);
+}
+
+/**
+ * __vmalloc_node - allocate virtually contiguous memory
+ * @size:       allocation size
+ * @align:      desired alignment
+ * @gfp_mask:       flags for the page level allocator
+ * @node:       node to use for allocation or NUMA_NO_NODE
+ * @caller:     caller's return address
+ *
+ * Allocate enough pages to cover @size from the page level allocator with
+ * @gfp_mask flags.  Map them into contiguous kernel virtual space.
+ *
+ * Reclaim modifiers in @gfp_mask - __GFP_NORETRY, __GFP_RETRY_MAYFAIL
+ * and __GFP_NOFAIL are not supported
+ *
+ * Any use of gfp flags outside of GFP_KERNEL should be consulted
+ * with mm people.
+ *
+ * Return: pointer to the allocated memory or %NULL on error
+ */
+void *__vmalloc_node_noprof(unsigned long size, unsigned long align,
+                gfp_t gfp_mask, int node, const void *caller)
+{
+    return __vmalloc_node_range_noprof(size, align, VMALLOC_START, VMALLOC_END,
+                gfp_mask, PAGE_KERNEL, 0, node, caller);
+}
+
+/**
+ * vzalloc - allocate virtually contiguous memory with zero fill
+ * @size:    allocation size
+ *
+ * Allocate enough pages to cover @size from the page level
+ * allocator and map them into contiguous kernel virtual space.
+ * The memory allocated is set to zero.
+ *
+ * For tight control over page level allocator and protection flags
+ * use __vmalloc() instead.
+ *
+ * Return: pointer to the allocated memory or %NULL on error
+ */
+void *vzalloc_noprof(unsigned long size)
+{
+    return __vmalloc_node_noprof(size, 1, GFP_KERNEL | __GFP_ZERO, NUMA_NO_NODE,
+                __builtin_return_address(0));
+}
+
 bool is_vmalloc_addr(const void *x)
 {
     unsigned long addr = (unsigned long)kasan_reset_tag(x);
@@ -123,4 +205,26 @@ void vunmap_range(unsigned long addr, unsigned long end)
     vunmap_range_noflush(addr, end);
     flush_tlb_kernel_range(addr, end);
 #endif
+}
+
+/**
+ * vfree - Release memory allocated by vmalloc()
+ * @addr:  Memory base address
+ *
+ * Free the virtually continuous memory area starting at @addr, as obtained
+ * from one of the vmalloc() family of APIs.  This will usually also free the
+ * physical memory underlying the virtual allocation, but that memory is
+ * reference counted, so it will not be freed until the last user goes away.
+ *
+ * If @addr is NULL, no operation is performed.
+ *
+ * Context:
+ * May sleep if called *not* from interrupt context.
+ * Must not be called in NMI context (strictly speaking, it could be
+ * if we have CONFIG_ARCH_HAVE_NMI_SAFE_CMPXCHG, but making the calling
+ * conventions for vfree() arch-dependent would be a really bad idea).
+ */
+void vfree(const void *addr)
+{
+    pr_notice("%s: No impl.\n", __func__);
 }

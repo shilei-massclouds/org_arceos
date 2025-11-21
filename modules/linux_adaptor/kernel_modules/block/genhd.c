@@ -381,7 +381,6 @@ int disk_scan_partitions(struct gendisk *disk, blk_mode_t mode)
     if (disk->open_partitions)
         return -EBUSY;
 
-#if 0
     /*
      * If the device is opened exclusively by current thread already, it's
      * safe to scan partitons, otherwise, use bd_prepare_to_claim() to
@@ -394,10 +393,23 @@ int disk_scan_partitions(struct gendisk *disk, blk_mode_t mode)
         if (ret)
             return ret;
     }
-#endif
+    set_bit(GD_NEED_PART_SCAN, &disk->state);
+    file = bdev_file_open_by_dev(disk_devt(disk), mode & ~BLK_OPEN_EXCL,
+                     NULL, NULL);
+    if (IS_ERR(file))
+        ret = PTR_ERR(file);
+    else
+        fput(file);
 
-    pr_notice("%s: No impl.", __func__);
-    return 0;
+    /*
+     * If blkdev_get_by_dev() failed early, GD_NEED_PART_SCAN is still set,
+     * and this will cause that re-assemble partitioned raid device will
+     * creat partition for underlying disk.
+     */
+    clear_bit(GD_NEED_PART_SCAN, &disk->state);
+    if (!(mode & BLK_OPEN_EXCL))
+        bd_abort_claiming(disk->part0, disk_scan_partitions);
+    return ret;
 }
 
 /**
@@ -640,6 +652,36 @@ void set_disk_ro(struct gendisk *disk, bool read_only)
 
 dev_t part_devt(struct gendisk *disk, u8 partno)
 {
+    PANIC("");
+}
+
+ssize_t part_size_show(struct device *dev,
+               struct device_attribute *attr, char *buf)
+{
+    return sprintf(buf, "%llu\n", bdev_nr_sectors(dev_to_bdev(dev)));
+}
+
+ssize_t part_stat_show(struct device *dev,
+               struct device_attribute *attr, char *buf)
+{
+    PANIC("");
+}
+
+ssize_t part_inflight_show(struct device *dev, struct device_attribute *attr,
+               char *buf)
+{
+#if 0
+    struct block_device *bdev = dev_to_bdev(dev);
+    struct request_queue *q = bdev_get_queue(bdev);
+    unsigned int inflight[2];
+
+    if (queue_is_mq(q))
+        blk_mq_in_flight_rw(q, bdev, inflight);
+    else
+        part_in_flight_rw(bdev, inflight);
+
+    return sprintf(buf, "%8u %8u\n", inflight[0], inflight[1]);
+#endif
     PANIC("");
 }
 

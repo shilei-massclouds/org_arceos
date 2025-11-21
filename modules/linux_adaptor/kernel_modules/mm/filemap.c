@@ -1931,6 +1931,109 @@ void filemap_remove_folio(struct folio *folio)
     filemap_free_folio(mapping, folio);
 }
 
+/**
+ * folio_put_wait_locked - Drop a reference and wait for it to be unlocked
+ * @folio: The folio to wait for.
+ * @state: The sleep state (TASK_KILLABLE, TASK_UNINTERRUPTIBLE, etc).
+ *
+ * The caller should hold a reference on @folio.  They expect the page to
+ * become unlocked relatively soon, but do not wish to hold up migration
+ * (for example) by holding the reference while waiting for the folio to
+ * come unlocked.  After this function returns, the caller should not
+ * dereference @folio.
+ *
+ * Return: 0 if the folio was unlocked or -EINTR if interrupted by a signal.
+ */
+static int folio_put_wait_locked(struct folio *folio, int state)
+{
+    return folio_wait_bit_common(folio, PG_locked, state, DROP);
+}
+
+static struct folio *do_read_cache_folio(struct address_space *mapping,
+        pgoff_t index, filler_t filler, struct file *file, gfp_t gfp)
+{
+    struct folio *folio;
+    int err;
+
+    if (!filler)
+        filler = mapping->a_ops->read_folio;
+repeat:
+    folio = filemap_get_folio(mapping, index);
+    if (IS_ERR(folio)) {
+        folio = filemap_alloc_folio(gfp,
+                        mapping_min_folio_order(mapping));
+        if (!folio)
+            return ERR_PTR(-ENOMEM);
+        index = mapping_align_index(mapping, index);
+        err = filemap_add_folio(mapping, folio, index, gfp);
+        if (unlikely(err)) {
+            folio_put(folio);
+            if (err == -EEXIST)
+                goto repeat;
+            /* Presumably ENOMEM for xarray node */
+            return ERR_PTR(err);
+        }
+
+        goto filler;
+    }
+    if (folio_test_uptodate(folio))
+        goto out;
+
+    if (!folio_trylock(folio)) {
+        folio_put_wait_locked(folio, TASK_UNINTERRUPTIBLE);
+        goto repeat;
+    }
+
+    /* Folio was truncated from mapping */
+    if (!folio->mapping) {
+        folio_unlock(folio);
+        folio_put(folio);
+        goto repeat;
+    }
+
+    /* Someone else locked and filled the page in a very small window */
+    if (folio_test_uptodate(folio)) {
+        folio_unlock(folio);
+        goto out;
+    }
+
+filler:
+    err = filemap_read_folio(file, filler, folio);
+    if (err) {
+        folio_put(folio);
+        if (err == AOP_TRUNCATED_PAGE)
+            goto repeat;
+        return ERR_PTR(err);
+    }
+
+out:
+    folio_mark_accessed(folio);
+    return folio;
+}
+
+/**
+ * read_cache_folio - Read into page cache, fill it if needed.
+ * @mapping: The address_space to read from.
+ * @index: The index to read.
+ * @filler: Function to perform the read, or NULL to use aops->read_folio().
+ * @file: Passed to filler function, may be NULL if not required.
+ *
+ * Read one page into the page cache.  If it succeeds, the folio returned
+ * will contain @index, but it may not be the first page of the folio.
+ *
+ * If the filler function returns an error, it will be returned to the
+ * caller.
+ *
+ * Context: May sleep.  Expects mapping->invalidate_lock to be held.
+ * Return: An uptodate folio on success, ERR_PTR() on failure.
+ */
+struct folio *read_cache_folio(struct address_space *mapping, pgoff_t index,
+        filler_t filler, struct file *file)
+{
+    return do_read_cache_folio(mapping, index, filler, file,
+            mapping_gfp_mask(mapping));
+}
+
 void __init pagecache_init(void)
 {
     int i;

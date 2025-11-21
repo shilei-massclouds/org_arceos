@@ -991,3 +991,8 @@ void pm_runtime_allow(struct device *dev)
 {
     pr_err("%s: No impl.", __func__);
 }
+
+void disk_flush_events(struct gendisk *disk, unsigned int mask)
+{
+    pr_notice("%s: No impl.", __func__);
+}
