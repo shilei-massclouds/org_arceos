@@ -28,6 +28,10 @@ $(curdir)%.o: $(curdir)%.c
 	$(Q)printf "CC $@\n"
 	$(Q)$(CC) $(CFLAGS) $(ccflags-y) $(CFLAGS_$(target-stem).o) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
 
+$(curdir)%.o: $(curdir)%.S
+	$(Q)printf "CC $@\n"
+	$(Q)$(CC) -D__ASSEMBLY__ $(CFLAGS) $(ccflags-y) $(CFLAGS_$(target-stem).o) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
+
 FORCE:
 
 .PHONY: _build FORCE

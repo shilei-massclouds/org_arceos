@@ -17,9 +17,6 @@ bool initcall_debug;
 
 bool noirqdebug __read_mostly;
 
-// defined in 'arch/riscv/mm/cacheflush.c'.
-unsigned int riscv_cbom_block_size;
-
 struct net init_net = {
     .ns.count = 1,
 };

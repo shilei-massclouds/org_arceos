@@ -1,3 +1,19 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ *  linux/mm/swap.c
+ *
+ *  Copyright (C) 1991, 1992, 1993, 1994  Linus Torvalds
+ */
+
+/*
+ * This file contains the default values for the operation of the
+ * Linux VM subsystem. Fine-tuning documentation can be found in
+ * Documentation/admin-guide/sysctl/vm.rst.
+ * Started 18.12.91
+ * Swap aging added 23.2.95, Stephen Tweedie.
+ * Buffermem limits added 12.3.98, Rik van Riel.
+ */
+
 #include <linux/mm.h>
 #include <linux/sched.h>
 #include <linux/kernel_stat.h>
@@ -222,12 +238,9 @@ static void __page_cache_release(struct folio *folio, struct lruvec **lruvecp,
         unsigned long *flagsp)
 {
     if (folio_test_lru(folio)) {
-#if 0
         folio_lruvec_relock_irqsave(folio, lruvecp, flagsp);
         lruvec_del_folio(*lruvecp, folio);
         __folio_clear_lru_flags(folio);
-#endif
-        PANIC("");
     }
 }
 
@@ -300,8 +313,6 @@ void folios_put_refs(struct folio_batch *folios, unsigned int *refs)
     folios->nr = j;
     //mem_cgroup_uncharge_folios(folios);
     free_unref_folios(folios);
-
-    PANIC("");
 }
 
 void lru_add_drain(void)

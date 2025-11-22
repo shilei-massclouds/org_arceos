@@ -102,8 +102,11 @@ void *__vmalloc_node_range_noprof(unsigned long size, unsigned long align,
             pgprot_t prot, unsigned long vm_flags, int node,
             const void *caller)
 {
-    pr_err("%s: NOTICE!!! implemente it!\n", __func__);
-    return __kmalloc_noprof(size, 0);
+    pr_err("%s: NOTICE!!! implemente it! size(%lx) align(%lx)\n", __func__, size, align);
+    if (!IS_ALIGNED(size, PAGE_SIZE)) {
+        PANIC("size is NOT aligned to PAGE_SIZE!");
+    }
+    return cl_alloc_pages(size, PAGE_SIZE);
 }
 
 /**
