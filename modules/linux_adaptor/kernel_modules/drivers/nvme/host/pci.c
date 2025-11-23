@@ -2057,11 +2057,20 @@ static int nvme_set_host_mem(struct nvme_dev *dev, u32 bits)
 	c.features.dword14	= cpu_to_le32(upper_32_bits(dma_addr));
 	c.features.dword15	= cpu_to_le32(dev->nr_host_mem_descs);
 
+    printk("---- %s: opcode(%x) fid(%x) (%x,%x,%x,%x,%x)\n",
+           __func__,
+           c.features.opcode, c.features.fid,
+           c.features.dword11,
+           c.features.dword12,
+           c.features.dword13,
+           c.features.dword14,
+           c.features.dword15);
 	ret = nvme_submit_sync_cmd(dev->ctrl.admin_q, &c, NULL, 0);
 	if (ret) {
 		dev_warn(dev->ctrl.device,
-			 "failed to set host mem (err %d, flags %#x).\n",
+			 "-------------------- ------------ failed to set host mem (err %d, flags %#x).\n",
 			 ret, bits);
+        PANIC("");
 	} else
 		dev->hmb = bits & NVME_HOST_MEM_ENABLE;
 

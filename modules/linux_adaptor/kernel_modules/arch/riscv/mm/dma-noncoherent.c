@@ -3,6 +3,7 @@
 #include <linux/mm.h>
 #include <asm/cacheflush.h>
 #include <asm/dma-noncoherent.h>
+#include "adaptor.h"
 
 static bool noncoherent_supported __ro_after_init;
 int dma_cache_alignment __ro_after_init = ARCH_DMA_MINALIGN;
@@ -26,14 +27,12 @@ void arch_dma_prep_coherent(struct page *page, size_t size)
 {
     void *flush_addr = page_address(page);
 
-    pr_err("%s: Fix config 'CONFIG_RISCV_NONSTANDARD_CACHE_OPS'\n", __func__);
-#if 0
 #ifdef CONFIG_RISCV_NONSTANDARD_CACHE_OPS
+    pr_err("%s: Fix config 'CONFIG_RISCV_NONSTANDARD_CACHE_OPS'\n", __func__);
     if (unlikely(noncoherent_cache_ops.wback_inv)) {
         noncoherent_cache_ops.wback_inv(page_to_phys(page), size);
         return;
     }
-#endif
 #endif
 
     ALT_CMO_OP(FLUSH, flush_addr, size, riscv_cbom_block_size);

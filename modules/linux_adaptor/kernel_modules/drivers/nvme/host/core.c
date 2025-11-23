@@ -3297,14 +3297,13 @@ static int nvme_init_identify(struct nvme_ctrl *ctrl)
 	bool prev_apst_enabled;
 	int ret;
 
-    printk("%s: step0\n", __func__);
 	ret = nvme_identify_ctrl(ctrl, &id);
 	if (ret) {
 		dev_err(ctrl->device, "Identify Controller failed (%d)\n", ret);
 		return -EIO;
 	}
 
-    printk("%s: step1\n", __func__);
+    printk("%s: step1 (%lx)\n", __func__, le32_to_cpu(id->hmpre));
 	if (!(ctrl->ops->flags & NVME_F_FABRICS))
 		ctrl->cntlid = le16_to_cpu(id->cntlid);
 
@@ -3335,7 +3334,7 @@ static int nvme_init_identify(struct nvme_ctrl *ctrl)
 	memcpy(ctrl->subsys->firmware_rev, id->fr,
 	       sizeof(ctrl->subsys->firmware_rev));
 
-    printk("%s: step2\n", __func__);
+    printk("%s: step2 flags(%lx)\n", __func__, ctrl->ops->flags);
 	if (force_apst && (ctrl->quirks & NVME_QUIRK_NO_DEEPEST_PS)) {
 		dev_warn(ctrl->device, "forcibly allowing all power states due to nvme_core.force_apst -- use at your own risk\n");
 		ctrl->quirks &= ~NVME_QUIRK_NO_DEEPEST_PS;
@@ -3367,7 +3366,6 @@ static int nvme_init_identify(struct nvme_ctrl *ctrl)
 	if (ret)
 		goto out_free;
 
-    printk("%s: step3\n", __func__);
 	ctrl->sgls = le32_to_cpu(id->sgls);
 	ctrl->kas = le16_to_cpu(id->kas);
 	ctrl->max_namespaces = le32_to_cpu(id->mnan);
@@ -3405,6 +3403,7 @@ static int nvme_init_identify(struct nvme_ctrl *ctrl)
 	}
 	memcpy(ctrl->psd, id->psd, sizeof(ctrl->psd));
 
+    printk("%s: step3 flags(%lx)\n", __func__, ctrl->ops->flags);
 	if (ctrl->ops->flags & NVME_F_FABRICS) {
 		ctrl->icdoff = le16_to_cpu(id->icdoff);
 		ctrl->ioccsz = le32_to_cpu(id->ioccsz);
