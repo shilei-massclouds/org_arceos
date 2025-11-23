@@ -10,26 +10,32 @@
 
 #include "adaptor.h"
 
-static DEFINE_MUTEX(list_lrus_mutex);
-
-static void memcg_destroy_list_lru(struct list_lru *lru)
+static void list_lru_register(struct list_lru *lru)
 {
+}
+
+static void list_lru_unregister(struct list_lru *lru)
+{
+}
+
+static int lru_shrinker_id(struct list_lru *lru)
+{
+	return -1;
 }
 
 static inline bool list_lru_memcg_aware(struct list_lru *lru)
 {
-    return false;
+	return false;
 }
 
 static inline struct list_lru_one *
 list_lru_from_memcg_idx(struct list_lru *lru, int nid, int idx)
 {
-    return &lru->node[nid].lru;
+	return &lru->node[nid].lru;
 }
 
-static int lru_shrinker_id(struct list_lru *lru)
+static void memcg_destroy_list_lru(struct list_lru *lru)
 {
-    return -1;
 }
 
 static void init_one_lru(struct list_lru_one *l)
@@ -105,19 +111,9 @@ int __list_lru_init(struct list_lru *lru, bool memcg_aware,
     }
 
     //memcg_init_list_lru(lru, memcg_aware);
-    //list_lru_register(lru);
+    list_lru_register(lru);
 
     return 0;
-}
-
-static void list_lru_unregister(struct list_lru *lru)
-{
-    if (!list_lru_memcg_aware(lru))
-        return;
-
-    mutex_lock(&list_lrus_mutex);
-    list_del(&lru->list);
-    mutex_unlock(&list_lrus_mutex);
 }
 
 void list_lru_destroy(struct list_lru *lru)

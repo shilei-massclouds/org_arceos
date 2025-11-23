@@ -97,21 +97,7 @@ static int wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi,
 
 static int cgwb_bdi_init(struct backing_dev_info *bdi)
 {
-    int ret;
-
-    INIT_RADIX_TREE(&bdi->cgwb_tree, GFP_ATOMIC);
-    mutex_init(&bdi->cgwb_release_mutex);
-    init_rwsem(&bdi->wb_switch_rwsem);
-
-    ret = wb_init(&bdi->wb, bdi, GFP_KERNEL);
-    if (!ret) {
-#if 0
-        bdi->wb.memcg_css = &root_mem_cgroup->css;
-        bdi->wb.blkcg_css = blkcg_root_css;
-#endif
-        pr_notice("%s: No impl.", __func__);
-    }
-    return ret;
+    return wb_init(&bdi->wb, bdi, GFP_KERNEL);
 }
 
 int bdi_init(struct backing_dev_info *bdi)
