@@ -601,7 +601,10 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
     // Note: all pages belone to node-0 and DMA32
     set_page_node(page, 0);
     set_page_zone(page, ZONE_DMA32);
-    // Note: __init_single_page
+
+    // Note: Consider to implement __init_single_page
+    //NOTE: Fix _mapcount.
+    //atomic_set(&page->_mapcount, -1);
     INIT_LIST_HEAD(&page->lru);
 
     //set_page_count(page, 1);
@@ -821,6 +824,7 @@ void free_unref_folios(struct folio_batch *folios)
         folio->private = NULL;
         migratetype = get_pfnblock_migratetype(&folio->page, pfn);
 
+    printk("%s: step1\n", __func__);
         /* Different zone requires a different pcp lock */
         if (zone != locked_zone ||
             is_migrate_isolate(migratetype)) {
@@ -831,6 +835,7 @@ void free_unref_folios(struct folio_batch *folios)
                 pcp = NULL;
             }
 
+    printk("%s: step2\n", __func__);
             /*
              * Free isolated pages directly to the
              * allocator, see comment in free_unref_page.
@@ -841,6 +846,7 @@ void free_unref_folios(struct folio_batch *folios)
                 continue;
             }
 
+    printk("%s: step3\n", __func__);
             /*
              * trylock is necessary as folios may be getting freed
              * from IRQ or SoftIRQ context after an IO completion.
@@ -856,6 +862,7 @@ void free_unref_folios(struct folio_batch *folios)
             locked_zone = zone;
         }
 
+    printk("%s: stepN\n", __func__);
         /*
          * Non-isolated types over MIGRATE_PCPTYPES get added
          * to the MIGRATE_MOVABLE pcp list.

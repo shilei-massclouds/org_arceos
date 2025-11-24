@@ -77,7 +77,6 @@ static void lru_add(struct lruvec *lruvec, struct folio *folio)
     int was_unevictable = folio_test_clear_unevictable(folio);
     long nr_pages = folio_nr_pages(folio);
 
-    printk("%s: step1 (%lx)(%lx, %lx)\n", __func__, folio, folio->lru.prev, folio->lru.next);
     VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
 
     /*
@@ -113,7 +112,6 @@ static void lru_add(struct lruvec *lruvec, struct folio *folio)
 #endif
     }
 
-    printk("%s: step2 lruvec(%lx), folio(%lx)\n", __func__, lruvec, folio);
     lruvec_add_folio(lruvec, folio);
     trace_mm_lru_insertion(folio);
 }
