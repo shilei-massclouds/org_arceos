@@ -320,20 +320,15 @@ void lru_add_drain(void)
     mlock_drain_local();
 }
 
-/*
- * Drain pages out of the cpu's folio_batch.
- * Either "cpu" is the current CPU, and preemption has already been
- * disabled; or "cpu" is being hot-unplugged, and is already dead.
- */
-void lru_add_drain_cpu(int cpu)
+static void lru_move_tail(struct lruvec *lruvec, struct folio *folio)
 {
-    pr_notice("%s: No impl. cpu(%d).", __func__, cpu);
-}
+    if (folio_test_unevictable(folio))
+        return;
 
-void lru_add_drain_all(void)
-{
-    pr_notice("%s: No impl.", __func__);
-    PANIC("");
+    lruvec_del_folio(lruvec, folio);
+    folio_clear_active(folio);
+    lruvec_add_folio_tail(lruvec, folio);
+    __count_vm_events(PGROTATED, folio_nr_pages(folio));
 }
 
 /*
@@ -359,6 +354,123 @@ void lru_add_drain_all(void)
  */
 static void lru_deactivate_file(struct lruvec *lruvec, struct folio *folio)
 {
+    PANIC("");
+}
+
+static void lru_deactivate(struct lruvec *lruvec, struct folio *folio)
+{
+    long nr_pages = folio_nr_pages(folio);
+
+    if (folio_test_unevictable(folio) || !(folio_test_active(folio) || lru_gen_enabled()))
+        return;
+
+    lruvec_del_folio(lruvec, folio);
+    folio_clear_active(folio);
+    folio_clear_referenced(folio);
+    lruvec_add_folio(lruvec, folio);
+
+    __count_vm_events(PGDEACTIVATE, nr_pages);
+    __count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE, nr_pages);
+}
+
+static void lru_lazyfree(struct lruvec *lruvec, struct folio *folio)
+{
+    long nr_pages = folio_nr_pages(folio);
+
+    if (!folio_test_anon(folio) || !folio_test_swapbacked(folio) ||
+        folio_test_swapcache(folio) || folio_test_unevictable(folio))
+        return;
+
+    lruvec_del_folio(lruvec, folio);
+    folio_clear_active(folio);
+    folio_clear_referenced(folio);
+    /*
+     * Lazyfree folios are clean anonymous folios.  They have
+     * the swapbacked flag cleared, to distinguish them from normal
+     * anonymous folios
+     */
+    folio_clear_swapbacked(folio);
+    lruvec_add_folio(lruvec, folio);
+
+    __count_vm_events(PGLAZYFREE, nr_pages);
+    __count_memcg_events(lruvec_memcg(lruvec), PGLAZYFREE, nr_pages);
+}
+
+static void lru_activate(struct lruvec *lruvec, struct folio *folio)
+{
+    long nr_pages = folio_nr_pages(folio);
+
+    if (folio_test_active(folio) || folio_test_unevictable(folio))
+        return;
+
+
+    lruvec_del_folio(lruvec, folio);
+    folio_set_active(folio);
+    lruvec_add_folio(lruvec, folio);
+    trace_mm_lru_activate(folio);
+
+    __count_vm_events(PGACTIVATE, nr_pages);
+    __count_memcg_events(lruvec_memcg(lruvec), PGACTIVATE, nr_pages);
+}
+
+static void folio_activate_drain(int cpu)
+{
+    struct folio_batch *fbatch = &per_cpu(cpu_fbatches.lru_activate, cpu);
+
+    if (folio_batch_count(fbatch))
+        folio_batch_move_lru(fbatch, lru_activate);
+}
+
+void folio_activate(struct folio *folio)
+{
+    if (folio_test_active(folio) || folio_test_unevictable(folio))
+        return;
+
+    folio_batch_add_and_move(folio, lru_activate, true);
+}
+
+/*
+ * Drain pages out of the cpu's folio_batch.
+ * Either "cpu" is the current CPU, and preemption has already been
+ * disabled; or "cpu" is being hot-unplugged, and is already dead.
+ */
+void lru_add_drain_cpu(int cpu)
+{
+    struct cpu_fbatches *fbatches = &per_cpu(cpu_fbatches, cpu);
+    struct folio_batch *fbatch = &fbatches->lru_add;
+
+    if (folio_batch_count(fbatch))
+        folio_batch_move_lru(fbatch, lru_add);
+
+    fbatch = &fbatches->lru_move_tail;
+    /* Disabling interrupts below acts as a compiler barrier. */
+    if (data_race(folio_batch_count(fbatch))) {
+        unsigned long flags;
+
+        /* No harm done if a racing interrupt already did this */
+        local_lock_irqsave(&cpu_fbatches.lock_irq, flags);
+        folio_batch_move_lru(fbatch, lru_move_tail);
+        local_unlock_irqrestore(&cpu_fbatches.lock_irq, flags);
+    }
+
+    fbatch = &fbatches->lru_deactivate_file;
+    if (folio_batch_count(fbatch))
+        folio_batch_move_lru(fbatch, lru_deactivate_file);
+
+    fbatch = &fbatches->lru_deactivate;
+    if (folio_batch_count(fbatch))
+        folio_batch_move_lru(fbatch, lru_deactivate);
+
+    fbatch = &fbatches->lru_lazyfree;
+    if (folio_batch_count(fbatch))
+        folio_batch_move_lru(fbatch, lru_lazyfree);
+
+    folio_activate_drain(cpu);
+}
+
+void lru_add_drain_all(void)
+{
+    pr_notice("%s: No impl.", __func__);
     PANIC("");
 }
 
