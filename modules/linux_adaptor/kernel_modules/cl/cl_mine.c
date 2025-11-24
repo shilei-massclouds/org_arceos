@@ -404,7 +404,6 @@ CL_MINE(workingset_refault)
 
 CL_MINE(truncate_inode_partial_folio)
 CL_MINE(truncate_inode_folio)
-CL_MINE(unmap_mapping_folio)
 CL_MINE(free_huge_folio)
 
 CL_MINE(kfree_sensitive)

@@ -22,6 +22,10 @@ __list_valid_slowpath
 bool __list_add_valid_or_report(struct list_head *new, struct list_head *prev,
 				struct list_head *next)
 {
+    if (next == NULL) {
+        dump_stack();
+    }
+
 	if (CHECK_DATA_CORRUPTION(prev == NULL,
 			"list_add corruption. prev is NULL.\n") ||
 	    CHECK_DATA_CORRUPTION(next == NULL,
@@ -48,6 +52,10 @@ bool __list_del_entry_valid_or_report(struct list_head *entry)
 
 	prev = entry->prev;
 	next = entry->next;
+
+    if (next == NULL) {
+        dump_stack();
+    }
 
 	if (CHECK_DATA_CORRUPTION(next == NULL,
 			"list_del corruption, %px->next is NULL\n", entry) ||

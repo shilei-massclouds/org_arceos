@@ -62,6 +62,57 @@
 
 #include "adaptor.h"
 
+/*
+ * On SMP, spin_trylock is sufficient protection.
+ * On PREEMPT_RT, spin_trylock is equivalent on both SMP and UP.
+ */
+#define pcp_trylock_prepare(flags)  do { } while (0)
+#define pcp_trylock_finish(flag)    do { } while (0)
+
+#define pcpu_task_pin()     preempt_disable()
+#define pcpu_task_unpin()   preempt_enable()
+
+/*
+ * Generic helper to lookup and a per-cpu variable with an embedded spinlock.
+ * Return value should be used with equivalent unlock helper.
+ */
+#define pcpu_spin_lock(type, member, ptr)               \
+({                                  \
+    type *_ret;                         \
+    pcpu_task_pin();                        \
+    _ret = this_cpu_ptr(ptr);                   \
+    spin_lock(&_ret->member);                   \
+    _ret;                               \
+})
+
+#define pcpu_spin_trylock(type, member, ptr)                \
+({                                  \
+    type *_ret;                         \
+    pcpu_task_pin();                        \
+    _ret = this_cpu_ptr(ptr);                   \
+    if (!spin_trylock(&_ret->member)) {             \
+        pcpu_task_unpin();                  \
+        _ret = NULL;                        \
+    }                               \
+    _ret;                               \
+})
+
+#define pcpu_spin_unlock(member, ptr)                   \
+({                                  \
+    spin_unlock(&ptr->member);                  \
+    pcpu_task_unpin();                      \
+})
+
+/* struct per_cpu_pages specific helpers. */
+#define pcp_spin_lock(ptr)                      \
+    pcpu_spin_lock(struct per_cpu_pages, lock, ptr)
+
+#define pcp_spin_trylock(ptr)                       \
+    pcpu_spin_trylock(struct per_cpu_pages, lock, ptr)
+
+#define pcp_spin_unlock(ptr)                        \
+    pcpu_spin_unlock(lock, ptr)
+
 /* No special request */
 #define FPI_NONE        ((__force fpi_t)0)
 
@@ -423,6 +474,119 @@ void *alloc_pages_exact_noprof(size_t size, gfp_t gfp_mask)
     return cl_alloc_pages(size, PAGE_SIZE);
 }
 
+static inline bool should_skip_init(gfp_t flags)
+{
+    /* Don't skip, if hardware tag-based KASAN is not enabled. */
+    if (!kasan_hw_tags_enabled())
+        return false;
+
+    /* For hardware tag-based KASAN, skip if requested. */
+    return (flags & __GFP_SKIP_ZERO);
+}
+
+static inline bool should_skip_kasan_unpoison(gfp_t flags)
+{
+    /* Don't skip if a software KASAN mode is enabled. */
+    if (IS_ENABLED(CONFIG_KASAN_GENERIC) ||
+        IS_ENABLED(CONFIG_KASAN_SW_TAGS))
+        return false;
+
+    /* Skip, if hardware tag-based KASAN is not enabled. */
+    if (!kasan_hw_tags_enabled())
+        return true;
+
+    /*
+     * With hardware tag-based KASAN enabled, skip if this has been
+     * requested via __GFP_SKIP_KASAN.
+     */
+    return flags & __GFP_SKIP_KASAN;
+}
+
+inline void post_alloc_hook(struct page *page, unsigned int order,
+                gfp_t gfp_flags)
+{
+    bool init = !want_init_on_free() && want_init_on_alloc(gfp_flags) &&
+            !should_skip_init(gfp_flags);
+    bool zero_tags = init && (gfp_flags & __GFP_ZEROTAGS);
+    int i;
+
+    set_page_private(page, 0);
+    set_page_refcounted(page);
+
+    arch_alloc_page(page, order);
+    debug_pagealloc_map_pages(page, 1 << order);
+
+    /*
+     * Page unpoisoning must happen before memory initialization.
+     * Otherwise, the poison pattern will be overwritten for __GFP_ZERO
+     * allocations and the page unpoisoning code will complain.
+     */
+    kernel_unpoison_pages(page, 1 << order);
+
+    /*
+     * As memory initialization might be integrated into KASAN,
+     * KASAN unpoisoning and memory initializion code must be
+     * kept together to avoid discrepancies in behavior.
+     */
+
+    /*
+     * If memory tags should be zeroed
+     * (which happens only when memory should be initialized as well).
+     */
+    if (zero_tags) {
+        /* Initialize both memory and memory tags. */
+        for (i = 0; i != 1 << order; ++i)
+            tag_clear_highpage(page + i);
+
+        /* Take note that memory was initialized by the loop above. */
+        init = false;
+    }
+    if (!should_skip_kasan_unpoison(gfp_flags) &&
+        kasan_unpoison_pages(page, order, init)) {
+        /* Take note that memory was initialized by KASAN. */
+        if (kasan_has_integrated_init())
+            init = false;
+    } else {
+        /*
+         * If memory tags have not been set by KASAN, reset the page
+         * tags to ensure page_address() dereferencing does not fault.
+         */
+        for (i = 0; i != 1 << order; ++i)
+            page_kasan_tag_reset(page + i);
+    }
+#if 0
+    /* If memory is still not initialized, initialize it now. */
+    if (init)
+        kernel_init_pages(page, 1 << order);
+#endif
+
+    set_page_owner(page, order, gfp_flags);
+    page_table_check_alloc(page, order);
+    pgalloc_tag_add(page, current, 1 << order);
+}
+
+static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags,
+                            unsigned int alloc_flags)
+{
+    post_alloc_hook(page, order, gfp_flags);
+
+    if (order && (gfp_flags & __GFP_COMP))
+        prep_compound_page(page, order);
+
+#if 0
+    /*
+     * page is set pfmemalloc when ALLOC_NO_WATERMARKS was necessary to
+     * allocate the page. The expectation is that the caller is taking
+     * steps that will free more memory. The caller should avoid the page
+     * being used for !PFMEMALLOC purposes.
+     */
+    if (alloc_flags & ALLOC_NO_WATERMARKS)
+        set_page_pfmemalloc(page);
+    else
+        clear_page_pfmemalloc(page);
+#endif
+}
+
 /*
  * This is the 'heart' of the zoned buddy allocator.
  */
@@ -433,9 +597,14 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
     void *va = cl_alloc_pages(PAGE_SIZE * nr_pages, PAGE_SIZE);
     struct page *page = virt_to_page(va);
     memset(page, 0, sizeof(struct page));
-    // Note: page_type must be inited with UINT_MAX. Check where set it.
-    page->page_type = UINT_MAX;
-    set_page_count(page, 1);
+    prep_new_page(page, order, gfp, 0 /* alloc_flags */);
+    // Note: all pages belone to node-0 and DMA32
+    set_page_node(page, 0);
+    set_page_zone(page, ZONE_DMA32);
+    // Note: __init_single_page
+    INIT_LIST_HEAD(&page->lru);
+
+    //set_page_count(page, 1);
     return page;
 }
 
@@ -496,6 +665,118 @@ static void free_one_page(struct zone *zone, struct page *page,
     __count_vm_events(PGFREE, 1 << order);
 }
 
+static inline unsigned int order_to_pindex(int migratetype, int order)
+{
+    bool __maybe_unused movable;
+
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+    if (order > PAGE_ALLOC_COSTLY_ORDER) {
+        VM_BUG_ON(order != HPAGE_PMD_ORDER);
+
+        movable = migratetype == MIGRATE_MOVABLE;
+
+        return NR_LOWORDER_PCP_LISTS + movable;
+    }
+#else
+    VM_BUG_ON(order > PAGE_ALLOC_COSTLY_ORDER);
+#endif
+
+    return (MIGRATE_PCPTYPES * order) + migratetype;
+}
+
+static int nr_pcp_high(struct per_cpu_pages *pcp, struct zone *zone,
+               int batch, bool free_high)
+{
+    PANIC("");
+}
+
+/*
+ * Frees a number of pages from the PCP lists
+ * Assumes all pages on list are in same zone.
+ * count is the number of pages to free.
+ */
+static void free_pcppages_bulk(struct zone *zone, int count,
+                    struct per_cpu_pages *pcp,
+                    int pindex)
+{
+    PANIC("");
+}
+
+static int nr_pcp_free(struct per_cpu_pages *pcp, int batch, int high, bool free_high)
+{
+    int min_nr_free, max_nr_free;
+
+    /* Free as much as possible if batch freeing high-order pages. */
+    if (unlikely(free_high))
+        return min(pcp->count, batch << CONFIG_PCP_BATCH_SCALE_MAX);
+
+    /* Check for PCP disabled or boot pageset */
+    if (unlikely(high < batch))
+        return 1;
+
+    /* Leave at least pcp->batch pages on the list */
+    min_nr_free = batch;
+    max_nr_free = high - batch;
+
+    /*
+     * Increase the batch number to the number of the consecutive
+     * freed pages to reduce zone lock contention.
+     */
+    batch = clamp_t(int, pcp->free_count, min_nr_free, max_nr_free);
+
+    return batch;
+}
+
+static void free_unref_page_commit(struct zone *zone, struct per_cpu_pages *pcp,
+                   struct page *page, int migratetype,
+                   unsigned int order)
+{
+    int high, batch;
+    int pindex;
+    bool free_high = false;
+
+    /*
+     * On freeing, reduce the number of pages that are batch allocated.
+     * See nr_pcp_alloc() where alloc_factor is increased for subsequent
+     * allocations.
+     */
+    pcp->alloc_factor >>= 1;
+    __count_vm_events(PGFREE, 1 << order);
+    pindex = order_to_pindex(migratetype, order);
+    list_add(&page->pcp_list, &pcp->lists[pindex]);
+    pcp->count += 1 << order;
+
+    batch = READ_ONCE(pcp->batch);
+    /*
+     * As high-order pages other than THP's stored on PCP can contribute
+     * to fragmentation, limit the number stored when PCP is heavily
+     * freeing without allocation. The remainder after bulk freeing
+     * stops will be drained from vmstat refresh context.
+     */
+    if (order && order <= PAGE_ALLOC_COSTLY_ORDER) {
+        free_high = (pcp->free_count >= batch &&
+                 (pcp->flags & PCPF_PREV_FREE_HIGH_ORDER) &&
+                 (!(pcp->flags & PCPF_FREE_HIGH_BATCH) ||
+                  pcp->count >= READ_ONCE(batch)));
+        pcp->flags |= PCPF_PREV_FREE_HIGH_ORDER;
+    } else if (pcp->flags & PCPF_PREV_FREE_HIGH_ORDER) {
+        pcp->flags &= ~PCPF_PREV_FREE_HIGH_ORDER;
+    }
+    if (pcp->free_count < (batch << CONFIG_PCP_BATCH_SCALE_MAX))
+        pcp->free_count += (1 << order);
+    high = nr_pcp_high(pcp, zone, batch, free_high);
+    if (pcp->count >= high) {
+        free_pcppages_bulk(zone, nr_pcp_free(pcp, batch, high, free_high),
+                   pcp, pindex);
+        if (test_bit(ZONE_BELOW_HIGH, &zone->flags) &&
+            zone_watermark_ok(zone, 0, high_wmark_pages(zone),
+                      ZONE_MOVABLE, 0))
+            clear_bit(ZONE_BELOW_HIGH, &zone->flags);
+    }
+
+    PANIC("");
+}
+
 /*
  * Free a batch of folios
  */
@@ -530,7 +811,6 @@ void free_unref_folios(struct folio_batch *folios)
     }
     folios->nr = j;
 
-#if 0
     for (i = 0; i < folios->nr; i++) {
         struct folio *folio = folios->folios[i];
         struct zone *zone = folio_zone(folio);
@@ -593,8 +873,6 @@ void free_unref_folios(struct folio_batch *folios)
         pcp_trylock_finish(UP_flags);
     }
     folio_batch_reinit(folios);
-#endif
-    PANIC("");
 }
 
 /*
@@ -1013,4 +1291,49 @@ unsigned long get_pfnblock_flags_mask(const struct page *page,
      */
     word = READ_ONCE(bitmap[word_bitidx]);
     return (word >> bitidx) & mask;
+}
+
+/*
+ * Higher-order pages are called "compound pages".  They are structured thusly:
+ *
+ * The first PAGE_SIZE page is called the "head page" and have PG_head set.
+ *
+ * The remaining PAGE_SIZE pages are called "tail pages". PageTail() is encoded
+ * in bit 0 of page->compound_head. The rest of bits is pointer to head page.
+ *
+ * The first tail page's ->compound_order holds the order of allocation.
+ * This usage means that zero-order pages may not be compound.
+ */
+
+void prep_compound_page(struct page *page, unsigned int order)
+{
+    int i;
+    int nr_pages = 1 << order;
+
+    __SetPageHead(page);
+    for (i = 1; i < nr_pages; i++)
+        prep_compound_tail(page, i);
+
+    prep_compound_head(page, order);
+}
+
+bool zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
+              int highest_zoneidx, unsigned int alloc_flags)
+{
+    return __zone_watermark_ok(z, order, mark, highest_zoneidx, alloc_flags,
+                    zone_page_state(z, NR_FREE_PAGES));
+}
+
+/*
+ * Return true if free base pages are above 'mark'. For high-order checks it
+ * will return true of the order-0 watermark is reached and there is at least
+ * one free page of a suitable size. Checking now avoids taking the zone lock
+ * to check in the allocation paths if no pages are free.
+ */
+bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
+             int highest_zoneidx, unsigned int alloc_flags,
+             long free_pages)
+{
+    pr_notice("%s: No impl.", __func__);
+    return false;
 }

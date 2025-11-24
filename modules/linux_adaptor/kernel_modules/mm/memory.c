@@ -149,3 +149,37 @@ void unmap_mapping_pages(struct address_space *mapping, pgoff_t start,
                      last_index, &details);
     i_mmap_unlock_read(mapping);
 }
+
+/**
+ * unmap_mapping_folio() - Unmap single folio from processes.
+ * @folio: The locked folio to be unmapped.
+ *
+ * Unmap this folio from any userspace process which still has it mmaped.
+ * Typically, for efficiency, the range of nearby pages has already been
+ * unmapped by unmap_mapping_pages() or unmap_mapping_range().  But once
+ * truncation or invalidation holds the lock on a folio, it may find that
+ * the page has been remapped again: and then uses unmap_mapping_folio()
+ * to unmap it finally.
+ */
+void unmap_mapping_folio(struct folio *folio)
+{
+    struct address_space *mapping = folio->mapping;
+    struct zap_details details = { };
+    pgoff_t first_index;
+    pgoff_t last_index;
+
+    VM_BUG_ON(!folio_test_locked(folio));
+
+    first_index = folio->index;
+    last_index = folio_next_index(folio) - 1;
+
+    details.even_cows = false;
+    details.single_folio = folio;
+    details.zap_flags = ZAP_FLAG_DROP_MARKER;
+
+    i_mmap_lock_read(mapping);
+    if (unlikely(!RB_EMPTY_ROOT(&mapping->i_mmap.rb_root)))
+        unmap_mapping_range_tree(&mapping->i_mmap, first_index,
+                     last_index, &details);
+    i_mmap_unlock_read(mapping);
+}

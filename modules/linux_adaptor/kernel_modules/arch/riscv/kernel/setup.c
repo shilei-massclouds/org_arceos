@@ -30,3 +30,11 @@
 //#include "head.h"
 
 unsigned long boot_cpu_hartid;
+
+void __init setup_arch(char **cmdline_p)
+{
+    // In misc_mem_init()
+    int nid = 0;
+    pg_data_t *pgdat = NODE_DATA(nid);
+    lruvec_init(&pgdat->__lruvec);
+}

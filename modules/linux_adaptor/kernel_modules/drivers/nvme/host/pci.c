@@ -1021,7 +1021,6 @@ static void nvme_queue_rqs(struct rq_list *rqlist)
 	struct nvme_queue *nvmeq = NULL;
 	struct request *req;
 
-    PANIC("");
 	while ((req = rq_list_pop(rqlist))) {
 		if (nvmeq && nvmeq != req->mq_hctx->driver_data)
 			nvme_submit_cmds(nvmeq, &submit_list);
@@ -2070,7 +2069,6 @@ static int nvme_set_host_mem(struct nvme_dev *dev, u32 bits)
 		dev_warn(dev->ctrl.device,
 			 "-------------------- ------------ failed to set host mem (err %d, flags %#x).\n",
 			 ret, bits);
-        PANIC("");
 	} else
 		dev->hmb = bits & NVME_HOST_MEM_ENABLE;
 
@@ -3287,6 +3285,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	if (result < 0)
 		goto out_disable;
 
+    printk("%s: step3\n", __func__);
 	result = nvme_setup_io_queues(dev);
 	if (result)
 		goto out_disable;

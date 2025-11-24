@@ -77,6 +77,7 @@ static void lru_add(struct lruvec *lruvec, struct folio *folio)
     int was_unevictable = folio_test_clear_unevictable(folio);
     long nr_pages = folio_nr_pages(folio);
 
+    printk("%s: step1 (%lx)(%lx, %lx)\n", __func__, folio, folio->lru.prev, folio->lru.next);
     VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
 
     /*
@@ -112,8 +113,8 @@ static void lru_add(struct lruvec *lruvec, struct folio *folio)
 #endif
     }
 
-    pr_notice("%s: No impl. for 'lruvec_add_folio'", __func__);
-    //lruvec_add_folio(lruvec, folio);
+    printk("%s: step2 lruvec(%lx), folio(%lx)\n", __func__, lruvec, folio);
+    lruvec_add_folio(lruvec, folio);
     trace_mm_lru_insertion(folio);
 }
 
@@ -126,16 +127,14 @@ static void folio_batch_move_lru(struct folio_batch *fbatch, move_fn_t move_fn)
     for (i = 0; i < folio_batch_count(fbatch); i++) {
         struct folio *folio = fbatch->folios[i];
 
-        //folio_lruvec_relock_irqsave(folio, &lruvec, &flags);
+        folio_lruvec_relock_irqsave(folio, &lruvec, &flags);
         move_fn(lruvec, folio);
 
         folio_set_lru(folio);
     }
 
-#if 0
     if (lruvec)
         unlock_page_lruvec_irqrestore(lruvec, flags);
-#endif
     folios_put(fbatch);
 }
 
@@ -311,7 +310,7 @@ void folios_put_refs(struct folio_batch *folios, unsigned int *refs)
     }
 
     folios->nr = j;
-    //mem_cgroup_uncharge_folios(folios);
+    mem_cgroup_uncharge_folios(folios);
     free_unref_folios(folios);
 }
 
@@ -330,12 +329,13 @@ void lru_add_drain(void)
  */
 void lru_add_drain_cpu(int cpu)
 {
-    pr_notice("%s: No impl.", __func__);
+    pr_notice("%s: No impl. cpu(%d).", __func__, cpu);
 }
 
 void lru_add_drain_all(void)
 {
     pr_notice("%s: No impl.", __func__);
+    PANIC("");
 }
 
 /*

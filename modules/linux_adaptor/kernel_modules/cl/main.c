@@ -46,6 +46,8 @@ int clinux_init(phys_addr_t dt_phys)
     smp_setup_processor_id();
     boot_cpu_init();
 
+    setup_arch(NULL /* cmdline_p */);
+
     // Only for riscv64
     sbi_init();
 

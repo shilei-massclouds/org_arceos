@@ -147,6 +147,15 @@ static int __request_region_locked(struct resource *res, struct resource *parent
 
 static void free_resource(struct resource *res)
 {
+    printk("%s ...\n", __func__);
+    printk("%s res(%lx) (%lx)\n", __func__, res, virt_to_page(res));
+    printk("%s res(%lx) (%lx)\n", __func__, res, virt_to_head_page(res));
+    {
+        struct page *p = virt_to_page(res);
+	    unsigned long head = READ_ONCE(p->compound_head);
+        printk("%s: head: %lx\n", __func__, head);
+    }
+
     /**
      * If the resource was allocated using memblock early during boot
      * we'll leak it here: we can only return full pages back to the
@@ -155,6 +164,7 @@ static void free_resource(struct resource *res)
      */
     if (res && PageSlab(virt_to_head_page(res)))
         kfree(res);
+    printk("%s ok!\n", __func__);
 }
 
 static void revoke_iomem(struct resource *res) {}

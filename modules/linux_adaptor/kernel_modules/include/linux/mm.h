@@ -1634,7 +1634,12 @@ int page_to_nid(const struct page *page);
 #else
 static inline int page_to_nid(const struct page *page)
 {
+    // Note: Fix it!
+#if 0
 	return (PF_POISONED_CHECK(page)->flags >> NODES_PGSHIFT) & NODES_MASK;
+#else
+    return 0;
+#endif
 }
 #endif
 
