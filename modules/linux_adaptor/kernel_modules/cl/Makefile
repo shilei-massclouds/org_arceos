@@ -7,4 +7,4 @@ obj-y += mount_ops.o
 obj-y += cl_syscalls.o
 obj-y += test_block.o
 obj-y += test_fs.o
-#obj-y += benchmark.o
+obj-y += benchmark.o

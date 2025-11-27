@@ -21,13 +21,15 @@
 #define DP1000
 
 //#define TEST_BLOCK
-#define TEST_EXT4
+//#define TEST_EXT4
+#define BENCH_MARK
 
 extern void cl_do_initcalls(void);
 extern void cl_invoke_softirq(void);
 
 extern void test_block(void);
 extern void test_ext4();
+extern void bench_ext4();
 
 int clinux_starting = 0;
 int clinux_started = 0;
@@ -118,6 +120,12 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     printk("====== Ext4 test ======\n");
     test_ext4();
     //ftrace_dump(DUMP_ALL);
+    PANIC("Reach here!");
+#endif
+
+#ifdef BENCH_MARK
+    printk("====== Bench Mark for Ext4 ======\n");
+    bench_ext4();
     PANIC("Reach here!");
 #endif
 

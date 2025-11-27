@@ -56,7 +56,6 @@ fn prepare_ext_interrupt() {
     const EXT_IRQ_NUM: usize = INTC_IRQ_BASE + 9;
 
     axhal::irq::register_handler(EXT_IRQ_NUM, || {
-        error!("Handle ext interrupt ...");
         unsafe { call_handle_arch_irq(EXT_IRQ_NUM as usize) };
     });
 }
