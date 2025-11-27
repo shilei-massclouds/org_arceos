@@ -223,7 +223,7 @@ static int __init riscv_intc_init(struct device_node *node,
 		return 0;
 	}
 
-    printk("%s: %lx, %lx, %lx\n",
+    printk("%s: hartid(%lx), cpuid(%lx), curid(%lx)\n",
            __func__,
            hartid,
            riscv_hartid_to_cpuid(hartid),

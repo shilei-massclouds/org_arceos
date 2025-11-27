@@ -10,6 +10,8 @@
 #include <asm/softirq_stack.h>
 #include <asm/stacktrace.h>
 
+#include "adaptor.h"
+
 static struct fwnode_handle *(*__get_intc_node)(void);
 
 void riscv_set_intc_hwnode_fn(struct fwnode_handle *(*fn)(void))
@@ -33,6 +35,6 @@ void __init init_IRQ(void)
 #endif
     irqchip_init();
     if (!handle_arch_irq)
-        panic("No interrupt controller found.");
+        PANIC("No interrupt controller found.");
     //sbi_ipi_init();
 }

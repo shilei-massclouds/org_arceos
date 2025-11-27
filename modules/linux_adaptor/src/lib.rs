@@ -22,7 +22,7 @@ use axconfig::plat::{PHYS_MEMORY_BASE, PHYS_MEMORY_SIZE, PHYS_VIRT_OFFSET};
 use crate::kallsyms::init_kallsyms;
 
 /// Initialize Linux modules.
-pub fn init_linux_modules(dtb: usize) {
+pub fn init_linux_modules(hartid: usize, dtb: usize) {
     info!("Initialize Linux modules...");
 
     /* Offset between VirtAddr and PhysAddr in kernel aspace. */
@@ -44,7 +44,7 @@ pub fn init_linux_modules(dtb: usize) {
 
     init_kallsyms();
 
-    let ret = unsafe { clinux_init(dtb) };
+    let ret = unsafe { clinux_init(hartid, dtb) };
     info!("cLinux init [{}].", ret);
 }
 
@@ -63,7 +63,7 @@ fn prepare_ext_interrupt() {
 
 unsafe extern "C" {
     fn init_current(tid: u64) -> u64;
-    fn clinux_init(dtb: usize) -> i32;
+    fn clinux_init(hartid: usize, dtb: usize) -> i32;
     fn init_mem_map(pa_start: usize, pa_end: usize) -> i32;
     fn _skernel();
 }

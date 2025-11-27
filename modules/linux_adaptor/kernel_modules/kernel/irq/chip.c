@@ -309,9 +309,12 @@ int irq_startup(struct irq_desc *desc, bool resend, bool force)
 
     desc->depth = 0;
 
+    printk("%s: step0\n", __func__);
+    printk("%s: step1 chip(%s)\n", __func__, d->chip->name);
     if (irqd_is_started(d)) {
         irq_enable(desc);
     } else {
+    printk("%s: step2 hwirq(%u) status(%u)\n", __func__, d->hwirq, __irq_startup_managed(desc, aff, force));
         switch (__irq_startup_managed(desc, aff, force)) {
         case IRQ_STARTUP_NORMAL:
             if (d->chip->flags & IRQCHIP_AFFINITY_PRE_STARTUP)
@@ -334,17 +337,6 @@ int irq_startup(struct irq_desc *desc, bool resend, bool force)
 
     return ret;
 }
-
-#ifndef CONFIG_AUTO_IRQ_AFFINITY
-/*
- * Generic version of the affinity autoselector.
- */
-int irq_setup_affinity(struct irq_desc *desc)
-{
-    pr_notice("%s: No impl.", __func__);
-    return 0;
-}
-#endif
 
 void irq_enable(struct irq_desc *desc)
 {
@@ -733,4 +725,32 @@ int irq_set_chip(unsigned int irq, const struct irq_chip *chip)
      */
     irq_mark_irq(irq);
     return 0;
+}
+
+void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu)
+{
+    printk("%s: irqchip(%s)\n", __func__, desc->irq_data.chip->name);
+    if (desc->irq_data.chip->irq_enable)
+        desc->irq_data.chip->irq_enable(&desc->irq_data);
+    else
+        desc->irq_data.chip->irq_unmask(&desc->irq_data);
+    cpumask_set_cpu(cpu, desc->percpu_enabled);
+}
+
+/**
+ * irq_chip_set_affinity_parent - Set affinity on the parent interrupt
+ * @data:   Pointer to interrupt specific data
+ * @dest:   The affinity mask to set
+ * @force:  Flag to enforce setting (disable online checks)
+ *
+ * Conditional, as the underlying parent chip might not implement it.
+ */
+int irq_chip_set_affinity_parent(struct irq_data *data,
+                 const struct cpumask *dest, bool force)
+{
+    data = data->parent_data;
+    if (data->chip->irq_set_affinity)
+        return data->chip->irq_set_affinity(data, dest, force);
+
+    return -ENOSYS;
 }

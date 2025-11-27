@@ -2117,21 +2117,7 @@ new_request:
         return;
 
     if (plug) {
-        // NOTE: REMOVE BLK_IRQ
-#ifdef BLK_IRQ
         blk_add_rq_to_plug(plug, rq);
-#else
-        struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
-        struct blk_rq_wait wait = {
-            .done = COMPLETION_INITIALIZER_ONSTACK(wait.done),
-        };
-        rq->end_io_data = &wait;
-        rq->end_io = blk_end_sync_rq;
-
-        blk_mq_insert_request(rq, BLK_MQ_INSERT_AT_HEAD);
-        blk_mq_run_hw_queue(hctx, false);
-        blk_rq_poll_completion(rq, &wait.done);
-#endif
         return;
     }
 
@@ -3223,20 +3209,10 @@ blk_status_t blk_execute_rq(struct request *rq, bool at_head)
     blk_mq_insert_request(rq, at_head ? BLK_MQ_INSERT_AT_HEAD : 0);
     blk_mq_run_hw_queue(hctx, false);
 
-    printk("%s: step0 irq(%d) sie(%lx) sip(%lx)\n",
-           __func__, arch_irqs_disabled(), csr_read(CSR_SIE), csr_read(CSR_SIP));
-    printk("%s: step1.1 irq_disabled(%d) pid(%u)\n", __func__, arch_irqs_disabled(), current->pid);
-
-    // NOTE: REMOVE BLK_IRQ
-//#define BLK_IRQ
-#ifdef BLK_IRQ
     if (blk_rq_is_poll(rq))
         blk_rq_poll_completion(rq, &wait.done);
     else
         blk_wait_io(&wait.done);
-#else
-    blk_rq_poll_completion(rq, &wait.done);
-#endif
 
     return wait.ret;
 }

@@ -168,7 +168,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     }
 
     #[cfg(linux_adaptor)]
-    linux_adaptor::init_linux_modules(dtb);
+    linux_adaptor::init_linux_modules(cpu_id, dtb);
 
     #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
     {
@@ -186,7 +186,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     }
 
     #[cfg(feature = "smp")]
-    self::mp::start_secondary_cpus(cpu_id);
+    self::mp::start_secondary_cpus(0 /* cpu_id */);
 
     #[cfg(all(feature = "tls", not(feature = "multitask")))]
     {

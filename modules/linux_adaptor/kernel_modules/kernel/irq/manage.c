@@ -20,6 +20,14 @@
 
 cpumask_var_t irq_default_affinity;
 
+static bool __irq_can_set_affinity(struct irq_desc *desc)
+{
+    if (!desc || !irqd_can_balance(&desc->irq_data) ||
+        !desc->irq_data.chip || !desc->irq_data.chip->irq_set_affinity)
+        return false;
+    return true;
+}
+
 /*
  * Primary handler for nested threaded interrupts. Should never be
  * called.
@@ -70,7 +78,37 @@ static int irq_setup_forced_threading(struct irqaction *new)
 
 void enable_percpu_irq(unsigned int irq, unsigned int type)
 {
-    pr_notice("%s: No impl. irq(%u) type(%u)\n", __func__, irq, type);
+    unsigned int cpu = smp_processor_id();
+    unsigned long flags;
+    struct irq_desc *desc = irq_get_desc_lock(irq, &flags, IRQ_GET_DESC_CHECK_PERCPU);
+
+    printk("%s: step1 irq(%u) type(%u)\n", __func__, irq, type);
+    if (!desc)
+        return;
+
+    /*
+     * If the trigger type is not specified by the caller, then
+     * use the default for this interrupt.
+     */
+    type &= IRQ_TYPE_SENSE_MASK;
+    if (type == IRQ_TYPE_NONE)
+        type = irqd_get_trigger_type(&desc->irq_data);
+
+    printk("%s: step2 type(%u)\n", __func__, type);
+    if (type != IRQ_TYPE_NONE) {
+        int ret;
+
+        ret = __irq_set_trigger(desc, type);
+
+        if (ret) {
+            WARN(1, "failed to set type for IRQ%d\n", irq);
+            goto out;
+        }
+    }
+
+    irq_percpu_enable(desc, cpu);
+out:
+    irq_put_desc_unlock(desc, flags);
 }
 
 static int __irq_set_affinity(unsigned int irq, const struct cpumask *mask,
@@ -279,6 +317,7 @@ int __irq_set_trigger(struct irq_desc *desc, unsigned long flags)
     struct irq_chip *chip = desc->irq_data.chip;
     int ret, unmask = 0;
 
+    printk("%s: step1\n", __func__);
     if (!chip || !chip->irq_set_type) {
         /*
          * IRQF_TRIGGER_* but the PIC does not support multiple
@@ -1194,3 +1233,49 @@ void synchronize_irq(unsigned int irq)
     if (desc)
         __synchronize_irq(desc);
 }
+
+#ifndef CONFIG_AUTO_IRQ_AFFINITY
+/*
+ * Generic version of the affinity autoselector.
+ */
+int irq_setup_affinity(struct irq_desc *desc)
+{
+    struct cpumask *set = irq_default_affinity;
+    int ret, node = irq_desc_get_node(desc);
+    static DEFINE_RAW_SPINLOCK(mask_lock);
+    static struct cpumask mask;
+
+    /* Excludes PER_CPU and NO_BALANCE interrupts */
+    if (!__irq_can_set_affinity(desc))
+        return 0;
+
+    raw_spin_lock(&mask_lock);
+    /*
+     * Preserve the managed affinity setting and a userspace affinity
+     * setup, but make sure that one of the targets is online.
+     */
+    if (irqd_affinity_is_managed(&desc->irq_data) ||
+        irqd_has_set(&desc->irq_data, IRQD_AFFINITY_SET)) {
+        if (cpumask_intersects(desc->irq_common_data.affinity,
+                       cpu_online_mask))
+            set = desc->irq_common_data.affinity;
+        else
+            irqd_clear(&desc->irq_data, IRQD_AFFINITY_SET);
+    }
+
+    cpumask_and(&mask, cpu_online_mask, set);
+    if (cpumask_empty(&mask))
+        cpumask_copy(&mask, cpu_online_mask);
+
+    if (node != NUMA_NO_NODE) {
+        const struct cpumask *nodemask = cpumask_of_node(node);
+
+        /* make sure at least one of the cpus in nodemask is online */
+        if (cpumask_intersects(&mask, nodemask))
+            cpumask_and(&mask, &mask, nodemask);
+    }
+    ret = irq_do_set_affinity(&desc->irq_data, &mask, false);
+    raw_spin_unlock(&mask_lock);
+    return ret;
+}
+#endif

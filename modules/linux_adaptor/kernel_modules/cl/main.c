@@ -36,9 +36,10 @@ bool static_key_initialized __read_mostly;
 
 unsigned long cl_fixaddr_start;
 
-int clinux_init(phys_addr_t dt_phys)
+int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 {
-    printk("cLinux base is starting ...\n");
+    printk("cLinux base is starting hartid[0x%lx] ...\n", hartid);
+    boot_cpu_hartid = hartid;
     cl_fixaddr_start = FIXADDR_START;
 
     clinux_starting = 1;

@@ -178,7 +178,7 @@ bool disk_live(struct gendisk *disk)
 
 static void bdev_write_inode(struct block_device *bdev)
 {
-    PANIC("");
+    pr_err("%s: No impl. -----------------------------", __func__);
 }
 
 static void blkdev_flush_mapping(struct block_device *bdev)

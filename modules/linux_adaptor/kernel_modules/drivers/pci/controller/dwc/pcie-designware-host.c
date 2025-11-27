@@ -738,12 +738,9 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
 		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_OB, i);
 
 	for (i = 0; i < pci->num_ib_windows; i++) {
+        // NOTE: How pcie-endpoint can access outside aspace?
         if (i == 0) continue;
 		dw_pcie_disable_atu(pci, PCIE_ATU_REGION_DIR_IB, i);
-#if 0
-        extern void dw_pcie_enable_atu(struct dw_pcie *pci, u32 dir, int index);
-		dw_pcie_enable_atu(pci, PCIE_ATU_REGION_DIR_IB, i);
-#endif
     }
 
 	i = 0;

@@ -41,13 +41,13 @@ fn hartid_to_logical_id(hartid: usize) -> usize {
     }
 }
 
-unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
-    let cpu_id = hartid_to_logical_id(cpu_id);
+unsafe extern "C" fn rust_entry(hartid: usize, dtb: usize) {
+    let cpu_id = hartid_to_logical_id(hartid);
     assert_eq!(cpu_id, 0);
     crate::mem::clear_bss();
     crate::cpu::init_primary(cpu_id);
     self::time::init_early();
-    rust_main(cpu_id, dtb);
+    rust_main(hartid, dtb);
 }
 
 #[cfg(feature = "smp")]
