@@ -88,3 +88,33 @@ int vfs_fsync_range(struct file *file, loff_t start, loff_t end, int datasync)
         mark_inode_dirty_sync(inode);
     return file->f_op->fsync(file, start, end, datasync);
 }
+
+/**
+ * vfs_fsync - perform a fsync or fdatasync on a file
+ * @file:       file to sync
+ * @datasync:       only perform a fdatasync operation
+ *
+ * Write back data and metadata for @file to disk.  If @datasync is
+ * set only metadata needed to access modified file data is written.
+ */
+int vfs_fsync(struct file *file, int datasync)
+{
+    return vfs_fsync_range(file, 0, LLONG_MAX, datasync);
+}
+
+static int do_fsync(unsigned int fd, int datasync)
+{
+    struct fd f = fdget(fd);
+    int ret = -EBADF;
+
+    if (fd_file(f)) {
+        ret = vfs_fsync(fd_file(f), datasync);
+        fdput(f);
+    }
+    return ret;
+}
+
+int cl_sys_fsync(unsigned int fd)
+{
+    return do_fsync(fd, 0);
+}

@@ -6,9 +6,11 @@
 #include "adaptor.h"
 #include "cl_syscalls.h"
 
+extern int cl_filp_flush(int fd);
+
 static uint64_t get_ticks(void)
 {
-    return csr_read(CSR_CYCLE);
+    return csr_read(CSR_TIME);
 }
 
 static bool
@@ -68,10 +70,20 @@ static void write_test_file(const char *fname, int size, int count)
 
     char wbuf[4096];
     for (int i = 0; i < count; i++) {
+        if (count % 1000 == 0) {
+            cl_sys_lseek(fd, 0, SEEK_SET);
+        }
+
         int err = cl_sys_write(fd, wbuf, size);
         if (err < 0) {
             printk("write err: %d\n", err);
             PANIC("write file err.");
+        }
+        if (cl_filp_flush(fd) != 0) {
+            PANIC("flush file err.");
+        }
+        if (cl_sys_fsync(fd) != 0) {
+            PANIC("sync file err.");
         }
     }
 
@@ -98,6 +110,10 @@ static void read_test_file(const char *fname, int size, int count)
 
     char rbuf[4096];
     for (int i = 0; i < count; i++) {
+        if (count % 1000 == 0) {
+            cl_sys_lseek(fd, 0, SEEK_SET);
+        }
+
         int err = cl_sys_read(fd, rbuf, size);
         if (err < 0) {
             printk("read err: %d\n", err);
@@ -124,12 +140,14 @@ static void do_test(const char *path, int size, int count)
     remove_test_file(path);
 }
 
+#define COUNT 1000000
+
 void bench_ext4(void)
 {
     char *path = "/bench_file";
 
-    do_test(path, 64, 1000);
-    do_test(path, 128, 1000);
-    do_test(path, 1024, 1000);
-    do_test(path, 4096, 1000);
+    do_test(path, 64, COUNT);
+    do_test(path, 128, COUNT);
+    do_test(path, 1024, COUNT);
+    do_test(path, 4096, COUNT);
 }

@@ -436,6 +436,18 @@ static int filp_flush(struct file *filp, fl_owner_t id)
     return retval;
 }
 
+int cl_filp_flush(int fd)
+{
+    struct fd f = fdget(fd);
+    int ret = -EBADF;
+
+    if (fd_file(f)) {
+        ret = filp_flush(fd_file(f), 0);
+        fdput(f);
+    }
+    return ret;
+}
+
 int cl_sys_close(int fd)
 {
     int retval;

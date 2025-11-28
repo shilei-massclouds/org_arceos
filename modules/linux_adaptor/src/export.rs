@@ -22,7 +22,7 @@ pub extern "C" fn cl_rust_alloc(size: usize, align: usize) -> usize {
 /// Dealloc bytes.
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_rust_dealloc(addr: usize) {
-    info!("No impl. We don't know layout for addr '{:#x}'.", addr);
+    debug!("No impl. We don't know layout for addr '{:#x}'.", addr);
 }
 
 /// Alloc pages.

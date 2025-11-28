@@ -30,6 +30,7 @@ extern int cl_sys_newstat(const char *filename, struct stat *statbuf);
 
 extern int cl_sys_mkdir(const char *pathname, umode_t mode);
 extern int cl_sys_rmdir(const char *pathname);
+extern int cl_sys_fsync(unsigned int fd);
 
 extern int cl_sys_exist(const char *path,
                         unsigned long *r_type,

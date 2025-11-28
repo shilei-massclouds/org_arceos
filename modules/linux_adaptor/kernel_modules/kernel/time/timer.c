@@ -486,7 +486,57 @@ __mod_timer(struct timer_list *timer, unsigned long expires, unsigned int option
      * same array bucket then just return:
      */
     if (!(options & MOD_TIMER_NOTPENDING) && timer_pending(timer)) {
-        PANIC("stage1");
+        /*
+         * The downside of this optimization is that it can result in
+         * larger granularity than you would get from adding a new
+         * timer with this expiry.
+         */
+        long diff = timer->expires - expires;
+
+        if (!diff)
+            return 1;
+        if (options & MOD_TIMER_REDUCE && diff <= 0)
+            return 1;
+
+        /*
+         * We lock timer base and calculate the bucket index right
+         * here. If the timer ends up in the same bucket, then we
+         * just update the expiry time and avoid the whole
+         * dequeue/enqueue dance.
+         */
+        base = lock_timer_base(timer, &flags);
+        /*
+         * Has @timer been shutdown? This needs to be evaluated
+         * while holding base lock to prevent a race against the
+         * shutdown code.
+         */
+        if (!timer->function)
+            goto out_unlock;
+
+        forward_timer_base(base);
+
+        if (timer_pending(timer) && (options & MOD_TIMER_REDUCE) &&
+            time_before_eq(timer->expires, expires)) {
+            ret = 1;
+            goto out_unlock;
+        }
+
+        clk = base->clk;
+        idx = calc_wheel_index(expires, clk, &bucket_expiry);
+
+        /*
+         * Retrieve and compare the array index of the pending
+         * timer. If it matches set the expiry to the new value so a
+         * subsequent call will exit in the expires check above.
+         */
+        if (idx == timer_get_idx(timer)) {
+            if (!(options & MOD_TIMER_REDUCE))
+                timer->expires = expires;
+            else if (time_after(timer->expires, expires))
+                timer->expires = expires;
+            ret = 1;
+            goto out_unlock;
+        }
     } else {
         base = lock_timer_base(timer, &flags);
         /*

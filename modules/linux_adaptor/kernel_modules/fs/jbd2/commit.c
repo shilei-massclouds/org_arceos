@@ -433,8 +433,6 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 	trace_jbd2_start_commit(journal, commit_transaction);
 	jbd2_debug(1, "JBD2: starting commit of transaction %d\n",
 			commit_transaction->t_tid);
-	printk("JBD2: starting commit of transaction %d\n",
-           commit_transaction->t_tid);
 
 	write_lock(&journal->j_state_lock);
 	journal->j_fc_off = 0;
