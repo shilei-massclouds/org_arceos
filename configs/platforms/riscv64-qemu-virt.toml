@@ -51,8 +51,8 @@ mmio-regions = [
     [0x4fff_0000, 0x1_0000],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
     [0x6fff_0000, 0x1_0000],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
     [0x7fff_0000, 0x1_0000],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
-    [0x9e00_0000, 0x100_0000],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
-    [0x87e30_0000, 0x100_0000],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
+#[0x9e00_0000, 0x100_0000],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
+#    [0x87e30_0000, 0x100_0000],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
     [0x40000_0000, 0x4000],         # PCI memory ranges (???)
 ]                                   # [(uint, uint)]
 # VirtIO MMIO regions with format (`base_paddr`, `size`).

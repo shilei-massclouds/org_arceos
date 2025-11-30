@@ -140,7 +140,8 @@ static void do_test(const char *path, int size, int count)
     remove_test_file(path);
 }
 
-#define COUNT 1000000
+//#define COUNT 1000000
+#define COUNT 100
 
 void bench_ext4(void)
 {

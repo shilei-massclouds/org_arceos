@@ -25,8 +25,7 @@ use crate::kallsyms::init_kallsyms;
 pub fn init_linux_modules(hartid: usize, dtb: usize) {
     info!("Initialize Linux modules...");
 
-    /* Offset between VirtAddr and PhysAddr in kernel aspace. */
-    unsafe { setup_paging(PHYS_VIRT_OFFSET) };
+    unsafe { setup_paging(PHYS_VIRT_OFFSET, PHYS_MEMORY_BASE) };
 
     /* Prepare handler for plic */
     prepare_ext_interrupt();
@@ -70,5 +69,5 @@ unsafe extern "C" {
 #[cfg(target_arch = "riscv64")]
 unsafe extern "C" {
     fn call_handle_arch_irq(cause: usize);
-    fn setup_paging(va_pa_offset: usize);
+    fn setup_paging(va_pa_offset: usize, phys_memory_base: usize);
 }

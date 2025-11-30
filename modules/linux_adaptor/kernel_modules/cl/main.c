@@ -9,6 +9,7 @@
 #include <linux/of_fdt.h>
 #include <linux/ftrace.h>
 #include <linux/async.h>
+#include <asm/fixmap.h>
 
 // Only for riscv64
 #include <asm/sbi.h>
@@ -21,11 +22,15 @@
 #define DP1000
 
 //#define TEST_BLOCK
-//#define TEST_EXT4
-#define BENCH_MARK
+#define TEST_EXT4
+//#define BENCH_MARK
 
 extern void cl_do_initcalls(void);
 extern void cl_invoke_softirq(void);
+
+extern void __init
+create_fdt_early_page_table(uintptr_t fix_fdt_va,
+                            uintptr_t dtb_pa);
 
 extern void test_block(void);
 extern void test_ext4();
@@ -44,6 +49,9 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     boot_cpu_hartid = hartid;
     cl_fixaddr_start = FIXADDR_START;
 
+    /* Setup early mapping for FDT early scan */
+    create_fdt_early_page_table(__fix_to_virt(FIX_FDT), dt_phys);
+
     clinux_starting = 1;
 
     smp_setup_processor_id();
@@ -54,7 +62,7 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     // Only for riscv64
     sbi_init();
 
-    early_init_dt_verify(__va(dt_phys), dt_phys);
+    early_init_dt_verify(dtb_early_va, dt_phys);
     early_init_dt_scan_chosen(boot_command_line);
 
     setup_nr_cpu_ids();

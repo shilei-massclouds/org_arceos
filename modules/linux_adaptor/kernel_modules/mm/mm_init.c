@@ -27,6 +27,7 @@
 #include "shuffle.h"
 
 #include <asm/setup.h>
+#include <asm/fixmap.h>
 
 #include "adaptor.h"
 
@@ -84,11 +85,29 @@ int init_mem_map(unsigned long pa_start, unsigned long pa_end)
     return 0;
 }
 
-void setup_paging(unsigned long va_pa_offset)
+void __init
+create_fdt_early_page_table(uintptr_t fix_fdt_va,
+                            uintptr_t dtb_pa)
 {
-    printk("%s: set va_pa_offset(0x%lx)\n", __func__, va_pa_offset);
-    kernel_map.page_offset = va_pa_offset;
+    printk("fix_fdt_va(%lx) dtb_pa(%lx)\n", fix_fdt_va, dtb_pa);
+
+    uintptr_t pa = dtb_pa & ~(PMD_SIZE - 1);
+
+    /* Make sure the fdt fixmap address is always aligned on PMD size */
+    BUILD_BUG_ON(FIX_FDT % (PMD_SIZE / PAGE_SIZE));
+
+    cl_vmap_range(fix_fdt_va, pa, PMD_SIZE * 2, PAGE_READ);
+
+    dtb_early_va = (void *)fix_fdt_va + (dtb_pa & (PMD_SIZE - 1));
+}
+
+void setup_paging(unsigned long va_pa_offset,
+                  unsigned long phys_memory_base)
+{
+    printk("%s: set va_pa_offset(0x%lx) phys_memory_base(0x%lx)\n",
+           __func__, va_pa_offset, phys_memory_base);
     kernel_map.va_pa_offset = va_pa_offset;
+    kernel_map.page_offset = phys_memory_base + va_pa_offset;
 }
 
 /*
