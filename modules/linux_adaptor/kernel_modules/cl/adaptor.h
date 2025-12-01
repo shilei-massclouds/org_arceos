@@ -29,9 +29,6 @@ cl_get_ksym(unsigned long addr, char *name, unsigned long size);
 
 extern void end_global_trace(void);
 
-extern int
-cl_vmap_range(unsigned long addr, phys_addr_t phys, unsigned long size, pgprot_t prot);
-
 extern int clinux_starting;
 extern int clinux_started;
 

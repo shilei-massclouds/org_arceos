@@ -1484,4 +1484,10 @@ static inline void accept_page(struct page *page)
 }
 #endif /* CONFIG_UNACCEPTED_MEMORY */
 
+extern int
+cl_vmap_range(unsigned long addr,
+              phys_addr_t phys,
+              unsigned long size,
+              pgprot_t prot);
+
 #endif	/* __MM_INTERNAL_H */

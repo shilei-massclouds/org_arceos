@@ -36,8 +36,30 @@
 #include <asm/sparsemem.h>
 #include <asm/tlbflush.h>
 
+#include "adaptor.h"
+
 //#include "../kernel/head.h"
 
 void *_dtb_early_va __initdata;
 //uintptr_t _dtb_early_pa __initdata;
 
+phys_addr_t phys_ram_end;
+
+static void __init setup_bootmem(void)
+{
+    min_low_pfn = PFN_UP(phys_ram_base);
+    max_low_pfn = max_pfn = PFN_DOWN(phys_ram_end);
+    printk("%s: min_low_pfn(%lx) max_low_pfn(%lx)\n",
+           __func__, min_low_pfn, max_low_pfn);
+}
+
+void __init paging_init(void)
+{
+    setup_bootmem();
+#if 0
+    setup_vm_final();
+
+    /* Depend on that Linear Mapping is ready */
+    memblock_allow_resize();
+#endif
+}

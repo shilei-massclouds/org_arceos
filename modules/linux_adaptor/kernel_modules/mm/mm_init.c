@@ -31,6 +31,8 @@
 
 #include "adaptor.h"
 
+extern phys_addr_t phys_ram_end;
+
 DEFINE_STATIC_KEY_MAYBE(CONFIG_DEBUG_VM, check_pages_enabled);
 
 DEFINE_STATIC_KEY_MAYBE(CONFIG_INIT_ON_ALLOC_DEFAULT_ON, init_on_alloc);
@@ -102,12 +104,16 @@ create_fdt_early_page_table(uintptr_t fix_fdt_va,
 }
 
 void setup_paging(unsigned long va_pa_offset,
-                  unsigned long phys_memory_base)
+                  unsigned long phys_memory_base,
+                  unsigned long phys_memory_size)
 {
-    printk("%s: set va_pa_offset(0x%lx) phys_memory_base(0x%lx)\n",
-           __func__, va_pa_offset, phys_memory_base);
+    printk("%s: set va_pa_offset(0x%lx) phys_memory(0x%lx)[0x%lx]\n",
+           __func__, va_pa_offset, phys_memory_base, phys_memory_size);
     kernel_map.va_pa_offset = va_pa_offset;
     kernel_map.page_offset = phys_memory_base + va_pa_offset;
+
+    phys_ram_base = phys_memory_base;
+    phys_ram_end = phys_memory_base + phys_memory_size;
 }
 
 /*
