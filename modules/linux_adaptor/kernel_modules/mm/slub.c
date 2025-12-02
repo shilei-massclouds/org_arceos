@@ -1001,7 +1001,43 @@ static void deactivate_slab(struct kmem_cache *s, struct slab *slab,
 #ifdef CONFIG_SLUB_CPU_PARTIAL
 static void __put_partials(struct kmem_cache *s, struct slab *partial_slab)
 {
-    PANIC("");
+    struct kmem_cache_node *n = NULL, *n2 = NULL;
+    struct slab *slab, *slab_to_discard = NULL;
+    unsigned long flags = 0;
+
+    while (partial_slab) {
+        slab = partial_slab;
+        partial_slab = slab->next;
+
+        n2 = get_node(s, slab_nid(slab));
+        if (n != n2) {
+            if (n)
+                spin_unlock_irqrestore(&n->list_lock, flags);
+
+            n = n2;
+            spin_lock_irqsave(&n->list_lock, flags);
+        }
+
+        if (unlikely(!slab->inuse && n->nr_partial >= s->min_partial)) {
+            slab->next = slab_to_discard;
+            slab_to_discard = slab;
+        } else {
+            add_partial(n, slab, DEACTIVATE_TO_TAIL);
+            stat(s, FREE_ADD_PARTIAL);
+        }
+    }
+
+    if (n)
+        spin_unlock_irqrestore(&n->list_lock, flags);
+
+    while (slab_to_discard) {
+        slab = slab_to_discard;
+        slab_to_discard = slab_to_discard->next;
+
+        stat(s, DEACTIVATE_EMPTY);
+        discard_slab(s, slab);
+        stat(s, FREE_SLAB);
+    }
 }
 #endif
 
