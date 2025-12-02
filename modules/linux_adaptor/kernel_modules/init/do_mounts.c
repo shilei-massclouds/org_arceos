@@ -83,6 +83,14 @@ void __init prepare_namespace(void)
 
     if (saved_root_name[0])
         ROOT_DEV = parse_root_device(saved_root_name);
-    ROOT_DEV = 0x10300002;
+
+    /* try to detect nvme0n1p2 */
+    if (ROOT_DEV == 0) {
+        ROOT_DEV = 0x10300002;
+        //ROOT_DEV = parse_root_device("/dev/nvme0n1p2");
+        //printk("p2 ROOT_DEV: %x\n", ROOT_DEV);
+    }
+
+    CL_ASSERT(ROOT_DEV != 0, "bad root_dev.");
     printk("ROOT_DEV: %x\n", ROOT_DEV);
 }
