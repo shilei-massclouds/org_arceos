@@ -10,5 +10,6 @@ obj-y += crc32.o iov_iter.o irq_regs.o dump_stack.o kstrtox.o
 obj-y += percpu_counter.o strncpy_from_user.o ctype.o seq_buf.o
 obj-y += cmdline.o logic_pio.o
 obj-y += debug_locks.o
+obj-y += group_cpus.o
 
 obj-y += math/

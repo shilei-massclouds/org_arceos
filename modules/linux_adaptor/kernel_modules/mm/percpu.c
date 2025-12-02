@@ -28,5 +28,7 @@ void __init setup_per_cpu_areas(void)
 void __percpu *pcpu_alloc_noprof(size_t size, size_t align, bool reserved,
                  gfp_t gfp)
 {
-    return cl_rust_alloc(size, align);
+    void *ret = cl_rust_alloc(size, align);
+    printk("%s: ret(%lx)\n", __func__, ret);
+    return ret;
 }

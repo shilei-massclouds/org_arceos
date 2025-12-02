@@ -397,6 +397,10 @@ bool cl_set_kthread_struct(struct task_struct *p)
     // before slub being inited.
     //kthread = kzalloc(sizeof(*kthread), GFP_KERNEL);
     kthread = cl_rust_alloc(sizeof(*kthread), 8);
+    {
+        printk("%s: kthread(%lx)\n", __func__, kthread);
+    }
+
     if (!kthread)
         return false;
 

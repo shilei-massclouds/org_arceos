@@ -2836,8 +2836,11 @@ void kfree(const void *object)
 
     {
         struct page *p = virt_to_page(object);
-        printk("%s: object(%lx) page(%lx)\n", __func__, object, p);
-        printk("%s: compound_head(%lx)\n", __func__, READ_ONCE(p->compound_head));
+        if (READ_ONCE(p->compound_head) == -1) {
+            printk("%s: object(%lx) page(%lx)\n", __func__, object, p);
+            printk("%s: compound_head(%lx)\n", __func__, READ_ONCE(p->compound_head));
+            dump_stack();
+        }
     }
     folio = virt_to_folio(object);
     if (unlikely(!folio_test_slab(folio))) {
@@ -2850,6 +2853,32 @@ void kfree(const void *object)
     slab_free(s, slab, x, _RET_IP_);
 }
 
+static inline struct kmem_cache *virt_to_cache(const void *obj)
+{
+    struct slab *slab;
+
+    slab = virt_to_slab(obj);
+    if (WARN_ONCE(!slab, "%s: Object is not a Slab page!\n", __func__))
+        return NULL;
+    return slab->slab_cache;
+}
+
+static inline struct kmem_cache *cache_from_obj(struct kmem_cache *s, void *x)
+{
+    struct kmem_cache *cachep;
+
+    if (!IS_ENABLED(CONFIG_SLAB_FREELIST_HARDENED) &&
+        !kmem_cache_debug_flags(s, SLAB_CONSISTENCY_CHECKS))
+        return s;
+
+    cachep = virt_to_cache(x);
+    if (WARN(cachep && cachep != s,
+         "%s: Wrong slab cache. %s but object is from %s\n",
+         __func__, s->name, cachep->name))
+        print_tracking(cachep, x);
+    return cachep;
+}
+
 /**
  * kmem_cache_free - Deallocate an object
  * @s: The cache the allocation was from.
@@ -2860,14 +2889,11 @@ void kfree(const void *object)
  */
 void kmem_cache_free(struct kmem_cache *s, void *x)
 {
-#if 0
     s = cache_from_obj(s, x);
     if (!s)
         return;
     trace_kmem_cache_free(_RET_IP_, x, s);
     slab_free(s, virt_to_slab(x), x, _RET_IP_);
-#endif
-    PANIC("%s: No impl.", __func__);
 }
 
 void skip_orig_size_check(struct kmem_cache *s, const void *object)

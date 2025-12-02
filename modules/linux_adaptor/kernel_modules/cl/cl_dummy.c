@@ -88,13 +88,6 @@ int kobject_uevent(struct kobject *kobj, enum kobject_action action)
     return 0;
 }
 
-struct cpumask *group_cpus_evenly(unsigned int numgrps)
-{
-    pr_notice("%s: No impl.", __func__);
-    static struct cpumask masks = {1};
-    return &masks;
-}
-
 kuid_t make_kuid(struct user_namespace *ns, uid_t uid)
 {
     pr_notice("%s: No impl.", __func__);
