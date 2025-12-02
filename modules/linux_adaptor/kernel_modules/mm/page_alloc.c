@@ -660,6 +660,7 @@ static void free_one_page(struct zone *zone, struct page *page,
               unsigned long pfn, unsigned int order,
               fpi_t fpi_flags)
 {
+#if 0
     unsigned long flags;
 
     spin_lock_irqsave(&zone->lock, flags);
@@ -667,6 +668,9 @@ static void free_one_page(struct zone *zone, struct page *page,
     spin_unlock_irqrestore(&zone->lock, flags);
 
     __count_vm_events(PGFREE, 1 << order);
+#endif
+    printk("%s: page(%lx) order(%u)\n", __func__, page, order);
+    cl_free_pages(page_to_virt(page), (1 << order));
 }
 
 static inline unsigned int order_to_pindex(int migratetype, int order)
@@ -853,7 +857,13 @@ void free_unref_folios(struct folio_batch *folios)
              * from IRQ or SoftIRQ context after an IO completion.
              */
             pcp_trylock_prepare(UP_flags);
+
+            // Note: Fix it when percpu supported!
+#if 0
             pcp = pcp_spin_trylock(zone->per_cpu_pageset);
+#else
+            pcp = NULL;
+#endif
             if (unlikely(!pcp)) {
                 pcp_trylock_finish(UP_flags);
                 free_one_page(zone, &folio->page, pfn,
@@ -1350,4 +1360,61 @@ bool gfp_pfmemalloc_allowed(gfp_t gfp_mask)
 {
     PANIC("");
     //return !!__gfp_pfmemalloc_flags(gfp_mask);
+}
+
+static void __free_pages_ok(struct page *page, unsigned int order,
+                fpi_t fpi_flags)
+{
+    unsigned long pfn = page_to_pfn(page);
+    struct zone *zone = page_zone(page);
+
+    if (free_pages_prepare(page, order))
+        free_one_page(zone, page, pfn, order, fpi_flags);
+}
+
+/*
+ * Free a pcp page
+ */
+void free_unref_page(struct page *page, unsigned int order)
+{
+    unsigned long __maybe_unused UP_flags;
+    struct per_cpu_pages *pcp;
+    struct zone *zone;
+    unsigned long pfn = page_to_pfn(page);
+    int migratetype;
+
+    if (!pcp_allowed_order(order)) {
+        __free_pages_ok(page, order, FPI_NONE);
+        return;
+    }
+
+    if (!free_pages_prepare(page, order))
+        return;
+
+    /*
+     * We only track unmovable, reclaimable and movable on pcp lists.
+     * Place ISOLATE pages on the isolated list because they are being
+     * offlined but treat HIGHATOMIC and CMA as movable pages so we can
+     * get those areas back if necessary. Otherwise, we may have to free
+     * excessively into the page allocator
+     */
+    migratetype = get_pfnblock_migratetype(page, pfn);
+    if (unlikely(migratetype >= MIGRATE_PCPTYPES)) {
+        if (unlikely(is_migrate_isolate(migratetype))) {
+            free_one_page(page_zone(page), page, pfn, order, FPI_NONE);
+            return;
+        }
+        migratetype = MIGRATE_MOVABLE;
+    }
+
+    zone = page_zone(page);
+    pcp_trylock_prepare(UP_flags);
+    pcp = pcp_spin_trylock(zone->per_cpu_pageset);
+    if (pcp) {
+        free_unref_page_commit(zone, pcp, page, migratetype, order);
+        pcp_spin_unlock(pcp);
+    } else {
+        free_one_page(zone, page, pfn, order, FPI_NONE);
+    }
+    pcp_trylock_finish(UP_flags);
 }

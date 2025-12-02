@@ -532,3 +532,35 @@ void folio_rotate_reclaimable(struct folio *folio)
 #endif
     PANIC("");
 }
+
+/*
+ * This path almost never happens for VM activity - pages are normally freed
+ * in batches.  But it gets used by networking - and for compound pages.
+ */
+static void page_cache_release(struct folio *folio)
+{
+    struct lruvec *lruvec = NULL;
+    unsigned long flags;
+
+    __page_cache_release(folio, &lruvec, &flags);
+    if (lruvec)
+        unlock_page_lruvec_irqrestore(lruvec, flags);
+}
+
+void __folio_put(struct folio *folio)
+{
+    if (unlikely(folio_is_zone_device(folio))) {
+        free_zone_device_folio(folio);
+        return;
+    }
+
+    if (folio_test_hugetlb(folio)) {
+        free_huge_folio(folio);
+        return;
+    }
+
+    page_cache_release(folio);
+    folio_unqueue_deferred_split(folio);
+    mem_cgroup_uncharge(folio);
+    free_unref_page(&folio->page, folio_order(folio));
+}
