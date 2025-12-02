@@ -14,7 +14,7 @@
 // Only for riscv64
 #include <asm/sbi.h>
 
-//#include "mm/slab.h"
+#include "../mm/slab.h"
 #include "../drivers/base/base.h"
 //#include "block/blk.h"
 #include "adaptor.h"
@@ -75,7 +75,7 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 
     random_init();
 
-    //kmem_cache_init();
+    kmem_cache_init();
     pagecache_init();
 #ifndef DP1000
     early_trace_init();

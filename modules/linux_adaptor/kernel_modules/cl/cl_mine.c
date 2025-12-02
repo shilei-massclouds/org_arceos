@@ -769,3 +769,8 @@ CL_MINE(acpi_dev_get_property)
 CL_MINE(__kernel_map_pages)
 CL_MINE(set_pageblock_migratetype)
 CL_MINE(__memcg_kmem_uncharge_page)
+
+CL_MINE(stack_depot_print)
+CL_MINE(stack_trace_save)
+CL_MINE(stack_depot_save)
+CL_MINE(kmalloc_fix_flags)

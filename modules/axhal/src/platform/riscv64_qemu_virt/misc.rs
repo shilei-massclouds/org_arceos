@@ -2,12 +2,12 @@
 pub fn terminate() -> ! {
     info!("Shutting down...");
 
-    #[cfg(linux_adaptor)]
-    unsafe {
-        machine_power_off();
-    }
-
-    #[cfg(not(linux_adaptor))]
+//    #[cfg(linux_adaptor)]
+//    unsafe {
+//        machine_power_off();
+//    }
+//
+//    #[cfg(not(linux_adaptor))]
     sbi_rt::system_reset(sbi_rt::Shutdown, sbi_rt::NoReason);
 
     warn!("It should shutdown!");
@@ -16,6 +16,8 @@ pub fn terminate() -> ! {
     }
 }
 
+/*
 unsafe extern "C" {
     fn machine_power_off();
 }
+*/

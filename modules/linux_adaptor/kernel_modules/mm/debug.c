@@ -6,7 +6,8 @@ static bool page_init_poisoning __read_mostly = true;
 
 void dump_page(const struct page *page, const char *reason)
 {
-    pr_err("%s: Page(0x%lx): %s", __func__, page, reason);
+    pr_err("%s: Page(0x%lx): pfn(0x%lx) reason: %s",
+           __func__, page, page_to_pfn(page), reason);
 }
 
 void page_init_poison(struct page *page, size_t size)

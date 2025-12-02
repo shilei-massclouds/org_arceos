@@ -1,6 +1,8 @@
 #include <linux/percpu.h>
 #include <linux/slab.h>
 
+#include "adaptor.h"
+
 #ifndef CONFIG_HAVE_SETUP_PER_CPU_AREA
 /*
  * Generic SMP percpu area setup.
@@ -26,6 +28,5 @@ void __init setup_per_cpu_areas(void)
 void __percpu *pcpu_alloc_noprof(size_t size, size_t align, bool reserved,
                  gfp_t gfp)
 {
-    pr_err("!!!IMPORTANT!!! %s: No impl.", __func__);
-    return kmalloc(size, 0);
+    return cl_rust_alloc(size, align);
 }

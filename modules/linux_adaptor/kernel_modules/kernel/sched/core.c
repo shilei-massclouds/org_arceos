@@ -91,6 +91,8 @@
 
 #include "adaptor.h"
 
+extern bool cl_set_kthread_struct(struct task_struct *p);
+
 static struct signal_struct __init_signal = {
     .rlim = INIT_RLIMITS
 };
@@ -114,7 +116,7 @@ unsigned long init_current(unsigned long thread_id)
     tsk->pid = thread_id;
     tsk->flags |= PF_KTHREAD;
     WRITE_ONCE(tsk->__state, TASK_RUNNING);
-    set_kthread_struct(tsk);
+    cl_set_kthread_struct(tsk);
     __asm__ __volatile__ (
         "mv tp, %0"
         : : "rK" (tsk)

@@ -119,3 +119,10 @@ void __mod_node_page_state(struct pglist_data *pgdat, enum node_stat_item item,
 #endif
     pr_notice("%s: No impl.", __func__);
 }
+
+void mod_node_page_state(struct pglist_data *pgdat, enum node_stat_item item,
+                    long delta)
+{
+    //mod_node_state(pgdat, item, delta, 0);
+    pr_notice("%s: No impl.", __func__);
+}

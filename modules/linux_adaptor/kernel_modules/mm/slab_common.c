@@ -38,6 +38,44 @@
 #include "adaptor.h"
 
 enum slab_state slab_state;
+struct kmem_cache *kmem_cache;
+static struct kmem_cache *kmem_buckets_cache __ro_after_init;
+DEFINE_MUTEX(slab_mutex);
+
+LIST_HEAD(slab_caches);
+
+/*
+ * Conversion table for small slabs sizes / 8 to the index in the
+ * kmalloc array. This is necessary for slabs < 192 since we have non power
+ * of two cache sizes there. The size of larger slabs can be determined using
+ * fls.
+ */
+u8 kmalloc_size_index[24] __ro_after_init = {
+    3,  /* 8 */
+    4,  /* 16 */
+    5,  /* 24 */
+    5,  /* 32 */
+    6,  /* 40 */
+    6,  /* 48 */
+    6,  /* 56 */
+    6,  /* 64 */
+    1,  /* 72 */
+    1,  /* 80 */
+    1,  /* 88 */
+    1,  /* 96 */
+    7,  /* 104 */
+    7,  /* 112 */
+    7,  /* 120 */
+    7,  /* 128 */
+    2,  /* 136 */
+    2,  /* 144 */
+    2,  /* 152 */
+    2,  /* 160 */
+    2,  /* 168 */
+    2,  /* 176 */
+    2,  /* 184 */
+    2   /* 192 */
+};
 
 kmem_buckets kmalloc_caches[NR_KMALLOC_TYPES] __ro_after_init =
 { /* initialization for https://llvm.org/pr42570 */ };
@@ -256,4 +294,299 @@ size_t ksize(const void *objp)
         return 0;
 
     return kfence_ksize(objp) ?: __ksize(objp);
+}
+
+/*
+ * Figure out what the alignment of the objects will be given a set of
+ * flags, a user specified alignment and the size of the objects.
+ */
+static unsigned int calculate_alignment(slab_flags_t flags,
+        unsigned int align, unsigned int size)
+{
+    /*
+     * If the user wants hardware cache aligned objects then follow that
+     * suggestion if the object is sufficiently large.
+     *
+     * The hardware cache alignment cannot override the specified
+     * alignment though. If that is greater then use it.
+     */
+    if (flags & SLAB_HWCACHE_ALIGN) {
+        unsigned int ralign;
+
+        ralign = cache_line_size();
+        while (size <= ralign / 2)
+            ralign /= 2;
+        align = max(align, ralign);
+    }
+
+    align = max(align, arch_slab_minalign());
+
+    return ALIGN(align, sizeof(void *));
+}
+
+/* Create a cache during boot when no slab services are available yet */
+void __init create_boot_cache(struct kmem_cache *s, const char *name,
+        unsigned int size, slab_flags_t flags,
+        unsigned int useroffset, unsigned int usersize)
+{
+    int err;
+    unsigned int align = ARCH_KMALLOC_MINALIGN;
+    struct kmem_cache_args kmem_args = {};
+
+    /*
+     * kmalloc caches guarantee alignment of at least the largest
+     * power-of-two divisor of the size. For power-of-two sizes,
+     * it is the size itself.
+     */
+    if (flags & SLAB_KMALLOC)
+        align = max(align, 1U << (ffs(size) - 1));
+    kmem_args.align = calculate_alignment(flags, align, size);
+
+#ifdef CONFIG_HARDENED_USERCOPY
+    kmem_args.useroffset = useroffset;
+    kmem_args.usersize = usersize;
+#endif
+
+    err = do_kmem_cache_create(s, name, size, &kmem_args, flags);
+
+    if (err)
+        panic("Creation of kmalloc slab %s size=%u failed. Reason %d\n",
+                    name, size, err);
+
+    s->refcount = -1;   /* Exempt from merging for now */
+}
+
+/*
+ * Patch up the size_index table if we have strange large alignment
+ * requirements for the kmalloc array. This is only the case for
+ * MIPS it seems. The standard arches will not generate any code here.
+ *
+ * Largest permitted alignment is 256 bytes due to the way we
+ * handle the index determination for the smaller caches.
+ *
+ * Make sure that nothing crazy happens if someone starts tinkering
+ * around with ARCH_KMALLOC_MINALIGN
+ */
+void __init setup_kmalloc_cache_index_table(void)
+{
+    unsigned int i;
+
+    BUILD_BUG_ON(KMALLOC_MIN_SIZE > 256 ||
+        !is_power_of_2(KMALLOC_MIN_SIZE));
+
+    for (i = 8; i < KMALLOC_MIN_SIZE; i += 8) {
+        unsigned int elem = size_index_elem(i);
+
+        if (elem >= ARRAY_SIZE(kmalloc_size_index))
+            break;
+        kmalloc_size_index[elem] = KMALLOC_SHIFT_LOW;
+    }
+
+    if (KMALLOC_MIN_SIZE >= 64) {
+        /*
+         * The 96 byte sized cache is not used if the alignment
+         * is 64 byte.
+         */
+        for (i = 64 + 8; i <= 96; i += 8)
+            kmalloc_size_index[size_index_elem(i)] = 7;
+
+    }
+
+    if (KMALLOC_MIN_SIZE >= 128) {
+        /*
+         * The 192 byte sized cache is not used if the alignment
+         * is 128 byte. Redirect kmalloc to use the 256 byte cache
+         * instead.
+         */
+        for (i = 128 + 8; i <= 192; i += 8)
+            kmalloc_size_index[size_index_elem(i)] = 8;
+    }
+}
+
+static unsigned int __kmalloc_minalign(void)
+{
+    unsigned int minalign = dma_get_cache_alignment();
+
+    if (IS_ENABLED(CONFIG_DMA_BOUNCE_UNALIGNED_KMALLOC) &&
+        is_swiotlb_allocated())
+        minalign = ARCH_KMALLOC_MINALIGN;
+
+    return max(minalign, arch_slab_minalign());
+}
+
+static struct kmem_cache *__init create_kmalloc_cache(const char *name,
+                              unsigned int size,
+                              slab_flags_t flags)
+{
+    struct kmem_cache *s = kmem_cache_zalloc(kmem_cache, GFP_NOWAIT);
+
+    if (!s)
+        panic("Out of memory when creating slab %s\n", name);
+
+    create_boot_cache(s, name, size, flags | SLAB_KMALLOC, 0, size);
+    list_add(&s->list, &slab_caches);
+    s->refcount = 1;
+    return s;
+}
+
+#ifdef CONFIG_ZONE_DMA
+#define KMALLOC_DMA_NAME(sz)    .name[KMALLOC_DMA] = "dma-kmalloc-" #sz,
+#else
+#define KMALLOC_DMA_NAME(sz)
+#endif
+
+#ifdef CONFIG_MEMCG
+#define KMALLOC_CGROUP_NAME(sz) .name[KMALLOC_CGROUP] = "kmalloc-cg-" #sz,
+#else
+#define KMALLOC_CGROUP_NAME(sz)
+#endif
+
+#ifndef CONFIG_SLUB_TINY
+#define KMALLOC_RCL_NAME(sz)    .name[KMALLOC_RECLAIM] = "kmalloc-rcl-" #sz,
+#else
+#define KMALLOC_RCL_NAME(sz)
+#endif
+
+#ifdef CONFIG_RANDOM_KMALLOC_CACHES
+#define __KMALLOC_RANDOM_CONCAT(a, b) a ## b
+#define KMALLOC_RANDOM_NAME(N, sz) __KMALLOC_RANDOM_CONCAT(KMA_RAND_, N)(sz)
+#define KMA_RAND_1(sz)                  .name[KMALLOC_RANDOM_START +  1] = "kmalloc-rnd-01-" #sz,
+#define KMA_RAND_2(sz)  KMA_RAND_1(sz)  .name[KMALLOC_RANDOM_START +  2] = "kmalloc-rnd-02-" #sz,
+#define KMA_RAND_3(sz)  KMA_RAND_2(sz)  .name[KMALLOC_RANDOM_START +  3] = "kmalloc-rnd-03-" #sz,
+#define KMA_RAND_4(sz)  KMA_RAND_3(sz)  .name[KMALLOC_RANDOM_START +  4] = "kmalloc-rnd-04-" #sz,
+#define KMA_RAND_5(sz)  KMA_RAND_4(sz)  .name[KMALLOC_RANDOM_START +  5] = "kmalloc-rnd-05-" #sz,
+#define KMA_RAND_6(sz)  KMA_RAND_5(sz)  .name[KMALLOC_RANDOM_START +  6] = "kmalloc-rnd-06-" #sz,
+#define KMA_RAND_7(sz)  KMA_RAND_6(sz)  .name[KMALLOC_RANDOM_START +  7] = "kmalloc-rnd-07-" #sz,
+#define KMA_RAND_8(sz)  KMA_RAND_7(sz)  .name[KMALLOC_RANDOM_START +  8] = "kmalloc-rnd-08-" #sz,
+#define KMA_RAND_9(sz)  KMA_RAND_8(sz)  .name[KMALLOC_RANDOM_START +  9] = "kmalloc-rnd-09-" #sz,
+#define KMA_RAND_10(sz) KMA_RAND_9(sz)  .name[KMALLOC_RANDOM_START + 10] = "kmalloc-rnd-10-" #sz,
+#define KMA_RAND_11(sz) KMA_RAND_10(sz) .name[KMALLOC_RANDOM_START + 11] = "kmalloc-rnd-11-" #sz,
+#define KMA_RAND_12(sz) KMA_RAND_11(sz) .name[KMALLOC_RANDOM_START + 12] = "kmalloc-rnd-12-" #sz,
+#define KMA_RAND_13(sz) KMA_RAND_12(sz) .name[KMALLOC_RANDOM_START + 13] = "kmalloc-rnd-13-" #sz,
+#define KMA_RAND_14(sz) KMA_RAND_13(sz) .name[KMALLOC_RANDOM_START + 14] = "kmalloc-rnd-14-" #sz,
+#define KMA_RAND_15(sz) KMA_RAND_14(sz) .name[KMALLOC_RANDOM_START + 15] = "kmalloc-rnd-15-" #sz,
+#else // CONFIG_RANDOM_KMALLOC_CACHES
+#define KMALLOC_RANDOM_NAME(N, sz)
+#endif
+
+#define INIT_KMALLOC_INFO(__size, __short_size)         \
+{                               \
+    .name[KMALLOC_NORMAL]  = "kmalloc-" #__short_size,  \
+    KMALLOC_RCL_NAME(__short_size)              \
+    KMALLOC_CGROUP_NAME(__short_size)           \
+    KMALLOC_DMA_NAME(__short_size)              \
+    KMALLOC_RANDOM_NAME(RANDOM_KMALLOC_CACHES_NR, __short_size) \
+    .size = __size,                     \
+}
+
+/*
+ * kmalloc_info[] is to make slab_debug=,kmalloc-xx option work at boot time.
+ * kmalloc_index() supports up to 2^21=2MB, so the final entry of the table is
+ * kmalloc-2M.
+ */
+const struct kmalloc_info_struct kmalloc_info[] __initconst = {
+    INIT_KMALLOC_INFO(0, 0),
+    INIT_KMALLOC_INFO(96, 96),
+    INIT_KMALLOC_INFO(192, 192),
+    INIT_KMALLOC_INFO(8, 8),
+    INIT_KMALLOC_INFO(16, 16),
+    INIT_KMALLOC_INFO(32, 32),
+    INIT_KMALLOC_INFO(64, 64),
+    INIT_KMALLOC_INFO(128, 128),
+    INIT_KMALLOC_INFO(256, 256),
+    INIT_KMALLOC_INFO(512, 512),
+    INIT_KMALLOC_INFO(1024, 1k),
+    INIT_KMALLOC_INFO(2048, 2k),
+    INIT_KMALLOC_INFO(4096, 4k),
+    INIT_KMALLOC_INFO(8192, 8k),
+    INIT_KMALLOC_INFO(16384, 16k),
+    INIT_KMALLOC_INFO(32768, 32k),
+    INIT_KMALLOC_INFO(65536, 64k),
+    INIT_KMALLOC_INFO(131072, 128k),
+    INIT_KMALLOC_INFO(262144, 256k),
+    INIT_KMALLOC_INFO(524288, 512k),
+    INIT_KMALLOC_INFO(1048576, 1M),
+    INIT_KMALLOC_INFO(2097152, 2M)
+};
+
+static void __init
+new_kmalloc_cache(int idx, enum kmalloc_cache_type type)
+{
+    slab_flags_t flags = 0;
+    unsigned int minalign = __kmalloc_minalign();
+    unsigned int aligned_size = kmalloc_info[idx].size;
+    int aligned_idx = idx;
+
+    if ((KMALLOC_RECLAIM != KMALLOC_NORMAL) && (type == KMALLOC_RECLAIM)) {
+        flags |= SLAB_RECLAIM_ACCOUNT;
+    } else if (IS_ENABLED(CONFIG_MEMCG) && (type == KMALLOC_CGROUP)) {
+        if (mem_cgroup_kmem_disabled()) {
+            kmalloc_caches[type][idx] = kmalloc_caches[KMALLOC_NORMAL][idx];
+            return;
+        }
+        flags |= SLAB_ACCOUNT;
+    } else if (IS_ENABLED(CONFIG_ZONE_DMA) && (type == KMALLOC_DMA)) {
+        flags |= SLAB_CACHE_DMA;
+    }
+
+#ifdef CONFIG_RANDOM_KMALLOC_CACHES
+    if (type >= KMALLOC_RANDOM_START && type <= KMALLOC_RANDOM_END)
+        flags |= SLAB_NO_MERGE;
+#endif
+
+    /*
+     * If CONFIG_MEMCG is enabled, disable cache merging for
+     * KMALLOC_NORMAL caches.
+     */
+    if (IS_ENABLED(CONFIG_MEMCG) && (type == KMALLOC_NORMAL))
+        flags |= SLAB_NO_MERGE;
+
+    if (minalign > ARCH_KMALLOC_MINALIGN) {
+        aligned_size = ALIGN(aligned_size, minalign);
+        aligned_idx = __kmalloc_index(aligned_size, false);
+    }
+
+    if (!kmalloc_caches[type][aligned_idx])
+        kmalloc_caches[type][aligned_idx] = create_kmalloc_cache(
+                    kmalloc_info[aligned_idx].name[type],
+                    aligned_size, flags);
+    if (idx != aligned_idx)
+        kmalloc_caches[type][idx] = kmalloc_caches[type][aligned_idx];
+}
+
+/*
+ * Create the kmalloc array. Some of the regular kmalloc arrays
+ * may already have been created because they were needed to
+ * enable allocations for slab creation.
+ */
+void __init create_kmalloc_caches(void)
+{
+    int i;
+    enum kmalloc_cache_type type;
+
+    /*
+     * Including KMALLOC_CGROUP if CONFIG_MEMCG defined
+     */
+    for (type = KMALLOC_NORMAL; type < NR_KMALLOC_TYPES; type++) {
+        /* Caches that are NOT of the two-to-the-power-of size. */
+        if (KMALLOC_MIN_SIZE <= 32)
+            new_kmalloc_cache(1, type);
+        if (KMALLOC_MIN_SIZE <= 64)
+            new_kmalloc_cache(2, type);
+
+        /* Caches that are of the two-to-the-power-of size. */
+        for (i = KMALLOC_SHIFT_LOW; i <= KMALLOC_SHIFT_HIGH; i++)
+            new_kmalloc_cache(i, type);
+    }
+#ifdef CONFIG_RANDOM_KMALLOC_CACHES
+    random_kmalloc_seed = get_random_u64();
+#endif
+
+    /* Kmalloc array is now usable */
+    slab_state = UP;
+
+    if (IS_ENABLED(CONFIG_SLAB_BUCKETS))
+        kmem_buckets_cache = kmem_cache_create("kmalloc_buckets",
+                               sizeof(kmem_buckets),
+                               0, SLAB_NO_MERGE, NULL);
 }

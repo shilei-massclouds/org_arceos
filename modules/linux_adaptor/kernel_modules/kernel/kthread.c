@@ -385,6 +385,29 @@ bool set_kthread_struct(struct task_struct *p)
     return true;
 }
 
+bool cl_set_kthread_struct(struct task_struct *p)
+{
+    struct kthread *kthread;
+
+    if (WARN_ON_ONCE(to_kthread(p)))
+        return false;
+
+    // NOTE:
+    // init_current->cl_set_kthread_struct will be invoked
+    // before slub being inited.
+    //kthread = kzalloc(sizeof(*kthread), GFP_KERNEL);
+    kthread = cl_rust_alloc(sizeof(*kthread), 8);
+    if (!kthread)
+        return false;
+
+    init_completion(&kthread->exited);
+    init_completion(&kthread->parked);
+    p->vfork_done = &kthread->exited;
+
+    p->worker_private = kthread;
+    return true;
+}
+
 /**
  * kthread_data - return data value specified on kthread creation
  * @task: kthread task in question

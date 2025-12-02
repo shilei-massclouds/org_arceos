@@ -601,6 +601,7 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
     // Note: all pages belone to node-0 and DMA32
     set_page_node(page, 0);
     set_page_zone(page, ZONE_DMA32);
+    page->page_type = UINT_MAX;
 
     // Note: Consider to implement __init_single_page
     //NOTE: Fix _mapcount.
@@ -1343,4 +1344,10 @@ bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
 {
     pr_notice("%s: No impl.", __func__);
     return false;
+}
+
+bool gfp_pfmemalloc_allowed(gfp_t gfp_mask)
+{
+    PANIC("");
+    //return !!__gfp_pfmemalloc_flags(gfp_mask);
 }
