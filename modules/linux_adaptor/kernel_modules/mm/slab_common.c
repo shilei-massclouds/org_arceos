@@ -45,6 +45,21 @@ DEFINE_MUTEX(slab_mutex);
 LIST_HEAD(slab_caches);
 
 /*
+ * Set of flags that will prevent slab merging
+ */
+#define SLAB_NEVER_MERGE (SLAB_RED_ZONE | SLAB_POISON | SLAB_STORE_USER | \
+        SLAB_TRACE | SLAB_TYPESAFE_BY_RCU | SLAB_NOLEAKTRACE | \
+        SLAB_FAILSLAB | SLAB_NO_MERGE)
+
+#define SLAB_MERGE_SAME (SLAB_RECLAIM_ACCOUNT | SLAB_CACHE_DMA | \
+             SLAB_CACHE_DMA32 | SLAB_ACCOUNT)
+
+/*
+ * Merge control. If this is set then no merging of slab caches will occur.
+ */
+static bool slab_nomerge = !IS_ENABLED(CONFIG_SLAB_MERGE_DEFAULT);
+
+/*
  * Conversion table for small slabs sizes / 8 to the index in the
  * kmalloc array. This is necessary for slabs < 192 since we have non power
  * of two cache sizes there. The size of larger slabs can be determined using
@@ -80,6 +95,98 @@ u8 kmalloc_size_index[24] __ro_after_init = {
 kmem_buckets kmalloc_caches[NR_KMALLOC_TYPES] __ro_after_init =
 { /* initialization for https://llvm.org/pr42570 */ };
 
+static bool kmem_cache_is_duplicate_name(const char *name)
+{
+    struct kmem_cache *s;
+
+    list_for_each_entry(s, &slab_caches, list) {
+        if (!strcmp(s->name, name))
+            return true;
+    }
+
+    return false;
+}
+
+static int kmem_cache_sanity_check(const char *name, unsigned int size)
+{
+    if (!name || in_interrupt() || size > KMALLOC_MAX_SIZE) {
+        pr_err("kmem_cache_create(%s) integrity check failed\n", name);
+        return -EINVAL;
+    }
+
+    /* Duplicate names will confuse slabtop, et al */
+    WARN(kmem_cache_is_duplicate_name(name),
+            "kmem_cache of name '%s' already exists\n", name);
+
+    WARN_ON(strchr(name, ' ')); /* It confuses parsers */
+    return 0;
+}
+
+/*
+ * Figure out what the alignment of the objects will be given a set of
+ * flags, a user specified alignment and the size of the objects.
+ */
+static unsigned int calculate_alignment(slab_flags_t flags,
+        unsigned int align, unsigned int size)
+{
+    /*
+     * If the user wants hardware cache aligned objects then follow that
+     * suggestion if the object is sufficiently large.
+     *
+     * The hardware cache alignment cannot override the specified
+     * alignment though. If that is greater then use it.
+     */
+    if (flags & SLAB_HWCACHE_ALIGN) {
+        unsigned int ralign;
+
+        ralign = cache_line_size();
+        while (size <= ralign / 2)
+            ralign /= 2;
+        align = max(align, ralign);
+    }
+
+    align = max(align, arch_slab_minalign());
+
+    return ALIGN(align, sizeof(void *));
+}
+
+static struct kmem_cache *create_cache(const char *name,
+                       unsigned int object_size,
+                       struct kmem_cache_args *args,
+                       slab_flags_t flags)
+{
+    struct kmem_cache *s;
+    int err;
+
+    if (WARN_ON(args->useroffset + args->usersize > object_size))
+        args->useroffset = args->usersize = 0;
+
+    /* If a custom freelist pointer is requested make sure it's sane. */
+    err = -EINVAL;
+    if (args->use_freeptr_offset &&
+        (args->freeptr_offset >= object_size ||
+         !(flags & SLAB_TYPESAFE_BY_RCU) ||
+         !IS_ALIGNED(args->freeptr_offset, __alignof__(freeptr_t))))
+        goto out;
+
+    err = -ENOMEM;
+    s = kmem_cache_zalloc(kmem_cache, GFP_KERNEL);
+    if (!s)
+        goto out;
+    err = do_kmem_cache_create(s, name, object_size, args, flags);
+    if (err)
+        goto out_free_cache;
+
+    s->refcount = 1;
+    list_add(&s->list, &slab_caches);
+    return s;
+
+out_free_cache:
+    kmem_cache_free(kmem_cache, s);
+out:
+    return ERR_PTR(err);
+}
+
 /**
  * __kmem_cache_create_args - Create a kmem cache.
  * @name: A string which is used in /proc/slabinfo to identify this cache.
@@ -100,15 +207,86 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
                         struct kmem_cache_args *args,
                         slab_flags_t flags)
 {
-    pr_notice("%s: No impl. object_size(%u) align(%u)\n", __func__, object_size, args->align);
+    struct kmem_cache *s = NULL;
+    const char *cache_name;
+    int err;
 
-    struct kmem_cache *cache = kmalloc(sizeof(struct kmem_cache), 0);
-    memset(cache, 0, sizeof(struct kmem_cache));
-    cache->object_size = object_size;
-    cache->size = object_size;
-    cache->align = args->align;
-    cache->ctor = args->ctor;
-    return cache;
+#ifdef CONFIG_SLUB_DEBUG
+    /*
+     * If no slab_debug was enabled globally, the static key is not yet
+     * enabled by setup_slub_debug(). Enable it if the cache is being
+     * created with any of the debugging flags passed explicitly.
+     * It's also possible that this is the first cache created with
+     * SLAB_STORE_USER and we should init stack_depot for it.
+     */
+    if (flags & SLAB_DEBUG_FLAGS)
+        static_branch_enable(&slub_debug_enabled);
+    if (flags & SLAB_STORE_USER)
+        stack_depot_init();
+#endif
+
+    mutex_lock(&slab_mutex);
+
+    err = kmem_cache_sanity_check(name, object_size);
+    if (err) {
+        goto out_unlock;
+    }
+
+    /* Refuse requests with allocator specific flags */
+    if (flags & ~SLAB_FLAGS_PERMITTED) {
+        err = -EINVAL;
+        goto out_unlock;
+    }
+
+    /*
+     * Some allocators will constraint the set of valid flags to a subset
+     * of all flags. We expect them to define CACHE_CREATE_MASK in this
+     * case, and we'll just provide them with a sanitized version of the
+     * passed flags.
+     */
+    flags &= CACHE_CREATE_MASK;
+
+    /* Fail closed on bad usersize of useroffset values. */
+    if (!IS_ENABLED(CONFIG_HARDENED_USERCOPY) ||
+        WARN_ON(!args->usersize && args->useroffset) ||
+        WARN_ON(object_size < args->usersize ||
+            object_size - args->usersize < args->useroffset))
+        args->usersize = args->useroffset = 0;
+
+    if (!args->usersize)
+        s = __kmem_cache_alias(name, object_size, args->align, flags,
+                       args->ctor);
+    if (s)
+        goto out_unlock;
+
+    cache_name = kstrdup_const(name, GFP_KERNEL);
+    if (!cache_name) {
+        err = -ENOMEM;
+        goto out_unlock;
+    }
+
+    args->align = calculate_alignment(flags, args->align, object_size);
+    s = create_cache(cache_name, object_size, args, flags);
+    if (IS_ERR(s)) {
+        err = PTR_ERR(s);
+        kfree_const(cache_name);
+    }
+
+out_unlock:
+    mutex_unlock(&slab_mutex);
+
+    if (err) {
+        if (flags & SLAB_PANIC)
+            panic("%s: Failed to create slab '%s'. Error %d\n",
+                __func__, name, err);
+        else {
+            pr_warn("%s(%s) failed with error %d\n",
+                __func__, name, err);
+            dump_stack();
+        }
+        return NULL;
+    }
+    return s;
 }
 
 size_t kmalloc_size_roundup(size_t size)
@@ -118,14 +296,7 @@ size_t kmalloc_size_roundup(size_t size)
          * The flags don't matter since size_index is common to all.
          * Neither does the caller for just getting ->object_size.
          */
-#if 0
         return kmalloc_slab(size, NULL, GFP_KERNEL, 0)->object_size;
-#else
-        size_t ret = ALIGN(size, 8);
-        pr_notice("%s: No impl for kmalloc_slab. size(%u -> %u)",
-                  __func__, size, ret);
-        return ret;
-#endif
     }
 
     /* Above the smaller buckets, size is a multiple of page size. */
@@ -141,9 +312,7 @@ size_t kmalloc_size_roundup(size_t size)
 
 bool slab_is_available(void)
 {
-    pr_notice("%s: No impl.", __func__);
-    return true;
-    //return slab_state >= UP;
+    return slab_state >= UP;
 }
 
 /*
@@ -294,34 +463,6 @@ size_t ksize(const void *objp)
         return 0;
 
     return kfence_ksize(objp) ?: __ksize(objp);
-}
-
-/*
- * Figure out what the alignment of the objects will be given a set of
- * flags, a user specified alignment and the size of the objects.
- */
-static unsigned int calculate_alignment(slab_flags_t flags,
-        unsigned int align, unsigned int size)
-{
-    /*
-     * If the user wants hardware cache aligned objects then follow that
-     * suggestion if the object is sufficiently large.
-     *
-     * The hardware cache alignment cannot override the specified
-     * alignment though. If that is greater then use it.
-     */
-    if (flags & SLAB_HWCACHE_ALIGN) {
-        unsigned int ralign;
-
-        ralign = cache_line_size();
-        while (size <= ralign / 2)
-            ralign /= 2;
-        align = max(align, ralign);
-    }
-
-    align = max(align, arch_slab_minalign());
-
-    return ALIGN(align, sizeof(void *));
 }
 
 /* Create a cache during boot when no slab services are available yet */
@@ -589,4 +730,73 @@ void __init create_kmalloc_caches(void)
         kmem_buckets_cache = kmem_cache_create("kmalloc_buckets",
                                sizeof(kmem_buckets),
                                0, SLAB_NO_MERGE, NULL);
+}
+
+struct kmem_cache *find_mergeable(unsigned int size, unsigned int align,
+        slab_flags_t flags, const char *name, void (*ctor)(void *))
+{
+    struct kmem_cache *s;
+
+    if (slab_nomerge)
+        return NULL;
+
+    if (ctor)
+        return NULL;
+
+    flags = kmem_cache_flags(flags, name);
+
+    if (flags & SLAB_NEVER_MERGE)
+        return NULL;
+
+    size = ALIGN(size, sizeof(void *));
+    align = calculate_alignment(flags, align, size);
+    size = ALIGN(size, align);
+
+    list_for_each_entry_reverse(s, &slab_caches, list) {
+        if (slab_unmergeable(s))
+            continue;
+
+        if (size > s->size)
+            continue;
+
+        if ((flags & SLAB_MERGE_SAME) != (s->flags & SLAB_MERGE_SAME))
+            continue;
+        /*
+         * Check if alignment is compatible.
+         * Courtesy of Adrian Drzewiecki
+         */
+        if ((s->size & ~(align - 1)) != s->size)
+            continue;
+
+        if (s->size - size >= sizeof(void *))
+            continue;
+
+        return s;
+    }
+    return NULL;
+}
+
+/*
+ * Find a mergeable slab cache
+ */
+int slab_unmergeable(struct kmem_cache *s)
+{
+    if (slab_nomerge || (s->flags & SLAB_NEVER_MERGE))
+        return 1;
+
+    if (s->ctor)
+        return 1;
+
+#ifdef CONFIG_HARDENED_USERCOPY
+    if (s->usersize)
+        return 1;
+#endif
+
+    /*
+     * We may have set a slab to be unmergeable during bootstrap.
+     */
+    if (s->refcount < 0)
+        return 1;
+
+    return 0;
 }

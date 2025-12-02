@@ -49,6 +49,7 @@ void * __init memblock_alloc_try_nid(
     }
     ret = cl_rust_alloc(size, align);
     if (ret) {
+        printk("%s: ptr(%lx)\n", __func__, ret);
         memset(ret, 0, size);
     }
     return ret;

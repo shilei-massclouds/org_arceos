@@ -72,6 +72,11 @@ struct partial_context {
     void *object;
 };
 
+static void discard_slab(struct kmem_cache *s, struct slab *slab);
+
+static inline void add_partial(struct kmem_cache_node *n,
+                struct slab *slab, int tail);
+
 static inline bool pfmemalloc_match(struct slab *slab, gfp_t gfpflags)
 {
     if (unlikely(slab_test_pfmemalloc(slab)))
@@ -720,33 +725,35 @@ static inline void *get_freepointer(struct kmem_cache *s, void *object)
     return freelist_ptr_decode(s, p, ptr_addr);
 }
 
-/*
- * Finishes removing the cpu slab. Merges cpu's freelist with slab's freelist,
- * unfreezes the slabs and puts it on the proper list.
- * Assumes the slab has been already safely taken away from kmem_cache_cpu
- * by the caller.
- */
-static void deactivate_slab(struct kmem_cache *s, struct slab *slab,
-                void *freelist)
+static inline void *restore_red_left(struct kmem_cache *s, void *p)
 {
-    PANIC("");
+    if (s->flags & SLAB_RED_ZONE)
+        p -= s->red_left_pad;
+
+    return p;
 }
 
-#ifdef CONFIG_SLUB_CPU_PARTIAL
-static void __put_partials(struct kmem_cache *s, struct slab *partial_slab)
+/* Verify that a pointer has an address that is valid within a slab page */
+static inline int check_valid_pointer(struct kmem_cache *s,
+                struct slab *slab, void *object)
 {
-    PANIC("");
+    void *base;
+
+    if (!object)
+        return 1;
+
+    base = slab_address(slab);
+    object = kasan_reset_tag(object);
+    object = restore_red_left(s, object);
+    if (object < base || object >= base + slab->objects * s->size ||
+        (object - base) % s->size) {
+        return 0;
+    }
+
+    return 1;
 }
-#endif
 
 static inline bool slab_add_kunit_errors(void) { return false; }
-
-static void print_slab_info(const struct slab *slab)
-{
-    pr_err("Slab 0x%p objects=%u used=%u fp=0x%p flags=%pGp\n",
-           slab, slab->objects, slab->inuse, slab->freelist,
-           &slab->__page_flags);
-}
 
 static void slab_bug(struct kmem_cache *s, char *fmt, ...)
 {
@@ -760,6 +767,107 @@ static void slab_bug(struct kmem_cache *s, char *fmt, ...)
     pr_err("BUG %s (%s): %pV\n", s->name, print_tainted(), &vaf);
     pr_err("-----------------------------------------------------------------------------\n\n");
     va_end(args);
+}
+
+static void print_slab_info(const struct slab *slab)
+{
+    pr_err("Slab 0x%p objects=%u used=%u fp=0x%p flags=%pGp\n",
+           slab, slab->objects, slab->inuse, slab->freelist,
+           &slab->__page_flags);
+}
+
+/*
+ * Object debugging
+ */
+
+static void print_section(char *level, char *text, u8 *addr,
+              unsigned int length)
+{
+    metadata_access_enable();
+    print_hex_dump(level, text, DUMP_PREFIX_ADDRESS,
+            16, 1, kasan_reset_tag((void *)addr), length, 1);
+    metadata_access_disable();
+}
+
+/*
+ * See comment in calculate_sizes().
+ */
+static inline bool freeptr_outside_object(struct kmem_cache *s)
+{
+    return s->offset >= s->inuse;
+}
+
+/*
+ * Return offset of the end of info block which is inuse + free pointer if
+ * not overlapping with object.
+ */
+static inline unsigned int get_info_end(struct kmem_cache *s)
+{
+    if (freeptr_outside_object(s))
+        return s->inuse + sizeof(void *);
+    else
+        return s->inuse;
+}
+
+static inline unsigned int size_from_object(struct kmem_cache *s)
+{
+    if (s->flags & SLAB_RED_ZONE)
+        return s->size - s->red_left_pad;
+
+    return s->size;
+}
+
+static void print_trailer(struct kmem_cache *s, struct slab *slab, u8 *p)
+{
+    unsigned int off;   /* Offset of last byte */
+    u8 *addr = slab_address(slab);
+
+    print_tracking(s, p);
+
+    print_slab_info(slab);
+
+    pr_err("Object 0x%p @offset=%tu fp=0x%p\n\n",
+           p, p - addr, get_freepointer(s, p));
+
+    if (s->flags & SLAB_RED_ZONE)
+        print_section(KERN_ERR, "Redzone  ", p - s->red_left_pad,
+                  s->red_left_pad);
+    else if (p > addr + 16)
+        print_section(KERN_ERR, "Bytes b4 ", p - 16, 16);
+
+    print_section(KERN_ERR,         "Object   ", p,
+              min_t(unsigned int, s->object_size, PAGE_SIZE));
+    if (s->flags & SLAB_RED_ZONE)
+        print_section(KERN_ERR, "Redzone  ", p + s->object_size,
+            s->inuse - s->object_size);
+
+    off = get_info_end(s);
+
+    if (s->flags & SLAB_STORE_USER)
+        off += 2 * sizeof(struct track);
+
+    if (slub_debug_orig_size(s))
+        off += sizeof(unsigned int);
+
+    off += kasan_metadata_size(s, false);
+
+    if (off != size_from_object(s))
+        /* Beginning of the filler is the free pointer */
+        print_section(KERN_ERR, "Padding  ", p + off,
+                  size_from_object(s) - off);
+
+    dump_stack();
+}
+
+static void object_err(struct kmem_cache *s, struct slab *slab,
+            u8 *object, char *reason)
+{
+    if (slab_add_kunit_errors())
+        return;
+
+    slab_bug(s, "%s", reason);
+    print_trailer(s, slab, object);
+    add_taint(TAINT_BAD_PAGE, LOCKDEP_NOW_UNRELIABLE);
 }
 
 __printf(2, 3)
@@ -777,6 +885,125 @@ static void slab_fix(struct kmem_cache *s, char *fmt, ...)
     pr_err("FIX %s: %pV\n", s->name, &vaf);
     va_end(args);
 }
+
+static bool freelist_corrupted(struct kmem_cache *s, struct slab *slab,
+                   void **freelist, void *nextfree)
+{
+    if ((s->flags & SLAB_CONSISTENCY_CHECKS) &&
+        !check_valid_pointer(s, slab, nextfree) && freelist) {
+        object_err(s, slab, *freelist, "Freechain corrupt");
+        *freelist = NULL;
+        slab_fix(s, "Isolate corrupted freechain");
+        return true;
+    }
+
+    return false;
+}
+
+static inline void set_freepointer(struct kmem_cache *s, void *object, void *fp)
+{
+    unsigned long freeptr_addr = (unsigned long)object + s->offset;
+
+#ifdef CONFIG_SLAB_FREELIST_HARDENED
+    BUG_ON(object == fp); /* naive detection of double free or corruption */
+#endif
+
+    freeptr_addr = (unsigned long)kasan_reset_tag((void *)freeptr_addr);
+    *(freeptr_t *)freeptr_addr = freelist_ptr_encode(s, fp, freeptr_addr);
+}
+
+/*
+ * Finishes removing the cpu slab. Merges cpu's freelist with slab's freelist,
+ * unfreezes the slabs and puts it on the proper list.
+ * Assumes the slab has been already safely taken away from kmem_cache_cpu
+ * by the caller.
+ */
+static void deactivate_slab(struct kmem_cache *s, struct slab *slab,
+                void *freelist)
+{
+    struct kmem_cache_node *n = get_node(s, slab_nid(slab));
+    int free_delta = 0;
+    void *nextfree, *freelist_iter, *freelist_tail;
+    int tail = DEACTIVATE_TO_HEAD;
+    unsigned long flags = 0;
+    struct slab new;
+    struct slab old;
+
+    if (READ_ONCE(slab->freelist)) {
+        stat(s, DEACTIVATE_REMOTE_FREES);
+        tail = DEACTIVATE_TO_TAIL;
+    }
+
+    /*
+     * Stage one: Count the objects on cpu's freelist as free_delta and
+     * remember the last object in freelist_tail for later splicing.
+     */
+    freelist_tail = NULL;
+    freelist_iter = freelist;
+    while (freelist_iter) {
+        nextfree = get_freepointer(s, freelist_iter);
+
+        /*
+         * If 'nextfree' is invalid, it is possible that the object at
+         * 'freelist_iter' is already corrupted.  So isolate all objects
+         * starting at 'freelist_iter' by skipping them.
+         */
+        if (freelist_corrupted(s, slab, &freelist_iter, nextfree))
+            break;
+
+        freelist_tail = freelist_iter;
+        free_delta++;
+
+        freelist_iter = nextfree;
+    }
+
+    /*
+     * Stage two: Unfreeze the slab while splicing the per-cpu
+     * freelist to the head of slab's freelist.
+     */
+    do {
+        old.freelist = READ_ONCE(slab->freelist);
+        old.counters = READ_ONCE(slab->counters);
+        VM_BUG_ON(!old.frozen);
+
+        /* Determine target state of the slab */
+        new.counters = old.counters;
+        new.frozen = 0;
+        if (freelist_tail) {
+            new.inuse -= free_delta;
+            set_freepointer(s, freelist_tail, old.freelist);
+            new.freelist = freelist;
+        } else {
+            new.freelist = old.freelist;
+        }
+    } while (!slab_update_freelist(s, slab,
+        old.freelist, old.counters,
+        new.freelist, new.counters,
+        "unfreezing slab"));
+
+    /*
+     * Stage three: Manipulate the slab list based on the updated state.
+     */
+    if (!new.inuse && n->nr_partial >= s->min_partial) {
+        stat(s, DEACTIVATE_EMPTY);
+        discard_slab(s, slab);
+        stat(s, FREE_SLAB);
+    } else if (new.freelist) {
+        spin_lock_irqsave(&n->list_lock, flags);
+        add_partial(n, slab, tail);
+        spin_unlock_irqrestore(&n->list_lock, flags);
+        stat(s, tail);
+    } else {
+        stat(s, DEACTIVATE_FULL);
+    }
+}
+
+#ifdef CONFIG_SLUB_CPU_PARTIAL
+static void __put_partials(struct kmem_cache *s, struct slab *partial_slab)
+{
+    PANIC("");
+}
+#endif
 
 static __printf(3, 4) void slab_err(struct kmem_cache *s, struct slab *slab,
             const char *fmt, ...)
@@ -799,55 +1026,6 @@ static __printf(3, 4) void slab_err(struct kmem_cache *s, struct slab *slab,
 static inline unsigned int order_objects(unsigned int order, unsigned int size)
 {
     return ((unsigned int)PAGE_SIZE << order) / size;
-}
-
-static inline unsigned int size_from_object(struct kmem_cache *s)
-{
-    if (s->flags & SLAB_RED_ZONE)
-        return s->size - s->red_left_pad;
-
-    return s->size;
-}
-
-static inline void *restore_red_left(struct kmem_cache *s, void *p)
-{
-    if (s->flags & SLAB_RED_ZONE)
-        p -= s->red_left_pad;
-
-    return p;
-}
-
-/*
- * Object debugging
- */
-
-/* Verify that a pointer has an address that is valid within a slab page */
-static inline int check_valid_pointer(struct kmem_cache *s,
-                struct slab *slab, void *object)
-{
-    void *base;
-
-    if (!object)
-        return 1;
-
-    base = slab_address(slab);
-    object = kasan_reset_tag(object);
-    object = restore_red_left(s, object);
-    if (object < base || object >= base + slab->objects * s->size ||
-        (object - base) % s->size) {
-        return 0;
-    }
-
-    return 1;
-}
-
-static void print_section(char *level, char *text, u8 *addr,
-              unsigned int length)
-{
-    metadata_access_enable();
-    print_hex_dump(level, text, DUMP_PREFIX_ADDRESS,
-            16, 1, kasan_reset_tag((void *)addr), length, 1);
-    metadata_access_disable();
 }
 
 static void restore_bytes(struct kmem_cache *s, char *message, u8 data,
@@ -924,26 +1102,6 @@ static int check_slab(struct kmem_cache *s, struct slab *slab)
     return 1;
 }
 
-/*
- * See comment in calculate_sizes().
- */
-static inline bool freeptr_outside_object(struct kmem_cache *s)
-{
-    return s->offset >= s->inuse;
-}
-
-/*
- * Return offset of the end of info block which is inuse + free pointer if
- * not overlapping with object.
- */
-static inline unsigned int get_info_end(struct kmem_cache *s)
-{
-    if (freeptr_outside_object(s))
-        return s->inuse + sizeof(void *);
-    else
-        return s->inuse;
-}
-
 static void print_track(const char *s, struct track *t, unsigned long pr_time)
 {
     depot_stack_handle_t handle __maybe_unused;
@@ -980,59 +1138,6 @@ void print_tracking(struct kmem_cache *s, void *object)
 
     print_track("Allocated", get_track(s, object, TRACK_ALLOC), pr_time);
     print_track("Freed", get_track(s, object, TRACK_FREE), pr_time);
-}
-
-static void print_trailer(struct kmem_cache *s, struct slab *slab, u8 *p)
-{
-    unsigned int off;   /* Offset of last byte */
-    u8 *addr = slab_address(slab);
-
-    print_tracking(s, p);
-
-    print_slab_info(slab);
-
-    pr_err("Object 0x%p @offset=%tu fp=0x%p\n\n",
-           p, p - addr, get_freepointer(s, p));
-
-    if (s->flags & SLAB_RED_ZONE)
-        print_section(KERN_ERR, "Redzone  ", p - s->red_left_pad,
-                  s->red_left_pad);
-    else if (p > addr + 16)
-        print_section(KERN_ERR, "Bytes b4 ", p - 16, 16);
-
-    print_section(KERN_ERR,         "Object   ", p,
-              min_t(unsigned int, s->object_size, PAGE_SIZE));
-    if (s->flags & SLAB_RED_ZONE)
-        print_section(KERN_ERR, "Redzone  ", p + s->object_size,
-            s->inuse - s->object_size);
-
-    off = get_info_end(s);
-
-    if (s->flags & SLAB_STORE_USER)
-        off += 2 * sizeof(struct track);
-
-    if (slub_debug_orig_size(s))
-        off += sizeof(unsigned int);
-
-    off += kasan_metadata_size(s, false);
-
-    if (off != size_from_object(s))
-        /* Beginning of the filler is the free pointer */
-        print_section(KERN_ERR, "Padding  ", p + off,
-                  size_from_object(s) - off);
-
-    dump_stack();
-}
-
-static void object_err(struct kmem_cache *s, struct slab *slab,
-            u8 *object, char *reason)
-{
-    if (slab_add_kunit_errors())
-        return;
-
-    slab_bug(s, "%s", reason);
-    print_trailer(s, slab, object);
-    add_taint(TAINT_BAD_PAGE, LOCKDEP_NOW_UNRELIABLE);
 }
 
 static pad_check_attributes int
@@ -1138,18 +1243,6 @@ static int check_pad_bytes(struct kmem_cache *s, struct slab *slab, u8 *p)
 
     return check_bytes_and_report(s, slab, p, "Object padding",
             p + off, POISON_INUSE, size_from_object(s) - off);
-}
-
-static inline void set_freepointer(struct kmem_cache *s, void *object, void *fp)
-{
-    unsigned long freeptr_addr = (unsigned long)object + s->offset;
-
-#ifdef CONFIG_SLAB_FREELIST_HARDENED
-    BUG_ON(object == fp); /* naive detection of double free or corruption */
-#endif
-
-    freeptr_addr = (unsigned long)kasan_reset_tag((void *)freeptr_addr);
-    *(freeptr_t *)freeptr_addr = freelist_ptr_encode(s, fp, freeptr_addr);
 }
 
 static int check_object(struct kmem_cache *s, struct slab *slab,
@@ -2125,6 +2218,10 @@ redo:
      * and cmpxchg later will validate the cpu.
      */
     c = raw_cpu_ptr(s->cpu_slab);
+    if (c == NULL) {
+        printk("%s: s(%lx) c(%lx)\n", __func__, s, c);
+        dump_stack();
+    }
     tid = READ_ONCE(c->tid);
 
     /*
@@ -2305,26 +2402,11 @@ void *kmem_cache_alloc_node_noprof(struct kmem_cache *s, gfp_t gfpflags, int nod
 
 void *kmem_cache_alloc_noprof(struct kmem_cache *s, gfp_t gfpflags)
 {
-    if (!s) {
-        PANIC("Bad kmem_cache");
-    }
-    if (s->ctor && (gfpflags & __GFP_ZERO)) {
-        PANIC("kmem_cache ctor conflicts with GFP_ZERO.");
-    }
-    pr_debug("%s: object_size(%u, %u) align(%u)",
-             __func__, s->object_size, s->size, s->align);
+    void *ret = slab_alloc_node(s, NULL, gfpflags, NUMA_NO_NODE, _RET_IP_,
+                    s->object_size);
 
-    int align = s->align;
-    if (align == 0) {
-        align = 8;
-    }
-    void *ret = cl_rust_alloc(s->size, align);
-    if (s->ctor) {
-        s->ctor(ret);
-    }
-    if (gfpflags & __GFP_ZERO) {
-        memset(ret, 0, s->size);
-    }
+    trace_kmem_cache_alloc(_RET_IP_, ret, s, gfpflags, NUMA_NO_NODE);
+
     return ret;
 }
 
@@ -2752,6 +2834,11 @@ void kfree(const void *object)
     if (unlikely(ZERO_OR_NULL_PTR(object)))
         return;
 
+    {
+        struct page *p = virt_to_page(object);
+        printk("%s: object(%lx) page(%lx)\n", __func__, object, p);
+        printk("%s: compound_head(%lx)\n", __func__, READ_ONCE(p->compound_head));
+    }
     folio = virt_to_folio(object);
     if (unlikely(!folio_test_slab(folio))) {
         free_large_kmalloc(folio, (void *)object);
@@ -3374,6 +3461,7 @@ static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
     s->cpu_slab = __alloc_percpu(sizeof(struct kmem_cache_cpu),
                      2 * sizeof(void *));
 
+    printk("%s: s(%lx) cpu_slab(%x)\n", __func__, s, s->cpu_slab);
     if (!s->cpu_slab)
         return 0;
 
@@ -3820,4 +3908,34 @@ void *__kmalloc_large_node_noprof(size_t size, gfp_t flags, int node)
     trace_kmalloc(_RET_IP_, ret, size, PAGE_SIZE << get_order(size),
               flags, node);
     return ret;
+}
+
+static int sysfs_slab_alias(struct kmem_cache *s, const char *name)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+struct kmem_cache *
+__kmem_cache_alias(const char *name, unsigned int size, unsigned int align,
+           slab_flags_t flags, void (*ctor)(void *))
+{
+    struct kmem_cache *s;
+
+    s = find_mergeable(size, align, flags, name, ctor);
+    if (s) {
+        if (sysfs_slab_alias(s, name))
+            return NULL;
+
+        s->refcount++;
+
+        /*
+         * Adjust the object sizes so that we clear
+         * the complete object on kzalloc.
+         */
+        s->object_size = max(s->object_size, size);
+        s->inuse = max(s->inuse, ALIGN(size, sizeof(void *)));
+    }
+
+    return s;
 }
