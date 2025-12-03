@@ -30,5 +30,8 @@ void __percpu *pcpu_alloc_noprof(size_t size, size_t align, bool reserved,
 {
     void *ret = cl_rust_alloc(size, align);
     printk("%s: ret(%lx)\n", __func__, ret);
+    if (ret) {
+        memset(ret, 0, size);
+    }
     return ret;
 }

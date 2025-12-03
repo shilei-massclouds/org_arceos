@@ -22,8 +22,8 @@
 #define DP1000
 
 //#define TEST_BLOCK
-#define TEST_EXT4
-//#define BENCH_MARK
+//#define TEST_EXT4
+#define BENCH_MARK
 
 extern void cl_do_initcalls(void);
 extern void cl_invoke_softirq(void);

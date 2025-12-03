@@ -77,7 +77,8 @@ int init_mem_map(unsigned long pa_start, unsigned long pa_end)
     pa_end >>= PAGE_SHIFT;
 
     unsigned int size = (pa_end - pa_start) * sizeof(struct page);
-    mem_map = alloc_pages_exact(PAGE_ALIGN(size), 0);
+    //mem_map = alloc_pages_exact(PAGE_ALIGN(size), 0);
+    mem_map = cl_rust_alloc(PAGE_ALIGN(size), 8);
     page_init_poison(mem_map, size);
     pfn_base = pa_start;
     max_mapnr = pa_end - pa_start;

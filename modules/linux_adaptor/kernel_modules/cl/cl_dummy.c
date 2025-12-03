@@ -986,3 +986,9 @@ void disk_flush_events(struct gendisk *disk, unsigned int mask)
 {
     pr_notice("%s: No impl.", __func__);
 }
+
+int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}

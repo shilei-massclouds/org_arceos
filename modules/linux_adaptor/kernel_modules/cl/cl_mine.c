@@ -429,7 +429,6 @@ CL_MINE(__printk_deferred_enter)
 CL_MINE(__printk_deferred_exit)
 CL_MINE(sched_show_task)
 CL_MINE(schedule_timeout_interruptible)
-CL_MINE(set_cpus_allowed_ptr)
 CL_MINE(try_wait_for_completion)
 
 // char/random

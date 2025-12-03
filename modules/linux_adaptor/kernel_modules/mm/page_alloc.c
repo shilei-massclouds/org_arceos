@@ -454,6 +454,54 @@ static void split_large_buddy(struct zone *zone, struct page *page,
     } while (1);
 }
 
+static void free_one_page(struct zone *zone, struct page *page,
+              unsigned long pfn, unsigned int order,
+              fpi_t fpi_flags)
+{
+#if 0
+    unsigned long flags;
+
+    spin_lock_irqsave(&zone->lock, flags);
+    split_large_buddy(zone, page, pfn, order, fpi_flags);
+    spin_unlock_irqrestore(&zone->lock, flags);
+
+    __count_vm_events(PGFREE, 1 << order);
+#endif
+    //printk("%s: page(%lx) order(%u)\n", __func__, page, order);
+    cl_free_pages(page_to_virt(page), (1 << order));
+}
+
+static void __free_pages_ok(struct page *page, unsigned int order,
+                fpi_t fpi_flags)
+{
+    unsigned long pfn = page_to_pfn(page);
+    struct zone *zone = page_zone(page);
+
+    if (free_pages_prepare(page, order))
+        free_one_page(zone, page, pfn, order, fpi_flags);
+}
+
+static void *make_alloc_exact(unsigned long addr, unsigned int order,
+        size_t size)
+{
+    if (addr) {
+        unsigned long nr = DIV_ROUND_UP(size, PAGE_SIZE);
+        struct page *page = virt_to_page((void *)addr);
+        struct page *last = page + nr;
+
+        split_page_owner(page, order, 0);
+        pgalloc_tag_split(page_folio(page), order, 0);
+        split_page_memcg(page, order, 0);
+        while (page < --last)
+            set_page_refcounted(last);
+
+        last = page + (1UL << order);
+        for (page += nr; page < last; page++)
+            __free_pages_ok(page, 0, FPI_TO_TAIL);
+    }
+    return (void *)addr;
+}
+
 /**
  * alloc_pages_exact - allocate an exact number physically-contiguous pages.
  * @size: the number of bytes to allocate
@@ -471,7 +519,14 @@ static void split_large_buddy(struct zone *zone, struct page *page,
  */
 void *alloc_pages_exact_noprof(size_t size, gfp_t gfp_mask)
 {
-    return cl_alloc_pages(size, PAGE_SIZE);
+    unsigned int order = get_order(size);
+    unsigned long addr;
+
+    if (WARN_ON_ONCE(gfp_mask & (__GFP_COMP | __GFP_HIGHMEM)))
+        gfp_mask &= ~(__GFP_COMP | __GFP_HIGHMEM);
+
+    addr = get_free_pages_noprof(gfp_mask, order);
+    return make_alloc_exact(addr, order, size);
 }
 
 static inline bool should_skip_init(gfp_t flags)
@@ -656,23 +711,6 @@ static inline bool pcp_allowed_order(unsigned int order)
     return false;
 }
 
-static void free_one_page(struct zone *zone, struct page *page,
-              unsigned long pfn, unsigned int order,
-              fpi_t fpi_flags)
-{
-#if 0
-    unsigned long flags;
-
-    spin_lock_irqsave(&zone->lock, flags);
-    split_large_buddy(zone, page, pfn, order, fpi_flags);
-    spin_unlock_irqrestore(&zone->lock, flags);
-
-    __count_vm_events(PGFREE, 1 << order);
-#endif
-    printk("%s: page(%lx) order(%u)\n", __func__, page, order);
-    cl_free_pages(page_to_virt(page), (1 << order));
-}
-
 static inline unsigned int order_to_pindex(int migratetype, int order)
 {
     bool __maybe_unused movable;
@@ -829,7 +867,6 @@ void free_unref_folios(struct folio_batch *folios)
         folio->private = NULL;
         migratetype = get_pfnblock_migratetype(&folio->page, pfn);
 
-    printk("%s: step1\n", __func__);
         /* Different zone requires a different pcp lock */
         if (zone != locked_zone ||
             is_migrate_isolate(migratetype)) {
@@ -840,7 +877,6 @@ void free_unref_folios(struct folio_batch *folios)
                 pcp = NULL;
             }
 
-    printk("%s: step2\n", __func__);
             /*
              * Free isolated pages directly to the
              * allocator, see comment in free_unref_page.
@@ -851,7 +887,6 @@ void free_unref_folios(struct folio_batch *folios)
                 continue;
             }
 
-    printk("%s: step3\n", __func__);
             /*
              * trylock is necessary as folios may be getting freed
              * from IRQ or SoftIRQ context after an IO completion.
@@ -873,7 +908,6 @@ void free_unref_folios(struct folio_batch *folios)
             locked_zone = zone;
         }
 
-    printk("%s: stepN\n", __func__);
         /*
          * Non-isolated types over MIGRATE_PCPTYPES get added
          * to the MIGRATE_MOVABLE pcp list.
@@ -1362,15 +1396,6 @@ bool gfp_pfmemalloc_allowed(gfp_t gfp_mask)
     //return !!__gfp_pfmemalloc_flags(gfp_mask);
 }
 
-static void __free_pages_ok(struct page *page, unsigned int order,
-                fpi_t fpi_flags)
-{
-    unsigned long pfn = page_to_pfn(page);
-    struct zone *zone = page_zone(page);
-
-    if (free_pages_prepare(page, order))
-        free_one_page(zone, page, pfn, order, fpi_flags);
-}
 
 /*
  * Free a pcp page

@@ -404,6 +404,9 @@ bool cl_set_kthread_struct(struct task_struct *p)
     if (!kthread)
         return false;
 
+    // for kzalloc
+    memset(kthread, 0, sizeof(*kthread));
+
     init_completion(&kthread->exited);
     init_completion(&kthread->parked);
     p->vfork_done = &kthread->exited;
