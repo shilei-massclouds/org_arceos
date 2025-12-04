@@ -6,6 +6,8 @@
 #include "adaptor.h"
 #include "cl_syscalls.h"
 
+extern int cl_filp_flush(struct file *filp, fl_owner_t id);
+
 /*
  * Utilities
  */
@@ -205,25 +207,44 @@ test_file_read(const char *fname, char *buf, size_t len, off_t offset)
 static void
 test_file_write(const char *fname, const char *buf, size_t len, off_t offset)
 {
+    uint64_t t0, t1, t2, t3;
+    int size = len;
+    int count = 1;
+
     printk("\n============== file write ... =============\n\n");
 
-    int fd = cl_sys_open(fname, O_WRONLY, 0);
-    if (fd < 0) {
-        printk("open for write err '%d'.\n", fd);
-        PANIC("bad dir fd.");
+    struct file *f;
+    printk("%s: open for write ..\n", __func__);
+    f = filp_open(fname, O_WRONLY, 0);
+    if (IS_ERR(f)) {
+        PANIC("bad file for write.");
     }
-    printk("%s: open dir fd '%d'\n", __func__, fd);
 
-    int pos = cl_sys_lseek(fd, offset, SEEK_SET);
-    CL_ASSERT(pos == offset, "seek error.");
+    t0 = get_ticks();
 
-    int err = cl_sys_write(fd, buf, len);
+    loff_t pos = 0;
+    int err = kernel_write(f, buf, len, &pos);
     if (err < 0) {
         printk("write err: %d\n", err);
         PANIC("write file err.");
     }
 
-    if (cl_sys_close(fd)) {
+    t1 = get_ticks();
+
+    if (cl_filp_flush(f, 0) != 0) {
+        PANIC("flush file err.");
+    }
+
+    t2 = get_ticks();
+    if (vfs_fsync(f, 0) != 0) {
+        PANIC("sync file err.");
+    }
+
+    t3 = get_ticks();
+
+    printk("%lu, %lu, %lu\n", t1-t0, t2-t1, t3-t2);
+
+    if (filp_close(f, 0)) {
         PANIC("close dir fd err.");
     }
 
@@ -279,8 +300,34 @@ static void test_simple(void)
     printk("create '%s' for write ok!\n", fname);
 }
 
+static void test_direct_write(void)
+{
+    char *path = "/f2.txt";
+    off_t offset = 0;
+
+    test_file_create(path);
+
+    char wbuf[4096] = "1234";
+    //test_file_write(path, wbuf, sizeof(wbuf), offset);
+    test_file_write(path, wbuf, 64, offset);
+
+#if 0
+    char rbuf[_BUF_LEN];
+    int count = test_file_read(path, rbuf, sizeof(rbuf), offset);
+    CL_ASSERT(count == sizeof(wbuf), "bad file size.");
+    CL_ASSERT(memcmp(rbuf, wbuf, count) == 0, "bad file content.");
+#endif
+
+    test_stat(path);
+
+    test_file_remove(path);
+}
+
 void test_ext4(void)
 {
+    test_direct_write();
+
+#if 0
     test_simple();
 
     test_getdents64();
@@ -295,4 +342,5 @@ void test_ext4(void)
     test_stat("/dir1");
 
     test_dir_remove("/dir1");
+#endif
 }

@@ -462,11 +462,8 @@ void __mark_inode_dirty(struct inode *inode, int flags)
                 wb_wakeup_delayed(wb);
             return;
         }
-
-        PANIC("flags!");
     }
 
-    PANIC("");
 out_unlock:
     if (wb)
         spin_unlock(&wb->list_lock);

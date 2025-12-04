@@ -992,3 +992,26 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
     pr_err("%s: No impl.", __func__);
     return 0;
 }
+
+time64_t ktime_get_seconds(void)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+void kill_fasync(struct fasync_struct **fp, int sig, int band)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+void __audit_getname(struct filename *name)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+int security_file_truncate(struct file *file)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}

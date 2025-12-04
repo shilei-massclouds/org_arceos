@@ -1492,7 +1492,7 @@ static bool blk_mq_req_expired(struct request *rq, struct blk_expired_data *expi
         return false;
 
     deadline = READ_ONCE(rq->deadline);
-    pr_err("%s: cur(%lu) dl(%lu)", __func__, expired->timeout_start, deadline);
+    pr_notice("%s: cur(%lu) dl(%lu)", __func__, expired->timeout_start, deadline);
     if (time_after_eq(expired->timeout_start, deadline))
         return true;
 
@@ -1607,7 +1607,7 @@ static void blk_mq_timeout_work(struct work_struct *work)
         }
     }
     blk_queue_exit(q);
-    pr_err("%s: NOTE! Timeout!", __func__);
+    pr_notice("%s: NOTE! Timeout!", __func__);
 }
 
 int blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,

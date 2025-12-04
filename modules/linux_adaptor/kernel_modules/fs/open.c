@@ -436,16 +436,9 @@ static int filp_flush(struct file *filp, fl_owner_t id)
     return retval;
 }
 
-int cl_filp_flush(int fd)
+int cl_filp_flush(struct file *filp, fl_owner_t id)
 {
-    struct fd f = fdget(fd);
-    int ret = -EBADF;
-
-    if (fd_file(f)) {
-        ret = filp_flush(fd_file(f), 0);
-        fdput(f);
-    }
-    return ret;
+    return filp_flush(filp, id);
 }
 
 int cl_sys_close(int fd)
@@ -564,4 +557,58 @@ mnt_drop_write_and_out:
     mnt_drop_write(path->mnt);
 out:
     return error;
+}
+
+/**
+ * filp_open - open file and return file pointer
+ *
+ * @filename:   path to open
+ * @flags:  open flags as per the open(2) second argument
+ * @mode:   mode for the new file if O_CREAT is set, else ignored
+ *
+ * This is the helper to open a file from kernelspace if you really
+ * have to.  But in generally you should not do this, so please move
+ * along, nothing to see here..
+ */
+struct file *filp_open(const char *filename, int flags, umode_t mode)
+{
+    struct filename *name = getname_kernel(filename);
+    struct file *file = ERR_CAST(name);
+
+    if (!IS_ERR(name)) {
+        file = file_open_name(name, flags, mode);
+        putname(name);
+    }
+    return file;
+}
+
+/**
+ * file_open_name - open file and return file pointer
+ *
+ * @name:   struct filename containing path to open
+ * @flags:  open flags as per the open(2) second argument
+ * @mode:   mode for the new file if O_CREAT is set, else ignored
+ *
+ * This is the helper to open a file from kernelspace if you really
+ * have to.  But in generally you should not do this, so please move
+ * along, nothing to see here..
+ */
+struct file *file_open_name(struct filename *name, int flags, umode_t mode)
+{
+    struct open_flags op;
+    struct open_how how = build_open_how(flags, mode);
+    int err = build_open_flags(&how, &op);
+    if (err)
+        return ERR_PTR(err);
+    return do_filp_open(AT_FDCWD, name, &op);
+}
+
+int filp_close(struct file *filp, fl_owner_t id)
+{
+    int retval;
+
+    retval = filp_flush(filp, id);
+    fput(filp);
+
+    return retval;
 }

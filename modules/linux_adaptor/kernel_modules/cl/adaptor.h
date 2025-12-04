@@ -38,7 +38,7 @@ do { \
     printk("\nPANIC: %s(%s:%d) %s\n", __FUNCTION__, __FILE__, __LINE__, args); \
     printk("\n########################\n"); \
     dump_stack(); \
-    end_global_trace(); \
+    /* end_global_trace(); */ \
     cl_terminate(); \
 } while (0)
 
@@ -74,5 +74,11 @@ do {                        \
 
 #define CL_TRACE_META_START (CL_TRACE_CHANNEL_START + CL_TRACE_CHANNEL_SIZE)
 #define CL_TRACE_META_SIZE  0xa0000UL
+
+#define CSR_TIME		0xc01
+static inline uint64_t get_ticks(void)
+{
+    return csr_read(CSR_TIME);
+}
 
 #endif /* _ADAPTOR_H_ */

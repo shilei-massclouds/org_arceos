@@ -977,7 +977,20 @@ static int path_lookupat(struct nameidata *nd, unsigned flags, struct path *path
 
 static int handle_truncate(struct mnt_idmap *idmap, struct file *filp)
 {
-    PANIC("");
+    const struct path *path = &filp->f_path;
+    struct inode *inode = path->dentry->d_inode;
+    int error = get_write_access(inode);
+    if (error)
+        return error;
+
+    error = security_file_truncate(filp);
+    if (!error) {
+        error = do_truncate(idmap, path->dentry, 0,
+                    ATTR_MTIME|ATTR_CTIME|ATTR_OPEN,
+                    filp);
+    }
+    put_write_access(inode);
+    return error;
 }
 
 static void __set_nameidata(struct nameidata *p, int dfd, struct filename *name)
@@ -2367,4 +2380,40 @@ int user_path_at(int dfd, const char __user *name, unsigned flags,
 
     putname(filename);
     return ret;
+}
+
+struct filename *
+getname_kernel(const char * filename)
+{
+    struct filename *result;
+    int len = strlen(filename) + 1;
+
+    result = __getname();
+    if (unlikely(!result))
+        return ERR_PTR(-ENOMEM);
+
+    if (len <= EMBEDDED_NAME_MAX) {
+        result->name = (char *)result->iname;
+    } else if (len <= PATH_MAX) {
+        const size_t size = offsetof(struct filename, iname[1]);
+        struct filename *tmp;
+
+        tmp = kmalloc(size, GFP_KERNEL);
+        if (unlikely(!tmp)) {
+            __putname(result);
+            return ERR_PTR(-ENOMEM);
+        }
+        tmp->name = (char *)result;
+        result = tmp;
+    } else {
+        __putname(result);
+        return ERR_PTR(-ENAMETOOLONG);
+    }
+    memcpy((char *)result->name, filename, len);
+    result->uptr = NULL;
+    result->aname = NULL;
+    atomic_set(&result->refcnt, 1);
+    audit_getname(result);
+
+    return result;
 }

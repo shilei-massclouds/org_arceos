@@ -154,10 +154,9 @@ ssize_t kernel_write(struct file *file, const void *buf, size_t count,
     if (ret)
         return ret;
 
-    pr_err("%s: No impl for file_[start|end]_write.", __func__);
-    //file_start_write(file);
+    file_start_write(file);
     ret =  __kernel_write(file, buf, count, pos);
-    //file_end_write(file);
+    file_end_write(file);
     return ret;
 }
 
