@@ -1,7 +1,7 @@
 # QEMU arguments
 
 #QEMU := qemu-system-$(ARCH)
-QEMU := ../edk2_workspace/qemu-9.2.4/build/qemu-system-riscv64
+QEMU := ../qemu_dp/build/qemu-system-riscv64
 ROOT_DEV ?= vda
 
 ifeq ($(BUS), mmio)

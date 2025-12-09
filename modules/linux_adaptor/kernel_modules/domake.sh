@@ -1,3 +1,3 @@
 #!/bin/sh
 
-make ARCH=riscv64 #-j $(nproc)
+make ARCH=riscv64 -j $(nproc)

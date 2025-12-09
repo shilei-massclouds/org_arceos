@@ -130,7 +130,7 @@ else
 endif
 
 # Binutils
-CROSS_COMPILE ?= $(ARCH)-linux-musl-
+CROSS_COMPILE ?= $(ARCH)-linux-gnu-
 CC := $(CROSS_COMPILE)gcc
 AR := $(CROSS_COMPILE)ar
 RANLIB := $(CROSS_COMPILE)ranlib

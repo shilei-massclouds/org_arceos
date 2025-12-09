@@ -6,6 +6,8 @@
 #include "adaptor.h"
 #include "cl_syscalls.h"
 
+extern uint64_t get_ticks(void);
+
 extern int cl_filp_flush(struct file *filp, fl_owner_t id);
 
 /*

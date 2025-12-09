@@ -1,6 +1,7 @@
 # Makefile basic Vars
 
-CROSS_ = $(ARCH)-linux-musl-
+#CROSS_ = $(ARCH)-linux-musl-
+CROSS_ = $(ARCH)-linux-gnu-
 CC = $(CROSS_)gcc
 AR = $(CROSS_)ar
 
@@ -12,7 +13,7 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
 	-I./arch/riscv/include/uapi -I./arch/riscv/include/generated/uapi -I./include/uapi -I./include/generated/uapi \
 	-include ./include/linux/kconfig.h -include ./include/linux/compiler_types.h \
 	-I./cl \
-	-nostdinc -fno-PIE -mabi=lp64d -march=rv64imafdc \
+	-nostdinc -fno-PIE -mabi=lp64d -march=rv64gc_zifencei \
 	-fshort-wchar -funsigned-char \
     -fno-asynchronous-unwind-tables -fno-unwind-tables \
     -fno-common -fno-stack-protector -mcmodel=medany -D__KERNEL__ \

@@ -7,6 +7,13 @@
 
 #define COUNT 1000
 
+#define CSR_TIME		0xc01
+
+uint64_t get_ticks(void)
+{
+    return csr_read(CSR_TIME);
+}
+
 extern int cl_filp_flush(struct file *filp, fl_owner_t id);
 
 static void
