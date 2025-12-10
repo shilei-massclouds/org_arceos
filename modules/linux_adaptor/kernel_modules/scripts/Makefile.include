@@ -16,6 +16,7 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
 	-nostdinc -fno-PIE -mabi=lp64d -march=rv64gc_zifencei \
 	-fshort-wchar -funsigned-char \
     -fno-asynchronous-unwind-tables -fno-unwind-tables \
+	-fno-builtin -fno-builtin-function \
     -fno-common -fno-stack-protector -mcmodel=medany -D__KERNEL__ \
     -O2 -Wno-stringop-overflow -Wno-format-truncation -Wno-format-security \
     -Werror=implicit-function-declaration -Wno-address-of-packed-member -Werror=implicit-function-declaration \

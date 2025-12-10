@@ -149,6 +149,7 @@ char *strchr(const char *s, int c)
 EXPORT_SYMBOL(strchr);
 #endif
 
+#if 0
 /**
  * strcmp - Compare two strings
  * @cs: One string
@@ -169,6 +170,7 @@ int strcmp(const char *cs, const char *ct)
     return 0;
 }
 EXPORT_SYMBOL(strcmp);
+#endif
 
 #ifndef __HAVE_ARCH_STRRCHR
 /**
@@ -188,6 +190,7 @@ char *strrchr(const char *s, int c)
 EXPORT_SYMBOL(strrchr);
 #endif
 
+#if 0
 /**
  * strncmp - Compare two length-limited strings
  * @cs: One string
@@ -210,6 +213,7 @@ int strncmp(const char *cs, const char *ct, size_t count)
     return 0;
 }
 EXPORT_SYMBOL(strncmp);
+#endif
 
 #ifndef __HAVE_ARCH_STRCASECMP
 int strcasecmp(const char *s1, const char *s2)
