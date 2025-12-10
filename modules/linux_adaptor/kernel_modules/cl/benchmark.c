@@ -176,17 +176,19 @@ void bench_ext4(void)
 {
     char *path = "/bench_file";
 
+#if 0
     /* Single write */
-#if 1
     create_test_file(path);
     single_write_file(path);
 
     read_test_file(path, 64, 1);
 #endif
 
-#if 0
+#if 1
     do_test(path, 64, COUNT);
     do_test(path, 128, COUNT);
+    do_test(path, 256, COUNT);
+    do_test(path, 512, COUNT);
     do_test(path, 1024, COUNT);
     do_test(path, 4096, COUNT);
 #endif
