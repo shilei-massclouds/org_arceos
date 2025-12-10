@@ -193,7 +193,7 @@ void bench_ext4(void)
     do_test(path, 4096, COUNT);
 #endif
 
-    unsigned long size = 10*SZ_1M;
+    unsigned long size = 15*SZ_1M;
     int order = get_order(size);
     printk("size = %lx order = %u\n", size, order);
     void *src = __get_free_pages(GFP_KERNEL, order);
