@@ -13,7 +13,7 @@ CFLAGS := -isystem /usr/lib/gcc-cross/riscv64-linux-gnu/11/include \
 	-I./arch/riscv/include/uapi -I./arch/riscv/include/generated/uapi -I./include/uapi -I./include/generated/uapi \
 	-include ./include/linux/kconfig.h -include ./include/linux/compiler_types.h \
 	-I./cl \
-	-nostdinc -fno-PIE -mabi=lp64d -march=rv64gc_zifencei \
+	-nostdinc -fno-PIE -mabi=lp64d -march=rv64imadc_zicsr_zifencei \
 	-fshort-wchar -funsigned-char \
     -fno-asynchronous-unwind-tables -fno-unwind-tables \
 	-fno-builtin -fno-builtin-function \
