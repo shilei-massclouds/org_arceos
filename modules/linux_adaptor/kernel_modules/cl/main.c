@@ -59,7 +59,6 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 
     setup_arch(NULL /* cmdline_p */);
 
-    printk("%s: step1\n", __func__);
     // Only for riscv64
     sbi_init();
 
@@ -83,12 +82,9 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 #endif
     sched_init();
     radix_tree_init();
-    printk("%s: ------- step0\n", __func__);
     maple_tree_init();
     trace_init();
-    printk("%s: ------- step1\n", __func__);
     workqueue_init_early();
-    printk("%s: ------- step2\n", __func__);
     devices_init();
     buses_init();
     classes_init();
@@ -97,7 +93,6 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     buffer_init();
     vfs_caches_init();
 
-    printk("%s: ------- step3\n", __func__);
     init_timers();
     workqueue_init();
     workqueue_init_topology();

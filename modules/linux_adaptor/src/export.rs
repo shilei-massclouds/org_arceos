@@ -72,7 +72,7 @@ type LinuxKthreadFunc = extern fn(usize) -> isize;
 pub extern "C" fn cl_kthread_run(
     task_ptr: u64, threadfn: LinuxKthreadFunc, arg: usize
 ) -> u64 {
-    let task = axtask::spawn_raw(
+    let task = axtask::TaskInner::new(
         move || {
             debug!("linux kthread: fn {:#?} {:#x}", threadfn, arg);
             threadfn(arg);
@@ -80,6 +80,9 @@ pub extern "C" fn cl_kthread_run(
         "linux kthread".into(),
         0x2000,     // KThread stack size must be compatible with linux.
     );
+    // NOTE: Now only support CPU-0. Fix it in future.
+    task.set_cpumask(axtask::AxCpuMask::one_shot(0));
+    let task = axtask::spawn_task(task);
     debug!("Kthread task pointer({:#x})", task_ptr);
     task.set_private(task_ptr);
     task.id().as_u64()

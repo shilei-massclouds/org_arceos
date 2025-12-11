@@ -35,7 +35,7 @@
 # General options
 ARCH ?= riscv64
 PLATFORM ?= #riscv64-sifive_u
-SMP ?= 1
+SMP ?= 8
 MODE ?= release
 LOG ?= info
 V ?=
@@ -56,7 +56,7 @@ NET ?= n
 GRAPHIC ?= n
 APPEND ?= y
 BUS ?= mmio
-MEM ?= 128M
+MEM ?= 512M
 ACCEL ?=
 PFLASH ?= n
 ifeq ($(PFLASH), y)
