@@ -85,8 +85,23 @@ SECTIONS
     _erodata = .;
     __end_rodata = .;
 
+    _sdata = .;
+
+    .data..percpu : ALIGN(4K) {
+        __per_cpu_load = .;
+        __per_cpu_start = .;
+        *(.data..percpu..first)
+        . = ALIGN(4K);
+        *(.data..percpu..page_aligned)
+        . = ALIGN((1 << 6));
+        *(.data..percpu..read_mostly)
+        . = ALIGN((1 << 6));
+        *(.data..percpu)
+        *(.data..percpu..shared_aligned)
+        __per_cpu_end = .;
+    }
+
     .data : ALIGN(4K) {
-        _sdata = .;
         *(.data.boot_page_table)
         . = ALIGN(4K);
         *(.data .data.*)

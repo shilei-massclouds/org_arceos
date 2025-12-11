@@ -49,8 +49,44 @@ void * __init memblock_alloc_try_nid(
     }
     ret = cl_rust_alloc(size, align);
     if (ret) {
-        printk("%s: ptr(%lx)\n", __func__, ret);
         memset(ret, 0, size);
     }
     return ret;
+}
+
+/**
+ * memblock_free - free boot memory allocation
+ * @ptr: starting address of the  boot memory allocation
+ * @size: size of the boot memory block in bytes
+ *
+ * Free boot memory block previously allocated by memblock_alloc_xx() API.
+ * The freeing memory will not be released to the buddy allocator.
+ */
+void __init_memblock memblock_free(void *ptr, size_t size)
+{
+    if (ptr)
+        memblock_phys_free(__pa(ptr), size);
+}
+
+/**
+ * memblock_phys_free - free boot memory block
+ * @base: phys starting address of the  boot memory block
+ * @size: size of the boot memory block in bytes
+ *
+ * Free boot memory block previously allocated by memblock_phys_alloc_xx() API.
+ * The freeing memory will not be released to the buddy allocator.
+ */
+int __init_memblock memblock_phys_free(phys_addr_t base, phys_addr_t size)
+{
+#if 0
+    phys_addr_t end = base + size - 1;
+
+    memblock_dbg("%s: [%pa-%pa] %pS\n", __func__,
+             &base, &end, (void *)_RET_IP_);
+
+    kmemleak_free_part_phys(base, size);
+    return memblock_remove_range(&memblock.reserved, base, size);
+#endif
+    cl_rust_dealloc(base);
+    return 0;
 }

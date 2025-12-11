@@ -59,6 +59,7 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 
     setup_arch(NULL /* cmdline_p */);
 
+    printk("%s: step1\n", __func__);
     // Only for riscv64
     sbi_init();
 

@@ -3523,7 +3523,6 @@ static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
     s->cpu_slab = __alloc_percpu(sizeof(struct kmem_cache_cpu),
                      2 * sizeof(void *));
 
-    printk("%s: s(%lx) cpu_slab(%x)\n", __func__, s, s->cpu_slab);
     if (!s->cpu_slab)
         return 0;
 

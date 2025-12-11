@@ -785,8 +785,7 @@ static void invalidate_bh_lru(void *arg)
 
 void invalidate_bh_lrus(void)
 {
-    pr_notice("%s: No impl\n", __func__);
-    //on_each_cpu_cond(has_bh_in_lru, invalidate_bh_lru, NULL, 1);
+    on_each_cpu_cond(has_bh_in_lru, invalidate_bh_lru, NULL, 1);
 }
 
 static sector_t blkdev_max_block(struct block_device *bdev, unsigned int size)
