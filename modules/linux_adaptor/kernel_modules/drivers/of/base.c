@@ -1400,3 +1400,59 @@ int of_map_id(struct device_node *np, u32 id,
         *id_out = id;
     return 0;
 }
+
+/**
+ *  __of_device_is_fail - check if a device has status "fail" or "fail-..."
+ *
+ *  @device: Node to check status for, with locks already held
+ *
+ *  Return: True if the status property is set to "fail" or "fail-..." (for any
+ *  error code suffix), false otherwise
+ */
+static bool __of_device_is_fail(const struct device_node *device)
+{
+    static const char * const fail[] = {"fail", "fail-", NULL};
+
+    return __of_device_is_status(device, fail);
+}
+
+/**
+ * of_get_next_cpu_node - Iterate on cpu nodes
+ * @prev:   previous child of the /cpus node, or NULL to get first
+ *
+ * Unusable CPUs (those with the status property set to "fail" or "fail-...")
+ * will be skipped.
+ *
+ * Return: A cpu node pointer with refcount incremented, use of_node_put()
+ * on it when done. Returns NULL when prev is the last child. Decrements
+ * the refcount of prev.
+ */
+struct device_node *of_get_next_cpu_node(struct device_node *prev)
+{
+    struct device_node *next = NULL;
+    unsigned long flags;
+    struct device_node *node;
+
+    if (!prev)
+        node = of_find_node_by_path("/cpus");
+
+    raw_spin_lock_irqsave(&devtree_lock, flags);
+    if (prev)
+        next = prev->sibling;
+    else if (node) {
+        next = node->child;
+        of_node_put(node);
+    }
+    for (; next; next = next->sibling) {
+        if (__of_device_is_fail(next))
+            continue;
+        if (!(of_node_name_eq(next, "cpu") ||
+              __of_node_is_type(next, "cpu")))
+            continue;
+        if (of_node_get(next))
+            break;
+    }
+    of_node_put(prev);
+    raw_spin_unlock_irqrestore(&devtree_lock, flags);
+    return next;
+}

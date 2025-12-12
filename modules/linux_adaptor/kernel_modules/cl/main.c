@@ -100,6 +100,8 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 
     unflatten_device_tree();
 
+    setup_smp();
+
     // NOTE: Impl it.
     //early_irq_init();
     init_IRQ();
