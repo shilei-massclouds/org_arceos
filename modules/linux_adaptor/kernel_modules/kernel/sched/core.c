@@ -761,6 +761,33 @@ void cl_ttwu_do_wakeup(struct task_struct *p)
     }
 }
 
+bool cpus_share_cache(int this_cpu, int that_cpu)
+{
+#if 0
+    if (this_cpu == that_cpu)
+        return true;
+
+    return per_cpu(sd_llc_id, this_cpu) == per_cpu(sd_llc_id, that_cpu);
+#endif
+    pr_err("%s: No impl.", __func__);
+    return false;
+}
+
+bool cpus_equal_capacity(int this_cpu, int that_cpu)
+{
+#if 0
+    if (!sched_asym_cpucap_active())
+        return true;
+
+    if (this_cpu == that_cpu)
+        return true;
+
+    return arch_scale_cpu_capacity(this_cpu) == arch_scale_cpu_capacity(that_cpu);
+#endif
+    pr_err("%s: No impl.", __func__);
+    return false;
+}
+
 void __init sched_init(void)
 {
     wait_bit_init();

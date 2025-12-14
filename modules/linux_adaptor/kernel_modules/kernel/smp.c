@@ -211,3 +211,33 @@ void __init setup_nr_cpu_ids(void)
 {
     set_nr_cpu_ids(find_last_bit(cpumask_bits(cpu_possible_mask), NR_CPUS) + 1);
 }
+
+/* Called by boot processor to activate the rest. */
+void __init smp_init(void)
+{
+    int num_nodes, num_cpus;
+
+    idle_threads_init();
+#if 0
+    cpuhp_threads_init();
+
+    pr_info("Bringing up secondary CPUs ...\n");
+
+    bringup_nonboot_cpus(setup_max_cpus);
+
+    num_nodes = num_online_nodes();
+    num_cpus  = num_online_cpus();
+    pr_info("Brought up %d node%s, %d CPU%s\n",
+        num_nodes, str_plural(num_nodes), num_cpus, str_plural(num_cpus));
+
+    /* Any cleanup work */
+    smp_cpus_done(setup_max_cpus);
+#endif
+    pr_err("%s: No impl.", __func__);
+    //PANIC("");
+}
+
+int smp_call_function_single_async(int cpu, call_single_data_t *csd)
+{
+    PANIC("");
+}

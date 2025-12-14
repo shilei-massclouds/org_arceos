@@ -39,21 +39,42 @@
 
 #define TAG_COMP_BATCH      32
 
+static DEFINE_PER_CPU(struct llist_head, blk_cpu_done);
 static DEFINE_MUTEX(blk_mq_cpuhp_lock);
+static DEFINE_PER_CPU(call_single_data_t, blk_cpu_csd);
 
 struct blk_rq_wait {
     struct completion done;
     blk_status_t ret;
 };
 
+static void blk_mq_raise_softirq(struct request *rq)
+{
+    struct llist_head *list;
+
+    preempt_disable();
+    list = this_cpu_ptr(&blk_cpu_done);
+    if (llist_add(&rq->ipi_list, list))
+        raise_softirq(BLOCK_SOFTIRQ);
+    preempt_enable();
+}
+
 static enum rq_end_io_ret blk_end_sync_rq(struct request *rq, blk_status_t ret)
 {
     struct blk_rq_wait *wait = rq->end_io_data;
 
-    printk("%s: step1\n", __func__);
     wait->ret = ret;
     complete(&wait->done);
     return RQ_END_IO_NONE;
+}
+
+static void blk_mq_complete_send_ipi(struct request *rq)
+{
+    unsigned int cpu;
+
+    cpu = rq->mq_ctx->cpu;
+    if (llist_add(&rq->ipi_list, &per_cpu(blk_cpu_done, cpu)))
+        smp_call_function_single_async(cpu, &per_cpu(blk_cpu_csd, cpu));
 }
 
 static int blk_hctx_poll(struct request_queue *q, struct blk_mq_hw_ctx *hctx,
@@ -2468,9 +2489,35 @@ void blk_mq_start_request(struct request *rq)
  **/
 void blk_mq_complete_request(struct request *rq)
 {
-    pr_debug("%s: ... bio_list(%lx)\n", __func__, current->bio_list);
     if (!blk_mq_complete_request_remote(rq))
         rq->q->mq_ops->complete(rq);
+}
+
+static inline bool blk_mq_complete_need_ipi(struct request *rq)
+{
+    int cpu = raw_smp_processor_id();
+
+    if (!IS_ENABLED(CONFIG_SMP) ||
+        !test_bit(QUEUE_FLAG_SAME_COMP, &rq->q->queue_flags))
+        return false;
+    /*
+     * With force threaded interrupts enabled, raising softirq from an SMP
+     * function call will always result in waking the ksoftirqd thread.
+     * This is probably worse than completing the request on a different
+     * cache domain.
+     */
+    if (force_irqthreads())
+        return false;
+
+    /* same CPU or cache domain and capacity?  Complete locally */
+    if (cpu == rq->mq_ctx->cpu ||
+        (!test_bit(QUEUE_FLAG_SAME_FORCE, &rq->q->queue_flags) &&
+         cpus_share_cache(cpu, rq->mq_ctx->cpu) &&
+         cpus_equal_capacity(cpu, rq->mq_ctx->cpu)))
+        return false;
+
+    /* don't try to IPI to an offline CPU */
+    return cpu_online(rq->mq_ctx->cpu);
 }
 
 bool blk_mq_complete_request_remote(struct request *rq)
@@ -2487,7 +2534,6 @@ bool blk_mq_complete_request_remote(struct request *rq)
          rq->cmd_flags & REQ_POLLED)
         return false;
 
-#if 0
     if (blk_mq_complete_need_ipi(rq)) {
         blk_mq_complete_send_ipi(rq);
         return true;
@@ -2498,8 +2544,6 @@ bool blk_mq_complete_request_remote(struct request *rq)
         return true;
     }
     return false;
-#endif
-    PANIC("");
 }
 
 void blk_mq_end_request(struct request *rq, blk_status_t error)
@@ -3504,3 +3548,99 @@ void blk_mq_quiesce_queue_nowait(struct request_queue *q)
         blk_queue_flag_set(QUEUE_FLAG_QUIESCED, q);
     spin_unlock_irqrestore(&q->queue_lock, flags);
 }
+
+static void blk_complete_reqs(struct llist_head *list)
+{
+    struct llist_node *entry = llist_reverse_order(llist_del_all(list));
+    struct request *rq, *next;
+
+    llist_for_each_entry_safe(rq, next, entry, ipi_list)
+        rq->q->mq_ops->complete(rq);
+}
+
+static __latent_entropy void blk_done_softirq(void)
+{
+    blk_complete_reqs(this_cpu_ptr(&blk_cpu_done));
+}
+
+static void __blk_mq_complete_request_remote(void *data)
+{
+    __raise_softirq_irqoff(BLOCK_SOFTIRQ);
+}
+
+static int blk_softirq_cpu_dead(unsigned int cpu)
+{
+    blk_complete_reqs(&per_cpu(blk_cpu_done, cpu));
+    return 0;
+}
+
+/*
+ * 'cpu' is going away. splice any existing rq_list entries from this
+ * software queue to the hw queue dispatch list, and ensure that it
+ * gets run.
+ */
+static int blk_mq_hctx_notify_dead(unsigned int cpu, struct hlist_node *node)
+{
+    PANIC("");
+}
+
+/*
+ * Check if one CPU is mapped to the specified hctx
+ *
+ * Isolated CPUs have been ruled out from hctx->cpumask, which is supposed
+ * to be used for scheduling kworker only. For other usage, please call this
+ * helper for checking if one CPU belongs to the specified hctx
+ */
+static bool blk_mq_cpu_mapped_to_hctx(unsigned int cpu,
+        const struct blk_mq_hw_ctx *hctx)
+{
+    {
+        struct request_queue *q = hctx->queue;
+        printk("%s: step1 hctx_table(%lx) (%lx)\n", __func__, q->hctx_table, q->tag_set);
+    }
+    struct blk_mq_hw_ctx *mapped_hctx = blk_mq_map_queue_type(hctx->queue,
+            hctx->type, cpu);
+
+    printk("%s: step2\n", __func__);
+    return mapped_hctx == hctx;
+}
+
+static int blk_mq_hctx_notify_online(unsigned int cpu, struct hlist_node *node)
+{
+    struct blk_mq_hw_ctx *hctx = hlist_entry_safe(node,
+            struct blk_mq_hw_ctx, cpuhp_online);
+
+    if (blk_mq_cpu_mapped_to_hctx(cpu, hctx))
+        clear_bit(BLK_MQ_S_INACTIVE, &hctx->state);
+    return 0;
+}
+
+static int blk_mq_hctx_notify_offline(unsigned int cpu, struct hlist_node *node)
+{
+    PANIC("");
+}
+
+static int __init blk_mq_init(void)
+{
+    int i;
+
+    for_each_possible_cpu(i)
+        init_llist_head(&per_cpu(blk_cpu_done, i));
+    for_each_possible_cpu(i)
+        INIT_CSD(&per_cpu(blk_cpu_csd, i),
+             __blk_mq_complete_request_remote, NULL);
+    open_softirq(BLOCK_SOFTIRQ, blk_done_softirq);
+
+    cpuhp_setup_state_nocalls(CPUHP_BLOCK_SOFTIRQ_DEAD,
+                  "block/softirq:dead", NULL,
+                  blk_softirq_cpu_dead);
+    cpuhp_setup_state_multi(CPUHP_BLK_MQ_DEAD, "block/mq:dead", NULL,
+                blk_mq_hctx_notify_dead);
+#if 0
+    cpuhp_setup_state_multi(CPUHP_AP_BLK_MQ_ONLINE, "block/mq:online",
+                blk_mq_hctx_notify_online,
+                blk_mq_hctx_notify_offline);
+#endif
+    return 0;
+}
+subsys_initcall(blk_mq_init);

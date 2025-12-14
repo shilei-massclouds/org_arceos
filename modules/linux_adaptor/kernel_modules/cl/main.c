@@ -57,13 +57,15 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     smp_setup_processor_id();
     boot_cpu_init();
 
+    early_init_dt_verify(dtb_early_va, dt_phys);
+    early_init_dt_scan_chosen(boot_command_line);
+
     setup_arch(NULL /* cmdline_p */);
 
     // Only for riscv64
     sbi_init();
-
-    early_init_dt_verify(dtb_early_va, dt_phys);
-    early_init_dt_scan_chosen(boot_command_line);
+    unflatten_device_tree();
+    setup_smp();
 
     setup_nr_cpu_ids();
     setup_per_cpu_areas();
@@ -98,10 +100,6 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     workqueue_init_topology();
     async_init();
 
-    unflatten_device_tree();
-
-    setup_smp();
-
     // NOTE: Impl it.
     //early_irq_init();
     init_IRQ();
@@ -115,6 +113,8 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     // Set ROOT_DEV based on linux commandline.
     printk("====== Prepare namespace ====== [%u]\n", current->pid);
     prepare_namespace();
+
+    smp_init();
 
 #ifdef TEST_BLOCK
     printk("====== VirtIoBlock test ======\n");
