@@ -106,6 +106,14 @@ static int get_nodes_in_cpumask(cpumask_var_t *node_to_cpumask,
     return nodes;
 }
 
+static int ncpus_cmp_func(const void *l, const void *r)
+{
+    const struct node_groups *ln = l;
+    const struct node_groups *rn = r;
+
+    return ln->ncpus - rn->ncpus;
+}
+
 /*
  * Allocate group number for each node, so that for each node:
  *
@@ -126,8 +134,116 @@ static void alloc_nodes_groups(unsigned int numgrps,
                    struct cpumask *nmsk,
                    struct node_groups *node_groups)
 {
+    unsigned n, remaining_ncpus = 0;
 
-    PANIC("");
+    for (n = 0; n < nr_node_ids; n++) {
+        node_groups[n].id = n;
+        node_groups[n].ncpus = UINT_MAX;
+    }
+
+    for_each_node_mask(n, nodemsk) {
+        unsigned ncpus;
+
+        cpumask_and(nmsk, cpu_mask, node_to_cpumask[n]);
+        ncpus = cpumask_weight(nmsk);
+
+        if (!ncpus)
+            continue;
+        remaining_ncpus += ncpus;
+        node_groups[n].ncpus = ncpus;
+    }
+
+    numgrps = min_t(unsigned, remaining_ncpus, numgrps);
+
+    sort(node_groups, nr_node_ids, sizeof(node_groups[0]),
+         ncpus_cmp_func, NULL);
+
+    /*
+     * Allocate groups for each node according to the ratio of this
+     * node's nr_cpus to remaining un-assigned ncpus. 'numgrps' is
+     * bigger than number of active numa nodes. Always start the
+     * allocation from the node with minimized nr_cpus.
+     *
+     * This way guarantees that each active node gets allocated at
+     * least one group, and the theory is simple: over-allocation
+     * is only done when this node is assigned by one group, so
+     * other nodes will be allocated >= 1 groups, since 'numgrps' is
+     * bigger than number of numa nodes.
+     *
+     * One perfect invariant is that number of allocated groups for
+     * each node is <= CPU count of this node:
+     *
+     * 1) suppose there are two nodes: A and B
+     *  ncpu(X) is CPU count of node X
+     *  grps(X) is the group count allocated to node X via this
+     *  algorithm
+     *
+     *  ncpu(A) <= ncpu(B)
+     *  ncpu(A) + ncpu(B) = N
+     *  grps(A) + grps(B) = G
+     *
+     *  grps(A) = max(1, round_down(G * ncpu(A) / N))
+     *  grps(B) = G - grps(A)
+     *
+     *  both N and G are integer, and 2 <= G <= N, suppose
+     *  G = N - delta, and 0 <= delta <= N - 2
+     *
+     * 2) obviously grps(A) <= ncpu(A) because:
+     *
+     *  if grps(A) is 1, then grps(A) <= ncpu(A) given
+     *  ncpu(A) >= 1
+     *
+     *  otherwise,
+     *      grps(A) <= G * ncpu(A) / N <= ncpu(A), given G <= N
+     *
+     * 3) prove how grps(B) <= ncpu(B):
+     *
+     *  if round_down(G * ncpu(A) / N) == 0, vecs(B) won't be
+     *  over-allocated, so grps(B) <= ncpu(B),
+     *
+     *  otherwise:
+     *
+     *  grps(A) =
+     *      round_down(G * ncpu(A) / N) =
+     *      round_down((N - delta) * ncpu(A) / N) =
+     *      round_down((N * ncpu(A) - delta * ncpu(A)) / N)  >=
+     *      round_down((N * ncpu(A) - delta * N) / N)    =
+     *      cpu(A) - delta
+     *
+     *  then:
+     *
+     *  grps(A) - G >= ncpu(A) - delta - G
+     *  =>
+     *  G - grps(A) <= G + delta - ncpu(A)
+     *  =>
+     *  grps(B) <= N - ncpu(A)
+     *  =>
+     *  grps(B) <= cpu(B)
+     *
+     * For nodes >= 3, it can be thought as one node and another big
+     * node given that is exactly what this algorithm is implemented,
+     * and we always re-calculate 'remaining_ncpus' & 'numgrps', and
+     * finally for each node X: grps(X) <= ncpu(X).
+     *
+     */
+    for (n = 0; n < nr_node_ids; n++) {
+        unsigned ngroups, ncpus;
+
+        if (node_groups[n].ncpus == UINT_MAX)
+            continue;
+
+        WARN_ON_ONCE(numgrps == 0);
+
+        ncpus = node_groups[n].ncpus;
+        ngroups = max_t(unsigned, 1,
+                 numgrps * ncpus / remaining_ncpus);
+        WARN_ON_ONCE(ngroups > ncpus);
+
+        node_groups[n].ngroups = ngroups;
+
+        remaining_ncpus -= ncpus;
+        numgrps -= ngroups;
+    }
 }
 
 static int __group_cpus_evenly(unsigned int startgrp, unsigned int numgrps,
