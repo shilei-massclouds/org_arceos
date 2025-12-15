@@ -491,6 +491,7 @@ static int plic_starting_cpu(unsigned int cpu)
 {
 	struct plic_handler *handler = this_cpu_ptr(&plic_handlers);
 
+    printk("---------------- %s: cpu[%u]\n", __func__, cpu);
 	if (plic_parent_irq)
 		enable_percpu_irq(plic_parent_irq,
 				  irq_get_trigger_type(plic_parent_irq));

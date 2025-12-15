@@ -788,6 +788,34 @@ bool cpus_equal_capacity(int this_cpu, int that_cpu)
     return false;
 }
 
+/**
+ * init_idle - set up an idle thread for a given CPU
+ * @idle: task in question
+ * @cpu: CPU the idle task belongs to
+ *
+ * NOTE: this function does not set the idle thread's NEED_RESCHED
+ * flag, to make booting more robust.
+ */
+void __init init_idle(struct task_struct *idle, int cpu)
+{
+    // Note: below in __set_task_cpu(idle, cpu)
+	/*
+	 * After ->cpu is set up to a new value, task_rq_lock(p, ...) can be
+	 * successfully executed on another CPU. We must ensure that updates of
+	 * per-task data have been completed by this moment.
+	 */
+	smp_wmb();
+	WRITE_ONCE(task_thread_info(idle)->cpu, cpu);
+	idle->wake_cpu = cpu;
+
+    idle->on_rq = TASK_ON_RQ_QUEUED;
+#ifdef CONFIG_SMP
+    idle->on_cpu = 1;
+#endif
+
+    pr_notice("%s: No impl.", __func__);
+}
+
 void __init sched_init(void)
 {
     wait_bit_init();

@@ -19,6 +19,12 @@
 #include "smpboot.h"
 #include "adaptor.h"
 
+/*
+ * For the hotplug case we keep the task structs around and reuse
+ * them.
+ */
+static DEFINE_PER_CPU(struct task_struct *, idle_threads);
+
 /**
  * idle_init - Initialize the idle thread for a cpu
  * @cpu:    The cpu for which the idle thread should be initialized
@@ -27,9 +33,9 @@
  */
 static __always_inline void idle_init(unsigned int cpu)
 {
-#if 0
     struct task_struct *tsk = per_cpu(idle_threads, cpu);
 
+    printk("%s: cpu[%u]\n", __func__, cpu);
     if (!tsk) {
         tsk = fork_idle(cpu);
         if (IS_ERR(tsk))
@@ -37,9 +43,6 @@ static __always_inline void idle_init(unsigned int cpu)
         else
             per_cpu(idle_threads, cpu) = tsk;
     }
-#endif
-    pr_err("%s: No impl.", __func__);
-    //PANIC("");
 }
 
 /**
@@ -52,10 +55,7 @@ void __init idle_threads_init(void)
     boot_cpu = smp_processor_id();
 
     for_each_possible_cpu(cpu) {
-        printk("%s: cpu[%u]\n", __func__, cpu);
         if (cpu != boot_cpu)
             idle_init(cpu);
     }
-    pr_err("%s: No impl.", __func__);
-    //PANIC("");
 }

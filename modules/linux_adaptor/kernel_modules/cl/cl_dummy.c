@@ -1015,3 +1015,14 @@ int security_file_truncate(struct file *file)
     pr_notice("%s: No impl.", __func__);
     return 0;
 }
+
+/*
+ * Called within set_task_rq() right before setting a task's CPU. The
+ * caller only guarantees p->pi_lock is held; no other assumptions,
+ * including the state of rq->lock, should be made.
+ */
+void set_task_rq_fair(struct sched_entity *se,
+              struct cfs_rq *prev, struct cfs_rq *next)
+{
+    pr_notice("%s: No impl.", __func__);
+}
