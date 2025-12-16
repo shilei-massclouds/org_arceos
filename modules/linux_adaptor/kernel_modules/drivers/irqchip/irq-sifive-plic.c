@@ -21,6 +21,8 @@
 #include <linux/syscore_ops.h>
 #include <asm/smp.h>
 
+#include "adaptor.h"
+
 /*
  * This driver implements a version of the RISC-V PLIC with the actual layout
  * specified in chapter 8 of the SiFive U5 Coreplex Series Manual:
@@ -749,9 +751,11 @@ done:
 			if (plic_parent_irq)
 				irq_set_chained_handler(plic_parent_irq, plic_handle_irq);
 
+            printk("%s: step1[%d]\n", __func__, CPUHP_AP_IRQ_SIFIVE_PLIC_STARTING);
 			cpuhp_setup_state(CPUHP_AP_IRQ_SIFIVE_PLIC_STARTING,
 					  "irqchip/sifive/plic:starting",
 					  plic_starting_cpu, plic_dying_cpu);
+
 			register_syscore_ops(&plic_irq_syscore_ops);
 			plic_global_setup_done = true;
 		}

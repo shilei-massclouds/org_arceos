@@ -386,13 +386,16 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
 		free_cpumask_var(wq_domain_mask);
 	}
 
+    printk("%s: step1 cpu(%u) nr_cpu_ids(%u)\n", __func__, cpu, nr_cpu_ids);
 	if (cpu < nr_cpu_ids)
 		error = work_on_cpu(cpu, local_pci_probe, &ddi);
 	else
 		error = local_pci_probe(&ddi);
+    printk("%s: step2 cpu(%u) nr_cpu_ids(%u)\n", __func__, cpu, nr_cpu_ids);
 out:
 	dev->is_probed = 0;
 	cpu_hotplug_enable();
+    printk("%s: step3\n", __func__);
 	return error;
 }
 

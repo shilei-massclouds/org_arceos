@@ -1026,3 +1026,13 @@ void set_task_rq_fair(struct sched_entity *se,
 {
     pr_notice("%s: No impl.", __func__);
 }
+
+int perf_event_init_cpu(unsigned int cpu)
+{
+    pr_notice("%s: No impl.", __func__);
+}
+
+void refcount_warn_saturate(refcount_t *r, enum refcount_saturation_type t)
+{
+    pr_notice("%s: No impl.", __func__);
+}

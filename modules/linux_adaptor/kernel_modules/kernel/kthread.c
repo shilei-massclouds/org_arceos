@@ -202,6 +202,46 @@ fail_task:
     return ERR_CAST(task);
 }
 
+static void __kthread_bind_mask(struct task_struct *p, const struct cpumask *mask, unsigned int state)
+{
+    unsigned long flags;
+
+#if 0
+    if (!wait_task_inactive(p, state)) {
+        WARN_ON(1);
+        return;
+    }
+#endif
+
+    /* It's safe because the task is inactive. */
+    raw_spin_lock_irqsave(&p->pi_lock, flags);
+#if 0
+    do_set_cpus_allowed(p, mask);
+#endif
+    pr_notice("%s: No impl.", __func__);
+    p->flags |= PF_NO_SETAFFINITY;
+    raw_spin_unlock_irqrestore(&p->pi_lock, flags);
+}
+
+static void __kthread_bind(struct task_struct *p, unsigned int cpu, unsigned int state)
+{
+    __kthread_bind_mask(p, cpumask_of(cpu), state);
+}
+
+/**
+ * kthread_bind - bind a just-created kthread to a cpu.
+ * @p: thread created by kthread_create().
+ * @cpu: cpu (might not be online, must be possible) for @k to run on.
+ *
+ * Description: This function is equivalent to set_cpus_allowed(),
+ * except that @cpu doesn't need to be online, and the thread must be
+ * stopped (i.e., just returned from kthread_create()).
+ */
+void kthread_bind(struct task_struct *p, unsigned int cpu)
+{
+    __kthread_bind(p, cpu, TASK_UNINTERRUPTIBLE);
+}
+
 /**
  * kthread_create_worker - create a kthread worker
  * @flags: flags modifying the default behavior of the worker
@@ -323,27 +363,6 @@ bool kthread_should_stop(void)
     return test_bit(KTHREAD_SHOULD_STOP, &to_kthread(current)->flags);
 }
 
-static void __kthread_bind_mask(struct task_struct *p, const struct cpumask *mask, unsigned int state)
-{
-    unsigned long flags;
-
-#if 0
-    if (!wait_task_inactive(p, state)) {
-        WARN_ON(1);
-        return;
-    }
-#endif
-
-    /* It's safe because the task is inactive. */
-    raw_spin_lock_irqsave(&p->pi_lock, flags);
-#if 0
-    do_set_cpus_allowed(p, mask);
-#endif
-    pr_notice("%s: No impl.", __func__);
-    p->flags |= PF_NO_SETAFFINITY;
-    raw_spin_unlock_irqrestore(&p->pi_lock, flags);
-}
-
 void kthread_bind_mask(struct task_struct *p, const struct cpumask *mask)
 {
     __kthread_bind_mask(p, mask, TASK_UNINTERRUPTIBLE);
@@ -453,4 +472,154 @@ bool kthread_queue_work(struct kthread_worker *worker,
     }
     raw_spin_unlock_irqrestore(&worker->lock, flags);
     return ret;
+}
+
+/**
+ * kthread_unpark - unpark a thread created by kthread_create().
+ * @k:      thread created by kthread_create().
+ *
+ * Sets kthread_should_park() for @k to return false, wakes it, and
+ * waits for it to return. If the thread is marked percpu then its
+ * bound to the cpu again.
+ */
+void kthread_unpark(struct task_struct *k)
+{
+    struct kthread *kthread = to_kthread(k);
+
+    if (!test_bit(KTHREAD_SHOULD_PARK, &kthread->flags))
+        return;
+    /*
+     * Newly created kthread was parked when the CPU was offline.
+     * The binding was lost and we need to set it again.
+     */
+    if (test_bit(KTHREAD_IS_PER_CPU, &kthread->flags))
+        __kthread_bind(k, kthread->cpu, TASK_PARKED);
+
+    clear_bit(KTHREAD_SHOULD_PARK, &kthread->flags);
+    /*
+     * __kthread_parkme() will either see !SHOULD_PARK or get the wakeup.
+     */
+    wake_up_state(k, TASK_PARKED);
+}
+
+/**
+ * kthread_create_on_cpu - Create a cpu bound kthread
+ * @threadfn: the function to run until signal_pending(current).
+ * @data: data ptr for @threadfn.
+ * @cpu: The cpu on which the thread should be bound,
+ * @namefmt: printf-style name for the thread. Format is restricted
+ *       to "name.*%u". Code fills in cpu number.
+ *
+ * Description: This helper function creates and names a kernel thread
+ */
+struct task_struct *kthread_create_on_cpu(int (*threadfn)(void *data),
+                      void *data, unsigned int cpu,
+                      const char *namefmt)
+{
+    struct task_struct *p;
+
+    p = kthread_create_on_node(threadfn, data, cpu_to_node(cpu), namefmt,
+                   cpu);
+    if (IS_ERR(p))
+        return p;
+    kthread_bind(p, cpu);
+    /* CPU hotplug need to bind once again when unparking the thread. */
+    to_kthread(p)->cpu = cpu;
+    return p;
+}
+
+/**
+ * kthread_park - park a thread created by kthread_create().
+ * @k: thread created by kthread_create().
+ *
+ * Sets kthread_should_park() for @k to return true, wakes it, and
+ * waits for it to return. This can also be called after kthread_create()
+ * instead of calling wake_up_process(): the thread will park without
+ * calling threadfn().
+ *
+ * Returns 0 if the thread is parked, -ENOSYS if the thread exited.
+ * If called by the kthread itself just the park bit is set.
+ */
+int kthread_park(struct task_struct *k)
+{
+    struct kthread *kthread = to_kthread(k);
+
+    if (WARN_ON(k->flags & PF_EXITING))
+        return -ENOSYS;
+
+    if (WARN_ON_ONCE(test_bit(KTHREAD_SHOULD_PARK, &kthread->flags)))
+        return -EBUSY;
+
+    set_bit(KTHREAD_SHOULD_PARK, &kthread->flags);
+    if (k != current) {
+        wake_up_process(k);
+        /*
+         * Wait for __kthread_parkme() to complete(), this means we
+         * _will_ have TASK_PARKED and are about to call schedule().
+         */
+        wait_for_completion(&kthread->parked);
+        /*
+         * Now wait for that schedule() to complete and the task to
+         * get scheduled out.
+         */
+        //WARN_ON_ONCE(!wait_task_inactive(k, TASK_PARKED));
+        pr_err("%s: NOTE: fix 'TASK_PARKED'.", __func__);
+    }
+
+    return 0;
+}
+
+static bool __kthread_should_park(struct task_struct *k)
+{
+    return test_bit(KTHREAD_SHOULD_PARK, &to_kthread(k)->flags);
+}
+
+/**
+ * kthread_should_park - should this kthread park now?
+ *
+ * When someone calls kthread_park() on your kthread, it will be woken
+ * and this will return true.  You should then do the necessary
+ * cleanup and call kthread_parkme()
+ *
+ * Similar to kthread_should_stop(), but this keeps the thread alive
+ * and in a park position. kthread_unpark() "restarts" the thread and
+ * calls the thread function again.
+ */
+bool kthread_should_park(void)
+{
+    return __kthread_should_park(current);
+}
+
+static void __kthread_parkme(struct kthread *self)
+{
+    for (;;) {
+        /*
+         * TASK_PARKED is a special state; we must serialize against
+         * possible pending wakeups to avoid store-store collisions on
+         * task->state.
+         *
+         * Such a collision might possibly result in the task state
+         * changin from TASK_PARKED and us failing the
+         * wait_task_inactive() in kthread_park().
+         */
+        set_special_state(TASK_PARKED);
+        if (!test_bit(KTHREAD_SHOULD_PARK, &self->flags))
+            break;
+
+        /*
+         * Thread is going to call schedule(), do not preempt it,
+         * or the caller of kthread_park() may spend more time in
+         * wait_task_inactive().
+         */
+        preempt_disable();
+        complete(&self->parked);
+        schedule_preempt_disabled();
+        preempt_enable();
+    }
+    __set_current_state(TASK_RUNNING);
+}
+
+void kthread_parkme(void)
+{
+    __kthread_parkme(to_kthread(current));
 }

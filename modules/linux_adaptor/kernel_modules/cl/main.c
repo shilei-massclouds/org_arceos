@@ -69,6 +69,7 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 
     setup_nr_cpu_ids();
     setup_per_cpu_areas();
+    boot_cpu_hotplug_init();
 
     printk("Kernel command line: %s\n", boot_command_line);
 
@@ -108,13 +109,13 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 
     clinux_started = 1;
 
+    smp_init();
+
     cl_do_initcalls();
 
     // Set ROOT_DEV based on linux commandline.
     printk("====== Prepare namespace ====== [%u]\n", current->pid);
     prepare_namespace();
-
-    smp_init();
 
 #ifdef TEST_BLOCK
     printk("====== VirtIoBlock test ======\n");

@@ -53,6 +53,9 @@ unsigned int nr_cpu_ids __read_mostly = NR_CPUS;
 EXPORT_SYMBOL(nr_cpu_ids);
 #endif
 
+/* Setup configured maximum number of CPUs to activate */
+unsigned int setup_max_cpus = NR_CPUS;
+
 static __always_inline void
 csd_do_func(smp_call_func_t func, void *info, call_single_data_t *csd)
 {
@@ -218,8 +221,7 @@ void __init smp_init(void)
     int num_nodes, num_cpus;
 
     idle_threads_init();
-#if 0
-    cpuhp_threads_init();
+    //cpuhp_threads_init();
 
     pr_info("Bringing up secondary CPUs ...\n");
 
@@ -232,9 +234,6 @@ void __init smp_init(void)
 
     /* Any cleanup work */
     smp_cpus_done(setup_max_cpus);
-#endif
-    pr_err("%s: No impl.", __func__);
-    //PANIC("");
 }
 
 int smp_call_function_single_async(int cpu, call_single_data_t *csd)

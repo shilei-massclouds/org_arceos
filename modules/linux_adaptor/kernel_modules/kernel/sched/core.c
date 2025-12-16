@@ -87,7 +87,7 @@
 
 //#include "../workqueue_internal.h"
 //#include "../../io_uring/io-wq.h"
-//#include "../smpboot.h"
+#include "../smpboot.h"
 
 #include "adaptor.h"
 
@@ -575,7 +575,7 @@ out:
 void __might_sleep(const char *file, int line)
 {
     unsigned int state = get_current_state();
-#if 1
+#if 0
     /*
      * Blocking primitives will set (and therefore destroy) current->state,
      * since we will exit with TASK_RUNNING make sure we enter with it,
@@ -788,6 +788,40 @@ bool cpus_equal_capacity(int this_cpu, int that_cpu)
     return false;
 }
 
+/*
+ * wait_task_inactive - wait for a thread to unschedule.
+ *
+ * Wait for the thread to block in any of the states set in @match_state.
+ * If it changes, i.e. @p might have woken up, then return zero.  When we
+ * succeed in waiting for @p to be off its CPU, we return a positive number
+ * (its total switch count).  If a second call a short while later returns the
+ * same number, the caller can be sure that @p has remained unscheduled the
+ * whole time.
+ *
+ * The caller must ensure that the task *will* unschedule sometime soon,
+ * else this function might spin for a *long* time. This function can't
+ * be called with interrupts off, or it may introduce deadlock with
+ * smp_call_function() if an IPI is sent by the same process we are
+ * waiting to become inactive.
+ */
+unsigned long wait_task_inactive(struct task_struct *p, unsigned int match_state)
+{
+    pr_err("%s: No impl.", __func__);
+    return 0;
+}
+
+/**
+ * schedule_preempt_disabled - called with preemption disabled
+ *
+ * Returns with preemption disabled. Note: preempt_count must be 1
+ */
+void __sched schedule_preempt_disabled(void)
+{
+    sched_preempt_enable_no_resched();
+    schedule();
+    preempt_disable();
+}
+
 /**
  * init_idle - set up an idle thread for a given CPU
  * @idle: task in question
@@ -819,4 +853,5 @@ void __init init_idle(struct task_struct *idle, int cpu)
 void __init sched_init(void)
 {
     wait_bit_init();
+    idle_thread_set_boot_cpu();
 }

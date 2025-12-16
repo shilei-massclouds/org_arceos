@@ -103,3 +103,7 @@ void secondary_start_sbi()
     cpu_do_idle();
 }
 #endif
+
+void __init smp_cpus_done(unsigned int max_cpus)
+{
+}
