@@ -42,6 +42,32 @@
 
 #define acpi_parse_and_init_cpus(...)   do { } while (0)
 
+static DECLARE_COMPLETION(cpu_running);
+
+void __init smp_prepare_cpus(unsigned int max_cpus)
+{
+    int cpuid;
+    unsigned int curr_cpuid;
+
+    //init_cpu_topology();
+
+    curr_cpuid = smp_processor_id();
+    //store_cpu_topology(curr_cpuid);
+    numa_store_cpu_info(curr_cpuid);
+    numa_add_cpu(curr_cpuid);
+
+    /* This covers non-smp usecase mandated by "nosmp" option */
+    if (max_cpus == 0)
+        return;
+
+    for_each_possible_cpu(cpuid) {
+        if (cpuid == curr_cpuid)
+            continue;
+        set_cpu_present(cpuid, true);
+        numa_store_cpu_info(cpuid);
+    }
+}
+
 static void __init of_parse_and_init_cpus(void)
 {
     struct device_node *dn;
@@ -95,15 +121,52 @@ void __init setup_smp(void)
             set_cpu_possible(cpuid, true);
 }
 
+void __init smp_cpus_done(unsigned int max_cpus)
+{
+}
+
+static int start_secondary_cpu(int cpu, struct task_struct *tidle)
+{
+#if 0
+    if (cpu_ops->cpu_start)
+        return cpu_ops->cpu_start(cpu, tidle);
+
+    return -EOPNOTSUPP;
+#endif
+    // NOTE: Now don't start secondary cpus really.
+    pr_notice("%s: No impl. cpu[%u]", __func__, cpu);
+
+    set_cpu_online(cpu, true);
+    complete(&cpu_running);
+    return 0;
+}
+
+int __cpu_up(unsigned int cpu, struct task_struct *tidle)
+{
+    int ret = 0;
+    tidle->thread_info.cpu = cpu;
+
+    ret = start_secondary_cpu(cpu, tidle);
+    if (!ret) {
+        wait_for_completion_timeout(&cpu_running,
+                        msecs_to_jiffies(1000));
+
+        if (!cpu_online(cpu)) {
+            pr_crit("CPU%u: failed to come online\n", cpu);
+            ret = -EIO;
+        }
+    } else {
+        pr_crit("CPU%u: failed to start\n", cpu);
+    }
+
+    return ret;
+}
+
 // NOTE: Remove it and use real impl!
 #if 1
 #include "asm/cpuidle.h"
 void secondary_start_sbi()
 {
-    cpu_do_idle();
+   cpu_do_idle();
 }
 #endif
-
-void __init smp_cpus_done(unsigned int max_cpus)
-{
-}

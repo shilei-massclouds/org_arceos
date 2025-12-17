@@ -75,6 +75,7 @@ static int sbi_cpu_start(unsigned int cpuid, struct task_struct *tidle)
     /* Make sure boot data is updated */
     smp_mb();
     hsm_data = __pa(bdata);
+    printk("%s: hartid(%lu) boot_addr(%lx)\n", __func__, hartid, boot_addr);
     return sbi_hsm_hart_start(hartid, boot_addr, hsm_data);
 }
 

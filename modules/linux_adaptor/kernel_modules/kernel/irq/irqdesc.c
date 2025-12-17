@@ -11,6 +11,16 @@ static struct lock_class_key irq_desc_lock_class;
 
 static DEFINE_MUTEX(sparse_irq_lock);
 
+void irq_lock_sparse(void)
+{
+    mutex_lock(&sparse_irq_lock);
+}
+
+void irq_unlock_sparse(void)
+{
+    mutex_unlock(&sparse_irq_lock);
+}
+
 int nr_irqs = NR_IRQS;
 static struct maple_tree sparse_irqs = MTREE_INIT_EXT(sparse_irqs,
                     MT_FLAGS_ALLOC_RANGE |

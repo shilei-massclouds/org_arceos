@@ -218,6 +218,7 @@ static int cpuhp_invoke_callback(unsigned int cpu, enum cpuhp_state state,
     int (*cb)(unsigned int cpu);
     int ret, cnt;
 
+    printk("%s: step1 cpu(%u) [%s] bringup(%d)\n", __func__, cpu, step->name, bringup);
     if (st->fail == state) {
         st->fail = CPUHP_INVALID;
         return -EAGAIN;
@@ -228,15 +229,18 @@ static int cpuhp_invoke_callback(unsigned int cpu, enum cpuhp_state state,
         return 0;
     }
 
+    printk("%s: step2\n", __func__);
     if (!step->multi_instance) {
         WARN_ON_ONCE(lastp && *lastp);
         cb = bringup ? step->startup.single : step->teardown.single;
 
+    printk("%s: step2.1 [%u][%u]\n", __func__, st->target, CPUHP_BRINGUP_CPU);
         trace_cpuhp_enter(cpu, st->target, state, cb);
         ret = cb(cpu);
         trace_cpuhp_exit(cpu, st->state, state, ret);
         return ret;
     }
+    printk("%s: step3\n", __func__);
     cbm = bringup ? step->startup.multi : step->teardown.multi;
 
     /* Single invocation for instance add/remove */
@@ -287,7 +291,6 @@ err:
          */
         WARN_ON_ONCE(ret);
     }
-    PANIC("");
     return ret;
 }
 
@@ -301,13 +304,68 @@ void cpus_write_unlock(void)
     percpu_up_write(&cpu_hotplug_lock);
 }
 
+static bool cpuhp_can_boot_ap(unsigned int cpu)
+{
+    atomic_t *st = per_cpu_ptr(&cpuhp_state.ap_sync_state, cpu);
+    int sync = atomic_read(st);
+
+again:
+    switch (sync) {
+    case SYNC_STATE_DEAD:
+        /* CPU is properly dead */
+        break;
+    case SYNC_STATE_KICKED:
+        /* CPU did not come up in previous attempt */
+        break;
+    case SYNC_STATE_ALIVE:
+        /* CPU is stuck cpuhp_ap_sync_alive(). */
+        break;
+    default:
+        /* CPU failed to report online or dead and is in limbo state. */
+        return false;
+    }
+
+    /* Prepare for booting */
+    if (!atomic_try_cmpxchg(st, &sync, SYNC_STATE_KICKED))
+        goto again;
+
+    return true;
+}
+
+static inline int cpuhp_bp_sync_alive(unsigned int cpu) { return 0; }
+
+static int bringup_wait_for_ap_online(unsigned int cpu)
+{
+    return 0;
+}
+
+static int cpuhp_kick_ap(int cpu, struct cpuhp_cpu_state *st,
+             enum cpuhp_state target)
+{
+#if 0
+    enum cpuhp_state prev_state;
+    int ret;
+
+    prev_state = cpuhp_set_state(cpu, st, target);
+    __cpuhp_kick_ap(st);
+    if ((ret = st->result)) {
+        cpuhp_reset_state(cpu, st, prev_state);
+        __cpuhp_kick_ap(st);
+    }
+
+    return ret;
+#endif
+    pr_err("%s: No impl.", __func__);
+    printk("%s: [%u,%u]\n", __func__, st->state, target);
+    return 0;
+}
+
 static int bringup_cpu(unsigned int cpu)
 {
     struct cpuhp_cpu_state *st = per_cpu_ptr(&cpuhp_state, cpu);
     struct task_struct *idle = idle_thread_get(cpu);
     int ret;
 
-#if 0
     if (!cpuhp_can_boot_ap(cpu))
         return -EAGAIN;
 
@@ -344,8 +402,6 @@ static int bringup_cpu(unsigned int cpu)
 out_unlock:
     irq_unlock_sparse();
     return ret;
-#endif
-    PANIC("");
 }
 
 static int finish_cpu(unsigned int cpu)
@@ -1084,6 +1140,7 @@ static int __cpuhp_invoke_callback_range(bool bringup,
     while (cpuhp_next_state(bringup, &state, st, target)) {
         int err;
 
+        printk("%s: cpu(%u) (%u:%u)\n", __func__, cpu, state, target);
         err = cpuhp_invoke_callback(cpu, state, bringup, NULL, NULL);
         if (!err)
             continue;
@@ -1108,7 +1165,6 @@ static inline int cpuhp_invoke_callback_range(bool bringup,
                           struct cpuhp_cpu_state *st,
                           enum cpuhp_state target)
 {
-    printk("%s: cpu(%u) bringup(%d)\n", __func__, cpu, bringup);
     return __cpuhp_invoke_callback_range(bringup, cpu, st, target, false);
 }
 
@@ -1165,7 +1221,6 @@ static int cpuhp_up_callbacks(unsigned int cpu, struct cpuhp_cpu_state *st,
     enum cpuhp_state prev_state = st->state;
     int ret = 0;
 
-    printk("%s: state(%d) target(%d)\n", __func__, st->state, target);
     ret = cpuhp_invoke_callback_range(true, cpu, st, target);
     if (ret) {
         pr_debug("CPU UP failed (%d) CPU %u state %s (%d)\n",
@@ -1177,6 +1232,7 @@ static int cpuhp_up_callbacks(unsigned int cpu, struct cpuhp_cpu_state *st,
             WARN_ON(cpuhp_invoke_callback_range(false, cpu, st,
                                 prev_state));
     }
+
     return ret;
 }
 
@@ -1202,14 +1258,12 @@ static int _cpu_up(unsigned int cpu, int tasks_frozen, enum cpuhp_state target)
         goto out;
 
     if (st->state == CPUHP_OFFLINE) {
-    printk("%s: step1 (%u)(%u)\n", __func__, st->state, target);
         /* Let it fail before we try to bring the cpu up */
         idle = idle_thread_get(cpu);
         if (IS_ERR(idle)) {
             ret = PTR_ERR(idle);
             goto out;
         }
-    printk("%s: step2\n", __func__);
 
         /*
          * Reset stale stack state from the last time this CPU was online.
@@ -1218,7 +1272,6 @@ static int _cpu_up(unsigned int cpu, int tasks_frozen, enum cpuhp_state target)
         kasan_unpoison_task_stack(idle);
     }
 
-    printk("%s: step3\n", __func__);
     cpuhp_tasks_frozen = tasks_frozen;
 
     cpuhp_set_state(cpu, st, target);
@@ -1243,15 +1296,7 @@ static int _cpu_up(unsigned int cpu, int tasks_frozen, enum cpuhp_state target)
      */
     target = min((int)target, CPUHP_BRINGUP_CPU);
 
-#if 0
-    //
-    // Note: fix it!
-    // Now we just use CPUHP_ONLINE rather than CPUHP_BRINGUP_CPU
-    // Because we don't want to use hotplug-kthreads.
-    //
-    target = min((int)target, CPUHP_ONLINE);
-#endif
-
+    printk("%s: cpu(%u) target(%u:%u)\n", __func__, cpu, target, CPUHP_BRINGUP_CPU);
     ret = cpuhp_up_callbacks(cpu, st, target);
 out:
     cpus_write_unlock();
@@ -1284,6 +1329,7 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
         goto out;
     }
 
+    printk("%s: cpu[%u]\n", __func__, cpu);
     err = _cpu_up(cpu, 0, target);
 out:
     cpu_maps_update_done();
@@ -1366,7 +1412,7 @@ void __init boot_cpu_hotplug_init(void)
  */
 static void cpuhp_thread_fun(unsigned int cpu)
 {
-    printk("%s: cpu(%u)\n", __func__);
+    printk("%s: cpu(%u)\n", __func__, cpu);
     PANIC("");
 }
 

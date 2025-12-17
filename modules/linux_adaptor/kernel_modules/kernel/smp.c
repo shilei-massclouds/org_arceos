@@ -150,7 +150,8 @@ static void smp_call_function_many_cond(const struct cpumask *mask,
         else if (likely(nr_cpus > 1))
             send_call_function_ipi_mask(cfd->cpumask_ipi);
 #endif
-        PANIC("");
+        //PANIC("");
+        pr_err("%s: No impl step1.", __func__);
     }
 
     if (run_local && (!cond_func || cond_func(this_cpu, info))) {
@@ -170,7 +171,8 @@ static void smp_call_function_many_cond(const struct cpumask *mask,
             csd_lock_wait(csd);
         }
 #endif
-        PANIC("");
+        //PANIC("");
+        pr_err("%s: No impl step2.", __func__);
     }
 }
 

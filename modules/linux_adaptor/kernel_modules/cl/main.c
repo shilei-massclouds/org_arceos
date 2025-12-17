@@ -97,6 +97,8 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     vfs_caches_init();
 
     init_timers();
+
+    smp_prepare_cpus(setup_max_cpus);
     workqueue_init();
     workqueue_init_topology();
     async_init();
