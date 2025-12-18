@@ -28,6 +28,18 @@ pub fn start_secondary_cpus(primary_cpu_id: usize) {
     }
 }
 
+#[unsafe(no_mangle)]
+pub fn ax_start_secondary_cpu(hartid: usize, cpuid: usize, idle_ptr: usize) {
+    info!("hartid {} cpuid {} idle {:#x}", hartid, cpuid, idle_ptr);
+    assert!(cpuid < SMP);
+
+    let stack_top = virt_to_phys(VirtAddr::from(unsafe {
+        SECONDARY_BOOT_STACK[cpuid-1].as_ptr_range().end as usize
+    }));
+
+    axhal::mp::start_secondary_cpu(hartid, stack_top);
+}
+
 /// The main entry point of the ArceOS runtime for secondary CPUs.
 ///
 /// It is called from the bootstrapping code in [axhal].
@@ -47,20 +59,34 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     info!("Secondary CPU {:x} init OK.", cpu_id);
     super::INITED_CPUS.fetch_add(1, Ordering::Relaxed);
 
-    while !super::is_init_ok() {
+    unsafe {
+        enable_secondary_cpu(cpu_id);
+    }
+
+    // NOTE: spin_loop and only handle irq.
+    loop {
         core::hint::spin_loop();
     }
+//
+//    while !super::is_init_ok() {
+//        core::hint::spin_loop();
+//    }
+//
+//    #[cfg(feature = "irq")]
+//    axhal::arch::enable_irqs();
+//
+//    #[cfg(all(feature = "tls", not(feature = "multitask")))]
+//    super::init_tls();
+//
+//    info!("stepN");
+//    #[cfg(feature = "multitask")]
+//    axtask::run_idle();
+//    #[cfg(not(feature = "multitask"))]
+//    loop {
+//        axhal::arch::wait_for_irqs();
+//    }
+}
 
-    #[cfg(feature = "irq")]
-    axhal::arch::enable_irqs();
-
-    #[cfg(all(feature = "tls", not(feature = "multitask")))]
-    super::init_tls();
-
-    #[cfg(feature = "multitask")]
-    axtask::run_idle();
-    #[cfg(not(feature = "multitask"))]
-    loop {
-        axhal::arch::wait_for_irqs();
-    }
+unsafe extern "C" {
+    fn enable_secondary_cpu(cpuid: usize);
 }

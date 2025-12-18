@@ -125,20 +125,31 @@ void __init smp_cpus_done(unsigned int max_cpus)
 {
 }
 
+extern void ax_start_secondary_cpu(unsigned long hartid,
+                                   unsigned long cpuid,
+                                   unsigned long idle_id);
+
 static int start_secondary_cpu(int cpu, struct task_struct *tidle)
 {
+    unsigned long hartid = cpuid_to_hartid_map(cpu);
+    ax_start_secondary_cpu(hartid, cpu, (unsigned long) tidle);
+    return 0;
+
 #if 0
     if (cpu_ops->cpu_start)
         return cpu_ops->cpu_start(cpu, tidle);
 
     return -EOPNOTSUPP;
 #endif
+
+#if 0
     // NOTE: Now don't start secondary cpus really.
     pr_notice("%s: No impl. cpu[%u]", __func__, cpu);
 
     set_cpu_online(cpu, true);
     complete(&cpu_running);
     return 0;
+#endif
 }
 
 int __cpu_up(unsigned int cpu, struct task_struct *tidle)
@@ -162,11 +173,17 @@ int __cpu_up(unsigned int cpu, struct task_struct *tidle)
     return ret;
 }
 
-// NOTE: Remove it and use real impl!
+// NOTE: Remove this dummy function.
 #if 1
-#include "asm/cpuidle.h"
 void secondary_start_sbi()
 {
-   cpu_do_idle();
+    // Never reach here!
+    PANIC("");
 }
 #endif
+
+void enable_secondary_cpu(unsigned int cpuid)
+{
+    set_cpu_online(cpuid, true);
+    complete(&cpu_running);
+}

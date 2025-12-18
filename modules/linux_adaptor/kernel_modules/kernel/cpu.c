@@ -218,7 +218,7 @@ static int cpuhp_invoke_callback(unsigned int cpu, enum cpuhp_state state,
     int (*cb)(unsigned int cpu);
     int ret, cnt;
 
-    printk("%s: step1 cpu(%u) [%s] bringup(%d)\n", __func__, cpu, step->name, bringup);
+    printk("%s: cpu(%u) [%s] bringup(%d)\n", __func__, cpu, step->name, bringup);
     if (st->fail == state) {
         st->fail = CPUHP_INVALID;
         return -EAGAIN;
@@ -229,18 +229,15 @@ static int cpuhp_invoke_callback(unsigned int cpu, enum cpuhp_state state,
         return 0;
     }
 
-    printk("%s: step2\n", __func__);
     if (!step->multi_instance) {
         WARN_ON_ONCE(lastp && *lastp);
         cb = bringup ? step->startup.single : step->teardown.single;
 
-    printk("%s: step2.1 [%u][%u]\n", __func__, st->target, CPUHP_BRINGUP_CPU);
         trace_cpuhp_enter(cpu, st->target, state, cb);
         ret = cb(cpu);
         trace_cpuhp_exit(cpu, st->state, state, ret);
         return ret;
     }
-    printk("%s: step3\n", __func__);
     cbm = bringup ? step->startup.multi : step->teardown.multi;
 
     /* Single invocation for instance add/remove */

@@ -185,8 +185,8 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         axdisplay::init_display(all_devices.display);
     }
 
-    #[cfg(feature = "smp")]
-    self::mp::start_secondary_cpus(0 /* cpu_id */);
+    //#[cfg(feature = "smp")]
+    //self::mp::start_secondary_cpus(0 /* cpu_id */);
 
     #[cfg(all(feature = "tls", not(feature = "multitask")))]
     {
