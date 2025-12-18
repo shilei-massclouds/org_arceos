@@ -56,6 +56,12 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     #[cfg(feature = "multitask")]
     axtask::init_scheduler_secondary();
 
+    #[cfg(all(feature = "tls", not(feature = "multitask")))]
+    super::init_tls();
+
+    #[cfg(feature = "irq")]
+    axhal::arch::enable_irqs();
+
     info!("Secondary CPU {:x} init OK.", cpu_id);
     super::INITED_CPUS.fetch_add(1, Ordering::Relaxed);
 
@@ -63,28 +69,12 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
         enable_secondary_cpu(cpu_id);
     }
 
-    // NOTE: spin_loop and only handle irq.
+    #[cfg(feature = "multitask")]
+    axtask::run_idle();
+    #[cfg(not(feature = "multitask"))]
     loop {
-        core::hint::spin_loop();
+        axhal::arch::wait_for_irqs();
     }
-//
-//    while !super::is_init_ok() {
-//        core::hint::spin_loop();
-//    }
-//
-//    #[cfg(feature = "irq")]
-//    axhal::arch::enable_irqs();
-//
-//    #[cfg(all(feature = "tls", not(feature = "multitask")))]
-//    super::init_tls();
-//
-//    info!("stepN");
-//    #[cfg(feature = "multitask")]
-//    axtask::run_idle();
-//    #[cfg(not(feature = "multitask"))]
-//    loop {
-//        axhal::arch::wait_for_irqs();
-//    }
 }
 
 unsafe extern "C" {

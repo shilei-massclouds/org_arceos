@@ -309,12 +309,9 @@ int irq_startup(struct irq_desc *desc, bool resend, bool force)
 
     desc->depth = 0;
 
-    printk("%s: step0\n", __func__);
-    printk("%s: step1 chip(%s)\n", __func__, d->chip->name);
     if (irqd_is_started(d)) {
         irq_enable(desc);
     } else {
-    printk("%s: step2 hwirq(%u) status(%u)\n", __func__, d->hwirq, __irq_startup_managed(desc, aff, force));
         switch (__irq_startup_managed(desc, aff, force)) {
         case IRQ_STARTUP_NORMAL:
             if (d->chip->flags & IRQCHIP_AFFINITY_PRE_STARTUP)

@@ -22,7 +22,7 @@
 #define DP1000
 
 //#define TEST_BLOCK
-#define TEST_EXT4
+//#define TEST_EXT4
 //#define BENCH_MARK
 
 extern void cl_do_initcalls(void);
@@ -148,10 +148,6 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 void call_handle_arch_irq(unsigned long cause)
 {
     struct pt_regs regs;
-    if (smp_processor_id()) {
-        printk("%s: cpu(%u)\n", __func__, smp_processor_id());
-        PANIC("");
-    }
     regs.cause = cause;
     handle_arch_irq(&regs);
 }
