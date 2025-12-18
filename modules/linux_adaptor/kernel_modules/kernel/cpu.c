@@ -960,8 +960,6 @@ int __cpuhp_setup_state_cpuslocked(enum cpuhp_state state,
         ret = 0;
     }
 
-    printk("%s: step1\n", __func__);
-
     if (ret || !invoke || !startup)
         goto out;
 
@@ -1411,6 +1409,33 @@ static void cpuhp_thread_fun(unsigned int cpu)
 {
     printk("%s: cpu(%u)\n", __func__, cpu);
     PANIC("");
+}
+
+/*
+ * Called from the idle task. Wake up the controlling task which brings the
+ * hotplug thread of the upcoming CPU up and then delegates the rest of the
+ * online bringup to the hotplug thread.
+ */
+void cpuhp_online_idle(enum cpuhp_state state)
+{
+    struct cpuhp_cpu_state *st = this_cpu_ptr(&cpuhp_state);
+
+    /* Happens for the boot cpu */
+    if (state != CPUHP_AP_ONLINE_IDLE)
+        return;
+
+#if 0
+    cpuhp_ap_update_sync_state(SYNC_STATE_ONLINE);
+
+    /*
+     * Unpark the stopper thread before we start the idle loop (and start
+     * scheduling); this ensures the stopper task is always available.
+     */
+    stop_machine_unpark(smp_processor_id());
+#endif
+
+    st->state = CPUHP_AP_ONLINE_IDLE;
+    //complete_ap_thread(st, true);
 }
 
 static struct smp_hotplug_thread cpuhp_threads = {

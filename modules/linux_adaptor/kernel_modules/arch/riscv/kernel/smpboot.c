@@ -185,5 +185,6 @@ void secondary_start_sbi()
 void enable_secondary_cpu(unsigned int cpuid)
 {
     set_cpu_online(cpuid, true);
+    cpuhp_online_idle(CPUHP_AP_ONLINE_IDLE);
     complete(&cpu_running);
 }
