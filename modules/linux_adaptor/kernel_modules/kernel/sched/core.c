@@ -122,7 +122,8 @@ unsigned long init_current(unsigned long thread_id)
         : : "rK" (tsk)
         : "memory"
     );
-    printk("%s: init_task(%lu) ptr (0x%lx)\n", __func__, thread_id, tsk);
+    printk("%s: init_task(%lu) ptr (0x%lx)\n",
+           __func__, thread_id, tsk);
     return (unsigned long)tsk;
 }
 
@@ -219,6 +220,7 @@ bool ttwu_state_match(struct task_struct *p, unsigned int state, int *success)
 
     *success = !!(match = __task_state_match(p, state));
 
+    printk("%s: success(%d) state(%u)\n", __func__, *success, state);
     /*
      * Saved state preserves the task state across blocking on
      * an RT lock or TASK_FREEZABLE tasks.  If the state matches,
@@ -266,7 +268,8 @@ bool ttwu_state_match(struct task_struct *p, unsigned int state, int *success)
  */
 static int ttwu_runnable(struct task_struct *p, int wake_flags)
 {
-    PANIC("");
+    pr_err("%s: No impl. task id: %u", __func__, p->pid);
+    return 0;
 }
 
 static bool ttwu_queue_wakelist(struct task_struct *p, int cpu, int wake_flags)
@@ -295,6 +298,9 @@ int select_task_rq(struct task_struct *p, int cpu, int *wake_flags)
 
 void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
 {
+    pr_err("%s: No impl.(%u)(%u)\n",
+           __func__, task_cpu(p), new_cpu);
+    return;
 #ifdef CONFIG_SCHED_DEBUG
     unsigned int state = READ_ONCE(p->__state);
 
@@ -336,6 +342,7 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
 	smp_wmb();
 	WRITE_ONCE(task_thread_info(p)->cpu, new_cpu);
 	p->wake_cpu = new_cpu;
+    PANIC("");
 }
 
 static void
@@ -354,15 +361,44 @@ ttwu_do_activate(struct task_struct *p, int wake_flags)
         delayacct_blkio_end(p);
     }
 
+    activate_task(NULL, p, en_flags);
     ttwu_do_wakeup(p);
+}
+
+void activate_task(struct rq *rq, struct task_struct *p, int flags)
+{
+    BUG_ON(rq != NULL);
+#if 0
+    if (task_on_rq_migrating(p))
+        flags |= ENQUEUE_MIGRATED;
+    if (flags & ENQUEUE_MIGRATED)
+        sched_mm_cid_migrate_to(rq, p);
+
+    enqueue_task(rq, p, flags);
+#endif
+    printk("%s: step1 task (%u) on_cpu(%u)\n",
+           __func__, p->pid, task_cpu(p));
+    cl_kthread_activate(p->pid);
+    printk("%s: step2 task (%u)\n", __func__, p->pid);
+
+    WRITE_ONCE(p->on_rq, TASK_ON_RQ_QUEUED);
+    ASSERT_EXCLUSIVE_WRITER(p->on_rq);
 }
 
 static void ttwu_queue(struct task_struct *p, int cpu, int wake_flags)
 {
+    //struct rq *rq = cpu_rq(cpu);
+    //struct rq_flags rf;
+
     if (ttwu_queue_wakelist(p, cpu, wake_flags))
         return;
 
+    WRITE_ONCE(task_thread_info(p)->cpu, cpu);
+
+    //rq_lock(rq, &rf);
+    //update_rq_clock(rq);
     ttwu_do_activate(p, wake_flags);
+    //rq_unlock(rq, &rf);
 }
 
 /**
@@ -404,6 +440,7 @@ static void ttwu_queue(struct task_struct *p, int cpu, int wake_flags)
  */
 int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 {
+    printk("%s: ...\n", __func__);
     guard(preempt)();
     int cpu, success = 0;
 
@@ -439,7 +476,6 @@ int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
         ttwu_do_wakeup(p);
         goto out;
     }
-
 
     /*
      * If we are going to wake up a thread waiting for CONDITION we
@@ -757,7 +793,8 @@ void cl_ttwu_do_wakeup(struct task_struct *p)
     } else if (state == TASK_RUNNING) {
         /* No-op */
     } else {
-        printk("%s: task: (%lx), state(%u)\n", __func__, p, p->__state);
+        printk("%s: task: (%lx), state(%u)\n",
+               __func__, (unsigned long)p, p->__state);
     }
 }
 
@@ -848,6 +885,11 @@ void __init init_idle(struct task_struct *idle, int cpu)
 #endif
 
     pr_notice("%s: No impl.", __func__);
+}
+
+unsigned int cl_task_cpu(const struct task_struct *p)
+{
+    return task_cpu(p);
 }
 
 void __init sched_init(void)

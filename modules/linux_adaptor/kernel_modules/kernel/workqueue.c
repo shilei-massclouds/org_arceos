@@ -57,6 +57,7 @@
 #include <linux/irq_work.h>
 
 #include "workqueue_internal.h"
+#include "adaptor.h"
 
 enum worker_pool_flags {
 	/*
@@ -2077,7 +2078,7 @@ static int try_to_grab_pending(struct work_struct *work, u32 cflags,
 	 */
     printk("%s: 1\n", __func__);
 	pool = get_work_pool(work);
-    printk("%s: 2 pool(%lx)\n", __func__, pool);
+    printk("%s: 2 pool(%lx)\n", __func__, (unsigned long)pool);
 	if (!pool)
 		goto fail;
 
@@ -2786,6 +2787,7 @@ static struct worker *create_worker(struct worker_pool *pool)
 		pr_err_once("workqueue: Failed to allocate a worker\n");
 		goto fail;
 	}
+    //printk("%s: worker(%lx)\n", __func__, (unsigned long)worker);
 
 	worker->id = id;
 
@@ -3341,6 +3343,10 @@ static int worker_thread(void *__worker)
 	struct worker *worker = __worker;
 	struct worker_pool *pool = worker->pool;
 
+    if (pool == NULL) {
+        printk("%s: worker(%lx)\n", __func__, (unsigned long)__worker);
+        PANIC("");
+    }
 	/* tell the scheduler that this is a workqueue worker */
 	set_pf_worker(true);
 woke_up:

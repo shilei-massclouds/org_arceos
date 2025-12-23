@@ -19,3 +19,4 @@ axtask = { workspace = true }
 axmm = { workspace = true }
 
 memory_addr = "0.3"
+kspin = "0.1"

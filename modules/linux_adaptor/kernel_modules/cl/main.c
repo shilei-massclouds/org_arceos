@@ -16,13 +16,12 @@
 
 #include "../mm/slab.h"
 #include "../drivers/base/base.h"
-//#include "block/blk.h"
 #include "adaptor.h"
 
 #define DP1000
 
 //#define TEST_BLOCK
-//#define TEST_EXT4
+#define TEST_EXT4
 //#define BENCH_MARK
 
 extern void cl_do_initcalls(void);

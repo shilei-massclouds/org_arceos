@@ -1237,6 +1237,7 @@ dependencies = [
  "axlog",
  "axmm",
  "axtask",
+ "kspin",
  "memory_addr",
 ]
 

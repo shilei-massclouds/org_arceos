@@ -8,8 +8,13 @@ use axhal::mem::MemRegionFlags;
 use memory_addr::{align_down_4k, is_aligned_4k};
 use axtask::current;
 use crate::kallsyms::get_ksym;
+use alloc::collections::BTreeMap;
+use axtask::AxTaskRef;
+use kspin::SpinNoIrq;
 
 const CL_TASK_STATE_MASK:   usize = 0x00000003;
+
+static LINUX_PENDING_TASKS: SpinNoIrq<BTreeMap<u64, AxTaskRef>> = SpinNoIrq::new(BTreeMap::new());
 
 /// Alloc bytes.
 #[unsafe(no_mangle)]
@@ -67,11 +72,12 @@ pub extern "C" fn cl_terminate() {
 
 type LinuxKthreadFunc = extern fn(usize) -> isize;
 
-/// Spawn a task(kthread).
+/// Create a task(kthread).
 #[unsafe(no_mangle)]
-pub extern "C" fn cl_kthread_run(
+pub extern "C" fn cl_kthread_new(
     task_ptr: u64, threadfn: LinuxKthreadFunc, arg: usize
 ) -> u64 {
+    info!("cl_kthread_new ...");
     let task = axtask::TaskInner::new(
         move || {
             debug!("linux kthread: fn {:#?} {:#x}", threadfn, arg);
@@ -80,12 +86,29 @@ pub extern "C" fn cl_kthread_run(
         "linux kthread".into(),
         0x2000,     // KThread stack size must be compatible with linux.
     );
-    // NOTE: Now only support CPU-0. Fix it in future.
-    task.set_cpumask(axtask::AxCpuMask::one_shot(0));
-    let task = axtask::spawn_task(task);
+
+    //let cpu = unsafe {
+    //    cl_task_cpu(task_ptr as usize)
+    //};
+    //task.set_cpumask(axtask::AxCpuMask::one_shot(cpu));
+    //let task = axtask::spawn_task(task);
+    let task = task.into_arc();
     debug!("Kthread task pointer({:#x})", task_ptr);
     task.set_private(task_ptr);
+    LINUX_PENDING_TASKS.lock().insert(task.id().as_u64(), task.clone());
+    info!("new task id: {}", task.id().as_u64());
     task.id().as_u64()
+}
+
+/// Spawn a task(kthread).
+#[unsafe(no_mangle)]
+pub extern "C" fn cl_kthread_activate(task_id: u64) {
+    info!("activate task id: {}", task_id);
+    if let Some(task_ref) = LINUX_PENDING_TASKS.lock().remove(&task_id) {
+        axtask::enqueue_task(task_ref)
+    } else {
+        info!("No task id: {}", task_id);
+    }
 }
 
 /// Reschedule.
@@ -109,6 +132,7 @@ pub extern "C" fn cl_get_ksym(addr: usize, s: *mut u8, size: usize) {
 
 unsafe extern "C" {
     static cl_fixaddr_start: usize;
+    fn cl_task_cpu(task_ptr: usize) -> usize;
 }
 
 /// Set fixmap.

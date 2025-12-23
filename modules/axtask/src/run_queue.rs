@@ -112,6 +112,24 @@ fn select_run_queue_index(cpumask: AxCpuMask) -> usize {
     }
 }
 
+#[cfg(feature = "smp")]
+/// Select rq based on Linux task's cpu.
+/// Only valid for cLinux.
+#[allow(clippy::modulo_one)]
+#[inline]
+fn task_cpu(task_ref: &AxTaskRef) -> usize {
+    let linux_task_ptr = task_ref.private();
+    if linux_task_ptr != 0 {
+        unsafe { cl_task_cpu(linux_task_ptr as usize) }
+    } else {
+        select_run_queue_index(task_ref.cpumask())
+    }
+}
+
+unsafe extern "C" {
+    fn cl_task_cpu(task_ptr: usize) -> usize;
+}
+
 /// Retrieves a `'static` reference to the run queue corresponding to the given index.
 ///
 /// This function asserts that the provided index is within the range of available CPUs
@@ -169,7 +187,9 @@ pub(crate) fn select_run_queue<G: BaseGuard>(task: &AxTaskRef) -> AxRunQueueRef<
     #[cfg(feature = "smp")]
     {
         // When SMP is enabled, select the run queue based on the task's CPU affinity and load balance.
-        let index = select_run_queue_index(task.cpumask());
+        //let index = select_run_queue_index(task.cpumask());
+        let index = task_cpu(task);
+    info!("======= select index({}) private({:#x}) ========", index, task.private());
         AxRunQueueRef {
             inner: get_run_queue(index),
             state: irq_state,
@@ -231,7 +251,7 @@ impl<G: BaseGuard> AxRunQueueRef<'_, G> {
     ///
     /// This function is used to add a new task to the scheduler.
     pub fn add_task(&mut self, task: AxTaskRef) {
-        debug!(
+        info!(
             "task add: {} on run_queue {}",
             task.id_name(),
             self.inner.cpu_id
@@ -446,6 +466,7 @@ impl AxRunQueue {
     /// Create a new run queue for the specified CPU.
     /// The run queue is initialized with a per-CPU gc task in its scheduler.
     fn new(cpu_id: usize) -> Self {
+        info!("=== new runqueue {}", cpu_id);
         let gc_task = TaskInner::new(gc_entry, "gc".into(), axconfig::TASK_STACK_SIZE).into_arc();
         // gc task should be pinned to the current CPU.
         gc_task.set_cpumask(AxCpuMask::one_shot(cpu_id));

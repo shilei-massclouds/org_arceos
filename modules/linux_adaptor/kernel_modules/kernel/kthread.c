@@ -107,24 +107,40 @@ int kthread_stop_put(struct task_struct *k)
 #endif
 }
 
+static unsigned int
+cl_select_cpu(void)
+{
+    // NOTE: Just for test. We should select any one.
+    if (cpu_online(7)) {
+        return 7;
+    }
+    return 0;
+}
+
 static __printf(4, 0)
 struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
                             void *data, int node,
                             const char namefmt[],
                             va_list args)
 {
+    printk("%s: ...\n", __func__);
     char name[512];
     struct task_struct *task = kzalloc(sizeof(struct task_struct), 0);
-    unsigned long tid = cl_kthread_run((unsigned long)task,
+
+    //unsigned int cpu = cl_select_cpu();
+	//WRITE_ONCE(task_thread_info(task)->cpu, cpu);
+
+    unsigned long tid = cl_kthread_new((unsigned long)task,
                                        (unsigned long)threadfn,
                                        (unsigned long)data);
 
     vscnprintf(name, sizeof(name), namefmt, args);
     pr_debug("%s: curr(%lx:%u) tid[%lu] name[%s]\n",
-             __func__, current, current->__state, tid, name);
+             __func__,
+             (unsigned long)current, current->__state, tid, name);
     task->pid = tid;
     task->flags |= PF_KTHREAD;
-    WRITE_ONCE(task->__state, TASK_RUNNING);
+    WRITE_ONCE(task->__state, TASK_NORMAL);
     set_kthread_struct(task);
     return task;
 }
@@ -416,10 +432,6 @@ bool cl_set_kthread_struct(struct task_struct *p)
     // before slub being inited.
     //kthread = kzalloc(sizeof(*kthread), GFP_KERNEL);
     kthread = cl_rust_alloc(sizeof(*kthread), 8);
-    {
-        printk("%s: kthread(%lx)\n", __func__, kthread);
-    }
-
     if (!kthread)
         return false;
 

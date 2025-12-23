@@ -20,9 +20,12 @@ extern void cl_wake_up(unsigned long tid);
 extern int cl_mount(const char *fstype, const char *source);
 
 extern unsigned long
-cl_kthread_run(unsigned long task_ptr,
+cl_kthread_new(unsigned long task_ptr,
                unsigned long threadfn_ptr,
                unsigned long arg_ptr);
+
+extern unsigned long
+cl_kthread_activate(unsigned long task_id);
 
 extern void
 cl_get_ksym(unsigned long addr, char *name, unsigned long size);
