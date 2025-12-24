@@ -13,6 +13,8 @@
 #include <linux/irqdomain.h>
 #include <asm/sbi.h>
 
+#include "adaptor.h"
+
 DEFINE_STATIC_KEY_FALSE(riscv_sbi_for_rfence);
 EXPORT_SYMBOL_GPL(riscv_sbi_for_rfence);
 
@@ -32,6 +34,8 @@ static void sbi_ipi_handle(struct irq_desc *desc)
 
 static int sbi_ipi_starting_cpu(unsigned int cpu)
 {
+    printk("%s: ... cpu[%u]\n", __func__, cpu);
+    if (cpu != 0) PANIC("");
 	enable_percpu_irq(sbi_ipi_virq, irq_get_trigger_type(sbi_ipi_virq));
 	return 0;
 }
@@ -66,6 +70,7 @@ void __init sbi_ipi_init(void)
 
 	irq_set_chained_handler(sbi_ipi_virq, sbi_ipi_handle);
 
+    printk("%s: CPUHP_AP_IRQ_RISCV_SBI_IPI_STARTING[%u]\n", __func__, CPUHP_AP_IRQ_RISCV_SBI_IPI_STARTING);
 	/*
 	 * Don't disable IPI when CPU goes offline because
 	 * the masking/unmasking of virtual IPIs is done

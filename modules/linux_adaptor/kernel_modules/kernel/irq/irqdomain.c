@@ -1363,3 +1363,53 @@ void irq_domain_free_irqs_parent(struct irq_domain *domain,
 
     irq_domain_free_irqs_hierarchy(domain->parent, irq_base, nr_irqs);
 }
+
+/**
+ * __irq_domain_alloc_fwnode - Allocate a fwnode_handle suitable for
+ *                           identifying an irq domain
+ * @type:   Type of irqchip_fwnode. See linux/irqdomain.h
+ * @id:     Optional user provided id if name != NULL
+ * @name:   Optional user provided domain name
+ * @pa:     Optional user-provided physical address
+ *
+ * Allocate a struct irqchip_fwid, and return a pointer to the embedded
+ * fwnode_handle (or NULL on failure).
+ *
+ * Note: The types IRQCHIP_FWNODE_NAMED and IRQCHIP_FWNODE_NAMED_ID are
+ * solely to transport name information to irqdomain creation code. The
+ * node is not stored. For other types the pointer is kept in the irq
+ * domain struct.
+ */
+struct fwnode_handle *__irq_domain_alloc_fwnode(unsigned int type, int id,
+                        const char *name,
+                        phys_addr_t *pa)
+{
+    struct irqchip_fwid *fwid;
+    char *n;
+
+    fwid = kzalloc(sizeof(*fwid), GFP_KERNEL);
+
+    switch (type) {
+    case IRQCHIP_FWNODE_NAMED:
+        n = kasprintf(GFP_KERNEL, "%s", name);
+        break;
+    case IRQCHIP_FWNODE_NAMED_ID:
+        n = kasprintf(GFP_KERNEL, "%s-%d", name, id);
+        break;
+    default:
+        n = kasprintf(GFP_KERNEL, "irqchip@%pa", pa);
+        break;
+    }
+
+    if (!fwid || !n) {
+        kfree(fwid);
+        kfree(n);
+        return NULL;
+    }
+
+    fwid->type = type;
+    fwid->name = n;
+    fwid->pa = pa;
+    fwnode_init(&fwid->fwnode, &irqchip_fwnode_ops);
+    return &fwid->fwnode;
+}

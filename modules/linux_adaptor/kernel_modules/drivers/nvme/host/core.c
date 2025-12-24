@@ -1111,8 +1111,9 @@ int nvme_execute_rq(struct request *rq, bool at_head)
 {
 	blk_status_t status;
 
-    printk("%s: req_op(%u)\n", __func__, req_op(rq));
+    printk("%s: req_op(%u) ...\n", __func__, req_op(rq));
 	status = blk_execute_rq(rq, at_head);
+    printk("%s: req_op(%u) ok!\n", __func__, req_op(rq));
 	if (nvme_req(rq)->flags & NVME_REQ_CANCELLED)
 		return -EINTR;
 	if (nvme_req(rq)->status)

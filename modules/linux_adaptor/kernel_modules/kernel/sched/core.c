@@ -292,8 +292,13 @@ static bool ttwu_queue_wakelist(struct task_struct *p, int cpu, int wake_flags)
 static inline
 int select_task_rq(struct task_struct *p, int cpu, int *wake_flags)
 {
-    pr_notice("%s: No impl.", __func__);
-    return 0;
+    pr_err("%s: No impl. cpu(%u) task_cpu(%u) state(%x)", __func__, cpu, task_cpu(p), p->__state);
+#if 0
+    if (cpu_online(7)) {
+        return 7;
+    }
+#endif
+    return task_cpu(p);
 }
 
 void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
@@ -376,10 +381,10 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 
     enqueue_task(rq, p, flags);
 #endif
-    printk("%s: step1 task (%u) on_cpu(%u)\n",
-           __func__, p->pid, task_cpu(p));
+    printk("%s: step1 task (%u) on_cpu(%u) state(%x)\n",
+           __func__, p->pid, task_cpu(p), p->__state);
     cl_kthread_activate(p->pid);
-    printk("%s: step2 task (%u)\n", __func__, p->pid);
+    printk("%s: step2 task (%u) state(%x)\n", __func__, p->pid, p->__state);
 
     WRITE_ONCE(p->on_rq, TASK_ON_RQ_QUEUED);
     ASSERT_EXCLUSIVE_WRITER(p->on_rq);
@@ -440,7 +445,7 @@ static void ttwu_queue(struct task_struct *p, int cpu, int wake_flags)
  */
 int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 {
-    printk("%s: ...\n", __func__);
+    printk("%s: task_id(%u) cpu(%u)\n", __func__, p->pid, task_cpu(p));
     guard(preempt)();
     int cpu, success = 0;
 
@@ -800,14 +805,13 @@ void cl_ttwu_do_wakeup(struct task_struct *p)
 
 bool cpus_share_cache(int this_cpu, int that_cpu)
 {
-#if 0
+    printk("%s: --- cpu(%d, %d)\n", __func__, this_cpu, that_cpu);
     if (this_cpu == that_cpu)
         return true;
 
-    return per_cpu(sd_llc_id, this_cpu) == per_cpu(sd_llc_id, that_cpu);
-#endif
-    pr_err("%s: No impl.", __func__);
+    pr_err("%s: --- cpu(%d, %d)", __func__, this_cpu, that_cpu);
     return false;
+    //return per_cpu(sd_llc_id, this_cpu) == per_cpu(sd_llc_id, that_cpu);
 }
 
 bool cpus_equal_capacity(int this_cpu, int that_cpu)
@@ -890,6 +894,42 @@ void __init init_idle(struct task_struct *idle, int cpu)
 unsigned int cl_task_cpu(const struct task_struct *p)
 {
     return task_cpu(p);
+}
+
+#if defined(CONFIG_SMP) && defined(TIF_POLLING_NRFLAG)
+#error "TIF_POLLING_NRFLAG"
+#else
+static inline bool set_nr_and_not_polling(struct task_struct *p)
+{
+    set_tsk_need_resched(p);
+    return true;
+}
+
+static inline bool set_nr_if_polling(struct task_struct *p)
+{
+    return false;
+}
+#endif
+
+/*
+ * Prepare the scene for sending an IPI for a remote smp_call
+ *
+ * Returns true if the caller can proceed with sending the IPI.
+ * Returns false otherwise.
+ */
+bool call_function_single_prep_ipi(int cpu)
+{
+    if (set_nr_if_polling(cpu_rq(cpu)->idle)) {
+        trace_sched_wake_idle_without_ipi(cpu);
+        return false;
+    }
+
+    return true;
+}
+
+void sched_ttwu_pending(void *arg)
+{
+    PANIC("");
 }
 
 void __init sched_init(void)

@@ -1039,12 +1039,6 @@ int hrtimers_prepare_cpu(unsigned int cpu)
     return 0;
 }
 
-int smpcfd_prepare_cpu(unsigned int cpu)
-{
-    pr_notice("%s: No impl.", __func__);
-    return 0;
-}
-
 void refcount_warn_saturate(refcount_t *r, enum refcount_saturation_type t)
 {
     pr_notice("%s: No impl.", __func__);

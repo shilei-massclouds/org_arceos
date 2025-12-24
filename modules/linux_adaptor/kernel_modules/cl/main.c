@@ -106,6 +106,8 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     //early_irq_init();
     init_IRQ();
 
+    call_function_init();
+
     parse_early_param();
 
     clinux_started = 1;

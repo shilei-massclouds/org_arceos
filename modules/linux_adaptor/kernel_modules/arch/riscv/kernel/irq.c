@@ -36,5 +36,5 @@ void __init init_IRQ(void)
     irqchip_init();
     if (!handle_arch_irq)
         PANIC("No interrupt controller found.");
-    //sbi_ipi_init();
+    sbi_ipi_init();
 }

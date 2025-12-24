@@ -36,6 +36,18 @@
 #include "sched/smp.h"
 #include "adaptor.h"
 
+#define CSD_TYPE(_csd)  ((_csd)->node.u_flags & CSD_FLAG_TYPE_MASK)
+
+struct call_function_data {
+    call_single_data_t  __percpu *csd;
+    cpumask_var_t       cpumask;
+    cpumask_var_t       cpumask_ipi;
+};
+
+static DEFINE_PER_CPU_ALIGNED(struct call_function_data, cfd_data);
+
+static DEFINE_PER_CPU_SHARED_ALIGNED(struct llist_head, call_single_queue);
+
 /*
  * Flags to be used as scf_flags argument of smp_call_function_many_cond().
  *
@@ -55,6 +67,38 @@ EXPORT_SYMBOL(nr_cpu_ids);
 
 /* Setup configured maximum number of CPUs to activate */
 unsigned int setup_max_cpus = NR_CPUS;
+
+static void csd_lock_record(call_single_data_t *csd)
+{
+}
+
+static __always_inline void csd_lock_wait(call_single_data_t *csd)
+{
+    smp_cond_load_acquire(&csd->node.u_flags, !(VAL & CSD_FLAG_LOCK));
+}
+
+static __always_inline void csd_lock(call_single_data_t *csd)
+{
+    csd_lock_wait(csd);
+    csd->node.u_flags |= CSD_FLAG_LOCK;
+
+    /*
+     * prevent CPU from reordering the above assignment
+     * to ->flags with any subsequent assignments to other
+     * fields of the specified call_single_data_t structure:
+     */
+    smp_wmb();
+}
+
+static __always_inline void csd_unlock(call_single_data_t *csd)
+{
+    WARN_ON(!(csd->node.u_flags & CSD_FLAG_LOCK));
+
+    /*
+     * ensure we're all done before releasing data:
+     */
+    smp_store_release(&csd->node.u_flags, 0);
+}
 
 static __always_inline void
 csd_do_func(smp_call_func_t func, void *info, call_single_data_t *csd)
@@ -238,7 +282,149 @@ void __init smp_init(void)
     smp_cpus_done(setup_max_cpus);
 }
 
+/*
+ * Insert a previously allocated call_single_data_t element
+ * for execution on the given CPU. data must already have
+ * ->func, ->info, and ->flags set.
+ */
+static int generic_exec_single(int cpu, call_single_data_t *csd)
+{
+    if (cpu == smp_processor_id()) {
+        smp_call_func_t func = csd->func;
+        void *info = csd->info;
+        unsigned long flags;
+
+        /*
+         * We can unlock early even for the synchronous on-stack case,
+         * since we're doing this from the same CPU..
+         */
+        csd_lock_record(csd);
+        csd_unlock(csd);
+        local_irq_save(flags);
+        csd_do_func(func, info, NULL);
+        csd_lock_record(NULL);
+        local_irq_restore(flags);
+        return 0;
+    }
+
+    if ((unsigned)cpu >= nr_cpu_ids || !cpu_online(cpu)) {
+        csd_unlock(csd);
+        return -ENXIO;
+    }
+
+    __smp_call_single_queue(cpu, &csd->node.llist);
+
+    return 0;
+}
+
 int smp_call_function_single_async(int cpu, call_single_data_t *csd)
 {
+    int err = 0;
+
+    preempt_disable();
+
+    if (csd->node.u_flags & CSD_FLAG_LOCK) {
+        err = -EBUSY;
+        goto out;
+    }
+
+    csd->node.u_flags = CSD_FLAG_LOCK;
+    smp_wmb();
+
+    err = generic_exec_single(cpu, csd);
+
+out:
+    preempt_enable();
+
+    return err;
+}
+
+int smpcfd_prepare_cpu(unsigned int cpu)
+{
+    struct call_function_data *cfd = &per_cpu(cfd_data, cpu);
+
+    if (!zalloc_cpumask_var_node(&cfd->cpumask, GFP_KERNEL,
+                     cpu_to_node(cpu)))
+        return -ENOMEM;
+    if (!zalloc_cpumask_var_node(&cfd->cpumask_ipi, GFP_KERNEL,
+                     cpu_to_node(cpu))) {
+        free_cpumask_var(cfd->cpumask);
+        return -ENOMEM;
+    }
+    cfd->csd = alloc_percpu(call_single_data_t);
+    if (!cfd->csd) {
+        free_cpumask_var(cfd->cpumask);
+        free_cpumask_var(cfd->cpumask_ipi);
+        return -ENOMEM;
+    }
+
+    return 0;
+}
+
+static __always_inline void
+send_call_function_single_ipi(int cpu)
+{
+    if (call_function_single_prep_ipi(cpu)) {
+        trace_ipi_send_cpu(cpu, _RET_IP_,
+                   generic_smp_call_function_single_interrupt);
+        arch_send_call_function_single_ipi(cpu);
+    }
+}
+
+/**
+ * generic_smp_call_function_single_interrupt - Execute SMP IPI callbacks
+ *
+ * Invoked by arch to handle an IPI for call function single.
+ * Must be called with interrupts disabled.
+ */
+void generic_smp_call_function_single_interrupt(void)
+{
     PANIC("");
+    //__flush_smp_call_function_queue(true);
+}
+
+void __smp_call_single_queue(int cpu, struct llist_node *node)
+{
+    /*
+     * We have to check the type of the CSD before queueing it, because
+     * once queued it can have its flags cleared by
+     *   flush_smp_call_function_queue()
+     * even if we haven't sent the smp_call IPI yet (e.g. the stopper
+     * executes migration_cpu_stop() on the remote CPU).
+     */
+    if (trace_csd_queue_cpu_enabled()) {
+        call_single_data_t *csd;
+        smp_call_func_t func;
+
+        csd = container_of(node, call_single_data_t, node.llist);
+        func = CSD_TYPE(csd) == CSD_TYPE_TTWU ?
+            sched_ttwu_pending : csd->func;
+
+        trace_csd_queue_cpu(cpu, _RET_IP_, func, csd);
+    }
+
+    /*
+     * The list addition should be visible to the target CPU when it pops
+     * the head of the list to pull the entry off it in the IPI handler
+     * because of normal cache coherency rules implied by the underlying
+     * llist ops.
+     *
+     * If IPIs can go out of order to the cache coherency protocol
+     * in an architecture, sufficient synchronisation should be added
+     * to arch code to make it appear to obey cache coherency WRT
+     * locking and barrier primitives. Generic code isn't really
+     * equipped to do the right thing...
+     */
+    if (llist_add(node, &per_cpu(call_single_queue, cpu)))
+        send_call_function_single_ipi(cpu);
+}
+
+void __init call_function_init(void)
+{
+    int i;
+
+    for_each_possible_cpu(i)
+        init_llist_head(&per_cpu(call_single_queue, i));
+
+    smpcfd_prepare_cpu(smp_processor_id());
 }

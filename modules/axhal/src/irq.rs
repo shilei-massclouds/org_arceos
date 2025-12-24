@@ -38,6 +38,9 @@ pub(crate) fn register_handler_common(irq_num: usize, handler: IrqHandler) -> bo
 
 #[register_trap_handler(IRQ)]
 fn handler_irq(irq_num: usize) -> bool {
+    if irq_num != 0x8000000000000005 && irq_num != 0x8000000000000009 {
+        info!("irq_num {:#x}", irq_num);
+    }
     let guard = kernel_guard::NoPreempt::new();
     dispatch_irq(irq_num);
     assert!(!irqs_enabled());

@@ -103,7 +103,8 @@ pub extern "C" fn cl_kthread_new(
 /// Spawn a task(kthread).
 #[unsafe(no_mangle)]
 pub extern "C" fn cl_kthread_activate(task_id: u64) {
-    info!("activate task id: {}", task_id);
+    info!("activate task id: {}; pending {}",
+          task_id, LINUX_PENDING_TASKS.lock().len());
     if let Some(task_ref) = LINUX_PENDING_TASKS.lock().remove(&task_id) {
         axtask::enqueue_task(task_ref)
     } else {

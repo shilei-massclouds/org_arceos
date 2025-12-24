@@ -18,9 +18,37 @@
 #include <asm/cacheflush.h>
 #include <asm/cpu_ops.h>
 
+#include "adaptor.h"
+
+enum ipi_message_type {
+    IPI_RESCHEDULE,
+    IPI_CALL_FUNC,
+    IPI_CPU_STOP,
+    IPI_CPU_CRASH_STOP,
+    IPI_IRQ_WORK,
+    IPI_TIMER,
+    IPI_CPU_BACKTRACE,
+    IPI_KGDB_ROUNDUP,
+    IPI_MAX
+};
+
 unsigned long __cpuid_to_hartid_map[NR_CPUS] __ro_after_init = {
     [0 ... NR_CPUS-1] = INVALID_HARTID
 };
+
+static struct irq_desc *ipi_desc[IPI_MAX] __read_mostly;
+static int ipi_virq_base __ro_after_init;
+static int nr_ipi __ro_after_init = IPI_MAX;
+static DEFINE_PER_CPU_READ_MOSTLY(int, ipi_dummy_dev);
+
+static irqreturn_t handle_IPI(int irq, void *data)
+{
+    unsigned int cpu = smp_processor_id();
+    int ipi = irq - ipi_virq_base;
+
+    printk("%s: ipi type(%u)\n", __func__, ipi);
+    PANIC("");
+}
 
 int riscv_hartid_to_cpuid(unsigned long hartid)
 {
@@ -36,4 +64,56 @@ int riscv_hartid_to_cpuid(unsigned long hartid)
 void __init smp_setup_processor_id(void)
 {
     cpuid_to_hartid_map(0) = boot_cpu_hartid;
+}
+
+static void send_ipi_single(int cpu, enum ipi_message_type op)
+{
+    printk("%s: ipi cpu(%u) type(%u)\n", __func__, cpu, op);
+    __ipi_send_mask(ipi_desc[op], cpumask_of(cpu));
+}
+
+void arch_send_call_function_single_ipi(int cpu)
+{
+    send_ipi_single(cpu, IPI_CALL_FUNC);
+}
+
+bool riscv_ipi_have_virq_range(void)
+{
+    return (ipi_virq_base) ? true : false;
+}
+
+void riscv_ipi_set_virq_range(int virq, int nr)
+{
+    int i, err;
+
+    if (WARN_ON(ipi_virq_base))
+        return;
+
+    WARN_ON(nr < IPI_MAX);
+    nr_ipi = min(nr, IPI_MAX);
+    ipi_virq_base = virq;
+
+    /* Request IPIs */
+    for (i = 0; i < nr_ipi; i++) {
+        err = request_percpu_irq(ipi_virq_base + i, handle_IPI,
+                     "IPI", &ipi_dummy_dev);
+        WARN_ON(err);
+
+        ipi_desc[i] = irq_to_desc(ipi_virq_base + i);
+        irq_set_status_flags(ipi_virq_base + i, IRQ_HIDDEN);
+    }
+
+    /* Enabled IPIs for boot CPU immediately */
+    riscv_ipi_enable();
+}
+
+void riscv_ipi_enable(void)
+{
+    int i;
+
+    if (WARN_ON_ONCE(!ipi_virq_base))
+        return;
+
+    for (i = 0; i < nr_ipi; i++)
+        enable_percpu_irq(ipi_virq_base + i, 0);
 }

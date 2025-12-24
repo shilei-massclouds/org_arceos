@@ -110,10 +110,12 @@ int kthread_stop_put(struct task_struct *k)
 static unsigned int
 cl_select_cpu(void)
 {
+#if 0
     // NOTE: Just for test. We should select any one.
     if (cpu_online(7)) {
         return 7;
     }
+#endif
     return 0;
 }
 
@@ -127,8 +129,8 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
     char name[512];
     struct task_struct *task = kzalloc(sizeof(struct task_struct), 0);
 
-    //unsigned int cpu = cl_select_cpu();
-	//WRITE_ONCE(task_thread_info(task)->cpu, cpu);
+    unsigned int cpu = cl_select_cpu();
+	WRITE_ONCE(task_thread_info(task)->cpu, cpu);
 
     unsigned long tid = cl_kthread_new((unsigned long)task,
                                        (unsigned long)threadfn,

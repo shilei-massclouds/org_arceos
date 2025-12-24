@@ -125,7 +125,40 @@ int irq_activate_and_startup(struct irq_desc *desc, bool resend)
 
 void irq_modify_status(unsigned int irq, unsigned long clr, unsigned long set)
 {
-    pr_notice("%s: No impl.\n", __func__);
+    unsigned long flags, trigger, tmp;
+    struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
+
+    if (!desc)
+        return;
+
+    /*
+     * Warn when a driver sets the no autoenable flag on an already
+     * active interrupt.
+     */
+    WARN_ON_ONCE(!desc->depth && (set & _IRQ_NOAUTOEN));
+
+    irq_settings_clr_and_set(desc, clr, set);
+
+    trigger = irqd_get_trigger_type(&desc->irq_data);
+
+    irqd_clear(&desc->irq_data, IRQD_NO_BALANCING | IRQD_PER_CPU |
+           IRQD_TRIGGER_MASK | IRQD_LEVEL | IRQD_MOVE_PCNTXT);
+    if (irq_settings_has_no_balance_set(desc))
+        irqd_set(&desc->irq_data, IRQD_NO_BALANCING);
+    if (irq_settings_is_per_cpu(desc))
+        irqd_set(&desc->irq_data, IRQD_PER_CPU);
+    if (irq_settings_can_move_pcntxt(desc))
+        irqd_set(&desc->irq_data, IRQD_MOVE_PCNTXT);
+    if (irq_settings_is_level(desc))
+        irqd_set(&desc->irq_data, IRQD_LEVEL);
+
+    tmp = irq_settings_get_trigger_mask(desc);
+    if (tmp != IRQ_TYPE_NONE)
+        trigger = tmp;
+
+    irqd_set(&desc->irq_data, trigger);
+
+    irq_put_desc_unlock(desc, flags);
 }
 
 static inline void mask_ack_irq(struct irq_desc *desc)
@@ -726,7 +759,7 @@ int irq_set_chip(unsigned int irq, const struct irq_chip *chip)
 
 void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu)
 {
-    printk("%s: irqchip(%s)\n", __func__, desc->irq_data.chip->name);
+    printk("%s: irqchip(%s) cpu[%u]\n", __func__, desc->irq_data.chip->name, cpu);
     if (desc->irq_data.chip->irq_enable)
         desc->irq_data.chip->irq_enable(&desc->irq_data);
     else

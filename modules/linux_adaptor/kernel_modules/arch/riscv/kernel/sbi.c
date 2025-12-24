@@ -316,6 +316,7 @@ void sbi_set_timer(uint64_t stime_value)
  */
 void sbi_send_ipi(unsigned int cpu)
 {
+    printk("%s: ... cpu[%u]\n", __func__, cpu);
 	__sbi_send_ipi(cpu);
 }
 EXPORT_SYMBOL(sbi_send_ipi);

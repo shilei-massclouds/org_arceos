@@ -751,7 +751,6 @@ done:
 			if (plic_parent_irq)
 				irq_set_chained_handler(plic_parent_irq, plic_handle_irq);
 
-            printk("%s: step1[%d]\n", __func__, CPUHP_AP_IRQ_SIFIVE_PLIC_STARTING);
 			cpuhp_setup_state(CPUHP_AP_IRQ_SIFIVE_PLIC_STARTING,
 					  "irqchip/sifive/plic:starting",
 					  plic_starting_cpu, plic_dying_cpu);
