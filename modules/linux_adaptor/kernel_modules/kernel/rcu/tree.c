@@ -42,3 +42,22 @@ void synchronize_rcu(void)
 {
     pr_notice("%s: No impl.", __func__);
 }
+
+/*
+ * Mark the specified CPU as being online so that subsequent grace periods
+ * (both expedited and normal) will wait on it.  Note that this means that
+ * incoming CPUs are not allowed to use RCU read-side critical sections
+ * until this function is called.  Failing to observe this restriction
+ * will result in lockdep splats.
+ *
+ * Note that this function is special in that it is invoked directly
+ * from the incoming CPU rather than from the cpuhp_step mechanism.
+ * This is because this function must be invoked at a precise location.
+ * This incoming CPU must not have enabled interrupts yet.
+ *
+ * This mirrors the effects of rcutree_report_cpu_dead().
+ */
+void rcutree_report_cpu_starting(unsigned int cpu)
+{
+    pr_notice("%s: No impl.", __func__);
+}

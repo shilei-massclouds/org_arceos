@@ -34,8 +34,6 @@ static void sbi_ipi_handle(struct irq_desc *desc)
 
 static int sbi_ipi_starting_cpu(unsigned int cpu)
 {
-    printk("%s: ... cpu[%u]\n", __func__, cpu);
-    if (cpu != 0) PANIC("");
 	enable_percpu_irq(sbi_ipi_virq, irq_get_trigger_type(sbi_ipi_virq));
 	return 0;
 }

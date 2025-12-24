@@ -66,6 +66,7 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     super::INITED_CPUS.fetch_add(1, Ordering::Relaxed);
 
     unsafe {
+        notify_cpu_starting(cpu_id);
         enable_secondary_cpu(cpu_id);
     }
 
@@ -79,4 +80,5 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
 
 unsafe extern "C" {
     fn enable_secondary_cpu(cpuid: usize);
+    fn notify_cpu_starting(cpuid: usize);
 }

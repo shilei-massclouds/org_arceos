@@ -131,25 +131,15 @@ extern void ax_start_secondary_cpu(unsigned long hartid,
 
 static int start_secondary_cpu(int cpu, struct task_struct *tidle)
 {
-    unsigned long hartid = cpuid_to_hartid_map(cpu);
-    ax_start_secondary_cpu(hartid, cpu, (unsigned long) tidle);
-    return 0;
-
 #if 0
     if (cpu_ops->cpu_start)
         return cpu_ops->cpu_start(cpu, tidle);
 
     return -EOPNOTSUPP;
 #endif
-
-#if 0
-    // NOTE: Now don't start secondary cpus really.
-    pr_notice("%s: No impl. cpu[%u]", __func__, cpu);
-
-    set_cpu_online(cpu, true);
-    complete(&cpu_running);
+    unsigned long hartid = cpuid_to_hartid_map(cpu);
+    ax_start_secondary_cpu(hartid, cpu, (unsigned long) tidle);
     return 0;
-#endif
 }
 
 int __cpu_up(unsigned int cpu, struct task_struct *tidle)

@@ -220,7 +220,7 @@ bool ttwu_state_match(struct task_struct *p, unsigned int state, int *success)
 
     *success = !!(match = __task_state_match(p, state));
 
-    printk("%s: success(%d) state(%u)\n", __func__, *success, state);
+    printk("%s: success(%d) state(%u, %u)\n", __func__, *success, state, p->__state);
     /*
      * Saved state preserves the task state across blocking on
      * an RT lock or TASK_FREEZABLE tasks.  If the state matches,
@@ -445,15 +445,16 @@ static void ttwu_queue(struct task_struct *p, int cpu, int wake_flags)
  */
 int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 {
-    printk("%s: task_id(%u) cpu(%u)\n", __func__, p->pid, task_cpu(p));
     guard(preempt)();
     int cpu, success = 0;
 
     if (p == NULL) {
         PANIC("bad task pointer.");
     }
-    pr_debug("%s: task_ptr(%lx:%u) tid(%lu) current(%lx:%u)\n",
-             __func__, p, p->__state, p->pid, current, current->__state);
+    printk("%s: task(%lx:%u) id(%lu) cpu(%u) cur(%lx:%u)\n",
+           __func__, p, p->__state, p->pid,
+           task_cpu(p),
+           current, current->__state);
 
     wake_flags |= WF_TTWU;
 
@@ -610,6 +611,7 @@ out:
     if (success)
         ttwu_stat(p, task_cpu(p), wake_flags);
 
+    printk("%s: end! success(%u)\n", __func__, success);
     return success;
 }
 
@@ -930,6 +932,17 @@ bool call_function_single_prep_ipi(int cpu)
 void sched_ttwu_pending(void *arg)
 {
     PANIC("");
+}
+
+int sched_cpu_starting(unsigned int cpu)
+{
+#if 0
+    sched_core_cpu_starting(cpu);
+    sched_rq_cpu_starting(cpu);
+    sched_tick_start(cpu);
+#endif
+    pr_err("%s: No impl.", __func__);
+    return 0;
 }
 
 void __init sched_init(void)

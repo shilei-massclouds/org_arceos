@@ -500,6 +500,7 @@ void kthread_unpark(struct task_struct *k)
 {
     struct kthread *kthread = to_kthread(k);
 
+    printk("%s: task(%lx)\n", __func__, (unsigned long)k);
     if (!test_bit(KTHREAD_SHOULD_PARK, &kthread->flags))
         return;
     /*
@@ -606,6 +607,7 @@ bool kthread_should_park(void)
 
 static void __kthread_parkme(struct kthread *self)
 {
+    printk("%s: ...\n", __func__);
     for (;;) {
         /*
          * TASK_PARKED is a special state; we must serialize against

@@ -69,6 +69,7 @@ static int smpboot_thread_fn(void *data)
     struct smpboot_thread_data *td = data;
     struct smp_hotplug_thread *ht = td->ht;
 
+    printk("%s: cpu[%u]...\n", __func__, td->cpu);
     while (1) {
         set_current_state(TASK_INTERRUPTIBLE);
         preempt_disable();
@@ -125,25 +126,6 @@ static int smpboot_thread_fn(void *data)
             ht->thread_fn(td->cpu);
         }
     }
-    PANIC("");
-}
-
-int smpboot_create_threads(unsigned int cpu)
-{
-    struct smp_hotplug_thread *cur;
-    int ret = 0;
-
-#if 0
-    mutex_lock(&smpboot_threads_lock);
-    list_for_each_entry(cur, &hotplug_threads, list) {
-        ret = __smpboot_create_thread(cur, cpu);
-        if (ret)
-            break;
-    }
-    mutex_unlock(&smpboot_threads_lock);
-#endif
-    pr_err("%s: No impl.", __func__);
-    return ret;
 }
 
 /**
@@ -210,6 +192,21 @@ __smpboot_create_thread(struct smp_hotplug_thread *ht, unsigned int cpu)
     return 0;
 }
 
+int smpboot_create_threads(unsigned int cpu)
+{
+    struct smp_hotplug_thread *cur;
+    int ret = 0;
+
+    mutex_lock(&smpboot_threads_lock);
+    list_for_each_entry(cur, &hotplug_threads, list) {
+        ret = __smpboot_create_thread(cur, cpu);
+        if (ret)
+            break;
+    }
+    mutex_unlock(&smpboot_threads_lock);
+    return ret;
+}
+
 static void smpboot_unpark_thread(struct smp_hotplug_thread *ht, unsigned int cpu)
 {
     struct task_struct *tsk = *per_cpu_ptr(ht->store, cpu);
@@ -248,6 +245,7 @@ int smpboot_register_percpu_thread(struct smp_hotplug_thread *plug_thread)
     cpus_read_lock();
     mutex_lock(&smpboot_threads_lock);
     for_each_online_cpu(cpu) {
+    printk("-------- %s: cpu[%u] step1\n", __func__, cpu);
         ret = __smpboot_create_thread(plug_thread, cpu);
         if (ret) {
             smpboot_destroy_threads(plug_thread);
