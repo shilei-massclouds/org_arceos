@@ -110,7 +110,7 @@ int kthread_stop_put(struct task_struct *k)
 static unsigned int
 cl_select_cpu(void)
 {
-#if 0
+#if 1
     // NOTE: Just for test. We should select any one.
     if (cpu_online(7)) {
         return 7;

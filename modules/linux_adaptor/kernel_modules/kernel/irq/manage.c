@@ -82,7 +82,7 @@ void enable_percpu_irq(unsigned int irq, unsigned int type)
     unsigned long flags;
     struct irq_desc *desc = irq_get_desc_lock(irq, &flags, IRQ_GET_DESC_CHECK_PERCPU);
 
-    printk("%s: step1 irq(%u) type(%u)\n", __func__, irq, type);
+    printk("%s: step1 cpu[%u] irq(%u) type(%u)\n", __func__, cpu, irq, type);
     if (!desc)
         return;
 

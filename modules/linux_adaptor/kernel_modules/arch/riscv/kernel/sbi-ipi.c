@@ -34,6 +34,7 @@ static void sbi_ipi_handle(struct irq_desc *desc)
 
 static int sbi_ipi_starting_cpu(unsigned int cpu)
 {
+    printk("%s: cpu[%u] sbi_ipi_virq[%u]\n", __func__, cpu, sbi_ipi_virq);
 	enable_percpu_irq(sbi_ipi_virq, irq_get_trigger_type(sbi_ipi_virq));
 	return 0;
 }
@@ -58,6 +59,7 @@ void __init sbi_ipi_init(void)
 		pr_err("unable to create INTC IRQ mapping\n");
 		return;
 	}
+    printk("%s: sbi_ipi_virq[%u]\n", __func__, sbi_ipi_virq);
 
 	virq = ipi_mux_create(BITS_PER_BYTE, sbi_send_ipi);
 	if (virq <= 0) {

@@ -26,8 +26,9 @@ pub const MAX_IRQ_COUNT: usize = 1024;
 pub const TIMER_IRQ_NUM: usize = S_TIMER;
 
 macro_rules! with_cause {
-    ($cause: expr, @TIMER => $timer_op: expr, @EXT => $ext_op: expr $(,)?) => {
+    ($cause: expr, @SOFT => $soft_op: expr, @TIMER => $timer_op: expr, @EXT => $ext_op: expr $(,)?) => {
         match $cause {
+            S_SOFT => $soft_op,
             S_TIMER => $timer_op,
             S_EXT => $ext_op,
             _ => panic!("invalid trap cause: {:#x}", $cause),
@@ -49,6 +50,7 @@ pub fn set_enable(scause: usize, _enabled: bool) {
 pub fn register_handler(scause: usize, handler: IrqHandler) -> bool {
     with_cause!(
         scause,
+        @SOFT => crate::irq::register_handler_common(scause & !INTC_IRQ_BASE, handler),
         @TIMER => if !TIMER_HANDLER.is_inited() {
             TIMER_HANDLER.init_once(handler);
             true
@@ -67,6 +69,7 @@ pub fn register_handler(scause: usize, handler: IrqHandler) -> bool {
 pub fn dispatch_irq(scause: usize) {
     with_cause!(
         scause,
+        @SOFT => crate::irq::dispatch_irq_common(scause & !INTC_IRQ_BASE),
         @TIMER => {
             trace!("IRQ: timer");
             TIMER_HANDLER();

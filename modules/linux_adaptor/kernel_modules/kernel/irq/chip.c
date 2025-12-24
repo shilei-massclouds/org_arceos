@@ -759,7 +759,8 @@ int irq_set_chip(unsigned int irq, const struct irq_chip *chip)
 
 void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu)
 {
-    printk("%s: irqchip(%s) cpu[%u]\n", __func__, desc->irq_data.chip->name, cpu);
+    printk("%s: irqchip(%s) cpu[%u] chip[%s]\n",
+           __func__, desc->irq_data.chip->name, cpu, desc->irq_data.chip->name);
     if (desc->irq_data.chip->irq_enable)
         desc->irq_data.chip->irq_enable(&desc->irq_data);
     else

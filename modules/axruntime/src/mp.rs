@@ -67,6 +67,7 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
 
     unsafe {
         notify_cpu_starting(cpu_id);
+        riscv_ipi_enable();
         enable_secondary_cpu(cpu_id);
     }
 
@@ -81,4 +82,5 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
 unsafe extern "C" {
     fn enable_secondary_cpu(cpuid: usize);
     fn notify_cpu_starting(cpuid: usize);
+    fn riscv_ipi_enable();
 }

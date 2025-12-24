@@ -52,10 +52,15 @@ fn prepare_ext_interrupt() {
     // NOTE: Define EXT_IRQ_NUM for various arch in axhal.
     // `Interrupt` bit in `scause`
     const INTC_IRQ_BASE: usize = 1 << (usize::BITS - 1);
+    const SOFT_IRQ_NUM: usize = INTC_IRQ_BASE + 1;
     const EXT_IRQ_NUM: usize = INTC_IRQ_BASE + 9;
 
     axhal::irq::register_handler(EXT_IRQ_NUM, || {
         unsafe { call_handle_arch_irq(EXT_IRQ_NUM as usize) };
+    });
+
+    axhal::irq::register_handler(SOFT_IRQ_NUM, || {
+        unsafe { call_handle_arch_irq(SOFT_IRQ_NUM as usize) };
     });
 }
 

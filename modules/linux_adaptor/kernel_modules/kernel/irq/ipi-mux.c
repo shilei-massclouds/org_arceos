@@ -187,3 +187,34 @@ fail_free_cpu:
     free_percpu(ipi_mux_pcpu);
     return rc;
 }
+
+/**
+ * ipi_mux_process - Process multiplexed virtual IPIs
+ */
+void ipi_mux_process(void)
+{
+    struct ipi_mux_cpu *icpu = this_cpu_ptr(ipi_mux_pcpu);
+    irq_hw_number_t hwirq;
+    unsigned long ipis;
+    unsigned int en;
+
+#if 0
+    /*
+     * Reading enable mask does not need to be ordered as long as
+     * this function is called from interrupt handler because only
+     * the CPU itself can change it's own enable mask.
+     */
+    en = atomic_read(&icpu->enable);
+
+    /*
+     * Clear the IPIs we are about to handle. This pairs with the
+     * atomic_fetch_or_release() in ipi_mux_send_mask().
+     */
+    ipis = atomic_fetch_andnot(en, &icpu->bits) & en;
+
+    for_each_set_bit(hwirq, &ipis, BITS_PER_TYPE(int))
+        generic_handle_domain_irq(ipi_mux_domain, hwirq);
+#endif
+
+    PANIC("");
+}
