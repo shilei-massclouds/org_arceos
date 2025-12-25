@@ -66,6 +66,7 @@ else
 endif
 MTD ?= n
 NVME ?= y
+TRACE_EVENT ?= ext4
 
 DISK_IMG ?= disk.img
 # Filesystem type: fat32, ext2, ext4

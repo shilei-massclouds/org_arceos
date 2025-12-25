@@ -25,6 +25,9 @@
 
 DEFINE_MUTEX(event_mutex);
 
+static LIST_HEAD(ftrace_generic_fields);
+static LIST_HEAD(ftrace_common_fields);
+
 LIST_HEAD(ftrace_events);
 
 #define GFP_TRACE (GFP_KERNEL | __GFP_ZERO)
@@ -90,6 +93,18 @@ void set_trace_status(u32 status)
 {
     global_trace_meta->status = status;
 }
+
+static char bootup_event_buf[COMMAND_LINE_SIZE] __initdata;
+
+static __init int setup_trace_event(char *str)
+{
+    strscpy(bootup_event_buf, str, COMMAND_LINE_SIZE);
+    //trace_set_ring_buffer_expanded(NULL);
+    disable_tracing_selftest("running event tracing");
+
+    return 1;
+}
+early_param("trace_event", setup_trace_event);
 
 u32 get_reader_index(int cpu)
 {
@@ -406,12 +421,13 @@ static __init int event_trace_enable(void)
     register_event_cmds();
 #endif
     pr_warn("%s: Enable trace event here! [", __func__);
-    {
+    if (strlen(bootup_event_buf) > 0) {
         //char filter[] = "ext4_writepages";
         //char filter[] = "mm_filemap_get_pages";
         //char filter[] = "filemap,ext4";
-        char filter[] = "ext4";
-        early_enable_events(tr, filter, false);
+        //char filter[] = "ext4";
+        printk("Filter: %s\n", bootup_event_buf);
+        early_enable_events(tr, bootup_event_buf, false);
     }
     pr_warn("] %s: Enable trace event here!", __func__);
 
@@ -1092,10 +1108,68 @@ static __init int event_trace_memsetup(void)
     return 0;
 }
 
+#define __generic_field(type, item, filter_type)            \
+    ret = __trace_define_field(&ftrace_generic_fields, #type,   \
+                   #item, 0, 0, is_signed_type(type),   \
+                   filter_type, 0, 0);          \
+    if (ret)                            \
+        return ret;
+
+#define __common_field(type, item)                  \
+    ret = __trace_define_field(&ftrace_common_fields, #type,    \
+                   "common_" #item,         \
+                   offsetof(typeof(ent), item),     \
+                   sizeof(ent.item),            \
+                   is_signed_type(type), FILTER_OTHER,  \
+                   0, 0);               \
+    if (ret)                            \
+        return ret;
+
+static int trace_define_generic_fields(void)
+{
+    int ret;
+
+    __generic_field(int, CPU, FILTER_CPU);
+    __generic_field(int, cpu, FILTER_CPU);
+    __generic_field(int, common_cpu, FILTER_CPU);
+    __generic_field(char *, COMM, FILTER_COMM);
+    __generic_field(char *, comm, FILTER_COMM);
+    __generic_field(char *, stacktrace, FILTER_STACKTRACE);
+    __generic_field(char *, STACKTRACE, FILTER_STACKTRACE);
+
+    return ret;
+}
+
+static int trace_define_common_fields(void)
+{
+    int ret;
+    struct trace_entry ent;
+
+    __common_field(unsigned short, type);
+    __common_field(unsigned char, flags);
+    /* Holds both preempt_count and migrate_disable */
+    __common_field(unsigned char, preempt_count);
+    __common_field(int, pid);
+
+    return ret;
+}
+
+/* Init fields which doesn't related to the tracefs */
+static __init int event_trace_init_fields(void)
+{
+    if (trace_define_generic_fields())
+        pr_warn("tracing: Failed to allocated generic fields");
+
+    if (trace_define_common_fields())
+        pr_warn("tracing: Failed to allocate common fields");
+
+    return 0;
+}
+
 void __init trace_event_init(void)
 {
     event_trace_memsetup();
     init_ftrace_syscalls();
     event_trace_enable();
-    //event_trace_init_fields();
+    event_trace_init_fields();
 }

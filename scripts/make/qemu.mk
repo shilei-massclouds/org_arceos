@@ -108,7 +108,7 @@ ifeq ($(GRAPHIC), n)
 endif
 
 qemu_args-$(APPEND) += \
-  -append "earlycon=sbi root=/dev/$(ROOT_DEV) rw console=ttyS0"
+  -append "earlycon=sbi root=/dev/$(ROOT_DEV) rw console=ttyS0 trace_event=$(TRACE_EVENT)"
 
 ifeq ($(QEMU_LOG), y)
   qemu_args-y += -D qemu.log -d in_asm,int,mmu,pcall,cpu_reset,guest_errors

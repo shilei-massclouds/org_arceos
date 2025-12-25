@@ -60,6 +60,7 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     early_init_dt_scan_chosen(boot_command_line);
 
     setup_arch(NULL /* cmdline_p */);
+    parse_early_param();
 
     // Only for riscv64
     sbi_init();
@@ -107,8 +108,6 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
     init_IRQ();
 
     call_function_init();
-
-    parse_early_param();
 
     clinux_started = 1;
 
