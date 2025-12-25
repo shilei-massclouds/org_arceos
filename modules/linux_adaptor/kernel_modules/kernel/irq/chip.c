@@ -785,3 +785,60 @@ int irq_chip_set_affinity_parent(struct irq_data *data,
 
     return -ENOSYS;
 }
+
+void irq_percpu_disable(struct irq_desc *desc, unsigned int cpu)
+{
+    if (desc->irq_data.chip->irq_disable)
+        desc->irq_data.chip->irq_disable(&desc->irq_data);
+    else
+        desc->irq_data.chip->irq_mask(&desc->irq_data);
+    cpumask_clear_cpu(cpu, desc->percpu_enabled);
+}
+
+/**
+ * handle_percpu_devid_irq - Per CPU local irq handler with per cpu dev ids
+ * @desc:   the interrupt description structure for this irq
+ *
+ * Per CPU interrupts on SMP machines without locking requirements. Same as
+ * handle_percpu_irq() above but with the following extras:
+ *
+ * action->percpu_dev_id is a pointer to percpu variables which
+ * contain the real device id for the cpu on which this handler is
+ * called
+ */
+void handle_percpu_devid_irq(struct irq_desc *desc)
+{
+    struct irq_chip *chip = irq_desc_get_chip(desc);
+    struct irqaction *action = desc->action;
+    unsigned int irq = irq_desc_get_irq(desc);
+    irqreturn_t res;
+
+#if 0
+    /*
+     * PER CPU interrupts are not serialized. Do not touch
+     * desc->tot_count.
+     */
+    __kstat_incr_irqs_this_cpu(desc);
+#endif
+
+    if (chip->irq_ack)
+        chip->irq_ack(&desc->irq_data);
+
+    if (likely(action)) {
+        trace_irq_handler_entry(irq, action);
+        res = action->handler(irq, raw_cpu_ptr(action->percpu_dev_id));
+        trace_irq_handler_exit(irq, action, res);
+    } else {
+        unsigned int cpu = smp_processor_id();
+        bool enabled = cpumask_test_cpu(cpu, desc->percpu_enabled);
+
+        if (enabled)
+            irq_percpu_disable(desc, cpu);
+
+        pr_err_once("Spurious%s percpu IRQ%u on CPU%u\n",
+                enabled ? " and unmasked" : "", irq, cpu);
+    }
+
+    if (chip->irq_eoi)
+        chip->irq_eoi(&desc->irq_data);
+}

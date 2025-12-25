@@ -41,13 +41,56 @@ static int ipi_virq_base __ro_after_init;
 static int nr_ipi __ro_after_init = IPI_MAX;
 static DEFINE_PER_CPU_READ_MOSTLY(int, ipi_dummy_dev);
 
+static void ipi_stop(void)
+{
+    set_cpu_online(smp_processor_id(), false);
+    while (1)
+        wait_for_interrupt();
+}
+
+static inline void ipi_cpu_crash_stop(unsigned int cpu, struct pt_regs *regs)
+{
+    unreachable();
+}
+
 static irqreturn_t handle_IPI(int irq, void *data)
 {
     unsigned int cpu = smp_processor_id();
     int ipi = irq - ipi_virq_base;
 
-    printk("%s: ipi type(%u)\n", __func__, ipi);
-    PANIC("");
+    switch (ipi) {
+    case IPI_RESCHEDULE:
+        scheduler_ipi();
+        break;
+    case IPI_CALL_FUNC:
+        generic_smp_call_function_interrupt();
+        break;
+    case IPI_CPU_STOP:
+        ipi_stop();
+        break;
+    case IPI_CPU_CRASH_STOP:
+        ipi_cpu_crash_stop(cpu, get_irq_regs());
+        break;
+    case IPI_IRQ_WORK:
+        irq_work_run();
+        break;
+#ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST
+    case IPI_TIMER:
+        tick_receive_broadcast();
+        break;
+#endif
+    case IPI_CPU_BACKTRACE:
+        nmi_cpu_backtrace(get_irq_regs());
+        break;
+    case IPI_KGDB_ROUNDUP:
+        kgdb_nmicallback(cpu, get_irq_regs());
+        break;
+    default:
+        pr_warn("CPU%d: unhandled IPI%d\n", cpu, ipi);
+        break;
+    }
+
+    return IRQ_HANDLED;
 }
 
 int riscv_hartid_to_cpuid(unsigned long hartid)

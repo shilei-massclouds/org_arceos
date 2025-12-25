@@ -34,3 +34,24 @@ bool irq_work_queue(struct irq_work *work)
 #endif
     PANIC("");
 }
+
+/*
+ * hotplug calls this through:
+ *  hotplug_cfd() -> flush_smp_call_function_queue()
+ */
+void irq_work_run(void)
+{
+#if 0
+    irq_work_run_list(this_cpu_ptr(&raised_list));
+    if (!IS_ENABLED(CONFIG_PREEMPT_RT))
+        irq_work_run_list(this_cpu_ptr(&lazy_list));
+    else
+        wake_irq_workd();
+#endif
+    PANIC("");
+}
+
+void irq_work_single(void *arg)
+{
+    PANIC("");
+}

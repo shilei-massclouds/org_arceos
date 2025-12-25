@@ -1055,3 +1055,15 @@ int timers_prepare_cpu(unsigned int cpu)
     pr_notice("%s: No impl.", __func__);
     return 0;
 }
+
+int tick_receive_broadcast(void)
+{
+    pr_notice("%s: No impl.", __func__);
+    return 0;
+}
+
+bool nmi_cpu_backtrace(struct pt_regs *regs)
+{
+    pr_notice("%s: No impl.", __func__);
+    return false;
+}

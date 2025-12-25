@@ -3151,9 +3151,17 @@ __acquires(&pool->lock)
 
 	lockdep_copy_map(&lockdep_map, &work->lockdep_map);
 #endif
+
 	/* ensure we're on the correct CPU */
+#if 0
 	WARN_ON_ONCE(!(pool->flags & POOL_DISASSOCIATED) &&
 		     raw_smp_processor_id() != pool->cpu);
+#else
+	if (!(pool->flags & POOL_DISASSOCIATED)
+        && raw_smp_processor_id() != pool->cpu) {
+        pr_err("%s: Note: Fix it about 'POOL_DISASSOCIATED' check!", __func__);
+    }
+#endif
 
 	/* claim and dequeue */
 	debug_work_deactivate(work);

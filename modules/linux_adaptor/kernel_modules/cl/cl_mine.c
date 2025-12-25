@@ -310,7 +310,6 @@ CL_MINE(kmem_cache_free_bulk)
 CL_MINE(handle_bad_irq)
 
 // irq-riscv-intc
-CL_MINE(handle_percpu_devid_irq)
 CL_MINE(irq_domain_xlate_onecell)
 CL_MINE(acpi_set_irq_model)
 CL_MINE(riscv_acpi_get_gsi_domain_id)

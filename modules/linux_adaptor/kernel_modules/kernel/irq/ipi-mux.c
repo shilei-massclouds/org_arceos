@@ -198,7 +198,6 @@ void ipi_mux_process(void)
     unsigned long ipis;
     unsigned int en;
 
-#if 0
     /*
      * Reading enable mask does not need to be ordered as long as
      * this function is called from interrupt handler because only
@@ -214,7 +213,4 @@ void ipi_mux_process(void)
 
     for_each_set_bit(hwirq, &ipis, BITS_PER_TYPE(int))
         generic_handle_domain_irq(ipi_mux_domain, hwirq);
-#endif
-
-    PANIC("");
 }
