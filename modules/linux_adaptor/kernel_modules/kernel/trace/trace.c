@@ -341,7 +341,6 @@ __init static int tracer_alloc_buffers(void)
 
     raw_spin_lock_init(&global_trace.start_lock);
 
-#if 0
     /*
      * The prepare callbacks allocates some memory for the ring buffer. We
      * don't free the buffer if the CPU goes down. If we were to free
@@ -353,8 +352,6 @@ __init static int tracer_alloc_buffers(void)
                       NULL);
     if (ret < 0)
         goto out_free_cpumask;
-#endif
-    pr_notice("%s: No impl.", __func__);
 
     /* Used for event triggers */
     ret = -ENOMEM;

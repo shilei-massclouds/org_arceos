@@ -1152,7 +1152,9 @@ static int ext4_write_begin(struct file *file, struct address_space *mapping,
 	if (unlikely(ext4_forced_shutdown(inode->i_sb)))
 		return -EIO;
 
+    printk("%s: ------------------- \n", __func__);
 	trace_ext4_write_begin(inode, pos, len);
+    printk("%s: +++++++++++++++++++ \n", __func__);
 	/*
 	 * Reserve one block more for addition to orphan list in case
 	 * we allocate blocks but write fails for some reason

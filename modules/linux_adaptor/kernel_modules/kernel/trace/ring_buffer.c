@@ -29,6 +29,9 @@
 #include "trace.h"
 #include "adaptor.h"
 
+static struct ring_buffer_per_cpu *
+rb_allocate_cpu_buffer(struct trace_buffer *buffer, long nr_pages, int cpu);
+
 /*
  * The "absolute" timestamp in the buffer is only 59 bits.
  * If a clock has the 5 MSBs set, it needs to be saved and
@@ -1168,15 +1171,34 @@ int trace_rb_cpu_prepare(unsigned int cpu, struct hlist_node *node)
     int cpu_i;
     unsigned long nr_pages;
 
-    printk("%s: step1\n", __func__);
     buffer = container_of(node, struct trace_buffer, node);
-    printk("%s: step2 buffer(%lx)\n", __func__, buffer);
     if (cpumask_test_cpu(cpu, buffer->cpumask))
         return 0;
 
-    printk("%s: step3\n", __func__);
-
-    PANIC("");
+    nr_pages = 0;
+    nr_pages_same = 1;
+    /* check if all cpu sizes are same */
+    for_each_buffer_cpu(buffer, cpu_i) {
+        /* fill in the size from first enabled cpu */
+        if (nr_pages == 0)
+            nr_pages = buffer->buffers[cpu_i]->nr_pages;
+        if (nr_pages != buffer->buffers[cpu_i]->nr_pages) {
+            nr_pages_same = 0;
+            break;
+        }
+    }
+    /* allocate minimum pages, user can later expand it */
+    if (!nr_pages_same)
+        nr_pages = 2;
+    buffer->buffers[cpu] =
+        rb_allocate_cpu_buffer(buffer, nr_pages, cpu);
+    if (!buffer->buffers[cpu]) {
+        WARN(1, "failed to allocate ring buffer on CPU %u\n",
+             cpu);
+        return -ENOMEM;
+    }
+    smp_wmb();
+    cpumask_set_cpu(cpu, buffer->cpumask);
     return 0;
 }
 

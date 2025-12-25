@@ -132,3 +132,24 @@ struct task_struct * __init fork_idle(int cpu)
     pr_notice("%s: No impl.", __func__);
     return task;
 }
+
+void __put_task_struct(struct task_struct *tsk)
+{
+#if 0
+    WARN_ON(!tsk->exit_state);
+    WARN_ON(refcount_read(&tsk->usage));
+    WARN_ON(tsk == current);
+
+    sched_ext_free(tsk);
+    io_uring_free(tsk);
+    cgroup_free(tsk);
+    task_numa_free(tsk, true);
+    security_task_free(tsk);
+    exit_creds(tsk);
+    delayacct_tsk_free(tsk);
+    put_signal_struct(tsk->signal);
+    sched_core_free(tsk);
+    free_task(tsk);
+#endif
+    pr_err("%s: No impl.", __func__);
+}
