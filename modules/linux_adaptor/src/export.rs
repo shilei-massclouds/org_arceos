@@ -87,11 +87,6 @@ pub extern "C" fn cl_kthread_new(
         0x2000,     // KThread stack size must be compatible with linux.
     );
 
-    //let cpu = unsafe {
-    //    cl_task_cpu(task_ptr as usize)
-    //};
-    //task.set_cpumask(axtask::AxCpuMask::one_shot(cpu));
-    //let task = axtask::spawn_task(task);
     let task = task.into_arc();
     debug!("Kthread task pointer({:#x})", task_ptr);
     task.set_private(task_ptr);
@@ -133,7 +128,6 @@ pub extern "C" fn cl_get_ksym(addr: usize, s: *mut u8, size: usize) {
 
 unsafe extern "C" {
     static cl_fixaddr_start: usize;
-    fn cl_task_cpu(task_ptr: usize) -> usize;
 }
 
 /// Set fixmap.
