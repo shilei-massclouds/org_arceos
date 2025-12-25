@@ -410,8 +410,7 @@ static __init int event_trace_enable(void)
         //char filter[] = "ext4_writepages";
         //char filter[] = "mm_filemap_get_pages";
         //char filter[] = "filemap,ext4";
-        //char filter[] = "ext4";
-        char filter[] = "ext4_write_begin";
+        char filter[] = "ext4";
         early_enable_events(tr, filter, false);
     }
     pr_warn("] %s: Enable trace event here!", __func__);

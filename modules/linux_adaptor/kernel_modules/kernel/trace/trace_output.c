@@ -417,7 +417,7 @@ enum print_line_t print_event_fields(struct trace_iterator *iter,
 
     trace_seq_printf(&iter->seq, "%s:", trace_event_name(call));
 
-    printk("%s: event name(%s)(%u)\n", __func__, trace_event_name(call), call->event.type);
+    pr_debug("%s: event name(%s)(%u)", __func__, trace_event_name(call), call->event.type);
     if (head && !list_empty(head))
         print_fields(iter, call, head);
     else

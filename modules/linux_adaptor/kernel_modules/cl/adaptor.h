@@ -41,7 +41,7 @@ do { \
     printk("\nPANIC: %s(%s:%d) %s\n", __FUNCTION__, __FILE__, __LINE__, args); \
     printk("\n########################\n"); \
     dump_stack(); \
-    /* end_global_trace(); */ \
+    end_global_trace(); \
     cl_terminate(); \
 } while (0)
 

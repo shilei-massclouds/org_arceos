@@ -18,7 +18,7 @@
 #include "../drivers/base/base.h"
 #include "adaptor.h"
 
-#define DP1000
+//#define DP1000
 
 //#define TEST_BLOCK
 #define TEST_EXT4
@@ -133,7 +133,7 @@ int clinux_init(unsigned long hartid, phys_addr_t dt_phys)
 #ifdef TEST_EXT4
     printk("====== Ext4 test ======\n");
     test_ext4();
-    //ftrace_dump(DUMP_ALL);
+    ftrace_dump(DUMP_ALL);
     PANIC("Reach here!");
 #endif
 
