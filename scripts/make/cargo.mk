@@ -32,7 +32,7 @@ endef
 clippy_args := -A unsafe_op_in_unsafe_fn
 
 define cargo_clippy
-  $(call run_cmd,cargo clippy,--all-features --workspace --exclude axlog $(1) $(verbose) -- $(clippy_args))
+  $(call run_cmd,cargo clippy,--all-features --workspace --exclude axlog --exclude axplat-riscv64-dp1000 $(1) $(verbose) -- $(clippy_args))
   $(call run_cmd,cargo clippy,-p axlog $(1) $(verbose) -- $(clippy_args))
 endef
 
