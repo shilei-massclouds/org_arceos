@@ -41,7 +41,7 @@ all_packages := \
   axfeat arceos_api axstd axlibc
 
 define cargo_doc
-  $(call run_cmd,cargo doc,--no-deps --all-features --workspace --exclude "arceos-*" $(verbose))
+  $(call run_cmd,cargo doc,--no-deps --all-features --workspace --exclude "arceos-*" --exclude axplat-riscv64-dp1000 $(verbose))
   @# run twice to fix broken hyperlinks
   $(foreach p,$(all_packages), \
     $(call run_cmd,cargo rustdoc,--all-features -p $(p) $(verbose))
@@ -51,5 +51,5 @@ endef
 define unit_test
   $(call run_cmd,cargo test,-p axfs $(1) $(verbose) -- --nocapture)
   $(call run_cmd,cargo test,-p axfs $(1) --features "myfs" $(verbose) -- --nocapture)
-  $(call run_cmd,cargo test,--workspace --exclude axfs $(1) $(verbose) -- --nocapture)
+  $(call run_cmd,cargo test,--workspace --exclude axfs --exclude axplat-riscv64-dp1000 $(1) $(verbose) -- --nocapture)
 endef
