@@ -30,6 +30,9 @@ members = [
     "examples/httpclient",
     "examples/httpserver",
     "examples/shell",
+    "examples/fstest",
+
+    "platforms/axplat-riscv64-dp1000",
 ]
 
 [workspace.package]
@@ -89,6 +92,7 @@ axplat-aarch64-qemu-virt = { git = "https://github.com/arceos-org/axplat_crates.
 axplat-aarch64-raspi = { git = "https://github.com/arceos-org/axplat_crates.git", tag = "dev-v03" }
 axplat-loongarch64-qemu-virt = { git = "https://github.com/arceos-org/axplat_crates.git", tag = "dev-v03" }
 axplat-riscv64-qemu-virt = { git = "https://github.com/arceos-org/axplat_crates.git", tag = "dev-v03" }
+axplat-riscv64-dp1000 = { path = "platforms/axplat-riscv64-dp1000" }
 axplat-x86-pc = { git = "https://github.com/arceos-org/axplat_crates.git", tag = "dev-v03" }
 axpoll = "0.1"
 bindgen = "0.72"

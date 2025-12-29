@@ -1,0 +1,17 @@
+[package]
+name = "arceos-fstest"
+version = "0.1.0"
+edition.workspace = true
+authors = ["Yuekai Jia <equation618@gmail.com>"]
+
+[features]
+riscv64-dp1000 = ["dep:axplat-riscv64-dp1000"]
+
+default = ["riscv64-dp1000"]
+
+[dependencies]
+cfg-if.workspace = true
+axstd = { workspace = true, features = ["myplat", "smp"], optional = true }
+
+[target.'cfg(target_arch = "riscv64")'.dependencies]
+axplat-riscv64-dp1000 = { workspace = true, features = ["smp", "irq"], optional = true }
