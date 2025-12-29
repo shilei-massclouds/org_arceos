@@ -1,9 +1,11 @@
 #!/bin/sh
 
-make clippy
-make clippy ARCH=x86_64
-make clippy ARCH=aarch64
-make clippy ARCH=riscv64
-#make clippy ARCH=loongarch64
-make doc_check_missing ARCH=x86_64
-make doc_check_missing ARCH=aarch64
+make ARCH=riscv64 defconfig
+make ARCH=riscv64 A=examples/task/affinity  run SMP=8
+make ARCH=riscv64 A=examples/task/irq       run SMP=8
+make ARCH=riscv64 A=examples/task/parallel  run SMP=8
+make ARCH=riscv64 A=examples/task/priority  run SMP=8
+make ARCH=riscv64 A=examples/task/sleep     run SMP=8
+make ARCH=riscv64 A=examples/task/tls       run SMP=8
+make ARCH=riscv64 A=examples/task/wait_queue run SMP=8
+make ARCH=riscv64 A=examples/task/yield     run SMP=8
