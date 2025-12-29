@@ -34,8 +34,8 @@
 #     - `GW`: Gateway IPv4 address (default is 10.0.2.2 for QEMU user netdev)
 
 # General options
-ARCH ?= riscv64
-MYPLAT ?= axplat-riscv64-dp1000
+ARCH ?= #riscv64
+MYPLAT ?= #axplat-riscv64-dp1000
 PLAT_CONFIG ?=
 SMP ?=
 MODE ?= release
