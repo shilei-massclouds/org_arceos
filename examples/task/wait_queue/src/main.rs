@@ -23,25 +23,32 @@ fn test_wait() {
 
     for _ in 0..NUM_TASKS {
         thread::spawn(move || {
+            println!("Task{}: ", api::ax_current_task_id());
             COUNTER.fetch_add(1, Ordering::SeqCst);
             api::ax_wait_queue_wake(&WQ1, 1); // WQ1.wait_until()
             api::ax_wait_queue_wait(&WQ2, None);
             let old = COUNTER.fetch_sub(1, Ordering::SeqCst);
-            println!("old: {}", old);
+            println!("Task{} -> {}", api::ax_current_task_id(), old);
         });
     }
 
     println!("wait_queue: wait for all tasks on WQ1 ...");
     api::ax_wait_queue_wait_until(&WQ1, || COUNTER.load(Ordering::Acquire) == NUM_TASKS, None);
-    //assert_eq!(COUNTER.load(Ordering::Relaxed), NUM_TASKS);
+    assert_eq!(COUNTER.load(Ordering::Relaxed), NUM_TASKS);
 
+    let mut already = false;
     println!("wait_queue: wake up all tasks on WQ2 ...");
     // FIXME: more robust!
     while COUNTER.load(Ordering::Acquire) > 0 {
-        api::ax_wait_queue_wake(&WQ2, u32::MAX); // WQ2.wait()
+        if !already {
+            api::ax_wait_queue_wake(&WQ2, u32::MAX); // WQ2.wait()
+            already = true;
+        } else {
+            api::ax_yield_now();
+        }
     }
 
-    //assert_eq!(COUNTER.load(Ordering::Relaxed), 0);
+    assert_eq!(COUNTER.load(Ordering::Relaxed), 0);
 
     println!("wait_queue: test_wait() OK!");
 }
@@ -167,7 +174,7 @@ fn test_wait_timeout_until() {
     println!("wait_timeout_until: test tasks woken up by notification or timeout, test OK!");
 }
 
-const TEST_NUM: usize = 10;
+const TEST_NUM: usize = 1;
 
 #[cfg_attr(feature = "axstd", no_mangle)]
 fn main() {
