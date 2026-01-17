@@ -102,16 +102,16 @@ jobs:
     # Test custom config file
     - name: Build helloworld for x86_64-pc-oslab
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/helloworld
+      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/helloworld ARCH=x86_64
     - name: Build httpclient for x86_64-pc-oslab
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/httpclient FEATURES=page-alloc-4g,driver-ixgbe
+      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/httpclient FEATURES=page-alloc-4g,driver-ixgbe ARCH=x86_64
     - name: Build httpserver for x86_64-pc-oslab
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/httpserver FEATURES=page-alloc-4g,driver-ixgbe
+      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/httpserver FEATURES=page-alloc-4g,driver-ixgbe ARCH=x86_64
     - name: Build shell for x86_64-pc-oslab
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/shell FEATURES=page-alloc-4g,driver-ramdisk
+      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/shell FEATURES=page-alloc-4g,driver-ramdisk ARCH=x86_64
 
     # Test app `helloworld-myplat` for various platforms
     - name: Build helloworld-myplat for x86-pc
@@ -207,16 +207,16 @@ jobs:
       with:
         arch: x86_64
     - name: Setup x86_64-pc-oslab for C apps
-      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml defconfig
+      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml defconfig ARCH=x86_64
     - name: Build helloworld-c for x86_64-pc-oslab
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/helloworld-c
+      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/helloworld-c ARCH=x86_64
     - name: Build httpclient-c for x86_64-pc-oslab
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/httpclient-c FEATURES=page-alloc-4g,driver-ixgbe
+      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/httpclient-c FEATURES=page-alloc-4g,driver-ixgbe ARCH=x86_64
     - name: Build httpserver-c for x86_64-pc-oslab
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/httpserver-c FEATURES=page-alloc-4g,driver-ixgbe
+      run: make PLAT_CONFIG=$(pwd)/configs/custom/x86_64-pc-oslab.toml A=examples/httpserver-c FEATURES=page-alloc-4g,driver-ixgbe ARCH=x86_64
 
   # Necessary checks for macOS builds
   build-for-macos:
@@ -255,17 +255,17 @@ jobs:
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
       run: make PLATFORM=x86_64-pc-oslab A=examples/shell FEATURES=page-alloc-4g,driver-ramdisk ARCH=x86_64
 
-    - run: make PLATFORM=aarch64-raspi4 defconfig
+    - run: make PLATFORM=aarch64-raspi4 defconfig ARCH=aarch64
     - name: Build helloworld for aarch64-raspi4
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLATFORM=aarch64-raspi4 SMP=4 A=examples/helloworld
+      run: make PLATFORM=aarch64-raspi4 SMP=4 A=examples/helloworld ARCH=aarch64
 
-    - run: make PLATFORM=aarch64-bsta1000b defconfig
+    - run: make PLATFORM=aarch64-bsta1000b defconfig ARCH=aarch64
     - name: Build helloworld for aarch64-bsta1000b
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLATFORM=aarch64-bsta1000b A=examples/helloworld SMP=8
+      run: make PLATFORM=aarch64-bsta1000b A=examples/helloworld SMP=8 ARCH=aarch64
 
-    - run: make PLATFORM=aarch64-phytium-pi defconfig
+    - run: make PLATFORM=aarch64-phytium-pi defconfig ARCH=aarch64
     - name: Build helloworld for aarch64-phytium-pi
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLATFORM=aarch64-phytium-pi A=examples/helloworld SMP=4
+      run: make PLATFORM=aarch64-phytium-pi A=examples/helloworld SMP=4 ARCH=aarch64
