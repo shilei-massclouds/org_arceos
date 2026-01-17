@@ -37,10 +37,10 @@
 #     - `GW`: Gateway IPv4 address (default is 10.0.2.2 for QEMU user netdev)
 
 # General options
-ARCH ?= x86_64
+ARCH ?= riscv64
 MYPLAT ?=
 PLAT_CONFIG ?=
-SMP ?= 1
+SMP ?= 8
 MODE ?= release
 LOG ?= warn
 V ?=
@@ -74,6 +74,9 @@ VHOST ?= n
 # Network options
 IP ?= 10.0.2.15
 GW ?= 10.0.2.2
+
+# Linux kernel modules support?
+LKM ?= y
 
 # App type
 ifeq ($(wildcard $(APP)),)
@@ -119,6 +122,7 @@ export AX_LOG=$(LOG)
 export AX_TARGET=$(TARGET)
 export AX_IP=$(IP)
 export AX_GW=$(GW)
+export AX_LKM=$(LKM)
 
 ifneq ($(filter $(MAKECMDGOALS),unittest unittest_no_fail_fast clippy doc doc_check_missing),)
   # When running unit tests or other tests unrelated to a specific platform,

@@ -18,6 +18,18 @@ fn gen_linker_script(arch: &str, platform: &str) -> Result<()> {
     } else {
         arch
     };
+
+    // target/<target_triple>/<mode>/build/axhal-xxxx/out
+    let out_dir = std::env::var("OUT_DIR").unwrap();
+    // target/<target_triple>/<mode>/linker_xxxx.lds
+    let out_path = Path::new(&out_dir).join("../../..").join(fname);
+
+    let lkm = std::env::var("AX_LKM").unwrap();
+    if lkm.as_str() == "y" {
+        std::fs::copy("linux.lds", &out_path)?;
+        return Ok(());
+    }
+
     let ld_content = std::fs::read_to_string("linker.lds.S")?;
     let ld_content = ld_content.replace("%ARCH%", output_arch);
     let ld_content = ld_content.replace(
@@ -26,10 +38,6 @@ fn gen_linker_script(arch: &str, platform: &str) -> Result<()> {
     );
     let ld_content = ld_content.replace("%CPU_NUM%", &format!("{}", axconfig::plat::MAX_CPU_NUM));
 
-    // target/<target_triple>/<mode>/build/axhal-xxxx/out
-    let out_dir = std::env::var("OUT_DIR").unwrap();
-    // target/<target_triple>/<mode>/linker_xxxx.lds
-    let out_path = Path::new(&out_dir).join("../../..").join(fname);
     std::fs::write(out_path, ld_content)?;
     Ok(())
 }
