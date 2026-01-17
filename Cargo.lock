@@ -730,8 +730,6 @@ dependencies = [
 [[package]]
 name = "axplat-riscv64-qemu-virt"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb75b0b52fd2289ec461a3ea3aba978cb943fb07fb023d5edc2c8efe079eb724"
 dependencies = [
  "axconfig-macros",
  "axcpu",

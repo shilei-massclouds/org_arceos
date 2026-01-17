@@ -37,10 +37,10 @@
 #     - `GW`: Gateway IPv4 address (default is 10.0.2.2 for QEMU user netdev)
 
 # General options
-ARCH ?= x86_64
+ARCH ?= riscv64
 MYPLAT ?=
 PLAT_CONFIG ?=
-SMP ?=
+SMP ?= 8
 MODE ?= release
 LOG ?= warn
 V ?=

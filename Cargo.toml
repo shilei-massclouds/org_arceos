@@ -69,3 +69,6 @@ axipi = { path = "modules/axipi" }
 
 [profile.release]
 lto = true
+
+[patch.crates-io]
+axplat-riscv64-qemu-virt = { path = "platforms/axplat-riscv64-qemu-virt" }
