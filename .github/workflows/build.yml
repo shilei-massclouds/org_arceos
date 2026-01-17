@@ -244,16 +244,16 @@ jobs:
 
     - name: Build helloworld
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make A=examples/helloworld
+      run: make A=examples/helloworld ARCH=x86_64
 
     # Test for other platforms
-    - run: make PLATFORM=x86_64-pc-oslab defconfig
+    - run: make PLATFORM=x86_64-pc-oslab defconfig ARCH=x86_64
     - name: Build helloworld for x86_64-pc-oslab
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLATFORM=x86_64-pc-oslab A=examples/helloworld
+      run: make PLATFORM=x86_64-pc-oslab A=examples/helloworld ARCH=x86_64
     - name: Build shell for x86_64-pc-oslab
       continue-on-error: ${{ matrix.rust-toolchain == 'nightly' }}
-      run: make PLATFORM=x86_64-pc-oslab A=examples/shell FEATURES=page-alloc-4g,driver-ramdisk
+      run: make PLATFORM=x86_64-pc-oslab A=examples/shell FEATURES=page-alloc-4g,driver-ramdisk ARCH=x86_64
 
     - run: make PLATFORM=aarch64-raspi4 defconfig
     - name: Build helloworld for aarch64-raspi4

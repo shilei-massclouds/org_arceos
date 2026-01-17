@@ -16,7 +16,7 @@ jobs:
       with:
         toolchain: ${{ env.rust-toolchain }}
     - name: Run unit tests
-      run: make unittest_no_fail_fast
+      run: make unittest_no_fail_fast ARCH=x86_64
 
   app-test:
     runs-on: ${{ matrix.os }}
