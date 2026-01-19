@@ -13,3 +13,4 @@ rusty-tags.vi
 *.swp
 tags
 *.a
+obj_list.txt

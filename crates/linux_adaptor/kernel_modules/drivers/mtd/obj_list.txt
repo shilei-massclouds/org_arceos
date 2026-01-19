@@ -1,1 +1,0 @@
-drivers/mtd/mtdcore.o drivers/mtd/mtdpart.o drivers/mtd/mtdchar.o drivers/mtd/mtd_blkdevs.o drivers/mtd/mtdblock.o drivers/mtd/spi-nor/core.o drivers/mtd/spi-nor/sfdp.o drivers/mtd/spi-nor/swp.o drivers/mtd/spi-nor/otp.o drivers/mtd/spi-nor/issi.o

@@ -1,1 +1,0 @@
-init/do_mounts.o init/main.o

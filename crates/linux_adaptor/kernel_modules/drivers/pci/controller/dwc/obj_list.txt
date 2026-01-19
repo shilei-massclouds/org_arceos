@@ -1,1 +1,0 @@
-drivers/pci/controller/dwc/pcie-ultrarisc.o drivers/pci/controller/dwc/pcie-designware-host.o drivers/pci/controller/dwc/pcie-designware.o

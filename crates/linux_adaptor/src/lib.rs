@@ -8,5 +8,13 @@
 
 /// Initialize adaptor for linux modules.
 pub fn init(hartid: usize, dtb: usize) {
+    unsafe {
+        legacy_putchar(b'A');
+        legacy_putchar(b'\n');
+    }
     //info!("Initialize Linux Adaptor [hartid: {} dtb_pa {:#X}] ..", hartid, dtb);
+}
+
+unsafe extern "C" {
+    fn legacy_putchar(ch: u8);
 }

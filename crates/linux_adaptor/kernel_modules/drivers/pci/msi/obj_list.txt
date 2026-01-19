@@ -1,1 +1,0 @@
-drivers/pci/msi/api.o drivers/pci/msi/msi.o drivers/pci/msi/irqdomain.o drivers/pci/msi/pcidev_msi.o

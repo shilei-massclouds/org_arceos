@@ -1,1 +1,0 @@
-drivers/firmware/dmi_scan.o

@@ -1,1 +1,0 @@
-drivers/power/reset/gpio-restart.o drivers/power/reset/gpio-poweroff.o

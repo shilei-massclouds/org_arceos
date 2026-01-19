@@ -1,1 +1,0 @@
-drivers/clk/clk-devres.o drivers/clk/clkdev.o drivers/clk/clk.o drivers/clk/sifive-prci.o drivers/clk/wrpll-cln28hpc.o

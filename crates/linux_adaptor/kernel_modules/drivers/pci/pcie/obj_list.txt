@@ -1,1 +1,0 @@
-drivers/pci/pcie/aspm.o drivers/pci/pcie/rcec.o

@@ -1,1 +1,0 @@
-drivers/mtd/spi-nor/core.o drivers/mtd/spi-nor/sfdp.o drivers/mtd/spi-nor/swp.o drivers/mtd/spi-nor/otp.o drivers/mtd/spi-nor/issi.o

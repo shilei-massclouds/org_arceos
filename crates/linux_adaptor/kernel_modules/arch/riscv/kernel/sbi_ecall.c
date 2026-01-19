@@ -2,8 +2,8 @@
 /* Copyright (c) 2024 Rivos Inc. */
 
 #include <asm/sbi.h>
-#define CREATE_TRACE_POINTS
-#include <asm/trace.h>
+//#define CREATE_TRACE_POINTS
+//#include <asm/trace.h>
 
 long __sbi_base_ecall(int fid)
 {
@@ -24,7 +24,7 @@ struct sbiret __sbi_ecall(unsigned long arg0, unsigned long arg1,
 {
 	struct sbiret ret;
 
-	trace_sbi_call(ext, fid);
+	//trace_sbi_call(ext, fid);
 
 	register uintptr_t a0 asm ("a0") = (uintptr_t)(arg0);
 	register uintptr_t a1 asm ("a1") = (uintptr_t)(arg1);
@@ -41,7 +41,7 @@ struct sbiret __sbi_ecall(unsigned long arg0, unsigned long arg1,
 	ret.error = a0;
 	ret.value = a1;
 
-	trace_sbi_return(ext, ret.error, ret.value);
+	//trace_sbi_return(ext, ret.error, ret.value);
 
 	return ret;
 }
