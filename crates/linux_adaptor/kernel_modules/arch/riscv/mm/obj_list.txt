@@ -1,0 +1,1 @@
+arch/riscv/mm/init.o arch/riscv/mm/dma-noncoherent.o arch/riscv/mm/cacheflush.o

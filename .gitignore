@@ -11,3 +11,5 @@ rusty-tags.vi
 /.project*
 /.axconfig.*
 *.swp
+tags
+*.a

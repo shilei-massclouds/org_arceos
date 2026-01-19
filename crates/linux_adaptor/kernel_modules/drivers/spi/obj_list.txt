@@ -1,0 +1,1 @@
+drivers/spi/spi.o drivers/spi/spi-mem.o drivers/spi/spi-sifive.o

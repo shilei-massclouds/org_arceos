@@ -83,3 +83,7 @@ optional = true
 [dependencies.sbi-rt]
 version = "0.0.3"
 features = ["legacy"]
+
+[dependencies.linux_adaptor]
+path = "../../crates/linux_adaptor"
+version = "0.0.1"

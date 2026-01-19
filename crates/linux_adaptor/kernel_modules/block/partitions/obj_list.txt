@@ -1,0 +1,1 @@
+block/partitions/core.o block/partitions/efi.o block/partitions/msdos.o

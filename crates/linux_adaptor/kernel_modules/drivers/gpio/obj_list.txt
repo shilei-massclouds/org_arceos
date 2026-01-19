@@ -1,0 +1,1 @@
+drivers/gpio/gpiolib-devres.o drivers/gpio/gpiolib.o drivers/gpio/gpiolib-of.o drivers/gpio/gpio-sifive.o drivers/gpio/gpio-mmio.o drivers/gpio/gpiolib-cdev.o

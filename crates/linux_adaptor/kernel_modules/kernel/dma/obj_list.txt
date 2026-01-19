@@ -1,0 +1,1 @@
+kernel/dma/mapping.o kernel/dma/swiotlb.o kernel/dma/direct.o kernel/dma/coherent.o kernel/dma/pool.o

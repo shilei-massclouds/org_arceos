@@ -1,0 +1,1 @@
+kernel/trace/trace_syscalls.o kernel/trace/trace.o kernel/trace/trace_events.o kernel/trace/trace_output.o kernel/trace/pid_list.o kernel/trace/trace_events_filter.o kernel/trace/ring_buffer.o kernel/trace/ftrace.o kernel/trace/trace_seq.o kernel/trace/trace_functions.o kernel/trace/trace_nop.o

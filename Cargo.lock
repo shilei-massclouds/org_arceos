@@ -734,6 +734,7 @@ dependencies = [
  "axconfig-macros",
  "axcpu",
  "axplat",
+ "linux_adaptor",
  "log",
  "riscv",
  "riscv_goldfish",
@@ -1456,6 +1457,10 @@ dependencies = [
  "quote",
  "syn 2.0.106",
 ]
+
+[[package]]
+name = "linux_adaptor"
+version = "0.0.1"
 
 [[package]]
 name = "lock_api"

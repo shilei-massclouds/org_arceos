@@ -7,7 +7,8 @@ impl InitIf for InitIfImpl {
     /// This function should be called immediately after the kernel has booted,
     /// and performed earliest platform configuration and initialization (e.g.,
     /// early console, clocking).
-    fn init_early(_cpu_id: usize, _mbi: usize) {
+    fn init_early(hartid: usize, dtb_pa: usize) {
+        linux_adaptor::init(hartid, dtb_pa);
         axcpu::init::init_trap();
         crate::time::init_early();
     }

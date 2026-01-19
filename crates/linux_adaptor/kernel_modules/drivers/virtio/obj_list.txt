@@ -1,0 +1,1 @@
+drivers/virtio/virtio.o drivers/virtio/virtio_ring.o drivers/virtio/virtio_mmio.o drivers/virtio/virtio_anchor.o

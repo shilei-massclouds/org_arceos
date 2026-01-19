@@ -1,0 +1,1 @@
+drivers/irqchip/irq-riscv-intc.o drivers/irqchip/irq-sifive-plic.o drivers/irqchip/irqchip.o

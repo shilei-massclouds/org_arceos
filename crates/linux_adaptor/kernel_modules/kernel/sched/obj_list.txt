@@ -1,0 +1,1 @@
+kernel/sched/core.o kernel/sched/wait.o kernel/sched/wait_bit.o kernel/sched/swait.o kernel/sched/completion.o
