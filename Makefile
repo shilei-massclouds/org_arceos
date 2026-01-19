@@ -229,6 +229,9 @@ clean: clean_c
 	rm -rf $(APP)/*.bin $(APP)/*.elf $(OUT_CONFIG)
 	cargo clean
 
+clean_dist: clean
+	make -C crates/linux_adaptor/kernel_modules clean
+
 clean_c::
 	rm -rf ulib/axlibc/build_*
 	rm -rf $(app-objs)
