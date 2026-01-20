@@ -19,3 +19,13 @@ void legacy_putchar(unsigned char ch)
 
     sbi_ecall(SBI_EXT_0_1_CONSOLE_PUTCHAR, 0, ch, 0, 0, 0, 0, 0);
 }
+
+// FixMe
+void handle_exception()
+{
+}
+
+// FixMe
+void soc_early_init()
+{
+}

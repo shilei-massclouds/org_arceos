@@ -1,5 +1,5 @@
-use crate::config::plat::PHYS_VIRT_OFFSET;
-use axplat::mem::{PAGE_SIZE_4K, Aligned4K, pa};
+const PAGE_SHIFT: usize = 12;
+const PAGE_SIZE: usize = 1 << PAGE_SHIFT;
 
 /// Floating-point Status
 const SR_FS: usize = 0x00006000;
@@ -12,20 +12,22 @@ const SR_FS_VS: usize = SR_FS | SR_VS;
 // Defined in [include/generated/asm-offsets.h]
 const PT_SIZE_ON_STACK: usize = 0;
 
+// FixMe:
+// Defined in [include/generated/asm-offsets.h]
+const KERNEL_MAP_VIRT_ADDR: usize = 8;
+
 /// Boot hart id.
 pub static BOOT_CPU_HARTID: usize = 0;
 
 const CONFIG_THREAD_SIZE_ORDER: usize = 2;
 const THREAD_SIZE_ORDER: usize = CONFIG_THREAD_SIZE_ORDER;
-const THREAD_SIZE: usize = PAGE_SIZE_4K << THREAD_SIZE_ORDER;
+const THREAD_SIZE: usize = PAGE_SIZE << THREAD_SIZE_ORDER;
 
-/*
-#[unsafe(link_section = ".bss.stack")]
-static mut BOOT_STACK: [u8; BOOT_STACK_SIZE] = [0; BOOT_STACK_SIZE];
-*/
-
-#[unsafe(link_section = ".data")]
-static mut BOOT_PT_SV39: Aligned4K<[u64; 512]> = Aligned4K::new([0; 512]);
+#[unsafe(no_mangle)]
+fn start_kernel()
+{
+    axplat::call_main(0, 0);
+}
 
 /// The earliest entry point for the primary CPU.
 #[unsafe(naked)]
@@ -36,6 +38,9 @@ unsafe extern "C" fn _start() -> ! {
     // a0 = hartid
     // a1 = dtb
     core::arch::naked_asm!("
+        mv      s0, a0
+        mv      s1, a1
+
         /* Mask all interrupts */
         csrw sie, zero
         csrw sip, zero
@@ -74,33 +79,40 @@ unsafe extern "C" fn _start() -> ! {
         mv a0, a1
 
         /* Set trap vector to spin forever to help debug */
-        la a3, 3f
+        la a3, secondary_park
         csrw stvec, a3
         call setup_vm
 
-        /* *** Debug: Reach here! */
-        li a7, 1
-        li a0, '0'
-        ecall
-        li a0, '\n'
-        ecall
-        j .
-        /* *** Debug: Reach here! */
+        la a0, early_pg_dir
+        call relocate_enable_mmu
 
-        mv      s0, a0                  // save hartid
-        mv      s1, a1                  // save DTB pointer
+        call setup_trap_vector
 
-        li      s2, {phys_virt_offset}  // fix up virtual high address
-        add     sp, sp, s2
+        /* Restore C environment */
+        la tp, init_task
+        la sp, init_thread_union + {THREAD_SIZE}
+        addi sp, sp, -{PT_SIZE_ON_STACK}
 
+        /* Start the kernel */
         mv      a0, s0
         mv      a1, s1
-        la      a2, {entry}
-        add     a2, a2, s2
-        jalr    a2                      // call_main(cpu_id, dtb)
+        call soc_early_init
+        tail start_kernel
+        ",
+        SR_FS_VS = const SR_FS_VS,
+        boot_cpu_hartid = sym BOOT_CPU_HARTID,
+        THREAD_SIZE = const THREAD_SIZE,
+        PT_SIZE_ON_STACK = const PT_SIZE_ON_STACK,
+    )
+}
 
+#[unsafe(naked)]
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".head.text2")]
+unsafe extern "C" fn secondary_park() -> ! {
+    core::arch::naked_asm!("
     .align 2
-    3:  /* .Lsecondary_park: */
+    1:
         /*
          * Park this hart if we:
          *  - have too many harts on CONFIG_RISCV_BOOT_SPINWAIT
@@ -108,14 +120,91 @@ unsafe extern "C" fn _start() -> ! {
          *  - fail in smp_callin(), as a successful one wouldn't return
          */
         wfi
-        j 3b
+        j 1b
+    ")
+}
+
+#[unsafe(naked)]
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".head.text2")]
+unsafe extern "C" fn setup_trap_vector() -> ! {
+    core::arch::naked_asm!("
+    .align 2
+        /* Set trap vector to exception handler */
+        la a0, handle_exception
+        csrw stvec, a0
+
+        /*
+         * Set sup0 scratch register to 0, indicating to exception vector that
+         * we are presently executing in kernel.
+         */
+        csrw sscratch, zero
+        ret
+    ")
+}
+
+#[unsafe(naked)]
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".head.text2")]
+unsafe extern "C" fn relocate_enable_mmu() -> ! {
+    core::arch::naked_asm!("
+    .align 2
+        /* Relocate return address */
+        la a1, kernel_map
+        ld a1, {KERNEL_MAP_VIRT_ADDR}(a1)
+
+        la a2, _start
+        sub a1, a1, a2
+        add ra, ra, a1
+
+        /* Point stvec to virtual address of intruction after satp write */
+        la a2, 1f
+        add a2, a2, a1
+        csrw stvec, a2
+
+        /* Compute satp for kernel page tables, but don't load it yet */
+        srl a2, a0, {PAGE_SHIFT}
+        la a1, satp_mode
+        ld a1, 0(a1)
+        or a2, a2, a1
+
+        /*
+         * Load trampoline page directory, which will cause us to trap to
+         * stvec if VA != PA, or simply fall through if VA == PA.  We need a
+         * full fence here because setup_vm() just wrote these PTEs and we need
+         * to ensure the new translations are in use.
+         */
+        la a0, trampoline_pg_dir
+        srl a0, a0, {PAGE_SHIFT}
+        or a0, a0, a1
+        sfence.vma
+        csrw satp, a0
+
+    .align 2
+    1:
+        /* Set trap vector to spin forever to help debug */
+        la a0, secondary_park
+        csrw stvec, a0
+
+        /* Reload the global pointer */
+    .option push
+    .option norelax
+        la gp, __global_pointer$
+    .option pop
+
+        /*
+         * Switch to kernel page tables.  A full fence is necessary in order to
+         * avoid using the trampoline translations, which are only correct for
+         * the first superpage.  Fetching the fence is guaranteed to work
+         * because that first superpage is translated the same way.
+         */
+        csrw satp, a2
+        sfence.vma
+
+        ret
         ",
-        SR_FS_VS = const SR_FS_VS,
-        boot_cpu_hartid = sym BOOT_CPU_HARTID,
-        phys_virt_offset = const PHYS_VIRT_OFFSET,
-        THREAD_SIZE = const THREAD_SIZE,
-        PT_SIZE_ON_STACK = const PT_SIZE_ON_STACK,
-        entry = sym axplat::call_main,
+        KERNEL_MAP_VIRT_ADDR = const KERNEL_MAP_VIRT_ADDR,
+        PAGE_SHIFT = const PAGE_SHIFT,
     )
 }
 

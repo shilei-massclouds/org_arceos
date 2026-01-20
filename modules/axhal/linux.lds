@@ -14,6 +14,7 @@ SECTIONS
     _start = .;
     .head.text : AT(ADDR(.head.text) - LOAD_OFFSET) {
         KEEP(*(.head.text))
+        KEEP(*(.head.text2))
     }
     . = ALIGN(4K);
 

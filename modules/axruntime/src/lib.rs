@@ -109,6 +109,10 @@ unsafe extern "C" {
 /// secondary cores call [`rust_main_secondary`].
 #[cfg_attr(not(test), axplat::main)]
 pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
+    unsafe {
+        legacy_putchar(b'N');
+        legacy_putchar(b'\n');
+    }
     unsafe { axhal::mem::clear_bss() };
     axhal::init_percpu(cpu_id);
     axhal::init_early(cpu_id, arg);
