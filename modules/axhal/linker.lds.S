@@ -6,7 +6,7 @@ ENTRY(_start)
 SECTIONS
 {
     . = BASE_ADDRESS;
-    _skernel = .;
+    _start = .;
 
     .text : ALIGN(4K) {
         _stext = .;
@@ -82,7 +82,7 @@ SECTIONS
         _ebss = .;
     }
 
-    _ekernel = .;
+    _end = .;
 
 	/DISCARD/ : {
         *(.comment) *(.gnu*) *(.note*) *(.eh_frame*)

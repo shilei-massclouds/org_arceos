@@ -1,50 +1,94 @@
-use crate::config::plat::{BOOT_STACK_SIZE, PHYS_VIRT_OFFSET};
-use axplat::mem::{Aligned4K, pa};
+use crate::config::plat::PHYS_VIRT_OFFSET;
+use axplat::mem::{PAGE_SIZE_4K, Aligned4K, pa};
 
+/// Floating-point Status
+const SR_FS: usize = 0x00006000;
+/// Vector Status
+const SR_VS: usize = 0x00000600;
+/// Vector and Floating-Point Unit
+const SR_FS_VS: usize = SR_FS | SR_VS;
+
+// FixMe: This should be a valid value.
+// Defined in [include/generated/asm-offsets.h]
+const PT_SIZE_ON_STACK: usize = 0;
+
+/// Boot hart id.
+pub static BOOT_CPU_HARTID: usize = 0;
+
+const CONFIG_THREAD_SIZE_ORDER: usize = 2;
+const THREAD_SIZE_ORDER: usize = CONFIG_THREAD_SIZE_ORDER;
+const THREAD_SIZE: usize = PAGE_SIZE_4K << THREAD_SIZE_ORDER;
+
+/*
 #[unsafe(link_section = ".bss.stack")]
 static mut BOOT_STACK: [u8; BOOT_STACK_SIZE] = [0; BOOT_STACK_SIZE];
+*/
 
 #[unsafe(link_section = ".data")]
 static mut BOOT_PT_SV39: Aligned4K<[u64; 512]> = Aligned4K::new([0; 512]);
 
-#[allow(clippy::identity_op)] // (0x0 << 10) here makes sense because it's an address
-unsafe fn init_boot_page_table() {
-    unsafe {
-        // 0x0000_0000..0x4000_0000, VRWX_GAD, 1G block
-        BOOT_PT_SV39[0] = (0x0 << 10) | 0xef;
-        // 0x8000_0000..0xc000_0000, VRWX_GAD, 1G block
-        BOOT_PT_SV39[2] = (0x80000 << 10) | 0xef;
-        // 0xffff_ffc0_0000_0000..0xffff_ffc0_4000_0000, VRWX_GAD, 1G block
-        BOOT_PT_SV39[0x100] = (0x0 << 10) | 0xef;
-        // 0xffff_ffc0_8000_0000..0xffff_ffc0_c000_0000, VRWX_GAD, 1G block
-        BOOT_PT_SV39[0x102] = (0x80000 << 10) | 0xef;
-    }
-}
-
-unsafe fn init_mmu() {
-    unsafe {
-        axcpu::asm::write_kernel_page_table(pa!(&raw const BOOT_PT_SV39 as usize));
-        axcpu::asm::flush_tlb(None);
-    }
-}
-
 /// The earliest entry point for the primary CPU.
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
-#[unsafe(link_section = ".text.boot")]
+#[unsafe(link_section = ".head.text")]
 unsafe extern "C" fn _start() -> ! {
     // PC = 0x8020_0000
     // a0 = hartid
     // a1 = dtb
     core::arch::naked_asm!("
+        /* Mask all interrupts */
+        csrw sie, zero
+        csrw sip, zero
+
+        /* Load the global pointer */
+    .option push
+    .option norelax
+        la gp, __global_pointer$
+    .option pop
+
+        /*
+         * Disable FPU & VECTOR to detect illegal usage of
+         * floating point or vector in kernel space
+         */
+        li t0, {SR_FS_VS}
+        csrc sstatus, t0
+
+        /* Clear BSS for flat non-ELF images */
+        la a3, __bss_start
+        la a4, __bss_stop
+        ble a4, a3, 2f
+    1:  /* .Lclear_bss: */
+        sd zero, (a3)
+        add a3, a3, 8
+        blt a3, a4, 1b
+    2:  /* .Lclear_bss_done: */
+
+        la a2, {boot_cpu_hartid}
+        sd a0, (a2)
+
+        /* Initialize page tables and relocate to virtual addresses */
+        la tp, init_task
+        la sp, init_thread_union + {THREAD_SIZE}
+        addi sp, sp, -{PT_SIZE_ON_STACK}
+
+        mv a0, a1
+
+        /* Set trap vector to spin forever to help debug */
+        la a3, 3f
+        csrw stvec, a3
+        call setup_vm
+
+        /* *** Debug: Reach here! */
+        li a7, 1
+        li a0, '0'
+        ecall
+        li a0, '\n'
+        ecall
+        j .
+        /* *** Debug: Reach here! */
+
         mv      s0, a0                  // save hartid
         mv      s1, a1                  // save DTB pointer
-        la      sp, {boot_stack}
-        li      t0, {boot_stack_size}
-        add     sp, sp, t0              // setup boot stack
-
-        call    {init_boot_page_table}
-        call    {init_mmu}              // setup boot page table and enabel MMU
 
         li      s2, {phys_virt_offset}  // fix up virtual high address
         add     sp, sp, s2
@@ -54,12 +98,23 @@ unsafe extern "C" fn _start() -> ! {
         la      a2, {entry}
         add     a2, a2, s2
         jalr    a2                      // call_main(cpu_id, dtb)
-        j       .",
+
+    .align 2
+    3:  /* .Lsecondary_park: */
+        /*
+         * Park this hart if we:
+         *  - have too many harts on CONFIG_RISCV_BOOT_SPINWAIT
+         *  - receive an early trap, before setup_trap_vector finished
+         *  - fail in smp_callin(), as a successful one wouldn't return
+         */
+        wfi
+        j 3b
+        ",
+        SR_FS_VS = const SR_FS_VS,
+        boot_cpu_hartid = sym BOOT_CPU_HARTID,
         phys_virt_offset = const PHYS_VIRT_OFFSET,
-        boot_stack_size = const BOOT_STACK_SIZE,
-        boot_stack = sym BOOT_STACK,
-        init_boot_page_table = sym init_boot_page_table,
-        init_mmu = sym init_mmu,
+        THREAD_SIZE = const THREAD_SIZE,
+        PT_SIZE_ON_STACK = const PT_SIZE_ON_STACK,
         entry = sym axplat::call_main,
     )
 }
@@ -72,22 +127,6 @@ unsafe extern "C" fn _start_secondary() -> ! {
     // a0 = hartid
     // a1 = SP
     core::arch::naked_asm!("
-        mv      s0, a0                  // save hartid
-        mv      sp, a1                  // set SP
-
-        call    {init_mmu}              // setup boot page table and enabel MMU
-
-        li      s1, {phys_virt_offset}  // fix up virtual high address
-        add     a1, a1, s1
-        add     sp, sp, s1
-
-        mv      a0, s0
-        la      a1, {entry}
-        add     a1, a1, s1
-        jalr    a1                      // call_secondary_main(cpu_id)
         j       .",
-        phys_virt_offset = const PHYS_VIRT_OFFSET,
-        init_mmu = sym init_mmu,
-        entry = sym axplat::call_secondary_main,
     )
 }

@@ -93,6 +93,10 @@ fn is_init_ok() -> bool {
     INITED_CPUS.load(Ordering::Acquire) == axhal::cpu_num()
 }
 
+unsafe extern "C" {
+    fn legacy_putchar(ch: u8);
+}
+
 /// The main entry point of the ArceOS runtime.
 ///
 /// It is called from the bootstrapping code in the specific platform crate (see
@@ -109,7 +113,16 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     axhal::init_percpu(cpu_id);
     axhal::init_early(cpu_id, arg);
 
+    unsafe {
+        legacy_putchar(b'B');
+        legacy_putchar(b'\n');
+    }
     ax_println!("{}", LOGO);
+    unsafe {
+        legacy_putchar(b'C');
+        legacy_putchar(b'\n');
+    }
+
     ax_println!(
         "\
         arch = {}\n\

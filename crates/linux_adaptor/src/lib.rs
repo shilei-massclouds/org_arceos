@@ -7,7 +7,7 @@
 #![no_std]
 
 /// Initialize adaptor for linux modules.
-pub fn init(hartid: usize, dtb: usize) {
+pub fn init(_hartid: usize, _dtb_ptr: usize) {
     unsafe {
         legacy_putchar(b'A');
         legacy_putchar(b'\n');

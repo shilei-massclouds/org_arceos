@@ -1,13 +1,21 @@
 OUTPUT_ARCH(riscv)
 
-BASE_ADDRESS = 0xffffffc080200000;
-//BASE_ADDRESS = ((((-1))) - 0x80000000 + 1);
+//LOAD_OFFSET = 0xffffffc080200000;
+LOAD_OFFSET = ((((-1))) - 0x80000000 + 1);
+
+PAGE_SIZE = 4096;
+THREAD_SIZE_ORDER = 2;
+THREAD_SIZE = PAGE_SIZE << THREAD_SIZE_ORDER;
 
 ENTRY(_start)
 SECTIONS
 {
-    . = BASE_ADDRESS;
-    _skernel = .;
+    . = LOAD_OFFSET;
+    _start = .;
+    .head.text : AT(ADDR(.head.text) - LOAD_OFFSET) {
+        KEEP(*(.head.text))
+    }
+    . = ALIGN(4K);
 
     .text : ALIGN(4K) {
         _stext = .;
@@ -17,9 +25,33 @@ SECTIONS
         _etext = .;
     }
 
+    . = ALIGN(4K);
+    .data..percpu : AT(ADDR(.data..percpu) - LOAD_OFFSET) {
+        __per_cpu_load = .;
+        __per_cpu_start = .;
+        *(.data..percpu..first)
+        . = ALIGN((1 << 12));
+        *(.data..percpu..page_aligned)
+        . = ALIGN((1 << 6));
+        *(.data..percpu..read_mostly)
+        . = ALIGN((1 << 6));
+        *(.data..percpu)
+        *(.data..percpu..shared_aligned)
+        __per_cpu_end = .;
+
+        /* FixMe: Remove these old symbols. */
+        _percpu_start = .;
+        _percpu_end = .;
+        _percpu_load_start = .;
+        _percpu_load_end = .;
+    }
+
     _srodata = .;
-    .rodata : ALIGN(4K) {
+    . = ALIGN((1 << 21));
+    .rodata : AT(ADDR(.rodata) - LOAD_OFFSET) {
+        __start_rodata = .;
         *(.rodata .rodata.*)
+        *(.data.rel.ro*)
         *(.srodata .srodata.*)
         *(.sdata2 .sdata2.*)
     }
@@ -33,57 +65,55 @@ SECTIONS
     . = ALIGN(4K);
     _erodata = .;
 
-    .data : ALIGN(4K) {
+    . = ALIGN((1 << 21));
+    _data = .;
+    . = ALIGN(4K);
+    .data : AT(ADDR(.data) - LOAD_OFFSET) {
         _sdata = .;
-        *(.data.boot_page_table)
+
+        . = ALIGN(2 * THREAD_SIZE);
+        __start_init_stack = .;
+        init_thread_union = .;
+        init_stack = .;
+        KEEP(*(.data..init_task))
+        KEEP(*(.data..init_thread_info))
+        . = __start_init_stack + THREAD_SIZE;
+        __end_init_stack = .; 
+
         . = ALIGN(4K);
         *(.data .data.*)
-        *(.sdata .sdata.*)
-        *(.got .got.*)
     }
 
-    .tdata : ALIGN(0x10) {
-        _stdata = .;
-        *(.tdata .tdata.*)
-        _etdata = .;
+    .sdata : {
+        __global_pointer$ = . + 0x800;
+        *(.sdata*)
     }
 
-    .tbss : ALIGN(0x10) {
-        _stbss = .;
-        *(.tbss .tbss.*)
-        *(.tcommon)
-        _etbss = .;
-    }
-
-    . = ALIGN(4K);
-    _percpu_start = .;
-    _percpu_end = _percpu_start + SIZEOF(.percpu);
-    .percpu 0x0 : AT(_percpu_start) {
-        _percpu_load_start = .;
-        *(.percpu .percpu.*)
-        _percpu_load_end = .;
-        . = _percpu_load_start + ALIGN(64) * 8;
-    }
-    . = _percpu_end;
+    .got : { *(.got*) }
 
     . = ALIGN(4K);
     _edata = .;
 
-    .bss : AT(.) ALIGN(4K) {
-        boot_stack = .;
-        *(.bss.stack)
-        . = ALIGN(4K);
-        boot_stack_top = .;
-
-        _sbss = .;
-        *(.bss .bss.*)
-        *(.sbss .sbss.*)
-        *(COMMON)
-        . = ALIGN(4K);
-        _ebss = .;
+    . = ALIGN(4K);
+    __bss_start = .;
+    .sbss : AT(ADDR(.sbss) - LOAD_OFFSET) {
+        *(.dynsbss)
+        *(.sbss)
+        *(.scommon)
     }
+    . = ALIGN(4K);
+    .bss : AT(ADDR(.bss) - LOAD_OFFSET) {
+        . = ALIGN(4K);
+        *(.bss..page_aligned)
+        . = ALIGN(4K);
+        *(.dynbss)
+        *(.bss)
+        *(COMMON)
+    }
+    __bss_stop = .;
 
-    _ekernel = .;
+    . = ALIGN(4K);
+    _end = .;
 
 	/DISCARD/ : {
         *(.comment) *(.gnu*) *(.note*) *(.eh_frame*)
@@ -99,4 +129,4 @@ SECTIONS {
     linkm2_SYSCALL : { *(linkm2_SYSCALL) }
     axns_resource : { *(axns_resource) }
 }
-INSERT AFTER .tbss;
+INSERT AFTER .bss;

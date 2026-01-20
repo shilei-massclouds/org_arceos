@@ -23,14 +23,14 @@ pub fn memory_regions() -> impl Iterator<Item = PhysMemRegion> {
 
 /// Fills the `.bss` section with zeros.
 ///
-/// It requires the symbols `_sbss` and `_ebss` to be defined in the linker script.
+/// It requires the symbols `__bss_start` and `__bss_stop` to be defined in the linker script.
 ///
 /// # Safety
 ///
 /// This function is unsafe because it writes `.bss` section directly.
 pub unsafe fn clear_bss() {
     unsafe {
-        core::slice::from_raw_parts_mut(_sbss as usize as *mut u8, _ebss as usize - _sbss as usize)
+        core::slice::from_raw_parts_mut(__bss_start as usize as *mut u8, __bss_stop as usize - __bss_start as usize)
             .fill(0);
     }
 }
@@ -64,14 +64,14 @@ pub fn init() {
         name: ".data .tdata .tbss .percpu",
     });
     push(PhysMemRegion {
-        paddr: virt_to_phys((boot_stack as usize).into()),
-        size: boot_stack_top as usize - boot_stack as usize,
+        paddr: virt_to_phys((__end_init_stack as usize).into()),
+        size: __start_init_stack as usize - __end_init_stack as usize,
         flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
         name: "boot stack",
     });
     push(PhysMemRegion {
-        paddr: virt_to_phys((_sbss as usize).into()),
-        size: _ebss as usize - _sbss as usize,
+        paddr: virt_to_phys((__bss_start as usize).into()),
+        size: __bss_stop as usize - __bss_start as usize,
         flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
         name: ".bss",
     });
@@ -85,8 +85,8 @@ pub fn init() {
     }
 
     // Combine kernel image range and reserved ranges
-    let kernel_start = virt_to_phys(va!(_skernel as usize)).as_usize();
-    let kernel_size = _ekernel as usize - _skernel as usize;
+    let kernel_start = virt_to_phys(va!(_start as usize)).as_usize();
+    let kernel_size = _end as usize - _start as usize;
     let mut reserved_ranges = reserved_phys_ram_ranges()
         .iter()
         .cloned()
@@ -117,10 +117,10 @@ unsafe extern "C" {
     fn _erodata();
     fn _sdata();
     fn _edata();
-    fn _sbss();
-    fn _ebss();
-    fn _skernel();
-    fn _ekernel();
-    fn boot_stack();
-    fn boot_stack_top();
+    fn __bss_start();
+    fn __bss_stop();
+    fn _start();
+    fn _end();
+    fn __end_init_stack();
+    fn __start_init_stack();
 }
