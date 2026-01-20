@@ -108,6 +108,7 @@ pub unsafe fn set_current_task_ptr<T>(ptr: *const T) {
 }
 
 #[allow(dead_code)]
+#[cfg(not(feature = "linux-adaptor"))]
 pub(crate) fn init_primary(cpu_id: usize) {
     percpu::init();
     percpu::init_percpu_reg(cpu_id);
@@ -115,6 +116,11 @@ pub(crate) fn init_primary(cpu_id: usize) {
         CPU_ID.write_current_raw(cpu_id);
         IS_BSP.write_current_raw(true);
     }
+}
+
+#[allow(dead_code)]
+#[cfg(feature = "linux-adaptor")]
+pub(crate) fn init_primary(_cpu_id: usize) {
 }
 
 #[allow(dead_code)]

@@ -1,6 +1,7 @@
 # Makefile for `cl - clinux`
 
 obj-y += raw.o
+obj-y += adaptor.o
 
 #obj-y += main.o
 #obj-y += cl_mine.o

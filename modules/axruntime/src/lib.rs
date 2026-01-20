@@ -109,17 +109,15 @@ unsafe extern "C" {
 /// secondary cores call [`rust_main_secondary`].
 #[cfg_attr(not(test), axplat::main)]
 pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
-    unsafe {
-        legacy_putchar(b'N');
-        legacy_putchar(b'\n');
-    }
-    #[cfg(feature = "linux-adaptor")]
-    {
-    unsafe {
-        legacy_putchar(b'M');
-        legacy_putchar(b'\n');
-    }
     unsafe { axhal::mem::clear_bss() };
+    unsafe {
+        legacy_putchar(b'2');
+        legacy_putchar(b'\n');
+    }
+    axhal::console::write_bytes(b"[Hello]\n");
+    unsafe {
+        legacy_putchar(b'1');
+        legacy_putchar(b'\n');
     }
     axhal::init_percpu(cpu_id);
     axhal::init_early(cpu_id, arg);

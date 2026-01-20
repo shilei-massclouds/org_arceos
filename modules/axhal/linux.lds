@@ -1,6 +1,5 @@
 OUTPUT_ARCH(riscv)
 
-//LOAD_OFFSET = 0xffffffc080200000;
 LOAD_OFFSET = ((((-1))) - 0x80000000 + 1);
 
 PAGE_SIZE = 4096;

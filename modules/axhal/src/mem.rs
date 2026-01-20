@@ -29,6 +29,7 @@ pub fn memory_regions() -> impl Iterator<Item = PhysMemRegion> {
 ///
 /// This function is unsafe because it writes `.bss` section directly.
 pub unsafe fn clear_bss() {
+    #[cfg(not(feature = "linux-adaptor"))]
     unsafe {
         core::slice::from_raw_parts_mut(__bss_start as usize as *mut u8, __bss_stop as usize - __bss_start as usize)
             .fill(0);
