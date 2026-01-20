@@ -1461,6 +1461,9 @@ dependencies = [
 [[package]]
 name = "linux_adaptor"
 version = "0.0.1"
+dependencies = [
+ "axlog",
+]
 
 [[package]]
 name = "lock_api"

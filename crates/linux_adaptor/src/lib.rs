@@ -6,15 +6,10 @@
 
 #![no_std]
 
-/// Initialize adaptor for linux modules.
-pub fn init(_hartid: usize, _dtb_ptr: usize) {
-    unsafe {
-        legacy_putchar(b'A');
-        legacy_putchar(b'\n');
-    }
-    //info!("Initialize Linux Adaptor [hartid: {} dtb_pa {:#X}] ..", hartid, dtb);
-}
+#[macro_use]
+extern crate axlog;
 
-unsafe extern "C" {
-    fn legacy_putchar(ch: u8);
+/// Initialize adaptor for linux modules.
+pub fn init(hartid: usize, dtb_pa: usize) {
+    ax_println!("With Linux Adaptor: hartid = {hartid} dtb_pa = {dtb_pa:#X}");
 }

@@ -69,8 +69,6 @@ SECTIONS
     _data = .;
     . = ALIGN(4K);
     .data : AT(ADDR(.data) - LOAD_OFFSET) {
-        _sdata = .;
-
         . = ALIGN(2 * THREAD_SIZE);
         __start_init_stack = .;
         init_thread_union = .;
@@ -78,8 +76,9 @@ SECTIONS
         KEEP(*(.data..init_task))
         KEEP(*(.data..init_thread_info))
         . = __start_init_stack + THREAD_SIZE;
-        __end_init_stack = .; 
+        __end_init_stack = .;
 
+        _sdata = .;
         . = ALIGN(4K);
         *(.data .data.*)
     }

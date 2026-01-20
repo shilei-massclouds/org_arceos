@@ -40,7 +40,7 @@
 ARCH ?= riscv64
 MYPLAT ?=
 PLAT_CONFIG ?=
-SMP ?= 8
+SMP ?= 1
 MODE ?= release
 LOG ?= warn
 V ?=

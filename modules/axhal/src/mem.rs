@@ -65,8 +65,8 @@ pub fn init() {
         name: ".data .tdata .tbss .percpu",
     });
     push(PhysMemRegion {
-        paddr: virt_to_phys((__end_init_stack as usize).into()),
-        size: __start_init_stack as usize - __end_init_stack as usize,
+        paddr: virt_to_phys((__start_init_stack as usize).into()),
+        size: __end_init_stack as usize - __start_init_stack as usize,
         flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
         name: "boot stack",
     });

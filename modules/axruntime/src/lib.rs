@@ -93,10 +93,6 @@ fn is_init_ok() -> bool {
     INITED_CPUS.load(Ordering::Acquire) == axhal::cpu_num()
 }
 
-unsafe extern "C" {
-    fn legacy_putchar(ch: u8);
-}
-
 /// The main entry point of the ArceOS runtime.
 ///
 /// It is called from the bootstrapping code in the specific platform crate (see
@@ -110,27 +106,10 @@ unsafe extern "C" {
 #[cfg_attr(not(test), axplat::main)]
 pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     unsafe { axhal::mem::clear_bss() };
-    unsafe {
-        legacy_putchar(b'2');
-        legacy_putchar(b'\n');
-    }
-    axhal::console::write_bytes(b"[Hello]\n");
-    unsafe {
-        legacy_putchar(b'1');
-        legacy_putchar(b'\n');
-    }
     axhal::init_percpu(cpu_id);
     axhal::init_early(cpu_id, arg);
 
-    unsafe {
-        legacy_putchar(b'B');
-        legacy_putchar(b'\n');
-    }
     ax_println!("{}", LOGO);
-    unsafe {
-        legacy_putchar(b'C');
-        legacy_putchar(b'\n');
-    }
 
     ax_println!(
         "\
