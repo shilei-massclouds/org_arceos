@@ -24,9 +24,9 @@ const THREAD_SIZE_ORDER: usize = CONFIG_THREAD_SIZE_ORDER;
 const THREAD_SIZE: usize = PAGE_SIZE << THREAD_SIZE_ORDER;
 
 #[unsafe(no_mangle)]
-fn start_kernel()
+fn start_kernel(hartid: usize, dtb_pa: usize)
 {
-    axplat::call_main(0, 0);
+    axplat::call_main(hartid, dtb_pa);
 }
 
 /// The earliest entry point for the primary CPU.

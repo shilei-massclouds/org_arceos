@@ -26,6 +26,6 @@ void handle_exception()
 }
 
 // FixMe
-void soc_early_init()
+void soc_early_init(unsigned long hartid, unsigned long dtb_pa)
 {
 }

@@ -113,7 +113,14 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
         legacy_putchar(b'N');
         legacy_putchar(b'\n');
     }
+    #[cfg(feature = "linux-adaptor")]
+    {
+    unsafe {
+        legacy_putchar(b'M');
+        legacy_putchar(b'\n');
+    }
     unsafe { axhal::mem::clear_bss() };
+    }
     axhal::init_percpu(cpu_id);
     axhal::init_early(cpu_id, arg);
 

@@ -12,6 +12,8 @@ documentation = "https://arceos-org.github.io/arceos/axruntime/index.html"
 [features]
 default = []
 
+linux-adaptor = []
+
 smp = ["axhal/smp", "axtask?/smp"]
 irq = ["axhal/irq", "axtask?/irq", "percpu"]
 tls = ["axhal/tls", "axtask?/tls"]

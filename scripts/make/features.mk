@@ -58,6 +58,11 @@ ifeq ($(shell test $(SMP) -gt 1; echo $$?),0)
   lib_feat += smp
 endif
 
+# FixMe: we need a special platform which depends on linux.
+ifeq ($(PLAT_NAME),riscv64-qemu-virt)
+  ax_feat += linux-adaptor
+endif
+
 ax_feat += $(filter-out $(lib_features),$(FEATURES))
 lib_feat += $(filter $(lib_features),$(FEATURES))
 

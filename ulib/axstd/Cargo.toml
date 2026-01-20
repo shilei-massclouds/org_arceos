@@ -19,6 +19,9 @@ documentation = "https://arceos-org.github.io/arceos/axstd/index.html"
 [features]
 default = []
 
+# Support linux modules
+linux-adaptor = ["axfeat/linux-adaptor"]
+
 # Multicore
 smp = ["axfeat/smp", "kspin/smp"]
 

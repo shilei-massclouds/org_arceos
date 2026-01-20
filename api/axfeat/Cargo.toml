@@ -12,6 +12,9 @@ documentation = "https://arceos-org.github.io/arceos/axfeat/index.html"
 [features]
 default = []
 
+# Support linux modules
+linux-adaptor = ["axruntime/linux-adaptor"]
+
 # Multicore
 smp = ["axhal/smp", "axruntime/smp", "axtask?/smp", "kspin/smp"]
 

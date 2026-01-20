@@ -24,8 +24,8 @@ fn gen_linker_script(arch: &str, platform: &str) -> Result<()> {
     // target/<target_triple>/<mode>/linker_xxxx.lds
     let out_path = Path::new(&out_dir).join("../../..").join(fname);
 
-    let lkm = std::env::var("AX_LKM").unwrap();
-    if lkm.as_str() == "y" {
+    // FixMe: Use more appropriate config.
+    if platform == "riscv64-qemu-virt" {
         std::fs::copy("linux.lds", &out_path)?;
         return Ok(());
     }

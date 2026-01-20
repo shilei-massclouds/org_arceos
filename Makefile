@@ -75,9 +75,6 @@ VHOST ?= n
 IP ?= 10.0.2.15
 GW ?= 10.0.2.2
 
-# Linux kernel modules support?
-LKM ?= y
-
 # App type
 ifeq ($(wildcard $(APP)),)
   $(error Application path "$(APP)" is not valid)
@@ -122,7 +119,6 @@ export AX_LOG=$(LOG)
 export AX_TARGET=$(TARGET)
 export AX_IP=$(IP)
 export AX_GW=$(GW)
-export AX_LKM=$(LKM)
 
 ifneq ($(filter $(MAKECMDGOALS),unittest unittest_no_fail_fast clippy doc doc_check_missing),)
   # When running unit tests or other tests unrelated to a specific platform,
