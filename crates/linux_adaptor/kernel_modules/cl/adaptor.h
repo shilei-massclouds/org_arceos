@@ -3,8 +3,12 @@
 #ifndef _ADAPTOR_H_
 #define _ADAPTOR_H_
 
-extern void cl_printk(char level, const char *s);
-extern void cl_terminate(void);
+extern void legacy_puts(const char *s);
+extern void legacy_put_hex(unsigned long hex);
+extern void legacy_shutdown(void);
+
+//extern void cl_printk(char level, const char *s);
+//extern void cl_terminate(void);
 
 extern void *cl_rust_alloc(unsigned long size, unsigned long align);
 extern void cl_rust_dealloc(const void *addr);
@@ -35,14 +39,24 @@ extern void end_global_trace(void);
 extern int clinux_starting;
 extern int clinux_started;
 
+#define RAW_PANIC(args...) \
+do { \
+    legacy_puts("\n########################\n"); \
+    legacy_puts("\nRAW_PANIC: "); \
+    legacy_puts(__FUNCTION__); \
+    legacy_puts(" in ["); \
+    legacy_puts(__FILE__); \
+    legacy_puts("]\n"); \
+    legacy_puts("\n########################\n"); \
+    legacy_shutdown(); \
+} while (0)
+
 #define PANIC(args...) \
 do { \
     printk("\n########################\n"); \
     printk("\nPANIC: %s(%s:%d) %s\n", __FUNCTION__, __FILE__, __LINE__, args); \
     printk("\n########################\n"); \
-    dump_stack(); \
-    end_global_trace(); \
-    cl_terminate(); \
+    legacy_shutdown(); \
 } while (0)
 
 #define CL_ASSERT(cond, msg) \
@@ -56,7 +70,7 @@ do {                        \
 // Helper for decomposing components.
 //
 #define CL_MINE(name) \
-    void name() { PANIC("No impl."); }
+    void name() { RAW_PANIC("No impl."); }
 
 /*
  * Trace Buffer

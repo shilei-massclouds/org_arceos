@@ -68,8 +68,26 @@ static void __ref setup_usemap(struct zone *zone)
     }
 }
 
+#if 0
+static void __init parse_dtb(void)
+{
+    /* Early scan of device tree from init memory */
+    if (early_init_dt_scan(dtb_early_va, dtb_early_pa)) {
+        const char *name = of_flat_dt_get_machine_name();
+
+        if (name) {
+            pr_info("Machine model: %s\n", name);
+            dump_stack_set_arch_desc("%s (DT)", name);
+        }
+    } else {
+        pr_err("No DTB passed to the kernel\n");
+    }
+}
+
 void __init setup_arch(char **cmdline_p)
 {
+    parse_dtb();
+    /*
     paging_init();
 
     // In misc_mem_init()
@@ -81,4 +99,6 @@ void __init setup_arch(char **cmdline_p)
     zone->zone_start_pfn = min_low_pfn;
     zone->spanned_pages = max_low_pfn - min_low_pfn;
     setup_usemap(zone);
+    */
 }
+#endif

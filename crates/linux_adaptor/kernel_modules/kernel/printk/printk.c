@@ -59,7 +59,8 @@ int _vprintk(const char *fmt, va_list args)
 
     level = printk_get_level(fmt);
     n = vscnprintf(buf, sizeof(buf), printk_skip_level(fmt), args);
-    cl_printk(level, buf);
+    // FixMe: implement it in a formal manner.
+    legacy_puts(buf);
     return n;
 }
 
@@ -73,6 +74,7 @@ int _printk(const char *fmt, ...)
     return ret;
 }
 
+#if 0
 #define define_dev_printk_level(func, kern_level)       \
 void func(const struct device *dev, const char *fmt, ...)   \
 {                               \
@@ -148,3 +150,4 @@ void __printk_cpu_sync_put(void)
 {
     pr_notice("%s: No impl.", __func__);
 }
+#endif

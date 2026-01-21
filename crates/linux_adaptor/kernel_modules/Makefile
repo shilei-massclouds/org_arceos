@@ -4,8 +4,8 @@ include $(CURDIR)/scripts/Makefile.include
 
 TARGET = libclinux.a
 
-#obj-y := kernel/ mm/ fs/ crypto/ block/ lib/ libfdt/ drivers/
-obj-y := cl/ init/ arch/
+#obj-y := cl/ init/ arch/ kernel/ mm/ fs/ crypto/ block/ lib/ libfdt/ drivers/
+obj-y := cl/ init/ arch/ kernel/ mm/ lib/
 
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
 

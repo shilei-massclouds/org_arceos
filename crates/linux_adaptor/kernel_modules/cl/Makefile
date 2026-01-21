@@ -2,6 +2,9 @@
 
 obj-y += raw.o
 obj-y += adaptor.o
+obj-y += init.o
+obj-y += cl_mine2.o
+obj-y += cl_dummy2.o
 
 #obj-y += main.o
 #obj-y += cl_mine.o
