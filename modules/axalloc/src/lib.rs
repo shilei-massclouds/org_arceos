@@ -13,10 +13,11 @@ extern crate alloc;
 
 mod page;
 
-use allocator::{AllocResult, BaseAllocator, BitmapPageAllocator, ByteAllocator, PageAllocator};
+use allocator::{AllocResult, BaseAllocator, ByteAllocator, PageAllocator};
 use core::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 use kspin::SpinNoIrq;
+use memblock::MemblockAllocator;
 
 const PAGE_SIZE: usize = 0x1000;
 const MIN_HEAP_SIZE: usize = 0x8000; // 32 K
@@ -24,15 +25,21 @@ const MIN_HEAP_SIZE: usize = 0x8000; // 32 K
 pub use page::GlobalPage;
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "slab")] {
-        /// The default byte allocator.
-        pub type DefaultByteAllocator = allocator::SlabByteAllocator;
-    } else if #[cfg(feature = "buddy")] {
-        /// The default byte allocator.
-        pub type DefaultByteAllocator = allocator::BuddyByteAllocator;
-    } else if #[cfg(feature = "tlsf")] {
-        /// The default byte allocator.
-        pub type DefaultByteAllocator = allocator::TlsfByteAllocator;
+    if #[cfg(feature = "linux-adaptor")] {
+        pub type DefaultByteAllocator = MemblockAllocator<PAGE_SIZE>;
+        pub type DefaultPageAllocator = MemblockAllocator<PAGE_SIZE>;
+    } else {
+        if #[cfg(feature = "slab")] {
+            /// The default byte allocator.
+            pub type DefaultByteAllocator = allocator::SlabByteAllocator;
+        } else if #[cfg(feature = "buddy")] {
+            /// The default byte allocator.
+            pub type DefaultByteAllocator = allocator::BuddyByteAllocator;
+        } else if #[cfg(feature = "tlsf")] {
+            /// The default byte allocator.
+            pub type DefaultByteAllocator = allocator::TlsfByteAllocator;
+        }
+        pub type DefaultPageAllocator = allocator::BitmapPageAllocator<PAGE_SIZE>;
     }
 }
 
@@ -49,7 +56,7 @@ cfg_if::cfg_if! {
 /// [`TlsfByteAllocator`]: allocator::TlsfByteAllocator
 pub struct GlobalAllocator {
     balloc: SpinNoIrq<DefaultByteAllocator>,
-    palloc: SpinNoIrq<BitmapPageAllocator<PAGE_SIZE>>,
+    palloc: SpinNoIrq<DefaultPageAllocator>,
 }
 
 impl GlobalAllocator {
@@ -57,14 +64,16 @@ impl GlobalAllocator {
     pub const fn new() -> Self {
         Self {
             balloc: SpinNoIrq::new(DefaultByteAllocator::new()),
-            palloc: SpinNoIrq::new(BitmapPageAllocator::new()),
+            palloc: SpinNoIrq::new(DefaultPageAllocator::new()),
         }
     }
 
     /// Returns the name of the allocator.
     pub const fn name(&self) -> &'static str {
         cfg_if::cfg_if! {
-            if #[cfg(feature = "slab")] {
+            if #[cfg(feature = "linux-adaptor")] {
+                "memblock-buddy-slub"
+            } else if #[cfg(feature = "slab")] {
                 "slab"
             } else if #[cfg(feature = "buddy")] {
                 "buddy"
