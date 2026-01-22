@@ -38,6 +38,7 @@ members = [
     "examples/task/sleep",
     "examples/task/wait_queue",
     "examples/task/yield",
+    "examples/task/mutex",
 
     "examples/tour/u_1_0",
     "examples/tour/u_2_0",
