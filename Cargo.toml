@@ -38,6 +38,16 @@ members = [
     "examples/task/sleep",
     "examples/task/wait_queue",
     "examples/task/yield",
+
+    "examples/tour/u_1_0",
+    "examples/tour/u_2_0",
+    "examples/tour/u_3_0",
+    "examples/tour/u_4_0",
+    "examples/tour/u_5_0",
+    "examples/tour/u_6_0",
+    "examples/tour/u_6_1",
+    "examples/tour/u_7_0",
+    "examples/tour/u_8_0",
 ]
 
 [workspace.package]

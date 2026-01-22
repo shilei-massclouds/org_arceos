@@ -1,0 +1,29 @@
+#![cfg_attr(feature = "axstd", no_std)]
+#![cfg_attr(feature = "axstd", no_main)]
+
+#[macro_use]
+#[cfg(feature = "axstd")]
+extern crate axstd as std;
+
+use std::thread;
+use std::io::{self, prelude::*};
+use std::fs::File;
+
+#[cfg_attr(feature = "axstd", no_mangle)]
+fn main() {
+    println!("Load app from fat-fs ...");
+
+    let buf = [0u8; 64];
+    let worker1 = thread::spawn(move || {
+        println!("worker1 checks code: ");
+        for i in 0..8 {
+            print!("{:#x} ", buf[i]);
+        }
+        println!("\nworker1 ok!");
+    });
+
+    println!("Wait for workers to exit ...");
+    let _ = worker1.join();
+
+    println!("Load app from disk ok!");
+}

@@ -12,4 +12,14 @@ do
     make ARCH=riscv64 A=examples/task/sleep run FEATURES="sched-rr" SMP=8
     make ARCH=riscv64 A=examples/task/wait_queue run FEATURES="sched-rr" SMP=8
     make ARCH=riscv64 A=examples/task/yield run FEATURES="sched-rr" SMP=8
+
+    make ARCH=riscv64 A=examples/tour/u_1_0/ run FEATURES="sched-rr" SMP=8
+    make ARCH=riscv64 A=examples/tour/u_2_0/ run FEATURES="sched-rr" SMP=8
+    make ARCH=riscv64 A=examples/tour/u_3_0/ run FEATURES="sched-rr" SMP=8
+    make ARCH=riscv64 A=examples/tour/u_4_0/ run FEATURES="sched-rr" SMP=8
+    make ARCH=riscv64 A=examples/tour/u_5_0/ run FEATURES="sched-rr" SMP=8
+    make ARCH=riscv64 A=examples/tour/u_6_0/ run FEATURES="sched-rr" SMP=8
+    make ARCH=riscv64 A=examples/tour/u_6_1/ run FEATURES="sched-rr" SMP=8
+    make ARCH=riscv64 A=examples/tour/u_7_0/ run FEATURES="sched-rr" SMP=8 BLK=y
+    make ARCH=riscv64 A=examples/tour/u_8_0/ run FEATURES="sched-rr" SMP=8 BLK=y
 done

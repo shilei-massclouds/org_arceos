@@ -2098,6 +2098,72 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 
 [[package]]
+name = "u_1_0"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "u_2_0"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "u_3_0"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "u_4_0"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "u_5_0"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
+name = "u_6_0"
+version = "0.1.0"
+dependencies = [
+ "axlog",
+ "axstd",
+]
+
+[[package]]
+name = "u_6_1"
+version = "0.1.0"
+dependencies = [
+ "axlog",
+ "axstd",
+]
+
+[[package]]
+name = "u_7_0"
+version = "0.1.0"
+dependencies = [
+ "axdriver",
+ "axstd",
+]
+
+[[package]]
+name = "u_8_0"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
 name = "uart_16550"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
