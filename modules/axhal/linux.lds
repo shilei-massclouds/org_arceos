@@ -25,6 +25,14 @@ SECTIONS
         _etext = .;
     }
 
+    . = ALIGN((1 << 21));
+    . = ALIGN(4K);
+
+    .init.data : AT(ADDR(.init.data) - LOAD_OFFSET) {
+        KEEP(*(SORT(___kentry+*)))
+        *(.init.data .init.data.*)
+    }
+
     . = ALIGN(4K);
     .data..percpu : AT(ADDR(.data..percpu) - LOAD_OFFSET) {
         __per_cpu_load = .;

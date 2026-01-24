@@ -7,6 +7,8 @@
 
 #include <asm/sbi.h>
 
+#include "adaptor.h"
+
 #define UL_STR_SIZE 19  /* prefix with '0x' and end with '\0' */
 #define SBI_EXT_0_1_CONSOLE_PUTCHAR 0x1
 #define SBI_EXT_0_1_SHUTDOWN        0x8
@@ -68,6 +70,11 @@ void legacy_put_hex(unsigned long n)
     char buf[UL_STR_SIZE];
     hex_to_str(n, buf, sizeof(buf));
     legacy_puts(buf);
+}
+
+__weak void panic(const char *fmt, ...)
+{
+    RAW_PANIC(fmt);
 }
 
 // FixMe

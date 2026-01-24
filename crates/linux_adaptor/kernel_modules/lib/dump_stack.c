@@ -11,6 +11,28 @@
 
 #include "adaptor.h"
 
+static char dump_stack_arch_desc_str[128];
+
+/**
+ * dump_stack_set_arch_desc - set arch-specific str to show with task dumps
+ * @fmt: printf-style format string
+ * @...: arguments for the format string
+ *
+ * The configured string will be printed right after utsname during task
+ * dumps.  Usually used to add arch-specific system identifiers.  If an
+ * arch wants to make use of such an ID string, it should initialize this
+ * as soon as possible during boot.
+ */
+void __init dump_stack_set_arch_desc(const char *fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    vsnprintf(dump_stack_arch_desc_str, sizeof(dump_stack_arch_desc_str),
+          fmt, args);
+    va_end(args);
+}
+
 #if IS_ENABLED(CONFIG_STACKTRACE_BUILD_ID)
 #define BUILD_ID_FMT " %20phN"
 #define BUILD_ID_VAL vmlinux_build_id
@@ -28,7 +50,6 @@
  */
 void dump_stack_print_info(const char *log_lvl)
 {
-#if 0
     printk("\n%sCPU: %d UID: %u PID: %d Comm: %.20s " BUILD_ID_FMT "\n",
            log_lvl, raw_smp_processor_id(),
            __kuid_val(current_real_cred()->euid),
@@ -46,7 +67,6 @@ void dump_stack_print_info(const char *log_lvl)
     print_worker_info(log_lvl, current);
     print_stop_info(log_lvl, current);
     print_scx_info(log_lvl, current);
-#endif
 }
 
 static void __dump_stack(const char *log_lvl)

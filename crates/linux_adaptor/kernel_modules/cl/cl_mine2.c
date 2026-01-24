@@ -40,3 +40,5 @@ CL_MINE(__trace_trigger_soft_disabled)
 CL_MINE(perf_trace_buf_alloc)
 CL_MINE(perf_trace_run_bpf_submit)
 CL_MINE(bpf_trace_run2)
+
+CL_MINE(memblock_mark_hotplug)

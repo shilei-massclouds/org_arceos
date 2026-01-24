@@ -2,4 +2,4 @@
 
 obj-y += kernel/
 obj-y += mm/
-#obj-y += lib/
+obj-y += lib/

@@ -68,7 +68,6 @@ static void __ref setup_usemap(struct zone *zone)
     }
 }
 
-#if 0
 static void __init parse_dtb(void)
 {
     /* Early scan of device tree from init memory */
@@ -100,5 +99,5 @@ void __init setup_arch(char **cmdline_p)
     zone->spanned_pages = max_low_pfn - min_low_pfn;
     setup_usemap(zone);
     */
+    PANIC("Reach Here!");
 }
-#endif

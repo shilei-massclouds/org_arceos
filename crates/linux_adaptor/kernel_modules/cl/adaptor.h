@@ -7,12 +7,6 @@ extern void legacy_puts(const char *s);
 extern void legacy_put_hex(unsigned long hex);
 extern void legacy_shutdown(void);
 
-//extern void cl_printk(char level, const char *s);
-//extern void cl_terminate(void);
-
-extern void *cl_rust_alloc(unsigned long size, unsigned long align);
-extern void cl_rust_dealloc(const void *addr);
-
 extern void *cl_alloc_pages(unsigned long size, unsigned long align);
 extern void *cl_free_pages(const void *addr, size_t count);
 

@@ -1,17 +1,15 @@
 #include <linux/init.h>
 #include <linux/printk.h>
 
+#include <asm/setup.h>
+#include <linux/memblock.h>
+
 #include "adaptor.h"
 
-extern void legacy_puts(const char *str);
+/* Untouched command line saved by arch-specific code. */
+char __initdata boot_command_line[COMMAND_LINE_SIZE];
 
 void cl_init(unsigned long hartid, unsigned long dtb_pa)
 {
-    int i = 3;
-    unsigned long addr = 0x8000;
-    legacy_puts("cl_init ..\n");
-    //printk("[%d]: \n", i);
-    printk("[%s]: cl_init .. i(%d) addr(%lx)\n", __func__, i, addr);
-    RAW_PANIC("Reach here!\n");
-    //setup_arch(NULL /* cmdline_p */);
+    setup_arch(NULL /* cmdline_p */);
 }

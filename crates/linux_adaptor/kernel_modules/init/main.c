@@ -104,9 +104,6 @@
 
 #include "adaptor.h"
 
-/* Untouched command line saved by arch-specific code. */
-char __initdata boot_command_line[COMMAND_LINE_SIZE];
-
 /* Check for early params. */
 static int __init do_early_param(char *param, char *val,
                  const char *unused, void *arg)
