@@ -15,7 +15,7 @@ pub struct MemblockAllocator<const PAGE_SIZE: usize> {
 
 impl<const PAGE_SIZE: usize> BaseAllocator for MemblockAllocator<PAGE_SIZE> {
     fn init(&mut self, start: usize, size: usize) {
-        unimplemented!("{start:#x} {size:#x}");
+        unimplemented!("MemblockAllocator.init: {start:#x} {size:#x}");
     }
     fn add_memory(&mut self, start: usize, size: usize) -> AllocResult {
         unimplemented!("");

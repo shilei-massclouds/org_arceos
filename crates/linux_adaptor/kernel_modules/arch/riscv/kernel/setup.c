@@ -99,5 +99,5 @@ void __init setup_arch(char **cmdline_p)
     zone->spanned_pages = max_low_pfn - min_low_pfn;
     setup_usemap(zone);
     */
-    PANIC("Reach Here!");
+    //PANIC("Reach Here!");
 }
