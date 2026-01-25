@@ -303,8 +303,6 @@ void __init setup_bootmem(void)
 	 */
 	early_init_fdt_scan_reserved_mem();
 
-    printk("%s: vmlinux(%pa, %pa) phys_ram_base(%pa,%lx)\n", __func__, &vmlinux_start, &vmlinux_end, &phys_ram_base, PAGE_OFFSET);
-#if 0
 	/*
 	 * If DTB is built in, no need to reserve its memblock.
 	 * Otherwise, do reserve it but avoid using
@@ -317,8 +315,6 @@ void __init setup_bootmem(void)
 	dma_contiguous_reserve(dma32_phys_limit);
 	if (IS_ENABLED(CONFIG_64BIT))
 		hugetlb_cma_reserve(PUD_SHIFT - PAGE_SHIFT);
-#endif
-    PANIC("");
 }
 
 struct pt_alloc_ops pt_ops __meminitdata;

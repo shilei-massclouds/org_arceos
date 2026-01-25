@@ -178,7 +178,6 @@ static inline phys_addr_t memblock_cap_size(phys_addr_t base, phys_addr_t *size)
 	return *size = min(*size, PHYS_ADDR_MAX - base);
 }
 
-#if 0
 /*
  * Address comparison utilities
  */
@@ -202,7 +201,6 @@ bool __init_memblock memblock_overlaps_region(struct memblock_type *type,
 			return true;
 	return false;
 }
-#endif
 
 /**
  * __memblock_find_range_bottom_up - find free area utility in bottom-up
@@ -913,8 +911,6 @@ int __init_memblock memblock_reserve(phys_addr_t base, phys_addr_t size)
 	return memblock_add_range(&memblock.reserved, base, size, MAX_NUMNODES, 0);
 }
 
-#if 0
-
 #ifdef CONFIG_HAVE_MEMBLOCK_PHYS_MAP
 int __init_memblock memblock_physmem_add(phys_addr_t base, phys_addr_t size)
 {
@@ -961,6 +957,7 @@ static int __init_memblock memblock_setclr_flag(struct memblock_type *type,
 	return 0;
 }
 
+#if 0
 /**
  * memblock_mark_hotplug - Mark hotpluggable memory with flag MEMBLOCK_HOTPLUG.
  * @base: the base phys addr of the region
@@ -1001,6 +998,7 @@ int __init_memblock memblock_mark_mirror(phys_addr_t base, phys_addr_t size)
 
 	return memblock_setclr_flag(&memblock.memory, base, size, 1, MEMBLOCK_MIRROR);
 }
+#endif
 
 /**
  * memblock_mark_nomap - Mark a memory region with flag MEMBLOCK_NOMAP.
@@ -1022,6 +1020,7 @@ int __init_memblock memblock_mark_nomap(phys_addr_t base, phys_addr_t size)
 	return memblock_setclr_flag(&memblock.memory, base, size, 1, MEMBLOCK_NOMAP);
 }
 
+#if 0
 /**
  * memblock_clear_nomap - Clear flag MEMBLOCK_NOMAP for a specified region.
  * @base: the base phys addr of the region
@@ -1933,6 +1932,7 @@ bool __init_memblock memblock_is_region_memory(phys_addr_t base, phys_addr_t siz
 	return (memblock.memory.regions[idx].base +
 		 memblock.memory.regions[idx].size) >= end;
 }
+#endif
 
 /**
  * memblock_is_region_reserved - check if a region intersects reserved memory
@@ -1950,6 +1950,7 @@ bool __init_memblock memblock_is_region_reserved(phys_addr_t base, phys_addr_t s
 	return memblock_overlaps_region(&memblock.reserved, base, size);
 }
 
+#if 0
 void __init_memblock memblock_trim_memory(phys_addr_t align)
 {
 	phys_addr_t start, end, orig_start, orig_end;

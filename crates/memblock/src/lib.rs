@@ -26,7 +26,6 @@ impl<const PAGE_SIZE: usize> BaseAllocator for MemblockAllocator<PAGE_SIZE> {
             parse_dtb();
             setup_bootmem();
         }
-        unimplemented!("MemblockAllocator.init: {start:#x} {size:#x}");
     }
     fn add_memory(&mut self, start: usize, size: usize) -> AllocResult {
         unimplemented!("No support for Memblock.");

@@ -42,4 +42,3 @@ CL_MINE(perf_trace_run_bpf_submit)
 CL_MINE(bpf_trace_run2)
 
 CL_MINE(memblock_mark_hotplug)
-CL_MINE(fdt_scan_reserved_mem)
