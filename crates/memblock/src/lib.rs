@@ -15,10 +15,21 @@ pub struct MemblockAllocator<const PAGE_SIZE: usize> {
 
 impl<const PAGE_SIZE: usize> BaseAllocator for MemblockAllocator<PAGE_SIZE> {
     fn init(&mut self, start: usize, size: usize) {
+        //
+        // parse_dtb() [arch/riscv/kernel/setup.c]
+        //   - get physical memory range from fdt
+        //
+        // setup_bootmem() [arch/riscv/mm/init.c]
+        //   - reserve areas including kernel, initrd and fdt
+        //
+        unsafe {
+            parse_dtb();
+            setup_bootmem();
+        }
         unimplemented!("MemblockAllocator.init: {start:#x} {size:#x}");
     }
     fn add_memory(&mut self, start: usize, size: usize) -> AllocResult {
-        unimplemented!("");
+        unimplemented!("No support for Memblock.");
     }
 }
 
@@ -81,4 +92,9 @@ impl<const PAGE_SIZE: usize> PageAllocator for MemblockAllocator<PAGE_SIZE> {
     fn available_pages(&self) -> usize {
         unimplemented!("");
     }
+}
+
+unsafe extern "C" {
+    fn parse_dtb();
+    fn setup_bootmem();
 }

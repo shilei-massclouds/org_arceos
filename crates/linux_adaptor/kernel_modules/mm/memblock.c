@@ -726,6 +726,7 @@ int __init_memblock memblock_add(phys_addr_t base, phys_addr_t size)
 
 	memblock_dbg("%s: [%pa-%pa] %pS\n", __func__,
 		     &base, &end, (void *)_RET_IP_);
+	printk("%s: [%pa-%pa]\n", __func__, &base, &end);
 
 	return memblock_add_range(&memblock.memory, base, size, MAX_NUMNODES, 0);
 }
@@ -1754,6 +1755,7 @@ unsigned long __init memblock_estimated_nr_free_pages(void)
 {
 	return PHYS_PFN(memblock_phys_mem_size() - memblock_reserved_size());
 }
+#endif
 
 /* lowest address */
 phys_addr_t __init_memblock memblock_start_of_DRAM(void)
@@ -1808,7 +1810,6 @@ void __init memblock_enforce_memory_limit(phys_addr_t limit)
 	memblock_remove_range(&memblock.reserved, max_addr,
 			      PHYS_ADDR_MAX);
 }
-#endif
 
 void __init memblock_cap_memory_range(phys_addr_t base, phys_addr_t size)
 {

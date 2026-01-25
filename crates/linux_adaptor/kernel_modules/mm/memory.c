@@ -50,6 +50,20 @@
 #include "internal.h"
 #include "swap.h"
 
+/*
+ * A number of key systems in x86 including ioremap() rely on the assumption
+ * that high_memory defines the upper bound on direct map memory, then end
+ * of ZONE_NORMAL.
+ */
+void *high_memory;
+EXPORT_SYMBOL(high_memory);
+
+unsigned long max_mapnr;
+EXPORT_SYMBOL(max_mapnr);
+
+struct page *mem_map;
+EXPORT_SYMBOL(mem_map);
+
 #if defined(CONFIG_PROVE_LOCKING) || defined(CONFIG_DEBUG_ATOMIC_SLEEP)
 void __might_fault(const char *file, int line)
 {

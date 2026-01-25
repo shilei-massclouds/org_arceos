@@ -11,5 +11,5 @@ char __initdata boot_command_line[COMMAND_LINE_SIZE];
 
 void cl_init(unsigned long hartid, unsigned long dtb_pa)
 {
-    setup_arch(NULL /* cmdline_p */);
+    //setup_arch(NULL /* cmdline_p */);
 }

@@ -37,6 +37,7 @@
 #include <asm/tlbflush.h>
 
 #include "../kernel/head.h"
+#include "adaptor.h"
 
 //u64 new_vmalloc[NR_CPUS / sizeof(u64) + 1];
 
@@ -78,8 +79,8 @@ extern char _start[];
 void *_dtb_early_va __initdata;
 uintptr_t _dtb_early_pa __initdata;
 
-//phys_addr_t dma32_phys_limit __initdata;
-//
+phys_addr_t dma32_phys_limit __initdata;
+
 //static void __init zone_sizes_init(void)
 //{
 //	unsigned long max_zone_pfns[MAX_NR_ZONES] = { 0, };
@@ -215,106 +216,110 @@ static phys_addr_t memory_limit;
 //	return 0;
 //}
 //early_param("mem", early_mem);
-//
-//static void __init setup_bootmem(void)
-//{
-//	phys_addr_t vmlinux_end = __pa_symbol(&_end);
-//	phys_addr_t max_mapped_addr;
-//	phys_addr_t phys_ram_end, vmlinux_start;
-//
-//	if (IS_ENABLED(CONFIG_XIP_KERNEL))
-//		vmlinux_start = __pa_symbol(&_sdata);
-//	else
-//		vmlinux_start = __pa_symbol(&_start);
-//
-//	memblock_enforce_memory_limit(memory_limit);
-//
-//	/*
-//	 * Make sure we align the reservation on PMD_SIZE since we will
-//	 * map the kernel in the linear mapping as read-only: we do not want
-//	 * any allocation to happen between _end and the next pmd aligned page.
-//	 */
-//	if (IS_ENABLED(CONFIG_64BIT) && IS_ENABLED(CONFIG_STRICT_KERNEL_RWX))
-//		vmlinux_end = (vmlinux_end + PMD_SIZE - 1) & PMD_MASK;
-//	/*
-//	 * Reserve from the start of the kernel to the end of the kernel
-//	 */
-//	memblock_reserve(vmlinux_start, vmlinux_end - vmlinux_start);
-//
-//	/*
-//	 * Make sure we align the start of the memory on a PMD boundary so that
-//	 * at worst, we map the linear mapping with PMD mappings.
-//	 */
-//	if (!IS_ENABLED(CONFIG_XIP_KERNEL)) {
-//		phys_ram_base = memblock_start_of_DRAM() & PMD_MASK;
-//#ifdef CONFIG_SPARSEMEM_VMEMMAP
-//		vmemmap_start_pfn = round_down(phys_ram_base, VMEMMAP_ADDR_ALIGN) >> PAGE_SHIFT;
-//#endif
-//	}
-//
-//	/*
-//	 * In 64-bit, any use of __va/__pa before this point is wrong as we
-//	 * did not know the start of DRAM before.
-//	 */
-//	if (IS_ENABLED(CONFIG_64BIT) && IS_ENABLED(CONFIG_MMU))
-//		kernel_map.va_pa_offset = PAGE_OFFSET - phys_ram_base;
-//
-//	/*
-//	 * The size of the linear page mapping may restrict the amount of
-//	 * usable RAM.
-//	 */
-//	if (IS_ENABLED(CONFIG_64BIT) && IS_ENABLED(CONFIG_MMU)) {
-//		max_mapped_addr = __pa(PAGE_OFFSET) + KERN_VIRT_SIZE;
-//		memblock_cap_memory_range(phys_ram_base,
-//					  max_mapped_addr - phys_ram_base);
-//	}
-//
-//	/*
-//	 * Reserve physical address space that would be mapped to virtual
-//	 * addresses greater than (void *)(-PAGE_SIZE) because:
-//	 *  - This memory would overlap with ERR_PTR
-//	 *  - This memory belongs to high memory, which is not supported
-//	 *
-//	 * This is not applicable to 64-bit kernel, because virtual addresses
-//	 * after (void *)(-PAGE_SIZE) are not linearly mapped: they are
-//	 * occupied by kernel mapping. Also it is unrealistic for high memory
-//	 * to exist on 64-bit platforms.
-//	 */
-//	if (!IS_ENABLED(CONFIG_64BIT)) {
-//		max_mapped_addr = __va_to_pa_nodebug(-PAGE_SIZE);
-//		memblock_reserve(max_mapped_addr, (phys_addr_t)-max_mapped_addr);
-//	}
-//
-//	phys_ram_end = memblock_end_of_DRAM();
-//	min_low_pfn = PFN_UP(phys_ram_base);
-//	max_low_pfn = max_pfn = PFN_DOWN(phys_ram_end);
-//	high_memory = (void *)(__va(PFN_PHYS(max_low_pfn)));
-//
-//	dma32_phys_limit = min(4UL * SZ_1G, (unsigned long)PFN_PHYS(max_low_pfn));
-//	set_max_mapnr(max_low_pfn - ARCH_PFN_OFFSET);
-//
-//	reserve_initrd_mem();
-//
-//	/*
-//	 * No allocation should be done before reserving the memory as defined
-//	 * in the device tree, otherwise the allocation could end up in a
-//	 * reserved region.
-//	 */
-//	early_init_fdt_scan_reserved_mem();
-//
-//	/*
-//	 * If DTB is built in, no need to reserve its memblock.
-//	 * Otherwise, do reserve it but avoid using
-//	 * early_init_fdt_reserve_self() since __pa() does
-//	 * not work for DTB pointers that are fixmap addresses
-//	 */
-//	if (!IS_ENABLED(CONFIG_BUILTIN_DTB))
-//		memblock_reserve(dtb_early_pa, fdt_totalsize(dtb_early_va));
-//
-//	dma_contiguous_reserve(dma32_phys_limit);
-//	if (IS_ENABLED(CONFIG_64BIT))
-//		hugetlb_cma_reserve(PUD_SHIFT - PAGE_SHIFT);
-//}
+
+void __init setup_bootmem(void)
+{
+	phys_addr_t vmlinux_end = __pa_symbol(&_end);
+	phys_addr_t max_mapped_addr;
+	phys_addr_t phys_ram_end, vmlinux_start;
+
+	if (IS_ENABLED(CONFIG_XIP_KERNEL))
+		vmlinux_start = __pa_symbol(&_sdata);
+	else
+		vmlinux_start = __pa_symbol(&_start);
+
+	memblock_enforce_memory_limit(memory_limit);
+
+	/*
+	 * Make sure we align the reservation on PMD_SIZE since we will
+	 * map the kernel in the linear mapping as read-only: we do not want
+	 * any allocation to happen between _end and the next pmd aligned page.
+	 */
+	if (IS_ENABLED(CONFIG_64BIT) && IS_ENABLED(CONFIG_STRICT_KERNEL_RWX))
+		vmlinux_end = (vmlinux_end + PMD_SIZE - 1) & PMD_MASK;
+	/*
+	 * Reserve from the start of the kernel to the end of the kernel
+	 */
+	memblock_reserve(vmlinux_start, vmlinux_end - vmlinux_start);
+
+	/*
+	 * Make sure we align the start of the memory on a PMD boundary so that
+	 * at worst, we map the linear mapping with PMD mappings.
+	 */
+	if (!IS_ENABLED(CONFIG_XIP_KERNEL)) {
+		phys_ram_base = memblock_start_of_DRAM() & PMD_MASK;
+#ifdef CONFIG_SPARSEMEM_VMEMMAP
+		vmemmap_start_pfn = round_down(phys_ram_base, VMEMMAP_ADDR_ALIGN) >> PAGE_SHIFT;
+#endif
+	}
+
+	/*
+	 * In 64-bit, any use of __va/__pa before this point is wrong as we
+	 * did not know the start of DRAM before.
+	 */
+	if (IS_ENABLED(CONFIG_64BIT) && IS_ENABLED(CONFIG_MMU))
+		kernel_map.va_pa_offset = PAGE_OFFSET - phys_ram_base;
+
+	/*
+	 * The size of the linear page mapping may restrict the amount of
+	 * usable RAM.
+	 */
+	if (IS_ENABLED(CONFIG_64BIT) && IS_ENABLED(CONFIG_MMU)) {
+		max_mapped_addr = __pa(PAGE_OFFSET) + KERN_VIRT_SIZE;
+		memblock_cap_memory_range(phys_ram_base,
+					  max_mapped_addr - phys_ram_base);
+	}
+
+	/*
+	 * Reserve physical address space that would be mapped to virtual
+	 * addresses greater than (void *)(-PAGE_SIZE) because:
+	 *  - This memory would overlap with ERR_PTR
+	 *  - This memory belongs to high memory, which is not supported
+	 *
+	 * This is not applicable to 64-bit kernel, because virtual addresses
+	 * after (void *)(-PAGE_SIZE) are not linearly mapped: they are
+	 * occupied by kernel mapping. Also it is unrealistic for high memory
+	 * to exist on 64-bit platforms.
+	 */
+	if (!IS_ENABLED(CONFIG_64BIT)) {
+		max_mapped_addr = __va_to_pa_nodebug(-PAGE_SIZE);
+		memblock_reserve(max_mapped_addr, (phys_addr_t)-max_mapped_addr);
+	}
+
+	phys_ram_end = memblock_end_of_DRAM();
+	min_low_pfn = PFN_UP(phys_ram_base);
+	max_low_pfn = max_pfn = PFN_DOWN(phys_ram_end);
+	high_memory = (void *)(__va(PFN_PHYS(max_low_pfn)));
+
+	dma32_phys_limit = min(4UL * SZ_1G, (unsigned long)PFN_PHYS(max_low_pfn));
+	set_max_mapnr(max_low_pfn - ARCH_PFN_OFFSET);
+
+	reserve_initrd_mem();
+
+	/*
+	 * No allocation should be done before reserving the memory as defined
+	 * in the device tree, otherwise the allocation could end up in a
+	 * reserved region.
+	 */
+	early_init_fdt_scan_reserved_mem();
+
+    printk("%s: vmlinux(%pa, %pa) phys_ram_base(%pa,%lx)\n", __func__, &vmlinux_start, &vmlinux_end, &phys_ram_base, PAGE_OFFSET);
+#if 0
+	/*
+	 * If DTB is built in, no need to reserve its memblock.
+	 * Otherwise, do reserve it but avoid using
+	 * early_init_fdt_reserve_self() since __pa() does
+	 * not work for DTB pointers that are fixmap addresses
+	 */
+	if (!IS_ENABLED(CONFIG_BUILTIN_DTB))
+		memblock_reserve(dtb_early_pa, fdt_totalsize(dtb_early_va));
+
+	dma_contiguous_reserve(dma32_phys_limit);
+	if (IS_ENABLED(CONFIG_64BIT))
+		hugetlb_cma_reserve(PUD_SHIFT - PAGE_SHIFT);
+#endif
+    PANIC("");
+}
 
 struct pt_alloc_ops pt_ops __meminitdata;
 

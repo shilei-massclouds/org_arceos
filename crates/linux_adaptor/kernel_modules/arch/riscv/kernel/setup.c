@@ -68,7 +68,7 @@ static void __ref setup_usemap(struct zone *zone)
     }
 }
 
-static void __init parse_dtb(void)
+void __init parse_dtb(void)
 {
     /* Early scan of device tree from init memory */
     if (early_init_dt_scan(dtb_early_va, dtb_early_pa)) {
@@ -85,8 +85,8 @@ static void __init parse_dtb(void)
 
 void __init setup_arch(char **cmdline_p)
 {
-    parse_dtb();
     /*
+    parse_dtb();
     paging_init();
 
     // In misc_mem_init()

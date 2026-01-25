@@ -7,6 +7,7 @@
 #include <linux/of_fdt.h>
 #include <linux/libfdt_env.h>
 #include <linux/memblock.h>
+#include <linux/crash_dump.h>
 
 #include <asm/setup.h>
 
@@ -347,4 +348,55 @@ const char * __init of_flat_dt_get_machine_name(void)
 unsigned long __init of_get_flat_dt_root(void)
 {
     return 0;
+}
+
+/*
+ * fdt_reserve_elfcorehdr() - reserves memory for elf core header
+ *
+ * This function reserves the memory occupied by an elf core header
+ * described in the device tree. This region contains all the
+ * information about primary kernel's core image and is used by a dump
+ * capture kernel to access the system memory on primary kernel.
+ */
+static void __init fdt_reserve_elfcorehdr(void)
+{
+    if (!IS_ENABLED(CONFIG_CRASH_DUMP) || !elfcorehdr_size)
+        return;
+
+    if (memblock_is_region_reserved(elfcorehdr_addr, elfcorehdr_size)) {
+        pr_warn("elfcorehdr is overlapped\n");
+        return;
+    }
+
+    memblock_reserve(elfcorehdr_addr, elfcorehdr_size);
+
+    pr_info("Reserving %llu KiB of memory at 0x%llx for elfcorehdr\n",
+        elfcorehdr_size >> 10, elfcorehdr_addr);
+}
+
+/**
+ * early_init_fdt_scan_reserved_mem() - create reserved memory regions
+ *
+ * This function grabs memory from early allocator for device exclusive use
+ * defined in device tree structures. It should be called by arch specific code
+ * once the early allocator (i.e. memblock) has been fully activated.
+ */
+void __init early_init_fdt_scan_reserved_mem(void)
+{
+    int n;
+    u64 base, size;
+
+    if (!initial_boot_params)
+        return;
+
+    fdt_scan_reserved_mem();
+    fdt_reserve_elfcorehdr();
+
+    /* Process header /memreserve/ fields */
+    for (n = 0; ; n++) {
+        fdt_get_mem_rsv(initial_boot_params, n, &base, &size);
+        if (!size)
+            break;
+        memblock_reserve(base, size);
+    }
 }

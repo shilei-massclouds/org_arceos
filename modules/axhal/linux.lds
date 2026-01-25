@@ -89,6 +89,7 @@ SECTIONS
         _sdata = .;
         . = ALIGN(4K);
         *(.data .data.*)
+        *(.ref.data)
     }
 
     .sdata : {
