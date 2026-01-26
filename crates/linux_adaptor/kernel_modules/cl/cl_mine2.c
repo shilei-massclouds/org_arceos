@@ -2,8 +2,6 @@
 #include "adaptor.h"
 
 CL_MINE(__sw_hweight64)
-CL_MINE(_parse_integer_fixup_radix)
-CL_MINE(_parse_integer_limit)
 CL_MINE(get_random_bytes)
 CL_MINE(__warn_printk)
 CL_MINE(skip_spaces)
@@ -48,3 +46,4 @@ CL_MINE(__raw_spin_lock_init)
 CL_MINE(__alloc_pages_noprof)
 CL_MINE(mod_node_page_state)
 CL_MINE(get_free_pages_noprof)
+CL_MINE(_copy_from_user)

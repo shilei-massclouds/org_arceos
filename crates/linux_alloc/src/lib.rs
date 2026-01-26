@@ -10,17 +10,19 @@ use core::ptr::NonNull;
 use axerrno::AxError;
 
 use memblock::MemblockAllocator;
+use buddy::BuddyAllocator;
 
 static mut IS_FINAL: bool = false;
 
 /// Early Allocator used by Linux.
 pub struct LinuxAllocator<const PAGE_SIZE: usize> {
     early_alloc: MemblockAllocator<PAGE_SIZE>,
+    palloc: BuddyAllocator<PAGE_SIZE>,
 }
 
 impl<const PAGE_SIZE: usize> BaseAllocator for LinuxAllocator<PAGE_SIZE> {
     fn init(&mut self, start: usize, size: usize) {
-        self.early_alloc.init(start, size)
+        self.early_alloc.init(start, size);
     }
     fn add_memory(&mut self, _start: usize, _size: usize) -> AllocResult {
         unimplemented!("No support for Linux.");
@@ -51,14 +53,19 @@ impl<const PAGE_SIZE: usize> ByteAllocator for LinuxAllocator<PAGE_SIZE> {
 
 impl<const PAGE_SIZE: usize> LinuxAllocator<PAGE_SIZE> {
     pub const fn new() -> Self {
-        Self { early_alloc: MemblockAllocator::new() }
+        Self {
+            early_alloc: MemblockAllocator::new(),
+            palloc: BuddyAllocator::new(),
+        }
     }
-    pub fn finalize() {
+    pub fn finalize(&mut self) {
         // Safety: this function can only be called at boot-time.
         // At that time, there's only one task.
         unsafe {
             assert!(!IS_FINAL);
             IS_FINAL = true;
+            self.palloc.init(0, 0);
+            unimplemented!("IS_FINAL");
         }
     }
 }

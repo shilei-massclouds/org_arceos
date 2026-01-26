@@ -1283,21 +1283,24 @@ void __init setup_vm_final(void)
 //	/* Depend on that Linear Mapping is ready */
 //	memblock_allow_resize();
 //}
-//
-//void __init misc_mem_init(void)
-//{
-//	early_memtest(min_low_pfn << PAGE_SHIFT, max_low_pfn << PAGE_SHIFT);
-//	arch_numa_init();
-//	sparse_init();
-//#ifdef CONFIG_SPARSEMEM_VMEMMAP
-//	/* The entire VMEMMAP region has been populated. Flush TLB for this region */
-//	local_flush_tlb_kernel_range(VMEMMAP_START, VMEMMAP_END);
-//#endif
-//	zone_sizes_init();
-//	arch_reserve_crashkernel();
-//	memblock_dump_all();
-//}
-//
+
+void __init misc_mem_init(void)
+{
+	early_memtest(min_low_pfn << PAGE_SHIFT, max_low_pfn << PAGE_SHIFT);
+#if 0
+	arch_numa_init();
+	sparse_init();
+#ifdef CONFIG_SPARSEMEM_VMEMMAP
+	/* The entire VMEMMAP region has been populated. Flush TLB for this region */
+	local_flush_tlb_kernel_range(VMEMMAP_START, VMEMMAP_END);
+#endif
+	zone_sizes_init();
+	arch_reserve_crashkernel();
+	memblock_dump_all();
+#endif
+    PANIC("");
+}
+
 //#ifdef CONFIG_SPARSEMEM_VMEMMAP
 //void __meminit vmemmap_set_pmd(pmd_t *pmd, void *p, int node,
 //			       unsigned long addr, unsigned long next)

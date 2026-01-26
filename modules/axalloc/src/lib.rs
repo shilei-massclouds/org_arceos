@@ -254,7 +254,7 @@ pub fn global_init(start_vaddr: usize, size: usize) {
 /// This function should be called only once, and after 'init_memory_management'.
 pub fn global_init_final() {
     #[cfg(feature = "linux-adaptor")]
-    LinuxAllocator::<PAGE_SIZE>::finalize();
+    GLOBAL_ALLOCATOR.palloc.lock().finalize();
 }
 
 /// Add the given memory region to the global allocator.
