@@ -587,6 +587,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "axmm_lx"
+version = "0.2.0"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "axnet"
 version = "0.2.0"
 dependencies = [
@@ -788,6 +795,7 @@ dependencies = [
  "axipi",
  "axlog",
  "axmm",
+ "axmm_lx",
  "axnet",
  "axplat",
  "axtask",

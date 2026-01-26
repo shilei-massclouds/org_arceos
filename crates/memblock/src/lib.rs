@@ -14,7 +14,7 @@ pub struct MemblockAllocator<const PAGE_SIZE: usize> {
 }
 
 impl<const PAGE_SIZE: usize> BaseAllocator for MemblockAllocator<PAGE_SIZE> {
-    fn init(&mut self, start: usize, size: usize) {
+    fn init(&mut self, _start: usize, _size: usize) {
         //
         // parse_dtb() [arch/riscv/kernel/setup.c]
         //   - get physical memory range from fdt
@@ -27,17 +27,20 @@ impl<const PAGE_SIZE: usize> BaseAllocator for MemblockAllocator<PAGE_SIZE> {
             setup_bootmem();
         }
     }
-    fn add_memory(&mut self, start: usize, size: usize) -> AllocResult {
+    fn add_memory(&mut self, _start: usize, _size: usize) -> AllocResult {
         unimplemented!("No support for Memblock.");
     }
 }
 
 impl<const PAGE_SIZE: usize> ByteAllocator for MemblockAllocator<PAGE_SIZE> {
     fn alloc(&mut self, layout: Layout) -> AllocResult<NonNull<u8>> {
-        unimplemented!("");
+        let pa = unsafe {
+            memblock_phys_alloc(layout.size(), layout.align())
+        };
+        Ok(NonNull::new(pa as *mut u8).unwrap())
     }
 
-    fn dealloc(&mut self, pos: NonNull<u8>, layout: Layout) {
+    fn dealloc(&mut self, _pos: NonNull<u8>, _layout: Layout) {
         unimplemented!("");
     }
 
@@ -64,19 +67,22 @@ impl<const PAGE_SIZE: usize> PageAllocator for MemblockAllocator<PAGE_SIZE> {
     const PAGE_SIZE: usize = PAGE_SIZE;
 
     fn alloc_pages(&mut self, num_pages: usize, align_pow2: usize) -> AllocResult<usize> {
-        unimplemented!("");
+        let pa = unsafe {
+            memblock_phys_alloc(num_pages * PAGE_SIZE, align_pow2)
+        };
+        Ok(pa)
     }
 
     fn alloc_pages_at(
         &mut self,
-        base: usize,
-        num_pages: usize,
-        align_pow2: usize,
+        _base: usize,
+        _num_pages: usize,
+        _align_pow2: usize,
     ) -> AllocResult<usize> {
         unimplemented!("");
     }
 
-    fn dealloc_pages(&mut self, pos: usize, num_pages: usize) {
+    fn dealloc_pages(&mut self, _pos: usize, _num_pages: usize) {
         unimplemented!("");
     }
 
@@ -96,4 +102,5 @@ impl<const PAGE_SIZE: usize> PageAllocator for MemblockAllocator<PAGE_SIZE> {
 unsafe extern "C" {
     fn parse_dtb();
     fn setup_bootmem();
+    fn memblock_phys_alloc(size: usize, align: usize) -> usize;
 }

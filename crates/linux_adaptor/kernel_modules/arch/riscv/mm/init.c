@@ -388,9 +388,7 @@ static inline phys_addr_t __init alloc_pte_early(uintptr_t va)
 
 static inline phys_addr_t __init alloc_pte_fixmap(uintptr_t va)
 {
-    // FixMe
-	BUG();
-	//return memblock_phys_alloc(PAGE_SIZE, PAGE_SIZE);
+	return memblock_phys_alloc(PAGE_SIZE, PAGE_SIZE);
 }
 
 static phys_addr_t __meminit alloc_pte_late(uintptr_t va)
@@ -452,9 +450,7 @@ static phys_addr_t __init alloc_pmd_early(uintptr_t va)
 
 static phys_addr_t __init alloc_pmd_fixmap(uintptr_t va)
 {
-    // FixMe
-    BUG();
-	//return memblock_phys_alloc(PAGE_SIZE, PAGE_SIZE);
+	return memblock_phys_alloc(PAGE_SIZE, PAGE_SIZE);
 }
 
 static phys_addr_t __meminit alloc_pmd_late(uintptr_t va)
@@ -518,9 +514,7 @@ static phys_addr_t __init alloc_pud_early(uintptr_t va)
 
 static phys_addr_t __init alloc_pud_fixmap(uintptr_t va)
 {
-    // FixMe
-    BUG();
-	//return memblock_phys_alloc(PAGE_SIZE, PAGE_SIZE);
+	return memblock_phys_alloc(PAGE_SIZE, PAGE_SIZE);
 }
 
 static phys_addr_t __meminit alloc_pud_late(uintptr_t va)
@@ -558,9 +552,7 @@ static phys_addr_t __init alloc_p4d_early(uintptr_t va)
 
 static phys_addr_t __init alloc_p4d_fixmap(uintptr_t va)
 {
-    // FixMe
-    BUG();
-	//return memblock_phys_alloc(PAGE_SIZE, PAGE_SIZE);
+	return memblock_phys_alloc(PAGE_SIZE, PAGE_SIZE);
 }
 
 static phys_addr_t __meminit alloc_p4d_late(uintptr_t va)
@@ -681,25 +673,25 @@ void __meminit create_pgd_mapping(pgd_t *pgdp, uintptr_t va, phys_addr_t pa, phy
 	create_pgd_next_mapping(nextp, va, pa, sz, prot);
 }
 
-//static uintptr_t __meminit best_map_size(phys_addr_t pa, uintptr_t va, phys_addr_t size)
-//{
-//	if (debug_pagealloc_enabled())
-//		return PAGE_SIZE;
-//
-//	if (pgtable_l5_enabled &&
-//	    !(pa & (P4D_SIZE - 1)) && !(va & (P4D_SIZE - 1)) && size >= P4D_SIZE)
-//		return P4D_SIZE;
-//
-//	if (pgtable_l4_enabled &&
-//	    !(pa & (PUD_SIZE - 1)) && !(va & (PUD_SIZE - 1)) && size >= PUD_SIZE)
-//		return PUD_SIZE;
-//
-//	if (IS_ENABLED(CONFIG_64BIT) &&
-//	    !(pa & (PMD_SIZE - 1)) && !(va & (PMD_SIZE - 1)) && size >= PMD_SIZE)
-//		return PMD_SIZE;
-//
-//	return PAGE_SIZE;
-//}
+static uintptr_t __meminit best_map_size(phys_addr_t pa, uintptr_t va, phys_addr_t size)
+{
+	if (debug_pagealloc_enabled())
+		return PAGE_SIZE;
+
+	if (pgtable_l5_enabled &&
+	    !(pa & (P4D_SIZE - 1)) && !(va & (P4D_SIZE - 1)) && size >= P4D_SIZE)
+		return P4D_SIZE;
+
+	if (pgtable_l4_enabled &&
+	    !(pa & (PUD_SIZE - 1)) && !(va & (PUD_SIZE - 1)) && size >= PUD_SIZE)
+		return PUD_SIZE;
+
+	if (IS_ENABLED(CONFIG_64BIT) &&
+	    !(pa & (PMD_SIZE - 1)) && !(va & (PMD_SIZE - 1)) && size >= PMD_SIZE)
+		return PMD_SIZE;
+
+	return PAGE_SIZE;
+}
 
 #ifdef CONFIG_STRICT_KERNEL_RWX
 static __meminit pgprot_t pgprot_from_va(uintptr_t va)
@@ -952,24 +944,24 @@ static void __init pt_ops_set_fixmap(void)
 #endif
 }
 
-///*
-// * MMU is enabled and page table setup is complete, so from now, we can use
-// * generic page allocation functions to setup page table.
-// */
-//static void __init pt_ops_set_late(void)
-//{
-//	pt_ops.alloc_pte = alloc_pte_late;
-//	pt_ops.get_pte_virt = get_pte_virt_late;
-//#ifndef __PAGETABLE_PMD_FOLDED
-//	pt_ops.alloc_pmd = alloc_pmd_late;
-//	pt_ops.get_pmd_virt = get_pmd_virt_late;
-//	pt_ops.alloc_pud = alloc_pud_late;
-//	pt_ops.get_pud_virt = get_pud_virt_late;
-//	pt_ops.alloc_p4d = alloc_p4d_late;
-//	pt_ops.get_p4d_virt = get_p4d_virt_late;
-//#endif
-//}
-//
+/*
+ * MMU is enabled and page table setup is complete, so from now, we can use
+ * generic page allocation functions to setup page table.
+ */
+static void __init pt_ops_set_late(void)
+{
+	pt_ops.alloc_pte = alloc_pte_late;
+	pt_ops.get_pte_virt = get_pte_virt_late;
+#ifndef __PAGETABLE_PMD_FOLDED
+	pt_ops.alloc_pmd = alloc_pmd_late;
+	pt_ops.get_pmd_virt = get_pmd_virt_late;
+	pt_ops.alloc_pud = alloc_pud_late;
+	pt_ops.get_pud_virt = get_pud_virt_late;
+	pt_ops.alloc_p4d = alloc_p4d_late;
+	pt_ops.get_p4d_virt = get_p4d_virt_late;
+#endif
+}
+
 //#ifdef CONFIG_RANDOMIZE_BASE
 //extern bool __init __pi_set_nokaslr_from_cmdline(uintptr_t dtb_pa);
 //extern u64 __init __pi_get_kaslr_seed(uintptr_t dtb_pa);
@@ -1142,119 +1134,119 @@ asmlinkage void __init setup_vm(uintptr_t dtb_pa)
 	pt_ops_set_fixmap();
 }
 
-//static void __meminit create_linear_mapping_range(phys_addr_t start, phys_addr_t end,
-//						  uintptr_t fixed_map_size, const pgprot_t *pgprot)
-//{
-//	phys_addr_t pa;
-//	uintptr_t va, map_size;
-//
-//	for (pa = start; pa < end; pa += map_size) {
-//		va = (uintptr_t)__va(pa);
-//		map_size = fixed_map_size ? fixed_map_size :
-//					    best_map_size(pa, va, end - pa);
-//
-//		create_pgd_mapping(swapper_pg_dir, va, pa, map_size,
-//				   pgprot ? *pgprot : pgprot_from_va(va));
-//	}
-//}
-//
-//static void __init create_linear_mapping_page_table(void)
-//{
-//	phys_addr_t start, end;
-//	phys_addr_t kfence_pool __maybe_unused;
-//	u64 i;
-//
-//#ifdef CONFIG_STRICT_KERNEL_RWX
-//	phys_addr_t ktext_start = __pa_symbol(_start);
-//	phys_addr_t ktext_size = __init_data_begin - _start;
-//	phys_addr_t krodata_start = __pa_symbol(__start_rodata);
-//	phys_addr_t krodata_size = _data - __start_rodata;
-//
-//	/* Isolate kernel text and rodata so they don't get mapped with a PUD */
-//	memblock_mark_nomap(ktext_start,  ktext_size);
-//	memblock_mark_nomap(krodata_start, krodata_size);
-//#endif
-//
-//#ifdef CONFIG_KFENCE
-//	/*
-//	 *  kfence pool must be backed by PAGE_SIZE mappings, so allocate it
-//	 *  before we setup the linear mapping so that we avoid using hugepages
-//	 *  for this region.
-//	 */
-//	kfence_pool = memblock_phys_alloc(KFENCE_POOL_SIZE, PAGE_SIZE);
-//	BUG_ON(!kfence_pool);
-//
-//	memblock_mark_nomap(kfence_pool, KFENCE_POOL_SIZE);
-//	__kfence_pool = __va(kfence_pool);
-//#endif
-//
-//	/* Map all memory banks in the linear mapping */
-//	for_each_mem_range(i, &start, &end) {
-//		if (start >= end)
-//			break;
-//		if (start <= __pa(PAGE_OFFSET) &&
-//		    __pa(PAGE_OFFSET) < end)
-//			start = __pa(PAGE_OFFSET);
-//
-//		create_linear_mapping_range(start, end, 0, NULL);
-//	}
-//
-//#ifdef CONFIG_STRICT_KERNEL_RWX
-//	create_linear_mapping_range(ktext_start, ktext_start + ktext_size, 0, NULL);
-//	create_linear_mapping_range(krodata_start, krodata_start + krodata_size, 0, NULL);
-//
-//	memblock_clear_nomap(ktext_start,  ktext_size);
-//	memblock_clear_nomap(krodata_start, krodata_size);
-//#endif
-//
-//#ifdef CONFIG_KFENCE
-//	create_linear_mapping_range(kfence_pool, kfence_pool + KFENCE_POOL_SIZE, PAGE_SIZE, NULL);
-//
-//	memblock_clear_nomap(kfence_pool, KFENCE_POOL_SIZE);
-//#endif
-//}
-//
-//static void __init setup_vm_final(void)
-//{
-//	/* Setup swapper PGD for fixmap */
-//#if !defined(CONFIG_64BIT)
-//	/*
-//	 * In 32-bit, the device tree lies in a pgd entry, so it must be copied
-//	 * directly in swapper_pg_dir in addition to the pgd entry that points
-//	 * to fixmap_pte.
-//	 */
-//	unsigned long idx = pgd_index(__fix_to_virt(FIX_FDT));
-//
-//	set_pgd(&swapper_pg_dir[idx], early_pg_dir[idx]);
-//#endif
-//	create_pgd_mapping(swapper_pg_dir, FIXADDR_START,
-//			   __pa_symbol(fixmap_pgd_next),
-//			   PGDIR_SIZE, PAGE_TABLE);
-//
-//	/* Map the linear mapping */
-//	create_linear_mapping_page_table();
-//
-//	/* Map the kernel */
-//	if (IS_ENABLED(CONFIG_64BIT))
-//		create_kernel_page_table(swapper_pg_dir, false);
-//
-//#ifdef CONFIG_KASAN
-//	kasan_swapper_init();
-//#endif
-//
-//	/* Clear fixmap PTE and PMD mappings */
-//	clear_fixmap(FIX_PTE);
-//	clear_fixmap(FIX_PMD);
-//	clear_fixmap(FIX_PUD);
-//	clear_fixmap(FIX_P4D);
-//
-//	/* Move to swapper page table */
-//	csr_write(CSR_SATP, PFN_DOWN(__pa_symbol(swapper_pg_dir)) | satp_mode);
-//	local_flush_tlb_all();
-//
-//	pt_ops_set_late();
-//}
-//
+static void __meminit create_linear_mapping_range(phys_addr_t start, phys_addr_t end,
+						  uintptr_t fixed_map_size, const pgprot_t *pgprot)
+{
+	phys_addr_t pa;
+	uintptr_t va, map_size;
+
+	for (pa = start; pa < end; pa += map_size) {
+		va = (uintptr_t)__va(pa);
+		map_size = fixed_map_size ? fixed_map_size :
+					    best_map_size(pa, va, end - pa);
+
+		create_pgd_mapping(swapper_pg_dir, va, pa, map_size,
+				   pgprot ? *pgprot : pgprot_from_va(va));
+	}
+}
+
+static void __init create_linear_mapping_page_table(void)
+{
+	phys_addr_t start, end;
+	phys_addr_t kfence_pool __maybe_unused;
+	u64 i;
+
+#ifdef CONFIG_STRICT_KERNEL_RWX
+	phys_addr_t ktext_start = __pa_symbol(_start);
+	phys_addr_t ktext_size = __init_data_begin - _start;
+	phys_addr_t krodata_start = __pa_symbol(__start_rodata);
+	phys_addr_t krodata_size = _data - __start_rodata;
+
+	/* Isolate kernel text and rodata so they don't get mapped with a PUD */
+	memblock_mark_nomap(ktext_start,  ktext_size);
+	memblock_mark_nomap(krodata_start, krodata_size);
+#endif
+
+#ifdef CONFIG_KFENCE
+	/*
+	 *  kfence pool must be backed by PAGE_SIZE mappings, so allocate it
+	 *  before we setup the linear mapping so that we avoid using hugepages
+	 *  for this region.
+	 */
+	kfence_pool = memblock_phys_alloc(KFENCE_POOL_SIZE, PAGE_SIZE);
+	BUG_ON(!kfence_pool);
+
+	memblock_mark_nomap(kfence_pool, KFENCE_POOL_SIZE);
+	__kfence_pool = __va(kfence_pool);
+#endif
+
+	/* Map all memory banks in the linear mapping */
+	for_each_mem_range(i, &start, &end) {
+		if (start >= end)
+			break;
+		if (start <= __pa(PAGE_OFFSET) &&
+		    __pa(PAGE_OFFSET) < end)
+			start = __pa(PAGE_OFFSET);
+
+		create_linear_mapping_range(start, end, 0, NULL);
+	}
+
+#ifdef CONFIG_STRICT_KERNEL_RWX
+	create_linear_mapping_range(ktext_start, ktext_start + ktext_size, 0, NULL);
+	create_linear_mapping_range(krodata_start, krodata_start + krodata_size, 0, NULL);
+
+	memblock_clear_nomap(ktext_start,  ktext_size);
+	memblock_clear_nomap(krodata_start, krodata_size);
+#endif
+
+#ifdef CONFIG_KFENCE
+	create_linear_mapping_range(kfence_pool, kfence_pool + KFENCE_POOL_SIZE, PAGE_SIZE, NULL);
+
+	memblock_clear_nomap(kfence_pool, KFENCE_POOL_SIZE);
+#endif
+}
+
+void __init setup_vm_final(void)
+{
+	/* Setup swapper PGD for fixmap */
+#if !defined(CONFIG_64BIT)
+	/*
+	 * In 32-bit, the device tree lies in a pgd entry, so it must be copied
+	 * directly in swapper_pg_dir in addition to the pgd entry that points
+	 * to fixmap_pte.
+	 */
+	unsigned long idx = pgd_index(__fix_to_virt(FIX_FDT));
+
+	set_pgd(&swapper_pg_dir[idx], early_pg_dir[idx]);
+#endif
+	create_pgd_mapping(swapper_pg_dir, FIXADDR_START,
+			   __pa_symbol(fixmap_pgd_next),
+			   PGDIR_SIZE, PAGE_TABLE);
+
+	/* Map the linear mapping */
+	create_linear_mapping_page_table();
+
+	/* Map the kernel */
+	if (IS_ENABLED(CONFIG_64BIT))
+		create_kernel_page_table(swapper_pg_dir, false);
+
+#ifdef CONFIG_KASAN
+	kasan_swapper_init();
+#endif
+
+	/* Clear fixmap PTE and PMD mappings */
+	clear_fixmap(FIX_PTE);
+	clear_fixmap(FIX_PMD);
+	clear_fixmap(FIX_PUD);
+	clear_fixmap(FIX_P4D);
+
+	/* Move to swapper page table */
+	csr_write(CSR_SATP, PFN_DOWN(__pa_symbol(swapper_pg_dir)) | satp_mode);
+	local_flush_tlb_all();
+
+	pt_ops_set_late();
+}
+
 ///*
 // * reserve_crashkernel() - reserves memory for crash kernel
 // *

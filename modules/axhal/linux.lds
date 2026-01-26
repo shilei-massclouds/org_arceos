@@ -28,6 +28,7 @@ SECTIONS
     . = ALIGN((1 << 21));
     . = ALIGN(4K);
 
+    __init_data_begin = .;
     .init.data : AT(ADDR(.init.data) - LOAD_OFFSET) {
         KEEP(*(SORT(___kentry+*)))
         *(.init.data .init.data.*)
@@ -54,14 +55,17 @@ SECTIONS
         _percpu_load_end = .;
     }
 
+    __init_data_end = .;
+
     _srodata = .;
     . = ALIGN((1 << 21));
     .rodata : AT(ADDR(.rodata) - LOAD_OFFSET) {
         __start_rodata = .;
         *(.rodata .rodata.*)
         *(.data.rel.ro*)
-        *(.srodata .srodata.*)
-        *(.sdata2 .sdata2.*)
+    }
+    .srodata : {
+        *(.srodata*)
     }
 
     .init_array : ALIGN(0x10) {

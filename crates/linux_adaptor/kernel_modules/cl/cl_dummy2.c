@@ -25,3 +25,7 @@ EXPORT_SYMBOL_GPL(elfcorehdr_addr);
  * stores the size of elf header of crash image
  */
 unsigned long long elfcorehdr_size;
+
+// mm/debug_page_alloc.c
+bool _debug_pagealloc_enabled_early __read_mostly
+            = IS_ENABLED(CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT);

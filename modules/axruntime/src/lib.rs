@@ -31,6 +31,12 @@ mod mp;
 #[cfg(feature = "smp")]
 pub use self::mp::rust_main_secondary;
 
+#[cfg(feature = "linux-adaptor")]
+use axmm_lx as aspace;
+
+#[cfg(not(feature = "linux-adaptor"))]
+use axmm as aspace;
+
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.
       d88888                           d88P" "Y88b d88P  Y88b
@@ -152,7 +158,7 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     init_allocator();
 
     #[cfg(feature = "paging")]
-    axmm::init_memory_management();
+    aspace::init_memory_management();
 
     info!("Initialize platform devices...");
     axhal::init_later(cpu_id, arg);

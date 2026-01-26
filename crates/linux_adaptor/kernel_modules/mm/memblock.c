@@ -1020,7 +1020,6 @@ int __init_memblock memblock_mark_nomap(phys_addr_t base, phys_addr_t size)
 	return memblock_setclr_flag(&memblock.memory, base, size, 1, MEMBLOCK_NOMAP);
 }
 
-#if 0
 /**
  * memblock_clear_nomap - Clear flag MEMBLOCK_NOMAP for a specified region.
  * @base: the base phys addr of the region
@@ -1033,6 +1032,7 @@ int __init_memblock memblock_clear_nomap(phys_addr_t base, phys_addr_t size)
 	return memblock_setclr_flag(&memblock.memory, base, size, 0, MEMBLOCK_NOMAP);
 }
 
+#if 0
 /**
  * memblock_reserved_mark_noinit - Mark a reserved memory region with flag
  * MEMBLOCK_RSRV_NOINIT which results in the struct pages not being initialized
@@ -1411,6 +1411,8 @@ __next_mem_pfn_range_in_zone(u64 *idx, struct zone *zone,
 
 #endif /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
 
+#endif
+
 /**
  * memblock_alloc_range_nid - allocate boot memory block
  * @size: size of memory block to be allocated in bytes
@@ -1459,7 +1461,8 @@ phys_addr_t __init memblock_alloc_range_nid(phys_addr_t size,
 
 	if (!align) {
 		/* Can't use WARNs this early in boot on powerpc */
-		dump_stack();
+        // FixMe
+		//dump_stack();
 		align = SMP_CACHE_BYTES;
 	}
 
@@ -1536,6 +1539,7 @@ phys_addr_t __init memblock_phys_alloc_range(phys_addr_t size,
 					false);
 }
 
+#if 0
 /**
  * memblock_phys_alloc_try_nid - allocate a memory block from specified NUMA node
  * @size: size of memory block to be allocated in bytes
@@ -1554,6 +1558,7 @@ phys_addr_t __init memblock_phys_alloc_try_nid(phys_addr_t size, phys_addr_t ali
 	return memblock_alloc_range_nid(size, align, 0,
 					MEMBLOCK_ALLOC_ACCESSIBLE, nid, false);
 }
+#endif
 
 /**
  * memblock_alloc_internal - allocate boot memory block
@@ -1600,6 +1605,7 @@ static void * __init memblock_alloc_internal(
 	return phys_to_virt(alloc);
 }
 
+#if 0
 /**
  * memblock_alloc_exact_nid_raw - allocate boot memory block on the exact node
  * without zeroing memory
@@ -1663,6 +1669,8 @@ void * __init memblock_alloc_try_nid_raw(
 				       false);
 }
 
+#endif
+
 /**
  * memblock_alloc_try_nid - allocate boot memory block
  * @size: size of memory block to be allocated in bytes
@@ -1697,6 +1705,8 @@ void * __init memblock_alloc_try_nid(
 
 	return ptr;
 }
+
+#if 0
 
 /**
  * memblock_free_late - free pages directly to buddy allocator
@@ -2031,12 +2041,14 @@ void __init_memblock memblock_dump_all(void)
 	if (memblock_debug)
 		__memblock_dump_all();
 }
+#endif
 
 void __init memblock_allow_resize(void)
 {
 	memblock_can_resize = 1;
 }
 
+#if 0
 static int __init early_memblock(char *p)
 {
 	if (p && strstr(p, "debug"))
@@ -2455,3 +2467,15 @@ __initcall(memblock_init_debugfs);
 
 #endif /* CONFIG_DEBUG_FS */
 #endif
+
+phys_addr_t memblock_phys_alloc(phys_addr_t size, phys_addr_t align)
+{
+	return memblock_phys_alloc_range(size, align, 0,
+					 MEMBLOCK_ALLOC_ACCESSIBLE);
+}
+
+void *memblock_alloc(phys_addr_t size, phys_addr_t align)
+{
+	return memblock_alloc_try_nid(size, align, MEMBLOCK_LOW_LIMIT,
+				      MEMBLOCK_ALLOC_ACCESSIBLE, NUMA_NO_NODE);
+}

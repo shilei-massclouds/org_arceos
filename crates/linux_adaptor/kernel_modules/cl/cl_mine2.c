@@ -42,3 +42,9 @@ CL_MINE(perf_trace_run_bpf_submit)
 CL_MINE(bpf_trace_run2)
 
 CL_MINE(memblock_mark_hotplug)
+
+CL_MINE(ptlock_alloc)
+CL_MINE(__raw_spin_lock_init)
+CL_MINE(__alloc_pages_noprof)
+CL_MINE(mod_node_page_state)
+CL_MINE(get_free_pages_noprof)
