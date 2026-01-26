@@ -34,14 +34,16 @@ impl<const PAGE_SIZE: usize> BaseAllocator for MemblockAllocator<PAGE_SIZE> {
 
 impl<const PAGE_SIZE: usize> ByteAllocator for MemblockAllocator<PAGE_SIZE> {
     fn alloc(&mut self, layout: Layout) -> AllocResult<NonNull<u8>> {
-        let pa = unsafe {
-            memblock_phys_alloc(layout.size(), layout.align())
+        let va = unsafe {
+            memblock_alloc(layout.size(), layout.align())
         };
-        Ok(NonNull::new(pa as *mut u8).unwrap())
+        Ok(NonNull::new(va as *mut u8).unwrap())
     }
 
-    fn dealloc(&mut self, _pos: NonNull<u8>, _layout: Layout) {
-        unimplemented!("");
+    fn dealloc(&mut self, pos: NonNull<u8>, layout: Layout) {
+        unsafe {
+            memblock_free(pos.as_ptr() as usize, layout.size());
+        }
     }
 
     fn total_bytes(&self) -> usize {
@@ -67,10 +69,10 @@ impl<const PAGE_SIZE: usize> PageAllocator for MemblockAllocator<PAGE_SIZE> {
     const PAGE_SIZE: usize = PAGE_SIZE;
 
     fn alloc_pages(&mut self, num_pages: usize, align_pow2: usize) -> AllocResult<usize> {
-        let pa = unsafe {
-            memblock_phys_alloc(num_pages * PAGE_SIZE, align_pow2)
+        let va = unsafe {
+            memblock_alloc(num_pages * PAGE_SIZE, align_pow2)
         };
-        Ok(pa)
+        Ok(va)
     }
 
     fn alloc_pages_at(
@@ -102,5 +104,6 @@ impl<const PAGE_SIZE: usize> PageAllocator for MemblockAllocator<PAGE_SIZE> {
 unsafe extern "C" {
     fn parse_dtb();
     fn setup_bootmem();
-    fn memblock_phys_alloc(size: usize, align: usize) -> usize;
+    fn memblock_alloc(size: usize, align: usize) -> usize;
+    fn memblock_free(ptr: usize, size: usize);
 }

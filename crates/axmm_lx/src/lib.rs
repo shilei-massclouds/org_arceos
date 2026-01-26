@@ -18,8 +18,6 @@ pub fn init_memory_management() {
         /* Depend on that Linear Mapping is ready */
         memblock_allow_resize();
     }
-
-    unimplemented!("axmm_lx: init_memory_management: Reach Here!");
 }
 
 unsafe extern "C" {

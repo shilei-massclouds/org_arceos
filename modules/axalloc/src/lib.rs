@@ -90,12 +90,15 @@ impl GlobalAllocator {
     /// the given region must be larger than 32 KB.
     pub fn init(&self, start_vaddr: usize, size: usize) {
         assert!(size > MIN_HEAP_SIZE);
-        let init_heap_size = MIN_HEAP_SIZE;
         self.palloc.lock().init(start_vaddr, size);
-        let heap_ptr = self
-            .alloc_pages(init_heap_size / PAGE_SIZE, PAGE_SIZE)
-            .unwrap();
-        self.balloc.lock().init(heap_ptr, init_heap_size);
+
+        #[cfg(not(feature = "linux-adaptor"))] {
+            let init_heap_size = MIN_HEAP_SIZE;
+            let heap_ptr = self
+                .alloc_pages(init_heap_size / PAGE_SIZE, PAGE_SIZE)
+                .unwrap();
+            self.balloc.lock().init(heap_ptr, init_heap_size);
+        }
     }
 
     /// Add the given region to the allocator.
