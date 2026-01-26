@@ -263,8 +263,8 @@ dependencies = [
  "axerrno",
  "cfg-if",
  "kspin",
+ "linux_alloc",
  "log",
- "memblock",
  "memory_addr",
 ]
 
@@ -1480,6 +1480,15 @@ name = "linux_adaptor"
 version = "0.0.1"
 dependencies = [
  "axlog",
+]
+
+[[package]]
+name = "linux_alloc"
+version = "0.0.1"
+dependencies = [
+ "allocator",
+ "axerrno",
+ "memblock",
 ]
 
 [[package]]

@@ -17,7 +17,7 @@ use allocator::{AllocResult, BaseAllocator, ByteAllocator, PageAllocator};
 use core::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 use kspin::SpinNoIrq;
-use memblock::MemblockAllocator;
+use linux_alloc::LinuxAllocator;
 
 const PAGE_SIZE: usize = 0x1000;
 const MIN_HEAP_SIZE: usize = 0x8000; // 32 K
@@ -26,8 +26,8 @@ pub use page::GlobalPage;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "linux-adaptor")] {
-        pub type DefaultByteAllocator = MemblockAllocator<PAGE_SIZE>;
-        pub type DefaultPageAllocator = MemblockAllocator<PAGE_SIZE>;
+        pub type DefaultByteAllocator = LinuxAllocator<PAGE_SIZE>;
+        pub type DefaultPageAllocator = LinuxAllocator<PAGE_SIZE>;
     } else {
         if #[cfg(feature = "slab")] {
             /// The default byte allocator.
@@ -254,7 +254,7 @@ pub fn global_init(start_vaddr: usize, size: usize) {
 /// This function should be called only once, and after 'init_memory_management'.
 pub fn global_init_final() {
     #[cfg(feature = "linux-adaptor")]
-    MemblockAllocator::<PAGE_SIZE>::finalize();
+    LinuxAllocator::<PAGE_SIZE>::finalize();
 }
 
 /// Add the given memory region to the global allocator.
