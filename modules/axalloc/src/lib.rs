@@ -247,6 +247,16 @@ pub fn global_init(start_vaddr: usize, size: usize) {
     GLOBAL_ALLOCATOR.init(start_vaddr, size);
 }
 
+/// Finishes initialization for the global allocator after RePaging the aspace.
+///
+/// On some platforms, the final allocators depend on the whole kernel aspace.
+///
+/// This function should be called only once, and after 'init_memory_management'.
+pub fn global_init_final() {
+    #[cfg(feature = "linux-adaptor")]
+    MemblockAllocator::<PAGE_SIZE>::finalize();
+}
+
 /// Add the given memory region to the global allocator.
 ///
 /// Users should ensure that the region is valid and not being used by others,

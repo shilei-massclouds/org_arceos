@@ -160,6 +160,9 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     #[cfg(feature = "paging")]
     aspace::init_memory_management();
 
+    #[cfg(all(feature = "alloc", feature = "paging"))]
+    init_allocator_later();
+
     info!("Initialize platform devices...");
     axhal::init_later(cpu_id, arg);
 
@@ -243,6 +246,11 @@ fn init_allocator() {
                 .expect("add heap memory region failed");
         }
     }
+}
+
+#[cfg(feature = "alloc")]
+fn init_allocator_later() {
+    axalloc::global_init_final();
 }
 
 #[cfg(feature = "irq")]

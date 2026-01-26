@@ -9,6 +9,8 @@ use core::ptr::NonNull;
 #[cfg(feature = "axerrno")]
 use axerrno::AxError;
 
+static mut IS_FINAL: bool = false;
+
 /// Early Allocator used by Linux.
 pub struct MemblockAllocator<const PAGE_SIZE: usize> {
 }
@@ -62,6 +64,14 @@ impl<const PAGE_SIZE: usize> ByteAllocator for MemblockAllocator<PAGE_SIZE> {
 impl<const PAGE_SIZE: usize> MemblockAllocator<PAGE_SIZE> {
     pub const fn new() -> Self {
         Self { }
+    }
+    pub fn finalize() {
+        // Safety: this function can only be called at boot-time.
+        // At that time, there's only one task.
+        unsafe {
+            assert!(!IS_FINAL);
+            IS_FINAL = true;
+        }
     }
 }
 
