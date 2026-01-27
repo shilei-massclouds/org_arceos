@@ -126,3 +126,16 @@ void mod_node_page_state(struct pglist_data *pgdat, enum node_stat_item item,
     //mod_node_state(pgdat, item, delta, 0);
     pr_notice("%s: No impl.", __func__);
 }
+
+/*
+ * Count number of pages "struct page" and "struct page_ext" consume.
+ * nr_memmap_boot_pages: # of pages allocated by boot allocator
+ * nr_memmap_pages: # of pages that were allocated by buddy allocator
+ */
+static atomic_long_t nr_memmap_boot_pages = ATOMIC_LONG_INIT(0);
+static atomic_long_t nr_memmap_pages = ATOMIC_LONG_INIT(0);
+
+void memmap_boot_pages_add(long delta)
+{
+    atomic_long_add(delta, &nr_memmap_boot_pages);
+}

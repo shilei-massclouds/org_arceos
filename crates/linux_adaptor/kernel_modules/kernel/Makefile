@@ -1,6 +1,7 @@
 # Makefile for `kernel`
 
 obj-y += printk/
+obj-y += sched/
 
 #obj-y += resource.o workqueue.o kthread.o
 #obj-y += nsproxy.o cpu.o user_namespace.o
@@ -10,7 +11,6 @@ obj-y += printk/
 #obj-y += notifier.o smp.o smpboot.o async.o
 #obj-y += fork.o
 #
-#obj-y += sched/
 #obj-y += locking/
 #obj-y += irq/
 #obj-y += rcu/

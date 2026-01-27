@@ -1602,7 +1602,6 @@ static void * __init memblock_alloc_internal(
 	return phys_to_virt(alloc);
 }
 
-#if 0
 /**
  * memblock_alloc_exact_nid_raw - allocate boot memory block on the exact node
  * without zeroing memory
@@ -1665,8 +1664,6 @@ void * __init memblock_alloc_try_nid_raw(
 	return memblock_alloc_internal(size, align, min_addr, max_addr, nid,
 				       false);
 }
-
-#endif
 
 /**
  * memblock_alloc_try_nid - allocate boot memory block

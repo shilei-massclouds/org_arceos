@@ -663,6 +663,7 @@ static inline void fixup_hashdist(void)
 #else
 static inline void fixup_hashdist(void) {}
 #endif /* CONFIG_NUMA */
+#endif
 
 #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
 static inline void pgdat_set_deferred_range(pg_data_t *pgdat)
@@ -756,6 +757,7 @@ static inline void init_reserved_page(unsigned long pfn, int nid)
 }
 #endif /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
 
+#if 0
 /*
  * Initialised pages do not have PageReserved set. This function is
  * called for each range allocated by the bootmem allocator and
@@ -1124,6 +1126,8 @@ void __ref memmap_init_zone_device(struct zone *zone,
 }
 #endif
 
+#endif
+
 /*
  * The zone ranges provided by the architecture do not include ZONE_MOVABLE
  * because it is sized independent of architecture. Unlike the other zones,
@@ -1180,6 +1184,7 @@ static unsigned long __init __absent_pages_in_range(int nid,
 	return nr_absent;
 }
 
+#if 0
 /**
  * absent_pages_in_range - Return number of page frames in holes within a range
  * @start_pfn: The start PFN to start searching for holes
@@ -1192,6 +1197,7 @@ unsigned long __init absent_pages_in_range(unsigned long start_pfn,
 {
 	return __absent_pages_in_range(MAX_NUMNODES, start_pfn, end_pfn);
 }
+#endif
 
 /* Return the number of page frames in holes in a zone on a node */
 static unsigned long __init zone_absent_pages_in_node(int nid,
@@ -1285,6 +1291,7 @@ static void __init reset_memoryless_node_totalpages(struct pglist_data *pgdat)
 	pr_debug("On node %d totalpages: 0\n", pgdat->node_id);
 }
 
+#if 0
 static void __init calc_nr_kernel_pages(void)
 {
 	unsigned long start_pfn, end_pfn;
@@ -1308,6 +1315,7 @@ static void __init calc_nr_kernel_pages(void)
 		}
 	}
 }
+#endif
 
 static void __init calculate_node_totalpages(struct pglist_data *pgdat,
 						unsigned long node_start_pfn,
@@ -1349,7 +1357,7 @@ static void __init calculate_node_totalpages(struct pglist_data *pgdat,
 
 	pgdat->node_spanned_pages = totalpages;
 	pgdat->node_present_pages = realtotalpages;
-	pr_debug("On node %d totalpages: %lu\n", pgdat->node_id, realtotalpages);
+	pr_info("On node %d totalpages: %lu\n", pgdat->node_id, realtotalpages);
 }
 
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
@@ -1480,8 +1488,6 @@ static void __ref setup_usemap(struct zone *zone)
 static inline void setup_usemap(struct zone *zone) {}
 #endif /* CONFIG_SPARSEMEM */
 
-#endif
-
 #ifdef CONFIG_HUGETLB_PAGE_SIZE_VARIABLE
 
 /* Initialise the number of pages represented by NR_PAGEBLOCK_BITS */
@@ -1569,6 +1575,8 @@ void __ref free_area_init_core_hotplug(struct pglist_data *pgdat)
 }
 #endif
 
+#endif
+
 static void __init free_area_init_core(struct pglist_data *pgdat)
 {
 	enum zone_type j;
@@ -1641,7 +1649,7 @@ static void __init alloc_node_mem_map(struct pglist_data *pgdat)
 		      size, pgdat->node_id);
 	pgdat->node_mem_map = map + offset;
 	memmap_boot_pages_add(DIV_ROUND_UP(size, PAGE_SIZE));
-	pr_debug("%s: node %d, pgdat %08lx, node_mem_map %08lx\n",
+	pr_info("%s: node %d, pgdat %08lx, node_mem_map %08lx\n",
 		 __func__, pgdat->node_id, (unsigned long)pgdat,
 		 (unsigned long)pgdat->node_mem_map);
 #ifndef CONFIG_NUMA
@@ -1656,8 +1664,6 @@ static void __init alloc_node_mem_map(struct pglist_data *pgdat)
 #else
 static inline void alloc_node_mem_map(struct pglist_data *pgdat) { }
 #endif /* CONFIG_FLATMEM */
-
-#endif
 
 /**
  * get_pfn_range_for_nid - Return the start and end page frames for a node
@@ -1693,7 +1699,6 @@ static void __init free_area_init_node(int nid)
 	unsigned long start_pfn = 0;
 	unsigned long end_pfn = 0;
 
-#if 0
 	/* pg_data_t should be reset to zero when it's allocated */
 	WARN_ON(pgdat->nr_zones || pgdat->kswapd_highest_zoneidx);
 
@@ -1719,6 +1724,7 @@ static void __init free_area_init_node(int nid)
 	pgdat_set_deferred_range(pgdat);
 
 	free_area_init_core(pgdat);
+#if 0
 	lru_gen_init_pgdat(pgdat);
 #endif
     PANIC("");

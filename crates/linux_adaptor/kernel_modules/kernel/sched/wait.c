@@ -18,6 +18,8 @@ void __init_waitqueue_head(struct wait_queue_head *wq_head, const char *name, st
     INIT_LIST_HEAD(&wq_head->head);
 }
 
+#if 0
+
 /*
  * The core wakeup function. Non-exclusive wakeups (nr_exclusive == 0) just
  * wake everything up. If it's an exclusive wakeup (nr_exclusive == small +ve
@@ -212,3 +214,5 @@ prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_ent
     spin_unlock_irqrestore(&wq_head->lock, flags);
     return was_empty;
 }
+
+#endif
