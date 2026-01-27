@@ -67,3 +67,5 @@ CL_MINE(debug_locks_off)
 CL_MINE(queued_read_lock_slowpath)
 CL_MINE(queued_write_lock_slowpath)
 CL_MINE(per_cpu_pages_init)
+
+CL_MINE(memblock_free_all)

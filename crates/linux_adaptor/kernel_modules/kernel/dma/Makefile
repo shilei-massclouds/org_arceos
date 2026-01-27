@@ -1,4 +1,5 @@
 # Makefile for `kernel/dma`
 
-obj-y += mapping.o swiotlb.o direct.o coherent.o
-obj-y += pool.o
+obj-y += swiotlb.o
+#obj-y += mapping.o direct.o coherent.o
+#obj-y += pool.o

@@ -3,6 +3,7 @@
 obj-y += printk/
 obj-y += sched/
 obj-y += locking/
+obj-y += dma/
 
 obj-y += panic.o
 obj-y += cpu.o
@@ -17,6 +18,5 @@ obj-y += cpu.o
 #
 #obj-y += irq/
 #obj-y += rcu/
-#obj-y += dma/
 #obj-y += time/
 #obj-y += trace/

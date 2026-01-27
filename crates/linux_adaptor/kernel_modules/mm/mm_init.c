@@ -2579,6 +2579,7 @@ static void __init mem_debugging_and_hardening_init(void)
 	if (!IS_ENABLED(CONFIG_DEBUG_VM) && want_check_pages)
 		static_branch_enable(&check_pages_enabled);
 }
+#endif
 
 /* Report memory auto-initialization states for this boot. */
 static void __init report_meminit(void)
@@ -2605,6 +2606,7 @@ static void __init report_meminit(void)
 		pr_info("mem auto-init: clearing system memory may take some time...\n");
 }
 
+#if 0
 static void __init mem_init_print_info(void)
 {
 	unsigned long physpages, codesize, datasize, rosize, bss_size;
@@ -2665,20 +2667,28 @@ void __init mm_core_init(void)
 	/* Initializations relying on SMP setup */
 	BUILD_BUG_ON(MAX_ZONELISTS > 2);
 	build_all_zonelists(NULL);
-#if 0
-	page_alloc_init_cpuhp();
+
+    // Fixme
+	//page_alloc_init_cpuhp();
 
 	/*
 	 * page_ext requires contiguous pages,
 	 * bigger than MAX_PAGE_ORDER unless SPARSEMEM.
 	 */
 	page_ext_init_flatmem();
-	mem_debugging_and_hardening_init();
+
+    // Fixme
+	//mem_debugging_and_hardening_init();
+
 	kfence_alloc_pool_and_metadata();
 	report_meminit();
 	kmsan_init_shadow();
-	stack_depot_early_init();
+
+    // Fixme
+	//stack_depot_early_init();
 	mem_init();
+
+#if 0
 	kmem_cache_init();
 	/*
 	 * page_owner must be initialized after buddy is ready, and also after
