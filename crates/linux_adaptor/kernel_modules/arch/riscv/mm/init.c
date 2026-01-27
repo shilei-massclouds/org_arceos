@@ -1247,34 +1247,34 @@ void __init setup_vm_final(void)
 	pt_ops_set_late();
 }
 
-///*
-// * reserve_crashkernel() - reserves memory for crash kernel
-// *
-// * This function reserves memory area given in "crashkernel=" kernel command
-// * line parameter. The memory reserved is used by dump capture kernel when
-// * primary kernel is crashing.
-// */
-//static void __init arch_reserve_crashkernel(void)
-//{
-//	unsigned long long low_size = 0;
-//	unsigned long long crash_base, crash_size;
-//	char *cmdline = boot_command_line;
-//	bool high = false;
-//	int ret;
-//
-//	if (!IS_ENABLED(CONFIG_CRASH_RESERVE))
-//		return;
-//
-//	ret = parse_crashkernel(cmdline, memblock_phys_mem_size(),
-//				&crash_size, &crash_base,
-//				&low_size, &high);
-//	if (ret)
-//		return;
-//
-//	reserve_crashkernel_generic(cmdline, crash_size, crash_base,
-//				    low_size, high);
-//}
-//
+/*
+ * reserve_crashkernel() - reserves memory for crash kernel
+ *
+ * This function reserves memory area given in "crashkernel=" kernel command
+ * line parameter. The memory reserved is used by dump capture kernel when
+ * primary kernel is crashing.
+ */
+static void __init arch_reserve_crashkernel(void)
+{
+	unsigned long long low_size = 0;
+	unsigned long long crash_base, crash_size;
+	char *cmdline = boot_command_line;
+	bool high = false;
+	int ret;
+
+	if (!IS_ENABLED(CONFIG_CRASH_RESERVE))
+		return;
+
+	ret = parse_crashkernel(cmdline, memblock_phys_mem_size(),
+				&crash_size, &crash_base,
+				&low_size, &high);
+	if (ret)
+		return;
+
+	reserve_crashkernel_generic(cmdline, crash_size, crash_base,
+				    low_size, high);
+}
+
 //void __init paging_init(void)
 //{
 //	setup_bootmem();
@@ -1294,11 +1294,8 @@ void __init misc_mem_init(void)
 	local_flush_tlb_kernel_range(VMEMMAP_START, VMEMMAP_END);
 #endif
 	zone_sizes_init();
-#if 0
 	arch_reserve_crashkernel();
 	memblock_dump_all();
-#endif
-    PANIC("");
 }
 
 //#ifdef CONFIG_SPARSEMEM_VMEMMAP

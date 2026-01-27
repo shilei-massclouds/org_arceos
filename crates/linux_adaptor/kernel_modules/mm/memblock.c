@@ -1989,6 +1989,7 @@ phys_addr_t __init_memblock memblock_get_current_limit(void)
 {
 	return memblock.current_limit;
 }
+#endif
 
 static void __init_memblock memblock_dump(struct memblock_type *type)
 {
@@ -2035,7 +2036,6 @@ void __init_memblock memblock_dump_all(void)
 	if (memblock_debug)
 		__memblock_dump_all();
 }
-#endif
 
 void __init memblock_allow_resize(void)
 {
