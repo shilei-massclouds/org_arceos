@@ -966,6 +966,7 @@ int __init_memblock memblock_mark_hotplug(phys_addr_t base, phys_addr_t size)
 {
 	return memblock_setclr_flag(&memblock.memory, base, size, 1, MEMBLOCK_HOTPLUG);
 }
+#endif
 
 /**
  * memblock_clear_hotplug - Clear flag MEMBLOCK_HOTPLUG for a specified region.
@@ -979,6 +980,7 @@ int __init_memblock memblock_clear_hotplug(phys_addr_t base, phys_addr_t size)
 	return memblock_setclr_flag(&memblock.memory, base, size, 0, MEMBLOCK_HOTPLUG);
 }
 
+#if 0
 /**
  * memblock_mark_mirror - Mark mirrored memory with flag MEMBLOCK_MIRROR.
  * @base: the base phys addr of the region
@@ -1311,7 +1313,6 @@ void __init_memblock __next_mem_pfn_range(int *idx, int nid,
 		*out_nid = r_nid;
 }
 
-#if 0
 /**
  * memblock_set_node - set node ID on memblock regions
  * @base: base of area to set node ID for
@@ -1344,6 +1345,7 @@ int __init_memblock memblock_set_node(phys_addr_t base, phys_addr_t size,
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
 /**
  * __next_mem_pfn_range_in_zone - iterator for for_each_*_range_in_zone()
@@ -2052,6 +2054,7 @@ static int __init early_memblock(char *p)
 	return 0;
 }
 early_param("memblock", early_memblock);
+#endif
 
 static void __init free_memmap(unsigned long start_pfn, unsigned long end_pfn)
 {
@@ -2282,6 +2285,7 @@ void __init memblock_free_all(void)
 	totalram_pages_add(pages);
 }
 
+#if 0
 /* Keep a table to reserve named memory */
 #define RESERVE_MEM_MAX_ENTRIES		8
 #define RESERVE_MEM_NAME_SIZE		16

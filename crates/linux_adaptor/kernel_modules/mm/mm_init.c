@@ -755,7 +755,6 @@ static inline void init_reserved_page(unsigned long pfn, int nid)
 }
 #endif /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
 
-#if 0
 /*
  * Initialised pages do not have PageReserved set. This function is
  * called for each range allocated by the bootmem allocator and
@@ -783,7 +782,6 @@ void __meminit reserve_bootmem_region(phys_addr_t start,
 		}
 	}
 }
-#endif
 
 /* If zone is ZONE_MOVABLE but memory is mirrored, it is an overlapped init */
 static bool __meminit
@@ -2464,6 +2462,7 @@ void *__init alloc_large_system_hash(const char *tablename,
 
 	return table;
 }
+#endif
 
 void __init memblock_free_pages(struct page *page, unsigned long pfn,
 							unsigned int order)
@@ -2485,6 +2484,7 @@ void __init memblock_free_pages(struct page *page, unsigned long pfn,
 	__free_pages_core(page, order, MEMINIT_EARLY);
 }
 
+#if 0
 DEFINE_STATIC_KEY_MAYBE(CONFIG_INIT_ON_ALLOC_DEFAULT_ON, init_on_alloc);
 EXPORT_SYMBOL(init_on_alloc);
 
@@ -2688,6 +2688,9 @@ void __init mm_core_init(void)
 	//stack_depot_early_init();
 	mem_init();
 
+    /*
+     * Note: The second part should be put into rust crate 'slub'
+     */
 #if 0
 	kmem_cache_init();
 	/*
@@ -2711,5 +2714,4 @@ void __init mm_core_init(void)
 	mm_cache_init();
 	execmem_init();
 #endif
-    PANIC("");
 }

@@ -39,7 +39,6 @@ atomic_long_t vm_numa_event[NR_VM_NUMA_EVENT_ITEMS] __cacheline_aligned_in_smp;
 void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
                long delta)
 {
-#if 0
     struct per_cpu_zonestat __percpu *pcp = zone->per_cpu_zonestats;
     s8 __percpu *p = pcp->vm_stat_diff + item;
     long x;
@@ -65,8 +64,6 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
     __this_cpu_write(*p, x);
 
     preempt_enable_nested();
-#endif
-    PANIC("");
 }
 
 /*

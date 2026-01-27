@@ -11,6 +11,8 @@
 #include "page_reporting.h"
 #include "internal.h"
 
+#include "adaptor.h"
+
 /* Initialize to an unsupported value */
 unsigned int page_reporting_order = -1;
 
@@ -35,5 +37,5 @@ void __page_reporting_notify(void)
 
     rcu_read_unlock();
 #endif
-    pr_notice("%s: No impl.", __func__);
+    PANIC("");
 }

@@ -38,3 +38,6 @@ unsigned int nr_cpu_ids __read_mostly = NR_CPUS;
 
 // init/main.c:
 enum system_states system_state __read_mostly;
+
+// mm/show_mem.c
+atomic_long_t _totalram_pages __read_mostly;

@@ -60,6 +60,8 @@
 #include "shuffle.h"
 #include "page_reporting.h"
 
+#include "adaptor.h"
+
 /* Free Page Internal flags: for internal, non-pcp variants of free_pages(). */
 typedef int __bitwise fpi_t;
 
@@ -291,8 +293,6 @@ static bool __free_unaccepted(struct page *page);
 
 int page_group_by_mobility_disabled __read_mostly;
 
-#if 0
-
 #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
 /*
  * During boot we initialize deferred pages on-demand, as needed, but once
@@ -329,8 +329,6 @@ static inline bool _deferred_grow_zone(struct zone *zone, unsigned int order)
 }
 #endif /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
 
-#endif
-
 /* Return a pointer to the bitmap storing bits affecting a block of pages */
 static inline unsigned long *get_pageblock_bitmap(const struct page *page,
 							unsigned long pfn)
@@ -352,7 +350,6 @@ static inline int pfn_to_bitidx(const struct page *page, unsigned long pfn)
 	return (pfn >> pageblock_order) * NR_PAGEBLOCK_BITS;
 }
 
-#if 0
 /**
  * get_pfnblock_flags_mask - Return the requested group of flags for the pageblock_nr_pages block of pages
  * @page: The page within the block of interest
@@ -386,7 +383,6 @@ static __always_inline int get_pfnblock_migratetype(const struct page *page,
 {
 	return get_pfnblock_flags_mask(page, pfn, MIGRATETYPE_MASK);
 }
-#endif
 
 /**
  * set_pfnblock_flags_mask - Set the requested group of flags for a pageblock_nr_pages block of pages
@@ -431,7 +427,6 @@ void set_pageblock_migratetype(struct page *page, int migratetype)
 				page_to_pfn(page), MIGRATETYPE_MASK);
 }
 
-#if 0
 #ifdef CONFIG_DEBUG_VM
 static int page_outside_zone_boundaries(struct zone *zone, struct page *page)
 {
@@ -513,6 +508,8 @@ out:
 	add_taint(TAINT_BAD_PAGE, LOCKDEP_NOW_UNRELIABLE);
 }
 
+#if 0
+
 static inline unsigned int order_to_pindex(int migratetype, int order)
 {
 	bool __maybe_unused movable;
@@ -580,6 +577,7 @@ void prep_compound_page(struct page *page, unsigned int order)
 
 	prep_compound_head(page, order);
 }
+#endif
 
 static inline void set_buddy_order(struct page *page, unsigned int order)
 {
@@ -674,6 +672,7 @@ static inline void __add_to_free_list(struct page *page, struct zone *zone,
 	area->nr_free++;
 }
 
+#if 0
 /*
  * Used for pages which are on another list. Move the pages to the tail
  * of the list - so the moved pages won't immediately be considered for
@@ -694,6 +693,7 @@ static inline void move_to_free_list(struct page *page, struct zone *zone,
 	account_freepages(zone, -(1 << order), old_mt);
 	account_freepages(zone, 1 << order, new_mt);
 }
+#endif
 
 static inline void __del_page_from_free_list(struct page *page, struct zone *zone,
 					     unsigned int order, int migratetype)
@@ -712,6 +712,7 @@ static inline void __del_page_from_free_list(struct page *page, struct zone *zon
 	zone->free_area[order].nr_free--;
 }
 
+#if 0
 static inline void del_page_from_free_list(struct page *page, struct zone *zone,
 					   unsigned int order, int migratetype)
 {
@@ -725,6 +726,8 @@ static inline struct page *get_page_from_free_area(struct free_area *area,
 	return list_first_entry_or_null(&area->free_list[migratetype],
 					struct page, buddy_list);
 }
+
+#endif
 
 /*
  * If this is less than the 2nd largest possible page, check if the buddy
@@ -937,6 +940,7 @@ static int free_tail_page_prepare(struct page *head_page, struct page *page)
 	struct folio *folio = (struct folio *)head_page;
 	int ret = 1;
 
+#if 0
 	/*
 	 * We rely page->lru.next never has bit 0 set, unless the page
 	 * is PageTail(). Let's make sure that's true even for poisoned ->lru.
@@ -994,6 +998,8 @@ out:
 	page->mapping = NULL;
 	clear_compound_head(page);
 	return ret;
+#endif
+    PANIC("");
 }
 
 /*
@@ -1055,7 +1061,8 @@ __always_inline bool free_pages_prepare(struct page *page,
 
 	VM_BUG_ON_PAGE(PageTail(page), page);
 
-	trace_mm_page_free(page, order);
+    // FixMe
+	//trace_mm_page_free(page, order);
 	kmsan_free_page(page, order);
 
 	if (memcg_kmem_online() && PageMemcgKmem(page))
@@ -1170,6 +1177,7 @@ __always_inline bool free_pages_prepare(struct page *page,
 	return true;
 }
 
+#if 0
 /*
  * Frees a number of pages from the PCP lists
  * Assumes all pages on list are in same zone.
@@ -1227,6 +1235,7 @@ static void free_pcppages_bulk(struct zone *zone, int count,
 
 	spin_unlock_irqrestore(&zone->lock, flags);
 }
+#endif
 
 /* Split a multi-block free page into its individual pageblocks. */
 static void split_large_buddy(struct zone *zone, struct page *page,
@@ -1329,6 +1338,7 @@ void __meminit __free_pages_core(struct page *page, unsigned int order,
 	__free_pages_ok(page, order, FPI_TO_TAIL);
 }
 
+#if 0
 /*
  * Check that the whole (or subset of) a pageblock given by the interval of
  * [start_pfn, end_pfn) is valid and within the same zone, before scanning it
@@ -7060,6 +7070,8 @@ bool has_managed_dma(void)
 }
 #endif /* CONFIG_ZONE_DMA */
 
+#endif
+
 #ifdef CONFIG_UNACCEPTED_MEMORY
 
 static bool lazy_accept = true;
@@ -7204,5 +7216,3 @@ static bool __free_unaccepted(struct page *page)
 }
 
 #endif /* CONFIG_UNACCEPTED_MEMORY */
-
-#endif
