@@ -29,3 +29,32 @@ void lruvec_init(struct lruvec *lruvec)
 
     lru_gen_init_lruvec(lruvec);
 }
+
+static inline int zref_in_nodemask(struct zoneref *zref, nodemask_t *nodes)
+{
+#ifdef CONFIG_NUMA
+    return node_isset(zonelist_node_idx(zref), *nodes);
+#else
+    return 1;
+#endif /* CONFIG_NUMA */
+}
+
+/* Returns the next zone at or below highest_zoneidx in a zonelist */
+struct zoneref *__next_zones_zonelist(struct zoneref *z,
+                    enum zone_type highest_zoneidx,
+                    nodemask_t *nodes)
+{
+    /*
+     * Find the next suitable zone to use for the allocation.
+     * Only filter based on nodemask if it's set
+     */
+    if (unlikely(nodes == NULL))
+        while (zonelist_zone_idx(z) > highest_zoneidx)
+            z++;
+    else
+        while (zonelist_zone_idx(z) > highest_zoneidx ||
+                (zonelist_zone(z) && !zref_in_nodemask(z, nodes)))
+            z++;
+
+    return z;
+}

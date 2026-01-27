@@ -159,13 +159,10 @@ static int memblock_can_resize __initdata_memblock;
 //static int memblock_memory_in_slab __initdata_memblock;
 //static int memblock_reserved_in_slab __initdata_memblock;
 
-#if 0
-
 bool __init_memblock memblock_has_mirror(void)
 {
 	return system_has_some_mirror;
 }
-#endif
 
 static enum memblock_flags __init_memblock choose_memblock_flags(void)
 {
@@ -1281,7 +1278,6 @@ void __init_memblock __next_mem_range_rev(u64 *idx, int nid,
 	*idx = ULLONG_MAX;
 }
 
-#if 0
 /*
  * Common iterator interface used to define for_each_mem_pfn_range().
  */
@@ -1315,6 +1311,7 @@ void __init_memblock __next_mem_pfn_range(int *idx, int nid,
 		*out_nid = r_nid;
 }
 
+#if 0
 /**
  * memblock_set_node - set node ID on memblock regions
  * @base: base of area to set node ID for

@@ -10,10 +10,12 @@ obj-y += ratelimit.o
 obj-y += dump_stack.o
 obj-y += sort.o
 obj-y += kstrtox.o
+obj-y += hweight.o
+#obj-y += list_debug.o
 
-#obj-y += bitmap.o kasprintf.o string_helpers.o list_debug.o
+#obj-y += bitmap.o kasprintf.o string_helpers.o
 #obj-y += radix-tree.o maple_tree.o kobject.o klist.o
-#obj-y += devres.o hweight.o errname.o idr.o xarray.o
+#obj-y += devres.o errname.o idr.o xarray.o
 #obj-y += sbitmap.o lockref.o rbtree.o dec_and_lock.o
 #obj-y += sg_pool.o scatterlist.o errseq.o llist.o
 #obj-y += iov_iter.o irq_regs.o

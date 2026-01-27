@@ -1,7 +1,6 @@
 #include <linux/printk.h>
 #include "adaptor.h"
 
-CL_MINE(__sw_hweight64)
 CL_MINE(get_random_bytes)
 CL_MINE(__warn_printk)
 CL_MINE(skip_spaces)
@@ -47,3 +46,4 @@ CL_MINE(__alloc_pages_noprof)
 CL_MINE(mod_node_page_state)
 CL_MINE(get_free_pages_noprof)
 CL_MINE(_copy_from_user)
+CL_MINE(__list_del_entry_valid_or_report)
