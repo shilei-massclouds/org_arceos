@@ -2661,8 +2661,9 @@ static void __init mem_init_print_info(void)
 
 /*
  * Set up kernel memory allocators
+ *   - first part: buddy system
  */
-void __init mm_core_init(void)
+void __init mm_core_init_first_part(void)
 {
 	/* Initializations relying on SMP setup */
 	BUILD_BUG_ON(MAX_ZONELISTS > 2);

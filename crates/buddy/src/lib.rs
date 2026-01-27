@@ -2,10 +2,7 @@
 
 #![no_std]
 
-use allocator::{AllocResult, BaseAllocator, ByteAllocator, PageAllocator};
-use core::alloc::Layout;
-use core::ptr::NonNull;
-
+use allocator::{AllocResult, BaseAllocator, PageAllocator};
 #[cfg(feature = "axerrno")]
 use axerrno::AxError;
 
@@ -19,37 +16,16 @@ impl<const PAGE_SIZE: usize> BaseAllocator for BuddyAllocator<PAGE_SIZE> {
         // misc_mem_init() [arch/riscv/mm/init.c]
         //   - prepare node/zone/mem_map for buddy system
         //
-        // mm_core_init() [mm/mm_init.c]
+        // mm_core_init_first_part() [mm/mm_init.c]
         //   - set up kernel memory allocators
+        //
         unsafe {
             misc_mem_init();
-            mm_core_init();
+            mm_core_init_first_part();
         }
     }
     fn add_memory(&mut self, _start: usize, _size: usize) -> AllocResult {
         unimplemented!("No support for Buddy.add_memory()");
-    }
-}
-
-impl<const PAGE_SIZE: usize> ByteAllocator for BuddyAllocator<PAGE_SIZE> {
-    fn alloc(&mut self, _layout: Layout) -> AllocResult<NonNull<u8>> {
-        unimplemented!("alloc");
-    }
-
-    fn dealloc(&mut self, _pos: NonNull<u8>, _layout: Layout) {
-        unimplemented!("dealloc");
-    }
-
-    fn total_bytes(&self) -> usize {
-        unimplemented!("");
-    }
-
-    fn used_bytes(&self) -> usize {
-        unimplemented!("");
-    }
-
-    fn available_bytes(&self) -> usize {
-        unimplemented!("");
     }
 }
 
@@ -94,5 +70,5 @@ impl<const PAGE_SIZE: usize> PageAllocator for BuddyAllocator<PAGE_SIZE> {
 
 unsafe extern "C" {
     fn misc_mem_init();
-    fn mm_core_init();
+    fn mm_core_init_first_part();
 }

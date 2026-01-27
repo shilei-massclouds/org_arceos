@@ -1498,6 +1498,7 @@ dependencies = [
  "axerrno",
  "buddy",
  "memblock",
+ "slub",
 ]
 
 [[package]]
@@ -1918,6 +1919,14 @@ version = "0.3.1"
 source = "git+https://github.com/arceos-org/slab_allocator.git?tag=v0.3.1#3c13499d664ccd36f66786985b753340aea57f5a"
 dependencies = [
  "buddy_system_allocator",
+]
+
+[[package]]
+name = "slub"
+version = "0.0.1"
+dependencies = [
+ "allocator",
+ "axerrno",
 ]
 
 [[package]]

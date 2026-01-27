@@ -11,6 +11,7 @@ use axerrno::AxError;
 
 use memblock::MemblockAllocator;
 use buddy::BuddyAllocator;
+use slub::SlubAllocator;
 
 static mut IS_FINAL: bool = false;
 
@@ -18,6 +19,7 @@ static mut IS_FINAL: bool = false;
 pub struct LinuxAllocator<const PAGE_SIZE: usize> {
     early_alloc: MemblockAllocator<PAGE_SIZE>,
     palloc: BuddyAllocator<PAGE_SIZE>,
+    balloc: SlubAllocator,
 }
 
 impl<const PAGE_SIZE: usize> BaseAllocator for LinuxAllocator<PAGE_SIZE> {
@@ -31,7 +33,11 @@ impl<const PAGE_SIZE: usize> BaseAllocator for LinuxAllocator<PAGE_SIZE> {
 
 impl<const PAGE_SIZE: usize> ByteAllocator for LinuxAllocator<PAGE_SIZE> {
     fn alloc(&mut self, layout: Layout) -> AllocResult<NonNull<u8>> {
-        self.early_alloc.alloc(layout)
+        if unsafe { IS_FINAL } {
+            self.balloc.alloc(layout)
+        } else {
+            self.early_alloc.alloc(layout)
+        }
     }
 
     fn dealloc(&mut self, pos: NonNull<u8>, layout: Layout) {
@@ -56,6 +62,7 @@ impl<const PAGE_SIZE: usize> LinuxAllocator<PAGE_SIZE> {
         Self {
             early_alloc: MemblockAllocator::new(),
             palloc: BuddyAllocator::new(),
+            balloc: SlubAllocator::new(),
         }
     }
     pub fn finalize(&mut self) {
@@ -65,7 +72,7 @@ impl<const PAGE_SIZE: usize> LinuxAllocator<PAGE_SIZE> {
             assert!(!IS_FINAL);
             IS_FINAL = true;
             self.palloc.init(0, 0);
-            unimplemented!("IS_FINAL");
+            self.balloc.init(0, 0);
         }
     }
 }
@@ -74,7 +81,11 @@ impl<const PAGE_SIZE: usize> PageAllocator for LinuxAllocator<PAGE_SIZE> {
     const PAGE_SIZE: usize = PAGE_SIZE;
 
     fn alloc_pages(&mut self, num_pages: usize, align_pow2: usize) -> AllocResult<usize> {
-        self.early_alloc.alloc_pages(num_pages, align_pow2)
+        if unsafe { IS_FINAL } {
+            panic!("No buddy system.");
+        } else {
+            self.early_alloc.alloc_pages(num_pages, align_pow2)
+        }
     }
 
     fn alloc_pages_at(
@@ -83,7 +94,7 @@ impl<const PAGE_SIZE: usize> PageAllocator for LinuxAllocator<PAGE_SIZE> {
         _num_pages: usize,
         _align_pow2: usize,
     ) -> AllocResult<usize> {
-        unimplemented!("");
+        unimplemented!("LinuxAllocator::alloc_pages_at");
     }
 
     fn dealloc_pages(&mut self, _pos: usize, _num_pages: usize) {
