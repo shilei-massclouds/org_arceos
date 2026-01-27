@@ -11,7 +11,7 @@ obj-y += dump_stack.o
 obj-y += sort.o
 obj-y += kstrtox.o
 obj-y += hweight.o
-#obj-y += list_debug.o
+obj-y += list_debug.o
 
 #obj-y += bitmap.o kasprintf.o string_helpers.o
 #obj-y += radix-tree.o maple_tree.o kobject.o klist.o
