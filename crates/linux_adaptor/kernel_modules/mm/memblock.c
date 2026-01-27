@@ -2461,15 +2461,3 @@ __initcall(memblock_init_debugfs);
 
 #endif /* CONFIG_DEBUG_FS */
 #endif
-
-phys_addr_t memblock_phys_alloc(phys_addr_t size, phys_addr_t align)
-{
-	return memblock_phys_alloc_range(size, align, 0,
-					 MEMBLOCK_ALLOC_ACCESSIBLE);
-}
-
-void *memblock_alloc(phys_addr_t size, phys_addr_t align)
-{
-	return memblock_alloc_try_nid(size, align, MEMBLOCK_LOW_LIMIT,
-				      MEMBLOCK_ALLOC_ACCESSIBLE, NUMA_NO_NODE);
-}
