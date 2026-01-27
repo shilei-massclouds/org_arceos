@@ -7,6 +7,9 @@ THREAD_SIZE_ORDER = 2;
 THREAD_SIZE = PAGE_SIZE << THREAD_SIZE_ORDER;
 
 ENTRY(_start)
+
+jiffies = jiffies_64;
+
 SECTIONS
 {
     . = LOAD_OFFSET;

@@ -329,6 +329,8 @@ static inline bool _deferred_grow_zone(struct zone *zone, unsigned int order)
 }
 #endif /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
 
+#endif
+
 /* Return a pointer to the bitmap storing bits affecting a block of pages */
 static inline unsigned long *get_pageblock_bitmap(const struct page *page,
 							unsigned long pfn)
@@ -350,6 +352,7 @@ static inline int pfn_to_bitidx(const struct page *page, unsigned long pfn)
 	return (pfn >> pageblock_order) * NR_PAGEBLOCK_BITS;
 }
 
+#if 0
 /**
  * get_pfnblock_flags_mask - Return the requested group of flags for the pageblock_nr_pages block of pages
  * @page: The page within the block of interest
@@ -383,6 +386,7 @@ static __always_inline int get_pfnblock_migratetype(const struct page *page,
 {
 	return get_pfnblock_flags_mask(page, pfn, MIGRATETYPE_MASK);
 }
+#endif
 
 /**
  * set_pfnblock_flags_mask - Set the requested group of flags for a pageblock_nr_pages block of pages
@@ -427,6 +431,7 @@ void set_pageblock_migratetype(struct page *page, int migratetype)
 				page_to_pfn(page), MIGRATETYPE_MASK);
 }
 
+#if 0
 #ifdef CONFIG_DEBUG_VM
 static int page_outside_zone_boundaries(struct zone *zone, struct page *page)
 {

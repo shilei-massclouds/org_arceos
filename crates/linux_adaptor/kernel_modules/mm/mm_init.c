@@ -575,7 +575,6 @@ out:
 	node_states[N_MEMORY] = saved_node_state;
 }
 
-#if 0
 void __meminit __init_single_page(struct page *page, unsigned long pfn,
 				unsigned long zone, int nid)
 {
@@ -663,7 +662,6 @@ static inline void fixup_hashdist(void)
 #else
 static inline void fixup_hashdist(void) {}
 #endif /* CONFIG_NUMA */
-#endif
 
 #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
 static inline void pgdat_set_deferred_range(pg_data_t *pgdat)
@@ -785,6 +783,7 @@ void __meminit reserve_bootmem_region(phys_addr_t start,
 		}
 	}
 }
+#endif
 
 /* If zone is ZONE_MOVABLE but memory is mirrored, it is an overlapped init */
 static bool __meminit
@@ -989,6 +988,8 @@ static void __init memmap_init(void)
 #endif
 		init_unavailable_range(hole_pfn, end_pfn, zone_id, nid);
 }
+
+#if 0
 
 #ifdef CONFIG_ZONE_DEVICE
 static void __ref __init_zone_device_page(struct page *page, unsigned long pfn,
@@ -1291,7 +1292,6 @@ static void __init reset_memoryless_node_totalpages(struct pglist_data *pgdat)
 	pr_debug("On node %d totalpages: 0\n", pgdat->node_id);
 }
 
-#if 0
 static void __init calc_nr_kernel_pages(void)
 {
 	unsigned long start_pfn, end_pfn;
@@ -1315,7 +1315,6 @@ static void __init calc_nr_kernel_pages(void)
 		}
 	}
 }
-#endif
 
 static void __init calculate_node_totalpages(struct pglist_data *pgdat,
 						unsigned long node_start_pfn,
@@ -1724,10 +1723,7 @@ static void __init free_area_init_node(int nid)
 	pgdat_set_deferred_range(pgdat);
 
 	free_area_init_core(pgdat);
-#if 0
 	lru_gen_init_pgdat(pgdat);
-#endif
-    PANIC("");
 }
 
 /* Any regular or high memory on that node ? */
@@ -1883,14 +1879,11 @@ void __init free_area_init(unsigned long *max_zone_pfn)
 		}
 	}
 
-#if 0
 	calc_nr_kernel_pages();
 	memmap_init();
 
 	/* disable hash distribution for systems with a single node */
 	fixup_hashdist();
-#endif
-    PANIC("");
 }
 
 #if 0

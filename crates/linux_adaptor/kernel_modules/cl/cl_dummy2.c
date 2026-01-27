@@ -29,3 +29,13 @@ unsigned long long elfcorehdr_size;
 // mm/debug_page_alloc.c
 bool _debug_pagealloc_enabled_early __read_mostly
             = IS_ENABLED(CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT);
+
+// kernel/time/timer.c
+__visible u64 jiffies_64 __cacheline_aligned_in_smp = INITIAL_JIFFIES;
+
+// kernel/smp.c
+unsigned int nr_cpu_ids __read_mostly = NR_CPUS;
+
+// init/main.c:
+enum system_states system_state __read_mostly;
+
