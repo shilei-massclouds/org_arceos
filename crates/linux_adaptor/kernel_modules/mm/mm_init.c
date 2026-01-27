@@ -2655,6 +2655,7 @@ static void __init mem_init_print_info(void)
 #endif
 		);
 }
+#endif
 
 /*
  * Set up kernel memory allocators
@@ -2664,6 +2665,7 @@ void __init mm_core_init(void)
 	/* Initializations relying on SMP setup */
 	BUILD_BUG_ON(MAX_ZONELISTS > 2);
 	build_all_zonelists(NULL);
+#if 0
 	page_alloc_init_cpuhp();
 
 	/*
@@ -2698,6 +2700,6 @@ void __init mm_core_init(void)
 	kmsan_init_runtime();
 	mm_cache_init();
 	execmem_init();
-}
-
 #endif
+    PANIC("");
+}

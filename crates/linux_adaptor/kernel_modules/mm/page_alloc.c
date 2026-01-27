@@ -3925,6 +3925,8 @@ void fs_reclaim_release(gfp_t gfp_mask)
 EXPORT_SYMBOL_GPL(fs_reclaim_release);
 #endif
 
+#endif
+
 /*
  * Zonelists may change due to hotplug during allocation. Detect when zonelists
  * have been rebuilt so allocation retries. Reader side does not lock and
@@ -3933,6 +3935,7 @@ EXPORT_SYMBOL_GPL(fs_reclaim_release);
  */
 static DEFINE_SEQLOCK(zonelist_update_seq);
 
+#if 0
 static unsigned int zonelist_iter_begin(void)
 {
 	if (IS_ENABLED(CONFIG_MEMORY_HOTREMOVE))
@@ -5132,6 +5135,7 @@ void free_pages_exact(void *virt, size_t size)
 	}
 }
 EXPORT_SYMBOL(free_pages_exact);
+#endif
 
 /**
  * nr_free_zone_pages - count number of pages beyond high watermark
@@ -5165,6 +5169,7 @@ static unsigned long nr_free_zone_pages(int offset)
 	return sum;
 }
 
+#if 0
 /**
  * nr_free_buffer_pages - count number of pages beyond high watermark
  *
@@ -5179,6 +5184,7 @@ unsigned long nr_free_buffer_pages(void)
 	return nr_free_zone_pages(gfp_zone(GFP_USER));
 }
 EXPORT_SYMBOL_GPL(nr_free_buffer_pages);
+#endif
 
 static void zoneref_set_zone(struct zone *zone, struct zoneref *zoneref)
 {
@@ -5422,8 +5428,6 @@ static void build_zonelists(pg_data_t *pgdat)
 
 #endif	/* CONFIG_NUMA */
 
-#endif
-
 /*
  * Boot pageset table. One per cpu which is going to be used for all
  * zones and all nodes. The parameters will be set in such a way
@@ -5445,8 +5449,6 @@ static void per_cpu_pages_init(struct per_cpu_pages *pcp, struct per_cpu_zonesta
 #define BOOT_PAGESET_BATCH	1
 static DEFINE_PER_CPU(struct per_cpu_pages, boot_pageset);
 static DEFINE_PER_CPU(struct per_cpu_zonestat, boot_zonestats);
-
-#if 0
 
 static void __build_all_zonelists(void *data)
 {
@@ -5572,7 +5574,6 @@ void __ref build_all_zonelists(pg_data_t *pgdat)
 	pr_info("Policy zone: %s\n", zone_names[policy_zone]);
 #endif
 }
-#endif
 
 static int zone_batchsize(struct zone *zone)
 {

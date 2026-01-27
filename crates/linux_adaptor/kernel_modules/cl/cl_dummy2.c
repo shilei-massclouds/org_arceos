@@ -39,3 +39,8 @@ unsigned int nr_cpu_ids __read_mostly = NR_CPUS;
 // init/main.c:
 enum system_states system_state __read_mostly;
 
+// kernel/cgroup/cpuset.c
+void __init cpuset_init_current_mems_allowed(void)
+{
+    pr_notice("%s: No impl.\n", __func__);
+}

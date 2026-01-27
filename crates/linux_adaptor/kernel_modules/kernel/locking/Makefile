@@ -1,6 +1,6 @@
 # Makefile for `kernel/locking`
 
-#obj-y += spinlock.o
+obj-y += spinlock.o
 obj-y += spinlock_debug.o
 
 #obj-y += qrwlock.o

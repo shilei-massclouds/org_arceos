@@ -32,7 +32,6 @@ void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 
 EXPORT_SYMBOL(__raw_spin_lock_init);
 
-#if 0
 #ifndef CONFIG_PREEMPT_RT
 void __rwlock_init(rwlock_t *lock, const char *name,
 		   struct lock_class_key *key)
@@ -235,5 +234,3 @@ void do_raw_write_unlock(rwlock_t *lock)
 }
 
 #endif /* !CONFIG_PREEMPT_RT */
-
-#endif
