@@ -13,6 +13,8 @@ obj-y += kstrtox.o
 obj-y += hweight.o
 obj-y += list_debug.o
 
+obj-y += math/
+
 #obj-y += bitmap.o kasprintf.o string_helpers.o
 #obj-y += radix-tree.o maple_tree.o kobject.o klist.o
 #obj-y += devres.o errname.o idr.o xarray.o
@@ -23,4 +25,3 @@ obj-y += list_debug.o
 #obj-y += cmdline.o logic_pio.o
 #obj-y += debug_locks.o
 #obj-y += group_cpus.o
-#obj-y += math/

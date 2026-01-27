@@ -26,10 +26,6 @@ EXPORT_SYMBOL_GPL(elfcorehdr_addr);
  */
 unsigned long long elfcorehdr_size;
 
-// mm/debug_page_alloc.c
-bool _debug_pagealloc_enabled_early __read_mostly
-            = IS_ENABLED(CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT);
-
 // kernel/time/timer.c
 __visible u64 jiffies_64 __cacheline_aligned_in_smp = INITIAL_JIFFIES;
 

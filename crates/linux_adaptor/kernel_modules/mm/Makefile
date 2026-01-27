@@ -9,10 +9,13 @@ obj-y += mmzone.o
 obj-y += vmstat.o
 obj-y += page_alloc.o
 obj-y += page_reporting.o
+obj-y += slub.o
+obj-y += slab_common.o
+obj-y += debug_page_alloc.o
 
 #obj-y += filemap.o page-writeback.o
-#obj-y += slub.o percpu.o slab_common.o util.o swap.o
-#obj-y += debug_page_alloc.o ioremap.o mempool.o
+#obj-y += percpu.o util.o swap.o
+#obj-y += ioremap.o mempool.o
 #obj-y += backing-dev.o list_lru.o shrinker.o
 #obj-y += truncate.o workingset.o readahead.o
 #obj-y += rmap.o maccess.o vmalloc.o dmapool.o

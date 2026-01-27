@@ -2688,12 +2688,16 @@ void __init mm_core_init_first_part(void)
     // Fixme
 	//stack_depot_early_init();
 	mem_init();
+}
 
-    /*
-     * Note: The second part should be put into rust crate 'slub'
-     */
-#if 0
+/*
+ * Set up kernel memory allocators
+ *   - second part: slub
+ */
+void __init mm_core_init_second_part(void)
+{
 	kmem_cache_init();
+#if 0
 	/*
 	 * page_owner must be initialized after buddy is ready, and also after
 	 * slab is ready so that stack_depot_init() works properly
@@ -2715,4 +2719,5 @@ void __init mm_core_init_first_part(void)
 	mm_cache_init();
 	execmem_init();
 #endif
+    PANIC("");
 }
