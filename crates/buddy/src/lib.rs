@@ -16,12 +16,19 @@ impl<const PAGE_SIZE: usize> BaseAllocator for BuddyAllocator<PAGE_SIZE> {
         // misc_mem_init() [arch/riscv/mm/init.c]
         //   - prepare node/zone/mem_map for buddy system
         //
+        // setup_nr_cpu_ids() [init/main.c]
+        //
+        // setup_per_cpu_areas() [init/main.c]
+        //  - prepare percpu first chunk
+        //
         // mm_core_init_first_part() [mm/mm_init.c]
         //   - set up kernel memory allocators
         //
         unsafe {
             misc_mem_init();
             mm_core_init_first_part();
+            setup_nr_cpu_ids();
+            setup_per_cpu_areas();
         }
     }
     fn add_memory(&mut self, _start: usize, _size: usize) -> AllocResult {
@@ -71,4 +78,6 @@ impl<const PAGE_SIZE: usize> PageAllocator for BuddyAllocator<PAGE_SIZE> {
 unsafe extern "C" {
     fn misc_mem_init();
     fn mm_core_init_first_part();
+    fn setup_nr_cpu_ids();
+    fn setup_per_cpu_areas();
 }

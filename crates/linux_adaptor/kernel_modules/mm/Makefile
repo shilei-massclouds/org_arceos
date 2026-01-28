@@ -12,9 +12,10 @@ obj-y += page_reporting.o
 obj-y += slub.o
 obj-y += slab_common.o
 obj-y += debug_page_alloc.o
+obj-y += percpu.o
 
 #obj-y += filemap.o page-writeback.o
-#obj-y += percpu.o util.o swap.o
+#obj-y += util.o swap.o
 #obj-y += ioremap.o mempool.o
 #obj-y += backing-dev.o list_lru.o shrinker.o
 #obj-y += truncate.o workingset.o readahead.o
