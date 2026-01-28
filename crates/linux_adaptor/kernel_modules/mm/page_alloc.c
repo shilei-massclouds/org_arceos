@@ -552,7 +552,6 @@ static inline bool pcp_allowed_order(unsigned int order)
 	return false;
 }
 
-#if 0
 /*
  * Higher-order pages are called "compound pages".  They are structured thusly:
  *
@@ -576,7 +575,6 @@ void prep_compound_page(struct page *page, unsigned int order)
 
 	prep_compound_head(page, order);
 }
-#endif
 
 static inline void set_buddy_order(struct page *page, unsigned int order)
 {
@@ -1481,7 +1479,6 @@ static inline bool check_new_pages(struct page *page, unsigned int order)
 	return false;
 }
 
-#if 0
 static inline bool should_skip_kasan_unpoison(gfp_t flags)
 {
 	/* Don't skip if a software KASAN mode is enabled. */
@@ -1590,7 +1587,6 @@ static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags
 	else
 		clear_page_pfmemalloc(page);
 }
-#endif
 
 /*
  * Go through the free lists for the given migratetype and remove
@@ -1604,7 +1600,6 @@ struct page *__rmqueue_smallest(struct zone *zone, unsigned int order,
 	struct free_area *area;
 	struct page *page;
 
-#if 0
 	/* Find a page of the appropriate size in the preferred list */
 	for (current_order = order; current_order < NR_PAGE_ORDERS; ++current_order) {
 		area = &(zone->free_area[current_order]);
@@ -1621,11 +1616,8 @@ struct page *__rmqueue_smallest(struct zone *zone, unsigned int order,
 	}
 
 	return NULL;
-#endif
-    PANIC("");
 }
 
-#if 0
 /*
  * This array describes the order lists are fallen back to when
  * the free lists for the desirable migrate type are depleted
@@ -1637,8 +1629,6 @@ static int fallbacks[MIGRATE_PCPTYPES][MIGRATE_PCPTYPES - 1] = {
 	[MIGRATE_MOVABLE]     = { MIGRATE_RECLAIMABLE, MIGRATE_UNMOVABLE },
 	[MIGRATE_RECLAIMABLE] = { MIGRATE_UNMOVABLE,   MIGRATE_MOVABLE   },
 };
-
-#endif
 
 #ifdef CONFIG_CMA
 static __always_inline struct page *__rmqueue_cma_fallback(struct zone *zone,
@@ -1741,18 +1731,23 @@ static bool prep_move_freepages_block(struct zone *zone, struct page *page,
 
 	return true;
 }
+#endif
 
 static int move_freepages_block(struct zone *zone, struct page *page,
 				int old_mt, int new_mt)
 {
 	unsigned long start_pfn;
 
+#if 0
 	if (!prep_move_freepages_block(zone, page, &start_pfn, NULL, NULL))
 		return -1;
 
 	return __move_freepages_block(zone, start_pfn, old_mt, new_mt);
+#endif
+    PANIC("");
 }
 
+#if 0
 #ifdef CONFIG_MEMORY_ISOLATION
 /* Look for a buddy that straddles start_pfn */
 static unsigned long find_large_buddy(unsigned long start_pfn)
@@ -1840,6 +1835,8 @@ move:
 }
 #endif /* CONFIG_MEMORY_ISOLATION */
 
+#endif
+
 static void change_pageblock_range(struct page *pageblock_page,
 					int start_order, int migratetype)
 {
@@ -1884,6 +1881,7 @@ static bool can_steal_fallback(unsigned int order, int start_mt)
 	return false;
 }
 
+#if 0
 static inline bool boost_watermark(struct zone *zone)
 {
 	unsigned long max_boost;
@@ -1920,6 +1918,7 @@ static inline bool boost_watermark(struct zone *zone)
 
 	return true;
 }
+#endif
 
 /*
  * This function implements actual steal behaviour. If order is large enough, we
@@ -1957,6 +1956,7 @@ try_to_steal_block(struct zone *zone, struct page *page,
 		return page;
 	}
 
+#if 0
 	/*
 	 * Boost watermarks to increase reclaim pressure to reduce the
 	 * likelihood of future fallbacks. Wake kswapd now as the node
@@ -2002,8 +2002,9 @@ try_to_steal_block(struct zone *zone, struct page *page,
 	}
 
 	return NULL;
-}
 #endif
+    PANIC("");
+}
 
 /*
  * Check whether there is a suitable fallback freepage with requested order.
@@ -2017,7 +2018,6 @@ int find_suitable_fallback(struct free_area *area, unsigned int order,
 	int i;
 	int fallback_mt;
 
-#if 0
 	if (area->nr_free == 0)
 		return -1;
 
@@ -2038,11 +2038,8 @@ int find_suitable_fallback(struct free_area *area, unsigned int order,
 	}
 
 	return -1;
-#endif
-    PANIC("");
 }
 
-#if 0
 /*
  * Reserve the pageblock(s) surrounding an allocation request for
  * exclusive use of high-order atomic allocations if there are no
@@ -2091,6 +2088,7 @@ out_unlock:
 	spin_unlock_irqrestore(&zone->lock, flags);
 }
 
+#if 0
 /*
  * Used when an allocation is about to fail under memory pressure. This
  * potentially hurts the reliability of high-order allocations when under
@@ -2207,7 +2205,6 @@ __rmqueue_claim(struct zone *zone, int order, int start_migratetype,
 	int fallback_mt;
 	bool can_steal;
 
-#if 0
 	/*
 	 * Do not steal pages from freelists belonging to other pageblocks
 	 * i.e. orders < pageblock_order. If there are no local zones free,
@@ -2243,8 +2240,6 @@ __rmqueue_claim(struct zone *zone, int order, int start_migratetype,
 	}
 
 	return NULL;
-#endif
-    PANIC("");
 }
 
 /*
@@ -2931,6 +2926,7 @@ void __putback_isolated_page(struct page *page, unsigned int order, int mt)
 	__free_one_page(page, page_to_pfn(page), zone, order, mt,
 			FPI_SKIP_REPORT_NOTIFY | FPI_TO_TAIL);
 }
+#endif
 
 /*
  * Update NUMA hit/miss statistics
@@ -2998,7 +2994,6 @@ struct page *rmqueue_buddy(struct zone *preferred_zone, struct zone *zone,
 
 	return page;
 }
-#endif
 
 static int nr_pcp_alloc(struct per_cpu_pages *pcp, struct zone *zone, int order)
 {
@@ -3110,14 +3105,11 @@ static struct page *rmqueue_pcplist(struct zone *preferred_zone,
 	page = __rmqueue_pcplist(zone, order, migratetype, alloc_flags, pcp, list);
 	pcp_spin_unlock(pcp);
 	pcp_trylock_finish(UP_flags);
-#if 0
 	if (page) {
 		__count_zid_vm_events(PGALLOC, page_zonenum(page), 1 << order);
 		zone_statistics(preferred_zone, zone, 1);
 	}
 	return page;
-#endif
-    PANIC("");
 }
 
 /*
@@ -3147,13 +3139,10 @@ struct page *rmqueue(struct zone *preferred_zone,
 			goto out;
 	}
 
-#if 0
 	page = rmqueue_buddy(preferred_zone, zone, order, alloc_flags,
 							migratetype);
 
-#endif
 out:
-    PANIC("");
 	/* Separate test+clear to avoid unnecessary atomics */
 	if ((alloc_flags & ALLOC_KSWAPD) &&
 	    unlikely(test_bit(ZONE_BOOSTED_WATERMARK, &zone->flags))) {
@@ -3547,7 +3536,6 @@ check_alloc_wmark:
 try_this_zone:
 		page = rmqueue(zonelist_zone(ac->preferred_zoneref), zone, order,
 				gfp_mask, alloc_flags, ac->migratetype);
-#if 0
 		if (page) {
 			prep_new_page(page, order, gfp_mask, alloc_flags);
 
@@ -3569,8 +3557,6 @@ try_this_zone:
 					goto try_this_zone;
 			}
 		}
-#endif
-        PANIC("1");
 	}
 
 	/*

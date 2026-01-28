@@ -405,8 +405,6 @@ struct kmem_cache_cpu {
 };
 #endif /* CONFIG_SLUB_TINY */
 
-#if 0
-
 static inline void stat(const struct kmem_cache *s, enum stat_item si)
 {
 #ifdef CONFIG_SLUB_STATS
@@ -418,6 +416,7 @@ static inline void stat(const struct kmem_cache *s, enum stat_item si)
 #endif
 }
 
+#if 0
 static inline
 void stat_add(const struct kmem_cache *s, enum stat_item si, int v)
 {
@@ -1923,8 +1922,6 @@ static bool freelist_corrupted(struct kmem_cache *s, struct slab *slab,
 #endif
 #endif /* CONFIG_SLUB_DEBUG */
 
-#if 0
-
 #ifdef CONFIG_SLAB_OBJ_EXT
 
 #ifdef CONFIG_MEM_ALLOC_PROFILING_DEBUG
@@ -2076,6 +2073,7 @@ static inline void free_slab_obj_exts(struct slab *slab)
 
 #endif /* CONFIG_SLAB_OBJ_EXT */
 
+#if 0
 #ifdef CONFIG_MEM_ALLOC_PROFILING
 
 static inline struct slabobj_ext *
@@ -2571,7 +2569,6 @@ static inline bool shuffle_freelist(struct kmem_cache *s, struct slab *slab)
 }
 #endif /* CONFIG_SLAB_FREELIST_RANDOM */
 
-#if 0
 static __always_inline void account_slab(struct slab *slab, int order,
 					 struct kmem_cache *s, gfp_t gfp)
 {
@@ -2582,6 +2579,7 @@ static __always_inline void account_slab(struct slab *slab, int order,
 			    PAGE_SIZE << order);
 }
 
+#if 0
 static __always_inline void unaccount_slab(struct slab *slab, int order,
 					   struct kmem_cache *s)
 {
@@ -2619,7 +2617,6 @@ static struct slab *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 		alloc_gfp = (alloc_gfp | __GFP_NOMEMALLOC) & ~__GFP_RECLAIM;
 
 	slab = alloc_slab_page(alloc_gfp, node, oo);
-#if 0
 	if (unlikely(!slab)) {
 		oo = s->min;
 		alloc_gfp = flags;
@@ -2642,6 +2639,7 @@ static struct slab *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 
 	slab->slab_cache = s;
 
+#if 0
 	kasan_poison_slab(slab);
 
 	start = slab_address(slab);
