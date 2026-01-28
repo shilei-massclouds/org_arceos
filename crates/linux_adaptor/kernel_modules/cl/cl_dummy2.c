@@ -46,3 +46,6 @@ struct user_namespace init_user_ns = {
 
 // kernel/utsname.c
 const struct proc_ns_operations utsns_operations;
+
+// kernel/workqueue.c
+struct workqueue_struct *system_wq __ro_after_init;

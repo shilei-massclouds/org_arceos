@@ -697,6 +697,7 @@ static struct kmem_cache *__init create_kmalloc_cache(const char *name,
 	s->refcount = 1;
 	return s;
 }
+#endif
 
 kmem_buckets kmalloc_caches[NR_KMALLOC_TYPES] __ro_after_init =
 { /* initialization for https://llvm.org/pr42570 */ };
@@ -740,6 +741,7 @@ u8 kmalloc_size_index[24] __ro_after_init = {
 	2	/* 192 */
 };
 
+#if 0
 size_t kmalloc_size_roundup(size_t size)
 {
 	if (size && size <= KMALLOC_MAX_CACHE_SIZE) {
