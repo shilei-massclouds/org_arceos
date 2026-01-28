@@ -228,6 +228,7 @@ static bool pcpu_addr_in_chunk(struct pcpu_chunk *chunk, void *addr)
 
 	return addr >= start_addr && addr < end_addr;
 }
+#endif
 
 static int __pcpu_size_to_slot(int size)
 {
@@ -307,6 +308,7 @@ static unsigned long pcpu_block_off_to_off(int index, int off)
 	return index * PCPU_BITMAP_BLOCK_BITS + off;
 }
 
+#if 0
 /**
  * pcpu_check_block_hint - check against the contig hint
  * @block: block of interest
@@ -353,6 +355,7 @@ static int pcpu_next_hint(struct pcpu_block_md *block, int alloc_bits)
 
 	return block->first_free;
 }
+#endif
 
 /**
  * pcpu_next_md_free_region - finds the next hint free area
@@ -406,6 +409,7 @@ static void pcpu_next_md_free_region(struct pcpu_chunk *chunk, int *bit_off,
 	}
 }
 
+#if 0
 /**
  * pcpu_next_fit_region - finds fit areas for a given allocation request
  * @chunk: chunk of interest
@@ -470,6 +474,8 @@ static void pcpu_next_fit_region(struct pcpu_chunk *chunk, int alloc_bits,
 	/* no valid offsets were found - fail condition */
 	*bit_off = pcpu_chunk_map_bits(chunk);
 }
+
+#endif
 
 /*
  * Metadata free area iterators.  These perform aggregation of free areas
@@ -537,10 +543,12 @@ static void __pcpu_chunk_move(struct pcpu_chunk *chunk, int slot,
 	}
 }
 
+#if 0
 static void pcpu_chunk_move(struct pcpu_chunk *chunk, int slot)
 {
 	__pcpu_chunk_move(chunk, slot, true);
 }
+#endif
 
 /**
  * pcpu_chunk_relocate - put chunk in the appropriate chunk slot
@@ -567,6 +575,7 @@ static void pcpu_chunk_relocate(struct pcpu_chunk *chunk, int oslot)
 		__pcpu_chunk_move(chunk, nslot, oslot < nslot);
 }
 
+#if 0
 static void pcpu_isolate_chunk(struct pcpu_chunk *chunk)
 {
 	lockdep_assert_held(&pcpu_lock);
@@ -588,6 +597,7 @@ static void pcpu_reintegrate_chunk(struct pcpu_chunk *chunk)
 		pcpu_chunk_relocate(chunk, -1);
 	}
 }
+#endif
 
 /*
  * pcpu_update_empty_pages - update empty page counters
@@ -696,6 +706,8 @@ static void pcpu_block_update(struct pcpu_block_md *block, int start, int end)
 	}
 }
 
+#if 0
+
 /*
  * pcpu_block_update_scan - update a block given a free area from a scan
  * @chunk: chunk of interest
@@ -732,6 +744,7 @@ static void pcpu_block_update_scan(struct pcpu_chunk *chunk, int bit_off,
 
 	pcpu_block_update(block, s_off, e_off);
 }
+#endif
 
 /**
  * pcpu_chunk_refresh_hint - updates metadata about a chunk
@@ -945,6 +958,7 @@ static void pcpu_block_update_hint_alloc(struct pcpu_chunk *chunk, int bit_off,
 		pcpu_chunk_refresh_hint(chunk, false);
 }
 
+#if 0
 /**
  * pcpu_block_update_hint_free - updates the block hints on the free path
  * @chunk: chunk of interest
@@ -1309,6 +1323,8 @@ static int pcpu_free_area(struct pcpu_chunk *chunk, int off)
 	return freed;
 }
 
+#endif
+
 static void pcpu_init_md_block(struct pcpu_block_md *block, int nr_bits)
 {
 	block->scan_hint = 0;
@@ -1510,6 +1526,8 @@ static void pcpu_free_chunk(struct pcpu_chunk *chunk)
 	pcpu_mem_free(chunk);
 }
 
+#if 0
+
 /**
  * pcpu_chunk_populated - post-population bookkeeping
  * @chunk: pcpu_chunk which got populated
@@ -1558,6 +1576,8 @@ static void pcpu_chunk_depopulated(struct pcpu_chunk *chunk,
 	pcpu_update_empty_pages(chunk, -nr);
 }
 
+#endif
+
 /*
  * Chunk management implementation.
  *
@@ -1591,6 +1611,7 @@ static int __init pcpu_verify_alloc_info(const struct pcpu_alloc_info *ai);
 #include "percpu-vm.c"
 #endif
 
+#if 0
 /**
  * pcpu_chunk_addr_search - determine chunk containing specified address
  * @addr: address for which the chunk needs to be determined.
@@ -2397,6 +2418,7 @@ phys_addr_t per_cpu_ptr_to_phys(void *addr)
 		return page_to_phys(pcpu_addr_to_page(addr)) +
 		       offset_in_page(addr);
 }
+#endif
 
 /**
  * pcpu_alloc_alloc_info - allocate percpu allocation info
@@ -2749,8 +2771,6 @@ void __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	/* we're done */
 	pcpu_base_addr = base_addr;
 }
-
-#endif
 
 #ifdef CONFIG_SMP
 
@@ -3341,7 +3361,6 @@ void __init setup_per_cpu_areas(void)
 	unsigned int cpu;
 	int rc;
 
-#if 0
 	/*
 	 * Always reserve area for module percpu variables.  That's
 	 * what the legacy allocator did.
@@ -3354,7 +3373,6 @@ void __init setup_per_cpu_areas(void)
 	delta = (unsigned long)pcpu_base_addr - (unsigned long)__per_cpu_start;
 	for_each_possible_cpu(cpu)
 		__per_cpu_offset[cpu] = delta + pcpu_unit_offsets[cpu];
-#endif
     PANIC("");
 }
 #endif	/* CONFIG_HAVE_SETUP_PER_CPU_AREA */

@@ -28,9 +28,6 @@ unsigned long long elfcorehdr_size;
 // kernel/time/timer.c
 __visible u64 jiffies_64 __cacheline_aligned_in_smp = INITIAL_JIFFIES;
 
-// kernel/smp.c
-unsigned int nr_cpu_ids __read_mostly = NR_CPUS;
-
 // init/main.c:
 enum system_states system_state __read_mostly;
 
