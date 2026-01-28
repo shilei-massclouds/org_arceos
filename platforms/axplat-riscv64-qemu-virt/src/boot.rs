@@ -16,9 +16,6 @@ const PT_SIZE_ON_STACK: usize = 0;
 // Defined in [include/generated/asm-offsets.h]
 const KERNEL_MAP_VIRT_ADDR: usize = 8;
 
-/// Boot hart id.
-pub static BOOT_CPU_HARTID: usize = 0;
-
 const CONFIG_THREAD_SIZE_ORDER: usize = 2;
 const THREAD_SIZE_ORDER: usize = CONFIG_THREAD_SIZE_ORDER;
 const THREAD_SIZE: usize = PAGE_SIZE << THREAD_SIZE_ORDER;
@@ -68,7 +65,7 @@ unsafe extern "C" fn _start() -> ! {
         blt a3, a4, 1b
     2:  /* .Lclear_bss_done: */
 
-        la a2, {boot_cpu_hartid}
+        la a2, boot_cpu_hartid
         sd a0, (a2)
 
         /* Initialize page tables and relocate to virtual addresses */
@@ -100,7 +97,6 @@ unsafe extern "C" fn _start() -> ! {
         tail start_kernel
         ",
         SR_FS_VS = const SR_FS_VS,
-        boot_cpu_hartid = sym BOOT_CPU_HARTID,
         THREAD_SIZE = const THREAD_SIZE,
         PT_SIZE_ON_STACK = const PT_SIZE_ON_STACK,
     )

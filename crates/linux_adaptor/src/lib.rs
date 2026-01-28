@@ -13,10 +13,10 @@ extern crate axlog;
 pub fn init(hartid: usize, dtb_pa: usize) {
     ax_println!("\nWith Linux Adaptor: hartid = {hartid}, dtb_pa = {dtb_pa:#X}");
     unsafe {
-        cl_init(hartid, dtb_pa);
+        cl_early_init(hartid, dtb_pa);
     }
 }
 
 unsafe extern "C" {
-    fn cl_init(hartid: usize, dtb_pa: usize);
+    fn cl_early_init(hartid: usize, dtb_pa: usize);
 }

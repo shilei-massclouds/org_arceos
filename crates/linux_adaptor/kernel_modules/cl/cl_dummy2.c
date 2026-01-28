@@ -1,6 +1,8 @@
 #include <linux/cache.h>
 #include <linux/cpumask.h>
 #include <linux/crash_dump.h>
+#include <linux/user_namespace.h>
+#include <linux/proc_ns.h>
 
 // mm/percpu.c
 unsigned long __per_cpu_offset[NR_CPUS] __read_mostly;
@@ -37,3 +39,10 @@ enum system_states system_state __read_mostly;
 
 // mm/show_mem.c
 atomic_long_t _totalram_pages __read_mostly;
+
+// kernel/user.c
+struct user_namespace init_user_ns = {
+};
+
+// kernel/utsname.c
+const struct proc_ns_operations utsns_operations;

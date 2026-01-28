@@ -508,8 +508,6 @@ out:
 	add_taint(TAINT_BAD_PAGE, LOCKDEP_NOW_UNRELIABLE);
 }
 
-#if 0
-
 static inline unsigned int order_to_pindex(int migratetype, int order)
 {
 	bool __maybe_unused movable;
@@ -554,6 +552,7 @@ static inline bool pcp_allowed_order(unsigned int order)
 	return false;
 }
 
+#if 0
 /*
  * Higher-order pages are called "compound pages".  They are structured thusly:
  *
@@ -712,7 +711,6 @@ static inline void __del_page_from_free_list(struct page *page, struct zone *zon
 	zone->free_area[order].nr_free--;
 }
 
-#if 0
 static inline void del_page_from_free_list(struct page *page, struct zone *zone,
 					   unsigned int order, int migratetype)
 {
@@ -726,8 +724,6 @@ static inline struct page *get_page_from_free_area(struct free_area *area,
 	return list_first_entry_or_null(&area->free_list[migratetype],
 					struct page, buddy_list);
 }
-
-#endif
 
 /*
  * If this is less than the 2nd largest possible page, check if the buddy
@@ -1390,6 +1386,7 @@ struct page *__pageblock_pfn_to_page(unsigned long start_pfn,
 
 	return start_page;
 }
+#endif
 
 /*
  * The order of subdivision here is critical for the IO subsystem.
@@ -1484,6 +1481,7 @@ static inline bool check_new_pages(struct page *page, unsigned int order)
 	return false;
 }
 
+#if 0
 static inline bool should_skip_kasan_unpoison(gfp_t flags)
 {
 	/* Don't skip if a software KASAN mode is enabled. */
@@ -1592,6 +1590,7 @@ static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags
 	else
 		clear_page_pfmemalloc(page);
 }
+#endif
 
 /*
  * Go through the free lists for the given migratetype and remove
@@ -1605,6 +1604,7 @@ struct page *__rmqueue_smallest(struct zone *zone, unsigned int order,
 	struct free_area *area;
 	struct page *page;
 
+#if 0
 	/* Find a page of the appropriate size in the preferred list */
 	for (current_order = order; current_order < NR_PAGE_ORDERS; ++current_order) {
 		area = &(zone->free_area[current_order]);
@@ -1621,9 +1621,11 @@ struct page *__rmqueue_smallest(struct zone *zone, unsigned int order,
 	}
 
 	return NULL;
+#endif
+    PANIC("");
 }
 
-
+#if 0
 /*
  * This array describes the order lists are fallen back to when
  * the free lists for the desirable migrate type are depleted
@@ -1636,6 +1638,8 @@ static int fallbacks[MIGRATE_PCPTYPES][MIGRATE_PCPTYPES - 1] = {
 	[MIGRATE_RECLAIMABLE] = { MIGRATE_UNMOVABLE,   MIGRATE_MOVABLE   },
 };
 
+#endif
+
 #ifdef CONFIG_CMA
 static __always_inline struct page *__rmqueue_cma_fallback(struct zone *zone,
 					unsigned int order)
@@ -1646,6 +1650,8 @@ static __always_inline struct page *__rmqueue_cma_fallback(struct zone *zone,
 static inline struct page *__rmqueue_cma_fallback(struct zone *zone,
 					unsigned int order) { return NULL; }
 #endif
+
+#if 0
 
 /*
  * Change the type of a block and move all its free pages to that
@@ -1997,6 +2003,7 @@ try_to_steal_block(struct zone *zone, struct page *page,
 
 	return NULL;
 }
+#endif
 
 /*
  * Check whether there is a suitable fallback freepage with requested order.
@@ -2010,6 +2017,7 @@ int find_suitable_fallback(struct free_area *area, unsigned int order,
 	int i;
 	int fallback_mt;
 
+#if 0
 	if (area->nr_free == 0)
 		return -1;
 
@@ -2030,8 +2038,11 @@ int find_suitable_fallback(struct free_area *area, unsigned int order,
 	}
 
 	return -1;
+#endif
+    PANIC("");
 }
 
+#if 0
 /*
  * Reserve the pageblock(s) surrounding an allocation request for
  * exclusive use of high-order atomic allocations if there are no
@@ -2175,6 +2186,7 @@ static bool unreserve_highatomic_pageblock(const struct alloc_context *ac,
 
 	return false;
 }
+#endif
 
 /*
  * Try to allocate from some fallback migratetype by claiming the entire block,
@@ -2195,6 +2207,7 @@ __rmqueue_claim(struct zone *zone, int order, int start_migratetype,
 	int fallback_mt;
 	bool can_steal;
 
+#if 0
 	/*
 	 * Do not steal pages from freelists belonging to other pageblocks
 	 * i.e. orders < pageblock_order. If there are no local zones free,
@@ -2230,6 +2243,8 @@ __rmqueue_claim(struct zone *zone, int order, int start_migratetype,
 	}
 
 	return NULL;
+#endif
+    PANIC("");
 }
 
 /*
@@ -2376,6 +2391,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 	return i;
 }
 
+#if 0
 /*
  * Called from the vmstat counter updater to decay the PCP high.
  * Return whether there are addition works to do.
@@ -2982,6 +2998,7 @@ struct page *rmqueue_buddy(struct zone *preferred_zone, struct zone *zone,
 
 	return page;
 }
+#endif
 
 static int nr_pcp_alloc(struct per_cpu_pages *pcp, struct zone *zone, int order)
 {
@@ -3093,11 +3110,14 @@ static struct page *rmqueue_pcplist(struct zone *preferred_zone,
 	page = __rmqueue_pcplist(zone, order, migratetype, alloc_flags, pcp, list);
 	pcp_spin_unlock(pcp);
 	pcp_trylock_finish(UP_flags);
+#if 0
 	if (page) {
 		__count_zid_vm_events(PGALLOC, page_zonenum(page), 1 << order);
 		zone_statistics(preferred_zone, zone, 1);
 	}
 	return page;
+#endif
+    PANIC("");
 }
 
 /*
@@ -3127,10 +3147,13 @@ struct page *rmqueue(struct zone *preferred_zone,
 			goto out;
 	}
 
+#if 0
 	page = rmqueue_buddy(preferred_zone, zone, order, alloc_flags,
 							migratetype);
 
+#endif
 out:
+    PANIC("");
 	/* Separate test+clear to avoid unnecessary atomics */
 	if ((alloc_flags & ALLOC_KSWAPD) &&
 	    unlikely(test_bit(ZONE_BOOSTED_WATERMARK, &zone->flags))) {
@@ -3247,12 +3270,14 @@ bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
 	return false;
 }
 
+#if 0
 bool zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
 		      int highest_zoneidx, unsigned int alloc_flags)
 {
 	return __zone_watermark_ok(z, order, mark, highest_zoneidx, alloc_flags,
 					zone_page_state(z, NR_FREE_PAGES));
 }
+#endif
 
 static inline bool zone_watermark_fast(struct zone *z, unsigned int order,
 				unsigned long mark, int highest_zoneidx,
@@ -3299,6 +3324,7 @@ static inline bool zone_watermark_fast(struct zone *z, unsigned int order,
 	return false;
 }
 
+#if 0
 bool zone_watermark_ok_safe(struct zone *z, unsigned int order,
 			unsigned long mark, int highest_zoneidx)
 {
@@ -3310,6 +3336,7 @@ bool zone_watermark_ok_safe(struct zone *z, unsigned int order,
 	return __zone_watermark_ok(z, order, mark, highest_zoneidx, 0,
 								free_pages);
 }
+#endif
 
 #ifdef CONFIG_NUMA
 int __read_mostly node_reclaim_distance = RECLAIM_DISTANCE;
@@ -3520,6 +3547,7 @@ check_alloc_wmark:
 try_this_zone:
 		page = rmqueue(zonelist_zone(ac->preferred_zoneref), zone, order,
 				gfp_mask, alloc_flags, ac->migratetype);
+#if 0
 		if (page) {
 			prep_new_page(page, order, gfp_mask, alloc_flags);
 
@@ -3541,6 +3569,8 @@ try_this_zone:
 					goto try_this_zone;
 			}
 		}
+#endif
+        PANIC("1");
 	}
 
 	/*
@@ -3552,9 +3582,11 @@ try_this_zone:
 		goto retry;
 	}
 
+    PANIC("");
 	return NULL;
 }
 
+#if 0
 static void warn_alloc_show_mem(gfp_t gfp_mask, nodemask_t *nodemask)
 {
 	unsigned int filter = SHOW_MEM_FILTER_NODES;
@@ -4546,6 +4578,7 @@ fail:
 got_pg:
 	return page;
 }
+#endif
 
 static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 		int preferred_nid, nodemask_t *nodemask,
@@ -4590,6 +4623,7 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 	return true;
 }
 
+#if 0
 /*
  * __alloc_pages_bulk - Allocate a number of order-0 pages to a list or array
  * @gfp: GFP flags for the allocation
@@ -4770,6 +4804,7 @@ failed:
 	goto out;
 }
 EXPORT_SYMBOL_GPL(alloc_pages_bulk_noprof);
+#endif
 
 /*
  * This is the 'heart' of the zoned buddy allocator.
@@ -4814,6 +4849,7 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
 	if (likely(page))
 		goto out;
 
+#if 0
 	alloc_gfp = gfp;
 	ac.spread_dirty_pages = false;
 
@@ -4824,6 +4860,8 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
 	ac.nodemask = nodemask;
 
 	page = __alloc_pages_slowpath(alloc_gfp, order, &ac);
+#endif
+    PANIC("");
 
 out:
 	if (memcg_kmem_online() && (gfp & __GFP_ACCOUNT) && page &&
@@ -4839,6 +4877,7 @@ out:
 }
 EXPORT_SYMBOL(__alloc_pages_noprof);
 
+#if 0
 struct folio *__folio_alloc_noprof(gfp_t gfp, unsigned int order, int preferred_nid,
 		nodemask_t *nodemask)
 {
@@ -5708,6 +5747,7 @@ static void pageset_update(struct per_cpu_pages *pcp, unsigned long high_min,
 	WRITE_ONCE(pcp->high_min, high_min);
 	WRITE_ONCE(pcp->high_max, high_max);
 }
+#endif
 
 static void per_cpu_pages_init(struct per_cpu_pages *pcp, struct per_cpu_zonestat *pzstats)
 {
@@ -5732,6 +5772,7 @@ static void per_cpu_pages_init(struct per_cpu_pages *pcp, struct per_cpu_zonesta
 	pcp->free_count = 0;
 }
 
+#if 0
 static void __zone_set_pageset_high_and_batch(struct zone *zone, unsigned long high_min,
 					      unsigned long high_max, unsigned long batch)
 {
@@ -5784,6 +5825,7 @@ void __meminit setup_zone_pageset(struct zone *zone)
 {
 	int cpu;
 
+    PANIC("--- setup_zone_pageset ---");
 	/* Size may be 0 on !SMP && !NUMA */
 	if (sizeof(struct per_cpu_zonestat) > 0)
 		zone->per_cpu_zonestats = alloc_percpu(struct per_cpu_zonestat);
