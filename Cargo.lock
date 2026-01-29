@@ -114,6 +114,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-brute_force"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
 name = "arceos-helloworld"
 version = "0.1.0"
 dependencies = [

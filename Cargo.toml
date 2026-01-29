@@ -37,6 +37,7 @@ members = [
     "examples/task/priority",
     "examples/task/sleep",
     "examples/task/wait_queue",
+    "examples/task/brute_force",
     "examples/task/yield",
     "examples/task/mutex",
 
