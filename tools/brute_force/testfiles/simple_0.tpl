@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 //
 // Parameters
 //
-const TEST_ID: usize = 1;
+const TEST_ID: usize = %%TEST_ID%%;
 const NUM_TASK_A: usize = %%NUM_TASK_A%%;
 const NUM_TASK_B: usize = 1;
 
