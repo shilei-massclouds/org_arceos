@@ -11,10 +11,10 @@ use alloc::vec::Vec;
 //
 const TEST_ID: usize = %%TEST_ID%%;
 const NUM_TASK_A: usize = %%NUM_TASK_A%%;
-const NUM_TASK_B: usize = 1;
+const NUM_TASK_B: usize = %%NUM_TASK_B%%;
 
 pub fn do_test() {
-    println!("Test: {} ...", TEST_ID);
+    println!("\n###### Testcase: {} ######\n", TEST_ID);
 
     let mut tasks = Vec::with_capacity(NUM_TASK_A + NUM_TASK_B);
 
