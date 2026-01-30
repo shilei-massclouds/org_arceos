@@ -983,6 +983,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1d084b0137aaa901caf9f1e8b21daa6aa24d41cd806e111335541eff9683bd6"
 
 [[package]]
+name = "brute_force"
+version = "0.2.0"
+
+[[package]]
 name = "buddy_system_allocator"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -49,7 +49,7 @@ members = [
     "examples/tour/u_6_0",
     "examples/tour/u_6_1",
     "examples/tour/u_7_0",
-    "examples/tour/u_8_0",
+    "examples/tour/u_8_0", "tools/brute_force",
 ]
 
 [workspace.package]
