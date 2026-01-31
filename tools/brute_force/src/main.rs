@@ -1,15 +1,14 @@
 use std::fs::File;
 use std::io::{Read, Error};
 
-mod conditions;
-use conditions::{init_arg_space, make_testcases};
+mod factory;
+use factory::{init_arg_space, make_testcases};
 
 fn main() {
     let tpl = read_tpl().expect("bad tpl");
 
-    let mut level = 0;
     let args = init_arg_space();
-    make_testcases(tpl, &args, level);
+    make_testcases(tpl, &args, 0);
 }
 
 fn read_tpl() -> Result<String, Error> {

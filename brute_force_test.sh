@@ -1,8 +1,14 @@
 #!/bin/bash
 
+printf "Make test ...\n"
+pushd tools/brute_force/
+cargo run
+popd
+printf "Make test ok!\n"
+
 for testcase in tools/brute_force/testfiles/*.rs; do
 
-  echo "Do test: [$f]"
+  printf "Do test: [$testcase]\n"
 
   # Replace testcase file
   rm -f examples/task/brute_force/src/bf.rs
