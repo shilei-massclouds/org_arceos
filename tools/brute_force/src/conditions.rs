@@ -1,9 +1,39 @@
-use std::sync::LazyLock;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, BTreeSet};
+use std::fs::File;
+use std::io::{Write, Error};
+use std::sync::atomic::{AtomicUsize, Ordering::Relaxed};
 
-pub static CONDITIONS: LazyLock<HashMap<&str, [&str;4]>> = LazyLock::new(|| {
-    let mut map = HashMap::new();
-    map.insert("%%NUM_TASK_A%%", ["2", "4", "8", "16"]);
-    map.insert("%%NUM_TASK_B%%", ["1", "1", "1", "1"]);
-    map
-});
+type Arg<'a> = (&'a str, Vec<&'a str>);
+type ArgVec<'a> = Vec<Arg<'a>>;
+
+pub fn init_arg_space() -> ArgVec<'static> {
+    vec![
+        ("%%NUM_TASK_A%%", vec!["2", "4", "8", "16"]),
+        ("%%NUM_TASK_B%%", vec!["1", "2"]),
+    ]
+}
+
+pub fn make_testcases(tpl: String, args: &ArgVec, mut level: usize) {
+    if level >= args.len() {
+        let fid = new_id();
+        let ret = tpl.replace("%%TEST_ID%%", &fid);
+        write_to_file(&fid, &ret).expect("write test error");
+        return;
+    }
+    let ret = tpl.replace(args[level].0, args[level].1[0]);
+
+    level += 1;
+    make_testcases(ret, &args, level);
+}
+
+fn new_id() -> String {
+    static TEST_ID: AtomicUsize = AtomicUsize::new(1);
+    format!("{}", TEST_ID.fetch_add(1, Relaxed))
+}
+
+fn write_to_file(fid: &str, test: &str) -> Result<(), Error> {
+    let fname = format!("./testfiles/{}.rs", fid);
+    let mut f = File::create(fname)?;
+    f.write_all(test.as_bytes())?;
+    Ok(())
+}
