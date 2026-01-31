@@ -8,21 +8,22 @@ type ArgVec<'a> = Vec<Arg<'a>>;
 pub fn init_arg_space() -> ArgVec<'static> {
     vec![
         ("%%NUM_TASK_A%%", vec!["2", "4", "8", "16"]),
-        ("%%NUM_TASK_B%%", vec!["1", "2"]),
+        ("%%NUM_TASK_B%%", vec!["1"]),
     ]
 }
 
-pub fn make_testcases(tpl: String, args: &ArgVec, mut level: usize) {
+pub fn make_testcases(tpl: &String, args: &ArgVec, level: usize) {
     if level >= args.len() {
         let fid = new_id();
         let ret = tpl.replace("%%TEST_ID%%", &fid);
         write_to_file(&fid, &ret).expect("write test error");
         return;
     }
-    let ret = tpl.replace(args[level].0, args[level].1[0]);
 
-    level += 1;
-    make_testcases(ret, &args, level);
+    for val in args[level].1.iter() {
+        let ret = tpl.replace(args[level].0, val);
+        make_testcases(&ret, &args, level + 1);
+    }
 }
 
 fn new_id() -> String {

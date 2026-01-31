@@ -1,1 +1,1 @@
-../../../../tools/brute_force/testfiles/1.rs
+../../../../tools/brute_force/testfiles/4.rs

@@ -7,14 +7,15 @@ extern crate alloc;
 use alloc::vec::Vec;
 
 //
-// Parameters
+// Arguments Area
 //
 const TEST_ID: usize = %%TEST_ID%%;
 const NUM_TASK_A: usize = %%NUM_TASK_A%%;
 const NUM_TASK_B: usize = %%NUM_TASK_B%%;
 
 pub fn do_test() {
-    println!("\n###### Testcase: {} ######\n", TEST_ID);
+    println!("\n=== Testcase: {} #Tasks: {},{} ===\n",
+        TEST_ID, NUM_TASK_A, NUM_TASK_B);
 
     let mut tasks = Vec::with_capacity(NUM_TASK_A + NUM_TASK_B);
 
