@@ -1,5 +1,8 @@
 #!/bin/bash
 
+rm -f /tmp/result.log
+rm -f tools/brute_force/testfiles/*.rs
+
 printf "Make test ...\n"
 pushd tools/brute_force/
 cargo run
@@ -8,7 +11,7 @@ printf "Make test ok!\n"
 
 for testcase in tools/brute_force/testfiles/*.rs; do
 
-  printf "Do test: [$testcase]\n"
+  printf "Do test: [$testcase]\n" | tee -a /tmp/result.log
 
   # Replace testcase file
   rm -f examples/task/brute_force/src/bf.rs

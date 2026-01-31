@@ -27,8 +27,7 @@ pub fn do_test() {
             println!("TaskB: {}", api::ax_current_task_id());
             loop {
                 let lock = LOCK.lock();
-                thread::sleep(Duration::from_millis(100));
-                println!("Got notify: {}", *lock);
+                %%BLOCK1%%
                 if *lock == NUM_TASK_A { break; }
             }
         }));
@@ -43,6 +42,7 @@ pub fn do_test() {
             println!("TaskA: {}", api::ax_current_task_id());
             {
                 let mut lock = LOCK.lock();
+                %%BLOCK1%%
                 *lock += 1;
             }
         }));

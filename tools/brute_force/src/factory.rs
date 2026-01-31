@@ -9,6 +9,11 @@ pub fn init_arg_space() -> ArgVec<'static> {
     vec![
         ("%%NUM_TASK_A%%", vec!["2", "4", "8", "16"]),
         ("%%NUM_TASK_B%%", vec!["1"]),
+        ("%%BLOCK1%%", vec![
+         "thread::sleep(Duration::from_millis(100));",
+         "println!(\"Got notify: {}\", *lock);",
+         "api::ax_yield_now();",
+        ]),
     ]
 }
 
@@ -28,7 +33,7 @@ pub fn make_testcases(tpl: &String, args: &ArgVec, level: usize) {
 
 fn new_id() -> String {
     static TEST_ID: AtomicUsize = AtomicUsize::new(1);
-    format!("{}", TEST_ID.fetch_add(1, Relaxed))
+    format!("{:05}", TEST_ID.fetch_add(1, Relaxed))
 }
 
 fn write_to_file(fid: &str, test: &str) -> Result<(), Error> {
