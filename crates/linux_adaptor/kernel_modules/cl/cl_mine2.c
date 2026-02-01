@@ -126,7 +126,6 @@ CL_MINE(vunmap_range_noflush)
 CL_MINE(flush_tlb_kernel_range)
 CL_MINE(print_tracking)
 CL_MINE(call_rcu)
-CL_MINE(kmem_cache_alloc_noprof)
 CL_MINE(sysfs_slab_add)
 CL_MINE(debugfs_slab_add)
 
@@ -135,4 +134,3 @@ CL_MINE(stack_depot_save)
 CL_MINE(kmalloc_fix_flags)
 CL_MINE(copy_from_kernel_nofault)
 CL_MINE(gfp_pfmemalloc_allowed)
-

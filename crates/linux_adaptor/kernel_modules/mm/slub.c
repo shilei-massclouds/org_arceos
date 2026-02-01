@@ -4173,7 +4173,6 @@ out:
 	return object;
 }
 
-#if 0
 void *kmem_cache_alloc_noprof(struct kmem_cache *s, gfp_t gfpflags)
 {
 	void *ret = slab_alloc_node(s, NULL, gfpflags, NUMA_NO_NODE, _RET_IP_,
@@ -4185,6 +4184,7 @@ void *kmem_cache_alloc_noprof(struct kmem_cache *s, gfp_t gfpflags)
 }
 EXPORT_SYMBOL(kmem_cache_alloc_noprof);
 
+#if 0
 void *kmem_cache_alloc_lru_noprof(struct kmem_cache *s, struct list_lru *lru,
 			   gfp_t gfpflags)
 {
@@ -5973,7 +5973,6 @@ void __init kmem_cache_init(void)
 	kmem_cache = bootstrap(&boot_kmem_cache);
 	kmem_cache_node = bootstrap(&boot_kmem_cache_node);
 
-#if 0
 	/* Now we can use the kmem_cache to allocate kmalloc slabs */
 	setup_kmalloc_cache_index_table();
 	create_kmalloc_caches();
@@ -5988,8 +5987,6 @@ void __init kmem_cache_init(void)
 		cache_line_size(),
 		slub_min_order, slub_max_order, slub_min_objects,
 		nr_cpu_ids, nr_node_ids);
-#endif
-    PANIC("");
 }
 
 void __init kmem_cache_init_late(void)

@@ -1624,6 +1624,7 @@ size_t swiotlb_max_mapping_size(struct device *dev)
 
 	return ((size_t)IO_TLB_SIZE) * IO_TLB_SEGSIZE - min_align;
 }
+#endif
 
 /**
  * is_swiotlb_allocated() - check if the default software IO TLB is initialized
@@ -1633,6 +1634,7 @@ bool is_swiotlb_allocated(void)
 	return io_tlb_default_mem.nslabs;
 }
 
+#if 0
 bool is_swiotlb_active(struct device *dev)
 {
 	struct io_tlb_mem *mem = dev->dma_io_tlb_mem;

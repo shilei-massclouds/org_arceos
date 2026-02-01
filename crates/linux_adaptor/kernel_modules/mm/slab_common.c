@@ -360,9 +360,11 @@ out_unlock:
 	return s;
 }
 EXPORT_SYMBOL(__kmem_cache_create_args);
+#endif
 
 static struct kmem_cache *kmem_buckets_cache __ro_after_init;
 
+#if 0
 /**
  * kmem_buckets_create - Create a set of caches that handle dynamic sized
  *			 allocations via kmem_buckets_alloc()
@@ -682,7 +684,6 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name,
 	s->refcount = -1;	/* Exempt from merging for now */
 }
 
-#if 0
 static struct kmem_cache *__init create_kmalloc_cache(const char *name,
 						      unsigned int size,
 						      slab_flags_t flags)
@@ -697,7 +698,6 @@ static struct kmem_cache *__init create_kmalloc_cache(const char *name,
 	s->refcount = 1;
 	return s;
 }
-#endif
 
 kmem_buckets kmalloc_caches[NR_KMALLOC_TYPES] __ro_after_init =
 { /* initialization for https://llvm.org/pr42570 */ };
@@ -764,6 +764,8 @@ size_t kmalloc_size_roundup(size_t size)
 
 }
 EXPORT_SYMBOL(kmalloc_size_roundup);
+
+#endif
 
 #ifdef CONFIG_ZONE_DMA
 #define KMALLOC_DMA_NAME(sz)	.name[KMALLOC_DMA] = "dma-kmalloc-" #sz,
@@ -985,6 +987,7 @@ void __init create_kmalloc_caches(void)
 						       0, SLAB_NO_MERGE, NULL);
 }
 
+#if 0
 /**
  * __ksize -- Report full size of underlying allocation
  * @object: pointer to the object
