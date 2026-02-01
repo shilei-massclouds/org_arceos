@@ -512,7 +512,6 @@ static inline void *get_freepointer(struct kmem_cache *s, void *object)
 	return freelist_ptr_decode(s, p, ptr_addr);
 }
 
-#if 0
 #ifndef CONFIG_SLUB_TINY
 static void prefetch_freepointer(const struct kmem_cache *s, void *object)
 {
@@ -544,7 +543,6 @@ static inline void *get_freepointer_safe(struct kmem_cache *s, void *object)
 	copy_from_kernel_nofault(&p, (freeptr_t *)freepointer_addr, sizeof(p));
 	return freelist_ptr_decode(s, p, freepointer_addr);
 }
-#endif
 
 static inline void set_freepointer(struct kmem_cache *s, void *object, void *fp)
 {
@@ -689,7 +687,6 @@ __update_freelist_slow(struct slab *slab,
 	return ret;
 }
 
-#if 0
 /*
  * Interrupts must be disabled (for the fallback code to work right), typically
  * by an _irqsave() lock variant. On PREEMPT_RT the preempt_disable(), which is
@@ -726,7 +723,6 @@ static inline bool __slab_update_freelist(struct kmem_cache *s, struct slab *sla
 
 	return false;
 }
-#endif
 
 static inline bool slab_update_freelist(struct kmem_cache *s, struct slab *slab,
 		void *freelist_old, unsigned long counters_old,
@@ -805,7 +801,6 @@ static inline unsigned int get_orig_size(struct kmem_cache *s, void *object)
 
 #ifdef CONFIG_SLUB_DEBUG
 
-#if 0
 static unsigned long object_map[BITS_TO_LONGS(MAX_OBJS_PER_PAGE)];
 static DEFINE_SPINLOCK(object_map_lock);
 
@@ -820,7 +815,6 @@ static void __fill_map(unsigned long *obj_map, struct kmem_cache *s,
 	for (p = slab->freelist; p; p = get_freepointer(s, p))
 		set_bit(__obj_to_index(s, addr, p), obj_map);
 }
-#endif
 
 #if IS_ENABLED(CONFIG_KUNIT)
 static bool slab_add_kunit_errors(void)
@@ -1417,7 +1411,6 @@ static int check_object(struct kmem_cache *s, struct slab *slab,
 	return ret;
 }
 
-#if 0
 static int check_slab(struct kmem_cache *s, struct slab *slab)
 {
 	int maxobj;
@@ -1545,7 +1538,6 @@ static inline unsigned long node_nr_slabs(struct kmem_cache_node *n)
 {
 	return atomic_long_read(&n->nr_slabs);
 }
-#endif
 
 static inline void inc_slabs_node(struct kmem_cache *s, int node, int objects)
 {
@@ -1583,7 +1575,6 @@ void setup_slab_debug(struct kmem_cache *s, struct slab *slab, void *addr)
 	metadata_access_disable();
 }
 
-#if 0
 static inline int alloc_consistency_checks(struct kmem_cache *s,
 					struct slab *slab, void *object)
 {
@@ -1661,7 +1652,6 @@ static inline int free_consistency_checks(struct kmem_cache *s,
 	}
 	return 1;
 }
-#endif
 
 /*
  * Parse a block of slab_debug options. Blocks are delimited by ';'
@@ -2074,7 +2064,6 @@ static inline void free_slab_obj_exts(struct slab *slab)
 
 #endif /* CONFIG_SLAB_OBJ_EXT */
 
-#if 0
 #ifdef CONFIG_MEM_ALLOC_PROFILING
 
 static inline struct slabobj_ext *
@@ -2157,7 +2146,6 @@ alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p,
 }
 
 #endif /* CONFIG_MEM_ALLOC_PROFILING */
-
 
 #ifdef CONFIG_MEMCG
 
@@ -2274,6 +2262,8 @@ static inline bool memcg_slab_post_charge(void *p, gfp_t flags)
 	return true;
 }
 #endif /* CONFIG_MEMCG */
+
+#if 0
 
 #ifdef CONFIG_SLUB_RCU_DEBUG
 static void slab_free_after_rcu_debug(struct rcu_head *rcu_head);
@@ -2758,7 +2748,6 @@ static inline void add_partial(struct kmem_cache_node *n,
 	__add_partial(n, slab, tail);
 }
 
-#if 0
 static inline void remove_partial(struct kmem_cache_node *n,
 					struct slab *slab)
 {
@@ -2845,6 +2834,7 @@ static inline void put_cpu_partial(struct kmem_cache *s, struct slab *slab,
 				   int drain) { }
 #endif
 static inline bool pfmemalloc_match(struct slab *slab, gfp_t gfpflags);
+
 
 /*
  * Try to allocate a partial slab from a specific node.
@@ -2986,7 +2976,6 @@ static struct slab *get_partial(struct kmem_cache *s, int node,
 
 	return get_any_partial(s, pc);
 }
-#endif
 
 #ifndef CONFIG_SLUB_TINY
 
@@ -3412,7 +3401,6 @@ static inline void __flush_cpu_slab(struct kmem_cache *s, int cpu) { }
 static inline int slub_cpu_dead(unsigned int cpu) { return 0; }
 #endif /* CONFIG_SLUB_TINY */
 
-#if 0
 /*
  * Check if the objects in a per cpu structure fit numa
  * locality expectations.
@@ -3496,6 +3484,8 @@ out:
 }
 #endif /* CONFIG_SLUB_DEBUG */
 
+#if 0
+
 #if defined(CONFIG_SLUB_DEBUG) || defined(SLAB_SUPPORTS_SYSFS)
 static unsigned long count_partial(struct kmem_cache_node *n,
 					int (*get_count)(struct slab *))
@@ -3511,6 +3501,8 @@ static unsigned long count_partial(struct kmem_cache_node *n,
 	return x;
 }
 #endif /* CONFIG_SLUB_DEBUG || SLAB_SUPPORTS_SYSFS */
+
+#endif
 
 #ifdef CONFIG_SLUB_DEBUG
 #define MAX_PARTIAL_TO_SCAN 10000
@@ -4139,7 +4131,6 @@ bool slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
 
 	return memcg_slab_post_alloc_hook(s, lru, flags, size, p);
 }
-#endif
 
 /*
  * Inlined fastpath so that allocation functions (kmalloc, kmem_cache_alloc)
@@ -4157,7 +4148,6 @@ static __fastpath_inline void *slab_alloc_node(struct kmem_cache *s, struct list
 	void *object;
 	bool init = false;
 
-#if 0
 	s = slab_pre_alloc_hook(s, gfpflags);
 	if (unlikely(!s))
 		return NULL;
@@ -4181,8 +4171,6 @@ out:
 	slab_post_alloc_hook(s, lru, gfpflags, 1, &object, init, orig_size);
 
 	return object;
-#endif
-    PANIC("");
 }
 
 #if 0
@@ -5874,11 +5862,13 @@ out:
 	mutex_unlock(&slab_mutex);
 	return ret;
 }
+#endif
 
 static int slab_memory_callback(struct notifier_block *self,
 				unsigned long action, void *arg)
 {
 	int ret = 0;
+#if 0
 
 	switch (action) {
 	case MEM_GOING_ONLINE:
@@ -5900,6 +5890,8 @@ static int slab_memory_callback(struct notifier_block *self,
 	else
 		ret = NOTIFY_OK;
 	return ret;
+#endif
+    PANIC("");
 }
 
 /********************************************************************
@@ -5940,7 +5932,6 @@ static struct kmem_cache * __init bootstrap(struct kmem_cache *static_cache)
 	list_add(&s->list, &slab_caches);
 	return s;
 }
-#endif
 
 void __init kmem_cache_init(void)
 {
@@ -5969,7 +5960,6 @@ void __init kmem_cache_init(void)
 			sizeof(struct kmem_cache_node),
 			SLAB_HWCACHE_ALIGN | SLAB_NO_OBJ_EXT, 0, 0);
 
-#if 0
 	hotplug_memory_notifier(slab_memory_callback, SLAB_CALLBACK_PRI);
 
 	/* Able to allocate the per node structures */
@@ -5983,6 +5973,7 @@ void __init kmem_cache_init(void)
 	kmem_cache = bootstrap(&boot_kmem_cache);
 	kmem_cache_node = bootstrap(&boot_kmem_cache_node);
 
+#if 0
 	/* Now we can use the kmem_cache to allocate kmalloc slabs */
 	setup_kmalloc_cache_index_table();
 	create_kmalloc_caches();
@@ -6102,7 +6093,6 @@ int do_kmem_cache_create(struct kmem_cache *s, const char *name,
 	if (!alloc_kmem_cache_cpus(s))
 		goto out;
 
-#if 0
 	/* Mutex is not taken during early boot */
 	if (slab_state <= UP) {
 		err = 0;
@@ -6115,8 +6105,6 @@ int do_kmem_cache_create(struct kmem_cache *s, const char *name,
 
 	if (s->flags & SLAB_STORE_USER)
 		debugfs_slab_add(s);
-#endif
-    PANIC("");
 
 out:
 	if (err)
