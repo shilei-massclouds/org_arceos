@@ -14,3 +14,4 @@ rusty-tags.vi
 tags
 *.a
 obj_list.txt
+tools/brute_force/
