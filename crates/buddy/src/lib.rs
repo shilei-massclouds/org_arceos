@@ -26,9 +26,9 @@ impl<const PAGE_SIZE: usize> BaseAllocator for BuddyAllocator<PAGE_SIZE> {
         //
         unsafe {
             misc_mem_init();
-            mm_core_init_first_part();
             setup_nr_cpu_ids();
             setup_per_cpu_areas();
+            mm_core_init_first_part();
         }
     }
     fn add_memory(&mut self, _start: usize, _size: usize) -> AllocResult {

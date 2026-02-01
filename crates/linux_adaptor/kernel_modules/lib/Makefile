@@ -13,6 +13,7 @@ obj-y += kstrtox.o
 obj-y += hweight.o
 obj-y += list_debug.o
 obj-y += bitmap.o
+obj-y += debug_locks.o
 
 obj-y += math/
 
@@ -24,5 +25,4 @@ obj-y += math/
 #obj-y += iov_iter.o irq_regs.o
 #obj-y += percpu_counter.o strncpy_from_user.o seq_buf.o
 #obj-y += cmdline.o logic_pio.o
-#obj-y += debug_locks.o
 #obj-y += group_cpus.o
