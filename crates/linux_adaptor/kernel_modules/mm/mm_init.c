@@ -2719,5 +2719,4 @@ void __init mm_core_init_second_part(void)
 	mm_cache_init();
 	execmem_init();
 #endif
-    PANIC("");
 }

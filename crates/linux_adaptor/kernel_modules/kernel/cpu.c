@@ -43,6 +43,7 @@
 #include <trace/events/cpuhp.h>
 
 #include "smpboot.h"
+#include "adaptor.h"
 
 #if 0
 /**
@@ -115,6 +116,8 @@ static inline void cpuhp_lock_release(bool bringup) { }
 
 #endif
 
+#endif
+
 /**
  * struct cpuhp_step - Hotplug state machine step
  * @name:	Name of the step
@@ -150,6 +153,7 @@ static struct cpuhp_step *cpuhp_get_step(enum cpuhp_state state)
 	return cpuhp_hp_states + state;
 }
 
+#if 0
 static bool cpuhp_step_empty(bool bringup, struct cpuhp_step *step)
 {
 	return bringup ? !step->startup.single : !step->teardown.single;
@@ -475,6 +479,7 @@ void cpu_maps_update_done(void)
 {
 	mutex_unlock(&cpu_add_remove_lock);
 }
+#endif
 
 /*
  * If set, cpu_up and cpu_down will return -EBUSY and do nothing.
@@ -597,6 +602,7 @@ static void lockdep_release_cpus_lock(void)
 
 #endif	/* CONFIG_HOTPLUG_CPU */
 
+#if 0
 /*
  * Architectures that need SMT-specific errata handling during SMT hotplug
  * should override this.
@@ -2268,6 +2274,7 @@ static struct cpuhp_step cpuhp_hp_states[] = {
 		.teardown.single	= NULL,
 	},
 };
+#endif
 
 /* Sanity check for callbacks */
 static int cpuhp_cb_check(enum cpuhp_state state)
@@ -2345,6 +2352,7 @@ static int cpuhp_store_callbacks(enum cpuhp_state state, const char *name,
 	return ret;
 }
 
+#if 0
 static void *cpuhp_get_teardown_cb(enum cpuhp_state state)
 {
 	return cpuhp_get_step(state)->teardown.single;
@@ -2381,6 +2389,7 @@ static int cpuhp_issue_call(int cpu, enum cpuhp_state state, bool bringup,
 	BUG_ON(ret && !bringup);
 	return ret;
 }
+#endif
 
 /*
  * Called from __cpuhp_setup_state on a recoverable failure.
@@ -2392,6 +2401,7 @@ static void cpuhp_rollback_install(int failedcpu, enum cpuhp_state state,
 {
 	int cpu;
 
+#if 0
 	/* Roll back the already executed steps on the other cpus */
 	for_each_present_cpu(cpu) {
 		struct cpuhp_cpu_state *st = per_cpu_ptr(&cpuhp_state, cpu);
@@ -2404,8 +2414,11 @@ static void cpuhp_rollback_install(int failedcpu, enum cpuhp_state state,
 		if (cpustate >= state)
 			cpuhp_issue_call(cpu, state, false, node);
 	}
+#endif
+    PANIC("");
 }
 
+#if 0
 int __cpuhp_state_add_instance_cpuslocked(enum cpuhp_state state,
 					  struct hlist_node *node,
 					  bool invoke)
@@ -2462,6 +2475,7 @@ int __cpuhp_state_add_instance(enum cpuhp_state state, struct hlist_node *node,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(__cpuhp_state_add_instance);
+#endif
 
 /**
  * __cpuhp_setup_state_cpuslocked - Setup the callbacks for an hotplug machine state
@@ -2509,6 +2523,7 @@ int __cpuhp_setup_state_cpuslocked(enum cpuhp_state state,
 	if (ret || !invoke || !startup)
 		goto out;
 
+#if 0
 	/*
 	 * Try to call the startup callback for each present cpu
 	 * depending on the hotplug state of the cpu.
@@ -2528,6 +2543,8 @@ int __cpuhp_setup_state_cpuslocked(enum cpuhp_state state,
 			goto out;
 		}
 	}
+#endif
+    PANIC("");
 out:
 	mutex_unlock(&cpuhp_state_mutex);
 	/*
@@ -2556,6 +2573,7 @@ int __cpuhp_setup_state(enum cpuhp_state state,
 }
 EXPORT_SYMBOL(__cpuhp_setup_state);
 
+#if 0
 int __cpuhp_state_remove_instance(enum cpuhp_state state,
 				  struct hlist_node *node, bool invoke)
 {
