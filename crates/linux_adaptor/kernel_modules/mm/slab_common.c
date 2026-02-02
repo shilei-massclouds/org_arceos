@@ -42,7 +42,6 @@ LIST_HEAD(slab_caches);
 DEFINE_MUTEX(slab_mutex);
 struct kmem_cache *kmem_cache;
 
-#if 0
 /*
  * Set of flags that will prevent slab merging
  */
@@ -76,6 +75,7 @@ __setup_param("slub_merge", slub_merge, setup_slab_merge, 0);
 __setup("slab_nomerge", setup_slab_nomerge);
 __setup("slab_merge", setup_slab_merge);
 
+#if 0
 /*
  * Determine the size of a slab object
  */
@@ -84,6 +84,8 @@ unsigned int kmem_cache_size(struct kmem_cache *s)
 	return s->object_size;
 }
 EXPORT_SYMBOL(kmem_cache_size);
+
+#endif /* CL */
 
 #ifdef CONFIG_DEBUG_VM
 
@@ -120,8 +122,6 @@ static inline int kmem_cache_sanity_check(const char *name, unsigned int size)
 }
 #endif
 
-#endif
-
 /*
  * Figure out what the alignment of the objects will be given a set of
  * flags, a user specified alignment and the size of the objects.
@@ -149,8 +149,6 @@ static unsigned int calculate_alignment(slab_flags_t flags,
 
 	return ALIGN(align, sizeof(void *));
 }
-
-#if 0
 
 /*
  * Find a mergeable slab cache
@@ -229,6 +227,7 @@ static struct kmem_cache *create_cache(const char *name,
 	struct kmem_cache *s;
 	int err;
 
+#if 0
 	if (WARN_ON(args->useroffset + args->usersize > object_size))
 		args->useroffset = args->usersize = 0;
 
@@ -250,6 +249,8 @@ static struct kmem_cache *create_cache(const char *name,
 
 	s->refcount = 1;
 	list_add(&s->list, &slab_caches);
+#endif
+    PANIC("");
 	return s;
 
 out_free_cache:
@@ -336,12 +337,15 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
 		goto out_unlock;
 	}
 
+#if 0
 	args->align = calculate_alignment(flags, args->align, object_size);
 	s = create_cache(cache_name, object_size, args, flags);
 	if (IS_ERR(s)) {
 		err = PTR_ERR(s);
 		kfree_const(cache_name);
 	}
+#endif
+    PANIC("");
 
 out_unlock:
 	mutex_unlock(&slab_mutex);
@@ -360,7 +364,6 @@ out_unlock:
 	return s;
 }
 EXPORT_SYMBOL(__kmem_cache_create_args);
-#endif
 
 static struct kmem_cache *kmem_buckets_cache __ro_after_init;
 

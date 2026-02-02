@@ -4803,6 +4803,7 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
 	gfp_t alloc_gfp; /* The gfp_t that was actually used for allocation */
 	struct alloc_context ac = { };
 
+    printk("=== %s: order(%u)(%u) ===\n", __func__, order, MAX_PAGE_ORDER);
 	/*
 	 * There are several places where we assume that the order value is sane
 	 * so bail out early if the request is out of bound.

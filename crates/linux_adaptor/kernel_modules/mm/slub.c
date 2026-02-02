@@ -3484,8 +3484,6 @@ out:
 }
 #endif /* CONFIG_SLUB_DEBUG */
 
-#if 0
-
 #if defined(CONFIG_SLUB_DEBUG) || defined(SLAB_SUPPORTS_SYSFS)
 static unsigned long count_partial(struct kmem_cache_node *n,
 					int (*get_count)(struct slab *))
@@ -3501,8 +3499,6 @@ static unsigned long count_partial(struct kmem_cache_node *n,
 	return x;
 }
 #endif /* CONFIG_SLUB_DEBUG || SLAB_SUPPORTS_SYSFS */
-
-#endif
 
 #ifdef CONFIG_SLUB_DEBUG
 #define MAX_PARTIAL_TO_SCAN 10000
@@ -4230,7 +4226,6 @@ void *kmem_cache_alloc_node_noprof(struct kmem_cache *s, gfp_t gfpflags, int nod
 }
 EXPORT_SYMBOL(kmem_cache_alloc_node_noprof);
 
-#if 0
 /*
  * To avoid unnecessary overhead, we pass through large allocation requests
  * directly to the page allocator. We use __GFP_COMP, because we will need to
@@ -4305,11 +4300,14 @@ void *__do_kmalloc_node(size_t size, kmem_buckets *b, gfp_t flags, int node,
 	trace_kmalloc(caller, ret, size, s->size, flags, node);
 	return ret;
 }
+
+#if 0
 void *__kmalloc_node_noprof(DECL_BUCKET_PARAMS(size, b), gfp_t flags, int node)
 {
 	return __do_kmalloc_node(size, PASS_BUCKET_PARAM(b), flags, node, _RET_IP_);
 }
 EXPORT_SYMBOL(__kmalloc_node_noprof);
+#endif
 
 void *__kmalloc_noprof(size_t size, gfp_t flags)
 {
@@ -4325,6 +4323,7 @@ void *__kmalloc_node_track_caller_noprof(DECL_BUCKET_PARAMS(size, b), gfp_t flag
 }
 EXPORT_SYMBOL(__kmalloc_node_track_caller_noprof);
 
+#if 0
 void *__kmalloc_cache_noprof(struct kmem_cache *s, gfp_t gfpflags, size_t size)
 {
 	void *ret = slab_alloc_node(s, NULL, gfpflags, NUMA_NO_NODE,
@@ -5997,7 +5996,6 @@ void __init kmem_cache_init_late(void)
 #endif
 }
 
-#if 0
 struct kmem_cache *
 __kmem_cache_alias(const char *name, unsigned int size, unsigned int align,
 		   slab_flags_t flags, void (*ctor)(void *))
@@ -6021,7 +6019,6 @@ __kmem_cache_alias(const char *name, unsigned int size, unsigned int align,
 
 	return s;
 }
-#endif
 
 int do_kmem_cache_create(struct kmem_cache *s, const char *name,
 			 unsigned int size, struct kmem_cache_args *args,
@@ -6109,7 +6106,6 @@ out:
 	return err;
 }
 
-#if 0
 #ifdef SLAB_SUPPORTS_SYSFS
 static int count_inuse(struct slab *slab)
 {
@@ -6122,6 +6118,7 @@ static int count_total(struct slab *slab)
 }
 #endif
 
+#if 0
 #ifdef CONFIG_SLUB_DEBUG
 static void validate_slab(struct kmem_cache *s, struct slab *slab,
 			  unsigned long *obj_map)
@@ -6367,6 +6364,8 @@ static void process_slab(struct loc_track *t, struct kmem_cache *s,
 }
 #endif  /* CONFIG_DEBUG_FS   */
 #endif	/* CONFIG_SLUB_DEBUG */
+
+#endif /* CL */
 
 #ifdef SLAB_SUPPORTS_SYSFS
 enum slab_stat_type {
@@ -7254,6 +7253,7 @@ late_initcall(slab_sysfs_init);
 #endif /* SLAB_SUPPORTS_SYSFS */
 
 #if defined(CONFIG_SLUB_DEBUG) && defined(CONFIG_DEBUG_FS)
+#if 0
 static int slab_debugfs_show(struct seq_file *seq, void *v)
 {
 	struct loc_track *t = seq->private;
@@ -7467,6 +7467,7 @@ static int __init slab_debugfs_init(void)
 }
 __initcall(slab_debugfs_init);
 #endif
+#endif
 /*
  * The /proc/slabinfo ABI
  */
@@ -7493,5 +7494,3 @@ void get_slabinfo(struct kmem_cache *s, struct slabinfo *sinfo)
 	sinfo->cache_order = oo_order(s->oo);
 }
 #endif /* CONFIG_SLUB_DEBUG */
-
-#endif

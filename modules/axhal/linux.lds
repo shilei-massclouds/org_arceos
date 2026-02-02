@@ -66,6 +66,7 @@ SECTIONS
         __start_rodata = .;
         *(.rodata .rodata.*)
         *(.data.rel.ro*)
+        __end_rodata = .;
     }
     .srodata : {
         *(.srodata*)

@@ -29,8 +29,11 @@ impl BaseAllocator for SlubAllocator {
 }
 
 impl ByteAllocator for SlubAllocator {
-    fn alloc(&mut self, _layout: Layout) -> AllocResult<NonNull<u8>> {
-        unimplemented!("alloc");
+    fn alloc(&mut self, layout: Layout) -> AllocResult<NonNull<u8>> {
+        let ret = unsafe {
+            linux_kmalloc_kernel(layout.size(), layout.align())
+        };
+        Ok(NonNull::new(ret as *mut _).unwrap())
     }
 
     fn dealloc(&mut self, _pos: NonNull<u8>, _layout: Layout) {
@@ -58,4 +61,5 @@ impl SlubAllocator {
 
 unsafe extern "C" {
     fn mm_core_init_second_part();
+    fn linux_kmalloc_kernel(size: usize, align: usize) -> usize;
 }
