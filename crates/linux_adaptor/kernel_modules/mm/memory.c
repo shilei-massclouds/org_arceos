@@ -467,6 +467,7 @@ int __pte_alloc(struct mm_struct *mm, pmd_t *pmd)
 		pte_free(mm, new);
 	return 0;
 }
+#endif /* CL */
 
 int __pte_alloc_kernel(pmd_t *pmd)
 {
@@ -486,6 +487,7 @@ int __pte_alloc_kernel(pmd_t *pmd)
 	return 0;
 }
 
+#if 0
 static inline void init_rss_vec(int *rss)
 {
 	memset(rss, 0, sizeof(int) * NR_MM_COUNTERS);
@@ -6290,6 +6292,8 @@ inval:
 }
 #endif /* CONFIG_PER_VMA_LOCK */
 
+#endif /* CL */
+
 #ifndef __PAGETABLE_P4D_FOLDED
 /*
  * Allocate p4d page table.
@@ -6361,6 +6365,7 @@ int __pmd_alloc(struct mm_struct *mm, pud_t *pud, unsigned long address)
 }
 #endif /* __PAGETABLE_PMD_FOLDED */
 
+#if 0
 static inline void pfnmap_args_setup(struct follow_pfnmap_args *args,
 				     spinlock_t *lock, pte_t *ptep,
 				     pgprot_t pgprot, unsigned long pfn_base,
@@ -6918,6 +6923,8 @@ long copy_folio_from_user(struct folio *dst_folio,
 }
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE || CONFIG_HUGETLBFS */
 
+#endif /* CL */
+
 #if defined(CONFIG_SPLIT_PTE_PTLOCKS) && ALLOC_SPLIT_PTLOCKS
 
 static struct kmem_cache *page_ptl_cachep;
@@ -6945,6 +6952,7 @@ void ptlock_free(struct ptdesc *ptdesc)
 }
 #endif
 
+#if 0
 void vma_pgtable_walk_begin(struct vm_area_struct *vma)
 {
 	if (is_vm_hugetlb_page(vma))

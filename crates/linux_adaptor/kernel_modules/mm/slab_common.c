@@ -227,7 +227,6 @@ static struct kmem_cache *create_cache(const char *name,
 	struct kmem_cache *s;
 	int err;
 
-#if 0
 	if (WARN_ON(args->useroffset + args->usersize > object_size))
 		args->useroffset = args->usersize = 0;
 
@@ -249,8 +248,6 @@ static struct kmem_cache *create_cache(const char *name,
 
 	s->refcount = 1;
 	list_add(&s->list, &slab_caches);
-#endif
-    PANIC("");
 	return s;
 
 out_free_cache:
@@ -337,15 +334,12 @@ struct kmem_cache *__kmem_cache_create_args(const char *name,
 		goto out_unlock;
 	}
 
-#if 0
 	args->align = calculate_alignment(flags, args->align, object_size);
 	s = create_cache(cache_name, object_size, args, flags);
 	if (IS_ERR(s)) {
 		err = PTR_ERR(s);
 		kfree_const(cache_name);
 	}
-#endif
-    PANIC("");
 
 out_unlock:
 	mutex_unlock(&slab_mutex);

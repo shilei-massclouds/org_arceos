@@ -39,7 +39,7 @@
 #include "../kernel/head.h"
 #include "adaptor.h"
 
-//u64 new_vmalloc[NR_CPUS / sizeof(u64) + 1];
+u64 new_vmalloc[NR_CPUS / sizeof(u64) + 1];
 
 // FixMe: It comes from mm/mmap.c.
 int mmap_rnd_bits_max __ro_after_init = CONFIG_ARCH_MMAP_RND_BITS_MAX;

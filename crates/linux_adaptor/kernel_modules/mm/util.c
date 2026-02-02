@@ -32,7 +32,6 @@
 #include "swap.h"
 #include "adaptor.h"
 
-#if 0
 /**
  * kfree_const - conditionally free memory
  * @x: pointer to the memory
@@ -45,7 +44,6 @@ void kfree_const(const void *x)
 		kfree(x);
 }
 EXPORT_SYMBOL(kfree_const);
-#endif /* CL */
 
 /**
  * kstrdup - allocate space for and copy an existing string

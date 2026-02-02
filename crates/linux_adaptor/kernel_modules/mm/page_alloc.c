@@ -2841,6 +2841,7 @@ void free_unref_folios(struct folio_batch *folios)
 	}
 	folio_batch_reinit(folios);
 }
+#endif /* CL */
 
 /*
  * split_page takes a non-compound higher-order page, and splits it into
@@ -2865,6 +2866,7 @@ void split_page(struct page *page, unsigned int order)
 }
 EXPORT_SYMBOL_GPL(split_page);
 
+#if 0
 int __isolate_free_page(struct page *page, unsigned int order)
 {
 	struct zone *zone = page_zone(page);
@@ -4609,7 +4611,6 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
 	return true;
 }
 
-#if 0
 /*
  * __alloc_pages_bulk - Allocate a number of order-0 pages to a list or array
  * @gfp: GFP flags for the allocation
@@ -4790,7 +4791,6 @@ failed:
 	goto out;
 }
 EXPORT_SYMBOL_GPL(alloc_pages_bulk_noprof);
-#endif
 
 /*
  * This is the 'heart' of the zoned buddy allocator.
@@ -4803,7 +4803,6 @@ struct page *__alloc_pages_noprof(gfp_t gfp, unsigned int order,
 	gfp_t alloc_gfp; /* The gfp_t that was actually used for allocation */
 	struct alloc_context ac = { };
 
-    printk("=== %s: order(%u)(%u) ===\n", __func__, order, MAX_PAGE_ORDER);
 	/*
 	 * There are several places where we assume that the order value is sane
 	 * so bail out early if the request is out of bound.
@@ -4873,6 +4872,7 @@ struct folio *__folio_alloc_noprof(gfp_t gfp, unsigned int order, int preferred_
 	return page_rmappable_folio(page);
 }
 EXPORT_SYMBOL(__folio_alloc_noprof);
+#endif /* CL */
 
 /*
  * Common helper functions. Never use with __GFP_HIGHMEM because the returned
@@ -4896,6 +4896,7 @@ unsigned long get_zeroed_page_noprof(gfp_t gfp_mask)
 }
 EXPORT_SYMBOL(get_zeroed_page_noprof);
 
+#if 0
 /**
  * __free_pages - Free pages allocated with alloc_pages().
  * @page: The page pointer returned from alloc_pages().

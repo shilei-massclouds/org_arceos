@@ -60,7 +60,6 @@
 #include "console_cmdline.h"
 #include "braille.h"
 #include "internal.h"
-
 #include "adaptor.h"
 
 int console_printk[4] = {
@@ -71,10 +70,12 @@ int console_printk[4] = {
 };
 EXPORT_SYMBOL_GPL(console_printk);
 
+#if 0
 atomic_t ignore_console_lock_warning __read_mostly = ATOMIC_INIT(0);
 EXPORT_SYMBOL(ignore_console_lock_warning);
 
 EXPORT_TRACEPOINT_SYMBOL_GPL(console);
+#endif /* CL */
 
 /*
  * Low level drivers may need that to know if they can schedule in
@@ -90,6 +91,7 @@ EXPORT_SYMBOL(oops_in_progress);
  */
 static DEFINE_MUTEX(console_mutex);
 
+#if 0
 /*
  * console_sem protects updates to console->seq
  * and also provides serialization for console printing.
@@ -141,8 +143,6 @@ enum devkmsg_log_masks {
 #define DEVKMSG_LOG_MASK_DEFAULT	0
 
 static unsigned int __read_mostly devkmsg_log = DEVKMSG_LOG_MASK_DEFAULT;
-
-#if 0
 
 static int __control_devkmsg(char *str)
 {
@@ -201,7 +201,6 @@ static int __init control_devkmsg(char *str)
 __setup("printk.devkmsg=", control_devkmsg);
 
 char devkmsg_log_str[DEVKMSG_STR_MAX_SIZE] = "ratelimit";
-#if defined(CONFIG_PRINTK) && defined(CONFIG_SYSCTL)
 int devkmsg_sysctl_set_loglvl(const struct ctl_table *table, int write,
 			      void *buffer, size_t *lenp, loff_t *ppos)
 {
@@ -240,7 +239,6 @@ int devkmsg_sysctl_set_loglvl(const struct ctl_table *table, int write,
 
 	return 0;
 }
-#endif /* CONFIG_PRINTK && CONFIG_SYSCTL */
 
 /**
  * console_list_lock - Lock the console list
@@ -349,12 +347,11 @@ static void __up_console_sem(unsigned long ip)
 }
 #define up_console_sem() __up_console_sem(_RET_IP_)
 
-#endif
-
 static bool panic_in_progress(void)
 {
 	return unlikely(atomic_read(&panic_cpu) != PANIC_CPU_INVALID);
 }
+#endif /* CL */
 
 /* Return true if a panic is in progress on the current CPU. */
 bool this_cpu_in_panic(void)
@@ -369,7 +366,6 @@ bool this_cpu_in_panic(void)
 }
 
 #if 0
-
 /*
  * Return true if a panic is in progress on a remote CPU.
  *
@@ -403,12 +399,8 @@ static int preferred_console = -1;
 int console_set_on_cmdline;
 EXPORT_SYMBOL(console_set_on_cmdline);
 
-#endif
-
 /* Flag: console code may call schedule() */
 static int console_may_schedule;
-
-#if 0
 
 enum con_msg_format_flags {
 	MSG_FORMAT_DEFAULT	= 0,
@@ -473,12 +465,8 @@ static int console_msg_format = MSG_FORMAT_DEFAULT;
  * non-prinatable characters are escaped in the "\xff" notation.
  */
 
-#endif
-
 /* syslog_lock protects syslog_* variables and write access to clear_seq. */
 static DEFINE_MUTEX(syslog_lock);
-
-#if 0
 
 /*
  * Specifies if a legacy console is registered. If legacy consoles are
@@ -504,12 +492,6 @@ bool have_boot_console;
 
 /* See printk_legacy_allow_panic_sync() for details. */
 bool legacy_allow_panic_sync;
-
-#endif
-
-#ifdef CONFIG_PRINTK
-
-#if 0
 
 DECLARE_WAIT_QUEUE_HEAD(log_wait);
 static DECLARE_WAIT_QUEUE_HEAD(legacy_wait);
@@ -1112,7 +1094,6 @@ static int __init log_buf_len_setup(char *str)
 }
 early_param("log_buf_len", log_buf_len_setup);
 
-#ifdef CONFIG_SMP
 #define __LOG_CPU_MAX_BUF_LEN (1 << CONFIG_LOG_CPU_MAX_BUF_SHIFT)
 
 static void __init log_buf_add_cpu(void)
@@ -1141,9 +1122,6 @@ static void __init log_buf_add_cpu(void)
 
 	log_buf_len_update(cpu_extra + __LOG_BUF_LEN);
 }
-#else /* !CONFIG_SMP */
-static inline void log_buf_add_cpu(void) {}
-#endif /* CONFIG_SMP */
 
 static void __init set_percpu_data_ready(void)
 {
@@ -2443,8 +2421,7 @@ int vprintk_default(const char *fmt, va_list args)
 	return vprintk_emit(0, LOGLEVEL_DEFAULT, NULL, fmt, args);
 }
 EXPORT_SYMBOL_GPL(vprintk_default);
-
-#endif
+#endif /* CL */
 
 // FixMe: implement it in formal manner.
 int cl_vprintk(const char *fmt, va_list args)
@@ -2466,6 +2443,7 @@ asmlinkage __visible int _printk(const char *fmt, ...)
 	int r;
 
 	va_start(args, fmt);
+    /* Fixme: */
 #if 0
 	r = vprintk(fmt, args);
 #else
@@ -2477,23 +2455,8 @@ asmlinkage __visible int _printk(const char *fmt, ...)
 }
 EXPORT_SYMBOL(_printk);
 
-static bool __pr_flush(struct console *con, int timeout_ms, bool reset_on_progress);
-
-#else /* CONFIG_PRINTK */
-
-#define printk_time		false
-
-#define prb_read_valid(rb, seq, r)	false
-#define prb_first_valid_seq(rb)		0
-#define prb_next_seq(rb)		0
-
-static u64 syslog_seq;
-
-static bool __pr_flush(struct console *con, int timeout_ms, bool reset_on_progress) { return true; }
-
-#endif /* CONFIG_PRINTK */
-
 #if 0
+static bool __pr_flush(struct console *con, int timeout_ms, bool reset_on_progress);
 
 #ifdef CONFIG_EARLY_PRINTK
 struct console *early_console;
@@ -2735,6 +2698,7 @@ module_param_named(console_suspend, console_suspend_enabled,
 		bool, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(console_suspend, "suspend console during suspend"
 	" and hibernate operations");
+#endif /* CL */
 
 static bool printk_console_no_auto_verbose;
 
@@ -2745,6 +2709,7 @@ void console_verbose(void)
 }
 EXPORT_SYMBOL_GPL(console_verbose);
 
+#if 0
 module_param_named(console_no_auto_verbose, printk_console_no_auto_verbose, bool, 0644);
 MODULE_PARM_DESC(console_no_auto_verbose, "Disable console loglevel raise to highest on oops/panic/etc");
 
@@ -2884,8 +2849,6 @@ static void __console_unlock(void)
 	console_locked = 0;
 	up_console_sem();
 }
-
-#ifdef CONFIG_PRINTK
 
 /*
  * Prepend the message in @pmsg->pbufs->outbuf. This is achieved by shifting
@@ -3143,18 +3106,6 @@ static bool console_emit_next_record(struct console *con, bool *handover, int co
 skip:
 	return true;
 }
-
-#else
-
-static bool console_emit_next_record(struct console *con, bool *handover, int cookie)
-{
-	*handover = false;
-	return false;
-}
-
-static inline void printk_kthreads_check_locked(void) { }
-
-#endif /* CONFIG_PRINTK */
 
 /*
  * Print out all remaining records to all consoles.
@@ -3565,7 +3516,6 @@ void console_start(struct console *console)
 }
 EXPORT_SYMBOL(console_start);
 
-#ifdef CONFIG_PRINTK
 static int unregister_console_locked(struct console *console);
 
 /* True when system boot is far enough to create printer threads. */
@@ -3768,7 +3718,6 @@ static int __init printk_set_kthreads_ready(void)
 	return 0;
 }
 early_initcall(printk_set_kthreads_ready);
-#endif /* CONFIG_PRINTK */
 
 static int __read_mostly keep_bootcon;
 
@@ -4370,7 +4319,6 @@ static int __init printk_late_init(void)
 }
 late_initcall(printk_late_init);
 
-#if defined CONFIG_PRINTK
 /* If @con is specified, only wait for that console. Otherwise wait for all. */
 static bool __pr_flush(struct console *con, int timeout_ms, bool reset_on_progress)
 {
@@ -4603,6 +4551,7 @@ int _printk_deferred(const char *fmt, ...)
 
 	return r;
 }
+#endif /* CL */
 
 /*
  * printk rate limiting, lifted from the networking subsystem.
@@ -4618,6 +4567,7 @@ int __printk_ratelimit(const char *func)
 }
 EXPORT_SYMBOL(__printk_ratelimit);
 
+#if 0
 /**
  * printk_timed_ratelimit - caller-controlled printk ratelimiting
  * @caller_jiffies: pointer to caller's state
@@ -4937,11 +4887,8 @@ void console_try_replay_all(void)
 		console_unlock();
 	}
 }
-#endif
+#endif /* CL */
 
-#endif
-
-#ifdef CONFIG_SMP
 static atomic_t printk_cpu_sync_owner = ATOMIC_INIT(-1);
 static atomic_t printk_cpu_sync_nested = ATOMIC_INIT(0);
 
@@ -5061,4 +5008,3 @@ void __printk_cpu_sync_put(void)
 			   -1); /* LMM(__printk_cpu_sync_put:B) */
 }
 EXPORT_SYMBOL(__printk_cpu_sync_put);
-#endif /* CONFIG_SMP */
