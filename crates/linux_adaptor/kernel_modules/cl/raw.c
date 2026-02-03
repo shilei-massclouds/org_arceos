@@ -80,6 +80,7 @@ __weak void panic(const char *fmt, ...)
 // FixMe
 void handle_exception()
 {
+    legacy_puts("BootDummy: handle exception ..\n");
 }
 
 // FixMe
