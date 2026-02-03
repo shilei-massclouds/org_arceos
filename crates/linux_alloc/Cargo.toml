@@ -11,6 +11,7 @@ documentation = "https://arceos-org.github.io/allocator"
 
 [features]
 axerrno = ["dep:axerrno"]
+only-early = []     # only use early-stage memblock alloc
 
 [dependencies]
 axerrno = { version = "0.1", optional = true }

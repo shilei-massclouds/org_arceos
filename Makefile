@@ -88,7 +88,7 @@ endif
 
 .DEFAULT_GOAL := all
 
-ifneq ($(filter $(or $(MAKECMDGOALS), $(.DEFAULT_GOAL)), all build disasm run justrun debug defconfig oldconfig),)
+ifneq ($(filter $(or $(MAKECMDGOALS), $(.DEFAULT_GOAL)), all build disasm run justrun symtab debug defconfig oldconfig),)
 # Install dependencies
 include scripts/make/deps.mk
 # Platform resolving
@@ -231,6 +231,9 @@ clean_dist: clean
 clean_c::
 	rm -rf ulib/axlibc/build_*
 	rm -rf $(app-objs)
+
+symtab:
+	$(ARCH)-linux-gnu-nm --numeric-sort $(OUT_ELF) > kernel.syms
 
 .PHONY: all defconfig oldconfig \
 	build disasm run justrun debug \

@@ -68,6 +68,7 @@ impl<const PAGE_SIZE: usize> LinuxAllocator<PAGE_SIZE> {
     pub fn finalize(&mut self) {
         // Safety: this function can only be called at boot-time.
         // At that time, there's only one task.
+        #[cfg(not(feature = "only-early"))]
         unsafe {
             assert!(!IS_FINAL);
             IS_FINAL = true;
