@@ -78,4 +78,4 @@ lto = true
 
 [patch.crates-io]
 axplat-riscv64-qemu-virt = { path = "platforms/axplat-riscv64-qemu-virt" }
-axcpu = { path = "crates/axcpu" }
+axcpu = { path = "crates/axcpu_lx" }
