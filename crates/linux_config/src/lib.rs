@@ -16,6 +16,13 @@ pub const SR_FS: usize = 0x00006000;
 pub const SR_VS: usize = 0x00000600;
 /// Vector and Floating-Point Unit
 pub const SR_FS_VS: usize = SR_FS | SR_VS;
+ 
+/// Supervisor User Memory Access
+pub const SR_SUM: usize = 0x00040000;
+
+// Risc-V Pointer size for ASM code
+pub const RISCV_SZPTR: usize = 8;
+pub const RISCV_LGPTR: usize = 3;
 
 // FixMe:
 // Defined in [include/generated/asm-offsets.h]
@@ -67,3 +74,45 @@ pub const KERNEL_MAP_VIRT_ADDR: usize = 8;
  */
 
 pub const PT_SIZE_ON_STACK : usize = 288;
+
+#[allow(dead_code)]
+pub struct PtRegs {
+    epc: usize,
+    ra: usize,
+    sp: usize,
+    gp: usize,
+    tp: usize,
+    t0: usize,
+    t1: usize,
+    t2: usize,
+    s0: usize,
+    s1: usize,
+    a0: usize,
+    a1: usize,
+    a2: usize,
+    a3: usize,
+    a4: usize,
+    a5: usize,
+    a6: usize,
+    a7: usize,
+    s2: usize,
+    s3: usize,
+    s4: usize,
+    s5: usize,
+    s6: usize,
+    s7: usize,
+    s8: usize,
+    s9: usize,
+    s10: usize,
+    s11: usize,
+    t3: usize,
+    t4: usize,
+    t5: usize,
+    t6: usize,
+    /* Supervisor/Machine CSRs */
+    status: usize,
+    badaddr: usize,
+    cause: usize,
+    /* a0 value before the syscall */
+    orig_a0: usize,
+}

@@ -4,6 +4,7 @@
 obj-y += sbi_ecall.o
 obj-y += setup.o
 obj-y += smp.o
+obj-y += traps.o
 
 #obj-y += stacktrace.o
 

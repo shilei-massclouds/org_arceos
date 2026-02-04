@@ -86,4 +86,10 @@ do {                        \
 #define CL_TRACE_META_START (CL_TRACE_CHANNEL_START + CL_TRACE_CHANNEL_SIZE)
 #define CL_TRACE_META_SIZE  0xa0000UL
 
+/*
+ * Trap handler provided by ArceOS
+ */
+
+void ax_handle_ebreak(void *regs);
+
 #endif /* _ADAPTOR_H_ */

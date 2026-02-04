@@ -67,6 +67,11 @@ const PT_T4: usize = 232;
 const PT_T5: usize = 240;
 const PT_T6: usize = 248;
 
+const PT_STATUS : usize = 256;
+const PT_BADADDR: usize = 264;
+const PT_CAUSE  : usize = 272;
+const PT_ORIG_A0: usize = 280;
+
 // Defined by Risc-V ISA.
 const EXC_INST_PAGE_FAULT   : usize = 12;
 const EXC_LOAD_PAGE_FAULT   : usize = 13;
@@ -76,8 +81,11 @@ core::arch::global_asm!(
     include_asm_macros!(),
     include_str!("trap.S"),
     PT_SIZE_ON_STACK = const PT_SIZE_ON_STACK,
+    PT_EPC = const PT_EPC,
     PT_RA = const PT_RA,
+    PT_SP = const PT_SP,
     PT_GP = const PT_GP,
+    PT_TP = const PT_TP,
     PT_T0 = const PT_T0,
     PT_T1 = const PT_T1,
     PT_T2 = const PT_T2,
@@ -105,6 +113,10 @@ core::arch::global_asm!(
     PT_S9 = const PT_S9,
     PT_S10 = const PT_S10,
     PT_S11 = const PT_S11,
+    PT_STATUS = const PT_STATUS,
+    PT_BADADDR = const PT_BADADDR,
+    PT_CAUSE = const PT_CAUSE,
+    //PT_ORIG_A0 = const PT_ORIG_A0,
     TASK_TI_KERNEL_SP = const TASK_TI_KERNEL_SP,
     TASK_TI_USER_SP = const TASK_TI_USER_SP,
     TASK_TI_CPU = const TASK_TI_CPU,
@@ -114,9 +126,12 @@ core::arch::global_asm!(
     EXC_INST_PAGE_FAULT = const EXC_INST_PAGE_FAULT,
     EXC_LOAD_PAGE_FAULT = const EXC_LOAD_PAGE_FAULT,
     EXC_STORE_PAGE_FAULT = const EXC_STORE_PAGE_FAULT,
-    trapframe_size = const core::mem::size_of::<TrapFrame>(),
+    SR_SUM = const SR_SUM,
+    SR_FS_VS = const SR_FS_VS,
+    RISCV_LGPTR = const RISCV_LGPTR,
 );
 
+/*
 fn handle_breakpoint(sepc: &mut usize) {
     debug!("Exception(Breakpoint) @ {sepc:#x} ");
     *sepc += 2
@@ -180,3 +195,4 @@ fn riscv_trap_handler(tf: &mut TrapFrame, from_user: bool) {
     #[cfg(feature = "fp-simd")]
     tf.sstatus.set_fs(sstatus::read().fs());
 }
+*/

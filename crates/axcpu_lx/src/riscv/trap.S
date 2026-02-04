@@ -30,48 +30,6 @@
     sd x31, {PT_T6}(sp)
 .endm
 
-.macro SAVE_REGS, from_user
-    addi    sp, sp, -{trapframe_size}
-    PUSH_GENERAL_REGS
-
-    csrr    t0, sepc
-    csrr    t1, sstatus
-    csrrw   t2, sscratch, zero          // save sscratch (sp) and zero it
-    STR     t0, sp, 32                  // tf.sepc
-    STR     t1, sp, 33                  // tf.sstatus
-    STR     t2, sp, 2                   // tf.regs.sp
-
-.if \from_user == 1
-    LDR     t0, sp, 3                   // load supervisor gp
-    LDR     t1, sp, 4                   // load supervisor tp
-    STR     gp, sp, 3                   // save user gp
-    STR     tp, sp, 4                   // save user tp
-    mv      gp, t0
-    mv      tp, t1
-.endif
-.endm
-
-.macro RESTORE_REGS, from_user
-.if \from_user == 1
-    LDR     t1, sp, 3                   // load user gp
-    LDR     t0, sp, 4                   // load user tp
-    STR     gp, sp, 3                   // save supervisor gp
-    STR     tp, sp, 4                   // save supervisor tp
-    mv      gp, t1
-    mv      tp, t0
-    addi    t0, sp, {trapframe_size}    // put supervisor sp to scratch
-    csrw    sscratch, t0
-.endif
-
-    LDR     t0, sp, 32
-    LDR     t1, sp, 33
-    csrw    sepc, t0                    // restore sepc
-    csrw    sstatus, t1                 // restore sstatus, except FS state (already handled in trap handler)
-
-    POP_GENERAL_REGS
-    LDR     sp, sp, 2                   // load sp from tf.regs.sp
-.endm
-
 .macro new_vmalloc_check
     sd      a0, {TASK_TI_A0}(tp)
     csrr    a0, scause
@@ -150,7 +108,6 @@
     ld      a1, {TASK_TI_A1}(tp)
 .Lnew_vmalloc_restore_context_a0:
     ld      a0, {TASK_TI_A0}(tp)
-
 .endm
 
 .balign 4
@@ -198,46 +155,83 @@ handle_exception:
      * Disable the FPU/Vector to detect illegal usage of floating point
      * or vector in kernel space.
      */
-    //li t0, SR_SUM | SR_FS_VS
+    li t0, {SR_SUM} | {SR_FS_VS}
+
+    ld s0, {TASK_TI_USER_SP}(tp)
+    csrrc s1, sstatus, t0
+    csrr s2, sepc
+    csrr s3, stval
+    csrr s4, scause
+    csrr s5, sscratch
+    sd s0, {PT_SP}(sp)
+    sd s1, {PT_STATUS}(sp)
+    sd s2, {PT_EPC}(sp)
+    sd s3, {PT_BADADDR}(sp)
+    sd s4, {PT_CAUSE}(sp)
+    sd s5, {PT_TP}(sp)
 
     /*
-    REG_L s0, TASK_TI_USER_SP(tp)
-    csrrc s1, CSR_STATUS, t0
-    csrr s2, CSR_EPC
-    csrr s3, CSR_TVAL
-    csrr s4, CSR_CAUSE
-    csrr s5, CSR_SCRATCH
-    REG_S s0, PT_SP(sp)
-    REG_S s1, PT_STATUS(sp)
-    REG_S s2, PT_EPC(sp)
-    REG_S s3, PT_BADADDR(sp)
-    REG_S s4, PT_CAUSE(sp)
-    REG_S s5, PT_TP(sp)
-    */
+     * Set the scratch register to 0, so that if a recursive exception
+     * occurs, the exception vector knows it came from the kernel
+     */
+    csrw sscratch, x0
 
-j .
+    /* Load the global pointer */
+.option push
+.option norelax
+    la gp, __global_pointer$
+.option pop
 
-///////////////////////////////////////////////
-    // sscratch == 0: trap from S mode
-    // sscratch != 0: trap from U mode
-//    csrrw   sp, sscratch, sp            // swap sscratch and sp
-//    bnez    sp, .Ltrap_entry_u
-//
-//    csrr    sp, sscratch                // put supervisor sp back
-//    j       .Ltrap_entry_s
-//
-//.Ltrap_entry_s:
-//    SAVE_REGS 0
-//    mv      a0, sp
-//    li      a1, 0
-//    call    riscv_trap_handler
-//    RESTORE_REGS 0
-//    sret
-//
-//.Ltrap_entry_u:
-//    SAVE_REGS 1
-//    mv      a0, sp
-//    li      a1, 1
-//    call    riscv_trap_handler
-//    RESTORE_REGS 1
-//    sret
+    /* pt_regs */
+    mv a0, sp
+
+    /*
+     * MSB of cause differentiates between
+     * interrupts and exceptions
+     */
+    bge s4, zero, 1f
+
+    /* Handle interrupts */
+    call do_irq
+    j ret_from_exception
+1:
+    /* Handle other exceptions */
+    slli t0, s4, {RISCV_LGPTR}
+    la t1, excp_vect_table
+    la t2, excp_vect_table_end
+    add t0, t1, t0
+    /* Check if exception code lies within bounds */
+    bgeu t0, t2, 3f
+    ld t1, 0(t0)
+2:  jalr t1
+    j ret_from_exception
+3:
+
+    la t1, do_trap_unknown
+    j 2b
+
+/* Exception vector table */
+.section ".rodata"
+.align {RISCV_LGPTR}
+excp_vect_table:
+    .dword do_trap_insn_misaligned
+    .dword do_trap_insn_fault
+    .dword do_trap_insn_illegal
+    .dword do_trap_break
+    .dword do_trap_load_misaligned
+    .dword do_trap_load_fault
+    .dword do_trap_store_misaligned
+    .dword do_trap_store_fault
+    /* system call */
+    .dword do_trap_ecall_u
+    .dword do_trap_ecall_s
+    .dword do_trap_unknown
+    .dword do_trap_ecall_m
+    /* instruciton page fault */
+    .dword do_page_fault
+    /* load page fault */
+    .dword do_page_fault
+    .dword do_trap_unknown
+    /* store page fault */
+    .dword do_page_fault
+excp_vect_table_end:
