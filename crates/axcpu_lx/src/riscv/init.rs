@@ -5,9 +5,12 @@
 /// In detail, it initializes the trap vector on RISC-V platforms.
 pub fn init_trap() {
     unsafe extern "C" {
-        fn trap_vector_base();
+        fn legacy_putchar(ch: u8);
+        fn handle_exception();
     }
     unsafe {
-        crate::asm::write_trap_vector_base(trap_vector_base as usize);
+        legacy_putchar(b'T');
+        legacy_putchar(b'\n');
+        crate::asm::write_trap_vector_base(handle_exception as usize);
     }
 }

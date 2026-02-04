@@ -313,6 +313,7 @@ dependencies = [
  "cfg-if",
  "lazyinit",
  "linkme",
+ "linux_config",
  "log",
  "loongArch64",
  "memory_addr",
@@ -757,6 +758,7 @@ dependencies = [
  "axcpu",
  "axplat",
  "linux_adaptor",
+ "linux_config",
  "log",
  "riscv",
  "riscv_goldfish",
@@ -1506,6 +1508,10 @@ dependencies = [
  "memblock",
  "slub",
 ]
+
+[[package]]
+name = "linux_config"
+version = "0.2.0"
 
 [[package]]
 name = "lock_api"

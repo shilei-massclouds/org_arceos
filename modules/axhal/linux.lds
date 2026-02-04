@@ -24,6 +24,7 @@ SECTIONS
         _stext = .;
         *(.text.boot)
         *(.text .text.*)
+        *(.irqentry.text)
         . = ALIGN(4K);
         _etext = .;
     }

@@ -76,6 +76,10 @@ version = "0.4"
 [dependencies.riscv]
 version = "0.14"
 
+[dependencies.linux_config]
+path = "../../crates/linux_config"
+version = "0.2.0"
+
 [dependencies.riscv_goldfish]
 version = "0.1"
 optional = true

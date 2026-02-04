@@ -26,6 +26,7 @@ members = [
     "ulib/axlibc",
 
     "crates/axmm_lx",
+    "crates/linux_config",
 
     "examples/helloworld",
     "examples/helloworld-myplat",

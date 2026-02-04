@@ -78,9 +78,9 @@ __weak void panic(const char *fmt, ...)
 }
 
 // FixMe
-void handle_exception()
+void handle_exception_early()
 {
-    legacy_puts("BootDummy: handle exception ..\n");
+    legacy_puts("Early dummy function for exception handler\n");
 }
 
 // FixMe

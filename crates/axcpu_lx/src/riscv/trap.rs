@@ -7,9 +7,113 @@ use riscv::register::{scause, stval};
 use super::TrapFrame;
 use crate::trap::PageFaultFlags;
 
+use linux_config::*;
+
+/*
+ *  All offsets prefixed by 'TASK_TI_' according to
+ *  struct thread_info in linux kernel.
+ *
+ *  struct thread_info {
+ *      unsigned long   flags;
+ *      int             preempt_count;
+ *      long            kernel_sp;
+ *      long            user_sp;
+ *      int             cpu;
+ *      unsigned long   syscall_work;
+ *      unsigned long   a0, a1, a2;
+ *  };
+ */
+
+const TASK_TI_FLAGS         : usize = 0;
+const TASK_TI_PREEMPT_COUNT : usize = 8;
+const TASK_TI_KERNEL_SP     : usize = 16;
+const TASK_TI_USER_SP       : usize = 24;
+const TASK_TI_CPU           : usize = 32;
+
+const TASK_TI_A0 : usize = 48;
+const TASK_TI_A1 : usize = 56;
+const TASK_TI_A2 : usize = 64;
+
+const PT_EPC: usize = 0;
+const PT_RA: usize = 8;
+const PT_SP: usize = 16;
+const PT_GP: usize = 24;
+const PT_TP: usize = 32;
+const PT_T0: usize = 40;
+const PT_T1: usize = 48;
+const PT_T2: usize = 56;
+const PT_S0: usize = 64;
+const PT_S1: usize = 72;
+const PT_A0: usize = 80;
+const PT_A1: usize = 88;
+const PT_A2: usize = 96;
+const PT_A3: usize = 104;
+const PT_A4: usize = 112;
+const PT_A5: usize = 120;
+const PT_A6: usize = 128;
+const PT_A7: usize = 136;
+const PT_S2: usize = 144;
+const PT_S3: usize = 152;
+const PT_S4: usize = 160;
+const PT_S5: usize = 168;
+const PT_S6: usize = 176;
+const PT_S7: usize = 184;
+const PT_S8: usize = 192;
+const PT_S9: usize = 200;
+const PT_S10: usize = 208;
+const PT_S11: usize = 216;
+const PT_T3: usize = 224;
+const PT_T4: usize = 232;
+const PT_T5: usize = 240;
+const PT_T6: usize = 248;
+
+// Defined by Risc-V ISA.
+const EXC_INST_PAGE_FAULT   : usize = 12;
+const EXC_LOAD_PAGE_FAULT   : usize = 13;
+const EXC_STORE_PAGE_FAULT  : usize = 15;
+
 core::arch::global_asm!(
     include_asm_macros!(),
     include_str!("trap.S"),
+    PT_SIZE_ON_STACK = const PT_SIZE_ON_STACK,
+    PT_RA = const PT_RA,
+    PT_GP = const PT_GP,
+    PT_T0 = const PT_T0,
+    PT_T1 = const PT_T1,
+    PT_T2 = const PT_T2,
+    PT_T3 = const PT_T3,
+    PT_T4 = const PT_T4,
+    PT_T5 = const PT_T5,
+    PT_T6 = const PT_T6,
+    PT_A0 = const PT_A0,
+    PT_A1 = const PT_A1,
+    PT_A2 = const PT_A2,
+    PT_A3 = const PT_A3,
+    PT_A4 = const PT_A4,
+    PT_A5 = const PT_A5,
+    PT_A6 = const PT_A6,
+    PT_A7 = const PT_A7,
+    PT_S0 = const PT_S0,
+    PT_S1 = const PT_S1,
+    PT_S2 = const PT_S2,
+    PT_S3 = const PT_S3,
+    PT_S4 = const PT_S4,
+    PT_S5 = const PT_S5,
+    PT_S6 = const PT_S6,
+    PT_S7 = const PT_S7,
+    PT_S8 = const PT_S8,
+    PT_S9 = const PT_S9,
+    PT_S10 = const PT_S10,
+    PT_S11 = const PT_S11,
+    TASK_TI_KERNEL_SP = const TASK_TI_KERNEL_SP,
+    TASK_TI_USER_SP = const TASK_TI_USER_SP,
+    TASK_TI_CPU = const TASK_TI_CPU,
+    TASK_TI_A0 = const TASK_TI_A0,
+    TASK_TI_A1 = const TASK_TI_A1,
+    TASK_TI_A2 = const TASK_TI_A2,
+    EXC_INST_PAGE_FAULT = const EXC_INST_PAGE_FAULT,
+    EXC_LOAD_PAGE_FAULT = const EXC_LOAD_PAGE_FAULT,
+    EXC_STORE_PAGE_FAULT = const EXC_STORE_PAGE_FAULT,
     trapframe_size = const core::mem::size_of::<TrapFrame>(),
 );
 

@@ -1,24 +1,6 @@
-const PAGE_SHIFT: usize = 12;
-const PAGE_SIZE: usize = 1 << PAGE_SHIFT;
+//! Risc-V boot on qemu.
 
-/// Floating-point Status
-const SR_FS: usize = 0x00006000;
-/// Vector Status
-const SR_VS: usize = 0x00000600;
-/// Vector and Floating-Point Unit
-const SR_FS_VS: usize = SR_FS | SR_VS;
-
-// FixMe: This should be a valid value.
-// Defined in [include/generated/asm-offsets.h]
-const PT_SIZE_ON_STACK: usize = 0;
-
-// FixMe:
-// Defined in [include/generated/asm-offsets.h]
-const KERNEL_MAP_VIRT_ADDR: usize = 8;
-
-const CONFIG_THREAD_SIZE_ORDER: usize = 2;
-const THREAD_SIZE_ORDER: usize = CONFIG_THREAD_SIZE_ORDER;
-const THREAD_SIZE: usize = PAGE_SIZE << THREAD_SIZE_ORDER;
+use linux_config::*;
 
 #[unsafe(no_mangle)]
 fn start_kernel(hartid: usize, dtb_pa: usize)
@@ -127,7 +109,7 @@ unsafe extern "C" fn setup_trap_vector() -> ! {
     core::arch::naked_asm!("
     .align 2
         /* Set trap vector to exception handler */
-        la a0, handle_exception
+        la a0, handle_exception_early
         csrw stvec, a0
 
         /*
