@@ -179,6 +179,25 @@ impl WaitQueue {
         }
     }
 
+    /// Wakes up one task in the wait queue after doing sth about it.
+    ///
+    /// If `resched` is true, the current task will be preempted when the
+    /// preemption is enabled.
+    pub fn notify_one_with<F>(&self, resched: bool, func: F) -> bool
+    where
+        F: Fn(u64),
+    {
+        let mut wq = self.queue.lock();
+        if let Some(task) = wq.pop_front() {
+            func(task.id().as_u64());
+            unblock_one_task(task, resched);
+            true
+        } else {
+            func(0);
+            false
+        }
+    }
+
     /// Wakes all tasks in the wait queue.
     ///
     /// If `resched` is true, the current task will yield.
