@@ -11,3 +11,6 @@ rusty-tags.vi
 /.project*
 /.axconfig.*
 *.swp
+crates/
+kernel.syms
+tags
