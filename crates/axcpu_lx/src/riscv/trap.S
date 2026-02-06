@@ -30,6 +30,36 @@
     sd x31, {PT_T6}(sp)
 .endm
 
+/* restore all GPs except x1 ~ x5 */
+.macro restore_from_x6_to_x31
+    ld x6,  {PT_T1}(sp)
+    ld x7,  {PT_T2}(sp)
+    ld x8,  {PT_S0}(sp)
+    ld x9,  {PT_S1}(sp)
+    ld x10, {PT_A0}(sp)
+    ld x11, {PT_A1}(sp)
+    ld x12, {PT_A2}(sp)
+    ld x13, {PT_A3}(sp)
+    ld x14, {PT_A4}(sp)
+    ld x15, {PT_A5}(sp)
+    ld x16, {PT_A6}(sp)
+    ld x17, {PT_A7}(sp)
+    ld x18, {PT_S2}(sp)
+    ld x19, {PT_S3}(sp)
+    ld x20, {PT_S4}(sp)
+    ld x21, {PT_S5}(sp)
+    ld x22, {PT_S6}(sp)
+    ld x23, {PT_S7}(sp)
+    ld x24, {PT_S8}(sp)
+    ld x25, {PT_S9}(sp)
+    ld x26, {PT_S10}(sp)
+    ld x27, {PT_S11}(sp)
+    ld x28, {PT_T3}(sp)
+    ld x29, {PT_T4}(sp)
+    ld x30, {PT_T5}(sp)
+    ld x31, {PT_T6}(sp)
+.endm
+
 .macro new_vmalloc_check
     sd      a0, {TASK_TI_A0}(tp)
     csrr    a0, scause
@@ -84,7 +114,7 @@
 
     /* Atomically reset the current cpu bit in new_vmalloc */
     //amoxor.d    a0, a1, (a0)
-    // Now 'amoxor.d' is unsupported in ArceOS asm. Why?
+    // Now 'amoxor.d' is unsupported in ArceOS asm.
     // FixMe: use amoxor.d ===
     ld  a2, 0(a0)
     xor a2, a2, a1
@@ -209,6 +239,63 @@ handle_exception:
 
     la t1, do_trap_unknown
     j 2b
+
+/*
+ * The ret_from_exception must be called with interrupt disabled. Here is the
+ * caller list:
+ *  - handle_exception
+ *  - ret_from_fork
+ */
+.global ret_from_exception
+ret_from_exception:
+    ld s0, {PT_STATUS}(sp)
+    andi s0, s0, {SR_SPP}
+    bnez s0, 1f
+
+    /* Save unwound kernel stack pointer in thread_info */
+    addi s0, sp, {PT_SIZE_ON_STACK}
+    sd s0, {TASK_TI_KERNEL_SP}(tp)
+
+    /*
+     * Save TP into the scratch register , so we can find the kernel data
+     * structures again.
+     */
+    csrw sscratch, tp
+1:
+    ld a0, {PT_STATUS}(sp)
+    /*
+     * The current load reservation is effectively part of the processor's
+     * state, in the sense that load reservations cannot be shared between
+     * different hart contexts.  We can't actually save and restore a load
+     * reservation, so instead here we clear any existing reservation --
+     * it's always legal for implementations to clear load reservations at
+     * any point (as long as the forward progress guarantee is kept, but
+     * we'll ignore that here).
+     *
+     * Dangling load reservations can be the result of taking a trap in the
+     * middle of an LR/SC sequence, but can also be the result of a taken
+     * forward branch around an SC -- which is how we implement CAS.  As a
+     * result we need to clear reservations between the last CAS and the
+     * jump back to the new context.  While it is unlikely the store
+     * completes, implementations are allowed to expand reservations to be
+     * arbitrarily large.
+     */
+    ld  a2, {PT_EPC}(sp)
+    // FixMe: Now 'sc.d' is unsupported in ArceOS asm.
+    //sc.d x0, a2, {PT_EPC}(sp)
+
+    csrw sstatus, a0
+    csrw sepc, a2
+
+    ld x1,  {PT_RA}(sp)
+    ld x3,  {PT_GP}(sp)
+    ld x4,  {PT_TP}(sp)
+    ld x5,  {PT_T0}(sp)
+    restore_from_x6_to_x31
+
+    ld x2,  {PT_SP}(sp)
+
+    sret
 
 /* Exception vector table */
 .section ".rodata"

@@ -157,7 +157,6 @@ CL_MINE(flush_icache_pte)
 
 CL_MINE(free_pages)
 CL_MINE(do_irq)
-CL_MINE(ret_from_exception)
 
 CL_MINE(do_trap_insn_misaligned)
 CL_MINE(do_trap_insn_fault)

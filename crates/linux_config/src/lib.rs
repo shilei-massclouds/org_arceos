@@ -11,9 +11,13 @@ pub const THREAD_SIZE_ORDER: usize = CONFIG_THREAD_SIZE_ORDER;
 pub const THREAD_SIZE: usize = PAGE_SIZE << THREAD_SIZE_ORDER;
 
 /// Floating-point Status
-pub const SR_FS: usize = 0x00006000;
+pub const SR_FS:    usize = 0x00006000;
+
+/// Previously Supervisor
+pub const SR_SPP:   usize = 0x00000100;
 /// Vector Status
-pub const SR_VS: usize = 0x00000600;
+pub const SR_VS:    usize = 0x00000600;
+
 /// Vector and Floating-Point Unit
 pub const SR_FS_VS: usize = SR_FS | SR_VS;
  

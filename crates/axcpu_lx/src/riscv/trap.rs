@@ -128,6 +128,7 @@ core::arch::global_asm!(
     EXC_STORE_PAGE_FAULT = const EXC_STORE_PAGE_FAULT,
     SR_SUM = const SR_SUM,
     SR_FS_VS = const SR_FS_VS,
+    SR_SPP = const SR_SPP,
     RISCV_LGPTR = const RISCV_LGPTR,
 );
 
