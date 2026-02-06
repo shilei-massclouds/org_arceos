@@ -7,8 +7,8 @@ type ArgVec<'a> = Vec<Arg<'a>>;
 
 pub fn init_arg_space() -> ArgVec<'static> {
     vec![
-        ("%%NUM_TASK_A%%", vec!["2", "4", "8", "16"]),
-        ("%%NUM_TASK_B%%", vec!["1"]),
+        ("%%NUM_TASK_A%%", vec!["1", "2", "4", "8", "16"]),
+        ("%%NUM_TASK_B%%", vec!["1", "2", "4", "8", "16"]),
         ("%%BLOCK1%%", vec![
          "thread::sleep(Duration::from_millis(100));",
          "println!(\"Got notify: {}\", *lock);",

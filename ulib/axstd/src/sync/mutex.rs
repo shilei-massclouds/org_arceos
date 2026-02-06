@@ -89,7 +89,6 @@ unsafe impl lock_api::RawMutex for RawMutex {
         );
         // wake up one waiting thread.
         api::ax_wait_queue_wake_one_with(&self.wq, |id: u64| {
-            println!("on task {}", id);
             self.owner_id.swap(id, Ordering::Release);
         });
     }
