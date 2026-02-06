@@ -25,11 +25,13 @@ pub fn do_test() {
     for _ in 0..NUM_TASK_B {
         tasks.push(thread::spawn(move || {
             println!("TaskB: {}", api::ax_current_task_id());
+            %%BLOCK0%%
             loop {
                 let lock = LOCK.lock();
                 %%BLOCK1%%
                 if *lock == NUM_TASK_A { break; }
             }
+            %%BLOCK2%%
         }));
     }
 
@@ -39,12 +41,14 @@ pub fn do_test() {
     // TaskA Group
     for _ in 0..NUM_TASK_A {
         tasks.push(thread::spawn(move || {
+            %%BLOCK0%%
             println!("TaskA: {}", api::ax_current_task_id());
             {
                 let mut lock = LOCK.lock();
                 %%BLOCK1%%
                 *lock += 1;
             }
+            %%BLOCK2%%
         }));
     }
 

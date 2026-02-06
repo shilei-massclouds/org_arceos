@@ -6,14 +6,19 @@ type Arg<'a> = (&'a str, Vec<&'a str>);
 type ArgVec<'a> = Vec<Arg<'a>>;
 
 pub fn init_arg_space() -> ArgVec<'static> {
-    vec![
-        ("%%NUM_TASK_A%%", vec!["1", "2", "4", "8", "16"]),
-        ("%%NUM_TASK_B%%", vec!["1", "2", "4", "8", "16"]),
-        ("%%BLOCK1%%", vec![
+    let num_of_task = vec!["1", "2", "4", "8", "16"];
+    let block = vec![
          "thread::sleep(Duration::from_millis(100));",
-         "println!(\"Got notify: {}\", *lock);",
+         "println!(\"Just cost time\");",
          "api::ax_yield_now();",
-        ]),
+    ];
+
+    vec![
+        ("%%NUM_TASK_A%%", num_of_task.clone()),
+        ("%%NUM_TASK_B%%", num_of_task.clone()),
+        ("%%BLOCK0%%", block.clone()),
+        ("%%BLOCK1%%", block.clone()),
+        ("%%BLOCK2%%", block.clone()),
     ]
 }
 
