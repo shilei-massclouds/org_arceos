@@ -131,12 +131,21 @@ core::arch::global_asm!(
     RISCV_LGPTR = const RISCV_LGPTR,
 );
 
-/*
+#[unsafe(no_mangle)]
+fn ax_handle_ebreak(ptr_regs: usize)
+{
+    let ptr_regs = ptr_regs as *mut PtRegs;
+    unsafe {
+        handle_breakpoint(&mut ((*ptr_regs).epc))
+    }
+}
+
 fn handle_breakpoint(sepc: &mut usize) {
     debug!("Exception(Breakpoint) @ {sepc:#x} ");
     *sepc += 2
 }
 
+/*
 fn handle_page_fault(tf: &TrapFrame, mut access_flags: PageFaultFlags, is_user: bool) {
     if is_user {
         access_flags |= PageFaultFlags::USER;

@@ -9,8 +9,6 @@
 #[macro_use]
 extern crate axlog;
 
-mod traps;
-
 /// Initialize adaptor for linux modules.
 pub fn init(hartid: usize, dtb_pa: usize) {
     ax_println!("\nWith Linux Adaptor: hartid = {hartid}, dtb_pa = {dtb_pa:#X}");
