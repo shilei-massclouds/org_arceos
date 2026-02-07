@@ -1,11 +1,5 @@
-use riscv::interrupt::supervisor::{Exception as E, Interrupt as I};
-use riscv::interrupt::Trap;
-#[cfg(feature = "fp-simd")]
-use riscv::register::sstatus;
-use riscv::register::{scause, stval};
-use page_table_entry::MappingFlags;
+use riscv::register::stval;
 
-use super::TrapFrame;
 use crate::trap::PageFaultFlags;
 
 use linux_config::*;
@@ -25,8 +19,8 @@ use linux_config::*;
  *  };
  */
 
-const TASK_TI_FLAGS         : usize = 0;
-const TASK_TI_PREEMPT_COUNT : usize = 8;
+//const TASK_TI_FLAGS         : usize = 0;
+//const TASK_TI_PREEMPT_COUNT : usize = 8;
 const TASK_TI_KERNEL_SP     : usize = 16;
 const TASK_TI_USER_SP       : usize = 24;
 const TASK_TI_CPU           : usize = 32;
@@ -71,7 +65,7 @@ const PT_T6: usize = 248;
 const PT_STATUS : usize = 256;
 const PT_BADADDR: usize = 264;
 const PT_CAUSE  : usize = 272;
-const PT_ORIG_A0: usize = 280;
+//const PT_ORIG_A0: usize = 280;
 
 // Defined by Risc-V ISA.
 const EXC_INST_PAGE_FAULT   : usize = 12;
