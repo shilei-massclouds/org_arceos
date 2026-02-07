@@ -80,6 +80,7 @@ pub const KERNEL_MAP_VIRT_ADDR: usize = 8;
 pub const PT_SIZE_ON_STACK : usize = 288;
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub struct PtRegs {
     pub epc: usize,
     pub ra: usize,

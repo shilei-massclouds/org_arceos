@@ -3,6 +3,7 @@ use riscv::interrupt::Trap;
 #[cfg(feature = "fp-simd")]
 use riscv::register::sstatus;
 use riscv::register::{scause, stval};
+use page_table_entry::MappingFlags;
 
 use super::TrapFrame;
 use crate::trap::PageFaultFlags;
@@ -146,8 +147,22 @@ fn handle_breakpoint(sepc: &mut usize) {
     *sepc += 2
 }
 
-/*
-fn handle_page_fault(tf: &TrapFrame, mut access_flags: PageFaultFlags, is_user: bool) {
+#[unsafe(no_mangle)]
+fn ax_handle_page_fault(ptr_regs: usize)
+{
+    let ptr_regs = ptr_regs as *const PtRegs;
+    let regs = unsafe { &(*ptr_regs) };
+    let is_user = (regs.status & SR_SPP) == 0;
+    let flags = match regs.cause {
+        EXC_INST_PAGE_FAULT => PageFaultFlags::EXECUTE,
+        EXC_LOAD_PAGE_FAULT => PageFaultFlags::READ,
+        EXC_STORE_PAGE_FAULT => PageFaultFlags::WRITE,
+        _ => panic!("bad exception type {}", regs.cause),
+    };
+    handle_page_fault(regs, flags, is_user);
+}
+
+fn handle_page_fault(tf: &PtRegs, mut access_flags: PageFaultFlags, is_user: bool) {
     if is_user {
         access_flags |= PageFaultFlags::USER;
     }
@@ -156,14 +171,15 @@ fn handle_page_fault(tf: &TrapFrame, mut access_flags: PageFaultFlags, is_user: 
         panic!(
             "Unhandled {} Page Fault @ {:#x}, fault_vaddr={:#x} ({:?}):\n{:#x?}",
             if is_user { "User" } else { "Supervisor" },
-            tf.sepc,
+            tf.epc,
             vaddr,
             access_flags,
-            tf,
+            tf
         );
     }
 }
 
+/*
 #[unsafe(no_mangle)]
 fn riscv_trap_handler(tf: &mut TrapFrame, from_user: bool) {
     let scause = scause::read();

@@ -375,10 +375,13 @@ void do_trap_ecall_u(struct pt_regs *regs)
 	}
 
 }
+#endif /* CL */
 
 #ifdef CONFIG_MMU
 asmlinkage __visible noinstr void do_page_fault(struct pt_regs *regs)
 {
+    // FixMe
+#if 0
 	irqentry_state_t state = irqentry_enter(regs);
 
 	handle_page_fault(regs);
@@ -386,9 +389,13 @@ asmlinkage __visible noinstr void do_page_fault(struct pt_regs *regs)
 	local_irq_disable();
 
 	irqentry_exit(regs, state);
+#endif
+    /* Call handler of page_fault in ArceOS */
+    ax_handle_page_fault(regs);
 }
 #endif
 
+#if 0
 static void noinstr handle_riscv_irq(struct pt_regs *regs)
 {
 	struct pt_regs *old_regs;

@@ -147,4 +147,4 @@ SECTIONS {
     linkm2_SYSCALL : { *(linkm2_SYSCALL) }
     axns_resource : { *(axns_resource) }
 }
-INSERT AFTER .bss;
+INSERT AFTER .got;

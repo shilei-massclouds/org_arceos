@@ -91,5 +91,6 @@ do {                        \
  */
 
 void ax_handle_ebreak(void *regs);
+void ax_handle_page_fault(void *regs);
 
 #endif /* _ADAPTOR_H_ */
