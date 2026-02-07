@@ -35,6 +35,7 @@ members = [
     "examples/shell",
     "examples/memtest",
     "examples/exception",
+    "examples/task/priority",
 ]
 
 [workspace.package]
