@@ -89,7 +89,7 @@ pub fn init_scheduler() {
     //crate::timers::init();
 
     info!("  use linux scheduler.");
-    unimplemented!("init_scheduler");
+    error!("############# impl init_scheduler #############");
 }
 
 /*
@@ -120,6 +120,7 @@ pub fn init_scheduler_secondary() {
     #[cfg(feature = "irq")]
     crate::timers::init();
 }
+*/
 
 /// Handles periodic timer ticks for the task manager.
 ///
@@ -127,13 +128,17 @@ pub fn init_scheduler_secondary() {
 #[cfg(feature = "irq")]
 #[doc(cfg(feature = "irq"))]
 pub fn on_timer_tick() {
+    unimplemented!("on_timer_tick ..");
+    /*
     use kernel_guard::NoOp;
     crate::timers::check_events();
     // Since irq and preemption are both disabled here,
     // we can get current run queue with the default `kernel_guard::NoOp`.
     current_run_queue::<NoOp>().scheduler_timer_tick();
+    */
 }
 
+/*
 /// Adds the given task to the run queue, returns the task reference.
 pub fn spawn_task(task: TaskInner) -> AxTaskRef {
     let task_ref = task.into_arc();

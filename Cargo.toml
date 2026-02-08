@@ -37,6 +37,7 @@ members = [
     "examples/shell",
     "examples/memtest",
     "examples/exception",
+    "examples/task/parallel",
     "examples/task/priority",
 ]
 

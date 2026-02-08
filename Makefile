@@ -50,7 +50,7 @@ OUT_CONFIG ?= $(PWD)/.axconfig.toml
 UIMAGE ?= n
 
 # App options
-A ?= examples/task/priority
+A ?= examples/task/parallel
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=
