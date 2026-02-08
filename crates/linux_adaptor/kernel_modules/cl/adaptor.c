@@ -24,3 +24,8 @@ void *linux_kmalloc_kernel(size_t size, unsigned int align)
               "kmalloc error: NOT aligned");
     return ret;
 }
+
+struct task_struct *linux_current()
+{
+    return current;
+}

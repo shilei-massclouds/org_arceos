@@ -814,6 +814,7 @@ dependencies = [
  "axnet",
  "axplat",
  "axtask",
+ "axtask_lx",
  "chrono",
  "crate_interface",
  "ctor_bare",
@@ -871,6 +872,13 @@ dependencies = [
  "percpu",
  "rand",
  "timer_list",
+]
+
+[[package]]
+name = "axtask_lx"
+version = "0.2.0"
+dependencies = [
+ "log",
 ]
 
 [[package]]

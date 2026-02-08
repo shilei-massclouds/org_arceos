@@ -73,11 +73,16 @@ axtask = { path = "modules/axtask" }
 axdma = { path = "modules/axdma" }
 axipi = { path = "modules/axipi" }
 
+#
+# Alternative modules based on Linux
+#
 axmm_lx = { path = "crates/axmm_lx" }
+axtask_lx = { path = "crates/axtask_lx" }
 
 [profile.release]
 lto = true
 
 [patch.crates-io]
 axplat-riscv64-qemu-virt = { path = "platforms/axplat-riscv64-qemu-virt" }
+# move axcpu to Alternative modules as axcpu_lx
 axcpu = { path = "crates/axcpu_lx" }

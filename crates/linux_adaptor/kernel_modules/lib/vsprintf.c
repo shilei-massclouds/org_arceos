@@ -469,12 +469,6 @@ char *number(char *buf, char *end, unsigned long long num,
 	int field_width = spec.field_width;
 	int precision = spec.precision;
 
-#if 0
-    legacy_puts("step1 [\n");
-    legacy_put_hex(num);
-    legacy_puts("]\n");
-#endif
-
 	/* locase = 0 or 0x20. ORing digits or letters with 'locase'
 	 * produces same digits or (maybe lowercased) letters */
 	locase = (spec.flags & SMALL);

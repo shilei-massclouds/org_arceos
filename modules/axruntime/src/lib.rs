@@ -33,9 +33,13 @@ pub use self::mp::rust_main_secondary;
 
 #[cfg(feature = "linux-adaptor")]
 use axmm_lx as aspace;
-
 #[cfg(not(feature = "linux-adaptor"))]
 use axmm as aspace;
+
+#[cfg(feature = "linux-adaptor")]
+use axtask_lx as sched;
+#[cfg(not(feature = "linux-adaptor"))]
+use axtask as sched;
 
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.
@@ -80,7 +84,7 @@ impl axlog::LogIf for LogIfImpl {
         if is_init_ok() {
             #[cfg(feature = "multitask")]
             {
-                axtask::current_may_uninit().map(|curr| curr.id().as_u64())
+                sched::current_may_uninit().map(|curr| curr.id().as_u64())
             }
             #[cfg(not(feature = "multitask"))]
             None
@@ -167,7 +171,7 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     axhal::init_later(cpu_id, arg);
 
     #[cfg(feature = "multitask")]
-    axtask::init_scheduler();
+    sched::init_scheduler();
 
     #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
     {
@@ -211,7 +215,7 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     unsafe { main() };
 
     #[cfg(feature = "multitask")]
-    axtask::exit(0);
+    sched::exit(0);
     #[cfg(not(feature = "multitask"))]
     {
         debug!("main task exited: exit_code={}", 0);
@@ -276,7 +280,7 @@ fn init_interrupt() {
     axhal::irq::register(axconfig::devices::TIMER_IRQ, || {
         update_timer();
         #[cfg(feature = "multitask")]
-        axtask::on_timer_tick();
+        sched::on_timer_tick();
     });
 
     #[cfg(feature = "ipi")]
