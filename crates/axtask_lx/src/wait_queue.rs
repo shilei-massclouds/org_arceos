@@ -1,12 +1,3 @@
-use alloc::collections::VecDeque;
-use alloc::sync::Arc;
-use alloc::vec::Vec;
-
-use kernel_guard::{NoOp, NoPreemptIrqSave};
-use kspin::{SpinNoIrq, SpinNoIrqGuard};
-
-use crate::{AxTaskRef, CurrentTask, current_run_queue, select_run_queue};
-
 /// A queue to store sleeping tasks.
 ///
 /// # Examples
@@ -29,6 +20,75 @@ use crate::{AxTaskRef, CurrentTask, current_run_queue, select_run_queue};
 /// WQ.wait(); // block until `notify()` is called
 /// assert_eq!(VALUE.load(Ordering::Acquire), 1);
 /// ```
+pub struct WaitQueue;
+
+impl WaitQueue {
+    /// Creates an empty wait queue.
+    pub const fn new() -> Self {
+        Self {
+        }
+    }
+
+    /// Blocks the current task and put it into the wait queue, until other task
+    /// notifies it.
+    pub fn wait(&self) {
+        unimplemented!("wait() ..");
+    }
+
+    /// Blocks the current task and put it into the wait queue, until the given
+    /// `condition` becomes true.
+    ///
+    /// Note that even other tasks notify this task, it will not wake up until
+    /// the condition becomes true.
+    pub fn wait_until<F>(&self, _condition: F)
+    where
+        F: Fn() -> bool,
+    {
+        unimplemented!("wait_until ..");
+        /*
+        let curr = crate::current();
+        loop {
+            let mut rq = current_run_queue::<NoPreemptIrqSave>();
+            let wq = self.queue.lock();
+            if condition() {
+                break;
+            }
+            rq.blocked_resched(wq);
+            // Preemption may occur here.
+        }
+        self.cancel_events(curr, false);
+        */
+    }
+
+    /// Wakes all tasks in the wait queue.
+    ///
+    /// If `resched` is true, the current task will be preempted when the
+    /// preemption is enabled.
+    pub fn notify_all(&self, resched: bool) {
+        while self.notify_one(resched) {
+            // loop until the wait queue is empty
+        }
+    }
+
+    /// Wakes up one task in the wait queue, usually the first one.
+    ///
+    /// If `resched` is true, the current task will be preempted when the
+    /// preemption is enabled.
+    pub fn notify_one(&self, resched: bool) -> bool {
+        unimplemented!("notify_one: {resched}");
+    }
+}
+
+/*
+use alloc::collections::VecDeque;
+use alloc::sync::Arc;
+use alloc::vec::Vec;
+
+use kernel_guard::{NoOp, NoPreemptIrqSave};
+use kspin::{SpinNoIrq, SpinNoIrqGuard};
+
+use crate::{AxTaskRef, CurrentTask, current_run_queue, select_run_queue};
+
 pub struct WaitQueue {
     queue: SpinNoIrq<VecDeque<AxTaskRef>>,
 }
@@ -36,12 +96,6 @@ pub struct WaitQueue {
 pub(crate) type WaitQueueGuard<'a> = SpinNoIrqGuard<'a, VecDeque<AxTaskRef>>;
 
 impl WaitQueue {
-    /// Creates an empty wait queue.
-    pub const fn new() -> Self {
-        Self {
-            queue: SpinNoIrq::new(VecDeque::new()),
-        }
-    }
 
     /// Creates an empty wait queue with space for at least `capacity` elements.
     pub fn with_capacity(capacity: usize) -> Self {
@@ -74,34 +128,6 @@ impl WaitQueue {
         }
     }
 
-    /// Blocks the current task and put it into the wait queue, until other task
-    /// notifies it.
-    pub fn wait(&self) {
-        current_run_queue::<NoPreemptIrqSave>().blocked_resched(self.queue.lock());
-        self.cancel_events(crate::current(), false);
-    }
-
-    /// Blocks the current task and put it into the wait queue, until the given
-    /// `condition` becomes true.
-    ///
-    /// Note that even other tasks notify this task, it will not wake up until
-    /// the condition becomes true.
-    pub fn wait_until<F>(&self, condition: F)
-    where
-        F: Fn() -> bool,
-    {
-        let curr = crate::current();
-        loop {
-            let mut rq = current_run_queue::<NoPreemptIrqSave>();
-            let wq = self.queue.lock();
-            if condition() {
-                break;
-            }
-            rq.blocked_resched(wq);
-            // Preemption may occur here.
-        }
-        self.cancel_events(curr, false);
-    }
 
     /// Blocks the current task and put it into the wait queue, until other tasks
     /// notify it, or the given duration has elapsed.
@@ -165,30 +191,6 @@ impl WaitQueue {
         timeout
     }
 
-    /// Wakes up one task in the wait queue, usually the first one.
-    ///
-    /// If `resched` is true, the current task will be preempted when the
-    /// preemption is enabled.
-    pub fn notify_one(&self, resched: bool) -> bool {
-        let mut wq = self.queue.lock();
-        if let Some(task) = wq.pop_front() {
-            unblock_one_task(task, resched);
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Wakes all tasks in the wait queue.
-    ///
-    /// If `resched` is true, the current task will be preempted when the
-    /// preemption is enabled.
-    pub fn notify_all(&self, resched: bool) {
-        while self.notify_one(resched) {
-            // loop until the wait queue is empty
-        }
-    }
-
     /// Wake up the given task in the wait queue.
     ///
     /// If `resched` is true, the current task will be preempted when the
@@ -245,3 +247,4 @@ fn unblock_one_task(task: AxTaskRef, resched: bool) {
     // lock of wait queue, where the irq and preemption are disabled.
     select_run_queue::<NoOp>(&task).unblock_task(task, resched)
 }
+*/

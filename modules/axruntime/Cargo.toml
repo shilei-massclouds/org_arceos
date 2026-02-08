@@ -21,7 +21,7 @@ alloc = ["axalloc"]
 paging = ["axhal/paging", "axmm", "axmm_lx"]
 ipi = ["dep:axipi"]
 
-multitask = ["axtask/multitask", "axtask_lx/multitask"]
+multitask = ["axtask/multitask"]
 fs = ["axdriver", "axfs"]
 net = ["axdriver", "axnet"]
 display = ["axdriver", "axdisplay"]
@@ -39,7 +39,6 @@ axfs = { workspace = true, optional = true }
 axnet = { workspace = true, optional = true }
 axdisplay = { workspace = true, optional = true }
 axtask = { workspace = true, optional = true }
-axtask_lx = { workspace = true, optional = true }
 axipi = { workspace = true, optional = true }
 axplat = "0.3"
 

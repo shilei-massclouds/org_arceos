@@ -8,9 +8,11 @@ pub use self::api::*;
 
 #[macro_use]
 extern crate log;
+extern crate alloc;
 
 mod task;
 mod linux;
+mod wait_queue;
 
 /*
 #![feature(doc_auto_cfg)]
@@ -21,10 +23,6 @@ mod tests;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "multitask")] {
-        #[macro_use]
-        extern crate log;
-        extern crate alloc;
-
         #[macro_use]
         mod run_queue;
         mod task;

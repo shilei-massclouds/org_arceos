@@ -1,5 +1,21 @@
 use crate::linux::_current;
 
+pub struct AxTask;
+
+impl AxTask {
+    /// Gets the ID of the task.
+    pub fn id(&self) -> TaskId {
+        unimplemented!("id()");
+    }
+
+    /// Wait for the task to exit, and return the exit code.
+    ///
+    /// It will return immediately if the task has already exited (but not dropped).
+    pub fn join(&self) -> Option<i32> {
+        unimplemented!("join");
+    }
+}
+
 /// A wrapper of [`AxTaskRef`] as the current task.
 ///
 /// It won't change the reference count of the task when created or dropped.
@@ -9,6 +25,11 @@ impl CurrentTask {
     /// Gets the ID of the task.
     pub fn id(&self) -> TaskId {
         TaskId::new(_current().pid)
+    }
+
+    /// Get a combined string of the task ID and name.
+    pub fn id_name(&self) -> alloc::string::String {
+        alloc::format!("Task({}, <anon>)", self.id().as_u64())
     }
 }
 
@@ -170,11 +191,6 @@ impl TaskInner {
     /// Gets the name of the task.
     pub fn name(&self) -> &str {
         self.name.as_str()
-    }
-
-    /// Get a combined string of the task ID and name.
-    pub fn id_name(&self) -> alloc::string::String {
-        alloc::format!("Task({}, {:?})", self.id.as_u64(), self.name)
     }
 
     /// Wait for the task to exit, and return the exit code.

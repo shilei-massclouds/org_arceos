@@ -1,8 +1,10 @@
 //! Task APIs for multi-task configuration.
 
-/*
 use alloc::{string::String, sync::Arc};
 
+pub struct AxCpuMask;
+
+/*
 use kernel_guard::NoPreemptIrqSave;
 
 pub(crate) use crate::run_queue::{current_run_queue, select_run_queue};
@@ -13,12 +15,14 @@ pub use crate::task::{CurrentTask, TaskId, TaskInner};
 /*
 #[doc(cfg(feature = "multitask"))]
 pub use crate::task_ext::{TaskExtMut, TaskExtRef};
+*/
 #[doc(cfg(feature = "multitask"))]
 pub use crate::wait_queue::WaitQueue;
 
 /// The reference type of a task.
-pub type AxTaskRef = Arc<AxTask>;
+pub type AxTaskRef = Arc<crate::task::AxTask>;
 
+/*
 /// The wrapper type for [`cpumask::CpuMask`] with SMP configuration.
 pub type AxCpuMask = cpumask::CpuMask<{ axconfig::plat::MAX_CPU_NUM }>;
 
@@ -136,17 +140,20 @@ pub fn spawn_task(task: TaskInner) -> AxTaskRef {
     select_run_queue::<NoPreemptIrqSave>(&task_ref).add_task(task_ref.clone());
     task_ref
 }
+*/
 
 /// Spawns a new task with the given parameters.
 ///
 /// Returns the task reference.
-pub fn spawn_raw<F>(f: F, name: String, stack_size: usize) -> AxTaskRef
+pub fn spawn_raw<F>(_f: F, name: String, stack_size: usize) -> AxTaskRef
 where
     F: FnOnce() + Send + 'static,
 {
-    spawn_task(TaskInner::new(f, name, stack_size))
+    unimplemented!("spawn_raw: name {name}, stack_size {stack_size}");
+    //spawn_task(TaskInner::new(f, name, stack_size))
 }
 
+/*
 /// Spawns a new task with the default parameters.
 ///
 /// The default task name is an empty string. The default task stack size is
@@ -159,6 +166,7 @@ where
 {
     spawn_raw(f, "".into(), axconfig::TASK_STACK_SIZE)
 }
+*/
 
 /// Set the priority for current task.
 ///
@@ -170,7 +178,7 @@ where
 ///
 /// [CFS]: https://en.wikipedia.org/wiki/Completely_Fair_Scheduler
 pub fn set_priority(prio: isize) -> bool {
-    current_run_queue::<NoPreemptIrqSave>().set_current_priority(prio)
+    unimplemented!("set_priority: prio {prio}");
 }
 
 /// Set the affinity for the current task.
@@ -178,61 +186,36 @@ pub fn set_priority(prio: isize) -> bool {
 /// Returns `true` if the affinity is set successfully.
 ///
 /// TODO: support set the affinity for other tasks.
-pub fn set_current_affinity(cpumask: AxCpuMask) -> bool {
-    if cpumask.is_empty() {
-        false
-    } else {
-        let curr = current().clone();
-
-        curr.set_cpumask(cpumask);
-        // After setting the affinity, we need to check if current cpu matches
-        // the affinity. If not, we need to migrate the task to the correct CPU.
-        #[cfg(feature = "smp")]
-        if !cpumask.get(axhal::percpu::this_cpu_id()) {
-            const MIGRATION_TASK_STACK_SIZE: usize = 4096;
-            // Spawn a new migration task for migrating.
-            let migration_task = TaskInner::new(
-                move || crate::run_queue::migrate_entry(curr),
-                "migration-task".into(),
-                MIGRATION_TASK_STACK_SIZE,
-            )
-            .into_arc();
-
-            // Migrate the current task to the correct CPU using the migration task.
-            current_run_queue::<NoPreemptIrqSave>().migrate_current(migration_task);
-
-            assert!(
-                cpumask.get(axhal::percpu::this_cpu_id()),
-                "Migration failed"
-            );
-        }
-        true
-    }
+pub fn set_current_affinity(_cpumask: AxCpuMask) -> bool {
+    unimplemented!("set_current_affinity");
 }
 
 /// Current task gives up the CPU time voluntarily, and switches to another
 /// ready task.
 pub fn yield_now() {
-    current_run_queue::<NoPreemptIrqSave>().yield_current()
+    unimplemented!("yield_now");
 }
 
 /// Current task is going to sleep for the given duration.
 ///
 /// If the feature `irq` is not enabled, it uses busy-wait instead.
 pub fn sleep(dur: core::time::Duration) {
-    sleep_until(axhal::time::wall_time() + dur);
+    unimplemented!("sleep: {:?}", dur);
+    //sleep_until(axhal::time::wall_time() + dur);
 }
 
 /// Current task is going to sleep, it will be woken up at the given deadline.
 ///
 /// If the feature `irq` is not enabled, it uses busy-wait instead.
 pub fn sleep_until(deadline: axhal::time::TimeValue) {
+    unimplemented!("sleep_until: {:?}", deadline);
+    /*
     #[cfg(feature = "irq")]
     current_run_queue::<NoPreemptIrqSave>().sleep_until(deadline);
     #[cfg(not(feature = "irq"))]
     axhal::time::busy_wait_until(deadline);
+    */
 }
-*/
 
 /// Exits the current task.
 pub fn exit(exit_code: i32) -> ! {

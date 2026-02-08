@@ -814,20 +814,10 @@ dependencies = [
  "axnet",
  "axplat",
  "axtask",
- "axtask_lx",
  "chrono",
  "crate_interface",
  "ctor_bare",
  "percpu",
-]
-
-[[package]]
-name = "axsched"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44de469da35f912194e4104cc2f51bff63d6c184b65b6ebf8e90e2cd162b7f3c"
-dependencies = [
- "linked_list_r4l",
 ]
 
 [[package]]
@@ -857,27 +847,7 @@ dependencies = [
 name = "axtask"
 version = "0.2.0"
 dependencies = [
- "axconfig",
  "axhal",
- "axsched",
- "axtask",
- "cfg-if",
- "cpumask",
- "crate_interface",
- "kernel_guard",
- "kspin",
- "lazyinit",
- "log",
- "memory_addr",
- "percpu",
- "rand",
- "timer_list",
-]
-
-[[package]]
-name = "axtask_lx"
-version = "0.2.0"
-dependencies = [
  "log",
 ]
 
@@ -1110,15 +1080,6 @@ name = "core_detect"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f8f80099a98041a3d1622845c271458a2d73e688351bf3cb999266764b81d48"
-
-[[package]]
-name = "cpumask"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe4266f1bd910c087ff8c7848882217b2b079742877b21d29614c11c16087d70"
-dependencies = [
- "bitmaps",
-]
 
 [[package]]
 name = "crate_interface"
@@ -1481,12 +1442,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "linked_list_r4l"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54c6e48d7df84e6414be8e53976ead35ba4d47a4ba561eaad5d1e2b1447b4c0a"
-
-[[package]]
 name = "linkme"
 version = "0.3.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1681,7 +1636,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "01e56c0c558952222967b592899f98765b48590e7bd7403bfd7075f73afc6ed6"
 dependencies = [
  "cfg-if",
- "kernel_guard",
  "percpu_macros",
  "spin 0.9.8",
  "x86",
@@ -2075,12 +2029,6 @@ dependencies = [
  "quote",
  "syn 2.0.106",
 ]
-
-[[package]]
-name = "timer_list"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "158b52ace9609dd94f4af338f4828ff23b600d9160def8c001f2c73885521936"
 
 [[package]]
 name = "tock-registers"

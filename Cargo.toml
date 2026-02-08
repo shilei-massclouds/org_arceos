@@ -15,7 +15,8 @@ members = [
     "modules/axns",
     "modules/axruntime",
     "modules/axsync",
-    "modules/axtask",
+# FixMe: Patched by axtask_lx
+#"modules/axtask",
     "modules/axipi",
 
     "api/axfeat",
@@ -26,6 +27,7 @@ members = [
     "ulib/axlibc",
 
     "crates/axmm_lx",
+    "crates/axtask_lx",
     "crates/linux_config",
 
     "examples/helloworld",
@@ -69,7 +71,8 @@ axnet = { path = "modules/axnet" }
 axns = { path = "modules/axns" }
 axruntime = { path = "modules/axruntime" }
 axsync = { path = "modules/axsync" }
-axtask = { path = "modules/axtask" }
+# FixMe: Patched by axtask_lx
+#axtask = { path = "modules/axtask" }
 axdma = { path = "modules/axdma" }
 axipi = { path = "modules/axipi" }
 
@@ -77,7 +80,7 @@ axipi = { path = "modules/axipi" }
 # Alternative modules based on Linux
 #
 axmm_lx = { path = "crates/axmm_lx" }
-axtask_lx = { path = "crates/axtask_lx" }
+axtask = { path = "crates/axtask_lx" }
 
 [profile.release]
 lto = true
