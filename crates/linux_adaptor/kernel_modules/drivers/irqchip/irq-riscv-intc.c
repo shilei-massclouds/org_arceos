@@ -21,16 +21,18 @@
 
 #include <asm/hwcap.h>
 
+#include "adaptor.h"
+
 static struct irq_domain *intc_domain;
 static unsigned int riscv_intc_nr_irqs __ro_after_init = BITS_PER_LONG;
 static unsigned int riscv_intc_custom_base __ro_after_init = BITS_PER_LONG;
 static unsigned int riscv_intc_custom_nr_irqs __ro_after_init;
 
+#if 0
 static void riscv_intc_irq(struct pt_regs *regs)
 {
 	unsigned long cause = regs->cause & ~CAUSE_IRQ_FLAG;
 
-    pr_debug("%s: cause: %lu ; bio_list(%lx)\n", __func__, cause, current->bio_list);
 	if (generic_handle_domain_irq(intc_domain, cause))
 		pr_warn_ratelimited("Failed to handle interrupt (cause: %ld)\n", cause);
 }
@@ -42,6 +44,8 @@ static void riscv_intc_aia_irq(struct pt_regs *regs)
 	while ((topi = csr_read(CSR_TOPI)))
 		generic_handle_domain_irq(intc_domain, topi >> TOPI_IID_SHIFT);
 }
+
+#endif /* CL */
 
 /*
  * On RISC-V systems local interrupts are masked or unmasked by writing
@@ -121,6 +125,7 @@ static struct irq_chip andes_intc_chip = {
 	.irq_eoi	= riscv_intc_irq_eoi,
 };
 
+#if 0
 static int riscv_intc_domain_map(struct irq_domain *d, unsigned int irq,
 				 irq_hw_number_t hwirq)
 {
@@ -175,13 +180,14 @@ static struct fwnode_handle *riscv_intc_hwnode(void)
 	return intc_domain->fwnode;
 }
 
+#endif /* CL */
+
 static int __init riscv_intc_init_common(struct fwnode_handle *fn, struct irq_chip *chip)
 {
 	int rc;
 
-    printk("============== %s (%s)(%lx)\n", __func__, chip->name, fn);
+#if 0
 	intc_domain = irq_domain_create_tree(fn, &riscv_intc_domain_ops, chip);
-    printk("============== %s\n", __func__);
 	if (!intc_domain) {
 		pr_err("unable to add IRQ domain\n");
 		return -ENXIO;
@@ -194,7 +200,7 @@ static int __init riscv_intc_init_common(struct fwnode_handle *fn, struct irq_ch
 		rc = set_handle_irq(&riscv_intc_irq);
 	}
 	if (rc) {
-		pr_err("failed to set irq handler(%d)\n", rc);
+		pr_err("failed to set irq handler\n");
 		return rc;
 	}
 
@@ -207,6 +213,8 @@ static int __init riscv_intc_init_common(struct fwnode_handle *fn, struct irq_ch
 		pr_info("%d custom local interrupts mapped\n", riscv_intc_custom_nr_irqs);
 
 	return 0;
+#endif
+    PANIC("");
 }
 
 static int __init riscv_intc_init(struct device_node *node,
@@ -216,18 +224,12 @@ static int __init riscv_intc_init(struct device_node *node,
 	unsigned long hartid;
 	int rc;
 
-    printk("%s: ...\n", __func__);
+#if 0
 	rc = riscv_of_parent_hartid(node, &hartid);
 	if (rc < 0) {
 		pr_warn("unable to find hart id for %pOF\n", node);
 		return 0;
 	}
-
-    printk("%s: hartid(%lx), cpuid(%lx), curid(%lx)\n",
-           __func__,
-           hartid,
-           riscv_hartid_to_cpuid(hartid),
-           smp_processor_id());
 
 	/*
 	 * The DT will have one INTC DT node under each CPU (or HART)
@@ -253,6 +255,8 @@ static int __init riscv_intc_init(struct device_node *node,
 	}
 
 	return riscv_intc_init_common(of_node_to_fwnode(node), chip);
+#endif
+    PANIC("");
 }
 
 IRQCHIP_DECLARE(riscv, "riscv,cpu-intc", riscv_intc_init);

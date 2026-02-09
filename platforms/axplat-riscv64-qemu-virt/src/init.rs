@@ -8,7 +8,7 @@ impl InitIf for InitIfImpl {
     /// and performed earliest platform configuration and initialization (e.g.,
     /// early console, clocking).
     fn init_early(hartid: usize, dtb_pa: usize) {
-        linux_adaptor::init(hartid, dtb_pa);
+        linux_adaptor::init_early(hartid, dtb_pa);
         axcpu::init::init_trap();
         crate::time::init_early();
     }
@@ -24,7 +24,8 @@ impl InitIf for InitIfImpl {
     /// This function should be called after the kernel has done part of its
     /// initialization (e.g, logging, memory management), and finalized the rest of
     /// platform configuration and initialization.
-    fn init_later(_cpu_id: usize, _arg: usize) {
+    fn init_later(hartid: usize, dtb_pa: usize) {
+        linux_adaptor::init_later(hartid, dtb_pa);
         #[cfg(feature = "irq")]
         crate::irq::init_percpu();
         crate::time::init_percpu();

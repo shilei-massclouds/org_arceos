@@ -159,11 +159,11 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     #[cfg(feature = "paging")]
     aspace::init_memory_management();
 
-    #[cfg(all(feature = "alloc", feature = "paging"))]
-    init_allocator_later();
-
     info!("Initialize platform devices...");
     axhal::init_later(cpu_id, arg);
+
+    #[cfg(all(feature = "alloc", feature = "paging"))]
+    init_allocator_later();
 
     #[cfg(feature = "multitask")]
     axtask::init_scheduler();

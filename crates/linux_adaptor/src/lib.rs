@@ -9,14 +9,22 @@
 #[macro_use]
 extern crate axlog;
 
-/// Initialize adaptor for linux modules.
-pub fn init(hartid: usize, dtb_pa: usize) {
+/// Initialize adaptor at the early stage for linux modules.
+pub fn init_early(hartid: usize, dtb_pa: usize) {
     ax_println!("\nWith Linux Adaptor: hartid = {hartid}, dtb_pa = {dtb_pa:#X}");
     unsafe {
         cl_early_init(hartid, dtb_pa);
     }
 }
 
+/// Initialize adaptor at the later stage for linux modules.
+pub fn init_later(_hartid: usize, _dtb_pa: usize) {
+    unsafe {
+        unflatten_device_tree();
+    }
+}
+
 unsafe extern "C" {
     fn cl_early_init(hartid: usize, dtb_pa: usize);
+    fn unflatten_device_tree();
 }

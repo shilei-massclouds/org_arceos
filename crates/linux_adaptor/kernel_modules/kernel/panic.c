@@ -39,6 +39,8 @@
 #include <trace/events/error_report.h>
 #include <asm/sections.h>
 
+#include "adaptor.h"
+
 #define PANIC_TIMER_STEP 100
 #define PANIC_BLINK_SPD 18
 
@@ -282,6 +284,8 @@ static void panic_other_cpus_shutdown(bool crash_kexec)
 		crash_smp_send_stop();
 }
 
+#endif /* CL */
+
 /**
  *	panic - halt the system
  *	@fmt: The text string to print
@@ -299,6 +303,7 @@ void panic(const char *fmt, ...)
 	int old_cpu, this_cpu;
 	bool _crash_kexec_post_notifiers = crash_kexec_post_notifiers;
 
+#if 0
 	if (panic_on_warn) {
 		/*
 		 * This thread may hit another WARN() in the panic path.
@@ -482,10 +487,21 @@ void panic(const char *fmt, ...)
 		}
 		mdelay(PANIC_TIMER_STEP);
 	}
+#endif
+    // FixMe: remove these lines.
+    // ===========================================
+	va_start(args, fmt);
+	len = vscnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
+    legacy_puts(buf);
+    legacy_putchar('\n');
+    legacy_shutdown();
+    // ===========================================
 }
 
 EXPORT_SYMBOL(panic);
 
+#if 0
 #define TAINT_FLAG(taint, _c_true, _c_false, _module)			\
 	[ TAINT_##taint ] = {						\
 		.c_true = _c_true, .c_false = _c_false,			\

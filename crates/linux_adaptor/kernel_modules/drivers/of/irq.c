@@ -544,13 +544,14 @@ int of_irq_to_resource_table(struct device_node *dev, struct resource *res,
 }
 EXPORT_SYMBOL_GPL(of_irq_to_resource_table);
 
+#endif /* CL */
+
 struct of_intc_desc {
 	struct list_head	list;
 	of_irq_init_cb_t	irq_init_cb;
 	struct device_node	*dev;
 	struct device_node	*interrupt_parent;
 };
-#endif /* CL */
 
 /**
  * of_irq_init - Scan and init matching interrupt controllers in DT
@@ -566,7 +567,6 @@ void __init of_irq_init(const struct of_device_id *matches)
 	struct of_intc_desc *desc, *temp_desc;
 	struct list_head intc_desc_list, intc_parent_list;
 
-#if 0
 	INIT_LIST_HEAD(&intc_desc_list);
 	INIT_LIST_HEAD(&intc_parent_list);
 
@@ -575,6 +575,7 @@ void __init of_irq_init(const struct of_device_id *matches)
 				!of_device_is_available(np))
 			continue;
 
+#if 0
 		if (WARN(!match->data, "of_irq_init: no init function for %s\n",
 			 match->compatible))
 			continue;
@@ -604,6 +605,8 @@ void __init of_irq_init(const struct of_device_id *matches)
 			desc->interrupt_parent = NULL;
 		}
 		list_add_tail(&desc->list, &intc_desc_list);
+#endif
+        PANIC("");
 	}
 
 	/*
@@ -673,8 +676,6 @@ err:
 		of_node_put(desc->dev);
 		kfree(desc);
 	}
-#endif
-    PANIC("");
 }
 
 #if 0

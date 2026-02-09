@@ -3,6 +3,7 @@
 #ifndef _ADAPTOR_H_
 #define _ADAPTOR_H_
 
+extern void legacy_putchar(unsigned char ch);
 extern void legacy_puts(const char *s);
 extern void legacy_put_hex(unsigned long hex);
 extern void legacy_shutdown(void);
