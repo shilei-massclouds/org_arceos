@@ -1,7 +1,7 @@
 # Makefile for `drivers`
 
 obj-y += of/
-#obj-y += irqchip/
+obj-y += irqchip/
 #obj-y += gpio/
 #obj-y += pci/
 #obj-y += clk/

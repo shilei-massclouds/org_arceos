@@ -5,6 +5,7 @@ obj-y += sbi_ecall.o
 obj-y += setup.o
 obj-y += smp.o
 obj-y += traps.o
+obj-y += irq.o
 
 #obj-y += stacktrace.o
 
@@ -16,5 +17,4 @@ obj-y += traps.o
 #obj-y += cpu_ops.o
 #obj-y += cpu_ops_sbi.o
 #obj-y += cpufeature.o
-#obj-y += irq.o
 #obj-y += acpi.o

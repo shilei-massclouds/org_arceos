@@ -156,7 +156,6 @@ CL_MINE(flush_tlb_page)
 CL_MINE(flush_icache_pte)
 
 CL_MINE(free_pages)
-CL_MINE(do_irq)
 
 CL_MINE(do_trap_insn_misaligned)
 CL_MINE(do_trap_insn_fault)
@@ -169,3 +168,6 @@ CL_MINE(do_trap_ecall_u)
 CL_MINE(do_trap_ecall_s)
 CL_MINE(do_trap_unknown)
 CL_MINE(do_trap_ecall_m)
+
+CL_MINE(ct_irq_enter)
+CL_MINE(sbi_ipi_init)

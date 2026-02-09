@@ -67,10 +67,24 @@ const PT_BADADDR: usize = 264;
 const PT_CAUSE  : usize = 272;
 //const PT_ORIG_A0: usize = 280;
 
+/*
+ * IRQ-Stack
+ *
+ * struct stackframe {
+ *   unsigned long fp;
+ *   unsigned long ra;
+ * };
+ */
+const STACKFRAME_SIZE_ON_STACK: usize = 16;
+const STACKFRAME_FP: usize = 0;
+const STACKFRAME_RA: usize = 8;
+
 // Defined by Risc-V ISA.
 const EXC_INST_PAGE_FAULT   : usize = 12;
 const EXC_LOAD_PAGE_FAULT   : usize = 13;
 const EXC_STORE_PAGE_FAULT  : usize = 15;
+
+const IRQ_STACK_SIZE: usize = THREAD_SIZE;
 
 core::arch::global_asm!(
     include_asm_macros!(),
@@ -125,6 +139,10 @@ core::arch::global_asm!(
     SR_FS_VS = const SR_FS_VS,
     SR_SPP = const SR_SPP,
     RISCV_LGPTR = const RISCV_LGPTR,
+    STACKFRAME_SIZE_ON_STACK = const STACKFRAME_SIZE_ON_STACK,
+    STACKFRAME_FP = const STACKFRAME_FP,
+    STACKFRAME_RA = const STACKFRAME_RA,
+    IRQ_STACK_SIZE = const IRQ_STACK_SIZE,
 );
 
 #[unsafe(no_mangle)]

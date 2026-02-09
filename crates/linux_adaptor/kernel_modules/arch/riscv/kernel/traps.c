@@ -395,9 +395,9 @@ asmlinkage __visible noinstr void do_page_fault(struct pt_regs *regs)
 }
 #endif
 
-#if 0
 static void noinstr handle_riscv_irq(struct pt_regs *regs)
 {
+#if 0
 	struct pt_regs *old_regs;
 
 	irq_enter_rcu();
@@ -405,6 +405,8 @@ static void noinstr handle_riscv_irq(struct pt_regs *regs)
 	handle_arch_irq(regs);
 	set_irq_regs(old_regs);
 	irq_exit_rcu();
+#endif /* CL */
+    PANIC("");
 }
 
 asmlinkage void noinstr do_irq(struct pt_regs *regs)
@@ -416,9 +418,13 @@ asmlinkage void noinstr do_irq(struct pt_regs *regs)
 	else
 		handle_riscv_irq(regs);
 
+#if 0
 	irqentry_exit(regs, state);
+#endif
+    PANIC("");
 }
 
+#if 0
 #ifdef CONFIG_GENERIC_BUG
 int is_valid_bugaddr(unsigned long pc)
 {

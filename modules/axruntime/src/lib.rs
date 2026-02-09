@@ -168,6 +168,12 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     #[cfg(feature = "multitask")]
     axtask::init_scheduler();
 
+    #[cfg(feature = "irq")]
+    {
+        info!("Initialize interrupt early...");
+        init_interrupt_early();
+    }
+
     #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
     {
         #[allow(unused_variables)]
@@ -250,6 +256,11 @@ fn init_allocator() {
 #[cfg(feature = "alloc")]
 fn init_allocator_later() {
     axalloc::global_init_final();
+}
+
+#[cfg(feature = "irq")]
+fn init_interrupt_early() {
+    axhal::irq::init_early();
 }
 
 #[cfg(feature = "irq")]

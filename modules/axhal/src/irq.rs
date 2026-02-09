@@ -22,3 +22,15 @@ pub fn irq_handler(vector: usize) -> bool {
     drop(guard); // rescheduling may occur when preemption is re-enabled.
     true
 }
+
+pub fn init_early() {
+    // FixMe: move `init_IRQ` into axplat::irq::init_early()
+    #[cfg(feature = "linux-adaptor")]
+    unsafe {
+        init_IRQ();
+    }
+}
+
+unsafe extern "C" {
+    fn init_IRQ();
+}

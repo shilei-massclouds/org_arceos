@@ -37,6 +37,18 @@ SECTIONS
     .init.data : AT(ADDR(.init.data) - LOAD_OFFSET) {
         KEEP(*(SORT(___kentry+*)))
         *(.init.data .init.data.*)
+        . = ALIGN(8);
+        __clk_of_table = .;
+        KEEP(*(__clk_of_table))
+        KEEP(*(__clk_of_table_end))
+        . = ALIGN(8);
+        __timer_of_table = .;
+        KEEP(*(__timer_of_table))
+        KEEP(*(__timer_of_table_end))
+        . = ALIGN(8);
+        __irqchip_of_table = .;
+        KEEP(*(__irqchip_of_table))
+        KEEP(*(__irqchip_of_table_end))
     }
 
     . = ALIGN(4K);

@@ -1,5 +1,20 @@
 .section .irqentry.text, "ax"
 
+.macro asm_per_cpu dst sym tmp
+    ld    \tmp, {TASK_TI_CPU}(tp)
+    slli  \tmp, \tmp, {RISCV_LGPTR}
+    la    \dst, __per_cpu_offset
+    add   \dst, \dst, \tmp
+    ld    \tmp, 0(\dst)
+    la    \dst, \sym
+    add   \dst, \dst, \tmp
+.endm
+
+.macro load_per_cpu dst ptr tmp
+    asm_per_cpu \dst \ptr \tmp
+    ld \dst, 0(\dst)
+.endm
+
 /* save all GPs except x1 ~ x5 */
 .macro save_from_x6_to_x31
     sd x6,  {PT_T1}(sp)
@@ -296,6 +311,35 @@ ret_from_exception:
     ld x2,  {PT_SP}(sp)
 
     sret
+
+/*
+ * void call_on_irq_stack(struct pt_regs *regs,
+ *                        void (*func)(struct pt_regs *));
+ *
+ * Calls func(regs) using the per-CPU IRQ stack.
+ */
+.balign 4
+.global call_on_irq_stack
+call_on_irq_stack:
+    /* Create a frame record to save ra and s0 (fp) */
+    addi sp, sp, -{STACKFRAME_SIZE_ON_STACK}
+    sd   ra, {STACKFRAME_RA}(sp)
+    sd   s0, {STACKFRAME_FP}(sp)
+    addi s0, sp, {STACKFRAME_SIZE_ON_STACK}
+
+    /* Switch to the per-CPU IRQ stack and call the handler */
+    load_per_cpu t0, irq_stack_ptr, t1
+    li  t1, {IRQ_STACK_SIZE}
+    add sp, t0, t1
+    jalr    a1
+
+    /* Switch back to the thread stack and restore ra and s0 */
+    addi sp, s0, -{STACKFRAME_SIZE_ON_STACK}
+    ld   ra, {STACKFRAME_RA}(sp)
+    ld   s0, {STACKFRAME_FP}(sp)
+    addi sp, sp, {STACKFRAME_SIZE_ON_STACK}
+
+    ret
 
 /* Exception vector table */
 .section ".rodata"
