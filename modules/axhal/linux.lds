@@ -31,6 +31,17 @@ SECTIONS
     }
 
     . = ALIGN((1 << 21));
+    __init_begin = .;
+    __init_text_begin = .;
+    .init.text : AT(ADDR(.init.text) - LOAD_OFFSET) ALIGN((1 << 21)) {
+        _sinittext = .;
+        *(.init.text .init.text.*)
+        *(.text.startup)
+        _einittext = .;
+    }
+    __init_text_end = .;
+
+    . = ALIGN((1 << 21));
     . = ALIGN(4K);
 
     __init_data_begin = .;
@@ -41,6 +52,10 @@ SECTIONS
         __clk_of_table = .;
         KEEP(*(__clk_of_table))
         KEEP(*(__clk_of_table_end))
+        . = ALIGN(8);
+        __reservedmem_of_table = .;
+        KEEP(*(__reservedmem_of_table))
+        KEEP(*(__reservedmem_of_table_end))
         . = ALIGN(8);
         __timer_of_table = .;
         KEEP(*(__timer_of_table))

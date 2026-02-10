@@ -71,9 +71,12 @@ void dump_stack_print_info(const char *log_lvl)
 		printk("%sHardware name: %s\n",
 		       log_lvl, dump_stack_arch_desc_str);
 
+    /* FixMe: impl these lines in future. */
+#if 0
 	print_worker_info(log_lvl, current);
 	print_stop_info(log_lvl, current);
 	print_scx_info(log_lvl, current);
+#endif
 }
 
 /**

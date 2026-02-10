@@ -6,8 +6,7 @@ obj-y += setup.o
 obj-y += smp.o
 obj-y += traps.o
 obj-y += irq.o
-
-#obj-y += stacktrace.o
+obj-y += stacktrace.o
 
 #obj-y += jump_label.o
 #obj-y += patch.o

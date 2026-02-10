@@ -501,7 +501,6 @@ void panic(const char *fmt, ...)
 
 EXPORT_SYMBOL(panic);
 
-#if 0
 #define TAINT_FLAG(taint, _c_true, _c_false, _module)			\
 	[ TAINT_##taint ] = {						\
 		.c_true = _c_true, .c_false = _c_false,			\
@@ -611,6 +610,7 @@ unsigned long get_taint(void)
 	return tainted_mask;
 }
 
+#if 0
 /**
  * add_taint: add a taint flag if not already set.
  * @flag: one of the TAINT_* constants.

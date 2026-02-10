@@ -19,6 +19,10 @@
 #include <linux/slab.h>
 #include <linux/random.h>
 
+#include "adaptor.h"
+
+#if 0
+
 /**
  * kobject_namespace() - Return @kobj's namespace tag.
  * @kobj: kobject in question
@@ -193,6 +197,7 @@ static void kobj_kset_leave(struct kobject *kobj)
 	spin_unlock(&kobj->kset->list_lock);
 	kset_put(kobj->kset);
 }
+#endif /* CL */
 
 static void kobject_init_internal(struct kobject *kobj)
 {
@@ -206,7 +211,7 @@ static void kobject_init_internal(struct kobject *kobj)
 	kobj->state_initialized = 1;
 }
 
-
+#if 0
 static int kobject_add_internal(struct kobject *kobj)
 {
 	int error = 0;
@@ -317,6 +322,7 @@ int kobject_set_name(struct kobject *kobj, const char *fmt, ...)
 	return retval;
 }
 EXPORT_SYMBOL(kobject_set_name);
+#endif /* CL */
 
 /**
  * kobject_init() - Initialize a kobject structure.
@@ -359,6 +365,7 @@ error:
 }
 EXPORT_SYMBOL(kobject_init);
 
+#if 0
 static __printf(3, 0) int kobject_add_varg(struct kobject *kobj,
 					   struct kobject *parent,
 					   const char *fmt, va_list vargs)
@@ -1129,3 +1136,5 @@ void kobj_ns_drop(enum kobj_ns_type type, void *ns)
 	spin_unlock(&kobj_ns_type_lock);
 }
 EXPORT_SYMBOL_GPL(kobj_ns_drop);
+
+#endif /* CL */

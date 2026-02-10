@@ -27,6 +27,8 @@
 #include <linux/types.h>
 #include <linux/uaccess.h>
 
+#include "adaptor.h"
+
 /**
  * seq_buf_can_fit - can the new data fit in the current buffer?
  * @s: the seq_buf descriptor
@@ -40,6 +42,7 @@ static bool seq_buf_can_fit(struct seq_buf *s, size_t len)
 	return s->len + len <= s->size;
 }
 
+#if 0
 /**
  * seq_buf_print_seq - move the contents of seq_buf into a seq_file
  * @m: the seq_file descriptor that is the destination
@@ -53,6 +56,7 @@ int seq_buf_print_seq(struct seq_file *m, struct seq_buf *s)
 
 	return seq_write(m, s->buffer, len);
 }
+#endif /* CL */
 
 /**
  * seq_buf_vprintf - sequence printing of information.
@@ -103,6 +107,7 @@ int seq_buf_printf(struct seq_buf *s, const char *fmt, ...)
 }
 EXPORT_SYMBOL_GPL(seq_buf_printf);
 
+#if 0
 /**
  * seq_buf_do_printk - printk() seq_buf line by line
  * @s: seq_buf descriptor
@@ -170,6 +175,8 @@ int seq_buf_bprintf(struct seq_buf *s, const char *fmt, const u32 *binary)
 }
 #endif /* CONFIG_BINARY_PRINTF */
 
+#endif /* CL */
+
 /**
  * seq_buf_puts - sequence printing of simple string
  * @s: seq_buf descriptor
@@ -221,6 +228,7 @@ int seq_buf_putc(struct seq_buf *s, unsigned char c)
 }
 EXPORT_SYMBOL_GPL(seq_buf_putc);
 
+#if 0
 /**
  * seq_buf_putmem - write raw data into the sequence buffer
  * @s: seq_buf descriptor
@@ -436,3 +444,4 @@ int seq_buf_hex_dump(struct seq_buf *s, const char *prefix_str, int prefix_type,
 	}
 	return 0;
 }
+#endif /* CL */

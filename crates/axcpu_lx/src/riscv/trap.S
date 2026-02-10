@@ -312,6 +312,10 @@ ret_from_exception:
 
     sret
 
+.type ret_from_exception_end STT_NOTYPE
+.global ret_from_exception_end
+ret_from_exception_end:
+
 /*
  * void call_on_irq_stack(struct pt_regs *regs,
  *                        void (*func)(struct pt_regs *));

@@ -37,12 +37,8 @@ CL_MINE(memblock_mark_hotplug)
 
 CL_MINE(_copy_from_user)
 
-CL_MINE(print_tainted)
-CL_MINE(get_taint)
 CL_MINE(print_worker_info)
 CL_MINE(print_stop_info)
-CL_MINE(print_tainted_verbose)
-CL_MINE(show_stack)
 
 CL_MINE(bpf_trace_run1)
 CL_MINE(bpf_trace_run2)
@@ -168,4 +164,3 @@ CL_MINE(do_trap_ecall_m)
 
 CL_MINE(ct_irq_enter)
 CL_MINE(sbi_ipi_init)
-CL_MINE(kobject_init)

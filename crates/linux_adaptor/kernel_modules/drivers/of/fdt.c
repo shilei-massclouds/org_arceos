@@ -658,6 +658,7 @@ static int of_fdt_is_compatible(const void *blob,
 
 	return 0;
 }
+#endif /* CL */
 
 /**
  * of_flat_dt_is_compatible - Return true if given node has compat in compatible list
@@ -666,9 +667,11 @@ static int of_fdt_is_compatible(const void *blob,
  */
 int __init of_flat_dt_is_compatible(unsigned long node, const char *compat)
 {
-	return of_fdt_is_compatible(initial_boot_params, node, compat);
+	//return of_fdt_is_compatible(initial_boot_params, node, compat);
+    PANIC("");
 }
 
+#if 0
 /*
  * of_flat_dt_match - Return true if node matches a list of compatible values
  */
