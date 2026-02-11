@@ -4682,6 +4682,8 @@ void ___cache_free(struct kmem_cache *cache, void *x, unsigned long addr)
 }
 #endif
 
+#endif /* CL */
+
 static inline struct kmem_cache *virt_to_cache(const void *obj)
 {
 	struct slab *slab;
@@ -4708,6 +4710,7 @@ static inline struct kmem_cache *cache_from_obj(struct kmem_cache *s, void *x)
 	return cachep;
 }
 
+#if 0
 /**
  * kmem_cache_free - Deallocate an object
  * @s: The cache the allocation was from.
@@ -4773,7 +4776,6 @@ void kfree(const void *object)
 }
 EXPORT_SYMBOL(kfree);
 
-#if 0
 struct detached_freelist {
 	struct slab *slab;
 	void *tail;
@@ -4877,6 +4879,7 @@ static void __kmem_cache_free_bulk(struct kmem_cache *s, size_t size, void **p)
 	} while (likely(size));
 }
 
+#if 0
 /* Note that interrupts must be enabled when calling this function. */
 void kmem_cache_free_bulk(struct kmem_cache *s, size_t size, void **p)
 {
@@ -4895,6 +4898,8 @@ void kmem_cache_free_bulk(struct kmem_cache *s, size_t size, void **p)
 	} while (likely(size));
 }
 EXPORT_SYMBOL(kmem_cache_free_bulk);
+
+#endif /* CL */
 
 #ifndef CONFIG_SLUB_TINY
 static inline
@@ -5026,6 +5031,7 @@ int kmem_cache_alloc_bulk_noprof(struct kmem_cache *s, gfp_t flags, size_t size,
 }
 EXPORT_SYMBOL(kmem_cache_alloc_bulk_noprof);
 
+#if 0
 #endif
 
 /*

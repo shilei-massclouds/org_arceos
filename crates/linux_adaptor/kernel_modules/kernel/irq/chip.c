@@ -18,6 +18,7 @@
 #include <trace/events/irq.h>
 
 #include "internals.h"
+#include "adaptor.h"
 
 #if 0
 static irqreturn_t bad_chained_irq(int irq, void *dev_id)
@@ -152,6 +153,7 @@ int irq_set_chip_data(unsigned int irq, void *data)
 	return 0;
 }
 EXPORT_SYMBOL(irq_set_chip_data);
+#endif /* CL */
 
 struct irq_data *irq_get_irq_data(unsigned int irq)
 {
@@ -161,6 +163,7 @@ struct irq_data *irq_get_irq_data(unsigned int irq)
 }
 EXPORT_SYMBOL_GPL(irq_get_irq_data);
 
+#if 0
 static void irq_state_clr_disabled(struct irq_desc *desc)
 {
 	irqd_clear(&desc->irq_data, IRQD_IRQ_DISABLED);
@@ -910,6 +913,7 @@ void handle_percpu_irq(struct irq_desc *desc)
 	if (chip->irq_eoi)
 		chip->irq_eoi(&desc->irq_data);
 }
+#endif /* CL */
 
 /**
  * handle_percpu_devid_irq - Per CPU local irq handler with per cpu dev ids
@@ -929,6 +933,7 @@ void handle_percpu_devid_irq(struct irq_desc *desc)
 	unsigned int irq = irq_desc_get_irq(desc);
 	irqreturn_t res;
 
+#if 0
 	/*
 	 * PER CPU interrupts are not serialized. Do not touch
 	 * desc->tot_count.
@@ -955,8 +960,11 @@ void handle_percpu_devid_irq(struct irq_desc *desc)
 
 	if (chip->irq_eoi)
 		chip->irq_eoi(&desc->irq_data);
+#endif
+    PANIC("");
 }
 
+#if 0
 /**
  * handle_percpu_devid_fasteoi_nmi - Per CPU local NMI handler with per cpu
  *				     dev ids
@@ -1095,6 +1103,7 @@ irq_set_chip_and_handler_name(unsigned int irq, const struct irq_chip *chip,
 	__irq_set_handler(irq, handle, 0, name);
 }
 EXPORT_SYMBOL_GPL(irq_set_chip_and_handler_name);
+#endif /* CL */
 
 void irq_modify_status(unsigned int irq, unsigned long clr, unsigned long set)
 {
@@ -1135,6 +1144,7 @@ void irq_modify_status(unsigned int irq, unsigned long clr, unsigned long set)
 }
 EXPORT_SYMBOL_GPL(irq_modify_status);
 
+#if 0
 #ifdef CONFIG_DEPRECATED_IRQ_CPU_ONOFFLINE
 /**
  *	irq_cpu_online - Invoke all irq_cpu_online functions.

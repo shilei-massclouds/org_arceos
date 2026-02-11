@@ -1252,6 +1252,7 @@ int irq_domain_translate_twocell(struct irq_domain *d,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(irq_domain_translate_twocell);
+#endif /* CL */
 
 int irq_domain_alloc_descs(int virq, unsigned int cnt, irq_hw_number_t hwirq,
 			   int node, const struct irq_affinity_desc *affinity)
@@ -1276,6 +1277,7 @@ int irq_domain_alloc_descs(int virq, unsigned int cnt, irq_hw_number_t hwirq,
 	return virq;
 }
 
+#if 0
 /**
  * irq_domain_reset_irq_data - Clear hwirq, chip and chip_data in @irq_data
  * @irq_data:	The pointer to irq_data
@@ -1553,6 +1555,7 @@ int irq_domain_set_hwirq_and_chip(struct irq_domain *domain, unsigned int virq,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(irq_domain_set_hwirq_and_chip);
+#endif /* CL */
 
 /**
  * irq_domain_set_info - Set the complete data for a @virq in @domain
@@ -1570,12 +1573,16 @@ void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
 			 void *chip_data, irq_flow_handler_t handler,
 			 void *handler_data, const char *handler_name)
 {
+#if 0
 	irq_domain_set_hwirq_and_chip(domain, virq, hwirq, chip, chip_data);
 	__irq_set_handler(virq, handler, 0, handler_name);
 	irq_set_handler_data(virq, handler_data);
+#endif
+    PANIC("");
 }
 EXPORT_SYMBOL(irq_domain_set_info);
 
+#if 0
 /**
  * irq_domain_free_irqs_common - Clear irq_data and free the parent
  * @domain:	Interrupt domain to match

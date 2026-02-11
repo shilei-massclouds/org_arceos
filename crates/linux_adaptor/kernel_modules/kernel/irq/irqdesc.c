@@ -19,7 +19,6 @@
 #include "internals.h"
 #include "adaptor.h"
 
-#if 0
 /*
  * lockdep: we want to handle all irq_desc locks as a single lock-class:
  */
@@ -159,6 +158,7 @@ static int irq_find_free_area(unsigned int from, unsigned int cnt)
 	return mas.index;
 }
 
+#if 0
 static unsigned int irq_find_at_or_after(unsigned int offset)
 {
 	unsigned long index = offset;
@@ -169,6 +169,7 @@ static unsigned int irq_find_at_or_after(unsigned int offset)
 
 	return desc ? irq_desc_get_irq(desc) : nr_irqs;
 }
+#endif /* CL */
 
 static void irq_insert_desc(unsigned int irq, struct irq_desc *desc)
 {
@@ -222,6 +223,7 @@ static void irq_kobj_release(struct kobject *kobj);
 #ifdef CONFIG_SYSFS
 static struct kobject *irq_kobj_base;
 
+#if 0
 #define IRQ_ATTR_RO(_name) \
 static struct kobj_attribute _name##_attr = __ATTR_RO(_name)
 
@@ -364,6 +366,7 @@ static const struct kobj_type irq_kobj_type = {
 	.sysfs_ops	= &kobj_sysfs_ops,
 	.default_groups = irq_groups,
 };
+#endif /* CL */
 
 static void irq_sysfs_add(int irq, struct irq_desc *desc)
 {
@@ -380,6 +383,7 @@ static void irq_sysfs_add(int irq, struct irq_desc *desc)
 	}
 }
 
+#if 0
 static void irq_sysfs_del(struct irq_desc *desc)
 {
 	/*
@@ -415,6 +419,8 @@ static int __init irq_sysfs_init(void)
 }
 postcore_initcall(irq_sysfs_init);
 
+#endif /* CL */
+
 #else /* !CONFIG_SYSFS */
 
 static const struct kobj_type irq_kobj_type = {
@@ -434,6 +440,7 @@ struct irq_desc *irq_to_desc(unsigned int irq)
 EXPORT_SYMBOL_GPL(irq_to_desc);
 #endif
 
+#if 0
 void irq_lock_sparse(void)
 {
 	mutex_lock(&sparse_irq_lock);
@@ -443,6 +450,7 @@ void irq_unlock_sparse(void)
 {
 	mutex_unlock(&sparse_irq_lock);
 }
+#endif /* CL */
 
 static struct irq_desc *alloc_desc(int irq, int node, unsigned int flags,
 				   const struct cpumask *affinity,
@@ -464,6 +472,7 @@ static struct irq_desc *alloc_desc(int irq, int node, unsigned int flags,
 	return desc;
 }
 
+#if 0
 static void irq_kobj_release(struct kobject *kobj)
 {
 	struct irq_desc *desc = container_of(kobj, struct irq_desc, kobj);
@@ -479,11 +488,13 @@ static void delayed_free_desc(struct rcu_head *rhp)
 
 	kobject_put(&desc->kobj);
 }
+#endif /* CL */
 
 static void free_desc(unsigned int irq)
 {
 	struct irq_desc *desc = irq_to_desc(irq);
 
+#if 0
 	irq_remove_debugfs_entry(desc);
 	unregister_irq_proc(irq, desc);
 
@@ -506,6 +517,8 @@ static void free_desc(unsigned int irq)
 	 * This also allows us to use rcu in kstat_irqs_usr().
 	 */
 	call_rcu(&desc->rcu, delayed_free_desc);
+#endif
+    PANIC("");
 }
 
 static int alloc_descs(unsigned int start, unsigned int cnt, int node,
@@ -680,6 +693,7 @@ void irq_init_desc(unsigned int irq)
 
 #endif /* !CONFIG_SPARSE_IRQ */
 
+#if 0
 int handle_irq_desc(struct irq_desc *desc)
 {
 	struct irq_data *data;
@@ -819,6 +833,7 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
 	mutex_unlock(&sparse_irq_lock);
 }
 EXPORT_SYMBOL_GPL(irq_free_descs);
+#endif /* CL */
 
 /**
  * __irq_alloc_descs - allocate and initialize a range of irq descriptors
@@ -874,6 +889,7 @@ unlock:
 }
 EXPORT_SYMBOL_GPL(__irq_alloc_descs);
 
+#if 0
 /**
  * irq_get_next_irq - get next allocated irq number
  * @offset:	where to start the search
@@ -884,6 +900,7 @@ unsigned int irq_get_next_irq(unsigned int offset)
 {
 	return irq_find_at_or_after(offset);
 }
+#endif /* CL */
 
 struct irq_desc *
 __irq_get_desc_lock(unsigned int irq, unsigned long *flags, bool bus,
@@ -941,6 +958,7 @@ int irq_set_percpu_devid(unsigned int irq)
 	return irq_set_percpu_devid_partition(irq, NULL);
 }
 
+#if 0
 int irq_get_percpu_devid_partition(unsigned int irq, struct cpumask *affinity)
 {
 	struct irq_desc *desc = irq_to_desc(irq);

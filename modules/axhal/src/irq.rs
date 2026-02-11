@@ -27,10 +27,21 @@ pub fn init_early() {
     // FixMe: move `init_IRQ` into axplat::irq::init_early()
     #[cfg(feature = "linux-adaptor")]
     unsafe {
+        /*
+         * irq depends on radix && maple
+         */
+        radix_tree_init();
+        maple_tree_init();
+
+        /* init some links before init_ISA_irqs() */
+        early_irq_init();
         init_IRQ();
     }
 }
 
 unsafe extern "C" {
+    fn radix_tree_init();
+    fn maple_tree_init();
+    fn early_irq_init();
     fn init_IRQ();
 }

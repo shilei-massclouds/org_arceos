@@ -127,14 +127,11 @@ static int riscv_intc_domain_map(struct irq_domain *d, unsigned int irq,
 {
 	struct irq_chip *chip = d->host_data;
 
-#if 0
 	irq_set_percpu_devid(irq);
 	irq_domain_set_info(d, irq, hwirq, chip, NULL, handle_percpu_devid_irq,
 			    NULL, NULL);
 
 	return 0;
-#endif
-    PANIC("");
 }
 
 static int riscv_intc_domain_alloc(struct irq_domain *domain,
