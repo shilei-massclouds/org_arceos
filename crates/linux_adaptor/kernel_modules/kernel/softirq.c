@@ -734,7 +734,6 @@ void __raise_softirq_irqoff(unsigned int nr)
 	or_softirq_pending(1UL << nr);
 }
 
-#if 0
 void open_softirq(int nr, void (*action)(void))
 {
 	softirq_vec[nr].action = action;
@@ -751,6 +750,7 @@ struct tasklet_head {
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_vec);
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_hi_vec);
 
+#if 0
 static void __tasklet_schedule_common(struct tasklet_struct *t,
 				      struct tasklet_head __percpu *headp,
 				      unsigned int softirq_nr)
@@ -794,12 +794,14 @@ static bool tasklet_clear_sched(struct tasklet_struct *t)
 
 	return false;
 }
+#endif /* CL */
 
 static void tasklet_action_common(struct tasklet_head *tl_head,
 				  unsigned int softirq_nr)
 {
 	struct tasklet_struct *list;
 
+#if 0
 	local_irq_disable();
 	list = tl_head->head;
 	tl_head->head = NULL;
@@ -837,20 +839,29 @@ static void tasklet_action_common(struct tasklet_head *tl_head,
 		__raise_softirq_irqoff(softirq_nr);
 		local_irq_enable();
 	}
+#endif
+    PANIC("");
 }
 
 static __latent_entropy void tasklet_action(void)
 {
+#if 0
 	workqueue_softirq_action(false);
 	tasklet_action_common(this_cpu_ptr(&tasklet_vec), TASKLET_SOFTIRQ);
+#endif
+    PANIC("");
 }
 
 static __latent_entropy void tasklet_hi_action(void)
 {
+#if 0
 	workqueue_softirq_action(true);
 	tasklet_action_common(this_cpu_ptr(&tasklet_hi_vec), HI_SOFTIRQ);
+#endif
+    PANIC("");
 }
 
+#if 0
 void tasklet_setup(struct tasklet_struct *t,
 		   void (*callback)(struct tasklet_struct *))
 {
@@ -937,7 +948,6 @@ void __init softirq_init(void)
 {
 	int cpu;
 
-#if 0
 	for_each_possible_cpu(cpu) {
 		per_cpu(tasklet_vec, cpu).tail =
 			&per_cpu(tasklet_vec, cpu).head;
@@ -947,8 +957,6 @@ void __init softirq_init(void)
 
 	open_softirq(TASKLET_SOFTIRQ, tasklet_action);
 	open_softirq(HI_SOFTIRQ, tasklet_hi_action);
-#endif
-    PANIC("");
 }
 
 #if 0

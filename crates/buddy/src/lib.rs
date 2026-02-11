@@ -16,6 +16,8 @@ impl<const PAGE_SIZE: usize> BaseAllocator for BuddyAllocator<PAGE_SIZE> {
         // misc_mem_init() [arch/riscv/mm/init.c]
         //   - prepare node/zone/mem_map for buddy system
         //
+        // jump_label_init() [init/main.c]
+        //
         // setup_nr_cpu_ids() [init/main.c]
         //
         // setup_per_cpu_areas() [init/main.c]
@@ -26,6 +28,7 @@ impl<const PAGE_SIZE: usize> BaseAllocator for BuddyAllocator<PAGE_SIZE> {
         //
         unsafe {
             misc_mem_init();
+            jump_label_init();
             setup_nr_cpu_ids();
             setup_per_cpu_areas();
             mm_core_init_first_part();
@@ -77,6 +80,7 @@ impl<const PAGE_SIZE: usize> PageAllocator for BuddyAllocator<PAGE_SIZE> {
 
 unsafe extern "C" {
     fn misc_mem_init();
+    fn jump_label_init();
     fn mm_core_init_first_part();
     fn setup_nr_cpu_ids();
     fn setup_per_cpu_areas();

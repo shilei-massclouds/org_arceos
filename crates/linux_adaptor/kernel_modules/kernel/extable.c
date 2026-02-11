@@ -18,7 +18,6 @@
 
 #include "adaptor.h"
 
-#if 0
 /*
  * mutex protecting text section modification (dynamic code patching).
  * some users need to sleep (allocating memory...) while they hold this lock.
@@ -29,6 +28,7 @@
  */
 DEFINE_MUTEX(text_mutex);
 
+#if 0
 extern struct exception_table_entry __start___ex_table[];
 extern struct exception_table_entry __stop___ex_table[];
 

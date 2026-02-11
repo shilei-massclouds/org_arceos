@@ -10,8 +10,8 @@ obj-y += irq.o
 obj-y += stacktrace.o
 obj-y += cpu.o
 obj-y += cpufeature.o
+obj-y += jump_label.o
 
-#obj-y += jump_label.o
 #obj-y += patch.o
 #obj-y += reset.o
 #obj-y += smpboot.o

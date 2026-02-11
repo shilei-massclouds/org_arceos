@@ -46,3 +46,15 @@ struct workqueue_struct *system_wq __ro_after_init;
 
 // kernel/ksysfs.c
 struct kobject *kernel_kobj;
+
+// init/main.c
+/*
+ * Used to generate warnings if static_key manipulation functions are used
+ * before jump_label_init is called.
+ */
+bool static_key_initialized __read_mostly;
+
+// kernel/ksysfs.c
+int rcu_normal;
+int rcu_expedited;
+

@@ -88,6 +88,7 @@ SECTIONS
     }
 
     __init_data_end = .;
+    __init_end = .;
 
     _srodata = .;
     . = ALIGN((1 << 21));

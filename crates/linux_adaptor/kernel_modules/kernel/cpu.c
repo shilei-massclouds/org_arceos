@@ -45,7 +45,6 @@
 #include "smpboot.h"
 #include "adaptor.h"
 
-#if 0
 /**
  * struct cpuhp_cpu_state - Per cpu hotplug state storage
  * @state:	The current cpu state
@@ -89,6 +88,7 @@ static DEFINE_PER_CPU(struct cpuhp_cpu_state, cpuhp_state) = {
 	.fail = CPUHP_INVALID,
 };
 
+#if 0
 #ifdef CONFIG_SMP
 cpumask_t cpus_booted_once_mask;
 #endif
@@ -2523,7 +2523,6 @@ int __cpuhp_setup_state_cpuslocked(enum cpuhp_state state,
 	if (ret || !invoke || !startup)
 		goto out;
 
-#if 0
 	/*
 	 * Try to call the startup callback for each present cpu
 	 * depending on the hotplug state of the cpu.
@@ -2535,6 +2534,7 @@ int __cpuhp_setup_state_cpuslocked(enum cpuhp_state state,
 		if (cpustate < state)
 			continue;
 
+#if 0
 		ret = cpuhp_issue_call(cpu, state, true, NULL);
 		if (ret) {
 			if (teardown)
@@ -2542,9 +2542,9 @@ int __cpuhp_setup_state_cpuslocked(enum cpuhp_state state,
 			cpuhp_store_callbacks(state, NULL, NULL, NULL, false);
 			goto out;
 		}
-	}
 #endif
     PANIC("");
+	}
 out:
 	mutex_unlock(&cpuhp_state_mutex);
 	/*
