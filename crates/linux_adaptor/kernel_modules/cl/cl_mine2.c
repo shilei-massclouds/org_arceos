@@ -159,3 +159,5 @@ CL_MINE(do_trap_ecall_m)
 
 CL_MINE(ct_irq_enter)
 CL_MINE(sbi_ipi_init)
+CL_MINE(__do_softirq)
+CL_MINE(show_ipi_stats)

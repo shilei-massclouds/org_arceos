@@ -18,8 +18,6 @@
 
 #include "adaptor.h"
 
-#if 0
-
 static struct fwnode_handle *(*__get_intc_node)(void);
 
 void riscv_set_intc_hwnode_fn(struct fwnode_handle *(*fn)(void))
@@ -35,8 +33,6 @@ struct fwnode_handle *riscv_get_intc_hwnode(void)
 	return NULL;
 }
 EXPORT_SYMBOL_GPL(riscv_get_intc_hwnode);
-
-#endif /* CL */
 
 #ifdef CONFIG_IRQ_STACKS
 #include <asm/irq_stack.h>

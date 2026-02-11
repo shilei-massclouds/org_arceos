@@ -196,7 +196,6 @@ static int __init riscv_intc_init_common(struct fwnode_handle *fn, struct irq_ch
 		riscv_intc_nr_irqs = 64;
 		rc = set_handle_irq(&riscv_intc_aia_irq);
 	} else {
-        printk("====== riscv_intc_irq\n");
 		rc = set_handle_irq(&riscv_intc_irq);
 	}
 	if (rc) {
@@ -204,7 +203,6 @@ static int __init riscv_intc_init_common(struct fwnode_handle *fn, struct irq_ch
 		return rc;
 	}
 
-#if 0
 	riscv_set_intc_hwnode_fn(riscv_intc_hwnode);
 
 	pr_info("%d local interrupts mapped%s\n",
@@ -214,8 +212,6 @@ static int __init riscv_intc_init_common(struct fwnode_handle *fn, struct irq_ch
 		pr_info("%d custom local interrupts mapped\n", riscv_intc_custom_nr_irqs);
 
 	return 0;
-#endif
-    PANIC("");
 }
 
 static int __init riscv_intc_init(struct device_node *node,
