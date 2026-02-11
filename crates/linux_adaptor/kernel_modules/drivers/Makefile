@@ -1,13 +1,13 @@
 # Makefile for `drivers`
 
 obj-y += of/
+obj-y += base/
 obj-y += irqchip/
 #obj-y += gpio/
 #obj-y += pci/
 #obj-y += clk/
 #obj-y += virtio/
 #obj-y += char/
-#obj-y += base/
 #obj-y += block/
 #obj-y += nvme/
 #obj-y += mtd/

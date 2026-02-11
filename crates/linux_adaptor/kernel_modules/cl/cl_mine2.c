@@ -3,7 +3,6 @@
 
 CL_MINE(get_random_bytes)
 CL_MINE(__warn_printk)
-CL_MINE(skip_spaces)
 CL_MINE(__rcu_read_lock)
 CL_MINE(__rcu_read_unlock)
 CL_MINE(sprint_symbol)
@@ -11,10 +10,6 @@ CL_MINE(sprint_symbol_build_id)
 CL_MINE(sprint_backtrace)
 CL_MINE(sprint_symbol_no_offset)
 CL_MINE(sprint_backtrace_build_id)
-CL_MINE(string_escape_mem)
-CL_MINE(fwnode_count_parents)
-CL_MINE(fwnode_get_name_prefix)
-CL_MINE(fwnode_get_name)
 
 CL_MINE(fwnode_get_nth_parent)
 CL_MINE(__clk_get_name)

@@ -28,6 +28,7 @@
 #include <asm/cacheflush.h>
 #include <asm/cpu_ops.h>
 
+#if 0
 enum ipi_message_type {
 	IPI_RESCHEDULE,
 	IPI_CALL_FUNC,
@@ -39,6 +40,7 @@ enum ipi_message_type {
 	IPI_KGDB_ROUNDUP,
 	IPI_MAX
 };
+#endif /* CL */
 
 unsigned long __cpuid_to_hartid_map[NR_CPUS] __ro_after_init = {
 	[0 ... NR_CPUS-1] = INVALID_HARTID
@@ -49,10 +51,12 @@ void __init smp_setup_processor_id(void)
 	cpuid_to_hartid_map(0) = boot_cpu_hartid;
 }
 
+#if 0
 static DEFINE_PER_CPU_READ_MOSTLY(int, ipi_dummy_dev);
 static int ipi_virq_base __ro_after_init;
 static int nr_ipi __ro_after_init = IPI_MAX;
 static struct irq_desc *ipi_desc[IPI_MAX] __read_mostly;
+#endif /* CL */
 
 int riscv_hartid_to_cpuid(unsigned long hartid)
 {
@@ -65,6 +69,7 @@ int riscv_hartid_to_cpuid(unsigned long hartid)
 	return -ENOENT;
 }
 
+#if 0
 static void ipi_stop(void)
 {
 	set_cpu_online(smp_processor_id(), false);
@@ -362,3 +367,5 @@ void kgdb_roundup_cpus(void)
 	}
 }
 #endif
+
+#endif /* CL */

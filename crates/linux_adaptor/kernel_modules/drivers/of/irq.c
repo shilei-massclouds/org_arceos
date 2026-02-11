@@ -53,6 +53,7 @@ unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
+#endif /* CL */
 
 /**
  * of_irq_find_parent - Given a device node, find its interrupt parent node
@@ -86,6 +87,7 @@ struct device_node *of_irq_find_parent(struct device_node *child)
 }
 EXPORT_SYMBOL_GPL(of_irq_find_parent);
 
+#if  0
 /*
  * These interrupt controllers abuse interrupt-map for unspeakable
  * reasons and rely on the core code to *ignore* it (the drivers do
@@ -575,7 +577,6 @@ void __init of_irq_init(const struct of_device_id *matches)
 				!of_device_is_available(np))
 			continue;
 
-#if 0
 		if (WARN(!match->data, "of_irq_init: no init function for %s\n",
 			 match->compatible))
 			continue;
@@ -605,8 +606,6 @@ void __init of_irq_init(const struct of_device_id *matches)
 			desc->interrupt_parent = NULL;
 		}
 		list_add_tail(&desc->list, &intc_desc_list);
-#endif
-        PANIC("");
 	}
 
 	/*

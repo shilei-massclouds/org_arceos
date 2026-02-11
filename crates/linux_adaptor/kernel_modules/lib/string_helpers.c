@@ -21,6 +21,7 @@
 #include <kunit/test.h>
 #include <kunit/test-bug.h>
 
+#if 0
 /**
  * string_get_size - get the size in the specified units
  * @size:	The size to be converted in blocks
@@ -355,6 +356,8 @@ int string_unescape(char *src, char *dst, size_t size, unsigned int flags)
 }
 EXPORT_SYMBOL(string_unescape);
 
+#endif /* CL */
+
 static bool escape_passthrough(unsigned char c, char **dst, char *end)
 {
 	char *out = *dst;
@@ -641,6 +644,7 @@ int string_escape_mem(const char *src, size_t isz, char *dst, size_t osz,
 }
 EXPORT_SYMBOL(string_escape_mem);
 
+#if 0
 /*
  * Return an allocated string that has been escaped of special characters
  * and double quotes, making it safe to log in quotes.
@@ -833,6 +837,8 @@ char **devm_kasprintf_strarray(struct device *dev, const char *prefix, size_t n)
 }
 EXPORT_SYMBOL_GPL(devm_kasprintf_strarray);
 
+#endif /* CL */
+
 /**
  * skip_spaces - Removes leading whitespace from @str.
  * @str: The string to be stripped.
@@ -847,6 +853,7 @@ char *skip_spaces(const char *str)
 }
 EXPORT_SYMBOL(skip_spaces);
 
+#if 0
 /**
  * strim - Removes leading and trailing whitespace from @s.
  * @s: The string to be stripped.
@@ -968,6 +975,8 @@ int __sysfs_match_string(const char * const *array, size_t n, const char *str)
 }
 EXPORT_SYMBOL(__sysfs_match_string);
 
+#endif /* CL */
+
 /**
  * strreplace - Replace all occurrences of character in string.
  * @str: The string to operate on.
@@ -989,6 +998,7 @@ char *strreplace(char *str, char old, char new)
 }
 EXPORT_SYMBOL(strreplace);
 
+#if 0
 /**
  * memcpy_and_pad - Copy one buffer to another with padding
  * @dest: Where to copy to
@@ -1008,6 +1018,8 @@ void memcpy_and_pad(void *dest, size_t dest_len, const void *src, size_t count,
 	}
 }
 EXPORT_SYMBOL(memcpy_and_pad);
+
+#endif /* CL */
 
 #ifdef CONFIG_FORTIFY_SOURCE
 /* These are placeholders for fortify compile-time warnings. */

@@ -18,10 +18,10 @@ obj-y += rbtree.o
 obj-y += kasprintf.o
 obj-y += kobject.o
 obj-y += seq_buf.o
+obj-y += string_helpers.o
 
 obj-y += math/
 
-#obj-y += string_helpers.o
 #obj-y += radix-tree.o maple_tree.o klist.o
 #obj-y += devres.o errname.o idr.o xarray.o
 #obj-y += sbitmap.o lockref.o dec_and_lock.o
