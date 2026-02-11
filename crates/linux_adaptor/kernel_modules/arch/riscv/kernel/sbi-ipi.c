@@ -21,19 +21,22 @@ EXPORT_SYMBOL_GPL(riscv_sbi_for_rfence);
 
 static int sbi_ipi_virq;
 
-#if 0
 static void sbi_ipi_handle(struct irq_desc *desc)
 {
 	struct irq_chip *chip = irq_desc_get_chip(desc);
 
 	chained_irq_enter(chip, desc);
 
+#if 0
 	csr_clear(CSR_IP, IE_SIE);
 	ipi_mux_process();
 
 	chained_irq_exit(chip, desc);
+#endif
+    PANIC("");
 }
 
+#if 0
 static int sbi_ipi_starting_cpu(unsigned int cpu)
 {
 	enable_percpu_irq(sbi_ipi_virq, irq_get_trigger_type(sbi_ipi_virq));
@@ -63,7 +66,6 @@ void __init sbi_ipi_init(void)
 	}
 
 	virq = ipi_mux_create(BITS_PER_BYTE, sbi_send_ipi);
-#if 0
 	if (virq <= 0) {
 		pr_err("unable to create muxed IPIs\n");
 		irq_dispose_mapping(sbi_ipi_virq);
@@ -72,6 +74,7 @@ void __init sbi_ipi_init(void)
 
 	irq_set_chained_handler(sbi_ipi_virq, sbi_ipi_handle);
 
+#if 0
 	/*
 	 * Don't disable IPI when CPU goes offline because
 	 * the masking/unmasking of virtual IPIs is done

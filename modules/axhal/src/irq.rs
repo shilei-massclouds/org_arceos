@@ -36,6 +36,8 @@ pub fn init_early() {
         /* init some links before init_ISA_irqs() */
         early_irq_init();
         init_IRQ();
+
+        softirq_init();
     }
 }
 
@@ -44,4 +46,5 @@ unsafe extern "C" {
     fn maple_tree_init();
     fn early_irq_init();
     fn init_IRQ();
+    fn softirq_init();
 }

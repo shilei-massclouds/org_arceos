@@ -36,8 +36,6 @@
 
 #include "adaptor.h"
 
-#if 0
-
 /*
    - No shared variables, all the data are CPU local.
    - If a softirq needs serialization, let it serialize itself
@@ -65,10 +63,12 @@ static struct softirq_action softirq_vec[NR_SOFTIRQS] __cacheline_aligned_in_smp
 
 DEFINE_PER_CPU(struct task_struct *, ksoftirqd);
 
+#if 0
 const char * const softirq_to_name[NR_SOFTIRQS] = {
 	"HI", "TIMER", "NET_TX", "NET_RX", "BLOCK", "IRQ_POLL",
 	"TASKLET", "SCHED", "HRTIMER", "RCU"
 };
+#endif /* CL */
 
 /*
  * we cannot loop indefinitely here to avoid userspace starvation,
@@ -85,12 +85,15 @@ static void wakeup_softirqd(void)
 		wake_up_process(tsk);
 }
 
+#if 0
 #ifdef CONFIG_TRACE_IRQFLAGS
 DEFINE_PER_CPU(int, hardirqs_enabled);
 DEFINE_PER_CPU(int, hardirq_context);
 EXPORT_PER_CPU_SYMBOL_GPL(hardirqs_enabled);
 EXPORT_PER_CPU_SYMBOL_GPL(hardirq_context);
 #endif
+
+#endif /* CL */
 
 /*
  * SOFTIRQ_OFFSET usage:
@@ -488,6 +491,7 @@ asmlinkage __visible void do_softirq(void)
 
 #endif /* !CONFIG_PREEMPT_RT */
 
+#if 0
 /*
  * We restart softirq processing for at most MAX_SOFTIRQ_RESTART times,
  * but break the loop if need_resched() is set or after 2 ms.
@@ -692,6 +696,7 @@ void irq_exit(void)
 	 /* must be last! */
 	lockdep_hardirq_exit();
 }
+#endif /* CL */
 
 /*
  * This function must run with irqs disabled!
@@ -729,6 +734,7 @@ void __raise_softirq_irqoff(unsigned int nr)
 	or_softirq_pending(1UL << nr);
 }
 
+#if 0
 void open_softirq(int nr, void (*action)(void))
 {
 	softirq_vec[nr].action = action;
@@ -925,10 +931,13 @@ void tasklet_unlock_wait(struct tasklet_struct *t)
 EXPORT_SYMBOL_GPL(tasklet_unlock_wait);
 #endif
 
+#endif /* CL */
+
 void __init softirq_init(void)
 {
 	int cpu;
 
+#if 0
 	for_each_possible_cpu(cpu) {
 		per_cpu(tasklet_vec, cpu).tail =
 			&per_cpu(tasklet_vec, cpu).head;
@@ -938,8 +947,11 @@ void __init softirq_init(void)
 
 	open_softirq(TASKLET_SOFTIRQ, tasklet_action);
 	open_softirq(HI_SOFTIRQ, tasklet_hi_action);
+#endif
+    PANIC("");
 }
 
+#if 0
 static int ksoftirqd_should_run(unsigned int cpu)
 {
 	return local_softirq_pending();

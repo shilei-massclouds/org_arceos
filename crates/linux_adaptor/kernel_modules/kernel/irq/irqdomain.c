@@ -60,7 +60,6 @@ const struct fwnode_operations irqchip_fwnode_ops = {
 };
 EXPORT_SYMBOL_GPL(irqchip_fwnode_ops);
 
-#if 0
 /**
  * __irq_domain_alloc_fwnode - Allocate a fwnode_handle suitable for
  *                           identifying an irq domain
@@ -143,7 +142,6 @@ static int alloc_name(struct irq_domain *domain, char *base, enum irq_domain_bus
 	domain->flags |= IRQ_DOMAIN_NAME_ALLOCATED;
 	return 0;
 }
-#endif /* CL */
 
 static int alloc_fwnode_name(struct irq_domain *domain, const struct fwnode_handle *fwnode,
 			     enum irq_domain_bus_token bus_token, const char *suffix)
@@ -193,7 +191,6 @@ static int irq_domain_set_name(struct irq_domain *domain, const struct irq_domai
 	const struct fwnode_handle *fwnode = info->fwnode;
 
 	if (is_fwnode_irqchip(fwnode)) {
-#if 0
 		struct irqchip_fwid *fwid = container_of(fwnode, struct irqchip_fwid, fwnode);
 
 		/*
@@ -216,8 +213,6 @@ static int irq_domain_set_name(struct irq_domain *domain, const struct irq_domai
 			if (bus_token != DOMAIN_BUS_ANY)
 				return alloc_name(domain, fwid->name, bus_token);
 		}
-#endif
-        PANIC("");
 
 	} else if (is_of_node(fwnode) || is_acpi_device_node(fwnode) || is_software_node(fwnode)) {
 		return alloc_fwnode_name(domain, fwnode, bus_token, info->name_suffix);
@@ -389,7 +384,6 @@ struct irq_domain *irq_domain_instantiate(const struct irq_domain_info *info)
 }
 EXPORT_SYMBOL_GPL(irq_domain_instantiate);
 
-#if 0
 /**
  * irq_domain_remove() - Remove an irq domain.
  * @domain: domain to remove
@@ -458,6 +452,7 @@ void irq_domain_update_bus_token(struct irq_domain *domain,
 }
 EXPORT_SYMBOL_GPL(irq_domain_update_bus_token);
 
+#if 0
 /**
  * irq_domain_create_simple() - Register an irq_domain and optionally map a range of irqs
  * @fwnode: firmware node for the interrupt controller
@@ -1040,6 +1035,7 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
 	return irq_create_fwspec_mapping(&fwspec);
 }
 EXPORT_SYMBOL_GPL(irq_create_of_mapping);
+#endif /* CL */
 
 /**
  * irq_dispose_mapping() - Unmap an interrupt
@@ -1050,6 +1046,7 @@ void irq_dispose_mapping(unsigned int virq)
 	struct irq_data *irq_data;
 	struct irq_domain *domain;
 
+#if 0
 	irq_data = virq ? irq_get_irq_data(virq) : NULL;
 	if (!irq_data)
 		return;
@@ -1064,10 +1061,10 @@ void irq_dispose_mapping(unsigned int virq)
 		irq_domain_disassociate(domain, virq);
 		irq_free_desc(virq);
 	}
+#endif
+    PANIC("");
 }
 EXPORT_SYMBOL_GPL(irq_dispose_mapping);
-
-#endif /* CL */
 
 /**
  * __irq_resolve_mapping() - Find a linux irq from a hw irq number.
@@ -1335,6 +1332,7 @@ struct irq_domain *irq_domain_create_hierarchy(struct irq_domain *parent,
 	return IS_ERR(d) ? NULL : d;
 }
 EXPORT_SYMBOL_GPL(irq_domain_create_hierarchy);
+#endif /* CL */
 
 static void irq_domain_insert_irq(int virq)
 {
@@ -1350,6 +1348,7 @@ static void irq_domain_insert_irq(int virq)
 	irq_clear_status_flags(virq, IRQ_NOREQUEST);
 }
 
+#if 0
 static void irq_domain_remove_irq(int virq)
 {
 	struct irq_data *data;
@@ -1367,6 +1366,7 @@ static void irq_domain_remove_irq(int virq)
 		irq_domain_clear_mapping(domain, hwirq);
 	}
 }
+#endif /* CL */
 
 static struct irq_data *irq_domain_insert_irq_data(struct irq_domain *domain,
 						   struct irq_data *child)
@@ -1411,6 +1411,7 @@ static void irq_domain_free_irq_data(unsigned int virq, unsigned int nr_irqs)
 	}
 }
 
+#if 0
 /**
  * irq_domain_disconnect_hierarchy - Mark the first unused level of a hierarchy
  * @domain:	IRQ domain from which the hierarchy is to be disconnected
@@ -1437,6 +1438,7 @@ int irq_domain_disconnect_hierarchy(struct irq_domain *domain,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(irq_domain_disconnect_hierarchy);
+#endif /* CL */
 
 static int irq_domain_trim_hierarchy(unsigned int virq)
 {
@@ -1510,7 +1512,6 @@ static int irq_domain_alloc_irq_data(struct irq_domain *domain,
 
 	return 0;
 }
-#endif /* CL */
 
 /**
  * irq_domain_get_irq_data - Get irq_data associated with @virq and @domain
@@ -1600,6 +1601,7 @@ void irq_domain_free_irqs_common(struct irq_domain *domain, unsigned int virq,
 	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
 }
 EXPORT_SYMBOL_GPL(irq_domain_free_irqs_common);
+#endif /* CL */
 
 /**
  * irq_domain_free_irqs_top - Clear handler and handler data, clear irqdata and free parent
@@ -1616,9 +1618,11 @@ void irq_domain_free_irqs_top(struct irq_domain *domain, unsigned int virq,
 		irq_set_handler_data(virq + i, NULL);
 		irq_set_handler(virq + i, NULL);
 	}
-	irq_domain_free_irqs_common(domain, virq, nr_irqs);
+	//irq_domain_free_irqs_common(domain, virq, nr_irqs);
+    PANIC("");
 }
 
+#if 0
 static void irq_domain_free_irqs_hierarchy(struct irq_domain *domain,
 					   unsigned int irq_base,
 					   unsigned int nr_irqs)
@@ -1633,6 +1637,7 @@ static void irq_domain_free_irqs_hierarchy(struct irq_domain *domain,
 			domain->ops->free(domain, irq_base + i, 1);
 	}
 }
+#endif /* CL */
 
 int irq_domain_alloc_irqs_hierarchy(struct irq_domain *domain,
 				    unsigned int irq_base,
@@ -1735,6 +1740,7 @@ int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
 }
 EXPORT_SYMBOL_GPL(__irq_domain_alloc_irqs);
 
+#if 0
 /* The irq_data was moved, fix the revmap to refer to the new location */
 static void irq_domain_fix_revmap(struct irq_data *d)
 {
