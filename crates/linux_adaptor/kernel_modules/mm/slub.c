@@ -414,7 +414,6 @@ static inline void stat(const struct kmem_cache *s, enum stat_item si)
 #endif
 }
 
-#if 0
 static inline
 void stat_add(const struct kmem_cache *s, enum stat_item si, int v)
 {
@@ -422,7 +421,6 @@ void stat_add(const struct kmem_cache *s, enum stat_item si, int v)
 	raw_cpu_add(s->cpu_slab->stat[si], v);
 #endif
 }
-#endif
 
 /*
  * The slab lists for all objects.
@@ -2274,6 +2272,8 @@ struct rcu_delayed_free {
 };
 #endif
 
+#endif /* CL */
+
 /*
  * Hooks for other subsystems that check memory allocations. In a typical
  * production configuration these hooks all should produce no code at all.
@@ -2366,6 +2366,8 @@ bool slab_free_hook(struct kmem_cache *s, void *x, bool init,
 	/* KASAN might put x into memory quarantine, delaying its reuse. */
 	return !kasan_slab_free(s, x, init, still_accessible);
 }
+
+#if 0
 
 static __fastpath_inline
 bool slab_free_freelist_hook(struct kmem_cache *s, void **head, void **tail,
@@ -4406,6 +4408,7 @@ static noinline void free_to_partial_list(
 		free_slab(s, slab_free);
 	}
 }
+#endif /* CL */
 
 /*
  * Slow path handling. This may still be called frequently since objects
@@ -4428,6 +4431,7 @@ static void __slab_free(struct kmem_cache *s, struct slab *slab,
 	unsigned long flags;
 	bool on_node_partial;
 
+#if 0
 	stat(s, FREE_SLOWPATH);
 
 	if (IS_ENABLED(CONFIG_SLUB_TINY) || kmem_cache_debug(s)) {
@@ -4525,6 +4529,8 @@ slab_empty:
 	spin_unlock_irqrestore(&n->list_lock, flags);
 	stat(s, FREE_SLAB);
 	discard_slab(s, slab);
+#endif
+    PANIC("");
 }
 
 #ifndef CONFIG_SLUB_TINY
@@ -4617,6 +4623,7 @@ void slab_free(struct kmem_cache *s, struct slab *slab, void *object,
 		do_slab_free(s, slab, object, object, 1, addr);
 }
 
+#if 0
 #ifdef CONFIG_MEMCG
 /* Do not inline the rare memcg charging failed path into the allocation path */
 static noinline
@@ -4718,6 +4725,7 @@ void kmem_cache_free(struct kmem_cache *s, void *x)
 	slab_free(s, virt_to_slab(x), x, _RET_IP_);
 }
 EXPORT_SYMBOL(kmem_cache_free);
+#endif /* CL */
 
 static void free_large_kmalloc(struct folio *folio, void *object)
 {
@@ -4765,6 +4773,7 @@ void kfree(const void *object)
 }
 EXPORT_SYMBOL(kfree);
 
+#if 0
 struct detached_freelist {
 	struct slab *slab;
 	void *tail;
@@ -7428,9 +7437,11 @@ static const struct file_operations slab_debugfs_fops = {
 	.llseek  = seq_lseek,
 	.release = slab_debug_trace_release,
 };
+#endif /* CL */
 
 static void debugfs_slab_add(struct kmem_cache *s)
 {
+#if 0
 	struct dentry *slab_cache_dir;
 
 	if (unlikely(!slab_debugfs_root))
@@ -7443,8 +7454,11 @@ static void debugfs_slab_add(struct kmem_cache *s)
 
 	debugfs_create_file("free_traces", 0400,
 		slab_cache_dir, s, &slab_debugfs_fops);
+#endif
+    PANIC("");
 }
 
+#if 0
 void debugfs_slab_release(struct kmem_cache *s)
 {
 	debugfs_lookup_and_remove(s->name, slab_debugfs_root);

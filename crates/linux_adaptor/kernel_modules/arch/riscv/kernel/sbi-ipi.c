@@ -15,11 +15,13 @@
 
 #include "adaptor.h"
 
+
 DEFINE_STATIC_KEY_FALSE(riscv_sbi_for_rfence);
 EXPORT_SYMBOL_GPL(riscv_sbi_for_rfence);
 
 static int sbi_ipi_virq;
 
+#if 0
 static void sbi_ipi_handle(struct irq_desc *desc)
 {
 	struct irq_chip *chip = irq_desc_get_chip(desc);
@@ -34,10 +36,10 @@ static void sbi_ipi_handle(struct irq_desc *desc)
 
 static int sbi_ipi_starting_cpu(unsigned int cpu)
 {
-    printk("%s: cpu[%u] sbi_ipi_virq[%u]\n", __func__, cpu, sbi_ipi_virq);
 	enable_percpu_irq(sbi_ipi_virq, irq_get_trigger_type(sbi_ipi_virq));
 	return 0;
 }
+#endif /* CL */
 
 void __init sbi_ipi_init(void)
 {
@@ -59,8 +61,8 @@ void __init sbi_ipi_init(void)
 		pr_err("unable to create INTC IRQ mapping\n");
 		return;
 	}
-    printk("%s: sbi_ipi_virq[%u]\n", __func__, sbi_ipi_virq);
 
+#if 0
 	virq = ipi_mux_create(BITS_PER_BYTE, sbi_send_ipi);
 	if (virq <= 0) {
 		pr_err("unable to create muxed IPIs\n");
@@ -70,7 +72,6 @@ void __init sbi_ipi_init(void)
 
 	irq_set_chained_handler(sbi_ipi_virq, sbi_ipi_handle);
 
-    printk("%s: CPUHP_AP_IRQ_RISCV_SBI_IPI_STARTING[%u]\n", __func__, CPUHP_AP_IRQ_RISCV_SBI_IPI_STARTING);
 	/*
 	 * Don't disable IPI when CPU goes offline because
 	 * the masking/unmasking of virtual IPIs is done
@@ -88,4 +89,6 @@ void __init sbi_ipi_init(void)
 	 * the extra context switch needed to handle IPIs.
 	 */
 	static_branch_enable(&riscv_sbi_for_rfence);
+#endif
+    PANIC("");
 }

@@ -545,6 +545,8 @@ struct irq_domain *irq_domain_create_legacy(struct fwnode_handle *fwnode,
 }
 EXPORT_SYMBOL_GPL(irq_domain_create_legacy);
 
+#endif /* CL */
+
 /**
  * irq_find_matching_fwspec() - Locates a domain for a given fwspec
  * @fwspec: FW specifier for an interrupt
@@ -588,6 +590,7 @@ struct irq_domain *irq_find_matching_fwspec(struct irq_fwspec *fwspec,
 }
 EXPORT_SYMBOL_GPL(irq_find_matching_fwspec);
 
+#if 0
 /**
  * irq_set_default_host() - Set a "default" irq domain
  * @domain: default domain pointer
@@ -619,6 +622,7 @@ struct irq_domain *irq_get_default_host(void)
 	return irq_default_domain;
 }
 EXPORT_SYMBOL_GPL(irq_get_default_host);
+#endif /* CL */
 
 static bool irq_domain_is_nomap(struct irq_domain *domain)
 {
@@ -626,6 +630,7 @@ static bool irq_domain_is_nomap(struct irq_domain *domain)
 	       (domain->flags & IRQ_DOMAIN_FLAG_NO_MAP);
 }
 
+#if 0
 static void irq_domain_clear_mapping(struct irq_domain *domain,
 				     irq_hw_number_t hwirq)
 {
@@ -639,6 +644,7 @@ static void irq_domain_clear_mapping(struct irq_domain *domain,
 	else
 		radix_tree_delete(&domain->revmap_tree, hwirq);
 }
+#endif /* CL */
 
 static void irq_domain_set_mapping(struct irq_domain *domain,
 				   irq_hw_number_t hwirq,
@@ -659,6 +665,7 @@ static void irq_domain_set_mapping(struct irq_domain *domain,
 		radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
 }
 
+#if 0
 static void irq_domain_disassociate(struct irq_domain *domain, unsigned int irq)
 {
 	struct irq_data *irq_data = irq_get_irq_data(irq);
@@ -694,6 +701,7 @@ static void irq_domain_disassociate(struct irq_domain *domain, unsigned int irq)
 
 	mutex_unlock(&domain->root->mutex);
 }
+#endif /* CL */
 
 static int irq_domain_associate_locked(struct irq_domain *domain, unsigned int virq,
 				       irq_hw_number_t hwirq)
@@ -737,6 +745,7 @@ static int irq_domain_associate_locked(struct irq_domain *domain, unsigned int v
 	return 0;
 }
 
+#if 0
 int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
 			 irq_hw_number_t hwirq)
 {
@@ -814,6 +823,8 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
 EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
 #endif
 
+#endif /* CL */
+
 static unsigned int irq_create_mapping_affinity_locked(struct irq_domain *domain,
 						       irq_hw_number_t hwirq,
 						       const struct irq_affinity_desc *affinity)
@@ -884,6 +895,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(irq_create_mapping_affinity);
 
+#if 0
 static int irq_domain_translate(struct irq_domain *d,
 				struct irq_fwspec *fwspec,
 				irq_hw_number_t *hwirq, unsigned int *type)
@@ -1055,6 +1067,8 @@ void irq_dispose_mapping(unsigned int virq)
 }
 EXPORT_SYMBOL_GPL(irq_dispose_mapping);
 
+#endif /* CL */
+
 /**
  * __irq_resolve_mapping() - Find a linux irq from a hw irq number.
  * @domain: domain owning this hardware interrupt
@@ -1105,7 +1119,6 @@ struct irq_desc *__irq_resolve_mapping(struct irq_domain *domain,
 	return desc;
 }
 EXPORT_SYMBOL_GPL(__irq_resolve_mapping);
-#endif /* CL */
 
 /**
  * irq_domain_xlate_onecell() - Generic xlate for direct one cell bindings
