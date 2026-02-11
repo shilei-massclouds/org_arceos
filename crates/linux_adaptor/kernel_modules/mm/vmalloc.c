@@ -740,7 +740,6 @@ int is_vmalloc_or_module_addr(const void *x)
 }
 EXPORT_SYMBOL_GPL(is_vmalloc_or_module_addr);
 
-#if 0
 /*
  * Walk a vmap address to the struct page it maps. Huge vmap mappings will
  * return the tail page that corresponds to the base page address, which
@@ -802,6 +801,7 @@ struct page *vmalloc_to_page(const void *vmalloc_addr)
 }
 EXPORT_SYMBOL(vmalloc_to_page);
 
+#if 0
 /*
  * Map a vmalloc()-space virtual address to the physical page frame number.
  */

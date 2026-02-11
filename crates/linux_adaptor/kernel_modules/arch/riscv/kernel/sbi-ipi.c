@@ -62,8 +62,8 @@ void __init sbi_ipi_init(void)
 		return;
 	}
 
-#if 0
 	virq = ipi_mux_create(BITS_PER_BYTE, sbi_send_ipi);
+#if 0
 	if (virq <= 0) {
 		pr_err("unable to create muxed IPIs\n");
 		irq_dispose_mapping(sbi_ipi_virq);

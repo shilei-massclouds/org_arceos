@@ -78,6 +78,7 @@ int irq_set_irq_type(unsigned int irq, unsigned int type)
 	return ret;
 }
 EXPORT_SYMBOL(irq_set_irq_type);
+#endif /* CL */
 
 /**
  *	irq_set_handler_data - set irq handler data for an irq
@@ -99,6 +100,7 @@ int irq_set_handler_data(unsigned int irq, void *data)
 }
 EXPORT_SYMBOL(irq_set_handler_data);
 
+#if 0
 /**
  *	irq_set_msi_desc_off - set MSI descriptor data for an irq at offset
  *	@irq_base:	Interrupt number base
@@ -409,6 +411,7 @@ void irq_percpu_disable(struct irq_desc *desc, unsigned int cpu)
 		desc->irq_data.chip->irq_mask(&desc->irq_data);
 	cpumask_clear_cpu(cpu, desc->percpu_enabled);
 }
+#endif /* CL */
 
 static inline void mask_ack_irq(struct irq_desc *desc)
 {
@@ -433,6 +436,7 @@ void mask_irq(struct irq_desc *desc)
 	}
 }
 
+#if 0
 void unmask_irq(struct irq_desc *desc)
 {
 	if (!irqd_irq_masked(&desc->irq_data))
@@ -989,6 +993,7 @@ void handle_percpu_devid_fasteoi_nmi(struct irq_desc *desc)
 	if (chip->irq_eoi)
 		chip->irq_eoi(&desc->irq_data);
 }
+#endif /* CL */
 
 static void
 __irq_do_set_handler(struct irq_desc *desc, irq_flow_handler_t handle,
@@ -1041,6 +1046,7 @@ __irq_do_set_handler(struct irq_desc *desc, irq_flow_handler_t handle,
 	if (handle != handle_bad_irq && is_chained) {
 		unsigned int type = irqd_get_trigger_type(&desc->irq_data);
 
+#if 0
 		/*
 		 * We're about to start this interrupt immediately,
 		 * hence the need to set the trigger configuration.
@@ -1060,6 +1066,8 @@ __irq_do_set_handler(struct irq_desc *desc, irq_flow_handler_t handle,
 		desc->action = &chained_action;
 		WARN_ON(irq_chip_pm_get(irq_desc_get_irq_data(desc)));
 		irq_activate_and_startup(desc, IRQ_RESEND);
+#endif
+        PANIC("");
 	}
 }
 
@@ -1078,6 +1086,7 @@ __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
 }
 EXPORT_SYMBOL_GPL(__irq_set_handler);
 
+#if 0
 void
 irq_set_chained_handler_and_data(unsigned int irq, irq_flow_handler_t handle,
 				 void *data)
@@ -1609,6 +1618,7 @@ int irq_chip_pm_get(struct irq_data *data)
 
 	return retval;
 }
+#endif /* CL */
 
 /**
  * irq_chip_pm_put - Disable power for an IRQ chip
@@ -1620,6 +1630,7 @@ int irq_chip_pm_get(struct irq_data *data)
  */
 int irq_chip_pm_put(struct irq_data *data)
 {
+#if 0
 	struct device *dev = irq_get_pm_device(data);
 	int retval = 0;
 
@@ -1627,5 +1638,6 @@ int irq_chip_pm_put(struct irq_data *data)
 		retval = pm_runtime_put(dev);
 
 	return (retval < 0) ? retval : 0;
+#endif
+    PANIC("");
 }
-#endif /* CL */

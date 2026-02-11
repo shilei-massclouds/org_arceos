@@ -1510,6 +1510,7 @@ static int irq_domain_alloc_irq_data(struct irq_domain *domain,
 
 	return 0;
 }
+#endif /* CL */
 
 /**
  * irq_domain_get_irq_data - Get irq_data associated with @virq and @domain
@@ -1555,7 +1556,6 @@ int irq_domain_set_hwirq_and_chip(struct irq_domain *domain, unsigned int virq,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(irq_domain_set_hwirq_and_chip);
-#endif /* CL */
 
 /**
  * irq_domain_set_info - Set the complete data for a @virq in @domain
@@ -1573,12 +1573,9 @@ void irq_domain_set_info(struct irq_domain *domain, unsigned int virq,
 			 void *chip_data, irq_flow_handler_t handler,
 			 void *handler_data, const char *handler_name)
 {
-#if 0
 	irq_domain_set_hwirq_and_chip(domain, virq, hwirq, chip, chip_data);
 	__irq_set_handler(virq, handler, 0, handler_name);
 	irq_set_handler_data(virq, handler_data);
-#endif
-    PANIC("");
 }
 EXPORT_SYMBOL(irq_domain_set_info);
 
