@@ -18,6 +18,7 @@
 #include <linux/interrupt.h>
 
 #include "internals.h"
+#include "adaptor.h"
 
 #ifdef CONFIG_HARDIRQS_SW_RESEND
 
@@ -119,6 +120,7 @@ static int try_retrigger(struct irq_desc *desc)
 	return 0;
 #endif
 }
+#endif
 
 /*
  * IRQ resend
@@ -147,15 +149,19 @@ int check_irq_resend(struct irq_desc *desc, bool inject)
 
 	desc->istate &= ~IRQS_PENDING;
 
+#if 0
 	if (!try_retrigger(desc))
 		err = irq_sw_resend(desc);
 
 	/* If the retrigger was successful, mark it with the REPLAY bit */
 	if (!err)
 		desc->istate |= IRQS_REPLAY;
+#endif
+    PANIC("");
 	return err;
 }
 
+#if 0
 #ifdef CONFIG_GENERIC_IRQ_INJECTION
 /**
  * irq_inject_interrupt - Inject an interrupt for testing/error injection

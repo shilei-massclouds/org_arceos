@@ -28,6 +28,8 @@
 #include <asm/cacheflush.h>
 #include <asm/cpu_ops.h>
 
+#include "adaptor.h"
+
 enum ipi_message_type {
 	IPI_RESCHEDULE,
 	IPI_CALL_FUNC,
@@ -115,12 +117,14 @@ void arch_irq_work_raise(void)
 	send_ipi_single(smp_processor_id(), IPI_IRQ_WORK);
 }
 #endif
+#endif /* CL */
 
 static irqreturn_t handle_IPI(int irq, void *data)
 {
 	unsigned int cpu = smp_processor_id();
 	int ipi = irq - ipi_virq_base;
 
+#if 0
 	switch (ipi) {
 	case IPI_RESCHEDULE:
 		scheduler_ipi();
@@ -153,6 +157,8 @@ static irqreturn_t handle_IPI(int irq, void *data)
 		break;
 	}
 
+#endif
+    PANIC("");
 	return IRQ_HANDLED;
 }
 
@@ -167,6 +173,7 @@ void riscv_ipi_enable(void)
 		enable_percpu_irq(ipi_virq_base + i, 0);
 }
 
+#if 0
 void riscv_ipi_disable(void)
 {
 	int i;
@@ -184,7 +191,6 @@ bool riscv_ipi_have_virq_range(void)
 	return (ipi_virq_base) ? true : false;
 }
 
-#if 0
 void riscv_ipi_set_virq_range(int virq, int nr)
 {
 	int i, err;
@@ -210,6 +216,7 @@ void riscv_ipi_set_virq_range(int virq, int nr)
 	riscv_ipi_enable();
 }
 
+#if 0
 static const char * const ipi_names[] = {
 	[IPI_RESCHEDULE]	= "Rescheduling interrupts",
 	[IPI_CALL_FUNC]		= "Function call interrupts",

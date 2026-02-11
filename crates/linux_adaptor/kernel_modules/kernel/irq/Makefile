@@ -8,7 +8,10 @@ obj-y += chip.o
 obj-y += dummychip.o
 obj-y += resend.o
 obj-y += ipi-mux.o
+obj-y += pm.o
+obj-y += proc.o
+obj-y += spurious.o
 
-#obj-y += msi.o spurious.o
-#obj-y += devres.o pm.o affinity.o
+#obj-y += msi.o
+#obj-y += devres.o affinity.o
 #obj-y += ipi.o

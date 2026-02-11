@@ -23,7 +23,9 @@
 #include <linux/task_work.h>
 
 #include "internals.h"
+#include "adaptor.h"
 
+#if 0
 #if defined(CONFIG_IRQ_FORCED_THREADING) && !defined(CONFIG_PREEMPT_RT)
 DEFINE_STATIC_KEY_FALSE(force_irqthreads_key);
 
@@ -141,6 +143,7 @@ void synchronize_irq(unsigned int irq)
 		__synchronize_irq(desc);
 }
 EXPORT_SYMBOL(synchronize_irq);
+#endif /* CL */
 
 #ifdef CONFIG_SMP
 cpumask_var_t irq_default_affinity;
@@ -641,6 +644,7 @@ int irq_setup_affinity(struct irq_desc *desc)
 #endif /* CONFIG_AUTO_IRQ_AFFINITY */
 #endif /* CONFIG_SMP */
 
+#if 0
 
 /**
  *	irq_set_vcpu_affinity - Set vcpu affinity for the interrupt
@@ -781,6 +785,7 @@ void disable_nmi_nosync(unsigned int irq)
 {
 	disable_irq_nosync(irq);
 }
+#endif /* CL */
 
 void __enable_irq(struct irq_desc *desc)
 {
@@ -814,6 +819,7 @@ void __enable_irq(struct irq_desc *desc)
 	}
 }
 
+#if 0
 /**
  *	enable_irq - enable handling of an irq
  *	@irq: Interrupt to enable
@@ -955,12 +961,14 @@ int can_request_irq(unsigned int irq, unsigned long irqflags)
 	irq_put_desc_unlock(desc, flags);
 	return canrequest;
 }
+#endif /* CL */
 
 int __irq_set_trigger(struct irq_desc *desc, unsigned long flags)
 {
 	struct irq_chip *chip = desc->irq_data.chip;
 	int ret, unmask = 0;
 
+#if 0
 	if (!chip || !chip->irq_set_type) {
 		/*
 		 * IRQF_TRIGGER_* but the PIC does not support multiple
@@ -1009,8 +1017,11 @@ int __irq_set_trigger(struct irq_desc *desc, unsigned long flags)
 	if (unmask)
 		unmask_irq(desc);
 	return ret;
+#endif
+    PANIC("");
 }
 
+#if 0
 #ifdef CONFIG_HARDIRQS_SW_RESEND
 int irq_set_parent(int irq, int parent_irq)
 {
@@ -1027,6 +1038,7 @@ int irq_set_parent(int irq, int parent_irq)
 }
 EXPORT_SYMBOL_GPL(irq_set_parent);
 #endif
+#endif /* CL */
 
 /*
  * Default primary interrupt handler for threaded interrupts. Is
@@ -1048,6 +1060,7 @@ static irqreturn_t irq_nested_primary_handler(int irq, void *dev_id)
 	return IRQ_NONE;
 }
 
+#if 0
 static irqreturn_t irq_forced_secondary_handler(int irq, void *dev_id)
 {
 	WARN(1, "Secondary action handler called for irq %d\n", irq);
@@ -1278,6 +1291,7 @@ static void irq_thread_set_ready(struct irq_desc *desc,
 	set_bit(IRQTF_READY, &action->thread_flags);
 	wake_up(&desc->wait_for_threads);
 }
+#endif /* CL */
 
 /*
  * Internal function to wake up a interrupt thread and wait until it is
@@ -1305,6 +1319,7 @@ static int irq_thread(void *data)
 	irqreturn_t (*handler_fn)(struct irq_desc *desc,
 			struct irqaction *action);
 
+#if 0
 	irq_thread_set_ready(desc, action);
 
 	sched_set_fifo(current);
@@ -1335,9 +1350,12 @@ static int irq_thread(void *data)
 	 * oneshot mask bit can be set.
 	 */
 	task_work_cancel_func(current, irq_thread_dtor);
+#endif
+    PANIC("");
 	return 0;
 }
 
+#if 0
 /**
  *	irq_wake_thread - wake the irq thread for the action identified by dev_id
  *	@irq:		Interrupt line
@@ -1364,9 +1382,11 @@ void irq_wake_thread(unsigned int irq, void *dev_id)
 	raw_spin_unlock_irqrestore(&desc->lock, flags);
 }
 EXPORT_SYMBOL_GPL(irq_wake_thread);
+#endif /* CL */
 
 static int irq_setup_forced_threading(struct irqaction *new)
 {
+#if 0
 	if (!force_irqthreads())
 		return 0;
 	if (new->flags & (IRQF_NO_THREAD | IRQF_PERCPU | IRQF_ONESHOT))
@@ -1401,6 +1421,8 @@ static int irq_setup_forced_threading(struct irqaction *new)
 	set_bit(IRQTF_FORCED_THREAD, &new->thread_flags);
 	new->thread_fn = new->handler;
 	new->handler = irq_default_primary_handler;
+#endif
+    PANIC("");
 	return 0;
 }
 
@@ -1421,6 +1443,7 @@ static void irq_release_resources(struct irq_desc *desc)
 		c->irq_release_resources(d);
 }
 
+#if 0
 static bool irq_supports_nmi(struct irq_desc *desc)
 {
 	struct irq_data *d = irq_desc_get_irq_data(desc);
@@ -1453,12 +1476,14 @@ static void irq_nmi_teardown(struct irq_desc *desc)
 	if (c->irq_nmi_teardown)
 		c->irq_nmi_teardown(d);
 }
+#endif /* CL */
 
 static int
 setup_irq_thread(struct irqaction *new, unsigned int irq, bool secondary)
 {
 	struct task_struct *t;
 
+#if 0
 	if (!secondary) {
 		t = kthread_create(irq_thread, new, "irq/%d-%s", irq,
 				   new->name);
@@ -1486,6 +1511,8 @@ setup_irq_thread(struct irqaction *new, unsigned int irq, bool secondary)
 	 * on which the requesting code placed the interrupt.
 	 */
 	set_bit(IRQTF_AFFINITY, &new->thread_flags);
+#endif
+    PANIC("");
 	return 0;
 }
 
@@ -1872,6 +1899,7 @@ out_mput:
 	return ret;
 }
 
+#if 0
 /*
  * Internal function to unregister an irqaction - used to free
  * regular and special interrupts that are part of the architecture.
@@ -2372,6 +2400,7 @@ err_out:
 
 	return retval;
 }
+#endif /* CL */
 
 void enable_percpu_irq(unsigned int irq, unsigned int type)
 {
@@ -2407,6 +2436,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(enable_percpu_irq);
 
+#if 0
 void enable_percpu_nmi(unsigned int irq, unsigned int type)
 {
 	enable_percpu_irq(irq, type);
@@ -2581,6 +2611,7 @@ int setup_percpu_irq(unsigned int irq, struct irqaction *act)
 
 	return retval;
 }
+#endif /* CL */
 
 /**
  *	__request_percpu_irq - allocate a percpu interrupt line
@@ -2644,6 +2675,7 @@ int __request_percpu_irq(unsigned int irq, irq_handler_t handler,
 }
 EXPORT_SYMBOL_GPL(__request_percpu_irq);
 
+#if 0
 /**
  *	request_percpu_nmi - allocate a percpu interrupt line for NMI delivery
  *	@irq: Interrupt line to allocate
@@ -2942,3 +2974,5 @@ bool irq_check_status_bit(unsigned int irq, unsigned int bitmask)
 	return res;
 }
 EXPORT_SYMBOL_GPL(irq_check_status_bit);
+
+#endif /* CL */

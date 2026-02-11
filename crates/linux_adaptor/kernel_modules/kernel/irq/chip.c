@@ -20,7 +20,6 @@
 #include "internals.h"
 #include "adaptor.h"
 
-#if 0
 static irqreturn_t bad_chained_irq(int irq, void *dev_id)
 {
 	WARN_ONCE(1, "Chained irq %d should not call an action\n", irq);
@@ -35,6 +34,7 @@ struct irqaction chained_action = {
 	.handler = bad_chained_irq,
 };
 
+#if 0
 /**
  *	irq_set_chip - set the irq chip for an irq
  *	@irq:	irq number
@@ -165,7 +165,6 @@ struct irq_data *irq_get_irq_data(unsigned int irq)
 }
 EXPORT_SYMBOL_GPL(irq_get_irq_data);
 
-#if 0
 static void irq_state_clr_disabled(struct irq_desc *desc)
 {
 	irqd_clear(&desc->irq_data, IRQD_IRQ_DISABLED);
@@ -307,6 +306,7 @@ int irq_activate_and_startup(struct irq_desc *desc, bool resend)
 	return irq_startup(desc, resend, IRQ_START_FORCE);
 }
 
+#if 0
 static void __irq_disable(struct irq_desc *desc, bool mask);
 
 void irq_shutdown(struct irq_desc *desc)
@@ -337,6 +337,7 @@ void irq_shutdown_and_deactivate(struct irq_desc *desc)
 	 */
 	irq_domain_deactivate_irq(&desc->irq_data);
 }
+#endif /* CL */
 
 void irq_enable(struct irq_desc *desc)
 {
@@ -353,6 +354,7 @@ void irq_enable(struct irq_desc *desc)
 	}
 }
 
+#if 0
 static void __irq_disable(struct irq_desc *desc, bool mask)
 {
 	if (irqd_irq_disabled(&desc->irq_data)) {
@@ -393,6 +395,7 @@ void irq_disable(struct irq_desc *desc)
 {
 	__irq_disable(desc, irq_settings_disable_unlazy(desc));
 }
+#endif /* CL */
 
 void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu)
 {
@@ -403,6 +406,7 @@ void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu)
 	cpumask_set_cpu(cpu, desc->percpu_enabled);
 }
 
+#if 0
 void irq_percpu_disable(struct irq_desc *desc, unsigned int cpu)
 {
 	if (desc->irq_data.chip->irq_disable)
@@ -436,7 +440,6 @@ void mask_irq(struct irq_desc *desc)
 	}
 }
 
-#if 0
 void unmask_irq(struct irq_desc *desc)
 {
 	if (!irqd_irq_masked(&desc->irq_data))
@@ -448,6 +451,7 @@ void unmask_irq(struct irq_desc *desc)
 	}
 }
 
+#if 0
 void unmask_threaded_irq(struct irq_desc *desc)
 {
 	struct irq_chip *chip = desc->irq_data.chip;
@@ -1046,7 +1050,6 @@ __irq_do_set_handler(struct irq_desc *desc, irq_flow_handler_t handle,
 	if (handle != handle_bad_irq && is_chained) {
 		unsigned int type = irqd_get_trigger_type(&desc->irq_data);
 
-#if 0
 		/*
 		 * We're about to start this interrupt immediately,
 		 * hence the need to set the trigger configuration.
@@ -1066,8 +1069,6 @@ __irq_do_set_handler(struct irq_desc *desc, irq_flow_handler_t handle,
 		desc->action = &chained_action;
 		WARN_ON(irq_chip_pm_get(irq_desc_get_irq_data(desc)));
 		irq_activate_and_startup(desc, IRQ_RESEND);
-#endif
-        PANIC("");
 	}
 }
 
@@ -1592,6 +1593,7 @@ int irq_chip_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	pos->chip->irq_compose_msi_msg(pos, msg);
 	return 0;
 }
+#endif /* CL */
 
 static struct device *irq_get_pm_device(struct irq_data *data)
 {
@@ -1618,7 +1620,6 @@ int irq_chip_pm_get(struct irq_data *data)
 
 	return retval;
 }
-#endif /* CL */
 
 /**
  * irq_chip_pm_put - Disable power for an IRQ chip

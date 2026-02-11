@@ -36,13 +36,11 @@ static void sbi_ipi_handle(struct irq_desc *desc)
     PANIC("");
 }
 
-#if 0
 static int sbi_ipi_starting_cpu(unsigned int cpu)
 {
 	enable_percpu_irq(sbi_ipi_virq, irq_get_trigger_type(sbi_ipi_virq));
 	return 0;
 }
-#endif /* CL */
 
 void __init sbi_ipi_init(void)
 {
@@ -74,7 +72,6 @@ void __init sbi_ipi_init(void)
 
 	irq_set_chained_handler(sbi_ipi_virq, sbi_ipi_handle);
 
-#if 0
 	/*
 	 * Don't disable IPI when CPU goes offline because
 	 * the masking/unmasking of virtual IPIs is done
@@ -92,6 +89,4 @@ void __init sbi_ipi_init(void)
 	 * the extra context switch needed to handle IPIs.
 	 */
 	static_branch_enable(&riscv_sbi_for_rfence);
-#endif
-    PANIC("");
 }

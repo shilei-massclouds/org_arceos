@@ -1984,6 +1984,7 @@ void irq_domain_free_irqs_parent(struct irq_domain *domain,
 	irq_domain_free_irqs_hierarchy(domain->parent, irq_base, nr_irqs);
 }
 EXPORT_SYMBOL_GPL(irq_domain_free_irqs_parent);
+#endif /* CL */
 
 static void __irq_domain_deactivate_irq(struct irq_data *irq_data)
 {
@@ -2037,6 +2038,7 @@ int irq_domain_activate_irq(struct irq_data *irq_data, bool reserve)
 	return ret;
 }
 
+#if 0
 /**
  * irq_domain_deactivate_irq - Call domain_ops->deactivate recursively to
  *			       deactivate interrupt
