@@ -491,7 +491,6 @@ asmlinkage __visible void do_softirq(void)
 
 #endif /* !CONFIG_PREEMPT_RT */
 
-#if 0
 /*
  * We restart softirq processing for at most MAX_SOFTIRQ_RESTART times,
  * but break the loop if need_resched() is set or after 2 ms.
@@ -572,6 +571,7 @@ restart:
 
 	h = softirq_vec;
 
+#if 0
 	while ((softirq_bit = ffs(pending))) {
 		unsigned int vec_nr;
 		int prev_count;
@@ -614,6 +614,8 @@ restart:
 	lockdep_softirq_end(in_hardirq);
 	softirq_handle_end();
 	current_restore_flags(old_flags, PF_MEMALLOC);
+#endif
+    PANIC("");
 }
 
 asmlinkage __visible void __softirq_entry __do_softirq(void)
@@ -635,6 +637,7 @@ void irq_enter_rcu(void)
 	account_hardirq_enter(current);
 }
 
+#if 0
 /**
  * irq_enter - Enter an interrupt context including RCU update
  */
@@ -643,6 +646,7 @@ void irq_enter(void)
 	ct_irq_enter();
 	irq_enter_rcu();
 }
+#endif /* CL */
 
 static inline void tick_irq_exit(void)
 {
@@ -684,6 +688,7 @@ void irq_exit_rcu(void)
 	lockdep_hardirq_exit();
 }
 
+#if 0
 /**
  * irq_exit - Exit an interrupt context, update RCU and lockdep
  *

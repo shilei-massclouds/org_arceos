@@ -7,6 +7,7 @@ obj-y += dma/
 obj-y += entry/
 obj-y += irq/
 obj-y += rcu/
+obj-y += time/
 
 obj-y += panic.o
 obj-y += cpu.o
@@ -24,5 +25,4 @@ obj-y += jump_label.o
 #obj-y += irq_work.o params.o reboot.o
 #obj-y += notifier.o smpboot.o async.o
 #
-#obj-y += time/
 #obj-y += trace/

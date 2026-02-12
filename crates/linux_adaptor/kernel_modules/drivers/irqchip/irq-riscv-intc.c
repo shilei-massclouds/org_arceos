@@ -32,8 +32,13 @@ static void riscv_intc_irq(struct pt_regs *regs)
 {
 	unsigned long cause = regs->cause & ~CAUSE_IRQ_FLAG;
 
+    /* FixMe: Now just invoke ArceOS irq-handlers. */
+    /*
 	if (generic_handle_domain_irq(intc_domain, cause))
 		pr_warn_ratelimited("Failed to handle interrupt (cause: %ld)\n", cause);
+    */
+    printk("cause: (%lx)\n", cause);
+    PANIC("");
 }
 
 static void riscv_intc_aia_irq(struct pt_regs *regs)

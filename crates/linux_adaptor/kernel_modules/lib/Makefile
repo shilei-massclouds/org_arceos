@@ -21,6 +21,7 @@ obj-y += seq_buf.o
 obj-y += string_helpers.o
 obj-y += radix-tree.o
 obj-y += maple_tree.o
+obj-y += irq_regs.o
 
 obj-y += math/
 
@@ -28,7 +29,7 @@ obj-y += math/
 #obj-y += devres.o errname.o idr.o xarray.o
 #obj-y += sbitmap.o lockref.o dec_and_lock.o
 #obj-y += sg_pool.o scatterlist.o errseq.o llist.o
-#obj-y += iov_iter.o irq_regs.o
+#obj-y += iov_iter.o
 #obj-y += percpu_counter.o strncpy_from_user.o
 #obj-y += cmdline.o logic_pio.o
 #obj-y += group_cpus.o

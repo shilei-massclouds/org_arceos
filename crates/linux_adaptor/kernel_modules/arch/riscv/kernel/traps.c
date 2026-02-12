@@ -397,7 +397,6 @@ asmlinkage __visible noinstr void do_page_fault(struct pt_regs *regs)
 
 static void noinstr handle_riscv_irq(struct pt_regs *regs)
 {
-#if 0
 	struct pt_regs *old_regs;
 
 	irq_enter_rcu();
@@ -405,8 +404,6 @@ static void noinstr handle_riscv_irq(struct pt_regs *regs)
 	handle_arch_irq(regs);
 	set_irq_regs(old_regs);
 	irq_exit_rcu();
-#endif /* CL */
-    PANIC("");
 }
 
 asmlinkage void noinstr do_irq(struct pt_regs *regs)

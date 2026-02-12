@@ -25,10 +25,10 @@
 #include "internals.h"
 #include "adaptor.h"
 
-#if 0
 #if defined(CONFIG_IRQ_FORCED_THREADING) && !defined(CONFIG_PREEMPT_RT)
 DEFINE_STATIC_KEY_FALSE(force_irqthreads_key);
 
+#if 0
 static int __init setup_forced_irqthreads(char *arg)
 {
 	static_branch_enable(&force_irqthreads_key);
@@ -2827,6 +2827,7 @@ void teardown_percpu_nmi(unsigned int irq)
 out:
 	irq_put_desc_unlock(desc, flags);
 }
+#endif
 
 int __irq_get_irqchip_state(struct irq_data *data, enum irqchip_irq_state which,
 			    bool *state)
@@ -2852,6 +2853,7 @@ int __irq_get_irqchip_state(struct irq_data *data, enum irqchip_irq_state which,
 	return err;
 }
 
+#if 0
 /**
  *	irq_get_irqchip_state - returns the irqchip state of a interrupt.
  *	@irq: Interrupt line that is forwarded to a VM
