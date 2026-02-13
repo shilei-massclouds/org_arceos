@@ -22,6 +22,7 @@ obj-y += string_helpers.o
 obj-y += radix-tree.o
 obj-y += maple_tree.o
 obj-y += irq_regs.o
+obj-y += bug.o
 
 obj-y += math/
 

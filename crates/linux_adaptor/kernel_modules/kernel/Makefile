@@ -17,6 +17,7 @@ obj-y += cred.o
 obj-y += extable.o
 obj-y += softirq.o
 obj-y += jump_label.o
+obj-y += context_tracking.o
 
 #obj-y += resource.o workqueue.o kthread.o
 #obj-y += nsproxy.o user_namespace.o

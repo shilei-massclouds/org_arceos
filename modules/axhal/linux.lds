@@ -130,6 +130,13 @@ SECTIONS
         *(.ref.data)
     }
 
+    . = ALIGN(8);
+    __bug_table : AT(ADDR(__bug_table) - LOAD_OFFSET) {
+        __start___bug_table = .;
+        KEEP(*(__bug_table))
+        __stop___bug_table = .;
+    }
+
     .sdata : {
         __global_pointer$ = . + 0x800;
         *(.sdata*)

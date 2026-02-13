@@ -307,7 +307,6 @@ noinstr irqentry_state_t irqentry_enter(struct pt_regs *regs)
 	return ret;
 }
 
-#if 0
 void raw_irqentry_exit_cond_resched(void)
 {
 	if (!preempt_count()) {
@@ -319,6 +318,7 @@ void raw_irqentry_exit_cond_resched(void)
 			preempt_schedule_irq();
 	}
 }
+#if 0
 #ifdef CONFIG_PREEMPT_DYNAMIC
 #if defined(CONFIG_HAVE_PREEMPT_DYNAMIC_CALL)
 DEFINE_STATIC_CALL(irqentry_exit_cond_resched, raw_irqentry_exit_cond_resched);
@@ -332,6 +332,8 @@ void dynamic_irqentry_exit_cond_resched(void)
 }
 #endif
 #endif
+
+#endif /* CL */
 
 noinstr void irqentry_exit(struct pt_regs *regs, irqentry_state_t state)
 {
@@ -410,4 +412,3 @@ void noinstr irqentry_nmi_exit(struct pt_regs *regs, irqentry_state_t irq_state)
 		lockdep_hardirqs_on(CALLER_ADDR0);
 	__nmi_exit();
 }
-#endif /* CL */

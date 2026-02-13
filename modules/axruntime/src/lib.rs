@@ -304,3 +304,11 @@ fn init_tls() {
     unsafe { axhal::asm::write_thread_pointer(main_tls.tls_ptr() as usize) };
     core::mem::forget(main_tls);
 }
+
+#[unsafe(no_mangle)]
+fn ax_handle_irq()
+{
+    let s = "hello";
+    axhal::console::write_bytes(s.as_bytes());
+    panic!("");
+}

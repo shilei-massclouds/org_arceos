@@ -74,9 +74,11 @@ static void dump_instr(const char *loglvl, struct pt_regs *regs)
 	}
 	printk("%sCode: %s\n", loglvl, str);
 }
+#endif /* CL */
 
 void die(struct pt_regs *regs, const char *str)
 {
+#if 0
 	static int die_counter;
 	int ret;
 	long cause;
@@ -112,8 +114,15 @@ void die(struct pt_regs *regs, const char *str)
 		panic("Fatal exception");
 	if (ret != NOTIFY_STOP)
 		make_task_dead(SIGSEGV);
+#endif
+
+    /* FixMe: */
+    /* Call handler of ebreak in ArceOS */
+    ax_handle_ebreak(regs);
+    //PANIC("Linux kernel die.");
 }
 
+#if 0
 void do_trap(struct pt_regs *regs, int signo, int code, unsigned long addr)
 {
 	struct task_struct *tsk = current;
@@ -130,6 +139,7 @@ void do_trap(struct pt_regs *regs, int signo, int code, unsigned long addr)
 
 	force_sig_fault(signo, code, (void __user *)addr);
 }
+#endif /* CL */
 
 static void do_trap_error(struct pt_regs *regs, int signo, int code,
 	unsigned long addr, const char *str)
@@ -143,7 +153,6 @@ static void do_trap_error(struct pt_regs *regs, int signo, int code,
 			die(regs, str);
 	}
 }
-#endif /* CL */
 
 #if defined(CONFIG_XIP_KERNEL) && defined(CONFIG_RISCV_ALTERNATIVE)
 #define __trap_section __noinstr_section(".xip.traps")
@@ -253,6 +262,7 @@ asmlinkage __visible __trap_section void do_trap_store_misaligned(struct pt_regs
 {
 	do_trap_misaligned(regs, MISALIGNED_STORE);
 }
+#endif /* CL */
 
 DO_ERROR_INFO(do_trap_store_fault,
 	SIGSEGV, SEGV_ACCERR, "store (or AMO) access fault");
@@ -308,12 +318,9 @@ void handle_break(struct pt_regs *regs)
 	else
 		die(regs, "Kernel BUG");
 }
-#endif /* CL */
 
 asmlinkage __visible __trap_section void do_trap_break(struct pt_regs *regs)
 {
-    // FixMe:
-#if 0
 	if (user_mode(regs)) {
 		irqentry_enter_from_user_mode(regs);
 
@@ -327,9 +334,6 @@ asmlinkage __visible __trap_section void do_trap_break(struct pt_regs *regs)
 
 		irqentry_nmi_exit(regs, state);
 	}
-#endif
-    /* Call handler of ebreak in ArceOS */
-    ax_handle_ebreak(regs);
 }
 
 #if 0
@@ -380,18 +384,17 @@ void do_trap_ecall_u(struct pt_regs *regs)
 #ifdef CONFIG_MMU
 asmlinkage __visible noinstr void do_page_fault(struct pt_regs *regs)
 {
-    // FixMe
-#if 0
 	irqentry_state_t state = irqentry_enter(regs);
 
-	handle_page_fault(regs);
+    // FixMe
+	//handle_page_fault(regs);
+
+    /* Call handler of page_fault in ArceOS */
+    ax_handle_page_fault(regs);
 
 	local_irq_disable();
 
 	irqentry_exit(regs, state);
-#endif
-    /* Call handler of page_fault in ArceOS */
-    ax_handle_page_fault(regs);
 }
 #endif
 
@@ -415,13 +418,9 @@ asmlinkage void noinstr do_irq(struct pt_regs *regs)
 	else
 		handle_riscv_irq(regs);
 
-#if 0
 	irqentry_exit(regs, state);
-#endif
-    PANIC("");
 }
 
-#if 0
 #ifdef CONFIG_GENERIC_BUG
 int is_valid_bugaddr(unsigned long pc)
 {
@@ -438,6 +437,7 @@ int is_valid_bugaddr(unsigned long pc)
 }
 #endif /* CONFIG_GENERIC_BUG */
 
+#if 0
 #ifdef CONFIG_VMAP_STACK
 DEFINE_PER_CPU(unsigned long [OVERFLOW_STACK_SIZE/sizeof(long)],
 		overflow_stack)__aligned(16);
