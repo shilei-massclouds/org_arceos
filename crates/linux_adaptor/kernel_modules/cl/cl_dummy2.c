@@ -58,3 +58,27 @@ bool static_key_initialized __read_mostly;
 int rcu_normal;
 int rcu_expedited;
 
+// kernel/trace/trace.c
+void disable_trace_on_warning(void)
+{
+}
+
+// kernel/panic.c
+void __warn(const char *file, int line, void *caller, unsigned taint,
+        struct pt_regs *regs, struct warn_args *args)
+{
+    if (file)
+        pr_warn("WARNING: CPU: %d PID: %d at %s:%d %pS\n",
+            raw_smp_processor_id(), current->pid, file, line,
+            caller);
+    else
+        pr_warn("WARNING: CPU: %d PID: %d at %pS\n",
+            raw_smp_processor_id(), current->pid, caller);
+}
+
+// kernel/kallsyms.c
+int sprint_symbol(char *buffer, unsigned long addr)
+{
+    *buffer = '\0';
+    return 0;
+}

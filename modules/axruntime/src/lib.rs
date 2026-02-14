@@ -18,6 +18,7 @@
 
 #![cfg_attr(not(test), no_std)]
 #![feature(doc_auto_cfg)]
+#![feature(trace_macros)]
 
 #[macro_use]
 extern crate axlog;
@@ -269,14 +270,16 @@ fn init_interrupt() {
     const PERIODIC_INTERVAL_NANOS: u64 =
         axhal::time::NANOS_PER_SEC / axconfig::TICKS_PER_SEC as u64;
 
+    trace_macros!(true);
     #[percpu::def_percpu]
     static NEXT_DEADLINE: u64 = 0;
+    trace_macros!(false);
 
     fn update_timer() {
-        unimplemented!("update_timer: Reach here!");
         let now_ns = axhal::time::monotonic_time_nanos();
         // Safety: we have disabled preemption in IRQ handler.
         let mut deadline = unsafe { NEXT_DEADLINE.read_current_raw() };
+        error!("deadline {:#x}", deadline);
         if now_ns >= deadline {
             deadline = now_ns + PERIODIC_INTERVAL_NANOS;
         }

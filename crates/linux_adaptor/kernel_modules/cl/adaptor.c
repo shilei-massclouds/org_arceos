@@ -33,3 +33,8 @@ struct task_struct *linux_current()
 {
     return current;
 }
+
+unsigned long linux_my_cpu_offset()
+{
+    return __my_cpu_offset;
+}

@@ -3,7 +3,6 @@
 
 CL_MINE(get_random_bytes)
 CL_MINE(__warn_printk)
-CL_MINE(sprint_symbol)
 CL_MINE(sprint_symbol_build_id)
 CL_MINE(sprint_backtrace)
 CL_MINE(sprint_symbol_no_offset)
@@ -266,8 +265,6 @@ CL_MINE(sched_setscheduler_nocheck)
 CL_MINE(smpboot_register_percpu_thread)
 CL_MINE(register_pm_notifier)
 
-CL_MINE(disable_trace_on_warning)
-CL_MINE(__warn)
 CL_MINE(uprobe_single_step_handler)
 CL_MINE(uprobe_breakpoint_handler)
 CL_MINE(do_trap)

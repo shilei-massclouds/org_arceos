@@ -128,7 +128,7 @@ pub fn init_scheduler_secondary() {
 #[cfg(feature = "irq")]
 #[doc(cfg(feature = "irq"))]
 pub fn on_timer_tick() {
-    unimplemented!("on_timer_tick ..");
+    error!("MAYBE we need to implement on_timer_tick.");
     /*
     use kernel_guard::NoOp;
     crate::timers::check_events();
