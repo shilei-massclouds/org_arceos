@@ -12,6 +12,8 @@
 #include <linux/jiffies.h>
 #include <linux/export.h>
 
+#include "adaptor.h"
+
 /*
  * __ratelimit - rate limiting
  * @rs: ratelimit_state data
@@ -26,6 +28,7 @@
  */
 int ___ratelimit(struct ratelimit_state *rs, const char *func)
 {
+    PANIC("");
     pr_notice("%s: No impl.", __func__);
     return 0;
 #if 0

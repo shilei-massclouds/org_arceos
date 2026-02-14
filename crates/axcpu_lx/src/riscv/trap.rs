@@ -191,6 +191,13 @@ fn handle_page_fault(tf: &PtRegs, mut access_flags: PageFaultFlags, is_user: boo
     }
 }
 
+#[unsafe(no_mangle)]
+fn ax_handle_irq(cause: usize) {
+    if !handle_trap!(IRQ, cause) {
+        panic!("Unhandled IRQ {}", cause);
+    }
+}
+
 /*
 #[unsafe(no_mangle)]
 fn riscv_trap_handler(tf: &mut TrapFrame, from_user: bool) {

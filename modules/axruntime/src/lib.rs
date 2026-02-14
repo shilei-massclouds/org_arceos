@@ -273,6 +273,7 @@ fn init_interrupt() {
     static NEXT_DEADLINE: u64 = 0;
 
     fn update_timer() {
+        unimplemented!("update_timer: Reach here!");
         let now_ns = axhal::time::monotonic_time_nanos();
         // Safety: we have disabled preemption in IRQ handler.
         let mut deadline = unsafe { NEXT_DEADLINE.read_current_raw() };
@@ -303,12 +304,4 @@ fn init_tls() {
     let main_tls = axhal::tls::TlsArea::alloc();
     unsafe { axhal::asm::write_thread_pointer(main_tls.tls_ptr() as usize) };
     core::mem::forget(main_tls);
-}
-
-#[unsafe(no_mangle)]
-fn ax_handle_irq()
-{
-    let s = "hello";
-    axhal::console::write_bytes(s.as_bytes());
-    panic!("");
 }

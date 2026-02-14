@@ -93,5 +93,6 @@ do {                        \
 
 void ax_handle_ebreak(void *regs);
 void ax_handle_page_fault(void *regs);
+void ax_handle_irq(unsigned long cause);
 
 #endif /* _ADAPTOR_H_ */

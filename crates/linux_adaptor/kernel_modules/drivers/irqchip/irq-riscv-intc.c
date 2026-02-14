@@ -37,11 +37,7 @@ static void riscv_intc_irq(struct pt_regs *regs)
 	if (generic_handle_domain_irq(intc_domain, cause))
 		pr_warn_ratelimited("Failed to handle interrupt (cause: %ld)\n", cause);
     */
-    printk("============ cause: (%lx)\n", cause);
-
-    extern ax_handle_irq();
-    ax_handle_irq();
-    //PANIC("");
+    ax_handle_irq(regs->cause);
 }
 
 static void riscv_intc_aia_irq(struct pt_regs *regs)

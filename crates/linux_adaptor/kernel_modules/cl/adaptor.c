@@ -5,6 +5,10 @@
 
 unsigned long linux_virt_to_phys(unsigned long va)
 {
+    if (is_vmalloc_addr((void *)va)) {
+        struct page *page = vmalloc_to_page(va);
+        return page_to_phys(page) + offset_in_page(va);
+    }
     return __pa(va);
 }
 
