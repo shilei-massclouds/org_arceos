@@ -3,8 +3,23 @@
  * <linux/swait.h> (simple wait queues ) implementation:
  */
 
+#include <linux/mmu_context.h>
 #include <linux/spinlock.h>
-#include <linux/swait.h>
+#include <linux/sched.h>
+
+#include "sched.h"
+#include "adaptor.h"
+
+/* It must called under lock. */
+void check_or_init_list(struct list_head *head)
+{
+    if (head == NULL) {
+        PANIC("list head itself is NULL.");
+    }
+    if (head->next == NULL && head->prev == NULL) {
+	    INIT_LIST_HEAD(head);
+    }
+}
 
 void __init_swait_queue_head(struct swait_queue_head *q, const char *name,
 			     struct lock_class_key *key)
@@ -15,7 +30,6 @@ void __init_swait_queue_head(struct swait_queue_head *q, const char *name,
 }
 EXPORT_SYMBOL(__init_swait_queue_head);
 
-#if 0
 /*
  * The thing about the wake_up_state() return value; I think we can ignore it.
  *
@@ -26,6 +40,9 @@ void swake_up_locked(struct swait_queue_head *q, int wake_flags)
 {
 	struct swait_queue *curr;
 
+    /* FixMe: make sure list has been initialized. For ArceOS. */
+    check_or_init_list(&q->task_list);
+
 	if (list_empty(&q->task_list))
 		return;
 
@@ -35,6 +52,7 @@ void swake_up_locked(struct swait_queue_head *q, int wake_flags)
 }
 EXPORT_SYMBOL(swake_up_locked);
 
+#if 0
 /*
  * Wake up all waiters. This is an interface which is solely exposed for
  * completions and not for general usage.
@@ -47,6 +65,7 @@ void swake_up_all_locked(struct swait_queue_head *q)
 	while (!list_empty(&q->task_list))
 		swake_up_locked(q, 0);
 }
+#endif /* CL */
 
 void swake_up_one(struct swait_queue_head *q)
 {
@@ -58,6 +77,7 @@ void swake_up_one(struct swait_queue_head *q)
 }
 EXPORT_SYMBOL(swake_up_one);
 
+#if 0
 /*
  * Does not allow usage from IRQ disabled, since we must be able to
  * release IRQs to guarantee bounded hold time.

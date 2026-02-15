@@ -1,3 +1,55 @@
+//! An Alternative WaitQueue
+//! It's based on Linux Kernel `swait`.
+
+use core::sync::atomic::AtomicI32;
+
+/// An equivalence of list_head in Linux Kernel.
+/// FixMe: wrap it as a standalone crate.
+#[repr(C)]
+pub struct LinuxList {
+    _next: *const LinuxList,
+    _prev: *const LinuxList,
+}
+
+impl LinuxList {
+    const fn new() -> Self {
+        Self {
+            _next: core::ptr::null(),
+            _prev: core::ptr::null(),
+        }
+    }
+}
+
+unsafe impl Sync for LinuxList {}
+
+const ARCH_SPIN_LOCK_UNLOCKED: i32 = 0;
+const SPINLOCK_MAGIC: u32 = 0xdead4ead;
+const SPINLOCK_OWNER_INIT: usize = usize::MAX;
+
+type ArchSpinLock = AtomicI32;
+
+/// An equivalence of spinlock in Linux Kernel.
+/// FixMe: it will be an alternative impl for spinlock.
+/// Wrap it as a standalone crate.
+#[repr(C)]
+pub struct RawSpinLock {
+    _raw_lock: ArchSpinLock,
+    _magic: u32,
+    _owner_cpu: u32,
+    _owner: usize,  // opaque pointer
+}
+
+impl RawSpinLock {
+    const fn new() -> Self {
+        Self {
+            _raw_lock: ArchSpinLock::new(ARCH_SPIN_LOCK_UNLOCKED),
+            _magic: SPINLOCK_MAGIC,
+            _owner_cpu: u32::MAX,
+            _owner: SPINLOCK_OWNER_INIT,
+        }
+    }
+}
+
 /// A queue to store sleeping tasks.
 ///
 /// # Examples
@@ -20,12 +72,22 @@
 /// WQ.wait(); // block until `notify()` is called
 /// assert_eq!(VALUE.load(Ordering::Acquire), 1);
 /// ```
-pub struct WaitQueue;
+///
+/// FixMe: In fact, it should be named with `SWaitQueue`,
+/// because it's based on `swait_queue_head` in Linux kernel.
+///
+#[repr(C)]
+pub struct WaitQueue {
+    _lock:       RawSpinLock,
+    _task_list:  LinuxList,
+}
 
 impl WaitQueue {
     /// Creates an empty wait queue.
     pub const fn new() -> Self {
         Self {
+            _lock: RawSpinLock::new(),
+            _task_list: LinuxList::new(),
         }
     }
 
@@ -143,8 +205,19 @@ impl WaitQueue {
     /// If `resched` is true, the current task will be preempted when the
     /// preemption is enabled.
     pub fn notify_one(&self, resched: bool) -> bool {
-        unimplemented!("notify_one: {resched}");
+        unsafe {
+            swake_up_one(self);
+            if resched {
+                set_current_need_resched();
+            }
+        }
+        true
     }
+}
+
+unsafe extern "C" {
+    fn swake_up_one(wq: *const WaitQueue);
+    fn set_current_need_resched();
 }
 
 /*

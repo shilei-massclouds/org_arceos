@@ -22,6 +22,7 @@ void *linux_kmalloc_kernel(size_t size, unsigned int align)
     void *ret = kmalloc(size, GFP_KERNEL);
     if (ret == NULL) {
         /* size is too large, try to use vmalloc */
+        printk("kmalloc.size: 0x%lx, it's too large, use vmalloc instead.\n", size);
         ret = vmalloc(size);
     }
     CL_ASSERT(IS_ALIGNED((unsigned long)ret, align),
@@ -37,4 +38,9 @@ struct task_struct *linux_current()
 unsigned long linux_my_cpu_offset()
 {
     return __my_cpu_offset;
+}
+
+void set_current_need_resched()
+{
+    set_tsk_need_resched(current);
 }
