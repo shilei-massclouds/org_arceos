@@ -213,18 +213,27 @@ pub fn sleep(dur: core::time::Duration) {
 ///
 /// If the feature `irq` is not enabled, it uses busy-wait instead.
 pub fn sleep_until(deadline: axhal::time::TimeValue) {
-    unimplemented!("sleep_until: {:?}", deadline);
-    /*
+    let now = axhal::time::wall_time();
+    if deadline <= now {
+        return;
+    }
+    let timeout = deadline - now;
+
     #[cfg(feature = "irq")]
-    current_run_queue::<NoPreemptIrqSave>().sleep_until(deadline);
+    unsafe {
+        msleep(timeout.as_millis().try_into().unwrap());
+    }
     #[cfg(not(feature = "irq"))]
-    axhal::time::busy_wait_until(deadline);
-    */
+    unimplemented!("mdelay");
 }
 
 /// Exits the current task.
 pub fn exit(exit_code: i32) -> ! {
     unimplemented!("axtask_lx::exit({}) ..", exit_code);
+}
+
+unsafe extern "C" {
+    fn msleep(msecs: usize);
 }
 
 /*

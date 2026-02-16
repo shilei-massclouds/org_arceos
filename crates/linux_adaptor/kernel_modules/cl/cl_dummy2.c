@@ -25,9 +25,6 @@ EXPORT_SYMBOL_GPL(elfcorehdr_addr);
  */
 unsigned long long elfcorehdr_size;
 
-// kernel/time/timer.c
-__visible u64 jiffies_64 __cacheline_aligned_in_smp = INITIAL_JIFFIES;
-
 // init/main.c:
 enum system_states system_state __read_mostly;
 
