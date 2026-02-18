@@ -97,6 +97,8 @@
 #include "../../io_uring/io-wq.h"
 #include "../smpboot.h"
 
+#include "adaptor.h"
+
 EXPORT_TRACEPOINT_SYMBOL_GPL(ipi_send_cpu);
 EXPORT_TRACEPOINT_SYMBOL_GPL(ipi_send_cpumask);
 
@@ -5853,7 +5855,7 @@ static inline void preempt_latency_start(int val) { }
 static inline void preempt_latency_stop(int val) { }
 #endif
 
-#endif
+#endif /* CL */
 
 static inline unsigned long get_preempt_disable_ip(struct task_struct *p)
 {
@@ -6744,12 +6746,14 @@ void __noreturn do_task_dead(void)
 	for (;;)
 		cpu_relax();
 }
+#endif /* CL */
 
 static inline void sched_submit_work(struct task_struct *tsk)
 {
 	static DEFINE_WAIT_OVERRIDE_MAP(sched_map, LD_WAIT_CONFIG);
 	unsigned int task_flags;
 
+#if 0
 	/*
 	 * Establish LD_WAIT_CONFIG context to ensure none of the code called
 	 * will use a blocking primitive -- which would lead to recursion.
@@ -6780,8 +6784,11 @@ static inline void sched_submit_work(struct task_struct *tsk)
 	blk_flush_plug(tsk->plug, true);
 
 	lock_map_release(&sched_map);
+#endif
+    PANIC("");
 }
 
+#if 0
 static void sched_update_worker(struct task_struct *tsk)
 {
 	if (tsk->flags & (PF_WQ_WORKER | PF_IO_WORKER | PF_BLOCK_TS)) {
@@ -6803,6 +6810,8 @@ static __always_inline void __schedule_loop(int sched_mode)
 	} while (need_resched());
 }
 
+#endif /* CL */
+
 asmlinkage __visible void __sched schedule(void)
 {
 	struct task_struct *tsk = current;
@@ -6813,11 +6822,15 @@ asmlinkage __visible void __sched schedule(void)
 
 	if (!task_is_running(tsk))
 		sched_submit_work(tsk);
+#if 0
 	__schedule_loop(SM_NONE);
 	sched_update_worker(tsk);
+#endif
+    PANIC("");
 }
 EXPORT_SYMBOL(schedule);
 
+#if 0
 /*
  * synchronize_rcu_tasks() makes sure that no task is stuck in preempted
  * state (have scheduled out non-voluntarily) by making sure that all
@@ -8390,6 +8403,8 @@ LIST_HEAD(task_groups);
 static struct kmem_cache *task_group_cache __ro_after_init;
 #endif
 
+#endif /* CL */
+
 void __init sched_init(void)
 {
 	unsigned long ptr = 0;
@@ -8407,6 +8422,7 @@ void __init sched_init(void)
 	BUG_ON(!sched_class_above(&ext_sched_class, &idle_sched_class));
 #endif
 
+#if 0
 	wait_bit_init();
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
@@ -8592,9 +8608,9 @@ void __init sched_init(void)
 	preempt_dynamic_init();
 
 	scheduler_running = 1;
-}
-
 #endif
+    PANIC("");
+}
 
 #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
 
@@ -10615,4 +10631,4 @@ void sched_enq_and_set_task(struct sched_enq_and_set_ctx *ctx)
 }
 #endif	/* CONFIG_SCHED_CLASS_EXT */
 
-#endif
+#endif /* CL */

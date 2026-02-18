@@ -187,7 +187,6 @@ CL_MINE(dump_cpu_task)
 CL_MINE(init_wait_entry)
 CL_MINE(prepare_to_wait_event)
 
-CL_MINE(schedule)
 CL_MINE(finish_wait)
 CL_MINE(llist_del_first)
 CL_MINE(hrtimer_init)

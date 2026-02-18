@@ -89,7 +89,13 @@ pub fn init_scheduler() {
     //crate::timers::init();
 
     info!("  use linux scheduler.");
-    error!("############# impl init_scheduler #############");
+    unsafe {
+        sched_init();
+    }
+}
+
+unsafe extern "C" {
+    fn sched_init();
 }
 
 /*

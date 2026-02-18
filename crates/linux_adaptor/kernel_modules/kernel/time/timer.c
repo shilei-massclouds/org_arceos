@@ -267,7 +267,6 @@ struct timer_base {
 	struct hlist_head	vectors[WHEEL_SIZE];
 } ____cacheline_aligned;
 
-#if 0
 static DEFINE_PER_CPU(struct timer_base, timer_bases[NR_BASES]);
 
 #ifdef CONFIG_NO_HZ_COMMON
@@ -275,6 +274,7 @@ static DEFINE_PER_CPU(struct timer_base, timer_bases[NR_BASES]);
 static DEFINE_STATIC_KEY_FALSE(timers_nohz_active);
 static DEFINE_MUTEX(timer_keys_mutex);
 
+#if 0
 static void timer_update_keys(struct work_struct *work);
 static DECLARE_WORK(timer_update_work, timer_update_keys);
 
@@ -340,6 +340,7 @@ void timers_update_nohz(void)
 {
 	schedule_work(&timer_update_work);
 }
+#endif /* CL */
 
 static inline bool is_timers_nohz_active(void)
 {
@@ -349,6 +350,7 @@ static inline bool is_timers_nohz_active(void)
 static inline bool is_timers_nohz_active(void) { return false; }
 #endif /* NO_HZ_COMMON */
 
+#if 0
 static unsigned long round_jiffies_common(unsigned long j, int cpu,
 		bool force_up)
 {
@@ -551,6 +553,7 @@ unsigned long round_jiffies_up_relative(unsigned long j)
 }
 EXPORT_SYMBOL_GPL(round_jiffies_up_relative);
 
+#endif /* CL */
 
 static inline unsigned int timer_get_idx(struct timer_list *timer)
 {
@@ -635,6 +638,7 @@ trigger_dyntick_cpu(struct timer_base *base, struct timer_list *timer)
 	if (!is_timers_nohz_active() || timer->flags & TIMER_DEFERRABLE)
 		return;
 
+#if 0
 	/*
 	 * We might have to IPI the remote CPU if the base is idle and the
 	 * timer is pinned. If it is a non pinned timer, it is only queued
@@ -648,6 +652,8 @@ trigger_dyntick_cpu(struct timer_base *base, struct timer_list *timer)
 			       tick_nohz_full_cpu(base->cpu)));
 		wake_up_nohz_cpu(base->cpu);
 	}
+#endif /* CL */
+    PANIC("");
 }
 
 /*
@@ -658,7 +664,6 @@ trigger_dyntick_cpu(struct timer_base *base, struct timer_list *timer)
 static void enqueue_timer(struct timer_base *base, struct timer_list *timer,
 			  unsigned int idx, unsigned long bucket_expiry)
 {
-
 	hlist_add_head(&timer->entry, base->vectors + idx);
 	__set_bit(idx, base->pending_map);
 	timer_set_idx(timer, idx);
@@ -690,8 +695,6 @@ static void internal_add_timer(struct timer_base *base, struct timer_list *timer
 	idx = calc_wheel_index(timer->expires, base->clk, &bucket_expiry);
 	enqueue_timer(base, timer, idx, bucket_expiry);
 }
-
-#endif /* CL */
 
 #ifdef CONFIG_DEBUG_OBJECTS_TIMERS
 
@@ -885,7 +888,6 @@ static inline void debug_init(struct timer_list *timer)
 	trace_timer_init(timer);
 }
 
-#if 0
 static inline void debug_deactivate(struct timer_list *timer)
 {
 	debug_timer_deactivate(timer);
@@ -896,7 +898,6 @@ static inline void debug_assert_init(struct timer_list *timer)
 {
 	debug_timer_assert_init(timer);
 }
-#endif /* CL */
 
 static void do_init_timer(struct timer_list *timer,
 			  void (*func)(struct timer_list *),
@@ -932,7 +933,6 @@ void init_timer_key(struct timer_list *timer,
 }
 EXPORT_SYMBOL(init_timer_key);
 
-#if 0
 static inline void detach_timer(struct timer_list *timer, bool clear_pending)
 {
 	struct hlist_node *entry = &timer->entry;
@@ -1065,8 +1065,6 @@ static struct timer_base *lock_timer_base(struct timer_list *timer,
 	}
 }
 
-#endif /* CL */
-
 #define MOD_TIMER_PENDING_ONLY		0x01
 #define MOD_TIMER_REDUCE		0x02
 #define MOD_TIMER_NOTPENDING		0x04
@@ -1079,7 +1077,6 @@ __mod_timer(struct timer_list *timer, unsigned long expires, unsigned int option
 	unsigned int idx = UINT_MAX;
 	int ret = 0;
 
-#if 0
 	debug_assert_init(timer);
 
 	/*
@@ -1088,6 +1085,7 @@ __mod_timer(struct timer_list *timer, unsigned long expires, unsigned int option
 	 * same array bucket then just return:
 	 */
 	if (!(options & MOD_TIMER_NOTPENDING) && timer_pending(timer)) {
+#if 0
 		/*
 		 * The downside of this optimization is that it can result in
 		 * larger granularity than you would get from adding a new
@@ -1139,6 +1137,8 @@ __mod_timer(struct timer_list *timer, unsigned long expires, unsigned int option
 			ret = 1;
 			goto out_unlock;
 		}
+#endif
+        PANIC("");
 	} else {
 		base = lock_timer_base(timer, &flags);
 		/*
@@ -1192,8 +1192,6 @@ __mod_timer(struct timer_list *timer, unsigned long expires, unsigned int option
 		enqueue_timer(base, timer, idx, bucket_expiry);
 	else
 		internal_add_timer(base, timer);
-#endif
-    PANIC("");
 
 out_unlock:
 	raw_spin_unlock_irqrestore(&base->lock, flags);
@@ -1551,6 +1549,8 @@ int try_to_del_timer_sync(struct timer_list *timer)
 }
 EXPORT_SYMBOL(try_to_del_timer_sync);
 
+#endif /* CL */
+
 #ifdef CONFIG_PREEMPT_RT
 static __init void timer_base_init_expiry_lock(struct timer_base *base)
 {
@@ -1625,6 +1625,8 @@ static inline void timer_base_unlock_expiry(struct timer_base *base) { }
 static inline void timer_sync_wait_running(struct timer_base *base) { }
 static inline void del_timer_wait_running(struct timer_list *timer) { }
 #endif
+
+#if 0
 
 /**
  * __timer_delete_sync - Internal function: Deactivate a timer and wait
@@ -2453,12 +2455,14 @@ static void run_timer_base(int index)
 
 	__run_timer_base(base);
 }
+#endif /* CL */
 
 /*
  * This function runs timers and the timer-tq in bottom half context.
  */
 static __latent_entropy void run_timer_softirq(void)
 {
+#if 0
 	run_timer_base(BASE_LOCAL);
 	if (IS_ENABLED(CONFIG_NO_HZ_COMMON)) {
 		run_timer_base(BASE_GLOBAL);
@@ -2467,8 +2471,11 @@ static __latent_entropy void run_timer_softirq(void)
 		if (is_timers_nohz_active())
 			tmigr_handle_remote();
 	}
+#endif
+    PANIC("");
 }
 
+#if 0
 /*
  * Called by the local, per-CPU timer interrupt on SMP.
  */
@@ -2624,14 +2631,13 @@ signed long __sched schedule_timeout(signed long timeout)
 		}
 	}
 
-    printk("%s: timeout(%lu)\n", __func__, timeout);
 	expire = timeout + jiffies;
 
 	timer.task = current;
 	timer_setup_on_stack(&timer.timer, process_timeout, 0);
 	__mod_timer(&timer.timer, expire, MOD_TIMER_NOTPENDING);
-#if 0
 	schedule();
+#if 0
 	del_timer_sync(&timer.timer);
 
 	/* Remove the timer from the object tracker */
@@ -2753,6 +2759,8 @@ int timers_dead_cpu(unsigned int cpu)
 
 #endif /* CONFIG_HOTPLUG_CPU */
 
+#endif /* CL */
+
 static void __init init_timer_cpu(int cpu)
 {
 	struct timer_base *base;
@@ -2782,7 +2790,6 @@ void __init init_timers(void)
 	posix_cputimers_init_work();
 	open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
 }
-#endif /* CL */
 
 /**
  * msleep - sleep safely even with waitqueue interruptions
