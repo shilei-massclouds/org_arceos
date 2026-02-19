@@ -21,12 +21,38 @@ SECTIONS
     . = ALIGN(4K);
 
     .text : ALIGN(4K) {
+        _text = .;
         _stext = .;
-        *(.text.boot)
-        *(.text .text.*)
+        *(.text.hot .text.hot.*)
+        *(.text .text.fixup)
+        *(.text.unlikely .text.unlikely.*)
+        *(.text.unknown .text.unknown.*)
+        __noinstr_text_start = .;
         *(.noinstr.text)
+        __cpuidle_text_start = .;
+        *(.cpuidle.text)
+        __cpuidle_text_end = .;
+        __noinstr_text_end = .;
+        *(.ref.text)
+        *(.text.asan.* .text.tsan.*)
+        __sched_text_start = .;
+        *(.sched.text)
+        __sched_text_end = .;
+        __lock_text_start = .;
+        *(.spinlock.text)
+        __lock_text_end = .;
+        __kprobes_text_start = .;
+        *(.kprobes.text)
+        __kprobes_text_end = .;
+        __entry_text_start = .;
+        *(.entry.text)
+        __entry_text_end = .;
+        __irqentry_text_start = .;
         *(.irqentry.text)
-        . = ALIGN(4K);
+        __irqentry_text_end = .;
+        __softirqentry_text_start = .;
+        *(.softirqentry.text)
+        __softirqentry_text_end = .;
         _etext = .;
     }
 
@@ -94,8 +120,20 @@ SECTIONS
     . = ALIGN((1 << 21));
     .rodata : AT(ADDR(.rodata) - LOAD_OFFSET) {
         __start_rodata = .;
-        *(.rodata .rodata.*)
+        *(.rodata)
+        *(.rodata.*)
         *(.data.rel.ro*)
+        . = ALIGN(32);
+
+        __sched_class_highest = .;
+        *(__stop_sched_class)
+        *(__dl_sched_class)
+        *(__rt_sched_class)
+        *(__fair_sched_class)
+        *(__ext_sched_class)
+        *(__idle_sched_class)
+        __sched_class_lowest = .;
+
         __end_rodata = .;
     }
     .srodata : {

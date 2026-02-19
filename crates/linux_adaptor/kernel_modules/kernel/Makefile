@@ -25,5 +25,5 @@ obj-y += context_tracking.o
 #obj-y += tracepoint.o
 #obj-y += irq_work.o params.o reboot.o
 #obj-y += notifier.o smpboot.o async.o
-#
-#obj-y += trace/
+
+obj-y += trace/

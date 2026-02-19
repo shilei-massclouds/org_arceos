@@ -461,11 +461,14 @@ static inline int cpuhp_bp_sync_alive(unsigned int cpu) { return 0; }
 static inline bool cpuhp_can_boot_ap(unsigned int cpu) { return true; }
 #endif /* !CONFIG_HOTPLUG_CORE_SYNC_FULL */
 
+#endif /* CL */
+
 /* Serializes the updates to cpu_online_mask, cpu_present_mask */
 static DEFINE_MUTEX(cpu_add_remove_lock);
 bool cpuhp_tasks_frozen;
 EXPORT_SYMBOL_GPL(cpuhp_tasks_frozen);
 
+#if 0
 /*
  * The following two APIs (cpu_maps_update_begin/done) must be used when
  * attempting to serialize the updates to cpu_online_mask & cpu_present_mask.

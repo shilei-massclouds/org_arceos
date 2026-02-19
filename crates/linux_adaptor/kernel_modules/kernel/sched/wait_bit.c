@@ -4,12 +4,14 @@
  * The implementation of the wait_bit*() and related waiting APIs:
  */
 
+#include <linux/wait.h>
+
 #define WAIT_TABLE_BITS 8
 #define WAIT_TABLE_SIZE (1 << WAIT_TABLE_BITS)
 
-#if 0
 static wait_queue_head_t bit_wait_table[WAIT_TABLE_SIZE] __cacheline_aligned;
 
+#if 0
 wait_queue_head_t *bit_waitqueue(void *word, int bit)
 {
 	const int shift = BITS_PER_LONG == 32 ? 5 : 6;
@@ -242,6 +244,7 @@ __sched int bit_wait_io_timeout(struct wait_bit_key *word, int mode)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(bit_wait_io_timeout);
+#endif /* CL */
 
 void __init wait_bit_init(void)
 {
@@ -250,4 +253,3 @@ void __init wait_bit_init(void)
 	for (i = 0; i < WAIT_TABLE_SIZE; i++)
 		init_waitqueue_head(bit_wait_table + i);
 }
-#endif /* CL */

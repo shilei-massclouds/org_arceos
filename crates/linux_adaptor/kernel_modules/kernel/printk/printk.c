@@ -4539,6 +4539,7 @@ int vprintk_deferred(const char *fmt, va_list args)
 {
 	return vprintk_emit(0, LOGLEVEL_SCHED, NULL, fmt, args);
 }
+#endif /* CL */
 
 int _printk_deferred(const char *fmt, ...)
 {
@@ -4546,12 +4547,16 @@ int _printk_deferred(const char *fmt, ...)
 	int r;
 
 	va_start(args, fmt);
+    /* Fixme: */
+#if 0
 	r = vprintk_deferred(fmt, args);
+#else
+    r = cl_vprintk(fmt, args);
+#endif
 	va_end(args);
 
 	return r;
 }
-#endif /* CL */
 
 /*
  * printk rate limiting, lifted from the networking subsystem.

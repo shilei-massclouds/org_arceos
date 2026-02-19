@@ -3,6 +3,8 @@
 #include <linux/crash_dump.h>
 #include <linux/user_namespace.h>
 #include <linux/proc_ns.h>
+#include <linux/suspend.h>
+#include <uapi/linux/perf_event.h>
 
 // lib/uuid.c
 const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
@@ -79,3 +81,22 @@ int sprint_symbol(char *buffer, unsigned long addr)
     *buffer = '\0';
     return 0;
 }
+
+// kernel/sched/isolation.c
+DEFINE_STATIC_KEY_FALSE(housekeeping_overridden);
+
+// drivers/base/arch_topology.c
+DEFINE_PER_CPU(unsigned long, cpu_scale) = SCHED_CAPACITY_SCALE;
+
+// kernel/power/suspend.c
+enum s2idle_states __read_mostly s2idle_state;
+static DEFINE_RAW_SPINLOCK(s2idle_lock);
+
+// drivers/cpuidle/cpuidle.c
+DEFINE_PER_CPU(struct cpuidle_device *, cpuidle_devices);
+
+// drivers/cpufreq/cpufreq.c
+DEFINE_PER_CPU(unsigned long, cpufreq_pressure);
+
+// kernel/events/core.c
+struct static_key perf_swevent_enabled[PERF_COUNT_SW_MAX];

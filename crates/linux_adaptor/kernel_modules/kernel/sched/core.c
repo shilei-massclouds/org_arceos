@@ -495,6 +495,8 @@ sched_core_dequeue(struct rq *rq, struct task_struct *p, int flags) { }
 
 #endif /* CONFIG_SCHED_CORE */
 
+#endif /* CL */
+
 /*
  * Serialization rules:
  *
@@ -617,6 +619,7 @@ void raw_spin_rq_lock_nested(struct rq *rq, int subclass)
 	}
 }
 
+#if 0
 bool raw_spin_rq_trylock(struct rq *rq)
 {
 	raw_spinlock_t *lock;
@@ -640,12 +643,14 @@ bool raw_spin_rq_trylock(struct rq *rq)
 		raw_spin_unlock(lock);
 	}
 }
+#endif /* CL */
 
 void raw_spin_rq_unlock(struct rq *rq)
 {
 	raw_spin_unlock(rq_lockp(rq));
 }
 
+#if 0
 #ifdef CONFIG_SMP
 /*
  * double_rq_lock - safely lock two runqueues
@@ -689,6 +694,8 @@ struct rq *__task_rq_lock(struct task_struct *p, struct rq_flags *rf)
 	}
 }
 
+#endif /* CL */
+
 /*
  * task_rq_lock - lock p->pi_lock and lock the rq @p resides on.
  */
@@ -698,6 +705,7 @@ struct rq *task_rq_lock(struct task_struct *p, struct rq_flags *rf)
 {
 	struct rq *rq;
 
+#if 0
 	for (;;) {
 		raw_spin_lock_irqsave(&p->pi_lock, rf->flags);
 		rq = task_rq(p);
@@ -729,7 +737,11 @@ struct rq *task_rq_lock(struct task_struct *p, struct rq_flags *rf)
 		while (unlikely(task_on_rq_migrating(p)))
 			cpu_relax();
 	}
+#endif
+    PANIC("");
 }
+
+#if 0
 
 /*
  * RQ-clock updating methods:
@@ -791,11 +803,13 @@ static void update_rq_clock_task(struct rq *rq, s64 delta)
 #endif
 	update_rq_clock_pelt(rq, delta);
 }
+#endif /* CL */
 
 void update_rq_clock(struct rq *rq)
 {
 	s64 delta;
 
+#if 0
 	lockdep_assert_rq_held(rq);
 
 	if (rq->clock_update_flags & RQCF_ACT_SKIP)
@@ -812,8 +826,11 @@ void update_rq_clock(struct rq *rq)
 		return;
 	rq->clock += delta;
 	update_rq_clock_task(rq, delta);
+#endif
+    PANIC("");
 }
 
+#if 0
 #ifdef CONFIG_SCHED_HRTICK
 /*
  * Use HR-timers to deliver accurate preemption points.
@@ -941,6 +958,8 @@ static inline void hrtick_rq_init(struct rq *rq)
 	_val;								\
 })
 
+#endif /* CL */
+
 #if defined(CONFIG_SMP) && defined(TIF_POLLING_NRFLAG)
 /*
  * Atomically set TIF_NEED_RESCHED and test for TIF_POLLING_NRFLAG,
@@ -988,6 +1007,8 @@ static inline bool set_nr_if_polling(struct task_struct *p)
 }
 #endif
 #endif
+
+#if 0
 
 static bool __wake_q_add(struct wake_q_head *head, struct task_struct *task)
 {
@@ -1117,6 +1138,7 @@ void resched_cpu(int cpu)
 		resched_curr(rq);
 	raw_spin_rq_unlock_irqrestore(rq, flags);
 }
+#endif /* CL */
 
 #ifdef CONFIG_SMP
 #ifdef CONFIG_NO_HZ_COMMON
@@ -1327,6 +1349,7 @@ bool sched_can_stop_tick(struct rq *rq)
 #endif /* CONFIG_NO_HZ_FULL */
 #endif /* CONFIG_SMP */
 
+#if 0
 #if defined(CONFIG_RT_GROUP_SCHED) || (defined(CONFIG_FAIR_GROUP_SCHED) && \
 			(defined(CONFIG_SMP) || defined(CONFIG_CFS_BANDWIDTH)))
 /*
@@ -2019,8 +2042,11 @@ unsigned long get_wchan(struct task_struct *p)
 	return ip;
 }
 
+#endif /* CL */
+
 void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 {
+#if 0
 	if (!(flags & ENQUEUE_NOCLOCK))
 		update_rq_clock(rq);
 
@@ -2038,6 +2064,8 @@ void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 
 	if (sched_core_enabled(rq))
 		sched_core_enqueue(rq, p);
+#endif
+    PANIC("");
 }
 
 /*
@@ -2045,6 +2073,7 @@ void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
  */
 inline bool dequeue_task(struct rq *rq, struct task_struct *p, int flags)
 {
+#if 0
 	if (sched_core_enabled(rq))
 		sched_core_dequeue(rq, p, flags);
 
@@ -2062,8 +2091,11 @@ inline bool dequeue_task(struct rq *rq, struct task_struct *p, int flags)
 	 */
 	uclamp_rq_dec(rq, p);
 	return p->sched_class->dequeue_task(rq, p, flags);
+#endif
+    PANIC("");
 }
 
+#if 0
 void activate_task(struct rq *rq, struct task_struct *p, int flags)
 {
 	if (task_on_rq_migrating(p))
@@ -2298,6 +2330,8 @@ unsigned long wait_task_inactive(struct task_struct *p, unsigned int match_state
 
 	return ncsw;
 }
+
+#endif /* CL */
 
 #ifdef CONFIG_SMP
 
@@ -3619,6 +3653,8 @@ static inline bool rq_has_pinned_tasks(struct rq *rq)
 
 #endif /* !CONFIG_SMP */
 
+#if 0
+
 static void
 ttwu_stat(struct task_struct *p, int cpu, int wake_flags)
 {
@@ -4791,6 +4827,7 @@ void sched_post_fork(struct task_struct *p)
 	uclamp_post_fork(p);
 	scx_post_fork(p);
 }
+#endif /* CL */
 
 unsigned long to_ratio(u64 period, u64 runtime)
 {
@@ -4808,6 +4845,7 @@ unsigned long to_ratio(u64 period, u64 runtime)
 	return div64_u64(runtime << BW_SHIFT, period);
 }
 
+#if 0
 /*
  * wake_up_new_task - wake up a newly created task for the first time.
  *
@@ -4975,6 +5013,7 @@ static inline void finish_task(struct task_struct *prev)
 	smp_store_release(&prev->on_cpu, 0);
 #endif
 }
+#endif /* CL */
 
 #ifdef CONFIG_SMP
 
@@ -5067,6 +5106,7 @@ static inline void __balance_callbacks(struct rq *rq)
 
 #endif
 
+#if 0
 static inline void
 prepare_lock_switch(struct rq *rq, struct task_struct *next, struct rq_flags *rf)
 {
@@ -5095,6 +5135,7 @@ static inline void finish_lock_switch(struct rq *rq)
 	__balance_callbacks(rq);
 	raw_spin_rq_unlock_irq(rq);
 }
+#endif /* CL */
 
 /*
  * NOP if the arch has not defined these:
@@ -5107,6 +5148,8 @@ static inline void finish_lock_switch(struct rq *rq)
 #ifndef finish_arch_post_lock_switch
 # define finish_arch_post_lock_switch()	do { } while (0)
 #endif
+
+#if 0
 
 static inline void kmap_local_sched_out(void)
 {
@@ -5867,7 +5910,6 @@ static inline unsigned long get_preempt_disable_ip(struct task_struct *p)
 }
 
 #if 0
-
 /*
  * Print scheduling while atomic bug:
  */
@@ -6746,14 +6788,12 @@ void __noreturn do_task_dead(void)
 	for (;;)
 		cpu_relax();
 }
-#endif /* CL */
 
 static inline void sched_submit_work(struct task_struct *tsk)
 {
 	static DEFINE_WAIT_OVERRIDE_MAP(sched_map, LD_WAIT_CONFIG);
 	unsigned int task_flags;
 
-#if 0
 	/*
 	 * Establish LD_WAIT_CONFIG context to ensure none of the code called
 	 * will use a blocking primitive -- which would lead to recursion.
@@ -6784,11 +6824,8 @@ static inline void sched_submit_work(struct task_struct *tsk)
 	blk_flush_plug(tsk->plug, true);
 
 	lock_map_release(&sched_map);
-#endif
-    PANIC("");
 }
 
-#if 0
 static void sched_update_worker(struct task_struct *tsk)
 {
 	if (tsk->flags & (PF_WQ_WORKER | PF_IO_WORKER | PF_BLOCK_TS)) {
@@ -6809,11 +6846,11 @@ static __always_inline void __schedule_loop(int sched_mode)
 		sched_preempt_enable_no_resched();
 	} while (need_resched());
 }
-
 #endif /* CL */
 
 asmlinkage __visible void __sched schedule(void)
 {
+#if 0
 	struct task_struct *tsk = current;
 
 #ifdef CONFIG_RT_MUTEXES
@@ -6822,7 +6859,6 @@ asmlinkage __visible void __sched schedule(void)
 
 	if (!task_is_running(tsk))
 		sched_submit_work(tsk);
-#if 0
 	__schedule_loop(SM_NONE);
 	sched_update_worker(tsk);
 #endif
@@ -7783,6 +7819,8 @@ void __init init_idle(struct task_struct *idle, int cpu)
 #endif
 }
 
+#endif /* CL */
+
 #ifdef CONFIG_SMP
 
 int cpuset_cpumask_can_shrink(const struct cpumask *cur,
@@ -7894,6 +7932,7 @@ static int __balance_push_cpu_stop(void *arg)
 	struct rq_flags rf;
 	int cpu;
 
+#if 0
 	raw_spin_lock_irq(&p->pi_lock);
 	rq_lock(rq, &rf);
 
@@ -7908,6 +7947,8 @@ static int __balance_push_cpu_stop(void *arg)
 	raw_spin_unlock_irq(&p->pi_lock);
 
 	put_task_struct(p);
+#endif
+    PANIC("");
 
 	return 0;
 }
@@ -7924,6 +7965,7 @@ static void balance_push(struct rq *rq)
 {
 	struct task_struct *push_task = rq->curr;
 
+#if 0
 	lockdep_assert_rq_held(rq);
 
 	/*
@@ -7981,6 +8023,8 @@ static void balance_push(struct rq *rq)
 	 * which kthread_is_per_cpu() and will push this task away.
 	 */
 	raw_spin_rq_lock(rq);
+#endif
+    PANIC("");
 }
 
 static void balance_push_set(int cpu, bool on)
@@ -8261,9 +8305,12 @@ static void sched_rq_cpu_starting(unsigned int cpu)
 
 int sched_cpu_starting(unsigned int cpu)
 {
+#if 0
 	sched_core_cpu_starting(cpu);
 	sched_rq_cpu_starting(cpu);
 	sched_tick_start(cpu);
+#endif
+    PANIC("");
 	return 0;
 }
 
@@ -8327,6 +8374,7 @@ int sched_cpu_dying(unsigned int cpu)
 	struct rq *rq = cpu_rq(cpu);
 	struct rq_flags rf;
 
+#if 0
 	/* Handle pending wakeups and then migrate everything off */
 	sched_tick_stop(cpu);
 
@@ -8341,6 +8389,8 @@ int sched_cpu_dying(unsigned int cpu)
 	update_max_interval();
 	hrtick_clear(rq);
 	sched_core_cpu_dying(cpu);
+#endif
+    PANIC("");
 	return 0;
 }
 #endif
@@ -8384,6 +8434,8 @@ void __init sched_init_smp(void)
 }
 #endif /* CONFIG_SMP */
 
+#if 0
+
 int in_sched_functions(unsigned long addr)
 {
 	return in_lock_functions(addr) ||
@@ -8422,7 +8474,6 @@ void __init sched_init(void)
 	BUG_ON(!sched_class_above(&ext_sched_class, &idle_sched_class));
 #endif
 
-#if 0
 	wait_bit_init();
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
@@ -8547,6 +8598,7 @@ void __init sched_init(void)
 		rcuwait_init(&rq->hotplug_wait);
 #endif
 #endif /* CONFIG_SMP */
+#if 0
 		hrtick_rq_init(rq);
 		atomic_set(&rq->nr_iowait, 0);
 		fair_server_init(rq);
@@ -8564,8 +8616,11 @@ void __init sched_init(void)
 		rq->core_cookie = 0UL;
 #endif
 		zalloc_cpumask_var_node(&rq->scratch_mask, GFP_KERNEL, cpu_to_node(i));
+#endif
+        PANIC("");
 	}
 
+#if 0
 	set_load_weight(&init_task, false);
 	init_task.se.slice = sysctl_sched_base_slice,
 
