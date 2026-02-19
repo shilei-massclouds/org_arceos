@@ -18,12 +18,14 @@ obj-y += extable.o
 obj-y += softirq.o
 obj-y += jump_label.o
 obj-y += context_tracking.o
+obj-y += kthread.o
+obj-y += smpboot.o
 
-#obj-y += resource.o workqueue.o kthread.o
+#obj-y += resource.o workqueue.o
 #obj-y += nsproxy.o user_namespace.o
 #obj-y += exit.o
 #obj-y += tracepoint.o
 #obj-y += irq_work.o params.o reboot.o
-#obj-y += notifier.o smpboot.o async.o
+#obj-y += notifier.o async.o
 
 obj-y += trace/

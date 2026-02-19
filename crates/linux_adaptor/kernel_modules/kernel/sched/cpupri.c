@@ -28,7 +28,6 @@
 
 #include "cpupri.h"
 
-#if 0
 /*
  * p->rt_priority   p->prio   newpri   cpupri
  *
@@ -70,6 +69,7 @@ static int convert_prio(int prio)
 	return cpupri;
 }
 
+#if 0
 static inline int __cpupri_find(struct cpupri *cp, struct task_struct *p,
 				struct cpumask *lowest_mask, int idx)
 {
@@ -202,6 +202,7 @@ int cpupri_find_fitness(struct cpupri *cp, struct task_struct *p,
 
 	return 0;
 }
+#endif /* CL */
 
 /**
  * cpupri_set - update the CPU priority setting
@@ -274,8 +275,6 @@ void cpupri_set(struct cpupri *cp, int cpu, int newpri)
 
 	*currpri = newpri;
 }
-
-#endif /* CL */
 
 /**
  * cpupri_init - initialize the cpupri structure

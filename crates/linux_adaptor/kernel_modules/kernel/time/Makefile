@@ -2,7 +2,9 @@
 
 obj-y += time.o
 obj-y += timer.o
+obj-y += hrtimer.o
 obj-y += tick-sched.o
+obj-y += sched_clock.o
 obj-y += posix-cpu-timers.o
 
-#obj-y += timekeeping.o hrtimer.o
+#obj-y += timekeeping.o

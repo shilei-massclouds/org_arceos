@@ -17,3 +17,4 @@ obj-y += deadline.o
 
 obj-y += cpudeadline.o
 obj-y += cpupri.o
+obj-y += loadavg.o

@@ -926,6 +926,8 @@ void hrtick_start(struct rq *rq, u64 delay)
 
 #endif /* CONFIG_SMP */
 
+#endif /* CL */
+
 static void hrtick_rq_init(struct rq *rq)
 {
 #ifdef CONFIG_SMP
@@ -944,6 +946,7 @@ static inline void hrtick_rq_init(struct rq *rq)
 }
 #endif	/* CONFIG_SCHED_HRTICK */
 
+#if 0
 /*
  * try_cmpxchg based fetch_or() macro so it works for different integer types:
  */
@@ -1394,6 +1397,8 @@ int tg_nop(struct task_group *tg, void *data)
 	return 0;
 }
 #endif
+
+#endif /* CL */
 
 void set_load_weight(struct task_struct *p, bool update_load)
 {
@@ -2018,6 +2023,7 @@ static inline void uclamp_post_fork(struct task_struct *p) { }
 static inline void init_uclamp(void) { }
 #endif /* CONFIG_UCLAMP_TASK */
 
+#if 0
 bool sched_task_on_rq(struct task_struct *p)
 {
 	return task_on_rq_queued(p);
@@ -4469,6 +4475,8 @@ int wake_up_state(struct task_struct *p, unsigned int state)
 	return try_to_wake_up(p, state, 0);
 }
 
+#endif /* CL */
+
 /*
  * Perform scheduler related setup for a newly forked process p.
  * p is forked by current.
@@ -4530,6 +4538,7 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 
 DEFINE_STATIC_KEY_FALSE(sched_numa_balancing);
 
+#if 0
 #ifdef CONFIG_NUMA_BALANCING
 
 int sysctl_numa_balancing_mode;
@@ -7411,6 +7420,8 @@ int __cond_resched_rwlock_write(rwlock_t *lock)
 }
 EXPORT_SYMBOL(__cond_resched_rwlock_write);
 
+#endif /* CL */
+
 #ifdef CONFIG_PREEMPT_DYNAMIC
 
 #ifdef CONFIG_GENERIC_ENTRY
@@ -7618,6 +7629,7 @@ static inline void preempt_dynamic_init(void) { }
 
 #endif /* CONFIG_PREEMPT_DYNAMIC */
 
+#if 0
 int io_schedule_prepare(void)
 {
 	int old_iowait = current->in_iowait;
@@ -7743,6 +7755,7 @@ void show_state_filter(unsigned int state_filter)
 	if (!state_filter)
 		debug_show_all_locks();
 }
+#endif /* CL */
 
 /**
  * init_idle - set up an idle thread for a given CPU
@@ -7818,8 +7831,6 @@ void __init init_idle(struct task_struct *idle, int cpu)
 	sprintf(idle->comm, "%s/%d", INIT_TASK_COMM, cpu);
 #endif
 }
-
-#endif /* CL */
 
 #ifdef CONFIG_SMP
 
@@ -8598,7 +8609,6 @@ void __init sched_init(void)
 		rcuwait_init(&rq->hotplug_wait);
 #endif
 #endif /* CONFIG_SMP */
-#if 0
 		hrtick_rq_init(rq);
 		atomic_set(&rq->nr_iowait, 0);
 		fair_server_init(rq);
@@ -8616,11 +8626,8 @@ void __init sched_init(void)
 		rq->core_cookie = 0UL;
 #endif
 		zalloc_cpumask_var_node(&rq->scratch_mask, GFP_KERNEL, cpu_to_node(i));
-#endif
-        PANIC("");
 	}
 
-#if 0
 	set_load_weight(&init_task, false);
 	init_task.se.slice = sysctl_sched_base_slice,
 
@@ -8663,8 +8670,6 @@ void __init sched_init(void)
 	preempt_dynamic_init();
 
 	scheduler_running = 1;
-#endif
-    PANIC("");
 }
 
 #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
@@ -10086,6 +10091,8 @@ void dump_cpu_task(int cpu)
 	sched_show_task(cpu_curr(cpu));
 }
 
+#endif /* CL */
+
 /*
  * Nice levels are multiplicative, with a gentle 10% change for every
  * nice level changed. I.e. when a CPU-bound task goes from nice 0 to
@@ -10127,6 +10134,7 @@ const u32 sched_prio_to_wmult[40] = {
  /*  15 */ 119304647, 148102320, 186737708, 238609294, 286331153,
 };
 
+#if 0
 void call_trace_sched_update_nr_running(struct rq *rq, int count)
 {
         trace_sched_update_nr_running_tp(rq, count);

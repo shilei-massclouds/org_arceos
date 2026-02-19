@@ -211,6 +211,8 @@ sd_parent_degenerate(struct sched_domain *sd, struct sched_domain *parent)
 	return 1;
 }
 
+#endif /* CL */
+
 #if defined(CONFIG_ENERGY_MODEL) && defined(CONFIG_CPU_FREQ_GOV_SCHEDUTIL)
 DEFINE_STATIC_KEY_FALSE(sched_energy_present);
 static unsigned int sysctl_sched_energy_aware = 1;
@@ -535,6 +537,7 @@ void rq_attach_root(struct rq *rq, struct root_domain *rd)
 		call_rcu(&old_rd->rcu, free_rootdomain);
 }
 
+#if 0
 void sched_get_rd(struct root_domain *rd)
 {
 	atomic_inc(&rd->refcount);

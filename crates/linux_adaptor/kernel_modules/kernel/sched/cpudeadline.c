@@ -241,6 +241,7 @@ void cpudl_set(struct cpudl *cp, int cpu, u64 dl)
 
 	raw_spin_unlock_irqrestore(&cp->lock, flags);
 }
+#endif /* CL */
 
 /*
  * cpudl_set_freecpu - Set the cpudl.free_cpus
@@ -252,6 +253,7 @@ void cpudl_set_freecpu(struct cpudl *cp, int cpu)
 	cpumask_set_cpu(cpu, cp->free_cpus);
 }
 
+#if 0
 /*
  * cpudl_clear_freecpu - Clear the cpudl.free_cpus
  * @cp: the cpudl max-heap context
