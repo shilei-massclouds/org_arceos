@@ -103,3 +103,6 @@ struct static_key perf_swevent_enabled[PERF_COUNT_SW_MAX];
 
 // drivers/base/arch_topology.c
 DEFINE_PER_CPU(unsigned long, arch_freq_scale) = SCHED_CAPACITY_SCALE;
+
+// kernel/profile.c
+int prof_on __read_mostly;

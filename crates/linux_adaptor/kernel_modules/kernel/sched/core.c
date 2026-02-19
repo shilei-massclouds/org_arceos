@@ -5918,7 +5918,6 @@ static inline unsigned long get_preempt_disable_ip(struct task_struct *p)
 #endif
 }
 
-#if 0
 /*
  * Print scheduling while atomic bug:
  */
@@ -5933,6 +5932,7 @@ static noinline void __schedule_bug(struct task_struct *prev)
 	printk(KERN_ERR "BUG: scheduling while atomic: %s/%d/0x%08x\n",
 		prev->comm, prev->pid, preempt_count());
 
+#if 0
 	debug_show_held_locks(prev);
 	print_modules();
 	if (irqs_disabled())
@@ -5945,6 +5945,8 @@ static noinline void __schedule_bug(struct task_struct *prev)
 
 	dump_stack();
 	add_taint(TAINT_WARN, LOCKDEP_STILL_OK);
+#endif
+    PANIC("");
 }
 
 /*
@@ -5981,6 +5983,7 @@ static inline void schedule_debug(struct task_struct *prev, bool preempt)
 	schedstat_inc(this_rq()->sched_count);
 }
 
+#if 0
 static void prev_balance(struct rq *rq, struct task_struct *prev,
 			 struct rq_flags *rf)
 {
@@ -6564,6 +6567,8 @@ pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
 
 #endif /* CONFIG_SCHED_CORE */
 
+#endif /* CL */
+
 /*
  * Constants for the sched_mode argument of __schedule().
  *
@@ -6575,6 +6580,7 @@ pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
 #define SM_PREEMPT		1
 #define SM_RTLOCK_WAIT		2
 
+#if 0
 /*
  * Helper function for __schedule()
  *
@@ -6615,6 +6621,8 @@ static bool try_to_block_task(struct rq *rq, struct task_struct *p,
 	block_task(rq, p, flags);
 	return true;
 }
+
+#endif /* CL */
 
 /*
  * __schedule() is the main scheduler function.
@@ -6674,6 +6682,7 @@ static void __sched notrace __schedule(int sched_mode)
 	prev = rq->curr;
 
 	schedule_debug(prev, preempt);
+#if 0
 
 	if (sched_feat(HRTICK) || sched_feat(HRTICK_DL))
 		hrtick_clear(rq);
@@ -6780,7 +6789,11 @@ picked:
 		__balance_callbacks(rq);
 		raw_spin_rq_unlock_irq(rq);
 	}
+#endif
+    PANIC("");
 }
+
+#if 0
 
 void __noreturn do_task_dead(void)
 {
@@ -6797,6 +6810,8 @@ void __noreturn do_task_dead(void)
 	for (;;)
 		cpu_relax();
 }
+
+#endif /* CL */
 
 static inline void sched_submit_work(struct task_struct *tsk)
 {
@@ -6835,6 +6850,7 @@ static inline void sched_submit_work(struct task_struct *tsk)
 	lock_map_release(&sched_map);
 }
 
+#if 0
 static void sched_update_worker(struct task_struct *tsk)
 {
 	if (tsk->flags & (PF_WQ_WORKER | PF_IO_WORKER | PF_BLOCK_TS)) {
@@ -6846,6 +6862,7 @@ static void sched_update_worker(struct task_struct *tsk)
 			io_wq_worker_running(tsk);
 	}
 }
+#endif /* CL */
 
 static __always_inline void __schedule_loop(int sched_mode)
 {
@@ -6855,11 +6872,9 @@ static __always_inline void __schedule_loop(int sched_mode)
 		sched_preempt_enable_no_resched();
 	} while (need_resched());
 }
-#endif /* CL */
 
 asmlinkage __visible void __sched schedule(void)
 {
-#if 0
 	struct task_struct *tsk = current;
 
 #ifdef CONFIG_RT_MUTEXES
@@ -6869,6 +6884,7 @@ asmlinkage __visible void __sched schedule(void)
 	if (!task_is_running(tsk))
 		sched_submit_work(tsk);
 	__schedule_loop(SM_NONE);
+#if 0
 	sched_update_worker(tsk);
 #endif
     PANIC("");
