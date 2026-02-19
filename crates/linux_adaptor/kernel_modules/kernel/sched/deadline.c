@@ -60,7 +60,6 @@ static int __init sched_dl_sysctl_init(void)
 late_initcall(sched_dl_sysctl_init);
 #endif
 
-#if 0
 static bool dl_server(struct sched_dl_entity *dl_se)
 {
 	return dl_se->dl_server;
@@ -523,7 +522,6 @@ static inline int is_leftmost(struct sched_dl_entity *dl_se, struct dl_rq *dl_rq
 {
 	return rb_first_cached(&dl_rq->root) == &dl_se->rb_node;
 }
-#endif /* CL */
 
 static void init_dl_rq_bw_ratio(struct dl_rq *dl_rq);
 
@@ -556,7 +554,6 @@ void init_dl_rq(struct dl_rq *dl_rq)
 	init_dl_rq_bw_ratio(dl_rq);
 }
 
-#if 0
 #ifdef CONFIG_SMP
 
 static inline int dl_overloaded(struct rq *rq)
@@ -3212,7 +3209,6 @@ next:
 
 	return ret;
 }
-#endif /* CL */
 
 static void init_dl_rq_bw_ratio(struct dl_rq *dl_rq)
 {
@@ -3227,7 +3223,6 @@ static void init_dl_rq_bw_ratio(struct dl_rq *dl_rq)
 	}
 }
 
-#if 0
 void sched_dl_do_global(void)
 {
 	u64 new_bw = -1;
@@ -3537,5 +3532,3 @@ void print_dl_stats(struct seq_file *m, int cpu)
 	print_dl_rq(m, cpu, &cpu_rq(cpu)->dl);
 }
 #endif /* CONFIG_SCHED_DEBUG */
-
-#endif /* CL */

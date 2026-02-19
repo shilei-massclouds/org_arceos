@@ -9,11 +9,11 @@ obj-y += topology.o
 obj-y += debug.o
 obj-y += syscalls.o
 
-obj-y += rt.o
 obj-y += stop_task.o
-obj-y += deadline.o
 obj-y += fair.o
 obj-y += idle.o
+obj-y += rt.o
+obj-y += deadline.o
 
 obj-y += cpudeadline.o
 obj-y += cpupri.o
