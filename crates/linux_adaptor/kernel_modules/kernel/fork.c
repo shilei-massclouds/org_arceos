@@ -120,6 +120,8 @@
 
 #include <kunit/visibility.h>
 
+#include "adaptor.h"
+
 /*
  * Minimum number of threads to boot the kernel
  */
@@ -1096,7 +1098,7 @@ int __weak arch_dup_task_struct(struct task_struct *dst,
 	*dst = *src;
 	return 0;
 }
-#endif
+#endif /* CL */
 
 void set_task_stack_end_magic(struct task_struct *tsk)
 {
@@ -2856,12 +2858,15 @@ pid_t kernel_clone(struct kernel_clone_args *args)
 	return nr;
 }
 
+#endif /* CL */
+
 /*
  * Create a kernel thread.
  */
 pid_t kernel_thread(int (*fn)(void *), void *arg, const char *name,
 		    unsigned long flags)
 {
+#if 0
 	struct kernel_clone_args args = {
 		.flags		= ((lower_32_bits(flags) | CLONE_VM |
 				    CLONE_UNTRACED) & ~CSIGNAL),
@@ -2873,8 +2878,13 @@ pid_t kernel_thread(int (*fn)(void *), void *arg, const char *name,
 	};
 
 	return kernel_clone(&args);
+#endif
+    printk("%s: fn(%lx)(%lx)\n", __func__, fn, arg);
+    fn(arg);
+    PANIC("");
 }
 
+#if 0
 /*
  * Create a user mode thread.
  */
@@ -3457,4 +3467,4 @@ int sysctl_max_threads(const struct ctl_table *table, int write,
 
 	return 0;
 }
-#endif
+#endif /* CL */

@@ -44,3 +44,8 @@ void set_current_need_resched()
 {
     set_tsk_need_resched(current);
 }
+
+pid_t linux_kernel_thread(int (*fn)(void *), void *opaque)
+{
+    return kernel_thread(fn, opaque, NULL, CLONE_FS | CLONE_FILES);
+}

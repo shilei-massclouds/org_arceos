@@ -1,6 +1,7 @@
 //! Task APIs for multi-task configuration.
 
-use alloc::{string::String, sync::Arc};
+use alloc::{string::String, sync::Arc, boxed::Box};
+use core::ffi::c_void;
 
 pub struct AxCpuMask;
 
@@ -21,6 +22,23 @@ pub use crate::wait_queue::WaitQueue;
 
 /// The reference type of a task.
 pub type AxTaskRef = Arc<crate::task::AxTask>;
+
+type LinuxThreadFn = unsafe extern "C" fn(opaque: *mut c_void);
+
+unsafe extern "C" fn thread_fn_hook<F>(opaque: *mut c_void)
+where
+    F: FnOnce(),
+{
+    let boxed_closure = Box::from_raw(opaque as *mut F);
+    (*boxed_closure)();
+}
+
+fn get_thread_fn<F>() -> LinuxThreadFn
+where
+    F: FnOnce(),
+{
+    thread_fn_hook::<F>
+}
 
 /*
 /// The wrapper type for [`cpumask::CpuMask`] with SMP configuration.
@@ -94,10 +112,6 @@ pub fn init_scheduler() {
     }
 }
 
-unsafe extern "C" {
-    fn sched_init();
-}
-
 /*
 /// The full CPU mask of the system.
 static CPU_MASK_FULL: lazyinit::LazyInit<AxCpuMask> = lazyinit::LazyInit::new();
@@ -164,6 +178,7 @@ where
     //spawn_task(TaskInner::new(f, name, stack_size))
 }
 
+
 /// Spawns a new task with the default parameters.
 ///
 /// The default task name is an empty string. The default task stack size is
@@ -174,8 +189,12 @@ pub fn spawn<F>(f: F) -> AxTaskRef
 where
     F: FnOnce() + Send + 'static,
 {
-    unimplemented!("spawn: ..");
-    //spawn_raw(f, "".into(), axconfig::TASK_STACK_SIZE)
+    let opaque = Box::into_raw(Box::new(f)) as *mut c_void;
+    let thread_fn = get_thread_fn::<F>();
+    let pid = unsafe {
+        linux_kernel_thread(thread_fn, opaque)
+    };
+    unimplemented!("spawn: .. pid{}", pid);
 }
 
 /// Set the priority for current task.
@@ -238,7 +257,9 @@ pub fn exit(exit_code: i32) -> ! {
 }
 
 unsafe extern "C" {
+    fn sched_init();
     fn msleep(msecs: usize);
+    fn linux_kernel_thread(f: LinuxThreadFn, opaque: *mut c_void) -> usize;
 }
 
 /*
