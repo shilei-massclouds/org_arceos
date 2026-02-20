@@ -214,15 +214,32 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
         core::hint::spin_loop();
     }
 
-    unsafe { main() };
+    call_main();
 
-    #[cfg(feature = "multitask")]
+    system_exit();
+}
+
+#[cfg(feature = "multitask")]
+fn call_main() {
+    axtask::spawn(|| {
+        unsafe { main(); }
+    }).join();
+}
+
+#[cfg(not(feature = "multitask"))]
+fn call_main() {
+    unsafe { main() };
+}
+
+#[cfg(feature = "multitask")]
+fn system_exit() -> ! {
     axtask::exit(0);
-    #[cfg(not(feature = "multitask"))]
-    {
-        debug!("main task exited: exit_code={}", 0);
-        axhal::power::system_off();
-    }
+}
+
+#[cfg(not(feature = "multitask"))]
+fn system_exit() -> ! {
+    debug!("main task exited: exit_code={}", 0);
+    axhal::power::system_off();
 }
 
 #[cfg(feature = "alloc")]
