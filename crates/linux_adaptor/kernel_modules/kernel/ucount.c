@@ -344,6 +344,7 @@ dec_unwind:
 	do_dec_rlimit_put_ucounts(ucounts, iter, type);
 	return 0;
 }
+#endif /* CL */
 
 bool is_rlimit_overlimit(struct ucounts *ucounts, enum rlimit_type type, unsigned long rlimit)
 {
@@ -360,6 +361,7 @@ bool is_rlimit_overlimit(struct ucounts *ucounts, enum rlimit_type type, unsigne
 	return false;
 }
 
+#if 0
 static __init int user_namespace_sysctl_init(void)
 {
 #ifdef CONFIG_SYSCTL

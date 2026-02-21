@@ -4719,6 +4719,8 @@ static int __init sched_core_sysctl_init(void)
 late_initcall(sched_core_sysctl_init);
 #endif /* CONFIG_SYSCTL */
 
+#endif /* CL */
+
 /*
  * fork()/clone()-time setup:
  */
@@ -4795,6 +4797,7 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
 	return 0;
 }
 
+#if 0
 int sched_cgroup_fork(struct task_struct *p, struct kernel_clone_args *kargs)
 {
 	unsigned long flags;

@@ -2004,6 +2004,7 @@ init_task_pid(struct task_struct *task, enum pid_type type, struct pid *pid)
 	else
 		task->signal->pids[type] = pid;
 }
+#endif /* CL */
 
 static inline void rcu_copy_process(struct task_struct *p)
 {
@@ -2027,6 +2028,7 @@ static inline void rcu_copy_process(struct task_struct *p)
 #endif /* #ifdef CONFIG_TASKS_TRACE_RCU */
 }
 
+#if 0
 /**
  * __pidfd_prepare - allocate a new pidfd_file and reserve a pidfd
  * @pid:   the struct pid for which to create a pidfd
@@ -2297,7 +2299,6 @@ __latent_entropy struct task_struct *copy_process(
 	if (retval < 0)
 		goto bad_fork_free;
 
-#if 0
 	retval = -EAGAIN;
 	if (is_rlimit_overlimit(task_ucounts(p), UCOUNT_RLIMIT_NPROC, rlimit(RLIMIT_NPROC))) {
 		if (p->real_cred->user != INIT_USER &&
@@ -2404,6 +2405,7 @@ __latent_entropy struct task_struct *copy_process(
 	if (retval)
 		goto bad_fork_cleanup_policy;
 
+#if 0
 	retval = perf_event_init_task(p, clone_flags);
 	if (retval)
 		goto bad_fork_sched_cancel_fork;
