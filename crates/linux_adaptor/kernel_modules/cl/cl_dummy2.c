@@ -33,10 +33,6 @@ enum system_states system_state __read_mostly;
 // mm/show_mem.c
 atomic_long_t _totalram_pages __read_mostly;
 
-// kernel/user.c
-struct user_namespace init_user_ns = {
-};
-
 // kernel/utsname.c
 const struct proc_ns_operations utsns_operations;
 
@@ -115,3 +111,24 @@ void update_vsyscall(struct timekeeper *tk)
 {
     pr_err("--> NOTE: %s: No impl.\n", __func__);
 }
+
+// kernel/power/main.c
+int register_pm_notifier(struct notifier_block *nb)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// security/security.c
+int security_prepare_creds(struct cred *new, const struct cred *old, gfp_t gfp)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// security/keys/key.c
+void key_put(struct key *key)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}
+

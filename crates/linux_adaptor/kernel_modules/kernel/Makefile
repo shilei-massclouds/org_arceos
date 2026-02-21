@@ -24,9 +24,12 @@ obj-y += signal.o
 obj-y += workqueue.o
 obj-y += freezer.o
 obj-y += notifier.o
+obj-y += ucount.o
+obj-y += user.o
+obj-y += user_namespace.o
 
 #obj-y += resource.o
-#obj-y += nsproxy.o user_namespace.o
+#obj-y += nsproxy.o
 #obj-y += exit.o
 #obj-y += tracepoint.o
 #obj-y += irq_work.o params.o reboot.o

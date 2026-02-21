@@ -55,6 +55,7 @@ void cl_early_init(unsigned long hartid, unsigned long dtb_pa)
  */
 void cl_late_init()
 {
+    cred_init();
     fork_init();
 #if 0
     proc_caches_init();

@@ -2,3 +2,4 @@
 
 obj-y += blake2s.o
 obj-y += blake2s-generic.o
+obj-y += chacha.o

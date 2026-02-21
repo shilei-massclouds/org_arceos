@@ -1173,7 +1173,6 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
 		tsk->cpus_ptr = &tsk->cpus_mask;
 	dup_user_cpus_ptr(tsk, orig, node);
 
-#if 0
 	/*
 	 * One for the user space visible state that goes away when reaped.
 	 * One for the scheduler.
@@ -1220,8 +1219,6 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
 	tsk->mm_cid_active = 0;
 	tsk->migrate_from_cpu = -1;
 #endif
-#endif
-    PANIC("");
 	return tsk;
 
 free_stack:
@@ -1978,6 +1975,7 @@ SYSCALL_DEFINE1(set_tid_address, int __user *, tidptr)
 
 	return task_pid_vnr(current);
 }
+#endif /* CL */
 
 static void rt_mutex_init_task(struct task_struct *p)
 {
@@ -1989,6 +1987,7 @@ static void rt_mutex_init_task(struct task_struct *p)
 #endif
 }
 
+#if 0
 static inline void init_task_pid_links(struct task_struct *task)
 {
 	enum pid_type type;
@@ -2263,7 +2262,6 @@ __latent_entropy struct task_struct *copy_process(
 	p = dup_task_struct(current, node);
 	if (!p)
 		goto fork_out;
-#if 0
 	p->flags &= ~PF_KTHREAD;
 	if (args->kthread)
 		p->flags |= PF_KTHREAD;
@@ -2299,6 +2297,7 @@ __latent_entropy struct task_struct *copy_process(
 	if (retval < 0)
 		goto bad_fork_free;
 
+#if 0
 	retval = -EAGAIN;
 	if (is_rlimit_overlimit(task_ucounts(p), UCOUNT_RLIMIT_NPROC, rlimit(RLIMIT_NPROC))) {
 		if (p->real_cred->user != INIT_USER &&
