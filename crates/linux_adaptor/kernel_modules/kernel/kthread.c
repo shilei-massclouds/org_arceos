@@ -396,6 +396,8 @@ static int kthread(void *_create)
 	kthread_exit(ret);
 }
 
+#endif /* CL */
+
 /* called from kernel_clone() to get node information for about to be created task */
 int tsk_fork_get_node(struct task_struct *tsk)
 {
@@ -406,6 +408,7 @@ int tsk_fork_get_node(struct task_struct *tsk)
 	return NUMA_NO_NODE;
 }
 
+#if 0
 static void create_kthread(struct kthread_create_info *create)
 {
 	int pid;

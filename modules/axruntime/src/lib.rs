@@ -51,6 +51,7 @@ d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
 unsafe extern "C" {
     /// Application's entry point.
     fn main();
+    fn cl_late_init();
 }
 
 struct LogIfImpl;
@@ -205,6 +206,8 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
         init_tls();
     }
 
+    prepare_for_uapp();
+
     ctor_bare::call_ctors();
 
     info!("Primary CPU {} init OK.", cpu_id);
@@ -217,6 +220,13 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     call_main();
 
     system_exit();
+}
+
+fn prepare_for_uapp() {
+    #[cfg(feature = "linux-adaptor")]
+    unsafe {
+        cl_late_init();
+    }
 }
 
 #[cfg(feature = "multitask")]

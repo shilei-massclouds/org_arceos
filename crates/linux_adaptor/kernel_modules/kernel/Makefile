@@ -20,12 +20,16 @@ obj-y += jump_label.o
 obj-y += context_tracking.o
 obj-y += kthread.o
 obj-y += smpboot.o
+obj-y += signal.o
+obj-y += workqueue.o
+obj-y += freezer.o
+obj-y += notifier.o
 
-#obj-y += resource.o workqueue.o
+#obj-y += resource.o
 #obj-y += nsproxy.o user_namespace.o
 #obj-y += exit.o
 #obj-y += tracepoint.o
 #obj-y += irq_work.o params.o reboot.o
-#obj-y += notifier.o async.o
+#obj-y += async.o
 
 obj-y += trace/

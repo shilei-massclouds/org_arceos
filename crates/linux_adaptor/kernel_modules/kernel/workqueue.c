@@ -697,6 +697,7 @@ static inline void debug_work_activate(struct work_struct *work) { }
 static inline void debug_work_deactivate(struct work_struct *work) { }
 #endif
 
+#if 0
 /**
  * worker_pool_assign_id - allocate ID and assign it to @pool
  * @pool: the pool pointer of interest
@@ -888,7 +889,6 @@ static struct worker_pool *get_work_pool(struct work_struct *work)
 		return work_struct_pwq(data)->pool;
 
 	pool_id = data >> WORK_OFFQ_POOL_SHIFT;
-    pr_debug("%s: pool_id(%u)\n", __func__, pool_id);
 	if (pool_id == WORK_OFFQ_POOL_NONE)
 		return NULL;
 
@@ -2076,9 +2076,7 @@ static int try_to_grab_pending(struct work_struct *work, u32 cflags,
 	 * The queueing is in progress, or it is already queued. Try to
 	 * steal it from ->worklist without clearing WORK_STRUCT_PENDING.
 	 */
-    printk("%s: 1\n", __func__);
 	pool = get_work_pool(work);
-    printk("%s: 2 pool(%lx)\n", __func__, (unsigned long)pool);
 	if (!pool)
 		goto fail;
 
@@ -2787,7 +2785,6 @@ static struct worker *create_worker(struct worker_pool *pool)
 		pr_err_once("workqueue: Failed to allocate a worker\n");
 		goto fail;
 	}
-    //printk("%s: worker(%lx)\n", __func__, (unsigned long)worker);
 
 	worker->id = id;
 
@@ -3151,17 +3148,9 @@ __acquires(&pool->lock)
 
 	lockdep_copy_map(&lockdep_map, &work->lockdep_map);
 #endif
-
 	/* ensure we're on the correct CPU */
-#if 0
 	WARN_ON_ONCE(!(pool->flags & POOL_DISASSOCIATED) &&
 		     raw_smp_processor_id() != pool->cpu);
-#else
-	if (!(pool->flags & POOL_DISASSOCIATED)
-        && raw_smp_processor_id() != pool->cpu) {
-        pr_err("%s: Note: Fix it about 'POOL_DISASSOCIATED' check!", __func__);
-    }
-#endif
 
 	/* claim and dequeue */
 	debug_work_deactivate(work);
@@ -3351,10 +3340,6 @@ static int worker_thread(void *__worker)
 	struct worker *worker = __worker;
 	struct worker_pool *pool = worker->pool;
 
-    if (pool == NULL) {
-        printk("%s: worker(%lx)\n", __func__, (unsigned long)__worker);
-        PANIC("");
-    }
 	/* tell the scheduler that this is a workqueue worker */
 	set_pf_worker(true);
 woke_up:
@@ -8051,3 +8036,5 @@ static int __init workqueue_unbound_cpus_setup(char *str)
 	return 1;
 }
 __setup("workqueue.unbound_cpus=", workqueue_unbound_cpus_setup);
+
+#endif /* CL */

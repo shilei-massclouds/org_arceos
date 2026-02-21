@@ -11,6 +11,8 @@ obj-y += stacktrace.o
 obj-y += cpu.o
 obj-y += cpufeature.o
 obj-y += jump_label.o
+obj-y += process.o
+obj-y += vector.o
 
 #obj-y += patch.o
 #obj-y += reset.o

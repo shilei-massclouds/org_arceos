@@ -22,7 +22,7 @@ char __initdata boot_command_line[COMMAND_LINE_SIZE];
 bool early_boot_irqs_disabled __read_mostly;
 
 /*
- * start_kernel() [init/main.c]
+ * early stage in start_kernel() [init/main.c]
  *   - the first part before setup_arch()
  */
 void cl_early_init(unsigned long hartid, unsigned long dtb_pa)
@@ -47,4 +47,24 @@ void cl_early_init(unsigned long hartid, unsigned long dtb_pa)
 
     /* setup_arch() will called in crate 'membloc'. */
     //setup_arch(NULL /* cmdline_p */);
+}
+
+/*
+ * late stage in start_kernel() [init/main.c]
+ *   - the last part before kernel_init kthread being scheduling
+ */
+void cl_late_init()
+{
+    fork_init();
+#if 0
+    proc_caches_init();
+    uts_ns_init();
+    key_init();
+    security_init();
+    dbg_late_init();
+    net_ns_init();
+    vfs_caches_init();
+    pagecache_init();
+#endif
+    signals_init();
 }

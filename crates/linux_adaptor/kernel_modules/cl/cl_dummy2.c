@@ -40,9 +40,6 @@ struct user_namespace init_user_ns = {
 // kernel/utsname.c
 const struct proc_ns_operations utsns_operations;
 
-// kernel/workqueue.c
-struct workqueue_struct *system_wq __ro_after_init;
-
 // kernel/ksysfs.c
 struct kobject *kernel_kobj;
 
@@ -106,3 +103,15 @@ DEFINE_PER_CPU(unsigned long, arch_freq_scale) = SCHED_CAPACITY_SCALE;
 
 // kernel/profile.c
 int prof_on __read_mostly;
+
+// kernel/events/uprobes.c
+void __init uprobes_init(void)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// kernel/time/vsyscall.c
+void update_vsyscall(struct timekeeper *tk)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}

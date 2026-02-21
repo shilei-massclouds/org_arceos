@@ -24,6 +24,10 @@ pub fn init_later(_hartid: usize, _dtb_pa: usize) {
     }
 }
 
+/// Prepare utilities for user-app.
+pub fn prepare_for_uapp() {
+}
+
 unsafe extern "C" {
     fn cl_early_init(hartid: usize, dtb_pa: usize);
     fn unflatten_device_tree();

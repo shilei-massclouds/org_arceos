@@ -177,6 +177,8 @@ void __weak arch_release_task_struct(struct task_struct *tsk)
 {
 }
 
+#endif /* CL */
+
 static struct kmem_cache *task_struct_cachep;
 
 static inline struct task_struct *alloc_task_struct_node(int node)
@@ -440,6 +442,8 @@ static struct kmem_cache *vm_area_cachep;
 /* SLAB cache for mm_struct structures (tsk->mm) */
 static struct kmem_cache *mm_cachep;
 
+#if 0
+
 #ifdef CONFIG_PER_VMA_LOCK
 
 /* SLAB cache for vm_area_struct.lock */
@@ -540,6 +544,8 @@ void vm_area_free(struct vm_area_struct *vma)
 #endif
 }
 
+#endif /* CL */
+
 static void account_kernel_stack(struct task_struct *tsk, int account)
 {
 	if (IS_ENABLED(CONFIG_VMAP_STACK)) {
@@ -558,6 +564,7 @@ static void account_kernel_stack(struct task_struct *tsk, int account)
 	}
 }
 
+#if 0
 void exit_task_stack_account(struct task_struct *tsk)
 {
 	account_kernel_stack(tsk, -1);
@@ -955,8 +962,11 @@ static void mmdrop_async(struct mm_struct *mm)
 	}
 }
 
+#endif /* CL */
+
 static inline void free_signal_struct(struct signal_struct *sig)
 {
+#if 0
 	taskstats_tgid_free(sig);
 	sched_autogroup_exit(sig);
 	/*
@@ -966,8 +976,11 @@ static inline void free_signal_struct(struct signal_struct *sig)
 	if (sig->oom_mm)
 		mmdrop_async(sig->oom_mm);
 	kmem_cache_free(signal_cachep, sig);
+#endif
+    PANIC("");
 }
 
+#if 0
 static inline void put_signal_struct(struct signal_struct *sig)
 {
 	if (refcount_dec_and_test(&sig->sigcnt))
@@ -1000,6 +1013,8 @@ void __put_task_struct_rcu_cb(struct rcu_head *rhp)
 	__put_task_struct(task);
 }
 EXPORT_SYMBOL_GPL(__put_task_struct_rcu_cb);
+
+#endif /* CL */
 
 void __init __weak arch_task_cache_init(void) { }
 
@@ -1098,7 +1113,6 @@ int __weak arch_dup_task_struct(struct task_struct *dst,
 	*dst = *src;
 	return 0;
 }
-#endif /* CL */
 
 void set_task_stack_end_magic(struct task_struct *tsk)
 {
@@ -1108,7 +1122,6 @@ void set_task_stack_end_magic(struct task_struct *tsk)
 	*stackend = STACK_END_MAGIC;	/* for overflow detection */
 }
 
-#if 0
 static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
 {
 	struct task_struct *tsk;
@@ -1160,6 +1173,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
 		tsk->cpus_ptr = &tsk->cpus_mask;
 	dup_user_cpus_ptr(tsk, orig, node);
 
+#if 0
 	/*
 	 * One for the user space visible state that goes away when reaped.
 	 * One for the scheduler.
@@ -1206,6 +1220,8 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
 	tsk->mm_cid_active = 0;
 	tsk->migrate_from_cpu = -1;
 #endif
+#endif
+    PANIC("");
 	return tsk;
 
 free_stack:
@@ -1220,6 +1236,7 @@ __cacheline_aligned_in_smp DEFINE_SPINLOCK(mmlist_lock);
 
 static unsigned long default_dump_filter = MMF_DUMP_FILTER_DEFAULT;
 
+#if 0
 static int __init coredump_filter_setup(char *s)
 {
 	default_dump_filter =
@@ -1240,6 +1257,8 @@ static void mm_init_aio(struct mm_struct *mm)
 #endif
 }
 
+#endif /* CL */
+
 static __always_inline void mm_clear_owner(struct mm_struct *mm,
 					   struct task_struct *p)
 {
@@ -1248,6 +1267,8 @@ static __always_inline void mm_clear_owner(struct mm_struct *mm,
 		WRITE_ONCE(mm->owner, NULL);
 #endif
 }
+
+#if 0
 
 static void mm_init_owner(struct mm_struct *mm, struct task_struct *p)
 {
@@ -1593,6 +1614,7 @@ static void complete_vfork_done(struct task_struct *tsk)
 	}
 	task_unlock(tsk);
 }
+#endif /* CL */
 
 static int wait_for_vfork_done(struct task_struct *child,
 				struct completion *vfork)
@@ -1600,6 +1622,7 @@ static int wait_for_vfork_done(struct task_struct *child,
 	unsigned int state = TASK_KILLABLE|TASK_FREEZABLE;
 	int killed;
 
+#if 0
 	cgroup_enter_frozen();
 	killed = wait_for_completion_state(vfork, state);
 	cgroup_leave_frozen(false);
@@ -1611,9 +1634,12 @@ static int wait_for_vfork_done(struct task_struct *child,
 	}
 
 	put_task_struct(child);
+#endif
+    PANIC("");
 	return killed;
 }
 
+#if 0
 /* Please note the differences between mmput and mm_release.
  * mmput is called whenever we stop holding onto a mm_struct,
  * error success whatever.
@@ -2089,6 +2115,7 @@ int pidfd_prepare(struct pid *pid, unsigned int flags, struct file **ret)
 
 	return __pidfd_prepare(pid, flags, ret);
 }
+#endif /* CL */
 
 static void __delayed_free_task(struct rcu_head *rhp)
 {
@@ -2105,6 +2132,7 @@ static __always_inline void delayed_free_task(struct task_struct *tsk)
 		free_task(tsk);
 }
 
+#if 0
 static void copy_oom_score_adj(u64 clone_flags, struct task_struct *tsk)
 {
 	/* Skip if kernel thread */
@@ -2135,6 +2163,8 @@ static void rv_task_fork(struct task_struct *p)
 #else
 #define rv_task_fork(p) do {} while (0)
 #endif
+
+#endif /* CL */
 
 /*
  * This creates a new process as a copy of the old one,
@@ -2233,6 +2263,7 @@ __latent_entropy struct task_struct *copy_process(
 	p = dup_task_struct(current, node);
 	if (!p)
 		goto fork_out;
+#if 0
 	p->flags &= ~PF_KTHREAD;
 	if (args->kthread)
 		p->flags |= PF_KTHREAD;
@@ -2635,6 +2666,8 @@ __latent_entropy struct task_struct *copy_process(
 
 	copy_oom_score_adj(clone_flags, p);
 
+#endif
+    PANIC("");
 	return p;
 
 bad_fork_core_free:
@@ -2704,6 +2737,8 @@ fork_out:
 	return ERR_PTR(retval);
 }
 
+#if 0
+
 static inline void init_idle_pids(struct task_struct *idle)
 {
 	enum pid_type type;
@@ -2762,6 +2797,7 @@ struct task_struct *create_io_thread(int (*fn)(void *), void *arg, int node)
 
 	return copy_process(NULL, 0, node, &args);
 }
+#endif /* CL */
 
 /*
  *  Ok, this is the main fork-routine.
@@ -2813,6 +2849,7 @@ pid_t kernel_clone(struct kernel_clone_args *args)
 	}
 
 	p = copy_process(NULL, trace, NUMA_NO_NODE, args);
+#if 0
 	add_latent_entropy();
 
 	if (IS_ERR(p))
@@ -2855,10 +2892,10 @@ pid_t kernel_clone(struct kernel_clone_args *args)
 	}
 
 	put_pid(pid);
+#endif
+    PANIC("");
 	return nr;
 }
-
-#endif /* CL */
 
 /*
  * Create a kernel thread.
@@ -2866,7 +2903,6 @@ pid_t kernel_clone(struct kernel_clone_args *args)
 pid_t kernel_thread(int (*fn)(void *), void *arg, const char *name,
 		    unsigned long flags)
 {
-#if 0
 	struct kernel_clone_args args = {
 		.flags		= ((lower_32_bits(flags) | CLONE_VM |
 				    CLONE_UNTRACED) & ~CSIGNAL),
@@ -2878,10 +2914,6 @@ pid_t kernel_thread(int (*fn)(void *), void *arg, const char *name,
 	};
 
 	return kernel_clone(&args);
-#endif
-    printk("%s: fn(%lx)(%lx)\n", __func__, fn, arg);
-    fn(arg);
-    PANIC("");
 }
 
 #if 0

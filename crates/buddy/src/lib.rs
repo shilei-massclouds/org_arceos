@@ -23,6 +23,9 @@ impl<const PAGE_SIZE: usize> BaseAllocator for BuddyAllocator<PAGE_SIZE> {
         // setup_per_cpu_areas() [init/main.c]
         //  - prepare percpu first chunk
         //
+        // random_init_early() [init/main.c]
+        //  - architectural and non-timekeeping rng init, before allocator init
+        //
         // mm_core_init_first_part() [mm/mm_init.c]
         //   - set up kernel memory allocators
         //
@@ -31,6 +34,8 @@ impl<const PAGE_SIZE: usize> BaseAllocator for BuddyAllocator<PAGE_SIZE> {
             jump_label_init();
             setup_nr_cpu_ids();
             setup_per_cpu_areas();
+            random_init_early(/* command_line */);
+
             mm_core_init_first_part();
         }
     }
@@ -84,4 +89,5 @@ unsafe extern "C" {
     fn mm_core_init_first_part();
     fn setup_nr_cpu_ids();
     fn setup_per_cpu_areas();
+    fn random_init_early(/* command_line */);
 }

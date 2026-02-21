@@ -483,6 +483,8 @@ struct __kernel_old_timeval ns_to_kernel_old_timeval(s64 nsec)
 }
 EXPORT_SYMBOL(ns_to_kernel_old_timeval);
 
+#endif /* CL */
+
 /**
  * set_normalized_timespec64 - set timespec sec and nsec parts and normalize
  *
@@ -545,8 +547,6 @@ struct timespec64 ns_to_timespec64(s64 nsec)
 	return ts;
 }
 EXPORT_SYMBOL(ns_to_timespec64);
-
-#endif /* CL */
 
 /**
  * __msecs_to_jiffies: - convert milliseconds to jiffies

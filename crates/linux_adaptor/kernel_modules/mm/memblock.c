@@ -1740,7 +1740,6 @@ phys_addr_t __init_memblock memblock_phys_mem_size(void)
 	return memblock.memory.total_size;
 }
 
-#if 0
 phys_addr_t __init_memblock memblock_reserved_size(void)
 {
 	return memblock.reserved.total_size;
@@ -1762,7 +1761,6 @@ unsigned long __init memblock_estimated_nr_free_pages(void)
 {
 	return PHYS_PFN(memblock_phys_mem_size() - memblock_reserved_size());
 }
-#endif
 
 /* lowest address */
 phys_addr_t __init_memblock memblock_start_of_DRAM(void)

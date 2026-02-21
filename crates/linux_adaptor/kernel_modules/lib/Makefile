@@ -25,6 +25,7 @@ obj-y += irq_regs.o
 obj-y += bug.o
 
 obj-y += math/
+obj-y += crypto/
 
 #obj-y += klist.o
 #obj-y += devres.o errname.o idr.o xarray.o

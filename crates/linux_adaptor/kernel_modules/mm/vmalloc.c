@@ -2421,7 +2421,6 @@ static void free_unmap_vmap_area(struct vmap_area *va)
 	free_vmap_area_noflush(va);
 }
 
-#if 0
 struct vmap_area *find_vmap_area(unsigned long addr)
 {
 	struct vmap_node *vn;
@@ -2458,8 +2457,6 @@ struct vmap_area *find_vmap_area(unsigned long addr)
 
 	return NULL;
 }
-
-#endif /* CL */
 
 static struct vmap_area *find_unlink_vmap_area(unsigned long addr)
 {
@@ -3233,6 +3230,8 @@ struct vm_struct *get_vm_area_caller(unsigned long size, unsigned long flags,
 				  NUMA_NO_NODE, GFP_KERNEL, caller);
 }
 
+#endif /* CL */
+
 /**
  * find_vm_area - find a continuous kernel virtual area
  * @addr:	  base address
@@ -3253,7 +3252,6 @@ struct vm_struct *find_vm_area(const void *addr)
 
 	return va->vm;
 }
-#endif /* CL */
 
 /**
  * remove_vm_area - find and remove a continuous kernel virtual area
