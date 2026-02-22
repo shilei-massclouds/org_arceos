@@ -136,6 +136,8 @@ __always_inline unsigned long exit_to_user_mode_loop(struct pt_regs *regs,
 	return ti_work;
 }
 
+#endif /* CL */
+
 /*
  * If SYSCALL_EMU is set, then the only reason to report is when
  * SINGLESTEP is set (i.e. PTRACE_SYSEMU_SINGLESTEP).  This syscall
@@ -205,9 +207,12 @@ static void syscall_exit_to_user_mode_prepare(struct pt_regs *regs)
 
 static __always_inline void __syscall_exit_to_user_mode_work(struct pt_regs *regs)
 {
+#if 0
 	syscall_exit_to_user_mode_prepare(regs);
 	local_irq_disable_exit_to_user();
 	exit_to_user_mode_prepare(regs);
+#endif
+    PANIC("");
 }
 
 void syscall_exit_to_user_mode_work(struct pt_regs *regs)
@@ -217,12 +222,14 @@ void syscall_exit_to_user_mode_work(struct pt_regs *regs)
 
 __visible noinstr void syscall_exit_to_user_mode(struct pt_regs *regs)
 {
+#if 0
 	instrumentation_begin();
 	__syscall_exit_to_user_mode_work(regs);
 	instrumentation_end();
 	exit_to_user_mode();
+#endif
+    PANIC("");
 }
-#endif /* CL */
 
 noinstr void irqentry_enter_from_user_mode(struct pt_regs *regs)
 {

@@ -30,9 +30,9 @@ obj-y += user_namespace.o
 obj-y += nsproxy.o
 obj-y += pid.o
 obj-y += pid_namespace.o
+obj-y += exit.o
 
 #obj-y += resource.o
-#obj-y += exit.o
 #obj-y += tracepoint.o
 #obj-y += irq_work.o params.o reboot.o
 #obj-y += async.o

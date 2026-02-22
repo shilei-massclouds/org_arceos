@@ -316,6 +316,20 @@ ret_from_exception:
 .global ret_from_exception_end
 ret_from_exception_end:
 
+.balign 4
+.global ret_from_fork
+ret_from_fork:
+    call schedule_tail
+    beqz s0, 1f /* not from kernel thread */
+    /* Call fn(arg) */
+    move a0, s1
+    jalr s0
+1:
+    /* pt_regs */
+    move a0, sp
+    call syscall_exit_to_user_mode
+    j ret_from_exception
+
 /*
  * void call_on_irq_stack(struct pt_regs *regs,
  *                        void (*func)(struct pt_regs *));

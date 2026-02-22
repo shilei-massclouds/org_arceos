@@ -5000,7 +5000,6 @@ static inline void prepare_task(struct task_struct *next)
 #endif
 }
 
-#if 0
 static inline void finish_task(struct task_struct *prev)
 {
 #ifdef CONFIG_SMP
@@ -5018,7 +5017,6 @@ static inline void finish_task(struct task_struct *prev)
 	smp_store_release(&prev->on_cpu, 0);
 #endif
 }
-#endif /* CL */
 
 #ifdef CONFIG_SMP
 
@@ -5128,7 +5126,6 @@ prepare_lock_switch(struct rq *rq, struct task_struct *next, struct rq_flags *rf
 #endif
 }
 
-#if 0
 static inline void finish_lock_switch(struct rq *rq)
 {
 	/*
@@ -5140,7 +5137,6 @@ static inline void finish_lock_switch(struct rq *rq)
 	__balance_callbacks(rq);
 	raw_spin_rq_unlock_irq(rq);
 }
-#endif /* CL */
 
 /*
  * NOP if the arch has not defined these:
@@ -5162,7 +5158,6 @@ static inline void kmap_local_sched_out(void)
 #endif
 }
 
-#if 0
 static inline void kmap_local_sched_in(void)
 {
 #ifdef CONFIG_KMAP_LOCAL
@@ -5170,8 +5165,6 @@ static inline void kmap_local_sched_in(void)
 		__kmap_local_sched_in();
 #endif
 }
-
-#endif /* CL */
 
 /**
  * prepare_task_switch - prepare to switch tasks
@@ -5226,7 +5219,6 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 	struct mm_struct *mm = rq->prev_mm;
 	unsigned int prev_state;
 
-#if 0
 	/*
 	 * The previous task will have left us with a preempt_count of 2
 	 * because it left us after:
@@ -5301,12 +5293,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 		put_task_struct_rcu_user(prev);
 	}
 
-#endif
-    PANIC("");
 	return rq;
 }
 
-#if 0
 /**
  * schedule_tail - first thing a freshly forked thread must call.
  * @prev: the thread we just switched away from.
@@ -5331,8 +5320,6 @@ asmlinkage __visible void schedule_tail(struct task_struct *prev)
 
 	calculate_sigpending();
 }
-
-#endif /* CL */
 
 /*
  * context_switch - switch to the new MM and the new thread's register state.

@@ -917,6 +917,7 @@ static void cleanup_lazy_tlbs(struct mm_struct *mm)
 	if (IS_ENABLED(CONFIG_DEBUG_VM_SHOOT_LAZIES))
 		on_each_cpu(do_check_lazy_tlb, (void *)mm, 1);
 }
+#endif /* CL */
 
 /*
  * Called when the last reference to the mm
@@ -925,6 +926,7 @@ static void cleanup_lazy_tlbs(struct mm_struct *mm)
  */
 void __mmdrop(struct mm_struct *mm)
 {
+#if 0
 	BUG_ON(mm == &init_mm);
 	WARN_ON_ONCE(mm == current->mm);
 
@@ -942,9 +944,12 @@ void __mmdrop(struct mm_struct *mm)
 	percpu_counter_destroy_many(mm->rss_stat, NR_MM_COUNTERS);
 
 	free_mm(mm);
+#endif
+    PANIC("");
 }
 EXPORT_SYMBOL_GPL(__mmdrop);
 
+#if 0
 static void mmdrop_async_fn(struct work_struct *work)
 {
 	struct mm_struct *mm;

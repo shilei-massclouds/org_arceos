@@ -185,7 +185,6 @@ void recalc_sigpending(void)
 }
 EXPORT_SYMBOL(recalc_sigpending);
 
-#if 0
 void calculate_sigpending(void)
 {
 	/* Have any signals or users of TIF_SIGPENDING been delayed
@@ -197,6 +196,7 @@ void calculate_sigpending(void)
 	spin_unlock_irq(&current->sighand->siglock);
 }
 
+#if 0
 /* Given the mask, find the first available signal that should be serviced. */
 
 #define SYNCHRONOUS_MASK \

@@ -204,6 +204,11 @@ void __perf_event_task_sched_out(struct task_struct *task,
 {
     pr_err("--> NOTE: %s: No impl.\n", __func__);
 }
+void __perf_event_task_sched_in(struct task_struct *prev,
+                struct task_struct *task)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}
 void ___perf_sw_event(u32 event_id, u64 nr, struct pt_regs *regs, u64 addr)
 {
     pr_err("--> NOTE: %s: No impl.\n", __func__);
