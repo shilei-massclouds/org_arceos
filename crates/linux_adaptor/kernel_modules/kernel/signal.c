@@ -2223,6 +2223,7 @@ static void do_notify_parent_cldstop(struct task_struct *tsk,
 	__wake_up_parent(tsk, parent);
 	spin_unlock_irqrestore(&sighand->siglock, flags);
 }
+#endif /* CL */
 
 /*
  * This must be called with current->sighand->siglock held.
@@ -2243,6 +2244,7 @@ static int ptrace_stop(int exit_code, int why, unsigned long message,
 {
 	bool gstop_done = false;
 
+#if 0
 	if (arch_ptrace_stop_needed()) {
 		/*
 		 * The arch code has something special to do before a
@@ -2384,6 +2386,8 @@ static int ptrace_stop(int exit_code, int why, unsigned long message,
 	 * This sets TIF_SIGPENDING, but never clears it.
 	 */
 	recalc_sigpending_tsk(current);
+#endif
+    PANIC("");
 	return exit_code;
 }
 
@@ -2415,6 +2419,7 @@ int ptrace_notify(int exit_code, unsigned long message)
 	return signr;
 }
 
+#if 0
 /**
  * do_signal_stop - handle group stop for SIGSTOP and other stop signals
  * @signr: signr causing group stop if initiating

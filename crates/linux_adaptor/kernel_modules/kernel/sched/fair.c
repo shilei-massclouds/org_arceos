@@ -7144,7 +7144,6 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		dl_server_start(&rq->fair_server);
 	}
 
-#if 0
 	/* At this point se is NULL and we are at root level*/
 	add_nr_running(rq, 1);
 
@@ -7164,8 +7163,6 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	 */
 	if (!task_new)
 		check_update_overutilized_status(rq);
-#endif
-    PANIC("");
 
 enqueue_throttle:
 	assert_list_leaf_cfs_rq(rq);

@@ -2886,7 +2886,6 @@ pid_t kernel_clone(struct kernel_clone_args *args)
 
 	wake_up_new_task(p);
 
-#if 0
 	/* forking complete and child started to run, tell ptracer */
 	if (unlikely(trace))
 		ptrace_event_pid(trace, pid);
@@ -2897,8 +2896,6 @@ pid_t kernel_clone(struct kernel_clone_args *args)
 	}
 
 	put_pid(pid);
-#endif
-    PANIC("");
 	return nr;
 }
 

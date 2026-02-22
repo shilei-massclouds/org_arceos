@@ -155,8 +155,6 @@ const_debug unsigned int sysctl_sched_nr_migrate = SCHED_NR_MIGRATE_BREAK;
 
 __read_mostly int scheduler_running;
 
-#if 0
-
 #ifdef CONFIG_SCHED_CORE
 
 DEFINE_STATIC_KEY_FALSE(__sched_core_enabled);
@@ -494,8 +492,6 @@ static inline void
 sched_core_dequeue(struct rq *rq, struct task_struct *p, int flags) { }
 
 #endif /* CONFIG_SCHED_CORE */
-
-#endif /* CL */
 
 /*
  * Serialization rules:
@@ -1093,6 +1089,7 @@ void wake_up_q(struct wake_q_head *head)
 		put_task_struct(task);
 	}
 }
+#endif /* CL */
 
 /*
  * resched_curr - mark rq's current task 'to be rescheduled now'.
@@ -1125,6 +1122,7 @@ void resched_curr(struct rq *rq)
 		trace_sched_wake_idle_without_ipi(cpu);
 }
 
+#if 0
 void resched_cpu(int cpu)
 {
 	struct rq *rq = cpu_rq(cpu);
@@ -2056,7 +2054,6 @@ void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 	 */
 	uclamp_rq_inc(rq, p);
 
-#if 0
 	psi_enqueue(p, flags);
 
 	if (!(flags & ENQUEUE_RESTORE))
@@ -2064,8 +2061,6 @@ void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 
 	if (sched_core_enabled(rq))
 		sched_core_enqueue(rq, p);
-#endif
-    PANIC("");
 }
 
 /*
@@ -2171,6 +2166,7 @@ void check_class_changed(struct rq *rq, struct task_struct *p,
 	} else if (oldprio != p->prio || dl_task(p))
 		p->sched_class->prio_changed(rq, p, oldprio);
 }
+#endif /* CL */
 
 void wakeup_preempt(struct rq *rq, struct task_struct *p, int flags)
 {
@@ -2187,6 +2183,7 @@ void wakeup_preempt(struct rq *rq, struct task_struct *p, int flags)
 		rq_clock_skip_update(rq);
 }
 
+#if 0
 static __always_inline
 int __task_state_match(struct task_struct *p, unsigned int state)
 {
