@@ -1609,6 +1609,7 @@ void notify_cpu_starting(unsigned int cpu)
 	 */
 	cpuhp_invoke_callback_range_nofail(true, cpu, st, target);
 }
+#endif /* CL */
 
 /*
  * Called from the idle task. Wake up the controlling task which brings the
@@ -1623,6 +1624,7 @@ void cpuhp_online_idle(enum cpuhp_state state)
 	if (state != CPUHP_AP_ONLINE_IDLE)
 		return;
 
+#if 0
 	cpuhp_ap_update_sync_state(SYNC_STATE_ONLINE);
 
 	/*
@@ -1633,8 +1635,11 @@ void cpuhp_online_idle(enum cpuhp_state state)
 
 	st->state = CPUHP_AP_ONLINE_IDLE;
 	complete_ap_thread(st, true);
+#endif
+    PANIC("");
 }
 
+#if 0
 /* Requires cpu_add_remove_lock to be held */
 static int _cpu_up(unsigned int cpu, int tasks_frozen, enum cpuhp_state target)
 {

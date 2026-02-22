@@ -36,7 +36,8 @@ pub fn init_early() {
         /* init some links before init_ISA_irqs() */
         early_irq_init();
         init_IRQ();
-
+        tick_init();
+        //rcu_init_nohz();
         init_timers();
         //srcu_init();
         hrtimers_init();
@@ -54,6 +55,7 @@ unsafe extern "C" {
     fn maple_tree_init();
     fn early_irq_init();
     fn init_IRQ();
+    fn tick_init();
     fn init_timers();
     fn hrtimers_init();
     fn softirq_init();

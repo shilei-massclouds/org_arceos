@@ -4,6 +4,7 @@ obj-y += of/
 obj-y += base/
 obj-y += irqchip/
 obj-y += char/
+obj-y += cpuidle/
 #obj-y += gpio/
 #obj-y += pci/
 #obj-y += clk/

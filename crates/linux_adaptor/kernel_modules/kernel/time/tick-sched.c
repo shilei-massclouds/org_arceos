@@ -34,6 +34,8 @@
 
 #include <trace/events/timer.h>
 
+#include "adaptor.h"
+
 /*
  * Per-CPU nohz control structure
  */
@@ -894,6 +896,7 @@ u64 get_jiffies_update(unsigned long *basej)
 	*basej = basejiff;
 	return basemono;
 }
+#endif /* CL */
 
 /**
  * tick_nohz_next_event() - return the clock monotonic based next event
@@ -911,6 +914,7 @@ static ktime_t tick_nohz_next_event(struct tick_sched *ts, int cpu)
 	unsigned long basejiff;
 	int tick_cpu;
 
+#if 0
 	basemono = get_jiffies_update(&basejiff);
 	ts->last_jiffies = basejiff;
 	ts->timer_expires_base = basemono;
@@ -978,11 +982,14 @@ static ktime_t tick_nohz_next_event(struct tick_sched *ts, int cpu)
 		expires = KTIME_MAX;
 
 	ts->timer_expires = min_t(u64, expires, next_tick);
+#endif
+    PANIC("");
 
 out:
 	return ts->timer_expires;
 }
 
+#if 0
 static void tick_nohz_stop_tick(struct tick_sched *ts, int cpu)
 {
 	struct clock_event_device *dev = __this_cpu_read(tick_cpu_device.evtdev);
@@ -1181,6 +1188,7 @@ static bool report_idle_softirq(void)
 
 	return true;
 }
+#endif /* CL */
 
 static bool can_stop_idle_tick(int cpu, struct tick_sched *ts)
 {
@@ -1189,6 +1197,7 @@ static bool can_stop_idle_tick(int cpu, struct tick_sched *ts)
 	if (unlikely(!tick_sched_flag_test(ts, TS_FLAG_NOHZ)))
 		return false;
 
+#if 0
 	if (need_resched())
 		return false;
 
@@ -1209,6 +1218,8 @@ static bool can_stop_idle_tick(int cpu, struct tick_sched *ts)
 		if (WARN_ON_ONCE(tick_cpu == TICK_DO_TIMER_NONE))
 			return false;
 	}
+#endif
+    PANIC("");
 
 	return true;
 }
@@ -1235,6 +1246,7 @@ void tick_nohz_idle_stop_tick(void)
 	else
 		return;
 
+#if 0
 	ts->idle_calls++;
 
 	if (expires > 0LL) {
@@ -1252,12 +1264,17 @@ void tick_nohz_idle_stop_tick(void)
 	} else {
 		tick_nohz_retain_tick(ts);
 	}
+#endif
+    PANIC("");
 }
 
+#if 0
 void tick_nohz_idle_retain_tick(void)
 {
 	tick_nohz_retain_tick(this_cpu_ptr(&tick_cpu_sched));
 }
+
+#endif /* CL */
 
 /**
  * tick_nohz_idle_enter - prepare for entering idle on the current CPU
@@ -1281,7 +1298,6 @@ void tick_nohz_idle_enter(void)
 
 	local_irq_enable();
 }
-#endif /* CL */
 
 /**
  * tick_nohz_irq_exit - Notify the tick about IRQ exit
@@ -1425,18 +1441,23 @@ static void tick_nohz_account_idle_time(struct tick_sched *ts,
 	if (ticks && ticks < LONG_MAX)
 		account_idle_ticks(ticks);
 }
+#endif /* CL */
 
 void tick_nohz_idle_restart_tick(void)
 {
 	struct tick_sched *ts = this_cpu_ptr(&tick_cpu_sched);
 
 	if (tick_sched_flag_test(ts, TS_FLAG_STOPPED)) {
+#if 0
 		ktime_t now = ktime_get();
 		tick_nohz_restart_sched_tick(ts, now);
 		tick_nohz_account_idle_time(ts, now);
+#endif
+        PANIC("");
 	}
 }
 
+#if 0
 static void tick_nohz_idle_update_tick(struct tick_sched *ts, ktime_t now)
 {
 	if (tick_nohz_full_cpu(smp_processor_id()))
@@ -1564,7 +1585,6 @@ static inline void tick_nohz_activate(struct tick_sched *ts) { }
 #endif /* CL */
 #endif /* CONFIG_NO_HZ_COMMON */
 
-#if 0
 /*
  * Called from irq_enter() to notify about the possible interruption of idle()
  */
@@ -1576,6 +1596,7 @@ void tick_irq_enter(void)
 
 static int sched_skew_tick;
 
+#if 0
 static int __init skew_tick(char *str)
 {
 	get_option(&str, &sched_skew_tick);

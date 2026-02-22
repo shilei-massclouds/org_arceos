@@ -10,3 +10,5 @@ obj-y += timekeeping.o
 obj-y += ntp.o
 obj-y += jiffies.o
 obj-y += namespace.o
+obj-y += tick-common.o
+obj-y += tick-broadcast.o

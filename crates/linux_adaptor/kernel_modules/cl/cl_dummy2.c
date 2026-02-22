@@ -90,9 +90,6 @@ DEFINE_PER_CPU(unsigned long, cpu_scale) = SCHED_CAPACITY_SCALE;
 enum s2idle_states __read_mostly s2idle_state;
 static DEFINE_RAW_SPINLOCK(s2idle_lock);
 
-// drivers/cpuidle/cpuidle.c
-DEFINE_PER_CPU(struct cpuidle_device *, cpuidle_devices);
-
 // drivers/cpufreq/cpufreq.c
 DEFINE_PER_CPU(unsigned long, cpufreq_pressure);
 
