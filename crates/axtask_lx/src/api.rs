@@ -194,7 +194,7 @@ where
     let pid = unsafe {
         linux_kernel_thread(thread_fn, opaque)
     };
-    unimplemented!("spawn: .. pid{}", pid);
+    crate::task::AxTask::new(pid)
 }
 
 /// Set the priority for current task.
@@ -259,7 +259,7 @@ pub fn exit(exit_code: i32) -> ! {
 unsafe extern "C" {
     fn sched_init();
     fn msleep(msecs: usize);
-    fn linux_kernel_thread(f: LinuxThreadFn, opaque: *mut c_void) -> usize;
+    fn linux_kernel_thread(f: LinuxThreadFn, opaque: *mut c_void) -> i32;
 }
 
 /*

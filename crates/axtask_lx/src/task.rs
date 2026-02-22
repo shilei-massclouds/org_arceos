@@ -1,11 +1,20 @@
+use alloc::sync::Arc;
 use crate::linux::_current;
 
-pub struct AxTask;
+pub struct AxTask {
+    pid: i32,
+}
 
 impl AxTask {
+    pub fn new(pid: i32) -> Arc<Self> {
+        Arc::new(Self {
+            pid,
+        })
+    }
+
     /// Gets the ID of the task.
     pub fn id(&self) -> TaskId {
-        unimplemented!("id()");
+        TaskId::new(self.pid)
     }
 
     /// Wait for the task to exit, and return the exit code.
