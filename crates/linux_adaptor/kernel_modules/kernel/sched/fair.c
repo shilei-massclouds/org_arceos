@@ -8839,6 +8839,7 @@ static void set_task_max_allowed_capacity(struct task_struct *p)
 	if (!sched_asym_cpucap_active())
 		return;
 
+#if 0
 	rcu_read_lock();
 	list_for_each_entry_rcu(entry, &asym_cap_list, link) {
 		cpumask_t *cpumask;
@@ -8851,6 +8852,8 @@ static void set_task_max_allowed_capacity(struct task_struct *p)
 		break;
 	}
 	rcu_read_unlock();
+#endif
+    PANIC("");
 }
 
 static void set_cpus_allowed_fair(struct task_struct *p, struct affinity_context *ctx)
@@ -13227,8 +13230,7 @@ static void task_tick_fair(struct rq *rq, struct task_struct *curr, int queued)
  */
 static void task_fork_fair(struct task_struct *p)
 {
-	//set_task_max_allowed_capacity(p);
-    PANIC("");
+	set_task_max_allowed_capacity(p);
 }
 
 /*

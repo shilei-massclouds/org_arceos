@@ -1947,7 +1947,6 @@ static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)
 	return 0;
 }
 
-#if  0
 static void copy_seccomp(struct task_struct *p)
 {
 #ifdef CONFIG_SECCOMP
@@ -1981,6 +1980,7 @@ static void copy_seccomp(struct task_struct *p)
 #endif
 }
 
+#if  0
 SYSCALL_DEFINE1(set_tid_address, int __user *, tidptr)
 {
 	current->clear_child_tid = tidptr;
@@ -1999,7 +1999,6 @@ static void rt_mutex_init_task(struct task_struct *p)
 #endif
 }
 
-#if 0
 static inline void init_task_pid_links(struct task_struct *task)
 {
 	enum pid_type type;
@@ -2016,7 +2015,6 @@ init_task_pid(struct task_struct *task, enum pid_type type, struct pid *pid)
 	else
 		task->signal->pids[type] = pid;
 }
-#endif /* CL */
 
 static inline void rcu_copy_process(struct task_struct *p)
 {
@@ -2040,7 +2038,6 @@ static inline void rcu_copy_process(struct task_struct *p)
 #endif /* #ifdef CONFIG_TASKS_TRACE_RCU */
 }
 
-#if 0
 /**
  * __pidfd_prepare - allocate a new pidfd_file and reserve a pidfd
  * @pid:   the struct pid for which to create a pidfd
@@ -2092,6 +2089,7 @@ static int __pidfd_prepare(struct pid *pid, unsigned int flags, struct file **re
 	return pidfd;
 }
 
+#if 0
 /**
  * pidfd_prepare - allocate a new pidfd_file and reserve a pidfd
  * @pid:   the struct pid for which to create a pidfd
@@ -2145,7 +2143,6 @@ static __always_inline void delayed_free_task(struct task_struct *tsk)
 		free_task(tsk);
 }
 
-#if 0
 static void copy_oom_score_adj(u64 clone_flags, struct task_struct *tsk)
 {
 	/* Skip if kernel thread */
@@ -2176,8 +2173,6 @@ static void rv_task_fork(struct task_struct *p)
 #else
 #define rv_task_fork(p) do {} while (0)
 #endif
-
-#endif /* CL */
 
 /*
  * This creates a new process as a copy of the old one,
@@ -2456,7 +2451,6 @@ __latent_entropy struct task_struct *copy_process(
 	if (retval)
 		goto bad_fork_cleanup_io;
 
-#if 0
 	stackleak_task_init(p);
 
 	if (pid != &init_struct_pid) {
@@ -2679,8 +2673,6 @@ __latent_entropy struct task_struct *copy_process(
 
 	copy_oom_score_adj(clone_flags, p);
 
-#endif
-    PANIC("");
 	return p;
 
 bad_fork_core_free:

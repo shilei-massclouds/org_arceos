@@ -46,6 +46,8 @@
 #include <net/sock.h>
 #include <uapi/linux/pidfd.h>
 
+#include "adaptor.h"
+
 struct pid init_struct_pid = {
 	.count		= REFCOUNT_INIT(1),
 	.tasks		= {
@@ -163,6 +165,7 @@ void free_pid(struct pid *pid)
 
 	call_rcu(&pid->rcu, delayed_put_pid);
 }
+#endif /* CL */
 
 struct pid *alloc_pid(struct pid_namespace *ns, pid_t *set_tid,
 		      size_t set_tid_size)
@@ -309,6 +312,7 @@ out_free:
 	return ERR_PTR(retval);
 }
 
+#if 0
 void disable_pid_allocation(struct pid_namespace *ns)
 {
 	spin_lock_irq(&pidmap_lock);
@@ -327,6 +331,7 @@ struct pid *find_vpid(int nr)
 	return find_pid_ns(nr, task_active_pid_ns(current));
 }
 EXPORT_SYMBOL_GPL(find_vpid);
+#endif /* CL */
 
 static struct pid **task_pid_ptr(struct task_struct *task, enum pid_type type)
 {
@@ -344,6 +349,7 @@ void attach_pid(struct task_struct *task, enum pid_type type)
 	hlist_add_head_rcu(&task->pid_links[type], &pid->tasks[type]);
 }
 
+#if 0
 static void __change_pid(struct task_struct *task, enum pid_type type,
 			struct pid *new)
 {
@@ -647,6 +653,7 @@ SYSCALL_DEFINE2(pidfd_open, pid_t, pid, unsigned int, flags)
 	put_pid(p);
 	return fd;
 }
+#endif /* CL */
 
 void __init pid_idr_init(void)
 {
@@ -669,6 +676,7 @@ void __init pid_idr_init(void)
 			NULL);
 }
 
+#if 0
 static struct file *__pidfd_fget(struct task_struct *task, int fd)
 {
 	struct file *file;

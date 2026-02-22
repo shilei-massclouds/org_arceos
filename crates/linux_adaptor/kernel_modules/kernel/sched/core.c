@@ -4797,7 +4797,6 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
 	return 0;
 }
 
-#if 0
 int sched_cgroup_fork(struct task_struct *p, struct kernel_clone_args *kargs)
 {
 	unsigned long flags;
@@ -4829,17 +4828,18 @@ int sched_cgroup_fork(struct task_struct *p, struct kernel_clone_args *kargs)
 	return scx_fork(p);
 }
 
+#if 0
 void sched_cancel_fork(struct task_struct *p)
 {
 	scx_cancel_fork(p);
 }
+#endif /* CL */
 
 void sched_post_fork(struct task_struct *p)
 {
 	uclamp_post_fork(p);
 	scx_post_fork(p);
 }
-#endif /* CL */
 
 unsigned long to_ratio(u64 period, u64 runtime)
 {

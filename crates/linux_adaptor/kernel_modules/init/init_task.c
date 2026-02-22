@@ -36,14 +36,12 @@ static struct signal_struct init_signals = {
 	},
 #endif
 	INIT_CPU_TIMERS(init_signals)
-    /*
 	.pids = {
 		[PIDTYPE_PID]	= &init_struct_pid,
 		[PIDTYPE_TGID]	= &init_struct_pid,
 		[PIDTYPE_PGID]	= &init_struct_pid,
 		[PIDTYPE_SID]	= &init_struct_pid,
 	},
-    */
 	INIT_PREV_CPUTIME(init_signals)
 };
 

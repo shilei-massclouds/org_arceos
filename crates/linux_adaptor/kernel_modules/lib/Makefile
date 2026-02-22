@@ -24,12 +24,14 @@ obj-y += maple_tree.o
 obj-y += irq_regs.o
 obj-y += bug.o
 obj-y += percpu_counter.o
+obj-y += idr.o
+obj-y += xarray.o
 
 obj-y += math/
 obj-y += crypto/
 
 #obj-y += klist.o
-#obj-y += devres.o errname.o idr.o xarray.o
+#obj-y += devres.o errname.o
 #obj-y += sbitmap.o lockref.o dec_and_lock.o
 #obj-y += sg_pool.o scatterlist.o errseq.o llist.o
 #obj-y += iov_iter.o

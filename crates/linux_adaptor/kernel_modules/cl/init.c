@@ -6,6 +6,7 @@
 #include <linux/cgroup.h>
 #include <linux/cpu.h>
 #include <linux/memblock.h>
+#include <linux/pid_namespace.h>
 
 #include "adaptor.h"
 
@@ -55,6 +56,12 @@ void cl_early_init(unsigned long hartid, unsigned long dtb_pa)
  */
 void cl_late_init()
 {
+    pid_idr_init();
+#if 0
+    anon_vma_init();
+    thread_stack_cache_init();
+#endif
+
     cred_init();
     fork_init();
     proc_caches_init();

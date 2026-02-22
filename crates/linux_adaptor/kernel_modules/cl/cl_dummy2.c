@@ -143,6 +143,10 @@ int perf_event_init_task(struct task_struct *child, u64 clone_flags)
     pr_err("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+void perf_event_fork(struct task_struct *task)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}
 
 // kernel/auditsc.c
 int audit_alloc(struct task_struct *tsk)
@@ -179,3 +183,16 @@ void tty_audit_fork(struct signal_struct *sig)
 // net/core/net_namespace.c
 struct net init_net;
 EXPORT_SYMBOL(init_net);
+
+// kernel/seccomp.c
+void get_seccomp_filter(struct task_struct *tsk)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// kernel/events/uprobes.c
+void uprobe_copy_process(struct task_struct *t, unsigned long flags)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}
+

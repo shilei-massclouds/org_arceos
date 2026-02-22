@@ -750,6 +750,8 @@ void ktime_get_real_ts64(struct timespec64 *ts)
 }
 EXPORT_SYMBOL(ktime_get_real_ts64);
 
+#endif /* CL */
+
 ktime_t ktime_get(void)
 {
 	struct timekeeper *tk = &tk_core.timekeeper;
@@ -770,6 +772,7 @@ ktime_t ktime_get(void)
 }
 EXPORT_SYMBOL_GPL(ktime_get);
 
+#if 0
 u32 ktime_get_resolution_ns(void)
 {
 	struct timekeeper *tk = &tk_core.timekeeper;

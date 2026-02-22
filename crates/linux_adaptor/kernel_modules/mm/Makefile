@@ -20,6 +20,7 @@ obj-y += init-mm.o
 obj-y += swap.o
 obj-y += maccess.o
 obj-y += mmap.o
+obj-y += oom_kill.o
 
 #obj-y += filemap.o page-writeback.o
 #obj-y += ioremap.o mempool.o
