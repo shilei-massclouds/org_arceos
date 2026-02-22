@@ -6,6 +6,11 @@
 #include <linux/suspend.h>
 #include <uapi/linux/perf_event.h>
 
+#include <net/sock.h>
+#include <net/netlink.h>
+#include <net/net_namespace.h>
+#include <net/netns/generic.h>
+
 // lib/uuid.c
 const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
 const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
@@ -132,3 +137,45 @@ void key_put(struct key *key)
     pr_err("--> NOTE: %s: No impl.\n", __func__);
 }
 
+// kernel/events/core.c
+int perf_event_init_task(struct task_struct *child, u64 clone_flags)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// kernel/auditsc.c
+int audit_alloc(struct task_struct *tsk)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// security/security.c
+int security_task_alloc(struct task_struct *task, unsigned long clone_flags)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// ipc/sem.c
+int copy_semundo(unsigned long clone_flags, struct task_struct *tsk)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// drivers/tty/tty_audit.c
+/*
+ *  tty_audit_fork  -   Copy TTY audit state for a new task
+ *
+ *  Set up TTY audit state in @sig from current.  @sig needs no locking.
+ */
+void tty_audit_fork(struct signal_struct *sig)
+{
+    sig->audit_tty = current->signal->audit_tty;
+}
+
+// net/core/net_namespace.c
+struct net init_net;
+EXPORT_SYMBOL(init_net);

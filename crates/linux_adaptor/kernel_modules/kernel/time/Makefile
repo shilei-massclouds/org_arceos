@@ -9,3 +9,4 @@ obj-y += posix-cpu-timers.o
 obj-y += timekeeping.o
 obj-y += ntp.o
 obj-y += jiffies.o
+obj-y += namespace.o

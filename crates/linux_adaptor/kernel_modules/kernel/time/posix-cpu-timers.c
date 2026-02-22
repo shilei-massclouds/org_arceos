@@ -20,7 +20,6 @@
 #include "posix-timers.h"
 #include "adaptor.h"
 
-#if 0
 static void posix_cpu_timer_rearm(struct k_itimer *timer);
 
 void posix_cputimers_group_init(struct posix_cputimers *pct, u64 cpu_limit)
@@ -32,6 +31,7 @@ void posix_cputimers_group_init(struct posix_cputimers *pct, u64 cpu_limit)
 	}
 }
 
+#if 0
 /*
  * Called after updating RLIMIT_CPU to run cpu timer and update
  * tsk->signal->posix_cputimers.bases[clock].nextevt expiration cache if

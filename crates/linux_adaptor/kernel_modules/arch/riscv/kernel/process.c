@@ -201,6 +201,7 @@ int arch_dup_task_struct(struct task_struct *dst, struct task_struct *src)
 
 	return 0;
 }
+#endif /* CL */
 
 int copy_thread(struct task_struct *p, const struct kernel_clone_args *args)
 {
@@ -238,8 +239,6 @@ int copy_thread(struct task_struct *p, const struct kernel_clone_args *args)
 	p->thread.sp = (unsigned long)childregs; /* kernel sp */
 	return 0;
 }
-
-#endif /* CL */
 
 void __init arch_task_cache_init(void)
 {

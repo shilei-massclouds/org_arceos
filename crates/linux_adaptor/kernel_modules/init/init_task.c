@@ -126,14 +126,14 @@ struct task_struct init_task __aligned(L1_CACHE_BYTES) = {
 	RCU_POINTER_INITIALIZER(cred, &init_cred),
 	.comm		= INIT_TASK_COMM,
 	.thread		= INIT_THREAD,
-	//.fs		= &init_fs,
+	.fs		= &init_fs,
 	//.files		= &init_files,
 #ifdef CONFIG_IO_URING
 	.io_uring	= NULL,
 #endif
 	.signal		= &init_signals,
 	.sighand	= &init_sighand,
-	//.nsproxy	= &init_nsproxy,
+	.nsproxy	= &init_nsproxy,
 	.pending	= {
 		.list = LIST_HEAD_INIT(init_task.pending.list),
 		.signal = {{0}}

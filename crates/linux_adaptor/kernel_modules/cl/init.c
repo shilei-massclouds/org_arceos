@@ -57,8 +57,8 @@ void cl_late_init()
 {
     cred_init();
     fork_init();
-#if 0
     proc_caches_init();
+#if 0
     uts_ns_init();
     key_init();
     security_init();

@@ -160,8 +160,6 @@ early_param("mminit_loglevel", set_mminit_loglevel);
 #endif
 #endif /* CONFIG_DEBUG_MEMORY_INIT */
 
-#if 0
-
 struct kobject *mm_kobj;
 
 #ifdef CONFIG_SMP
@@ -213,6 +211,7 @@ __initcall(mm_compute_batch_init);
 
 #endif
 
+#if 0
 static int __init mm_sysfs_init(void)
 {
 	mm_kobj = kobject_create_and_add("mm", kernel_kobj);

@@ -442,8 +442,6 @@ static struct kmem_cache *vm_area_cachep;
 /* SLAB cache for mm_struct structures (tsk->mm) */
 static struct kmem_cache *mm_cachep;
 
-#if 0
-
 #ifdef CONFIG_PER_VMA_LOCK
 
 /* SLAB cache for vm_area_struct.lock */
@@ -473,6 +471,7 @@ static inline void vma_lock_free(struct vm_area_struct *vma) {}
 
 #endif /* CONFIG_PER_VMA_LOCK */
 
+#if 0
 struct vm_area_struct *vm_area_alloc(struct mm_struct *mm)
 {
 	struct vm_area_struct *vma;
@@ -1265,8 +1264,6 @@ static __always_inline void mm_clear_owner(struct mm_struct *mm,
 #endif
 }
 
-#if 0
-
 static void mm_init_owner(struct mm_struct *mm, struct task_struct *p)
 {
 #ifdef CONFIG_MEMCG
@@ -1274,6 +1271,7 @@ static void mm_init_owner(struct mm_struct *mm, struct task_struct *p)
 #endif
 }
 
+#if 0
 static void mm_init_uprobes_state(struct mm_struct *mm)
 {
 #ifdef CONFIG_UPROBES
@@ -1694,6 +1692,7 @@ void exec_mm_release(struct task_struct *tsk, struct mm_struct *mm)
 	futex_exec_release(tsk);
 	mm_release(tsk, mm);
 }
+#endif /* CL */
 
 /**
  * dup_mm() - duplicates an existing mm structure
@@ -1711,6 +1710,7 @@ static struct mm_struct *dup_mm(struct task_struct *tsk,
 	struct mm_struct *mm;
 	int err;
 
+#if 0
 	mm = allocate_mm();
 	if (!mm)
 		goto fail_nomem;
@@ -1731,6 +1731,9 @@ static struct mm_struct *dup_mm(struct task_struct *tsk,
 
 	if (mm->binfmt && !try_module_get(mm->binfmt->module))
 		goto free_pt;
+
+#endif
+    PANIC("");
 
 	return mm;
 
@@ -1799,9 +1802,12 @@ static int copy_fs(unsigned long clone_flags, struct task_struct *tsk)
 		spin_unlock(&fs->lock);
 		return 0;
 	}
+#if 0
 	tsk->fs = copy_fs_struct(fs);
 	if (!tsk->fs)
 		return -ENOMEM;
+#endif
+    PANIC("");
 	return 0;
 }
 
@@ -1827,11 +1833,14 @@ static int copy_files(unsigned long clone_flags, struct task_struct *tsk,
 		return 0;
 	}
 
+#if 0
 	newf = dup_fd(oldf, NULL);
 	if (IS_ERR(newf))
 		return PTR_ERR(newf);
 
 	tsk->files = newf;
+#endif
+    PANIC("");
 	return 0;
 }
 
@@ -1860,6 +1869,7 @@ static int copy_sighand(unsigned long clone_flags, struct task_struct *tsk)
 	return 0;
 }
 
+#if 0
 void __cleanup_sighand(struct sighand_struct *sighand)
 {
 	if (refcount_dec_and_test(&sighand->count)) {
@@ -1871,6 +1881,7 @@ void __cleanup_sighand(struct sighand_struct *sighand)
 		kmem_cache_free(sighand_cachep, sighand);
 	}
 }
+#endif /* CL */
 
 /*
  * Initialize POSIX timer handling for a thread group.
@@ -1936,6 +1947,7 @@ static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)
 	return 0;
 }
 
+#if  0
 static void copy_seccomp(struct task_struct *p)
 {
 #ifdef CONFIG_SECCOMP
@@ -2405,7 +2417,6 @@ __latent_entropy struct task_struct *copy_process(
 	if (retval)
 		goto bad_fork_cleanup_policy;
 
-#if 0
 	retval = perf_event_init_task(p, clone_flags);
 	if (retval)
 		goto bad_fork_sched_cancel_fork;
@@ -2445,6 +2456,7 @@ __latent_entropy struct task_struct *copy_process(
 	if (retval)
 		goto bad_fork_cleanup_io;
 
+#if 0
 	stackleak_task_init(p);
 
 	if (pid != &init_struct_pid) {
@@ -3191,6 +3203,7 @@ up:
 out:
 	read_unlock(&tasklist_lock);
 }
+#endif /* CL */
 
 #ifndef ARCH_MIN_MMSTRUCT_ALIGN
 #define ARCH_MIN_MMSTRUCT_ALIGN 0
@@ -3204,6 +3217,7 @@ static void sighand_ctor(void *data)
 	init_waitqueue_head(&sighand->signalfd_wqh);
 }
 
+#if 0
 void __init mm_cache_init(void)
 {
 	unsigned int mm_size;
@@ -3222,6 +3236,7 @@ void __init mm_cache_init(void)
 			sizeof_field(struct mm_struct, saved_auxv),
 			NULL);
 }
+#endif /* CL */
 
 void __init proc_caches_init(void)
 {
@@ -3250,6 +3265,7 @@ void __init proc_caches_init(void)
 	nsproxy_cache_init();
 }
 
+#if 0
 /*
  * Check constraints on flags passed to the unshare system call.
  */
