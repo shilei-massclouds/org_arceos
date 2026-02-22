@@ -38,6 +38,8 @@ pub fn init_early() {
         init_IRQ();
 
         init_timers();
+        //srcu_init();
+        hrtimers_init();
 
         softirq_init();
         timekeeping_init();
@@ -53,6 +55,7 @@ unsafe extern "C" {
     fn early_irq_init();
     fn init_IRQ();
     fn init_timers();
+    fn hrtimers_init();
     fn softirq_init();
     fn timekeeping_init();
     fn random_init();

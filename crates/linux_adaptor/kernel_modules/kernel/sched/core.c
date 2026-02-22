@@ -670,6 +670,8 @@ void double_rq_lock(struct rq *rq1, struct rq *rq2)
 }
 #endif
 
+#endif /* CL */
+
 /*
  * __task_rq_lock - lock the rq @p resides on.
  */
@@ -693,8 +695,6 @@ struct rq *__task_rq_lock(struct task_struct *p, struct rq_flags *rf)
 			cpu_relax();
 	}
 }
-
-#endif /* CL */
 
 /*
  * task_rq_lock - lock p->pi_lock and lock the rq @p resides on.
@@ -740,8 +740,6 @@ struct rq *task_rq_lock(struct task_struct *p, struct rq_flags *rf)
 #endif
     PANIC("");
 }
-
-#if 0
 
 /*
  * RQ-clock updating methods:
@@ -803,13 +801,11 @@ static void update_rq_clock_task(struct rq *rq, s64 delta)
 #endif
 	update_rq_clock_pelt(rq, delta);
 }
-#endif /* CL */
 
 void update_rq_clock(struct rq *rq)
 {
 	s64 delta;
 
-#if 0
 	lockdep_assert_rq_held(rq);
 
 	if (rq->clock_update_flags & RQCF_ACT_SKIP)
@@ -826,8 +822,6 @@ void update_rq_clock(struct rq *rq)
 		return;
 	rq->clock += delta;
 	update_rq_clock_task(rq, delta);
-#endif
-    PANIC("");
 }
 
 #if 0
@@ -2052,7 +2046,6 @@ unsigned long get_wchan(struct task_struct *p)
 
 void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 {
-#if 0
 	if (!(flags & ENQUEUE_NOCLOCK))
 		update_rq_clock(rq);
 
@@ -2063,6 +2056,7 @@ void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 	 */
 	uclamp_rq_inc(rq, p);
 
+#if 0
 	psi_enqueue(p, flags);
 
 	if (!(flags & ENQUEUE_RESTORE))
@@ -2101,7 +2095,6 @@ inline bool dequeue_task(struct rq *rq, struct task_struct *p, int flags)
     PANIC("");
 }
 
-#if 0
 void activate_task(struct rq *rq, struct task_struct *p, int flags)
 {
 	if (task_on_rq_migrating(p))
@@ -2115,6 +2108,7 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 	ASSERT_EXCLUSIVE_WRITER(p->on_rq);
 }
 
+#if 0
 void deactivate_task(struct rq *rq, struct task_struct *p, int flags)
 {
 	SCHED_WARN_ON(flags & DEQUEUE_SLEEP);
@@ -4857,7 +4851,6 @@ unsigned long to_ratio(u64 period, u64 runtime)
 	return div64_u64(runtime << BW_SHIFT, period);
 }
 
-#if 0
 /*
  * wake_up_new_task - wake up a newly created task for the first time.
  *
@@ -4907,6 +4900,7 @@ void wake_up_new_task(struct task_struct *p)
 	task_rq_unlock(rq, p, &rf);
 }
 
+#if 0
 #ifdef CONFIG_PREEMPT_NOTIFIERS
 
 static DEFINE_STATIC_KEY_FALSE(preempt_notifier_key);

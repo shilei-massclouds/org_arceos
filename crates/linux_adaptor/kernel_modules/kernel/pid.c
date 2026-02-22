@@ -454,6 +454,7 @@ struct task_struct *find_get_task_by_vpid(pid_t nr)
 
 	return task;
 }
+#endif /* CL */
 
 struct pid *get_task_pid(struct task_struct *task, enum pid_type type)
 {
@@ -465,6 +466,7 @@ struct pid *get_task_pid(struct task_struct *task, enum pid_type type)
 }
 EXPORT_SYMBOL_GPL(get_task_pid);
 
+#if 0
 struct task_struct *get_pid_task(struct pid *pid, enum pid_type type)
 {
 	struct task_struct *result;
@@ -488,6 +490,7 @@ struct pid *find_get_pid(pid_t nr)
 	return pid;
 }
 EXPORT_SYMBOL_GPL(find_get_pid);
+#endif /* CL */
 
 pid_t pid_nr_ns(struct pid *pid, struct pid_namespace *ns)
 {
@@ -509,6 +512,7 @@ pid_t pid_vnr(struct pid *pid)
 }
 EXPORT_SYMBOL_GPL(pid_vnr);
 
+#if 0
 pid_t __task_pid_nr_ns(struct task_struct *task, enum pid_type type,
 			struct pid_namespace *ns)
 {
@@ -523,6 +527,7 @@ pid_t __task_pid_nr_ns(struct task_struct *task, enum pid_type type,
 	return nr;
 }
 EXPORT_SYMBOL(__task_pid_nr_ns);
+#endif /* CL */
 
 struct pid_namespace *task_active_pid_ns(struct task_struct *tsk)
 {
@@ -530,6 +535,7 @@ struct pid_namespace *task_active_pid_ns(struct task_struct *tsk)
 }
 EXPORT_SYMBOL_GPL(task_active_pid_ns);
 
+#if 0
 /*
  * Used by proc to find the first pid that is greater than or equal to nr.
  *

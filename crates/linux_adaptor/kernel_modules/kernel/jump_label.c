@@ -229,7 +229,6 @@ void static_key_enable(struct static_key *key)
 }
 EXPORT_SYMBOL_GPL(static_key_enable);
 
-#if 0
 void static_key_disable_cpuslocked(struct static_key *key)
 {
 	STATIC_KEY_CHECK_USE(key);
@@ -255,6 +254,7 @@ void static_key_disable(struct static_key *key)
 }
 EXPORT_SYMBOL_GPL(static_key_disable);
 
+#if 0
 static bool static_key_dec_not_one(struct static_key *key)
 {
 	int v;

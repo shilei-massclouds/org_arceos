@@ -7050,7 +7050,6 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	int rq_h_nr_queued = rq->cfs.h_nr_queued;
 	u64 slice = 0;
 
-#if 0
 	/*
 	 * The code below (indirectly) updates schedutil which looks at
 	 * the cfs_rq utilization to select a frequency.
@@ -7145,6 +7144,7 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		dl_server_start(&rq->fair_server);
 	}
 
+#if 0
 	/* At this point se is NULL and we are at root level*/
 	add_nr_running(rq, 1);
 
@@ -7164,13 +7164,13 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	 */
 	if (!task_new)
 		check_update_overutilized_status(rq);
+#endif
+    PANIC("");
 
 enqueue_throttle:
 	assert_list_leaf_cfs_rq(rq);
 
 	hrtick_update(rq);
-#endif
-    PANIC("");
 }
 
 static void set_next_buddy(struct sched_entity *se);

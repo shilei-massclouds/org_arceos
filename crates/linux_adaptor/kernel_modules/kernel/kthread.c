@@ -78,8 +78,6 @@ static inline struct kthread *to_kthread(struct task_struct *k)
 	return k->worker_private;
 }
 
-#if 0
-
 /*
  * Variant of to_kthread() that doesn't assume @p is a kthread.
  *
@@ -98,6 +96,8 @@ static inline struct kthread *__to_kthread(struct task_struct *p)
 		kthread = NULL;
 	return kthread;
 }
+
+#if 0
 
 void get_kthread_comm(char *buf, size_t buf_size, struct task_struct *tsk)
 {
@@ -611,7 +611,6 @@ void kthread_set_per_cpu(struct task_struct *k, int cpu)
 	set_bit(KTHREAD_IS_PER_CPU, &kthread->flags);
 }
 
-#if 0
 bool kthread_is_per_cpu(struct task_struct *p)
 {
 	struct kthread *kthread = __to_kthread(p);
@@ -621,6 +620,7 @@ bool kthread_is_per_cpu(struct task_struct *p)
 	return test_bit(KTHREAD_IS_PER_CPU, &kthread->flags);
 }
 
+#if 0
 /**
  * kthread_unpark - unpark a thread created by kthread_create().
  * @k:		thread created by kthread_create().

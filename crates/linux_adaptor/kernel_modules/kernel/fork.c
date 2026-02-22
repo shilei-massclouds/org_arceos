@@ -2854,7 +2854,6 @@ pid_t kernel_clone(struct kernel_clone_args *args)
 	}
 
 	p = copy_process(NULL, trace, NUMA_NO_NODE, args);
-#if 0
 	add_latent_entropy();
 
 	if (IS_ERR(p))
@@ -2887,6 +2886,7 @@ pid_t kernel_clone(struct kernel_clone_args *args)
 
 	wake_up_new_task(p);
 
+#if 0
 	/* forking complete and child started to run, tell ptracer */
 	if (unlikely(trace))
 		ptrace_event_pid(trace, pid);

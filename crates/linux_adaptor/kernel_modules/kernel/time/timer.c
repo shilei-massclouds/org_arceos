@@ -274,7 +274,6 @@ static DEFINE_PER_CPU(struct timer_base, timer_bases[NR_BASES]);
 static DEFINE_STATIC_KEY_FALSE(timers_nohz_active);
 static DEFINE_MUTEX(timer_keys_mutex);
 
-#if 0
 static void timer_update_keys(struct work_struct *work);
 static DECLARE_WORK(timer_update_work, timer_update_keys);
 
@@ -328,6 +327,7 @@ device_initcall(timer_sysctl_init);
 static inline void timers_update_migration(void) { }
 #endif /* !CONFIG_SMP */
 
+#if 0
 static void timer_update_keys(struct work_struct *work)
 {
 	mutex_lock(&timer_keys_mutex);

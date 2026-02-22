@@ -26,6 +26,7 @@ obj-y += bug.o
 obj-y += percpu_counter.o
 obj-y += idr.o
 obj-y += xarray.o
+obj-y += timerqueue.o
 
 obj-y += math/
 obj-y += crypto/
