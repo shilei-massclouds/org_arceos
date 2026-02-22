@@ -1373,7 +1373,6 @@ void hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
 }
 EXPORT_SYMBOL_GPL(hrtimer_start_range_ns);
 
-#if 0
 /**
  * hrtimer_try_to_cancel - try to deactivate a timer
  * @timer:	hrtimer to stop
@@ -1411,7 +1410,6 @@ int hrtimer_try_to_cancel(struct hrtimer *timer)
 
 }
 EXPORT_SYMBOL_GPL(hrtimer_try_to_cancel);
-#endif /* CL */
 
 #ifdef CONFIG_PREEMPT_RT
 static void hrtimer_cpu_base_init_expiry_lock(struct hrtimer_cpu_base *base)
@@ -1689,7 +1687,6 @@ void hrtimer_init(struct hrtimer *timer, clockid_t clock_id,
 }
 EXPORT_SYMBOL_GPL(hrtimer_init);
 
-#if 0
 /*
  * A timer is active, when it is enqueued into the rbtree or the
  * callback function is running or it's in the state of being migrated
@@ -1717,6 +1714,7 @@ bool hrtimer_active(const struct hrtimer *timer)
 }
 EXPORT_SYMBOL_GPL(hrtimer_active);
 
+#if 0
 /*
  * The write_seqcount_barrier()s in __run_hrtimer() split the thing into 3
  * distinct sections:

@@ -2068,7 +2068,6 @@ void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
  */
 inline bool dequeue_task(struct rq *rq, struct task_struct *p, int flags)
 {
-#if 0
 	if (sched_core_enabled(rq))
 		sched_core_dequeue(rq, p, flags);
 
@@ -2086,8 +2085,6 @@ inline bool dequeue_task(struct rq *rq, struct task_struct *p, int flags)
 	 */
 	uclamp_rq_dec(rq, p);
 	return p->sched_class->dequeue_task(rq, p, flags);
-#endif
-    PANIC("");
 }
 
 void activate_task(struct rq *rq, struct task_struct *p, int flags)
@@ -5822,6 +5819,8 @@ static inline void sched_tick_start(int cpu) { }
 static inline void sched_tick_stop(int cpu) { }
 #endif
 
+#endif /* CL */
+
 #if defined(CONFIG_PREEMPTION) && (defined(CONFIG_DEBUG_PREEMPT) || \
 				defined(CONFIG_TRACE_PREEMPT_TOGGLE))
 /*
@@ -5897,8 +5896,6 @@ NOKPROBE_SYMBOL(preempt_count_sub);
 static inline void preempt_latency_start(int val) { }
 static inline void preempt_latency_stop(int val) { }
 #endif
-
-#endif /* CL */
 
 static inline unsigned long get_preempt_disable_ip(struct task_struct *p)
 {
@@ -6832,7 +6829,6 @@ static inline void sched_submit_work(struct task_struct *tsk)
 	lock_map_release(&sched_map);
 }
 
-#if 0
 static void sched_update_worker(struct task_struct *tsk)
 {
 	if (tsk->flags & (PF_WQ_WORKER | PF_IO_WORKER | PF_BLOCK_TS)) {
@@ -6844,7 +6840,6 @@ static void sched_update_worker(struct task_struct *tsk)
 			io_wq_worker_running(tsk);
 	}
 }
-#endif /* CL */
 
 static __always_inline void __schedule_loop(int sched_mode)
 {
@@ -6866,10 +6861,7 @@ asmlinkage __visible void __sched schedule(void)
 	if (!task_is_running(tsk))
 		sched_submit_work(tsk);
 	__schedule_loop(SM_NONE);
-#if 0
 	sched_update_worker(tsk);
-#endif
-    PANIC("");
 }
 EXPORT_SYMBOL(schedule);
 
@@ -6940,6 +6932,7 @@ void __sched notrace schedule_rtlock(void)
 }
 NOKPROBE_SYMBOL(schedule_rtlock);
 #endif
+#endif /* CL */
 
 static void __sched notrace preempt_schedule_common(void)
 {
@@ -7084,6 +7077,7 @@ EXPORT_SYMBOL(dynamic_preempt_schedule_notrace);
 
 #endif /* CONFIG_PREEMPTION */
 
+#if 0
 /*
  * This is the entry point to schedule() from kernel preemption
  * off of IRQ context.
