@@ -115,7 +115,6 @@ int static_key_count(struct static_key *key)
 }
 EXPORT_SYMBOL_GPL(static_key_count);
 
-#if 0
 /*
  * static_key_fast_inc_not_disabled - adds a user for a static key
  * @key: static key that must be already enabled
@@ -196,7 +195,6 @@ bool static_key_slow_inc(struct static_key *key)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(static_key_slow_inc);
-#endif /* CL */
 
 void static_key_enable_cpuslocked(struct static_key *key)
 {
@@ -254,7 +252,6 @@ void static_key_disable(struct static_key *key)
 }
 EXPORT_SYMBOL_GPL(static_key_disable);
 
-#if 0
 static bool static_key_dec_not_one(struct static_key *key)
 {
 	int v;
@@ -327,6 +324,7 @@ static void __static_key_slow_dec(struct static_key *key)
 	cpus_read_unlock();
 }
 
+#if 0
 void jump_label_update_timeout(struct work_struct *work)
 {
 	struct static_key_deferred *key =
@@ -334,6 +332,7 @@ void jump_label_update_timeout(struct work_struct *work)
 	__static_key_slow_dec(&key->key);
 }
 EXPORT_SYMBOL_GPL(jump_label_update_timeout);
+#endif /* CL */
 
 void static_key_slow_dec(struct static_key *key)
 {
@@ -342,6 +341,7 @@ void static_key_slow_dec(struct static_key *key)
 }
 EXPORT_SYMBOL_GPL(static_key_slow_dec);
 
+#if 0
 void static_key_slow_dec_cpuslocked(struct static_key *key)
 {
 	STATIC_KEY_CHECK_USE(key);

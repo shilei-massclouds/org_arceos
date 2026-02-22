@@ -231,9 +231,10 @@ fn prepare_for_uapp() {
 
 #[cfg(feature = "multitask")]
 fn call_main() {
-    axtask::spawn(|| {
+    let task = axtask::spawn(|| {
         unsafe { main(); }
-    }).join();
+    });
+    axtask::idle_loop(task);
 }
 
 #[cfg(not(feature = "multitask"))]

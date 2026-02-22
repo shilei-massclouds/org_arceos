@@ -196,3 +196,15 @@ void uprobe_copy_process(struct task_struct *t, unsigned long flags)
     pr_err("--> NOTE: %s: No impl.\n", __func__);
 }
 
+// kernel/events/core.c
+DEFINE_STATIC_KEY_FALSE(perf_sched_events);
+DEFINE_PER_CPU(struct pt_regs, __perf_regs[4]);
+void __perf_event_task_sched_out(struct task_struct *task,
+                 struct task_struct *next)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}
+void ___perf_sw_event(u32 event_id, u64 nr, struct pt_regs *regs, u64 addr)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}

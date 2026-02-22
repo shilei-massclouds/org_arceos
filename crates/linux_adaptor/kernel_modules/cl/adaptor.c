@@ -1,3 +1,4 @@
+#include <linux/cpu.h>
 #include <linux/mm.h>
 #include <linux/vmalloc.h>
 
@@ -6,7 +7,7 @@
 unsigned long linux_virt_to_phys(unsigned long va)
 {
     if (is_vmalloc_addr((void *)va)) {
-        struct page *page = vmalloc_to_page(va);
+        struct page *page = vmalloc_to_page((void *)va);
         return page_to_phys(page) + offset_in_page(va);
     }
     return __pa(va);
@@ -48,4 +49,15 @@ void set_current_need_resched()
 pid_t linux_kernel_thread(int (*fn)(void *), void *opaque)
 {
     return kernel_thread(fn, opaque, NULL, CLONE_FS | CLONE_FILES);
+}
+
+void linux_idle_loop(pid_t pid)
+{
+    /*
+     * The boot idle thread must execute schedule()
+     * at least once to get things moving:
+     */
+    schedule_preempt_disabled();
+    /* Call into cpu_idle with preempt disabled */
+    cpu_startup_entry(CPUHP_ONLINE);
 }

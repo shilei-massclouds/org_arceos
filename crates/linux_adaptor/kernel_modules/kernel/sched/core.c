@@ -2118,6 +2118,7 @@ void deactivate_task(struct rq *rq, struct task_struct *p, int flags)
 
 	dequeue_task(rq, p, flags);
 }
+#endif /* CL */
 
 static void block_task(struct rq *rq, struct task_struct *p, int flags)
 {
@@ -2125,6 +2126,7 @@ static void block_task(struct rq *rq, struct task_struct *p, int flags)
 		__block_task(rq, p);
 }
 
+#if 0
 /**
  * task_curr - is this task currently executing on a CPU?
  * @p: the task in question.
@@ -4897,7 +4899,6 @@ void wake_up_new_task(struct task_struct *p)
 	task_rq_unlock(rq, p, &rf);
 }
 
-#if 0
 #ifdef CONFIG_PREEMPT_NOTIFIERS
 
 static DEFINE_STATIC_KEY_FALSE(preempt_notifier_key);
@@ -4999,6 +5000,7 @@ static inline void prepare_task(struct task_struct *next)
 #endif
 }
 
+#if 0
 static inline void finish_task(struct task_struct *prev)
 {
 #ifdef CONFIG_SMP
@@ -5109,7 +5111,6 @@ static inline void __balance_callbacks(struct rq *rq)
 
 #endif
 
-#if 0
 static inline void
 prepare_lock_switch(struct rq *rq, struct task_struct *next, struct rq_flags *rf)
 {
@@ -5127,6 +5128,7 @@ prepare_lock_switch(struct rq *rq, struct task_struct *next, struct rq_flags *rf
 #endif
 }
 
+#if 0
 static inline void finish_lock_switch(struct rq *rq)
 {
 	/*
@@ -5152,8 +5154,6 @@ static inline void finish_lock_switch(struct rq *rq)
 # define finish_arch_post_lock_switch()	do { } while (0)
 #endif
 
-#if 0
-
 static inline void kmap_local_sched_out(void)
 {
 #ifdef CONFIG_KMAP_LOCAL
@@ -5162,6 +5162,7 @@ static inline void kmap_local_sched_out(void)
 #endif
 }
 
+#if 0
 static inline void kmap_local_sched_in(void)
 {
 #ifdef CONFIG_KMAP_LOCAL
@@ -5169,6 +5170,8 @@ static inline void kmap_local_sched_in(void)
 		__kmap_local_sched_in();
 #endif
 }
+
+#endif /* CL */
 
 /**
  * prepare_task_switch - prepare to switch tasks
@@ -5223,6 +5226,7 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 	struct mm_struct *mm = rq->prev_mm;
 	unsigned int prev_state;
 
+#if 0
 	/*
 	 * The previous task will have left us with a preempt_count of 2
 	 * because it left us after:
@@ -5297,9 +5301,12 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 		put_task_struct_rcu_user(prev);
 	}
 
+#endif
+    PANIC("");
 	return rq;
 }
 
+#if 0
 /**
  * schedule_tail - first thing a freshly forked thread must call.
  * @prev: the thread we just switched away from.
@@ -5324,6 +5331,8 @@ asmlinkage __visible void schedule_tail(struct task_struct *prev)
 
 	calculate_sigpending();
 }
+
+#endif /* CL */
 
 /*
  * context_switch - switch to the new MM and the new thread's register state.
@@ -5391,6 +5400,7 @@ context_switch(struct rq *rq, struct task_struct *prev,
 	return finish_task_switch(prev);
 }
 
+#if 0
 /*
  * nr_running and nr_context_switches:
  *
@@ -5977,7 +5987,6 @@ static inline void schedule_debug(struct task_struct *prev, bool preempt)
 	schedstat_inc(this_rq()->sched_count);
 }
 
-#if 0
 static void prev_balance(struct rq *rq, struct task_struct *prev,
 			 struct rq_flags *rf)
 {
@@ -6561,8 +6570,6 @@ pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
 
 #endif /* CONFIG_SCHED_CORE */
 
-#endif /* CL */
-
 /*
  * Constants for the sched_mode argument of __schedule().
  *
@@ -6574,7 +6581,6 @@ pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
 #define SM_PREEMPT		1
 #define SM_RTLOCK_WAIT		2
 
-#if 0
 /*
  * Helper function for __schedule()
  *
@@ -6615,8 +6621,6 @@ static bool try_to_block_task(struct rq *rq, struct task_struct *p,
 	block_task(rq, p, flags);
 	return true;
 }
-
-#endif /* CL */
 
 /*
  * __schedule() is the main scheduler function.
@@ -6676,7 +6680,6 @@ static void __sched notrace __schedule(int sched_mode)
 	prev = rq->curr;
 
 	schedule_debug(prev, preempt);
-#if 0
 
 	if (sched_feat(HRTICK) || sched_feat(HRTICK_DL))
 		hrtick_clear(rq);
@@ -6783,8 +6786,6 @@ picked:
 		__balance_callbacks(rq);
 		raw_spin_rq_unlock_irq(rq);
 	}
-#endif
-    PANIC("");
 }
 
 #if 0
@@ -6930,6 +6931,8 @@ asmlinkage __visible void __sched schedule_user(void)
 }
 #endif
 
+#endif /* CL */
+
 /**
  * schedule_preempt_disabled - called with preemption disabled
  *
@@ -6942,6 +6945,7 @@ void __sched schedule_preempt_disabled(void)
 	preempt_disable();
 }
 
+#if 0
 #ifdef CONFIG_PREEMPT_RT
 void __sched notrace schedule_rtlock(void)
 {

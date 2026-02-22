@@ -256,10 +256,17 @@ pub fn exit(exit_code: i32) -> ! {
     unimplemented!("axtask_lx::exit({}) ..", exit_code);
 }
 
+pub fn idle_loop(idle: AxTaskRef) {
+    unsafe {
+        linux_idle_loop(idle.id().as_u64() as i32);
+    }
+}
+
 unsafe extern "C" {
     fn sched_init();
     fn msleep(msecs: usize);
     fn linux_kernel_thread(f: LinuxThreadFn, opaque: *mut c_void) -> i32;
+    fn linux_idle_loop(pid: i32);
 }
 
 /*

@@ -345,6 +345,56 @@ call_on_irq_stack:
 
     ret
 
+/*
+ * Integer register context switch
+ * The callee-saved registers must be saved and restored.
+ *
+ *   a0: previous task_struct (must be preserved across the switch)
+ *   a1: next task_struct
+ *
+ * The value of a0 and a1 must be preserved by this function, as that's how
+ * arguments are passed to schedule_tail.
+ */
+.balign 4
+.global __switch_to
+__switch_to:
+    /* Save context into prev->thread */
+    li    a4,  {TASK_THREAD_RA}
+    add   a3, a0, a4
+    add   a4, a1, a4
+    sd ra,  {TASK_THREAD_RA_RA}(a3)
+    sd sp,  {TASK_THREAD_SP_RA}(a3)
+    sd s0,  {TASK_THREAD_S0_RA}(a3)
+    sd s1,  {TASK_THREAD_S1_RA}(a3)
+    sd s2,  {TASK_THREAD_S2_RA}(a3)
+    sd s3,  {TASK_THREAD_S3_RA}(a3)
+    sd s4,  {TASK_THREAD_S4_RA}(a3)
+    sd s5,  {TASK_THREAD_S5_RA}(a3)
+    sd s6,  {TASK_THREAD_S6_RA}(a3)
+    sd s7,  {TASK_THREAD_S7_RA}(a3)
+    sd s8,  {TASK_THREAD_S8_RA}(a3)
+    sd s9,  {TASK_THREAD_S9_RA}(a3)
+    sd s10, {TASK_THREAD_S10_RA}(a3)
+    sd s11, {TASK_THREAD_S11_RA}(a3)
+    /* Restore context from next->thread */
+    ld ra,  {TASK_THREAD_RA_RA}(a4)
+    ld sp,  {TASK_THREAD_SP_RA}(a4)
+    ld s0,  {TASK_THREAD_S0_RA}(a4)
+    ld s1,  {TASK_THREAD_S1_RA}(a4)
+    ld s2,  {TASK_THREAD_S2_RA}(a4)
+    ld s3,  {TASK_THREAD_S3_RA}(a4)
+    ld s4,  {TASK_THREAD_S4_RA}(a4)
+    ld s5,  {TASK_THREAD_S5_RA}(a4)
+    ld s6,  {TASK_THREAD_S6_RA}(a4)
+    ld s7,  {TASK_THREAD_S7_RA}(a4)
+    ld s8,  {TASK_THREAD_S8_RA}(a4)
+    ld s9,  {TASK_THREAD_S9_RA}(a4)
+    ld s10, {TASK_THREAD_S10_RA}(a4)
+    ld s11, {TASK_THREAD_S11_RA}(a4)
+    /* The offset of thread_info in task_struct is zero. */
+    move tp, a1
+    ret
+
 /* Exception vector table */
 .section ".rodata"
 .align {RISCV_LGPTR}

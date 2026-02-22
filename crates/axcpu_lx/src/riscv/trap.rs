@@ -5,6 +5,36 @@ use crate::trap::PageFaultFlags;
 use linux_config::*;
 
 /*
+ * All offsets prefixed by 'TASK_THREAD_' according to
+ * 
+ * struct thread_struct {
+ *      unsigned long ra;
+ *      unsigned long sp;
+ *      unsigned long s[12];
+ *      ... ...
+ * };
+ */
+
+/* offsetof(struct task_struct, thread.ra) */
+const TASK_THREAD_RA:   usize = 2640;
+
+/* offset for thread.XX from thread.ra */
+const TASK_THREAD_RA_RA: usize = 0;
+const TASK_THREAD_SP_RA: usize = 8;
+const TASK_THREAD_S0_RA: usize = 16;
+const TASK_THREAD_S1_RA: usize = 24;
+const TASK_THREAD_S2_RA: usize = 32;
+const TASK_THREAD_S3_RA: usize = 40;
+const TASK_THREAD_S4_RA: usize = 48;
+const TASK_THREAD_S5_RA: usize = 56;
+const TASK_THREAD_S6_RA: usize = 64;
+const TASK_THREAD_S7_RA: usize = 72;
+const TASK_THREAD_S8_RA: usize = 80;
+const TASK_THREAD_S9_RA: usize = 88;
+const TASK_THREAD_S10_RA: usize = 96;
+const TASK_THREAD_S11_RA: usize = 104;
+
+/*
  *  All offsets prefixed by 'TASK_TI_' according to
  *  struct thread_info in linux kernel.
  *
@@ -143,6 +173,21 @@ core::arch::global_asm!(
     STACKFRAME_FP = const STACKFRAME_FP,
     STACKFRAME_RA = const STACKFRAME_RA,
     IRQ_STACK_SIZE = const IRQ_STACK_SIZE,
+    TASK_THREAD_RA = const TASK_THREAD_RA,
+    TASK_THREAD_RA_RA = const TASK_THREAD_RA_RA,
+    TASK_THREAD_SP_RA = const TASK_THREAD_SP_RA,
+    TASK_THREAD_S0_RA = const TASK_THREAD_S0_RA,
+    TASK_THREAD_S1_RA = const TASK_THREAD_S1_RA,
+    TASK_THREAD_S2_RA = const TASK_THREAD_S2_RA,
+    TASK_THREAD_S3_RA = const TASK_THREAD_S3_RA,
+    TASK_THREAD_S4_RA = const TASK_THREAD_S4_RA,
+    TASK_THREAD_S5_RA = const TASK_THREAD_S5_RA,
+    TASK_THREAD_S6_RA = const TASK_THREAD_S6_RA,
+    TASK_THREAD_S7_RA = const TASK_THREAD_S7_RA,
+    TASK_THREAD_S8_RA = const TASK_THREAD_S8_RA,
+    TASK_THREAD_S9_RA = const TASK_THREAD_S9_RA,
+    TASK_THREAD_S10_RA = const TASK_THREAD_S10_RA,
+    TASK_THREAD_S11_RA = const TASK_THREAD_S11_RA,
 );
 
 #[unsafe(no_mangle)]
