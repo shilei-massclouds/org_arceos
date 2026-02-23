@@ -81,6 +81,7 @@ int tick_is_oneshot_available(void)
 		return 1;
 	return tick_broadcast_oneshot_available();
 }
+#endif /* CL */
 
 /*
  * Periodic tick
@@ -260,6 +261,7 @@ static void tick_setup_device(struct tick_device *td,
 		tick_setup_oneshot(newdev, handler, next_event);
 }
 
+#if 0
 void tick_install_replacement(struct clock_event_device *newdev)
 {
 	struct tick_device *td = this_cpu_ptr(&tick_cpu_device);
@@ -338,7 +340,6 @@ void tick_check_new_device(struct clock_event_device *newdev)
 	if (!tick_check_replacement(curdev, newdev))
 		goto out_bc;
 
-#if 0
 	if (!try_module_get(newdev->owner))
 		return;
 
@@ -355,8 +356,6 @@ void tick_check_new_device(struct clock_event_device *newdev)
 	tick_setup_device(td, newdev, cpu, cpumask_of(cpu));
 	if (newdev->features & CLOCK_EVT_FEAT_ONESHOT)
 		tick_oneshot_notify();
-#endif
-    PANIC("");
 	return;
 
 out_bc:

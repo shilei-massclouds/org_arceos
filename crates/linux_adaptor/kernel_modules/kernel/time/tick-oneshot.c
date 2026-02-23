@@ -55,6 +55,7 @@ void tick_resume_oneshot(void)
 	clockevents_switch_state(dev, CLOCK_EVT_STATE_ONESHOT);
 	clockevents_program_event(dev, ktime_get(), true);
 }
+#endif /* CL */
 
 /**
  * tick_setup_oneshot - setup the event device for oneshot mode (hres or nohz)
@@ -68,6 +69,7 @@ void tick_setup_oneshot(struct clock_event_device *newdev,
 	clockevents_program_event(newdev, next_event, true);
 }
 
+#if 0
 /**
  * tick_switch_to_oneshot - switch to oneshot mode
  */

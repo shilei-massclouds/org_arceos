@@ -1685,7 +1685,6 @@ void tick_clock_notify(void)
 		set_bit(0, &per_cpu(tick_cpu_sched, cpu).check_clocks);
 }
 
-#if 0
 /*
  * Async notification about clock event changes
  */
@@ -1696,6 +1695,7 @@ void tick_oneshot_notify(void)
 	set_bit(0, &ts->check_clocks);
 }
 
+#if 0
 /*
  * Check if a change happened, which makes oneshot possible.
  *

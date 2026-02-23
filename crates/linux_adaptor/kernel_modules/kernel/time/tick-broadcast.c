@@ -206,7 +206,6 @@ void tick_install_broadcast_device(struct clock_event_device *dev, int cpu)
 	tick_clock_notify();
 }
 
-#if 0
 /*
  * Check, if the device is the broadcast device
  */
@@ -215,6 +214,7 @@ int tick_is_broadcast_device(struct clock_event_device *dev)
 	return (dev && tick_broadcast_device.evtdev == dev);
 }
 
+#if 0
 int tick_broadcast_update_freq(struct clock_event_device *dev, u32 freq)
 {
 	int ret = -ENODEV;
@@ -227,6 +227,7 @@ int tick_broadcast_update_freq(struct clock_event_device *dev, u32 freq)
 	return ret;
 }
 
+#endif /* CL */
 
 static void err_broadcast(const struct cpumask *mask)
 {
@@ -329,6 +330,8 @@ int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 	return ret;
 }
 
+#if 0
+
 int tick_receive_broadcast(void)
 {
 	struct tick_device *td = this_cpu_ptr(&tick_cpu_device);
@@ -343,6 +346,7 @@ int tick_receive_broadcast(void)
 	evt->event_handler(evt);
 	return 0;
 }
+#endif /* CL */
 
 /*
  * Broadcast the event to the cpus, which are set in the mask (mangled).
@@ -432,6 +436,7 @@ static void tick_handle_periodic_broadcast(struct clock_event_device *dev)
 		td->evtdev->event_handler(td->evtdev);
 }
 
+#if 0
 /**
  * tick_broadcast_control - Enable/disable or force broadcast mode
  * @mode:	The selected broadcast mode
@@ -513,6 +518,8 @@ out:
 }
 EXPORT_SYMBOL_GPL(tick_broadcast_control);
 
+#endif /* CL */
+
 /*
  * Set the periodic handler depending on broadcast on/off
  */
@@ -524,6 +531,7 @@ void tick_set_periodic_handler(struct clock_event_device *dev, int broadcast)
 		dev->event_handler = tick_handle_periodic_broadcast;
 }
 
+#if 0
 #ifdef CONFIG_HOTPLUG_CPU
 static void tick_shutdown_broadcast(void)
 {

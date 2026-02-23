@@ -29,7 +29,6 @@ struct ce_unbind {
 	int res;
 };
 
-#if 0
 static u64 cev_delta2ns(unsigned long latch, struct clock_event_device *evt,
 			bool ismax)
 {
@@ -76,6 +75,7 @@ static u64 cev_delta2ns(unsigned long latch, struct clock_event_device *evt,
 	return clc > 1000 ? clc : 1000;
 }
 
+#if 0
 /**
  * clockevent_delta2ns - Convert a latch value (device ticks) to nanoseconds
  * @latch:	value to convert
@@ -176,7 +176,6 @@ void clockevents_shutdown(struct clock_event_device *dev)
 	dev->next_event = KTIME_MAX;
 }
 
-#if 0
 /**
  * clockevents_tick_resume -	Resume the tick device before using it again
  * @dev:			device to resume
@@ -338,7 +337,6 @@ int clockevents_program_event(struct clock_event_device *dev, ktime_t expires,
 
 	return (rc && force) ? clockevents_program_min_delta(dev) : rc;
 }
-#endif /* CL */
 
 /*
  * Called after a notify add to make devices available which were
@@ -475,7 +473,6 @@ void clockevents_register_device(struct clock_event_device *dev)
 }
 EXPORT_SYMBOL_GPL(clockevents_register_device);
 
-#if 0
 static void clockevents_config(struct clock_event_device *dev, u32 freq)
 {
 	u64 sec;
@@ -520,6 +517,7 @@ void clockevents_config_and_register(struct clock_event_device *dev,
 }
 EXPORT_SYMBOL_GPL(clockevents_config_and_register);
 
+#if 0
 int __clockevents_update_freq(struct clock_event_device *dev, u32 freq)
 {
 	clockevents_config(dev, freq);

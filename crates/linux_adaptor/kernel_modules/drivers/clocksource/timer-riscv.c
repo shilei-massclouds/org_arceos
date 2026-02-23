@@ -65,8 +65,7 @@ static int riscv_clock_next_event(unsigned long delta,
 
 static int riscv_clock_shutdown(struct clock_event_device *evt)
 {
-	//riscv_clock_event_stop();
-    PANIC("");
+	riscv_clock_event_stop();
 	return 0;
 }
 
