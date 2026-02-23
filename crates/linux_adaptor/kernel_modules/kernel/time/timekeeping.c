@@ -2333,6 +2333,8 @@ void ktime_get_coarse_ts64(struct timespec64 *ts)
 }
 EXPORT_SYMBOL(ktime_get_coarse_ts64);
 
+#endif /* CL */
+
 /*
  * Must hold jiffies_lock
  */
@@ -2342,6 +2344,7 @@ void do_timer(unsigned long ticks)
 	calc_global_load();
 }
 
+#if 0
 /**
  * ktime_get_update_offsets_now - hrtimer helper
  * @cwsseq:	pointer to check and store the clock was set sequence number
