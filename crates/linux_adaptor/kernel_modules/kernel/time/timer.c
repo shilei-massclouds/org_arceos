@@ -2475,7 +2475,6 @@ static __latent_entropy void run_timer_softirq(void)
     PANIC("");
 }
 
-#if 0
 /*
  * Called by the local, per-CPU timer interrupt on SMP.
  */
@@ -2538,6 +2537,7 @@ void update_process_times(int user_tick)
 	/* Note: this timer irq context must be accounted for as well. */
 	account_process_tick(p, user_tick);
 	run_local_timers();
+#if 0
 	rcu_sched_clock_irq(user_tick);
 #ifdef CONFIG_IRQ_WORK
 	if (in_irq())
@@ -2546,9 +2546,9 @@ void update_process_times(int user_tick)
 	sched_tick();
 	if (IS_ENABLED(CONFIG_POSIX_TIMERS))
 		run_posix_cpu_timers();
+#endif
+    PANIC("");
 }
-
-#endif /* CL */
 
 /*
  * Since schedule_timeout()'s timer is defined on the stack, it must store

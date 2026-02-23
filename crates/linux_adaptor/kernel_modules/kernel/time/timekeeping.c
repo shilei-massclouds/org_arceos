@@ -1479,6 +1479,7 @@ void timekeeping_warp_clock(void)
 		timekeeping_inject_offset(&adjust);
 	}
 }
+#endif /* CL */
 
 /*
  * __timekeeping_set_tai_offset - Sets the TAI offset from UTC and monotonic
@@ -1489,6 +1490,7 @@ static void __timekeeping_set_tai_offset(struct timekeeper *tk, s32 tai_offset)
 	tk->offs_tai = ktime_add(tk->offs_real, ktime_set(tai_offset, 0));
 }
 
+#if 0
 /*
  * change_clocksource - Swaps clocksources if a new one is available
  *
@@ -1581,6 +1583,7 @@ void ktime_get_raw_ts64(struct timespec64 *ts)
 }
 EXPORT_SYMBOL(ktime_get_raw_ts64);
 
+#endif /* CL */
 
 /**
  * timekeeping_valid_for_hres - Check if timekeeping is suitable for hres
@@ -1601,6 +1604,7 @@ int timekeeping_valid_for_hres(void)
 	return ret;
 }
 
+#if 0
 /**
  * timekeeping_max_deferment - Returns max time the clocksource can be deferred
  */
@@ -1970,6 +1974,7 @@ static int __init timekeeping_init_ops(void)
 }
 device_initcall(timekeeping_init_ops);
 
+#endif /* CL */
 /*
  * Apply a multiplier adjustment to the timekeeper
  */
@@ -2282,6 +2287,7 @@ void update_wall_time(void)
 		clock_was_set_delayed();
 }
 
+#if 0
 /**
  * getboottime64 - Return the real time of system boot.
  * @ts:		pointer to the timespec64 to be set
@@ -2344,7 +2350,6 @@ void do_timer(unsigned long ticks)
 	calc_global_load();
 }
 
-#if 0
 /**
  * ktime_get_update_offsets_now - hrtimer helper
  * @cwsseq:	pointer to check and store the clock was set sequence number
@@ -2389,6 +2394,7 @@ ktime_t ktime_get_update_offsets_now(unsigned int *cwsseq, ktime_t *offs_real,
 	return base;
 }
 
+#if 0
 /*
  * timekeeping_validate_timex - Ensures the timex is ok for use in do_adjtimex
  */

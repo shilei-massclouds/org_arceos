@@ -1695,7 +1695,6 @@ void tick_oneshot_notify(void)
 	set_bit(0, &ts->check_clocks);
 }
 
-#if 0
 /*
  * Check if a change happened, which makes oneshot possible.
  *
@@ -1723,5 +1722,3 @@ int tick_check_oneshot_change(int allow_nohz)
 	tick_nohz_switch_to_nohz();
 	return 0;
 }
-
-#endif /* CL */

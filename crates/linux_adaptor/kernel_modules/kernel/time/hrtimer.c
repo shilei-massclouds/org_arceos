@@ -651,7 +651,6 @@ static ktime_t hrtimer_update_next_event(struct hrtimer_cpu_base *cpu_base)
 	return expires_next;
 }
 
-#if 0
 static inline ktime_t hrtimer_update_base(struct hrtimer_cpu_base *base)
 {
 	ktime_t *offs_real = &base->clock_base[HRTIMER_BASE_REALTIME].offset;
@@ -667,7 +666,6 @@ static inline ktime_t hrtimer_update_base(struct hrtimer_cpu_base *base)
 
 	return now;
 }
-#endif /* CL */
 
 /*
  * Is the high resolution mode active ?
@@ -725,7 +723,6 @@ hrtimer_force_reprogram(struct hrtimer_cpu_base *cpu_base, int skip_equal)
 	__hrtimer_reprogram(cpu_base, cpu_base->next_timer, expires_next);
 }
 
-#if 0
 /* High resolution timer related functions */
 #ifdef CONFIG_HIGH_RES_TIMERS
 
@@ -780,8 +777,6 @@ static inline int hrtimer_is_hres_enabled(void) { return 0; }
 static inline void hrtimer_switch_to_hres(void) { }
 
 #endif /* CONFIG_HIGH_RES_TIMERS */
-
-#endif /* CL */
 
 /*
  * Retrigger next event is called after clock was set with interrupts
@@ -1714,7 +1709,6 @@ bool hrtimer_active(const struct hrtimer *timer)
 }
 EXPORT_SYMBOL_GPL(hrtimer_active);
 
-#if 0
 /*
  * The write_seqcount_barrier()s in __run_hrtimer() split the thing into 3
  * distinct sections:
@@ -1846,7 +1840,6 @@ static void __hrtimer_run_queues(struct hrtimer_cpu_base *cpu_base, ktime_t now,
 		}
 	}
 }
-#endif /* CL */
 
 static __latent_entropy void hrtimer_run_softirq(void)
 {
@@ -1969,6 +1962,8 @@ retry:
 }
 #endif /* !CONFIG_HIGH_RES_TIMERS */
 
+#endif /* CL */
+
 /*
  * Called from run_local_timers in hardirq context every jiffy
  */
@@ -2006,6 +2001,7 @@ void hrtimer_run_queues(void)
 	raw_spin_unlock_irqrestore(&cpu_base->lock, flags);
 }
 
+#if 0
 /*
  * Sleep related functions:
  */

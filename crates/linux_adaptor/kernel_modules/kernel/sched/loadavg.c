@@ -54,7 +54,10 @@
  *  This covers the NO_HZ=n code, for extra head-aches, see the comment below.
  */
 
+#include <linux/jiffies.h>
 #include <linux/sched.h>
+
+#include "adaptor.h"
 
 /* Variables and functions for calc_load */
 atomic_long_t calc_load_tasks;
@@ -343,6 +346,8 @@ static inline void calc_global_nohz(void) { }
 
 #endif /* CONFIG_NO_HZ_COMMON */
 
+#endif /* CL */
+
 /*
  * calc_load - update the avenrun load estimates 10 ticks after the
  * CPUs have updated calc_load_tasks.
@@ -358,6 +363,7 @@ void calc_global_load(void)
 	if (time_before(jiffies, sample_window + 10))
 		return;
 
+#if 0
 	/*
 	 * Fold the 'old' NO_HZ-delta to include all NO_HZ CPUs.
 	 */
@@ -379,8 +385,11 @@ void calc_global_load(void)
 	 * catch up in bulk.
 	 */
 	calc_global_nohz();
+#endif
+    PANIC("");
 }
 
+#if 0
 /*
  * Called from sched_tick() to periodically update this CPU's
  * active count.

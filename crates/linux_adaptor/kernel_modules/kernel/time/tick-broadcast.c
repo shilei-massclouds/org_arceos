@@ -1223,7 +1223,6 @@ int tick_broadcast_oneshot_active(void)
 	return tick_broadcast_device.mode == TICKDEV_MODE_ONESHOT;
 }
 
-#if 0
 /*
  * Check whether the broadcast device supports oneshot.
  */
@@ -1233,7 +1232,6 @@ bool tick_broadcast_oneshot_available(void)
 
 	return bc ? bc->features & CLOCK_EVT_FEAT_ONESHOT : false;
 }
-#endif /* CL */
 
 #else /* CONFIG_TICK_ONESHOT */
 int __tick_broadcast_oneshot_control(enum tick_broadcast_state state)

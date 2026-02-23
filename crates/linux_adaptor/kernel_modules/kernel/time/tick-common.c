@@ -67,6 +67,7 @@ struct tick_device *tick_get_device(int cpu)
 {
 	return &per_cpu(tick_cpu_device, cpu);
 }
+#endif /* CL */
 
 /**
  * tick_is_oneshot_available - check for a oneshot capable event device
@@ -81,7 +82,6 @@ int tick_is_oneshot_available(void)
 		return 1;
 	return tick_broadcast_oneshot_available();
 }
-#endif /* CL */
 
 /*
  * Periodic tick
