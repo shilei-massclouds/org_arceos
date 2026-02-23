@@ -109,6 +109,7 @@ void __init call_function_init(void)
 
 	smpcfd_prepare_cpu(smp_processor_id());
 }
+#endif /* CL */
 
 static __always_inline void
 send_call_function_single_ipi(int cpu)
@@ -376,6 +377,7 @@ static __always_inline void csd_unlock(call_single_data_t *csd)
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(call_single_data_t, csd_data);
 
+#if 0
 void __smp_call_single_queue(int cpu, struct llist_node *node)
 {
 	/*
@@ -774,6 +776,8 @@ call:
 }
 EXPORT_SYMBOL_GPL(smp_call_function_any);
 
+#endif /* CL */
+
 /*
  * Flags to be used as scf_flags argument of smp_call_function_many_cond().
  *
@@ -887,6 +891,7 @@ static void smp_call_function_many_cond(const struct cpumask *mask,
 	}
 }
 
+#if 0
 /**
  * smp_call_function_many(): Run a function on a set of CPUs.
  * @mask: The set of cpus to run on (only runs on online subset).
@@ -985,7 +990,7 @@ static int __init maxcpus(char *str)
 
 early_param("maxcpus", maxcpus);
 
-#endif
+#endif /* CL */
 
 #if (NR_CPUS > 1) && !defined(CONFIG_FORCE_NR_CPUS)
 /* Setup number of possible processor ids */
@@ -1021,6 +1026,7 @@ void __init smp_init(void)
 	/* Any cleanup work */
 	smp_cpus_done(setup_max_cpus);
 }
+#endif /* CL */
 
 /*
  * on_each_cpu_cond(): Call a function on each processor for which
@@ -1058,6 +1064,7 @@ void on_each_cpu_cond_mask(smp_cond_func_t cond_func, smp_call_func_t func,
 }
 EXPORT_SYMBOL(on_each_cpu_cond_mask);
 
+#if 0
 static void do_nothing(void *unused)
 {
 }
@@ -1157,4 +1164,4 @@ int smp_call_on_cpu(unsigned int cpu, int (*func)(void *), void *par, bool phys)
 	return sscs.ret;
 }
 EXPORT_SYMBOL_GPL(smp_call_on_cpu);
-#endif
+#endif /* CL */

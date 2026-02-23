@@ -22,6 +22,7 @@
 #include <asm/irq_regs.h>
 
 #include "tick-internal.h"
+#include "adaptor.h"
 
 /*
  * Tick devices
@@ -269,6 +270,7 @@ void tick_install_replacement(struct clock_event_device *newdev)
 	if (newdev->features & CLOCK_EVT_FEAT_ONESHOT)
 		tick_oneshot_notify();
 }
+#endif /* CL */
 
 static bool tick_check_percpu(struct clock_event_device *curdev,
 			      struct clock_event_device *newdev, int cpu)
@@ -336,6 +338,7 @@ void tick_check_new_device(struct clock_event_device *newdev)
 	if (!tick_check_replacement(curdev, newdev))
 		goto out_bc;
 
+#if 0
 	if (!try_module_get(newdev->owner))
 		return;
 
@@ -352,6 +355,8 @@ void tick_check_new_device(struct clock_event_device *newdev)
 	tick_setup_device(td, newdev, cpu, cpumask_of(cpu));
 	if (newdev->features & CLOCK_EVT_FEAT_ONESHOT)
 		tick_oneshot_notify();
+#endif
+    PANIC("");
 	return;
 
 out_bc:
@@ -361,6 +366,7 @@ out_bc:
 	tick_install_broadcast_device(newdev, cpu);
 }
 
+#if 0
 /**
  * tick_broadcast_oneshot_control - Enter/exit broadcast oneshot mode
  * @state:	The target state (enter/exit)

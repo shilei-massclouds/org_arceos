@@ -21,6 +21,7 @@ pub fn init_early(hartid: usize, dtb_pa: usize) {
 pub fn init_later(_hartid: usize, _dtb_pa: usize) {
     unsafe {
         unflatten_device_tree();
+        riscv_fill_hwcap();
     }
 }
 
@@ -31,4 +32,5 @@ pub fn prepare_for_uapp() {
 unsafe extern "C" {
     fn cl_early_init(hartid: usize, dtb_pa: usize);
     fn unflatten_device_tree();
+    fn riscv_fill_hwcap();
 }

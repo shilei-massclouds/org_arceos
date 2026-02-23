@@ -19,11 +19,14 @@ impl<const PAGE_SIZE: usize> BaseAllocator for MemblockAllocator<PAGE_SIZE> {
         // parse_dtb() [arch/riscv/kernel/setup.c]
         //   - get physical memory range from fdt
         //
+        // sbi_init() [arch/riscv/kernel/setup.c]
+        //
         // setup_bootmem() [arch/riscv/mm/init.c]
         //   - reserve areas including kernel, initrd and fdt
         //
         unsafe {
             parse_dtb();
+            sbi_init();
             setup_bootmem();
         }
     }
@@ -103,6 +106,7 @@ impl<const PAGE_SIZE: usize> PageAllocator for MemblockAllocator<PAGE_SIZE> {
 
 unsafe extern "C" {
     fn parse_dtb();
+    fn sbi_init();
     fn setup_bootmem();
     fn linux_memblock_alloc(size: usize, align: usize) -> usize;
     fn memblock_free(ptr: usize, size: usize);

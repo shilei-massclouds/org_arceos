@@ -12,3 +12,7 @@ obj-y += jiffies.o
 obj-y += namespace.o
 obj-y += tick-common.o
 obj-y += tick-broadcast.o
+obj-y += tick-broadcast-hrtimer.o
+obj-y += tick-oneshot.o
+obj-y += clocksource.o
+obj-y += clockevents.o

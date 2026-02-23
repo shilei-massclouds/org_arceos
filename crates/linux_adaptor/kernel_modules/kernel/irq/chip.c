@@ -406,7 +406,6 @@ void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu)
 	cpumask_set_cpu(cpu, desc->percpu_enabled);
 }
 
-#if 0
 void irq_percpu_disable(struct irq_desc *desc, unsigned int cpu)
 {
 	if (desc->irq_data.chip->irq_disable)
@@ -415,7 +414,6 @@ void irq_percpu_disable(struct irq_desc *desc, unsigned int cpu)
 		desc->irq_data.chip->irq_mask(&desc->irq_data);
 	cpumask_clear_cpu(cpu, desc->percpu_enabled);
 }
-#endif /* CL */
 
 static inline void mask_ack_irq(struct irq_desc *desc)
 {
@@ -941,7 +939,6 @@ void handle_percpu_devid_irq(struct irq_desc *desc)
 	unsigned int irq = irq_desc_get_irq(desc);
 	irqreturn_t res;
 
-#if 0
 	/*
 	 * PER CPU interrupts are not serialized. Do not touch
 	 * desc->tot_count.
@@ -966,6 +963,7 @@ void handle_percpu_devid_irq(struct irq_desc *desc)
 			    enabled ? " and unmasked" : "", irq, cpu);
 	}
 
+#if 0
 	if (chip->irq_eoi)
 		chip->irq_eoi(&desc->irq_data);
 #endif

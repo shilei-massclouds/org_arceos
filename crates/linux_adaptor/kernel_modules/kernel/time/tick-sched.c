@@ -1672,6 +1672,7 @@ void tick_sched_timer_dying(int cpu)
 	ts->idle_calls = idle_calls;
 	ts->idle_sleeps = idle_sleeps;
 }
+#endif /* CL */
 
 /*
  * Async notification about clocksource changes
@@ -1684,6 +1685,7 @@ void tick_clock_notify(void)
 		set_bit(0, &per_cpu(tick_cpu_sched, cpu).check_clocks);
 }
 
+#if 0
 /*
  * Async notification about clock event changes
  */

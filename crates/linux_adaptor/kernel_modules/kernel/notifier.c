@@ -17,7 +17,6 @@
  */
 BLOCKING_NOTIFIER_HEAD(reboot_notifier_list);
 
-#if 0
 /*
  *	Notifier chain core routines.  The exported routines below
  *	are layered on top of these, with appropriate locking added.
@@ -45,6 +44,7 @@ static int notifier_chain_register(struct notifier_block **nl,
 	return 0;
 }
 
+#if 0
 static int notifier_chain_unregister(struct notifier_block **nl,
 		struct notifier_block *n)
 {
@@ -134,7 +134,6 @@ static int notifier_call_chain_robust(struct notifier_block **nl,
 	return ret;
 }
 
-#if 0
 /*
  *	Atomic notifier chain routines.  Registration and unregistration
  *	use a spinlock, and call_chain is synchronized by RCU (no locks).
@@ -162,6 +161,7 @@ int atomic_notifier_chain_register(struct atomic_notifier_head *nh,
 }
 EXPORT_SYMBOL_GPL(atomic_notifier_chain_register);
 
+#if 0
 /**
  *	atomic_notifier_chain_register_unique_prio - Add notifier to an atomic notifier chain
  *	@nh: Pointer to head of the atomic notifier chain

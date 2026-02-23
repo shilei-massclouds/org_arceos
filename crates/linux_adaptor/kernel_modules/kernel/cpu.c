@@ -2519,6 +2519,7 @@ int __cpuhp_setup_state_cpuslocked(enum cpuhp_state state,
 
 	mutex_lock(&cpuhp_state_mutex);
 
+    printk("%s: --- name(%s) state(%u:%u)\n", __func__, name, state, CPUHP_AP_RISCV_TIMER_STARTING);
 	ret = cpuhp_store_callbacks(state, name, startup, teardown,
 				    multi_instance);
 

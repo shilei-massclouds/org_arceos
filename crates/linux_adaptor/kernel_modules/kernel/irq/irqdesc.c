@@ -693,7 +693,6 @@ void irq_init_desc(unsigned int irq)
 
 #endif /* !CONFIG_SPARSE_IRQ */
 
-#if 0
 int handle_irq_desc(struct irq_desc *desc)
 {
 	struct irq_data *data;
@@ -709,6 +708,7 @@ int handle_irq_desc(struct irq_desc *desc)
 	return 0;
 }
 
+#if 0
 /**
  * generic_handle_irq - Invoke the handler for a particular irq
  * @irq:	The irq number to handle
@@ -762,8 +762,7 @@ EXPORT_SYMBOL_GPL(generic_handle_irq_safe);
  */
 int generic_handle_domain_irq(struct irq_domain *domain, unsigned int hwirq)
 {
-	//return handle_irq_desc(irq_resolve_mapping(domain, hwirq));
-    PANIC("");
+	return handle_irq_desc(irq_resolve_mapping(domain, hwirq));
 }
 EXPORT_SYMBOL_GPL(generic_handle_domain_irq);
 

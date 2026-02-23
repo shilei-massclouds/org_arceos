@@ -210,3 +210,6 @@ void ___perf_sw_event(u32 event_id, u64 nr, struct pt_regs *regs, u64 addr)
 {
     pr_err("--> NOTE: %s: No impl.\n", __func__);
 }
+
+// init/calibrate.c
+unsigned long lpj_fine;

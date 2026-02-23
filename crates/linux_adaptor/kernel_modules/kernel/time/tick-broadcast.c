@@ -18,6 +18,7 @@
 #include <linux/module.h>
 
 #include "tick-internal.h"
+#include "adaptor.h"
 
 /*
  * Broadcast support for broken x86 hardware, where the local apic
@@ -71,6 +72,7 @@ const struct clock_event_device *tick_get_wakeup_device(int cpu)
 {
 	return tick_get_oneshot_wakeup_device(cpu);
 }
+#endif /* CL */
 
 /*
  * Start the device in periodic mode
@@ -204,6 +206,7 @@ void tick_install_broadcast_device(struct clock_event_device *dev, int cpu)
 	tick_clock_notify();
 }
 
+#if 0
 /*
  * Check, if the device is the broadcast device
  */
@@ -1203,6 +1206,7 @@ static void tick_broadcast_oneshot_offline(unsigned int cpu)
 }
 #endif
 
+#endif /* CL */
 /*
  * Check, whether the broadcast device is in one shot mode
  */
@@ -1211,6 +1215,7 @@ int tick_broadcast_oneshot_active(void)
 	return tick_broadcast_device.mode == TICKDEV_MODE_ONESHOT;
 }
 
+#if 0
 /*
  * Check whether the broadcast device supports oneshot.
  */

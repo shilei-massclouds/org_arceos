@@ -18,8 +18,6 @@
 #include <asm/pgtable.h>
 #include <asm/vendor_extensions.h>
 
-#if 0
-
 bool arch_match_cpu_phys_id(int cpu, u64 phys_id)
 {
 	return phys_id == cpuid_to_hartid_map(cpu);
@@ -49,6 +47,7 @@ int riscv_of_processor_hartid(struct device_node *node, unsigned long *hart)
 	return 0;
 }
 
+#if 0
 int __init riscv_early_of_processor_hartid(struct device_node *node, unsigned long *hart)
 {
 	const char *isa;

@@ -44,6 +44,7 @@ pub fn init_early() {
 
         softirq_init();
         timekeeping_init();
+        time_init();
 
         /* This must be after timekeeping is initialized */
         random_init();
@@ -60,5 +61,6 @@ unsafe extern "C" {
     fn hrtimers_init();
     fn softirq_init();
     fn timekeeping_init();
+    fn time_init();
     fn random_init();
 }

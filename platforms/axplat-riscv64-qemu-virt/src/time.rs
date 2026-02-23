@@ -32,6 +32,7 @@ pub(super) fn init_early() {
 }
 
 pub(super) fn init_percpu() {
+    /* FixMe: enable timer by in 'linux-adaptor'. */
     #[cfg(feature = "irq")]
     sbi_rt::set_timer(0);
 }

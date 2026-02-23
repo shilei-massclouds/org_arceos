@@ -100,6 +100,7 @@ static inline void ipi_cpu_crash_stop(unsigned int cpu, struct pt_regs *regs)
 	unreachable();
 }
 #endif
+#endif /* CL */
 
 static void send_ipi_mask(const struct cpumask *mask, enum ipi_message_type op)
 {
@@ -117,7 +118,6 @@ void arch_irq_work_raise(void)
 	send_ipi_single(smp_processor_id(), IPI_IRQ_WORK);
 }
 #endif
-#endif /* CL */
 
 static irqreturn_t handle_IPI(int irq, void *data)
 {
@@ -240,6 +240,7 @@ void show_ipi_stats(struct seq_file *p, int prec)
 		seq_printf(p, " %s\n", ipi_names[i]);
 	}
 }
+#endif /* CL */
 
 void arch_send_call_function_ipi_mask(struct cpumask *mask)
 {
@@ -251,6 +252,7 @@ void arch_send_call_function_single_ipi(int cpu)
 	send_ipi_single(cpu, IPI_CALL_FUNC);
 }
 
+#if 0
 #ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST
 void tick_broadcast(const struct cpumask *mask)
 {

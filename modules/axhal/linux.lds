@@ -65,6 +65,12 @@ SECTIONS
         *(.text.startup)
         _einittext = .;
     }
+
+    __exittext_begin = .;
+    .exit.text : {
+        *(.exit.text) *(.text.exit)
+    }
+    __exittext_end = .;
     __init_text_end = .;
 
     . = ALIGN((1 << 21));
