@@ -581,9 +581,7 @@ restart:
 		kstat_incr_softirqs_this_cpu(vec_nr);
 
 		trace_softirq_entry(vec_nr);
-        printk("+++++++++++++++ %s: before vecnr[%d] (%s)\n", __func__, vec_nr, softirq_to_name[vec_nr]);
 		h->action();
-        printk("+++++++++++++++ %s: after ]\n", __func__);
 		trace_softirq_exit(vec_nr);
 		if (unlikely(prev_count != preempt_count())) {
 			pr_err("huh, entered softirq %u %s %p with preempt_count %08x, exited with %08x?\n",
@@ -595,7 +593,6 @@ restart:
 		pending >>= softirq_bit;
 	}
 
-#if 0
 	if (!IS_ENABLED(CONFIG_PREEMPT_RT) && ksirqd)
 		rcu_softirq_qs();
 
@@ -614,8 +611,6 @@ restart:
 	lockdep_softirq_end(in_hardirq);
 	softirq_handle_end();
 	current_restore_flags(old_flags, PF_MEMALLOC);
-#endif
-    PANIC("");
 }
 
 asmlinkage __visible void __softirq_entry __do_softirq(void)

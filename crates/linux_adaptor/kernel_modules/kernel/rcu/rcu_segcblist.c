@@ -91,7 +91,6 @@ static void rcu_segcblist_set_len(struct rcu_segcblist *rsclp, long v)
 #endif
 }
 
-#if 0
 /* Get the length of a segment of the rcu_segcblist structure. */
 long rcu_segcblist_get_seglen(struct rcu_segcblist *rsclp, int seg)
 {
@@ -109,7 +108,6 @@ long rcu_segcblist_n_segment_cbs(struct rcu_segcblist *rsclp)
 
 	return len;
 }
-#endif /* CL */
 
 /* Set the length of a segment of the rcu_segcblist structure. */
 static void rcu_segcblist_set_seglen(struct rcu_segcblist *rsclp, int seg, long v)
@@ -123,7 +121,6 @@ static void rcu_segcblist_add_seglen(struct rcu_segcblist *rsclp, int seg, long 
 	WRITE_ONCE(rsclp->seglen[seg], rsclp->seglen[seg] + v);
 }
 
-#if 0
 /* Move from's segment length to to's segment. */
 static void rcu_segcblist_move_seglen(struct rcu_segcblist *rsclp, int from, int to)
 {
@@ -139,7 +136,6 @@ static void rcu_segcblist_move_seglen(struct rcu_segcblist *rsclp, int from, int
 	rcu_segcblist_add_seglen(rsclp, to, len);
 	rcu_segcblist_set_seglen(rsclp, from, 0);
 }
-#endif /* CL */
 
 /* Increment segment's length. */
 static void rcu_segcblist_inc_seglen(struct rcu_segcblist *rsclp, int seg)
@@ -279,7 +275,6 @@ bool rcu_segcblist_ready_cbs(struct rcu_segcblist *rsclp)
 	       &rsclp->head != READ_ONCE(rsclp->tails[RCU_DONE_TAIL]);
 }
 
-#if 0
 /*
  * Does the specified rcu_segcblist structure contain callbacks that
  * are still pending, that is, not yet ready to be invoked?
@@ -290,6 +285,7 @@ bool rcu_segcblist_pend_cbs(struct rcu_segcblist *rsclp)
 	       !rcu_segcblist_restempty(rsclp, RCU_DONE_TAIL);
 }
 
+#if 0
 /*
  * Return a pointer to the first callback in the specified rcu_segcblist
  * structure.  This is useful for diagnostics.
@@ -519,6 +515,7 @@ void rcu_segcblist_advance(struct rcu_segcblist *rsclp, unsigned long seq)
 		rsclp->gp_seq[j] = rsclp->gp_seq[i];
 	}
 }
+#endif /* CL */
 
 /*
  * "Accelerate" callbacks based on more-accurate grace-period information.
@@ -598,6 +595,7 @@ bool rcu_segcblist_accelerate(struct rcu_segcblist *rsclp, unsigned long seq)
 	return true;
 }
 
+#if 0
 /*
  * Merge the source rcu_segcblist structure into the destination
  * rcu_segcblist structure, then initialize the source.  Any pending

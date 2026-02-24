@@ -8,6 +8,7 @@ obj-y += clock.o
 obj-y += completion.o
 obj-y += topology.o
 obj-y += debug.o
+obj-y += isolation.o
 obj-y += syscalls.o
 
 obj-y += stop_task.o

@@ -80,9 +80,6 @@ int sprint_symbol(char *buffer, unsigned long addr)
     return 0;
 }
 
-// kernel/sched/isolation.c
-DEFINE_STATIC_KEY_FALSE(housekeeping_overridden);
-
 // drivers/base/arch_topology.c
 DEFINE_PER_CPU(unsigned long, cpu_scale) = SCHED_CAPACITY_SCALE;
 

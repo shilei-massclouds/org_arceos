@@ -33,6 +33,14 @@ pub fn init_early() {
         radix_tree_init();
         maple_tree_init();
 
+        /*
+         * Allow workqueue creation and work item queueing/cancelling
+         * early.  Work item execution depends on kthreads and starts after
+         * workqueue_init().
+         */
+        workqueue_init_early();
+        rcu_init();
+
         /* init some links before init_ISA_irqs() */
         early_irq_init();
         init_IRQ();
@@ -54,6 +62,8 @@ pub fn init_early() {
 unsafe extern "C" {
     fn radix_tree_init();
     fn maple_tree_init();
+    fn workqueue_init_early();
+    fn rcu_init();
     fn early_irq_init();
     fn init_IRQ();
     fn tick_init();

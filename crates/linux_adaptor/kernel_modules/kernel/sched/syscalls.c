@@ -16,7 +16,6 @@
 #include "sched.h"
 #include "autogroup.h"
 
-#if 0
 static inline int __normal_prio(int policy, int rt_prio, int nice)
 {
 	int prio;
@@ -116,6 +115,7 @@ void set_user_nice(struct task_struct *p, long nice)
 }
 EXPORT_SYMBOL(set_user_nice);
 
+#if 0
 /*
  * is_nice_reduction - check if nice value is an actual reduction
  *

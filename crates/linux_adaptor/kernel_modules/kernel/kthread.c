@@ -235,6 +235,7 @@ void *kthread_func(struct task_struct *task)
 	return NULL;
 }
 EXPORT_SYMBOL_GPL(kthread_func);
+#endif /* CL */
 
 /**
  * kthread_data - return data value specified on kthread creation
@@ -250,6 +251,7 @@ void *kthread_data(struct task_struct *task)
 }
 EXPORT_SYMBOL_GPL(kthread_data);
 
+#if 0
 /**
  * kthread_probe_data - speculative version of kthread_data()
  * @task: possible kthread task in question
@@ -1146,6 +1148,7 @@ bool kthread_queue_delayed_work(struct kthread_worker *worker,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(kthread_queue_delayed_work);
+#endif /* CL */
 
 struct kthread_flush_work {
 	struct kthread_work	work;
@@ -1159,6 +1162,7 @@ static void kthread_flush_work_fn(struct kthread_work *work)
 	complete(&fwork->done);
 }
 
+#if 0
 /**
  * kthread_flush_work - flush a kthread_work
  * @work: work to flush
@@ -1394,6 +1398,7 @@ bool kthread_cancel_delayed_work_sync(struct kthread_delayed_work *dwork)
 	return __kthread_cancel_work_sync(&dwork->work, true);
 }
 EXPORT_SYMBOL_GPL(kthread_cancel_delayed_work_sync);
+#endif /* CL */
 
 /**
  * kthread_flush_worker - flush all current works on a kthread_worker
@@ -1414,6 +1419,7 @@ void kthread_flush_worker(struct kthread_worker *worker)
 }
 EXPORT_SYMBOL_GPL(kthread_flush_worker);
 
+#if 0
 /**
  * kthread_destroy_worker - destroy a kthread worker
  * @worker: worker to be destroyed

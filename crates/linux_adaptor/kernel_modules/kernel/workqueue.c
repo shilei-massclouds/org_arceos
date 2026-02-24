@@ -697,7 +697,6 @@ static inline void debug_work_activate(struct work_struct *work) { }
 static inline void debug_work_deactivate(struct work_struct *work) { }
 #endif
 
-#if 0
 /**
  * worker_pool_assign_id - allocate ID and assign it to @pool
  * @pool: the pool pointer of interest
@@ -1055,6 +1054,7 @@ static void worker_enter_idle(struct worker *worker)
 	WARN_ON_ONCE(pool->nr_workers == pool->nr_idle && pool->nr_running);
 }
 
+#if 0
 /**
  * worker_leave_idle - leave idle state
  * @worker: worker which is leaving idle state
@@ -1074,6 +1074,7 @@ static void worker_leave_idle(struct worker *worker)
 	pool->nr_idle--;
 	list_del_init(&worker->entry);
 }
+#endif /* CL */
 
 /**
  * find_worker_executing_work - find worker which is executing a work
@@ -1282,6 +1283,7 @@ static bool kick_pool(struct worker_pool *pool)
 	return true;
 }
 
+#if 0
 #ifdef CONFIG_WQ_CPU_INTENSIVE_REPORT
 
 /*
@@ -1537,6 +1539,7 @@ work_func_t wq_worker_last_func(struct task_struct *task)
 
 	return worker->last_func;
 }
+#endif /* CL */
 
 /**
  * wq_node_nr_active - Determine wq_node_nr_active to use
@@ -1801,6 +1804,7 @@ static bool pwq_activate_first_inactive(struct pool_workqueue *pwq, bool fill)
 	}
 }
 
+#if 0
 /**
  * unplug_oldest_pwq - unplug the oldest pool_workqueue
  * @wq: workqueue_struct where its oldest pwq is to be unplugged
@@ -1840,6 +1844,7 @@ static void unplug_oldest_pwq(struct workqueue_struct *wq)
 	}
 	raw_spin_unlock_irq(&pwq->pool->lock);
 }
+#endif /* CL */
 
 /**
  * node_activate_pending_pwq - Activate a pending pwq on a wq_node_nr_active
@@ -2018,6 +2023,7 @@ out_put:
 	put_pwq(pwq);
 }
 
+#if 0
 /**
  * try_to_grab_pending - steal work item from worklist and disable irq
  * @work: work item to steal
@@ -2162,6 +2168,7 @@ static bool work_grab_pending(struct work_struct *work, u32 cflags,
 		cpu_relax();
 	}
 }
+#endif /* CL */
 
 /**
  * insert_work - insert a work into a pool
@@ -2398,6 +2405,7 @@ bool queue_work_on(int cpu, struct workqueue_struct *wq,
 }
 EXPORT_SYMBOL(queue_work_on);
 
+#if 0
 /**
  * select_numa_node_cpu - Select a CPU based on NUMA node
  * @node: NUMA node ID that we want to select a CPU from
@@ -2632,6 +2640,7 @@ bool queue_rcu_work(struct workqueue_struct *wq, struct rcu_work *rwork)
 	return false;
 }
 EXPORT_SYMBOL(queue_rcu_work);
+#endif /* CL */
 
 static struct worker *alloc_worker(int node)
 {
@@ -2701,7 +2710,6 @@ static void unbind_worker(struct worker *worker)
 	else
 		WARN_ON_ONCE(set_cpus_allowed_ptr(worker->task, cpu_possible_mask) < 0);
 }
-
 
 static void detach_worker(struct worker *worker)
 {
@@ -3024,6 +3032,7 @@ static void pool_mayday_timeout(struct timer_list *t)
 	mod_timer(&pool->mayday_timer, jiffies + MAYDAY_INTERVAL);
 }
 
+#if 0
 /**
  * maybe_create_worker - create a new worker if necessary
  * @pool: pool to create a new worker for
@@ -3112,6 +3121,7 @@ static bool manage_workers(struct worker *worker)
 	rcuwait_wake_up(&manager_wait);
 	return true;
 }
+#endif /* CL */
 
 /**
  * process_one_work - process single work
@@ -3323,6 +3333,7 @@ static void set_pf_worker(bool val)
 	mutex_unlock(&wq_pool_attach_mutex);
 }
 
+#if 0
 /**
  * worker_thread - the worker thread function
  * @__worker: self
@@ -3408,6 +3419,7 @@ sleep:
 	schedule();
 	goto woke_up;
 }
+#endif /* CL */
 
 /**
  * rescuer_thread - the rescuer thread function
@@ -3544,6 +3556,7 @@ repeat:
 	goto repeat;
 }
 
+#if 0
 static void bh_worker(struct worker *worker)
 {
 	struct worker_pool *pool = worker->pool;
@@ -4582,6 +4595,7 @@ int execute_in_process_context(work_func_t fn, struct execute_work *ew)
 	return 1;
 }
 EXPORT_SYMBOL_GPL(execute_in_process_context);
+#endif /* CL */
 
 /**
  * free_workqueue_attrs - free a workqueue_attrs
@@ -4869,6 +4883,7 @@ err_free:
 	return -ENOMEM;
 }
 
+#if 0
 static void rcu_free_wq(struct rcu_head *rcu)
 {
 	struct workqueue_struct *wq =
@@ -4882,6 +4897,7 @@ static void rcu_free_wq(struct rcu_head *rcu)
 	free_workqueue_attrs(wq->unbound_attrs);
 	kfree(wq);
 }
+#endif /* CL */
 
 static void rcu_free_pool(struct rcu_head *rcu)
 {
@@ -5048,6 +5064,7 @@ static void pwq_release_workfn(struct kthread_work *work)
 	struct worker_pool *pool = pwq->pool;
 	bool is_last = false;
 
+#if 0
 	/*
 	 * When @pwq is not linked, it doesn't hold any reference to the
 	 * @wq, and @wq is invalid to access.
@@ -5091,6 +5108,8 @@ static void pwq_release_workfn(struct kthread_work *work)
 		wq_unregister_lockdep(wq);
 		call_rcu(&wq->rcu, rcu_free_wq);
 	}
+#endif
+    PANIC("");
 }
 
 /* initialize newly allocated @pwq which is associated with @wq and @pool */
@@ -5351,6 +5370,7 @@ static int apply_workqueue_attrs_locked(struct workqueue_struct *wq,
 	return 0;
 }
 
+#if 0
 /**
  * apply_workqueue_attrs - apply new workqueue_attrs to an unbound workqueue
  * @wq: the target workqueue
@@ -5446,6 +5466,7 @@ out_unlock:
 	mutex_unlock(&wq->mutex);
 	put_pwq_unlocked(old_pwq);
 }
+#endif /* CL */
 
 static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 {
@@ -5608,6 +5629,7 @@ static void wq_adjust_max_active(struct workqueue_struct *wq)
 	if (wq->flags & WQ_UNBOUND)
 		wq_update_node_max_active(wq, -1);
 
+#if 0
 	if (new_max == 0)
 		return;
 
@@ -5631,6 +5653,8 @@ static void wq_adjust_max_active(struct workqueue_struct *wq)
 			raw_spin_unlock_irqrestore(&pwq->pool->lock, irq_flags);
 		}
 	} while (activated);
+#endif
+    PANIC("");
 }
 
 __printf(1, 0)
@@ -5773,6 +5797,7 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
 }
 EXPORT_SYMBOL_GPL(alloc_workqueue);
 
+#if 0
 #ifdef CONFIG_LOCKDEP
 __printf(1, 5)
 struct workqueue_struct *
@@ -6871,6 +6896,8 @@ out_unlock:
 }
 #endif /* CONFIG_FREEZER */
 
+#endif /* CL */
+
 static int workqueue_apply_unbound_cpumask(const cpumask_var_t unbound_cpumask)
 {
 	LIST_HEAD(ctxs);
@@ -6907,6 +6934,7 @@ static int workqueue_apply_unbound_cpumask(const cpumask_var_t unbound_cpumask)
 	return ret;
 }
 
+#if 0
 /**
  * workqueue_unbound_exclude_cpumask - Exclude given CPUs from unbound cpumask
  * @exclude_cpumask: the cpumask to be excluded from wq_unbound_cpumask
@@ -6943,6 +6971,7 @@ int workqueue_unbound_exclude_cpumask(cpumask_var_t exclude_cpumask)
 	free_cpumask_var(cpumask);
 	return ret;
 }
+#endif /* CL */
 
 static int parse_affn_scope(const char *val)
 {
@@ -6955,6 +6984,7 @@ static int parse_affn_scope(const char *val)
 	return -EINVAL;
 }
 
+#if 0
 static int wq_affn_dfl_set(const char *val, const struct kernel_param *kp)
 {
 	struct workqueue_struct *wq;
@@ -6993,6 +7023,8 @@ static const struct kernel_param_ops wq_affn_dfl_ops = {
 };
 
 module_param_cb(default_affinity_scope, &wq_affn_dfl_ops, NULL, 0644);
+
+#endif /* CL */
 
 #ifdef CONFIG_SYSFS
 /*
@@ -7429,6 +7461,7 @@ static void workqueue_sysfs_unregister(struct workqueue_struct *wq)
 static void workqueue_sysfs_unregister(struct workqueue_struct *wq)	{ }
 #endif	/* CONFIG_SYSFS */
 
+#if 0
 /*
  * Workqueue watchdog.
  *
@@ -7663,6 +7696,8 @@ static inline void wq_watchdog_init(void) { }
 
 #endif	/* CONFIG_WQ_WATCHDOG */
 
+#endif /* CL */
+
 static void bh_pool_kick_normal(struct irq_work *irq_work)
 {
 	raise_softirq_irqoff(TASKLET_SOFTIRQ);
@@ -7817,6 +7852,7 @@ void __init workqueue_init_early(void)
 	       !system_bh_wq || !system_bh_highpri_wq);
 }
 
+#if 0
 static void __init wq_cpu_intensive_thresh_init(void)
 {
 	unsigned long thresh;
