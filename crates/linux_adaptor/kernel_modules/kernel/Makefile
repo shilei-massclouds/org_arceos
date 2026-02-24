@@ -32,10 +32,11 @@ obj-y += pid.o
 obj-y += pid_namespace.o
 obj-y += exit.o
 obj-y += reboot.o
+obj-y += irq_work.o
 
 #obj-y += resource.o
 #obj-y += tracepoint.o
-#obj-y += irq_work.o params.o
+#obj-y += params.o
 #obj-y += async.o
 
 obj-y += trace/

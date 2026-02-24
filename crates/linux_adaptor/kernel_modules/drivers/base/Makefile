@@ -5,6 +5,7 @@ CFLAGS_trace.o := -I$(curdir)
 obj-y += property.o
 obj-y += swnode.o
 obj-y += cpu.o
+obj-y += arch_topology.o
 
 #obj-y += platform.o property.o syscore.o bus.o
 #obj-y += core.o devres.o dd.o driver.o trace.o

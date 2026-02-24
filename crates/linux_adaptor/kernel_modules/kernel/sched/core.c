@@ -5582,6 +5582,8 @@ unsigned long long task_sched_runtime(struct task_struct *p)
 	return ns;
 }
 
+#endif /* CL */
+
 #ifdef CONFIG_SCHED_DEBUG
 static u64 cpu_resched_latency(struct rq *rq)
 {
@@ -5682,6 +5684,8 @@ void sched_tick(void)
 	}
 #endif
 }
+
+#if 0
 
 #ifdef CONFIG_NO_HZ_FULL
 

@@ -63,12 +63,10 @@ static struct softirq_action softirq_vec[NR_SOFTIRQS] __cacheline_aligned_in_smp
 
 DEFINE_PER_CPU(struct task_struct *, ksoftirqd);
 
-#if 0
 const char * const softirq_to_name[NR_SOFTIRQS] = {
 	"HI", "TIMER", "NET_TX", "NET_RX", "BLOCK", "IRQ_POLL",
 	"TASKLET", "SCHED", "HRTIMER", "RCU"
 };
-#endif /* CL */
 
 /*
  * we cannot loop indefinitely here to avoid userspace starvation,
@@ -571,7 +569,6 @@ restart:
 
 	h = softirq_vec;
 
-#if 0
 	while ((softirq_bit = ffs(pending))) {
 		unsigned int vec_nr;
 		int prev_count;
@@ -584,7 +581,9 @@ restart:
 		kstat_incr_softirqs_this_cpu(vec_nr);
 
 		trace_softirq_entry(vec_nr);
+        printk("+++++++++++++++ %s: before vecnr[%d] (%s)\n", __func__, vec_nr, softirq_to_name[vec_nr]);
 		h->action();
+        printk("+++++++++++++++ %s: after ]\n", __func__);
 		trace_softirq_exit(vec_nr);
 		if (unlikely(prev_count != preempt_count())) {
 			pr_err("huh, entered softirq %u %s %p with preempt_count %08x, exited with %08x?\n",
@@ -596,6 +595,7 @@ restart:
 		pending >>= softirq_bit;
 	}
 
+#if 0
 	if (!IS_ENABLED(CONFIG_PREEMPT_RT) && ksirqd)
 		rcu_softirq_qs();
 

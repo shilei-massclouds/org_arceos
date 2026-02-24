@@ -149,6 +149,7 @@ static u64 bump_cpu_timer(struct k_itimer *timer, u64 now)
 	}
 	return timer->it.cpu.node.expires;
 }
+#endif /* CL */
 
 /* Check whether all cache entries contain U64_MAX, i.e. eternal expiry time */
 static inline bool expiry_cache_is_inactive(const struct posix_cputimers *pct)
@@ -158,6 +159,7 @@ static inline bool expiry_cache_is_inactive(const struct posix_cputimers *pct)
 		 ~pct->bases[CPUCLOCK_SCHED].nextevt);
 }
 
+#if 0
 static int
 posix_cpu_clock_getres(const clockid_t which_clock, struct timespec64 *tp)
 {
@@ -212,6 +214,7 @@ static u64 cpu_clock_sample(const clockid_t clkid, struct task_struct *p)
 	}
 	return 0;
 }
+#endif /* CL */
 
 static inline void store_samples(u64 *samples, u64 stime, u64 utime, u64 rtime)
 {
@@ -239,6 +242,7 @@ static void proc_sample_cputime_atomic(struct task_cputime_atomic *at,
 	store_samples(samples, stime, utime, rtime);
 }
 
+#if 0
 /*
  * Set cputime to sum_cputime if sum_cputime > cputime. Use cmpxchg
  * to avoid race conditions with concurrent updates to cputime.
@@ -1045,6 +1049,7 @@ static void posix_cpu_timer_rearm(struct k_itimer *timer)
 out:
 	rcu_read_unlock();
 }
+#endif /* CL */
 
 /**
  * task_cputimers_expired - Check whether posix CPU timers are expired
@@ -1066,7 +1071,6 @@ task_cputimers_expired(const u64 *samples, struct posix_cputimers *pct)
 	}
 	return false;
 }
-#endif /* CL */
 
 /**
  * fastpath_timer_check - POSIX CPU timers fast path.
@@ -1083,7 +1087,6 @@ static inline bool fastpath_timer_check(struct task_struct *tsk)
 	struct posix_cputimers *pct = &tsk->posix_cputimers;
 	struct signal_struct *sig;
 
-#if 0
 	if (!expiry_cache_is_inactive(pct)) {
 		u64 samples[CPUCLOCK_MAX];
 
@@ -1121,8 +1124,6 @@ static inline bool fastpath_timer_check(struct task_struct *tsk)
 
 	if (dl_task(tsk) && tsk->dl.dl_overrun)
 		return true;
-#endif
-    PANIC("");
 
 	return false;
 }
@@ -1398,7 +1399,6 @@ static void handle_posix_cpu_timers(struct task_struct *tsk)
     PANIC("");
 }
 
-#if 0
 /*
  * This is called from the timer interrupt handler.  The irq handler has
  * already updated our counts.  We need to check if any timers fire now.
@@ -1436,6 +1436,7 @@ void run_posix_cpu_timers(void)
 	__run_posix_cpu_timers(tsk);
 }
 
+#if 0
 /*
  * Set one of the process-wide special case CPU timers or RLIMIT_CPU.
  * The tsk->sighand->siglock must be held by the caller.

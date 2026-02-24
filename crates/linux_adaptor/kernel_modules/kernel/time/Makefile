@@ -16,3 +16,4 @@ obj-y += tick-broadcast-hrtimer.o
 obj-y += tick-oneshot.o
 obj-y += clocksource.o
 obj-y += clockevents.o
+obj-y += timer_migration.o

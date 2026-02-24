@@ -267,6 +267,7 @@ void rcu_segcblist_disable(struct rcu_segcblist *rsclp)
 	WARN_ON_ONCE(rcu_segcblist_n_cbs(rsclp));
 	rcu_segcblist_clear_flags(rsclp, SEGCBLIST_ENABLED);
 }
+#endif /* CL */
 
 /*
  * Does the specified rcu_segcblist structure contain callbacks that
@@ -278,6 +279,7 @@ bool rcu_segcblist_ready_cbs(struct rcu_segcblist *rsclp)
 	       &rsclp->head != READ_ONCE(rsclp->tails[RCU_DONE_TAIL]);
 }
 
+#if 0
 /*
  * Does the specified rcu_segcblist structure contain callbacks that
  * are still pending, that is, not yet ready to be invoked?

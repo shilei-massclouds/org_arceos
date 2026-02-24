@@ -96,9 +96,6 @@ DEFINE_PER_CPU(unsigned long, cpufreq_pressure);
 // kernel/events/core.c
 struct static_key perf_swevent_enabled[PERF_COUNT_SW_MAX];
 
-// drivers/base/arch_topology.c
-DEFINE_PER_CPU(unsigned long, arch_freq_scale) = SCHED_CAPACITY_SCALE;
-
 // kernel/profile.c
 int prof_on __read_mostly;
 
@@ -213,3 +210,15 @@ void ___perf_sw_event(u32 event_id, u64 nr, struct pt_regs *regs, u64 addr)
 
 // init/calibrate.c
 unsigned long lpj_fine;
+
+// kernel/events/core.c
+void perf_event_task_tick(void)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// kernel/profile.c
+void profile_tick(int type)
+{
+    pr_err("--> NOTE: %s: No impl.\n", __func__);
+}

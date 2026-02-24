@@ -55,8 +55,10 @@
  */
 
 #include <linux/jiffies.h>
+#include <linux/mmu_context.h>
 #include <linux/sched.h>
 
+#include "sched.h"
 #include "adaptor.h"
 
 /* Variables and functions for calc_load */
@@ -81,6 +83,7 @@ void get_avenrun(unsigned long *loads, unsigned long offset, int shift)
 	loads[2] = (avenrun[2] + offset) << shift;
 }
 
+#endif /* CL */
 long calc_load_fold_active(struct rq *this_rq, long adjust)
 {
 	long nr_active, delta = 0;
@@ -96,6 +99,7 @@ long calc_load_fold_active(struct rq *this_rq, long adjust)
 	return delta;
 }
 
+#if 0
 /**
  * fixed_power_int - compute: x^n, in O(log n) time
  *
@@ -389,7 +393,6 @@ void calc_global_load(void)
     PANIC("");
 }
 
-#if 0
 /*
  * Called from sched_tick() to periodically update this CPU's
  * active count.
@@ -407,5 +410,3 @@ void calc_global_load_tick(struct rq *this_rq)
 
 	this_rq->calc_load_update += LOAD_FREQ;
 }
-
-#endif /* CL */

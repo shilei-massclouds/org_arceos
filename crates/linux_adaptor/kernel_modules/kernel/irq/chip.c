@@ -963,11 +963,8 @@ void handle_percpu_devid_irq(struct irq_desc *desc)
 			    enabled ? " and unmasked" : "", irq, cpu);
 	}
 
-#if 0
 	if (chip->irq_eoi)
 		chip->irq_eoi(&desc->irq_data);
-#endif
-    PANIC("");
 }
 
 #if 0
