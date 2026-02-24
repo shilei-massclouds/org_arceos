@@ -1780,6 +1780,7 @@ int timer_shutdown_sync(struct timer_list *timer)
 	return __timer_delete_sync(timer, true);
 }
 EXPORT_SYMBOL_GPL(timer_shutdown_sync);
+#endif /* CL */
 
 static void call_timer_fn(struct timer_list *timer,
 			  void (*fn)(struct timer_list *),
@@ -1987,6 +1988,7 @@ static void timer_recalc_next_expiry(struct timer_base *base)
 	base->timers_pending = !(next == base->clk + NEXT_TIMER_MAX_DELTA);
 }
 
+#if 0
 #ifdef CONFIG_NO_HZ_COMMON
 /*
  * Check, if the next hrtimer event is before the next timer wheel
@@ -2398,6 +2400,8 @@ void timer_clear_idle(void)
 }
 #endif
 
+#endif /* CL */
+
 /**
  * __run_timers - run all expired timers (if any) on this CPU.
  * @base: the timer vector to be processed.
@@ -2455,14 +2459,12 @@ static void run_timer_base(int index)
 
 	__run_timer_base(base);
 }
-#endif /* CL */
 
 /*
  * This function runs timers and the timer-tq in bottom half context.
  */
 static __latent_entropy void run_timer_softirq(void)
 {
-#if 0
 	run_timer_base(BASE_LOCAL);
 	if (IS_ENABLED(CONFIG_NO_HZ_COMMON)) {
 		run_timer_base(BASE_GLOBAL);
@@ -2471,8 +2473,6 @@ static __latent_entropy void run_timer_softirq(void)
 		if (is_timers_nohz_active())
 			tmigr_handle_remote();
 	}
-#endif
-    PANIC("");
 }
 
 /*
