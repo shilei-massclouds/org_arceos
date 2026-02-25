@@ -35,6 +35,8 @@
 #include "smpboot.h"
 #include "sched/smp.h"
 
+#include "adaptor.h"
+
 #define CSD_TYPE(_csd)	((_csd)->node.u_flags & CSD_FLAG_TYPE_MASK)
 
 struct call_function_data {
@@ -459,6 +461,7 @@ void generic_smp_call_function_single_interrupt(void)
 {
 	__flush_smp_call_function_queue(true);
 }
+#endif /* CL */
 
 /**
  * __flush_smp_call_function_queue - Flush pending smp-call-function callbacks
@@ -482,6 +485,7 @@ static void __flush_smp_call_function_queue(bool warn_cpu_offline)
 	static bool warned;
 	atomic_t *tbt;
 
+#if 0
 	lockdep_assert_irqs_disabled();
 
 	/* Allow waiters to send backtrace NMI from here onwards */
@@ -589,8 +593,9 @@ static void __flush_smp_call_function_queue(bool warn_cpu_offline)
 		csd = llist_entry(entry, typeof(*csd), node.llist);
 		csd_do_func(sched_ttwu_pending, entry, csd);
 	}
+#endif
+    PANIC("");
 }
-
 
 /**
  * flush_smp_call_function_queue - Flush pending smp-call-function callbacks
@@ -622,6 +627,7 @@ void flush_smp_call_function_queue(void)
 	local_irq_restore(flags);
 }
 
+#if 0
 /*
  * smp_call_function_single - Run a function on a specific CPU
  * @func: The function to run. This must be fast and non-blocking.

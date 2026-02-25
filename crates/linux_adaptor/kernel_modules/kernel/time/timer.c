@@ -1401,6 +1401,8 @@ out_unlock:
 }
 EXPORT_SYMBOL_GPL(add_timer_on);
 
+#endif /* CL */
+
 /**
  * __timer_delete - Internal function: Deactivate a timer
  * @timer:	The timer to be deactivated
@@ -1446,6 +1448,8 @@ static int __timer_delete(struct timer_list *timer, bool shutdown)
 	return ret;
 }
 
+#if 0
+
 /**
  * timer_delete - Deactivate a timer
  * @timer:	The timer to be deactivated
@@ -1486,6 +1490,7 @@ int timer_shutdown(struct timer_list *timer)
 	return __timer_delete(timer, true);
 }
 EXPORT_SYMBOL_GPL(timer_shutdown);
+#endif /* CL */
 
 /**
  * __try_to_del_timer_sync - Internal function: Try to deactivate a timer
@@ -1527,6 +1532,7 @@ static int __try_to_del_timer_sync(struct timer_list *timer, bool shutdown)
 	return ret;
 }
 
+#if 0
 /**
  * try_to_del_timer_sync - Try to deactivate a timer
  * @timer:	Timer to deactivate
@@ -1625,8 +1631,6 @@ static inline void timer_base_unlock_expiry(struct timer_base *base) { }
 static inline void timer_sync_wait_running(struct timer_base *base) { }
 static inline void del_timer_wait_running(struct timer_list *timer) { }
 #endif
-
-#if 0
 
 /**
  * __timer_delete_sync - Internal function: Deactivate a timer and wait
@@ -1739,6 +1743,7 @@ int timer_delete_sync(struct timer_list *timer)
 }
 EXPORT_SYMBOL(timer_delete_sync);
 
+#if 0
 /**
  * timer_shutdown_sync - Shutdown a timer and prevent rearming
  * @timer: The timer to be shutdown
@@ -2634,15 +2639,12 @@ signed long __sched schedule_timeout(signed long timeout)
 	timer_setup_on_stack(&timer.timer, process_timeout, 0);
 	__mod_timer(&timer.timer, expire, MOD_TIMER_NOTPENDING);
 	schedule();
-#if 0
 	del_timer_sync(&timer.timer);
 
 	/* Remove the timer from the object tracker */
 	destroy_timer_on_stack(&timer.timer);
 
 	timeout = expire - jiffies;
-#endif
-    PANIC("");
 
  out:
 	return timeout < 0 ? 0 : timeout;
