@@ -6776,8 +6776,6 @@ picked:
 	}
 }
 
-#if 0
-
 void __noreturn do_task_dead(void)
 {
 	/* Causes final put_task_struct in finish_task_switch(): */
@@ -6793,8 +6791,6 @@ void __noreturn do_task_dead(void)
 	for (;;)
 		cpu_relax();
 }
-
-#endif /* CL */
 
 static inline void sched_submit_work(struct task_struct *tsk)
 {

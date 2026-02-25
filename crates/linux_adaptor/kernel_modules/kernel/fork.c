@@ -563,7 +563,6 @@ static void account_kernel_stack(struct task_struct *tsk, int account)
 	}
 }
 
-#if 0
 void exit_task_stack_account(struct task_struct *tsk)
 {
 	account_kernel_stack(tsk, -1);
@@ -594,6 +593,7 @@ void put_task_stack(struct task_struct *tsk)
 }
 #endif
 
+#if 0
 void free_task(struct task_struct *tsk)
 {
 #ifdef CONFIG_SECCOMP

@@ -800,7 +800,6 @@ static void exit_notify(struct task_struct *tsk, int group_dead)
 	}
 }
 
-#if 0
 #ifdef CONFIG_DEBUG_STACK_USAGE
 unsigned long stack_not_used(struct task_struct *p)
 {
@@ -881,7 +880,6 @@ static void check_stack_usage(void)
 #else
 static inline void check_stack_usage(void) {}
 #endif
-#endif /* CL */
 
 static void synchronize_group_exit(struct task_struct *tsk, long code)
 {
@@ -983,7 +981,6 @@ void __noreturn do_exit(long code)
 
 	exit_tasks_rcu_start();
 	exit_notify(tsk, group_dead);
-#if 0
 	proc_exit_connector(tsk);
 	mpol_put_task_policy(tsk);
 #ifdef CONFIG_FUTEX
@@ -1015,8 +1012,6 @@ void __noreturn do_exit(long code)
 
 	lockdep_free_task(tsk);
 	do_task_dead();
-#endif
-    PANIC("");
 }
 
 #if 0

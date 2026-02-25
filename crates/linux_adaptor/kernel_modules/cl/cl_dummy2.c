@@ -283,3 +283,6 @@ void disassociate_ctty(int on_exit)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+// mm/page-writeback.c
+DEFINE_PER_CPU(int, dirty_throttle_leaks) = 0;
