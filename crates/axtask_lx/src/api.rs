@@ -31,7 +31,12 @@ where
 {
     let boxed_closure = Box::from_raw(opaque as *mut F);
     (*boxed_closure)();
-    exit(0);
+    if current().id().as_u64() == 1 {
+        // For main task(pid=1), shutdown the kernel.
+        axhal::power::system_off();
+    } else {
+        exit(0);
+    }
 }
 
 fn get_thread_fn<F>() -> LinuxThreadFn
