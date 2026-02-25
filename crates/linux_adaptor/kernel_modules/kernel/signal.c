@@ -2152,6 +2152,7 @@ bool do_notify_parent(struct task_struct *tsk, int sig)
 
 	return autoreap;
 }
+#endif /* CL */
 
 /**
  * do_notify_parent_cldstop - notify parent of stopped/continued state change
@@ -2175,6 +2176,7 @@ static void do_notify_parent_cldstop(struct task_struct *tsk,
 	struct sighand_struct *sighand;
 	u64 utime, stime;
 
+#if 0
 	if (for_ptracer) {
 		parent = tsk->parent;
 	} else {
@@ -2222,8 +2224,9 @@ static void do_notify_parent_cldstop(struct task_struct *tsk,
 	 */
 	__wake_up_parent(tsk, parent);
 	spin_unlock_irqrestore(&sighand->siglock, flags);
+#endif
+    PANIC("");
 }
-#endif /* CL */
 
 /*
  * This must be called with current->sighand->siglock held.
@@ -3007,6 +3010,7 @@ static void retarget_shared_pending(struct task_struct *tsk, sigset_t *which)
 			break;
 	}
 }
+#endif /* CL */
 
 void exit_signals(struct task_struct *tsk)
 {
@@ -3026,6 +3030,7 @@ void exit_signals(struct task_struct *tsk)
 		return;
 	}
 
+#if 0
 	spin_lock_irq(&tsk->sighand->siglock);
 	/*
 	 * From now this task is not visible for group-wide signals,
@@ -3046,6 +3051,9 @@ void exit_signals(struct task_struct *tsk)
 	if (unlikely(tsk->jobctl & JOBCTL_STOP_PENDING) &&
 	    task_participate_group_stop(tsk))
 		group_stop = CLD_STOPPED;
+#endif
+    PANIC("");
+
 out:
 	spin_unlock_irq(&tsk->sighand->siglock);
 
@@ -3060,6 +3068,7 @@ out:
 	}
 }
 
+#if 0
 /*
  * System call entry points.
  */

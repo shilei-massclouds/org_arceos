@@ -31,6 +31,7 @@ where
 {
     let boxed_closure = Box::from_raw(opaque as *mut F);
     (*boxed_closure)();
+    exit(0);
 }
 
 fn get_thread_fn<F>() -> LinuxThreadFn
@@ -259,7 +260,10 @@ pub fn sleep_until(deadline: axhal::time::TimeValue) {
 
 /// Exits the current task.
 pub fn exit(exit_code: i32) -> ! {
-    unimplemented!("axtask_lx::exit({}) ..", exit_code);
+    unsafe {
+        kthread_exit(exit_code);
+    }
+    unreachable!("exited!");
 }
 
 pub fn idle_loop(idle: AxTaskRef) {
@@ -273,6 +277,7 @@ unsafe extern "C" {
     fn msleep(msecs: usize);
     fn linux_kernel_thread(f: LinuxThreadFn, opaque: *mut c_void) -> i32;
     fn linux_idle_loop(pid: i32);
+    fn kthread_exit(exit_code: i32);
 }
 
 /*

@@ -188,6 +188,11 @@ void get_seccomp_filter(struct task_struct *tsk)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
+void seccomp_filter_release(struct task_struct *tsk)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
 // kernel/events/uprobes.c
 void uprobe_copy_process(struct task_struct *t, unsigned long flags)
 {
@@ -223,6 +228,12 @@ void perf_event_task_tick(void)
 
 // kernel/profile.c
 void profile_tick(int type)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// io_uring/io_uring.c
+void __io_uring_cancel(bool cancel_all)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }

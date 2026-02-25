@@ -306,6 +306,8 @@ void kthread_parkme(void)
 }
 EXPORT_SYMBOL_GPL(kthread_parkme);
 
+#endif /* CL */
+
 /**
  * kthread_exit - Cause the current kthread return @result to kthread_stop().
  * @result: The integer value to return to kthread_stop().
@@ -324,6 +326,7 @@ void __noreturn kthread_exit(long result)
 }
 EXPORT_SYMBOL(kthread_exit);
 
+#if 0
 /**
  * kthread_complete_and_exit - Exit the current kthread.
  * @comp: Completion to complete

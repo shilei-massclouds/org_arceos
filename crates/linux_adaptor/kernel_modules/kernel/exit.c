@@ -403,6 +403,7 @@ kill_orphaned_pgrp(struct task_struct *tsk, struct task_struct *parent)
 		__kill_pgrp_info(SIGCONT, SEND_SIG_PRIV, pgrp);
 	}
 }
+#endif /* CL */
 
 static void coredump_task_exit(struct task_struct *tsk)
 {
@@ -444,6 +445,7 @@ static void coredump_task_exit(struct task_struct *tsk)
 	}
 }
 
+#if 0
 #ifdef CONFIG_MEMCG
 /* drops tasklist_lock if succeeds */
 static bool __try_to_set_owner(struct task_struct *tsk, struct mm_struct *mm)
@@ -864,6 +866,7 @@ static void check_stack_usage(void)
 #else
 static inline void check_stack_usage(void) {}
 #endif
+#endif /* CL */
 
 static void synchronize_group_exit(struct task_struct *tsk, long code)
 {
@@ -922,6 +925,7 @@ void __noreturn do_exit(long code)
 		if (tsk->mm)
 			setmax_mm_hiwater_rss(&tsk->signal->maxrss, tsk->mm);
 	}
+#if 0
 	acct_collect(code, group_dead);
 	if (group_dead)
 		tty_audit_exit();
@@ -996,8 +1000,11 @@ void __noreturn do_exit(long code)
 
 	lockdep_free_task(tsk);
 	do_task_dead();
+#endif
+    PANIC("");
 }
 
+#if 0
 void __noreturn make_task_dead(int signr)
 {
 	/*

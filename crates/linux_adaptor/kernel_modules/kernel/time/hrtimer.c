@@ -1507,7 +1507,6 @@ static inline void hrtimer_sync_wait_running(struct hrtimer_cpu_base *base,
 					     unsigned long flags) { }
 #endif
 
-#if 0
 /**
  * hrtimer_cancel - cancel a timer and wait for the handler to finish.
  * @timer:	the timer to be cancelled
@@ -1530,6 +1529,7 @@ int hrtimer_cancel(struct hrtimer *timer)
 }
 EXPORT_SYMBOL_GPL(hrtimer_cancel);
 
+#if 0
 /**
  * __hrtimer_get_remaining - get remaining time for the timer
  * @timer:	the timer to read
