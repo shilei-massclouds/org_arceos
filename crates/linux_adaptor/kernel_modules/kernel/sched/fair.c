@@ -8892,7 +8892,6 @@ static void check_preempt_wakeup_fair(struct rq *rq, struct task_struct *p, int 
 	struct cfs_rq *cfs_rq = task_cfs_rq(curr);
 	int cse_is_idle, pse_is_idle;
 
-#if 0
 	if (unlikely(se == pse))
 		return;
 
@@ -8975,8 +8974,6 @@ static void check_preempt_wakeup_fair(struct rq *rq, struct task_struct *p, int 
 
 preempt:
 	resched_curr(rq);
-#endif
-    PANIC("");
 }
 
 static struct task_struct *pick_task_fair(struct rq *rq)

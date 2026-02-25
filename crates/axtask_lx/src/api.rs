@@ -171,12 +171,17 @@ pub fn spawn_task(task: TaskInner) -> AxTaskRef {
 /// Spawns a new task with the given parameters.
 ///
 /// Returns the task reference.
-pub fn spawn_raw<F>(_f: F, name: String, stack_size: usize) -> AxTaskRef
+pub fn spawn_raw<F>(f: F, _name: String, _stack_size: usize) -> AxTaskRef
 where
     F: FnOnce() + Send + 'static,
 {
-    unimplemented!("spawn_raw: name {name}, stack_size {stack_size}");
-    //spawn_task(TaskInner::new(f, name, stack_size))
+    /* FixMe: handle _name and _statck_size in linux. */
+    let opaque = Box::into_raw(Box::new(f)) as *mut c_void;
+    let thread_fn = get_thread_fn::<F>();
+    let pid = unsafe {
+        linux_kernel_thread(thread_fn, opaque)
+    };
+    crate::task::AxTask::new(pid)
 }
 
 
