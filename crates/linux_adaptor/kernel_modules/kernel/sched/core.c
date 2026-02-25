@@ -2182,7 +2182,6 @@ void wakeup_preempt(struct rq *rq, struct task_struct *p, int flags)
 		rq_clock_skip_update(rq);
 }
 
-#if 0
 static __always_inline
 int __task_state_match(struct task_struct *p, unsigned int state)
 {
@@ -2195,6 +2194,7 @@ int __task_state_match(struct task_struct *p, unsigned int state)
 	return 0;
 }
 
+#if 0
 static __always_inline
 int task_state_match(struct task_struct *p, unsigned int state)
 {
@@ -3649,8 +3649,6 @@ static inline bool rq_has_pinned_tasks(struct rq *rq)
 
 #endif /* !CONFIG_SMP */
 
-#if 0
-
 static void
 ttwu_stat(struct task_struct *p, int cpu, int wake_flags)
 {
@@ -4332,6 +4330,7 @@ out:
 	return success;
 }
 
+#if 0
 static bool __task_needs_rq_lock(struct task_struct *p)
 {
 	unsigned int state = READ_ONCE(p->__state);
@@ -4442,6 +4441,7 @@ struct task_struct *cpu_curr_snapshot(int cpu)
 
 	return t;
 }
+#endif /* CL */
 
 /**
  * wake_up_process - Wake up a specific process
@@ -4460,6 +4460,7 @@ int wake_up_process(struct task_struct *p)
 }
 EXPORT_SYMBOL(wake_up_process);
 
+#if 0
 int wake_up_state(struct task_struct *p, unsigned int state)
 {
 	return try_to_wake_up(p, state, 0);
@@ -5435,6 +5436,7 @@ unsigned long long nr_context_switches(void)
 
 	return sum;
 }
+#endif /* CL */
 
 /*
  * Consumers of these two interfaces, like for example the cpuidle menu
@@ -5448,6 +5450,7 @@ unsigned int nr_iowait_cpu(int cpu)
 	return atomic_read(&cpu_rq(cpu)->nr_iowait);
 }
 
+#if 0
 /*
  * IO-wait accounting, and how it's mostly bollocks (on SMP).
  *

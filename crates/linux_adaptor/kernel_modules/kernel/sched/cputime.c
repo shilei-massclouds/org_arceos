@@ -516,7 +516,6 @@ void account_process_tick(struct task_struct *p, int user_tick)
 		account_idle_time(cputime);
 }
 
-#if 0
 /*
  * Account multiple ticks of idle time.
  * @ticks: number of stolen ticks
@@ -540,6 +539,7 @@ void account_idle_ticks(unsigned long ticks)
 	account_idle_time(cputime);
 }
 
+#if 0
 /*
  * Adjust tick based cputime random precision against scheduler runtime
  * accounting.

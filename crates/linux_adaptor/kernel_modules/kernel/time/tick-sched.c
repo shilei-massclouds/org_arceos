@@ -198,7 +198,6 @@ static inline void tick_sched_flag_set(struct tick_sched *ts,
 	ts->flags |= flag;
 }
 
-#if 0
 static inline void tick_sched_flag_clear(struct tick_sched *ts,
 					 unsigned long flag)
 {
@@ -206,6 +205,7 @@ static inline void tick_sched_flag_clear(struct tick_sched *ts,
 	ts->flags &= ~flag;
 }
 
+#if 0
 #define MAX_STALLED_JIFFIES 5
 
 static void tick_sched_do_timer(struct tick_sched *ts, ktime_t now)
@@ -736,6 +736,7 @@ static void tick_nohz_update_jiffies(ktime_t now)
 
 	touch_softlockup_watchdog_sched();
 }
+#endif /* CL */
 
 static void tick_nohz_stop_idle(struct tick_sched *ts, ktime_t now)
 {
@@ -758,7 +759,6 @@ static void tick_nohz_stop_idle(struct tick_sched *ts, ktime_t now)
 
 	sched_clock_idle_wakeup_event();
 }
-#endif /* CL */
 
 static void tick_nohz_start_idle(struct tick_sched *ts)
 {
@@ -1105,8 +1105,11 @@ static void tick_nohz_full_stop_tick(struct tick_sched *ts, int cpu)
 }
 #endif /* CONFIG_NO_HZ_FULL */
 
+#endif /* CL */
+
 static void tick_nohz_restart_sched_tick(struct tick_sched *ts, ktime_t now)
 {
+#if 0
 	/* Update jiffies first */
 	tick_do_update_jiffies64(now);
 
@@ -1122,8 +1125,9 @@ static void tick_nohz_restart_sched_tick(struct tick_sched *ts, ktime_t now)
 	/* Cancel the scheduled timer and restore the tick: */
 	tick_sched_flag_clear(ts, TS_FLAG_STOPPED);
 	tick_nohz_restart(ts, now);
+#endif
+    PANIC("");
 }
-#endif /* CL */
 
 static void __tick_nohz_full_update_tick(struct tick_sched *ts,
 					 ktime_t now)
@@ -1419,6 +1423,7 @@ unsigned long tick_nohz_get_idle_calls_cpu(int cpu)
 
 	return ts->idle_calls;
 }
+#endif /* CL */
 
 static void tick_nohz_account_idle_time(struct tick_sched *ts,
 					ktime_t now)
@@ -1441,7 +1446,6 @@ static void tick_nohz_account_idle_time(struct tick_sched *ts,
 	if (ticks && ticks < LONG_MAX)
 		account_idle_ticks(ticks);
 }
-#endif /* CL */
 
 void tick_nohz_idle_restart_tick(void)
 {
@@ -1457,7 +1461,6 @@ void tick_nohz_idle_restart_tick(void)
 	}
 }
 
-#if 0
 static void tick_nohz_idle_update_tick(struct tick_sched *ts, ktime_t now)
 {
 	if (tick_nohz_full_cpu(smp_processor_id()))
@@ -1511,6 +1514,7 @@ void tick_nohz_idle_exit(void)
 	local_irq_enable();
 }
 
+#if 0
 /*
  * In low-resolution mode, the tick handler must be implemented directly
  * at the clockevent level. hrtimer can't be used instead, because its

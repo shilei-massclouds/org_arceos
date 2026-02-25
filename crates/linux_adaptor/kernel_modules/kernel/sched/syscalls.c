@@ -219,7 +219,6 @@ int idle_cpu(int cpu)
 	return 1;
 }
 
-#if 0
 /**
  * available_idle_cpu - is a given CPU idle for enqueuing work.
  * @cpu: the CPU in question.
@@ -237,6 +236,7 @@ int available_idle_cpu(int cpu)
 	return 1;
 }
 
+#if 0
 /**
  * idle_task - return the idle task for a given CPU.
  * @cpu: the processor in question.
