@@ -731,6 +731,8 @@ u64 jiffies_64_to_clock_t(u64 x)
 }
 EXPORT_SYMBOL(jiffies_64_to_clock_t);
 
+#endif /* CL */
+
 /**
  * nsec_to_clock_t - Convert nsec value to clock_t
  * @x: nsec value
@@ -753,6 +755,7 @@ u64 nsec_to_clock_t(u64 x)
 #endif
 }
 
+#if 0
 /**
  * jiffies64_to_nsecs - Convert jiffies64 to nanoseconds
  * @j: jiffies64 value

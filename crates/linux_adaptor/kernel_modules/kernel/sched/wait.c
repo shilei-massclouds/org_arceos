@@ -5,8 +5,11 @@
  * (C) 2004 Nadia Yvette Chambers, Oracle
  */
 
+#include <linux/mmu_context.h>
 #include <linux/spinlock.h>
 #include <linux/wait.h>
+
+#include "sched.h"
 
 void __init_waitqueue_head(struct wait_queue_head *wq_head, const char *name, struct lock_class_key *key)
 {
@@ -60,6 +63,7 @@ void remove_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry 
 	spin_unlock_irqrestore(&wq_head->lock, flags);
 }
 EXPORT_SYMBOL(remove_wait_queue);
+#endif /* CL */
 
 /*
  * The core wakeup function. Non-exclusive wakeups (nr_exclusive == 0) just
@@ -132,6 +136,7 @@ int __wake_up(struct wait_queue_head *wq_head, unsigned int mode,
 }
 EXPORT_SYMBOL(__wake_up);
 
+#if 0
 void __wake_up_on_current_cpu(struct wait_queue_head *wq_head, unsigned int mode, void *key)
 {
 	__wake_up_common_lock(wq_head, mode, 1, WF_CURRENT_CPU, key);
@@ -151,6 +156,7 @@ void __wake_up_locked_key(struct wait_queue_head *wq_head, unsigned int mode, vo
 	__wake_up_common(wq_head, mode, 1, 0, key);
 }
 EXPORT_SYMBOL_GPL(__wake_up_locked_key);
+#endif /* CL */
 
 /**
  * __wake_up_sync_key - wake up threads blocked on a waitqueue.
@@ -178,6 +184,7 @@ void __wake_up_sync_key(struct wait_queue_head *wq_head, unsigned int mode,
 }
 EXPORT_SYMBOL_GPL(__wake_up_sync_key);
 
+#if 0
 /**
  * __wake_up_locked_sync_key - wake up a thread blocked on a locked waitqueue.
  * @wq_head: the waitqueue

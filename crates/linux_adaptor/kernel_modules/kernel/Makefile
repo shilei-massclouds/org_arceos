@@ -33,6 +33,8 @@ obj-y += pid_namespace.o
 obj-y += exit.o
 obj-y += reboot.o
 obj-y += irq_work.o
+obj-y += task_work.o
+obj-y += sys.o
 
 #obj-y += resource.o
 #obj-y += tracepoint.o

@@ -820,7 +820,6 @@ void update_rq_clock(struct rq *rq)
 	update_rq_clock_task(rq, delta);
 }
 
-#if 0
 #ifdef CONFIG_SCHED_HRTICK
 /*
  * Use HR-timers to deliver accurate preemption points.
@@ -915,8 +914,6 @@ void hrtick_start(struct rq *rq, u64 delay)
 }
 
 #endif /* CONFIG_SMP */
-
-#endif /* CL */
 
 static void hrtick_rq_init(struct rq *rq)
 {

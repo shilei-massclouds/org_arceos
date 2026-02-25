@@ -8,6 +8,8 @@
 #include <linux/fs_struct.h>
 #include "internal.h"
 
+#include "adaptor.h"
+
 #if 0
 /*
  * Replace the fs->{rootmnt,root} with {mnt,dentry}. Put the old values.
@@ -85,12 +87,16 @@ void chroot_fs_refs(const struct path *old_root, const struct path *new_root)
 	while (count--)
 		path_put(old_root);
 }
+#endif /* CL */
 
 void free_fs_struct(struct fs_struct *fs)
 {
+#if 0
 	path_put(&fs->root);
 	path_put(&fs->pwd);
 	kmem_cache_free(fs_cachep, fs);
+#endif
+    PANIC("");
 }
 
 void exit_fs(struct task_struct *tsk)
@@ -110,6 +116,7 @@ void exit_fs(struct task_struct *tsk)
 	}
 }
 
+#if 0
 struct fs_struct *copy_fs_struct(struct fs_struct *old)
 {
 	struct fs_struct *fs = kmem_cache_alloc(fs_cachep, GFP_KERNEL);

@@ -13,7 +13,10 @@
  * Waiting for completion is a typically sync point, but not an exclusion point.
  */
 
-#if 0
+#include <linux/mmu_context.h>
+
+#include "sched.h"
+
 static void complete_with_flags(struct completion *x, int wake_flags)
 {
 	unsigned long flags;
@@ -26,10 +29,12 @@ static void complete_with_flags(struct completion *x, int wake_flags)
 	raw_spin_unlock_irqrestore(&x->wait.lock, flags);
 }
 
+#if 0
 void complete_on_current_cpu(struct completion *x)
 {
 	return complete_with_flags(x, WF_CURRENT_CPU);
 }
+#endif /* CL */
 
 /**
  * complete: - signals a single thread waiting on this completion
@@ -49,6 +54,7 @@ void complete(struct completion *x)
 }
 EXPORT_SYMBOL(complete);
 
+#if 0
 /**
  * complete_all: - signals all threads waiting on this completion
  * @x:  holds the state of this particular completion

@@ -1075,6 +1075,7 @@ static inline bool legacy_queue(struct sigpending *signals, int sig)
 {
 	return (sig < SIGRTMIN) && sigismember(&signals->signal, sig);
 }
+#endif /* CL */
 
 static int __send_signal_locked(int sig, struct kernel_siginfo *info,
 				struct task_struct *t, enum pid_type type, bool force)
@@ -1084,6 +1085,7 @@ static int __send_signal_locked(int sig, struct kernel_siginfo *info,
 	int override_rlimit;
 	int ret = 0, result;
 
+#if 0
 	lockdep_assert_held(&t->sighand->siglock);
 
 	result = TRACE_SIGNAL_IGNORED;
@@ -1189,10 +1191,13 @@ out_set:
 
 	complete_signal(sig, t, type);
 ret:
+#endif
+    PANIC("");
 	trace_signal_generate(sig, info, t, type != PIDTYPE_PID, result);
 	return ret;
 }
 
+#if 0
 static inline bool has_si_pid_and_uid(struct kernel_siginfo *info)
 {
 	bool ret = false;
@@ -2036,6 +2041,8 @@ ret:
 	return ret;
 }
 
+#endif /* CL */
+
 void do_notify_pidfd(struct task_struct *task)
 {
 	struct pid *pid = task_pid(task);
@@ -2152,7 +2159,6 @@ bool do_notify_parent(struct task_struct *tsk, int sig)
 
 	return autoreap;
 }
-#endif /* CL */
 
 /**
  * do_notify_parent_cldstop - notify parent of stopped/continued state change
@@ -3053,7 +3059,6 @@ void exit_signals(struct task_struct *tsk)
 		group_stop = CLD_STOPPED;
 #endif
     PANIC("");
-
 out:
 	spin_unlock_irq(&tsk->sighand->siglock);
 

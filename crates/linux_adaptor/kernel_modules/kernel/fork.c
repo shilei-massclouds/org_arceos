@@ -1601,6 +1601,7 @@ struct mm_struct *mm_access(struct task_struct *task, unsigned int mode)
 
 	return mm;
 }
+#endif /* CL */
 
 static void complete_vfork_done(struct task_struct *tsk)
 {
@@ -1614,7 +1615,6 @@ static void complete_vfork_done(struct task_struct *tsk)
 	}
 	task_unlock(tsk);
 }
-#endif /* CL */
 
 static int wait_for_vfork_done(struct task_struct *child,
 				struct completion *vfork)
@@ -1639,7 +1639,6 @@ static int wait_for_vfork_done(struct task_struct *child,
 	return killed;
 }
 
-#if 0
 /* Please note the differences between mmput and mm_release.
  * mmput is called whenever we stop holding onto a mm_struct,
  * error success whatever.
@@ -1692,6 +1691,7 @@ void exit_mm_release(struct task_struct *tsk, struct mm_struct *mm)
 	mm_release(tsk, mm);
 }
 
+#if 0
 void exec_mm_release(struct task_struct *tsk, struct mm_struct *mm)
 {
 	futex_exec_release(tsk);

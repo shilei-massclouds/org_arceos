@@ -27,6 +27,7 @@ obj-y += percpu_counter.o
 obj-y += idr.o
 obj-y += xarray.o
 obj-y += timerqueue.o
+obj-y += bsearch.o
 
 obj-y += math/
 obj-y += crypto/

@@ -233,6 +233,7 @@ void __put_user_ns(struct user_namespace *ns)
 	schedule_work(&ns->work);
 }
 EXPORT_SYMBOL(__put_user_ns);
+#endif /* CL */
 
 /*
  * struct idmap_key - holds the information necessary to find an idmapping in a
@@ -274,6 +275,7 @@ static int cmp_map_id(const void *k, const void *e)
 	return 1;
 }
 
+#if 0
 /*
  * map_id_range_down_max - Find idmap via binary search in ordered idmap array.
  * Can only be called if number of mappings exceeds UID_GID_MAP_MAX_BASE_EXTENTS.
@@ -340,6 +342,8 @@ u32 map_id_down(struct uid_gid_map *map, u32 id)
 	return map_id_range_down(map, id, 1);
 }
 
+#endif /* CL */
+
 /*
  * map_id_up_base - Find idmap via binary search in static extent array.
  * Can only be called if number of mappings is equal or less than
@@ -398,6 +402,7 @@ u32 map_id_up(struct uid_gid_map *map, u32 id)
 	return id;
 }
 
+#if 0
 /**
  *	make_kuid - Map a user-namespace uid pair into a kuid.
  *	@ns:  User namespace that the uid is in
@@ -417,6 +422,7 @@ kuid_t make_kuid(struct user_namespace *ns, uid_t uid)
 	return KUIDT_INIT(map_id_down(&ns->uid_map, uid));
 }
 EXPORT_SYMBOL(make_kuid);
+#endif /* CL */
 
 /**
  *	from_kuid - Create a uid from a kuid user-namespace pair.
@@ -466,6 +472,7 @@ uid_t from_kuid_munged(struct user_namespace *targ, kuid_t kuid)
 }
 EXPORT_SYMBOL(from_kuid_munged);
 
+#if 0
 /**
  *	make_kgid - Map a user-namespace gid pair into a kgid.
  *	@ns:  User namespace that the gid is in

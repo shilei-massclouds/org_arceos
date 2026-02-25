@@ -166,6 +166,10 @@ int copy_semundo(unsigned long clone_flags, struct task_struct *tsk)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+void exit_sem(struct task_struct *tsk)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
 
 // drivers/tty/tty_audit.c
 /*
@@ -234,6 +238,48 @@ void profile_tick(int type)
 
 // io_uring/io_uring.c
 void __io_uring_cancel(bool cancel_all)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// drivers/tty/tty_audit.c
+void tty_audit_exit(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// kernel/events/core.c
+void perf_event_exit_task(struct task_struct *child)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// kernel/futex/core.c
+void futex_exit_release(struct task_struct *tsk)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// kernel/events/uprobes.c
+void uprobe_free_utask(struct task_struct *t)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// ipc/shm.c
+void exit_shm(struct task_struct *task)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// fs/file.c
+void exit_files(struct task_struct *tsk)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// drivers/tty/tty_jobctrl.c
+void disassociate_ctty(int on_exit)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }

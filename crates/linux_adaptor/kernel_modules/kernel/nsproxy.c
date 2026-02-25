@@ -194,9 +194,9 @@ int copy_namespaces(unsigned long flags, struct task_struct *tsk)
 	return 0;
 }
 
-#if 0
 void free_nsproxy(struct nsproxy *ns)
 {
+#if 0
 	if (ns->mnt_ns)
 		put_mnt_ns(ns->mnt_ns);
 	if (ns->uts_ns)
@@ -212,8 +212,11 @@ void free_nsproxy(struct nsproxy *ns)
 	put_cgroup_ns(ns->cgroup_ns);
 	put_net(ns->net_ns);
 	kmem_cache_free(nsproxy_cachep, ns);
+#endif
+    PANIC("");
 }
 
+#if 0
 /*
  * Called from unshare. Unshare all the namespaces part of nsproxy.
  * On success, returns the new nsproxy.
@@ -243,6 +246,7 @@ int unshare_nsproxy_namespaces(unsigned long unshare_flags,
 out:
 	return err;
 }
+#endif /* CL */
 
 void switch_task_namespaces(struct task_struct *p, struct nsproxy *new)
 {
@@ -264,6 +268,7 @@ void exit_task_namespaces(struct task_struct *p)
 	switch_task_namespaces(p, NULL);
 }
 
+#if 0
 int exec_task_namespaces(void)
 {
 	struct task_struct *tsk = current;

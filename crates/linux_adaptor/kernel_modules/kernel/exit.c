@@ -323,6 +323,8 @@ int rcuwait_wake_up(struct rcuwait *w)
 }
 EXPORT_SYMBOL_GPL(rcuwait_wake_up);
 
+#endif /* CL */
+
 /*
  * Determine if a process group is "orphaned", according to the POSIX
  * definition in 2.2.2.52.  Orphaned process groups are not to be affected
@@ -336,6 +338,7 @@ static int will_become_orphaned_pgrp(struct pid *pgrp,
 {
 	struct task_struct *p;
 
+#if 0
 	do_each_pid_task(pgrp, PIDTYPE_PGID, p) {
 		if ((p == ignored_task) ||
 		    (p->exit_state && thread_group_empty(p)) ||
@@ -348,6 +351,8 @@ static int will_become_orphaned_pgrp(struct pid *pgrp,
 	} while_each_pid_task(pgrp, PIDTYPE_PGID, p);
 
 	return 1;
+#endif
+    PANIC("");
 }
 
 int is_current_pgrp_orphaned(void)
@@ -403,7 +408,6 @@ kill_orphaned_pgrp(struct task_struct *tsk, struct task_struct *parent)
 		__kill_pgrp_info(SIGCONT, SEND_SIG_PRIV, pgrp);
 	}
 }
-#endif /* CL */
 
 static void coredump_task_exit(struct task_struct *tsk)
 {
@@ -542,6 +546,8 @@ void mm_update_next_owner(struct mm_struct *mm)
 }
 #endif /* CONFIG_MEMCG */
 
+#endif /* CL */
+
 /*
  * Turn us into a lazy TLB process if we
  * aren't already..
@@ -553,6 +559,7 @@ static void exit_mm(void)
 	exit_mm_release(current, mm);
 	if (!mm)
 		return;
+#if 0
 	mmap_read_lock(mm);
 	mmgrab_lazy_tlb(mm);
 	BUG_ON(mm != current->active_mm);
@@ -580,6 +587,8 @@ static void exit_mm(void)
 	mmput(mm);
 	if (test_thread_flag(TIF_MEMDIE))
 		exit_oom_victim();
+#endif
+    PANIC("");
 }
 
 static struct task_struct *find_alive_thread(struct task_struct *p)
@@ -624,6 +633,7 @@ static struct task_struct *find_child_reaper(struct task_struct *father,
 	return father;
 }
 
+#if 0
 /*
  * When we die, we re-parent all our children, and try to:
  * 1. give them to another thread in our thread group, if such a member exists
@@ -689,6 +699,7 @@ static void reparent_leader(struct task_struct *father, struct task_struct *p,
 
 	kill_orphaned_pgrp(p, father);
 }
+#endif /* CL */
 
 /*
  * This does two things:
@@ -711,6 +722,7 @@ static void forget_original_parent(struct task_struct *father,
 	if (list_empty(&father->children))
 		return;
 
+#if 0
 	reaper = find_new_reaper(father, reaper);
 	list_for_each_entry(p, &father->children, sibling) {
 		for_each_thread(p, t) {
@@ -731,6 +743,8 @@ static void forget_original_parent(struct task_struct *father,
 			reparent_leader(father, p, dead);
 	}
 	list_splice_tail_init(&father->children, &reaper->children);
+#endif
+    PANIC("");
 }
 
 /*
@@ -786,6 +800,7 @@ static void exit_notify(struct task_struct *tsk, int group_dead)
 	}
 }
 
+#if 0
 #ifdef CONFIG_DEBUG_STACK_USAGE
 unsigned long stack_not_used(struct task_struct *p)
 {
@@ -925,7 +940,6 @@ void __noreturn do_exit(long code)
 		if (tsk->mm)
 			setmax_mm_hiwater_rss(&tsk->signal->maxrss, tsk->mm);
 	}
-#if 0
 	acct_collect(code, group_dead);
 	if (group_dead)
 		tty_audit_exit();
@@ -969,6 +983,7 @@ void __noreturn do_exit(long code)
 
 	exit_tasks_rcu_start();
 	exit_notify(tsk, group_dead);
+#if 0
 	proc_exit_connector(tsk);
 	mpol_put_task_policy(tsk);
 #ifdef CONFIG_FUTEX
@@ -1598,6 +1613,7 @@ static int child_wait_callback(wait_queue_entry_t *wait, unsigned mode,
 
 	return 0;
 }
+#endif /* CL */
 
 void __wake_up_parent(struct task_struct *p, struct task_struct *parent)
 {
@@ -1605,6 +1621,7 @@ void __wake_up_parent(struct task_struct *p, struct task_struct *parent)
 			   TASK_INTERRUPTIBLE, p);
 }
 
+#if 0
 static bool is_effectively_child(struct wait_opts *wo, bool ptrace,
 				 struct task_struct *target)
 {
