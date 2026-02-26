@@ -195,9 +195,12 @@ impl WaitQueue {
     /// If `resched` is true, the current task will be preempted when the
     /// preemption is enabled.
     pub fn notify_all(&self, resched: bool) {
+        unimplemented!("notify_all <- swake_up_all resched{resched}");
+        /*
         while self.notify_one(resched) {
             // loop until the wait queue is empty
         }
+        */
     }
 
     /// Wakes up one task in the wait queue, usually the first one.

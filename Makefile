@@ -50,7 +50,7 @@ OUT_CONFIG ?= $(PWD)/.axconfig.toml
 UIMAGE ?= n
 
 # App options
-A ?= examples/task/sleep
+A ?= examples/task/yield
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=

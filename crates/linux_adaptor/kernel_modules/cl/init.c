@@ -7,6 +7,7 @@
 #include <linux/cpu.h>
 #include <linux/memblock.h>
 #include <linux/pid_namespace.h>
+#include <linux/sched/clock.h>
 
 #include "adaptor.h"
 
@@ -56,6 +57,20 @@ void cl_early_init(unsigned long hartid, unsigned long dtb_pa)
  */
 void cl_late_init()
 {
+#if 0
+    setup_per_cpu_pageset();
+    numa_policy_init();
+    acpi_early_init();
+    if (late_time_init)
+        late_time_init();
+#endif
+    sched_clock_init();
+#if 0
+    calibrate_delay();
+
+    arch_cpu_finalize_init();
+#endif
+
     pid_idr_init();
 #if 0
     anon_vma_init();

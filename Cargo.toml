@@ -40,6 +40,7 @@ members = [
     "examples/task/parallel",
     "examples/task/priority",
     "examples/task/sleep",
+    "examples/task/yield",
 ]
 
 [workspace.package]

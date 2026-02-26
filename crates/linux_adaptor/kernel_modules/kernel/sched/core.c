@@ -7077,7 +7077,6 @@ EXPORT_SYMBOL(dynamic_preempt_schedule_notrace);
 
 #endif /* CONFIG_PREEMPTION */
 
-#if 0
 /*
  * This is the entry point to schedule() from kernel preemption
  * off of IRQ context.
@@ -7104,6 +7103,7 @@ asmlinkage __visible void __sched preempt_schedule_irq(void)
 	exception_exit(prev_state);
 }
 
+#if 0
 int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flags,
 			  void *key)
 {

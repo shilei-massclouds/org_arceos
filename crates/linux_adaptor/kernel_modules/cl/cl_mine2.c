@@ -207,7 +207,6 @@ CL_MINE(cpu_curr_snapshot)
 
 CL_MINE(wait_for_completion)
 CL_MINE(irqentry_exit_to_user_mode)
-CL_MINE(preempt_schedule_irq)
 
 CL_MINE(dev_driver_string)
 CL_MINE(riscv_get_mvendorid)

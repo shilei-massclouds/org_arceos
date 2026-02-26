@@ -234,7 +234,9 @@ pub fn set_current_affinity(_cpumask: AxCpuMask) -> bool {
 /// Current task gives up the CPU time voluntarily, and switches to another
 /// ready task.
 pub fn yield_now() {
-    unimplemented!("yield_now");
+    unsafe {
+        schedule();
+    }
 }
 
 /// Current task is going to sleep for the given duration.
@@ -283,6 +285,7 @@ unsafe extern "C" {
     fn linux_kernel_thread(f: LinuxThreadFn, opaque: *mut c_void) -> i32;
     fn linux_idle_loop(pid: i32);
     fn kthread_exit(exit_code: i32);
+    fn schedule();
 }
 
 /*
