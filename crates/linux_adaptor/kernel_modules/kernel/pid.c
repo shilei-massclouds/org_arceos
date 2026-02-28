@@ -319,6 +319,7 @@ void disable_pid_allocation(struct pid_namespace *ns)
 	ns->pid_allocated &= ~PIDNS_ADDING;
 	spin_unlock_irq(&pidmap_lock);
 }
+#endif /* CL */
 
 struct pid *find_pid_ns(int nr, struct pid_namespace *ns)
 {
@@ -331,7 +332,6 @@ struct pid *find_vpid(int nr)
 	return find_pid_ns(nr, task_active_pid_ns(current));
 }
 EXPORT_SYMBOL_GPL(find_vpid);
-#endif /* CL */
 
 static struct pid **task_pid_ptr(struct task_struct *task, enum pid_type type)
 {
@@ -412,6 +412,7 @@ void transfer_pid(struct task_struct *old, struct task_struct *new,
 	WARN_ON_ONCE(type == PIDTYPE_PID);
 	hlist_replace_rcu(&old->pid_links[type], &new->pid_links[type]);
 }
+#endif /* CL */
 
 struct task_struct *pid_task(struct pid *pid, enum pid_type type)
 {
@@ -427,6 +428,7 @@ struct task_struct *pid_task(struct pid *pid, enum pid_type type)
 }
 EXPORT_SYMBOL(pid_task);
 
+#if 0
 /*
  * Must be called under rcu_read_lock().
  */
@@ -478,6 +480,7 @@ struct task_struct *get_pid_task(struct pid *pid, enum pid_type type)
 	return result;
 }
 EXPORT_SYMBOL_GPL(get_pid_task);
+#endif /* CL */
 
 struct pid *find_get_pid(pid_t nr)
 {
@@ -490,7 +493,6 @@ struct pid *find_get_pid(pid_t nr)
 	return pid;
 }
 EXPORT_SYMBOL_GPL(find_get_pid);
-#endif /* CL */
 
 pid_t pid_nr_ns(struct pid *pid, struct pid_namespace *ns)
 {

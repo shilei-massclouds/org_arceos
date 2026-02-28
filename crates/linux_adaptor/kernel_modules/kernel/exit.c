@@ -1125,6 +1125,7 @@ SYSCALL_DEFINE1(exit_group, int, error_code)
 	/* NOTREACHED */
 	return 0;
 }
+#endif /* CL */
 
 static int eligible_pid(struct wait_opts *wo, struct task_struct *p)
 {
@@ -1175,6 +1176,7 @@ static int wait_task_zombie(struct wait_opts *wo, struct task_struct *p)
 	if (!likely(wo->wo_flags & WEXITED))
 		return 0;
 
+#if 0
 	if (unlikely(wo->wo_flags & WNOWAIT)) {
 		status = (p->signal->flags & SIGNAL_GROUP_EXIT)
 			? p->signal->group_exit_code : p->exit_code;
@@ -1275,6 +1277,8 @@ static int wait_task_zombie(struct wait_opts *wo, struct task_struct *p)
 		release_task(p);
 
 out_info:
+#endif
+    PANIC("");
 	infop = wo->wo_info;
 	if (infop) {
 		if ((status & 0x7f) == 0) {
@@ -1548,6 +1552,7 @@ static int wait_consider_task(struct wait_opts *wo, int ptrace,
 	return wait_task_continued(wo, p);
 }
 
+#if 0
 /*
  * Do the work of do_wait() for one thread in the group, @tsk.
  *
@@ -1584,6 +1589,7 @@ static int ptrace_do_wait(struct wait_opts *wo, struct task_struct *tsk)
 
 	return 0;
 }
+#endif /* CL */
 
 bool pid_child_should_wake(struct wait_opts *wo, struct task_struct *p)
 {
@@ -1608,7 +1614,6 @@ static int child_wait_callback(wait_queue_entry_t *wait, unsigned mode,
 
 	return 0;
 }
-#endif /* CL */
 
 void __wake_up_parent(struct task_struct *p, struct task_struct *parent)
 {
@@ -1616,7 +1621,6 @@ void __wake_up_parent(struct task_struct *p, struct task_struct *parent)
 			   TASK_INTERRUPTIBLE, p);
 }
 
-#if 0
 static bool is_effectively_child(struct wait_opts *wo, bool ptrace,
 				 struct task_struct *target)
 {
@@ -1679,6 +1683,7 @@ long __do_wait(struct wait_opts *wo)
 		if (retval)
 			return retval;
 	} else {
+#if 0
 		struct task_struct *tsk = current;
 
 		do {
@@ -1693,6 +1698,8 @@ long __do_wait(struct wait_opts *wo)
 			if (wo->wo_flags & __WNOTHREAD)
 				break;
 		} while_each_thread(current, tsk);
+#endif
+        PANIC("");
 	}
 	read_unlock(&tasklist_lock);
 
@@ -1729,6 +1736,7 @@ static long do_wait(struct wait_opts *wo)
 	return retval;
 }
 
+#if 0
 int kernel_waitid_prepare(struct wait_opts *wo, int which, pid_t upid,
 			  struct waitid_info *infop, int options,
 			  struct rusage *ru)
@@ -1882,6 +1890,7 @@ long kernel_wait4(pid_t upid, int __user *stat_addr, int options,
 
 	return ret;
 }
+#endif /* CL */
 
 int kernel_wait(pid_t pid, int *stat)
 {
@@ -1899,6 +1908,23 @@ int kernel_wait(pid_t pid, int *stat)
 	return ret;
 }
 
+int linux_wait_for_exit(pid_t pid, int *stat)
+{
+	struct wait_opts wo = {
+		.wo_type	= PIDTYPE_PID,
+		.wo_pid		= find_get_pid(pid),
+		.wo_flags	= __WALL,
+	};
+	int ret;
+
+	ret = do_wait(&wo);
+	if (ret > 0 && wo.wo_stat)
+		*stat = wo.wo_stat;
+	put_pid(wo.wo_pid);
+	return ret;
+}
+
+#if 0
 SYSCALL_DEFINE4(wait4, pid_t, upid, int __user *, stat_addr,
 		int, options, struct rusage __user *, ru)
 {

@@ -20,7 +20,6 @@ void __init_waitqueue_head(struct wait_queue_head *wq_head, const char *name, st
 
 EXPORT_SYMBOL(__init_waitqueue_head);
 
-#if 0
 void add_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry)
 {
 	unsigned long flags;
@@ -32,6 +31,7 @@ void add_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq
 }
 EXPORT_SYMBOL(add_wait_queue);
 
+#if 0
 void add_wait_queue_exclusive(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry)
 {
 	unsigned long flags;
@@ -53,6 +53,7 @@ void add_wait_queue_priority(struct wait_queue_head *wq_head, struct wait_queue_
 	spin_unlock_irqrestore(&wq_head->lock, flags);
 }
 EXPORT_SYMBOL_GPL(add_wait_queue_priority);
+#endif /* CL */
 
 void remove_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry)
 {
@@ -63,7 +64,6 @@ void remove_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry 
 	spin_unlock_irqrestore(&wq_head->lock, flags);
 }
 EXPORT_SYMBOL(remove_wait_queue);
-#endif /* CL */
 
 /*
  * The core wakeup function. Non-exclusive wakeups (nr_exclusive == 0) just

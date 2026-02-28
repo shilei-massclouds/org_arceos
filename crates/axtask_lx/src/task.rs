@@ -1,3 +1,4 @@
+use core::ffi::c_int;
 use alloc::sync::Arc;
 use crate::linux::_current;
 
@@ -21,7 +22,16 @@ impl AxTask {
     ///
     /// It will return immediately if the task has already exited (but not dropped).
     pub fn join(&self) -> Option<i32> {
-        unimplemented!("join");
+        let mut _stat = 0;
+        let ret = unsafe {
+            linux_wait_for_exit(self.pid, &mut _stat)
+        };
+        if ret < 0 {
+            error!("wait_for_exit error: {}", ret);
+            None
+        } else {
+            Some(ret)
+        }
     }
 }
 
@@ -61,6 +71,10 @@ impl TaskId {
 
 /// The inner task structure.
 pub struct TaskInner;
+
+unsafe extern "C" {
+    fn linux_wait_for_exit(pid: c_int, stat: *mut c_int) -> c_int;
+}
 
 /*
 use alloc::{boxed::Box, string::String, sync::Arc};
