@@ -61,3 +61,33 @@ void linux_idle_loop(pid_t pid)
     /* Call into cpu_idle with preempt disabled */
     cpu_startup_entry(CPUHP_ONLINE);
 }
+
+/*
+ * Return 0 when the timer has expired
+ * otherwise the remaining time in jiffies.
+ */
+int swait_timeout_until(struct swait_queue_head *wq,
+                        long msecs,
+                        int (*condition)(void *),
+                        void *opaque)
+{
+    long timeout = msecs_to_jiffies(msecs);
+    printk("%s: msecs(%lu) timeout(%lu)\n", __func__, msecs, timeout);
+    return swait_event_timeout_exclusive(*wq, condition(opaque), timeout);
+}
+
+/*
+ * Check or init swait itself.
+ */
+void swait_check_or_init(struct swait_queue_head *wq)
+{
+	unsigned long flags;
+
+    BUG_ON(!wq);
+
+	raw_spin_lock_irqsave(&wq->lock, flags);
+    if (wq->task_list.next == NULL && wq->task_list.prev == NULL) {
+        INIT_LIST_HEAD(&wq->task_list);
+    }
+	raw_spin_unlock_irqrestore(&wq->lock, flags);
+}

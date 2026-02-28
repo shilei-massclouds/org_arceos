@@ -1,7 +1,6 @@
 #include <linux/printk.h>
 #include "adaptor.h"
 
-CL_MINE(__warn_printk)
 CL_MINE(sprint_symbol_build_id)
 CL_MINE(sprint_backtrace)
 CL_MINE(sprint_symbol_no_offset)
@@ -160,8 +159,6 @@ CL_MINE(kthread_queue_work)
 CL_MINE(kthread_flush_work)
 CL_MINE(llist_add_batch)
 
-CL_MINE(prepare_to_swait_event)
-CL_MINE(finish_swait)
 CL_MINE(irq_work_queue_on)
 CL_MINE(rcu_segcblist_advance)
 CL_MINE(rcu_segcblist_first_pend_cb)

@@ -286,3 +286,18 @@ void disassociate_ctty(int on_exit)
 
 // mm/page-writeback.c
 DEFINE_PER_CPU(int, dirty_throttle_leaks) = 0;
+
+// kernel/panic.c
+extern int cl_vprintk(const char *, va_list);
+
+void __warn_printk(const char *fmt, ...)
+{
+	va_list args;
+	int r;
+
+	va_start(args, fmt);
+    r = cl_vprintk(fmt, args);
+	va_end(args);
+
+	return r;
+}

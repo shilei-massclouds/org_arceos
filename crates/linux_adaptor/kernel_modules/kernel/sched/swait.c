@@ -10,17 +10,6 @@
 #include "sched.h"
 #include "adaptor.h"
 
-/* It must called under lock. */
-void check_or_init_list(struct list_head *head)
-{
-    if (head == NULL) {
-        PANIC("list head itself is NULL.");
-    }
-    if (head->next == NULL && head->prev == NULL) {
-	    INIT_LIST_HEAD(head);
-    }
-}
-
 void __init_swait_queue_head(struct swait_queue_head *q, const char *name,
 			     struct lock_class_key *key)
 {
@@ -39,9 +28,6 @@ EXPORT_SYMBOL(__init_swait_queue_head);
 void swake_up_locked(struct swait_queue_head *q, int wake_flags)
 {
 	struct swait_queue *curr;
-
-    /* FixMe: make sure list has been initialized. For ArceOS. */
-    check_or_init_list(&q->task_list);
 
 	if (list_empty(&q->task_list))
 		return;
@@ -104,6 +90,7 @@ void swake_up_all(struct swait_queue_head *q)
 	raw_spin_unlock_irq(&q->lock);
 }
 EXPORT_SYMBOL(swake_up_all);
+#endif /* CL */
 
 void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
 {
@@ -112,6 +99,7 @@ void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
 		list_add_tail(&wait->task_list, &q->task_list);
 }
 
+#if 0
 void prepare_to_swait_exclusive(struct swait_queue_head *q, struct swait_queue *wait, int state)
 {
 	unsigned long flags;
@@ -122,6 +110,7 @@ void prepare_to_swait_exclusive(struct swait_queue_head *q, struct swait_queue *
 	raw_spin_unlock_irqrestore(&q->lock, flags);
 }
 EXPORT_SYMBOL(prepare_to_swait_exclusive);
+#endif /* CL */
 
 long prepare_to_swait_event(struct swait_queue_head *q, struct swait_queue *wait, int state)
 {
@@ -166,5 +155,3 @@ void finish_swait(struct swait_queue_head *q, struct swait_queue *wait)
 	}
 }
 EXPORT_SYMBOL(finish_swait);
-
-#endif /* CL */
