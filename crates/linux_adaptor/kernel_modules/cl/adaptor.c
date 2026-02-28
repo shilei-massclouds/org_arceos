@@ -98,3 +98,13 @@ void swait_check_or_init(struct swait_queue_head *wq)
     }
 	raw_spin_unlock_irqrestore(&wq->lock, flags);
 }
+
+int linux_set_nice(pid_t pid, long nice)
+{
+    struct task_struct *p = find_task_by_vpid(pid);
+    if (p == NULL) {
+        return -ESRCH;
+    }
+    set_user_nice(p, nice);
+    return 0;
+}

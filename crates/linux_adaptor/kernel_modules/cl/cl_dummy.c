@@ -254,12 +254,6 @@ bool housekeeping_enabled(enum hk_type type)
     return false;
 }
 
-void set_user_nice(struct task_struct *p, long nice)
-{
-    pr_notice("%s: No impl.", __func__);
-    p->static_prio = NICE_TO_PRIO(nice);
-}
-
 void bio_associate_blkg_from_css(struct bio *bio,
                  struct cgroup_subsys_state *css)
 {

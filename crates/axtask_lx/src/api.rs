@@ -1,7 +1,10 @@
 //! Task APIs for multi-task configuration.
 
 use alloc::{string::String, sync::Arc, boxed::Box};
-use core::ffi::c_void;
+use core::ffi::{c_void, c_int, c_long};
+
+const MAX_NICE: isize =  19;
+const MIN_NICE: isize = -20;
 
 pub struct AxCpuMask;
 
@@ -218,8 +221,16 @@ where
 /// Returns `true` if the priority is set successfully.
 ///
 /// [CFS]: https://en.wikipedia.org/wiki/Completely_Fair_Scheduler
-pub fn set_priority(prio: isize) -> bool {
-    unimplemented!("set_priority: prio {prio}");
+pub fn set_priority(nice: isize) -> bool {
+    if nice < MIN_NICE || nice > MAX_NICE {
+        return false;
+    }
+
+    let pid = current().id().as_u64() as i32;
+    let ret = unsafe {
+        linux_set_nice(pid, nice as c_long)
+    };
+    ret == 0
 }
 
 /// Set the affinity for the current task.
@@ -286,6 +297,7 @@ unsafe extern "C" {
     fn linux_idle_loop(pid: i32);
     fn kthread_exit(exit_code: i32);
     fn schedule();
+    fn linux_set_nice(pid: c_int, nice: c_long) -> c_int;
 }
 
 /*

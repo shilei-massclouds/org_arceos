@@ -3959,11 +3959,8 @@ static void reweight_task_fair(struct rq *rq, struct task_struct *p,
 	struct cfs_rq *cfs_rq = cfs_rq_of(se);
 	struct load_weight *load = &se->load;
 
-#if 0
 	reweight_entity(cfs_rq, se, lw->weight);
 	load->inv_weight = lw->inv_weight;
-#endif
-    PANIC("");
 }
 
 static inline int throttled_hierarchy(struct cfs_rq *cfs_rq);
@@ -13228,7 +13225,6 @@ static void task_fork_fair(struct task_struct *p)
 static void
 prio_changed_fair(struct rq *rq, struct task_struct *p, int oldprio)
 {
-#if 0
 	if (!task_on_rq_queued(p))
 		return;
 
@@ -13245,8 +13241,6 @@ prio_changed_fair(struct rq *rq, struct task_struct *p, int oldprio)
 			resched_curr(rq);
 	} else
 		wakeup_preempt(rq, p, 0);
-#endif
-    PANIC("");
 }
 
 #ifdef CONFIG_FAIR_GROUP_SCHED

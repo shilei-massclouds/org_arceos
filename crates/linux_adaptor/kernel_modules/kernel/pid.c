@@ -428,7 +428,6 @@ struct task_struct *pid_task(struct pid *pid, enum pid_type type)
 }
 EXPORT_SYMBOL(pid_task);
 
-#if 0
 /*
  * Must be called under rcu_read_lock().
  */
@@ -444,6 +443,7 @@ struct task_struct *find_task_by_vpid(pid_t vnr)
 	return find_task_by_pid_ns(vnr, task_active_pid_ns(current));
 }
 
+#if 0
 struct task_struct *find_get_task_by_vpid(pid_t nr)
 {
 	struct task_struct *task;

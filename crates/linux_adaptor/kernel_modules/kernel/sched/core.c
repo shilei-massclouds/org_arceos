@@ -701,7 +701,6 @@ struct rq *task_rq_lock(struct task_struct *p, struct rq_flags *rf)
 {
 	struct rq *rq;
 
-#if 0
 	for (;;) {
 		raw_spin_lock_irqsave(&p->pi_lock, rf->flags);
 		rq = task_rq(p);
@@ -733,8 +732,6 @@ struct rq *task_rq_lock(struct task_struct *p, struct rq_flags *rf)
 		while (unlikely(task_on_rq_migrating(p)))
 			cpu_relax();
 	}
-#endif
-    PANIC("");
 }
 
 /*
