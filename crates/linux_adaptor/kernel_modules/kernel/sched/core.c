@@ -4457,13 +4457,10 @@ int wake_up_process(struct task_struct *p)
 }
 EXPORT_SYMBOL(wake_up_process);
 
-#if 0
 int wake_up_state(struct task_struct *p, unsigned int state)
 {
 	return try_to_wake_up(p, state, 0);
 }
-
-#endif /* CL */
 
 /*
  * Perform scheduler related setup for a newly forked process p.

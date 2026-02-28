@@ -76,6 +76,13 @@ int swait_timeout_until(struct swait_queue_head *wq,
     return swait_event_timeout_exclusive(*wq, condition(opaque), timeout);
 }
 
+void swait_until(struct swait_queue_head *wq,
+                 int (*condition)(void *),
+                 void *opaque)
+{
+    swait_event_exclusive(*wq, condition(opaque));
+}
+
 /*
  * Check or init swait itself.
  */

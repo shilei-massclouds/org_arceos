@@ -133,11 +133,17 @@ impl WaitQueue {
     ///
     /// Note that even other tasks notify this task, it will not wake up until
     /// the condition becomes true.
-    pub fn wait_until<F>(&self, _condition: F)
+    pub fn wait_until<F>(&self, condition: F)
     where
         F: Fn() -> bool,
     {
-        unimplemented!("wait_until ..");
+        self.check_or_init();
+
+        let opaque = Box::into_raw(Box::new(condition)) as *mut c_void;
+        let condition_fn = get_condition_fn::<F>();
+        unsafe {
+            swait_until(self, condition_fn, opaque);
+        }
         /*
         let curr = crate::current();
         loop {
@@ -241,12 +247,13 @@ impl WaitQueue {
     /// If `resched` is true, the current task will be preempted when the
     /// preemption is enabled.
     pub fn notify_all(&self, resched: bool) {
-        unimplemented!("notify_all <- swake_up_all resched{resched}");
-        /*
-        while self.notify_one(resched) {
-            // loop until the wait queue is empty
+        self.check_or_init();
+        unsafe {
+            swake_up_all(self);
+            if resched {
+                set_current_need_resched();
+            }
         }
-        */
     }
 
     /// Wakes up one task in the wait queue, usually the first one.
@@ -279,12 +286,21 @@ impl WaitQueue {
 unsafe extern "C" {
     fn set_current_need_resched();
     fn swake_up_one(wq: *const WaitQueue);
+    fn swake_up_all(wq: *const WaitQueue);
+
     fn swait_timeout_until(
         wq: *const WaitQueue,
         timeout: i64,
         condition: ConditionFn,
         opaque: *mut c_void
     ) -> c_int;
+
+    fn swait_until(
+        wq: *const WaitQueue,
+        condition: ConditionFn,
+        opaque: *mut c_void
+    );
+
     fn swait_check_or_init(wq: *const WaitQueue);
 }
 

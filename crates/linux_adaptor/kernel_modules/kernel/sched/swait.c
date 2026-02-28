@@ -38,7 +38,6 @@ void swake_up_locked(struct swait_queue_head *q, int wake_flags)
 }
 EXPORT_SYMBOL(swake_up_locked);
 
-#if 0
 /*
  * Wake up all waiters. This is an interface which is solely exposed for
  * completions and not for general usage.
@@ -51,7 +50,6 @@ void swake_up_all_locked(struct swait_queue_head *q)
 	while (!list_empty(&q->task_list))
 		swake_up_locked(q, 0);
 }
-#endif /* CL */
 
 void swake_up_one(struct swait_queue_head *q)
 {
@@ -63,7 +61,6 @@ void swake_up_one(struct swait_queue_head *q)
 }
 EXPORT_SYMBOL(swake_up_one);
 
-#if 0
 /*
  * Does not allow usage from IRQ disabled, since we must be able to
  * release IRQs to guarantee bounded hold time.
@@ -90,7 +87,6 @@ void swake_up_all(struct swait_queue_head *q)
 	raw_spin_unlock_irq(&q->lock);
 }
 EXPORT_SYMBOL(swake_up_all);
-#endif /* CL */
 
 void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
 {
