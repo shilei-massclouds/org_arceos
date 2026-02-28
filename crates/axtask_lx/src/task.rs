@@ -2,6 +2,9 @@ use core::ffi::c_int;
 use alloc::sync::Arc;
 use crate::linux::_current;
 
+/* No child processes */
+const ECHILD: i32 = 10;
+
 pub struct AxTask {
     pid: i32,
 }
@@ -26,7 +29,7 @@ impl AxTask {
         let ret = unsafe {
             linux_wait_for_exit(self.pid, &mut _stat)
         };
-        if ret < 0 {
+        if ret < 0 && ret != -ECHILD {
             error!("wait_for_exit error: {}", ret);
             None
         } else {

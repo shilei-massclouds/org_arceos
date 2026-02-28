@@ -7100,7 +7100,6 @@ asmlinkage __visible void __sched preempt_schedule_irq(void)
 	exception_exit(prev_state);
 }
 
-#if 0
 int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flags,
 			  void *key)
 {
@@ -7109,6 +7108,7 @@ int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flag
 }
 EXPORT_SYMBOL(default_wake_function);
 
+#if 0
 const struct sched_class *__setscheduler_class(int policy, int prio)
 {
 	if (dl_prio(prio))
