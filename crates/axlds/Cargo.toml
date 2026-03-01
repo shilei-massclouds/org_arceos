@@ -1,0 +1,18 @@
+[package]
+name = "axlds"
+version.workspace = true
+edition.workspace = true
+authors = ["Yuekai Jia <equation618@gmail.com>"]
+description = "ArceOS LDS management"
+license.workspace = true
+homepage.workspace = true
+repository = "https://github.com/arceos-org/arceos/tree/main/modules/axlds"
+documentation = "https://arceos-org.github.io/arceos/axlds/index.html"
+
+[features]
+default = []
+
+[dependencies]
+
+[build-dependencies]
+axconfig = { workspace = true }
