@@ -54,6 +54,12 @@ ifeq ($(BUS),mmio)
   ax_feat += bus-mmio
 endif
 
+# Handle features file under platform directory if it exists.
+PLAT_FEAT_FILE := $(dir $(PLAT_CONFIG))features.txt
+ifneq ($(wildcard $(PLAT_FEAT_FILE)),)
+  ax_feat += $(shell cat $(PLAT_FEAT_FILE))
+endif
+
 ifeq ($(shell test $(SMP) -gt 1; echo $$?),0)
   lib_feat += smp
 endif
