@@ -80,9 +80,8 @@ log-level-info = ["axfeat/log-level-info"]
 log-level-debug = ["axfeat/log-level-debug"]
 log-level-trace = ["axfeat/log-level-trace"]
 
-# Alternative axhal/axruntime/..
-alt-hal = []
-alt-runtime = []
+# Select alternatives for axruntime.
+axruntime = ["arceos_api/axruntime", "axfeat/axruntime"]
 
 [dependencies]
 axfeat = { workspace = true }

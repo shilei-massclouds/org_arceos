@@ -54,9 +54,16 @@ ifeq ($(BUS),mmio)
   ax_feat += bus-mmio
 endif
 
-# Handle features file under platform directory if it exists.
+#
+# Handle platform-specific features.
+# If a platform has features.txt, it should specify axruntime or
+# its alternatives explicitly.
+#
+PLAT_FEATURES :=
 PLAT_FEAT_FILE := $(dir $(PLAT_CONFIG))features.txt
-ifneq ($(wildcard $(PLAT_FEAT_FILE)),)
+ifeq ($(wildcard $(PLAT_FEAT_FILE)),)
+  ax_feat += axruntime
+else
   ax_feat += $(shell cat $(PLAT_FEAT_FILE))
 endif
 
