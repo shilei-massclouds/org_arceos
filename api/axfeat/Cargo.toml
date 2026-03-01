@@ -72,11 +72,13 @@ log-level-info = ["axlog/log-level-info"]
 log-level-debug = ["axlog/log-level-debug"]
 log-level-trace = ["axlog/log-level-trace"]
 
-# Select alternatives for axhal/axruntime/..
+# Select alternatives for axruntime.
 axruntime = ["dep:axruntime"]
+axruntime_lx = ["dep:axruntime_lx"]
 
 [dependencies]
 axruntime = { workspace = true, optional = true }
+axruntime_lx = { workspace = true, optional = true }
 axhal = { workspace = true }
 axlog = { workspace = true }
 axalloc = { workspace = true, optional = true }

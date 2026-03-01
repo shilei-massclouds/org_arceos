@@ -171,6 +171,7 @@ dependencies = [
  "axmm",
  "axnet",
  "axruntime",
+ "axruntime_lx",
  "axsync",
  "axtask",
 ]
@@ -433,6 +434,7 @@ dependencies = [
  "axlog",
  "axnet",
  "axruntime",
+ "axruntime_lx",
  "axsync",
  "axtask",
  "kspin",
@@ -795,6 +797,14 @@ dependencies = [
  "crate_interface",
  "ctor_bare",
  "percpu",
+]
+
+[[package]]
+name = "axruntime_lx"
+version = "0.2.0"
+dependencies = [
+ "axhal",
+ "axlog",
 ]
 
 [[package]]

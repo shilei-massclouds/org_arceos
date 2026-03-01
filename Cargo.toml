@@ -69,5 +69,7 @@ axtask = { path = "modules/axtask" }
 axdma = { path = "modules/axdma" }
 axipi = { path = "modules/axipi" }
 
+axruntime_lx = { path = "crates/axruntime_lx" }
+
 [profile.release]
 lto = true

@@ -29,12 +29,14 @@ dummy-if-not-enabled = []
 
 # Select alternatives for axruntime.
 axruntime = ["dep:axruntime"]
+axruntime_lx = ["dep:axruntime_lx"]
 
 [dependencies]
 axio = "0.1"
 axerrno = "0.1"
 axfeat = { workspace = true }
 axruntime = { workspace = true, optional = true }
+axruntime_lx = { workspace = true, optional = true }
 axconfig = { workspace = true }
 axlog = { workspace = true }
 axhal = { workspace = true }

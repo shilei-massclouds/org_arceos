@@ -392,9 +392,12 @@ pub mod modules {
     pub use axconfig;
     pub use axhal;
     pub use axlog;
+    pub use axsync;
+
     #[cfg(feature = "axruntime")]
     pub use axruntime;
-    pub use axsync;
+    #[cfg(feature = "axruntime_lx")]
+    pub use axruntime_lx;
 
     #[cfg(feature = "alloc")]
     pub use axalloc;
