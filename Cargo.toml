@@ -30,6 +30,8 @@ members = [
     "examples/httpclient",
     "examples/httpserver",
     "examples/shell",
+
+    "platforms/axplat-riscv64-dp1000",
 ]
 
 [workspace.package]

@@ -728,6 +728,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "axplat-riscv64-dp1000"
+version = "0.2.0"
+dependencies = [
+ "axconfig-macros",
+ "axplat",
+]
+
+[[package]]
 name = "axplat-riscv64-qemu-virt"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

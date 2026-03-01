@@ -1,0 +1,19 @@
+[package]
+name = "axplat-riscv64-dp1000"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[features]
+irq = ["axplat/irq"]
+smp = ["axplat/smp"]
+
+[dependencies]
+axconfig-macros = "0.2"
+axplat = "0.3"
