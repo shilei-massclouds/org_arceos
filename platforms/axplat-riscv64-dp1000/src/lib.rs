@@ -3,6 +3,7 @@
 #[macro_use]
 extern crate axplat;
 
+mod boot;
 mod console;
 mod init;
 #[cfg(feature = "irq")]
@@ -24,10 +25,4 @@ pub mod config {
         env!("CARGO_PKG_NAME"),
         "`PACKAGE` field in the configuration does not match the Package name. Please check your configuration file."
     );
-}
-
-#[unsafe(no_mangle)]
-unsafe extern "C" fn _start() -> ! {
-    // TODO: Implement actual bootstrap logic
-    axplat::call_main(0, 0);
 }
