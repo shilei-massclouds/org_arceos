@@ -1,0 +1,1 @@
+cl/raw.o cl/adaptor.o cl/init.o cl/cl_mine2.o cl/cl_dummy2.o

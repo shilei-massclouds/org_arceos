@@ -1,0 +1,42 @@
+# Makefile for `lib`
+
+obj-y += vsprintf.o
+obj-y += string.o
+obj-y += find_bit.o
+obj-y += ctype.o
+obj-y += hexdump.o
+obj-y += crc32.o
+obj-y += ratelimit.o
+obj-y += dump_stack.o
+obj-y += sort.o
+obj-y += kstrtox.o
+obj-y += hweight.o
+obj-y += list_debug.o
+obj-y += bitmap.o
+obj-y += debug_locks.o
+obj-y += rbtree.o
+obj-y += kasprintf.o
+obj-y += kobject.o
+obj-y += seq_buf.o
+obj-y += string_helpers.o
+obj-y += radix-tree.o
+obj-y += maple_tree.o
+obj-y += irq_regs.o
+obj-y += bug.o
+obj-y += percpu_counter.o
+obj-y += idr.o
+obj-y += xarray.o
+obj-y += timerqueue.o
+obj-y += bsearch.o
+
+obj-y += math/
+obj-y += crypto/
+
+#obj-y += klist.o
+#obj-y += devres.o errname.o
+#obj-y += sbitmap.o lockref.o dec_and_lock.o
+#obj-y += sg_pool.o scatterlist.o errseq.o llist.o
+#obj-y += iov_iter.o
+#obj-y += strncpy_from_user.o
+#obj-y += cmdline.o logic_pio.o
+#obj-y += group_cpus.o

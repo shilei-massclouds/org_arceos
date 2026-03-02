@@ -1,0 +1,1 @@
+lib/crypto/blake2s.o lib/crypto/blake2s-generic.o lib/crypto/chacha.o

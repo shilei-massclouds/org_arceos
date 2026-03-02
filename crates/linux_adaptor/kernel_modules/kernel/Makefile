@@ -1,0 +1,44 @@
+# Makefile for `kernel`
+
+obj-y += printk/
+obj-y += sched/
+obj-y += locking/
+obj-y += dma/
+obj-y += entry/
+obj-y += irq/
+obj-y += rcu/
+obj-y += time/
+
+obj-y += panic.o
+obj-y += cpu.o
+obj-y += fork.o
+obj-y += smp.o
+obj-y += cred.o
+obj-y += extable.o
+obj-y += softirq.o
+obj-y += jump_label.o
+obj-y += context_tracking.o
+obj-y += kthread.o
+obj-y += smpboot.o
+obj-y += signal.o
+obj-y += workqueue.o
+obj-y += freezer.o
+obj-y += notifier.o
+obj-y += ucount.o
+obj-y += user.o
+obj-y += user_namespace.o
+obj-y += nsproxy.o
+obj-y += pid.o
+obj-y += pid_namespace.o
+obj-y += exit.o
+obj-y += reboot.o
+obj-y += irq_work.o
+obj-y += task_work.o
+obj-y += sys.o
+
+#obj-y += resource.o
+#obj-y += tracepoint.o
+#obj-y += params.o
+#obj-y += async.o
+
+obj-y += trace/

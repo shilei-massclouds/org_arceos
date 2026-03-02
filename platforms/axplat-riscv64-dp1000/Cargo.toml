@@ -13,7 +13,13 @@ categories.workspace = true
 [features]
 irq = ["axplat/irq"]
 smp = ["axplat/smp"]
+#fp-simd = ["axcpu/fp-simd"]
+fp-simd = []
+#rtc = ["riscv_goldfish"]
+rtc = []
 
 [dependencies]
 axconfig-macros = "0.2"
 axplat = "0.3"
+linux_config = { path = "../../crates/linux_config" }
+linux_adaptor = { path = "../../crates/linux_adaptor" }

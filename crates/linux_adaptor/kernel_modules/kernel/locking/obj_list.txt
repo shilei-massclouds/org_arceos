@@ -1,0 +1,1 @@
+kernel/locking/spinlock.o kernel/locking/spinlock_debug.o kernel/locking/mutex.o kernel/locking/mutex-debug.o kernel/locking/rwsem.o

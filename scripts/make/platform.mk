@@ -56,4 +56,11 @@ else
   ARCH := $(_arch)
 endif
 
+PLAT_LDS := $(dir $(PLAT_CONFIG))linker.lds
+$(info "lds: [$(PLAT_LDS)]")
+ifeq ($(wildcard $(PLAT_LDS)),)
+  PLAT_LDS :=
+endif
+export PLAT_LDS
+
 PLAT_NAME := $(patsubst "%",%,$(shell axconfig-gen $(PLAT_CONFIG) -r platform))

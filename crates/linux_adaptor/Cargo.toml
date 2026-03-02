@@ -1,0 +1,15 @@
+[package]
+name = "linux_adaptor"
+version = "0.0.1"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+axlog = { workspace = true }
+linux_config = { path = "../linux_config" }

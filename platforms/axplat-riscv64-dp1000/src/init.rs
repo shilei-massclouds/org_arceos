@@ -12,9 +12,8 @@ impl InitIf for InitIfImpl {
     ///
     /// # Arguments
     ///
-    /// * `cpu_id` is the logical CPU ID (0, 1, ..., N-1, N is the number of CPU
-    /// cores on the platform).
-    /// * `arg` is passed from the bootloader (typically the device tree blob
+    /// * `hartid` is the physical CPU ID (just for riscv64).
+    /// * `dtb_pa` is passed from the bootloader (typically the device tree blob
     /// address).
     ///
     /// # Before calling this function
@@ -28,8 +27,11 @@ impl InitIf for InitIfImpl {
     /// * Exception & interrupt handlers are set up.
     /// * Early console is initialized.
     /// * Current monotonic time and wall time can be obtained.
-    fn init_early(cpu_id: usize, arg: usize) {
-        todo!()
+    fn init_early(hartid: usize, dtb_pa: usize) {
+        linux_adaptor::init_early(hartid, dtb_pa);
+        //axcpu::init::init_trap();
+        //crate::time::init_early();
+        todo!();
     }
 
     /// Initializes the platform at the early stage for secondary cores.
@@ -37,7 +39,7 @@ impl InitIf for InitIfImpl {
     /// See [`init_early`] for details.
     #[cfg(feature = "smp")]
     fn init_early_secondary(cpu_id: usize) {
-        todo!()
+        unimplemented!("init_early_secondary");
     }
 
     /// Initializes the platform at the later stage for the primary core.

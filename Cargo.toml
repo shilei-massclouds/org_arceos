@@ -32,6 +32,8 @@ members = [
     "examples/shell",
 
     "platforms/axplat-riscv64-dp1000",
+
+    "crates/axlds",
 ]
 
 [workspace.package]
@@ -70,6 +72,7 @@ axdma = { path = "modules/axdma" }
 axipi = { path = "modules/axipi" }
 
 axruntime_lx = { path = "crates/axruntime_lx" }
+axlds = { path = "crates/axlds" }
 
 [profile.release]
 lto = true

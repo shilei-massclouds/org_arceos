@@ -1,0 +1,1 @@
+savedcmd_arch/riscv/include/generated/uapi/asm/unistd_64.h := sh ./scripts/syscallhdr.sh --emit-nr  --abis common,64,riscv,rlimit,memfd_secret scripts/syscall.tbl arch/riscv/include/generated/uapi/asm/unistd_64.h

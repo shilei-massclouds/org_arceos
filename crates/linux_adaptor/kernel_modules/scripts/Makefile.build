@@ -1,0 +1,37 @@
+# Makefile for buildging subdirs
+
+curdir := $(dir $(obj))
+
+obj-y :=
+
+include $(CURDIR)/scripts/Makefile.include
+-include include/config/auto.conf
+include $(curdir)Makefile
+
+obj-y := $(addprefix $(curdir), $(obj-y))
+
+OBJS := $(filter-out %/, $(obj-y))
+
+OBJ_LIST := $(filter %/, $(obj-y))
+OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(OBJ_LIST))
+
+_build: $(obj)
+
+$(obj): $(OBJS) $(OBJ_LIST) FORCE
+	$(Q)rm -f $@
+	$(Q)echo $(OBJS) $(_OBJS) > $@
+
+$(OBJ_LIST): FORCE
+	$(Q)$(MAKE) -f ./scripts/Makefile.build obj=$@
+
+$(curdir)%.o: $(curdir)%.c
+	$(Q)printf "CC $@\n"
+	$(Q)$(CC) $(CFLAGS) $(ccflags-y) $(CFLAGS_$(target-stem).o) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
+
+$(curdir)%.o: $(curdir)%.S
+	$(Q)printf "CC $@\n"
+	$(Q)$(CC) -D__ASSEMBLY__ $(CFLAGS) $(ccflags-y) $(CFLAGS_$(target-stem).o) -DKBUILD_MODFILE='"$@"' -DKBUILD_BASENAME='"$@"' -DKBUILD_MODNAME='"$@"' -c -o $@ $<
+
+FORCE:
+
+.PHONY: _build FORCE

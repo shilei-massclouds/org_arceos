@@ -45,6 +45,9 @@ extern crate memory_addr;
 cfg_if::cfg_if! {
     if #[cfg(feature = "myplat")] {
         // link the custom platform crate in your application.
+        // FixMe: generate a special crate to inclue this line.
+        // Refer to comments in axhal/Cargo.toml.
+        extern crate axplat_riscv64_dp1000;
     } else if #[cfg(target_os = "none")] {
         #[cfg(target_arch = "x86_64")]
         extern crate axplat_x86_pc;

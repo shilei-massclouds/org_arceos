@@ -9,6 +9,21 @@ extern crate axlog;
 #[cfg(all(target_os = "none", not(test)))]
 mod lang_items;
 
+/// The main entry point of the ArceOS runtime.
+///
+/// It is called from the bootstrapping code in the specific platform crate (see
+/// [`axplat::main`]).
+///
+/// `cpu_id` is the logic ID of the current CPU, and `arg` is passed from the
+/// bootloader (typically the device tree blob address).
+///
+/// In multi-core environment, this function is called on the primary core, and
+/// secondary cores call [`rust_main_secondary`].
+#[cfg_attr(not(test), axplat::main)]
+pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
+    todo!();
+}
+
 /*
 #[cfg(feature = "smp")]
 mod mp;

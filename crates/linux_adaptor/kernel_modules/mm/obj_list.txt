@@ -1,0 +1,1 @@
+mm/debug.o mm/memblock.o mm/memory.o mm/memtest.o mm/mm_init.o mm/mmzone.o mm/vmstat.o mm/page_alloc.o mm/page_reporting.o mm/slub.o mm/slab_common.o mm/debug_page_alloc.o mm/percpu.o mm/vmalloc.o mm/util.o mm/shrinker.o mm/init-mm.o mm/swap.o mm/maccess.o mm/mmap.o mm/oom_kill.o

@@ -503,10 +503,12 @@ dependencies = [
  "axalloc",
  "axconfig",
  "axcpu",
+ "axlds",
  "axlog",
  "axplat",
  "axplat-aarch64-qemu-virt",
  "axplat-loongarch64-qemu-virt",
+ "axplat-riscv64-dp1000",
  "axplat-riscv64-qemu-virt",
  "axplat-x86-pc",
  "cfg-if",
@@ -539,6 +541,13 @@ dependencies = [
  "lazyinit",
  "log",
  "percpu",
+]
+
+[[package]]
+name = "axlds"
+version = "0.2.0"
+dependencies = [
+ "axconfig",
 ]
 
 [[package]]
@@ -735,6 +744,8 @@ version = "0.2.0"
 dependencies = [
  "axconfig-macros",
  "axplat",
+ "linux_adaptor",
+ "linux_config",
 ]
 
 [[package]]
@@ -805,6 +816,7 @@ version = "0.2.0"
 dependencies = [
  "axhal",
  "axlog",
+ "axplat",
 ]
 
 [[package]]
@@ -1476,6 +1488,18 @@ dependencies = [
  "quote",
  "syn 2.0.106",
 ]
+
+[[package]]
+name = "linux_adaptor"
+version = "0.0.1"
+dependencies = [
+ "axlog",
+ "linux_config",
+]
+
+[[package]]
+name = "linux_config"
+version = "0.2.0"
 
 [[package]]
 name = "lock_api"

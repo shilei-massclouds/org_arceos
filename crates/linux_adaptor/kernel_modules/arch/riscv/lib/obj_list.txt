@@ -1,0 +1,1 @@
+arch/riscv/lib/delay.o arch/riscv/lib/clear_page.o arch/riscv/lib/memset.o arch/riscv/lib/memcpy.o arch/riscv/lib/memmove.o arch/riscv/lib/strcmp.o arch/riscv/lib/strncmp.o arch/riscv/lib/strlen.o arch/riscv/lib/tishift.o

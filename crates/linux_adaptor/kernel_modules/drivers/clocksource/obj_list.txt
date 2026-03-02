@@ -1,0 +1,1 @@
+drivers/clocksource/timer-probe.o drivers/clocksource/timer-riscv.o
