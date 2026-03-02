@@ -21,7 +21,15 @@ mod lang_items;
 /// secondary cores call [`rust_main_secondary`].
 #[cfg_attr(not(test), axplat::main)]
 pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
-    todo!();
+    unsafe extern "C" {
+        fn legacy_puts(s: &[u8]);
+        fn legacy_shutdown();
+    }
+    unsafe {
+        legacy_puts("rust_main: enter\n\0".as_bytes());
+        //legacy_shutdown();
+    }
+    panic!("rust_main");
 }
 
 /*

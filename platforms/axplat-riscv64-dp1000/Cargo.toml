@@ -21,5 +21,6 @@ rtc = []
 [dependencies]
 axconfig-macros = "0.2"
 axplat = "0.3"
+sbi-rt = { version = "0.0.3", features = ["legacy"] }
 linux_config = { path = "../../crates/linux_config" }
 linux_adaptor = { path = "../../crates/linux_adaptor" }

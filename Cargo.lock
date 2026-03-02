@@ -746,6 +746,7 @@ dependencies = [
  "axplat",
  "linux_adaptor",
  "linux_config",
+ "sbi-rt",
 ]
 
 [[package]]

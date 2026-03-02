@@ -10,12 +10,12 @@ impl TimeIf for TimeIfImpl {
     }
 
     /// Converts hardware ticks to nanoseconds.
-    fn ticks_to_nanos(ticks: u64) -> u64 {
+    fn ticks_to_nanos(_ticks: u64) -> u64 {
         todo!()
     }
 
     /// Converts nanoseconds to hardware ticks.
-    fn nanos_to_ticks(nanos: u64) -> u64 {
+    fn nanos_to_ticks(_nanos: u64) -> u64 {
         todo!()
     }
 

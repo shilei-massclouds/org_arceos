@@ -1,4 +1,4 @@
-use axplat::mem::{MemIf, PhysAddr, RawRange, VirtAddr};
+use axplat::mem::{MemIf, PhysAddr, RawRange, VirtAddr, pa, va};
 
 struct MemIfImpl;
 
@@ -34,7 +34,10 @@ impl MemIf for MemIfImpl {
     /// is enabled. The mapping may not be unique, there can be multiple `vaddr`s
     /// mapped to that `paddr`.
     fn phys_to_virt(paddr: PhysAddr) -> VirtAddr {
-        todo!()
+        // FixMe: Use macro to implement it. Ref: __va in [asm/page.h].
+        unsafe {
+            va!(linux_phys_to_virt(paddr.as_usize()))
+        }
     }
 
     /// Translates a virtual address to a physical address.
@@ -43,6 +46,14 @@ impl MemIf for MemIfImpl {
     /// `vaddr` must be available through the [`phys_to_virt`] translation.
     /// It **cannot** be used to translate arbitrary virtual addresses.
     fn virt_to_phys(vaddr: VirtAddr) -> PhysAddr {
-        todo!()
+        // FixMe: Use macro to implement it. Ref: __pa in [asm/page.h].
+        unsafe {
+            pa!(linux_virt_to_phys(vaddr.as_usize()))
+        }
     }
+}
+
+unsafe extern "C" {
+    fn linux_virt_to_phys(va: usize) -> usize;
+    fn linux_phys_to_virt(pa: usize) -> usize;
 }

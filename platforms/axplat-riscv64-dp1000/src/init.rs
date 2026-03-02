@@ -31,14 +31,14 @@ impl InitIf for InitIfImpl {
         linux_adaptor::init_early(hartid, dtb_pa);
         //axcpu::init::init_trap();
         //crate::time::init_early();
-        todo!();
+        unimplemented!("init_early");
     }
 
     /// Initializes the platform at the early stage for secondary cores.
     ///
     /// See [`init_early`] for details.
     #[cfg(feature = "smp")]
-    fn init_early_secondary(cpu_id: usize) {
+    fn init_early_secondary(_cpu_id: usize) {
         unimplemented!("init_early_secondary");
     }
 
@@ -66,7 +66,7 @@ impl InitIf for InitIfImpl {
     /// * Interrupt controller is initialized (if applicable).
     /// * Timer interrupts are enabled (if applicable).
     /// * Other essential peripherals are initialized.
-    fn init_later(cpu_id: usize, arg: usize) {
+    fn init_later(_cpu_id: usize, _arg: usize) {
         todo!()
     }
 
@@ -74,7 +74,7 @@ impl InitIf for InitIfImpl {
     ///
     /// See [`init_later`] for details.
     #[cfg(feature = "smp")]
-    fn init_later_secondary(cpu_id: usize) {
+    fn init_later_secondary(_cpu_id: usize) {
         todo!()
     }
 }
