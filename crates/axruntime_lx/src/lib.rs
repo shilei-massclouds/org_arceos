@@ -20,7 +20,9 @@ mod lang_items;
 /// In multi-core environment, this function is called on the primary core, and
 /// secondary cores call [`rust_main_secondary`].
 #[cfg_attr(not(test), axplat::main)]
-pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
+pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
+    ax_println!("rust_main: {hartid} {dtb_pa:#x}");
+    /*
     unsafe extern "C" {
         fn legacy_puts(s: &[u8]);
         fn legacy_shutdown();
@@ -29,7 +31,50 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
         legacy_puts("rust_main: enter\n\0".as_bytes());
         //legacy_shutdown();
     }
+    */
     panic!("rust_main");
+}
+
+struct LogIfImpl;
+
+#[crate_interface::impl_interface]
+impl axlog::LogIf for LogIfImpl {
+    fn console_write_str(s: &str) {
+        axhal::console::write_bytes(s.as_bytes());
+    }
+
+    fn current_time() -> core::time::Duration {
+        axhal::time::monotonic_time()
+    }
+
+    fn current_cpu_id() -> Option<usize> {
+        #[cfg(feature = "smp")]
+        if is_init_ok() {
+            Some(axhal::percpu::this_cpu_id())
+        } else {
+            None
+        }
+        #[cfg(not(feature = "smp"))]
+        Some(0)
+    }
+
+    fn current_task_id() -> Option<u64> {
+        if is_init_ok() {
+            #[cfg(feature = "multitask")]
+            {
+                axtask::current_may_uninit().map(|curr| curr.id().as_u64())
+            }
+            #[cfg(not(feature = "multitask"))]
+            None
+        } else {
+            None
+        }
+    }
+}
+
+fn is_init_ok() -> bool {
+    // FixMe: return true ONLY after 'smp' has been inited.
+    false
 }
 
 /*

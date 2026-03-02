@@ -818,6 +818,8 @@ dependencies = [
  "axhal",
  "axlog",
  "axplat",
+ "axtask_lx",
+ "crate_interface",
 ]
 
 [[package]]
@@ -871,6 +873,14 @@ dependencies = [
  "percpu",
  "rand",
  "timer_list",
+]
+
+[[package]]
+name = "axtask_lx"
+version = "0.2.0"
+dependencies = [
+ "axhal",
+ "log",
 ]
 
 [[package]]
