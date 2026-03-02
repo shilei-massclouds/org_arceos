@@ -108,9 +108,3 @@ int linux_set_nice(pid_t pid, long nice)
     set_user_nice(p, nice);
     return 0;
 }
-
-/* FixMe: impl it. */
-void ax_handle_irq(unsigned long cause)
-{
-    PANIC("");
-}

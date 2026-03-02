@@ -423,8 +423,3 @@ CL_MINE(zap_pid_ns_processes)
 CL_MINE(free_pipe_info)
 CL_MINE(getrusage)
 
-CL_MINE(call_on_irq_stack)
-CL_MINE(ret_from_fork)
-CL_MINE(handle_exception)
-CL_MINE(ret_from_exception_end)
-CL_MINE(__switch_to)

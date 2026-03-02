@@ -4,6 +4,7 @@
 *.asm
 *.img
 *.o
+*.a
 *.elf
 *.bin
 qemu.log

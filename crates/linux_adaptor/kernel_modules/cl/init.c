@@ -45,7 +45,7 @@ void cl_early_init(unsigned long hartid, unsigned long dtb_pa)
      */
     boot_cpu_init();
     page_address_init();
-    pr_notice("%s", linux_banner);
+    pr_notice("%s\n", linux_banner);
 
     /* setup_arch() will called in crate 'membloc'. */
     //setup_arch(NULL /* cmdline_p */);

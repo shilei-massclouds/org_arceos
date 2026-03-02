@@ -29,9 +29,8 @@ impl InitIf for InitIfImpl {
     /// * Current monotonic time and wall time can be obtained.
     fn init_early(hartid: usize, dtb_pa: usize) {
         linux_adaptor::init_early(hartid, dtb_pa);
-        //axcpu::init::init_trap();
+        axcpu_lx::init::init_trap();
         //crate::time::init_early();
-        unimplemented!("init_early");
     }
 
     /// Initializes the platform at the early stage for secondary cores.

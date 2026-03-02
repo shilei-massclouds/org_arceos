@@ -313,6 +313,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "axcpu_lx"
+version = "0.2.2"
+dependencies = [
+ "aarch64-cpu 10.0.0",
+ "cfg-if",
+ "lazyinit",
+ "linkme",
+ "linux_config",
+ "log",
+ "loongArch64",
+ "memory_addr",
+ "page_table_entry",
+ "page_table_multiarch",
+ "percpu",
+ "riscv",
+ "static_assertions",
+ "tock-registers 0.9.0",
+ "x86",
+ "x86_64",
+]
+
+[[package]]
 name = "axdisplay"
 version = "0.2.0"
 dependencies = [
@@ -743,6 +765,7 @@ name = "axplat-riscv64-dp1000"
 version = "0.2.0"
 dependencies = [
  "axconfig-macros",
+ "axcpu_lx",
  "axplat",
  "linux_adaptor",
  "linux_config",
