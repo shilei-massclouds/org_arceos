@@ -19,6 +19,7 @@ fp-simd = []
 rtc = []
 
 [dependencies]
+riscv = "0.14"
 axconfig-macros = "0.2"
 axplat = "0.3"
 sbi-rt = { version = "0.0.3", features = ["legacy"] }

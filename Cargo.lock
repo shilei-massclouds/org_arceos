@@ -777,6 +777,7 @@ dependencies = [
  "axplat",
  "linux_adaptor",
  "linux_config",
+ "riscv",
  "sbi-rt",
 ]
 
@@ -846,6 +847,7 @@ dependencies = [
 name = "axruntime_lx"
 version = "0.2.0"
 dependencies = [
+ "axconfig",
  "axhal",
  "axlog",
  "axplat",

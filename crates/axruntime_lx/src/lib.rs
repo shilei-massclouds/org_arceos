@@ -36,6 +36,38 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
 
     ax_println!("{}", LOGO);
 
+    ax_println!(
+        "\
+        arch = {}\n\
+        platform = {}\n\
+        target = {}\n\
+        build_mode = {}\n\
+        log_level = {}\n\
+        ",
+        axconfig::ARCH,
+        axconfig::PLATFORM,
+        option_env!("AX_TARGET").unwrap_or(""),
+        option_env!("AX_MODE").unwrap_or(""),
+        option_env!("AX_LOG").unwrap_or(""),
+    );
+
+    axlog::init();
+    axlog::set_max_level(option_env!("AX_LOG").unwrap_or("")); // no effect if set `log-level-*` features
+    info!("Logging is enabled.");
+    info!("Primary hartid {} started, dtb_pa = {:#x}.", hartid, dtb_pa);
+
+    axhal::mem::init();
+    info!("Found physcial memory regions:");
+    for r in axhal::mem::memory_regions() {
+        info!(
+            "  [{:x?}, {:x?}) {} ({:?})",
+            r.paddr,
+            r.paddr + r.size,
+            r.name,
+            r.flags
+        );
+    }
+
     /////////////
     // Body of rust_main().
     /////////////

@@ -9,7 +9,8 @@ impl MemIf for MemIfImpl {
     /// All memory ranges except reserved ranges (including the kernel loaded
     /// range) are free for allocation.
     fn phys_ram_ranges() -> &'static [RawRange] {
-        todo!()
+        // FixMe: return ranges from fdt.
+        &[]
     }
 
     /// Returns all reserved physical memory ranges on the platform.
@@ -20,12 +21,14 @@ impl MemIf for MemIfImpl {
     /// Note that the ranges returned should not include the range where the
     /// kernel is loaded.
     fn reserved_phys_ram_ranges() -> &'static [RawRange] {
-        todo!()
+        // FixMe: return ranges from fdt.
+        &[]
     }
 
     /// Returns all device memory (MMIO) ranges on the platform.
     fn mmio_ranges() -> &'static [RawRange] {
-        todo!()
+        // FixMe: return ranges from fdt.
+        &[]
     }
 
     /// Translates a physical address to a virtual address.

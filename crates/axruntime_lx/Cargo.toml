@@ -28,7 +28,7 @@ multitask = ["axtask_lx/multitask"]
 [dependencies]
 axhal = { workspace = true }
 axlog = { workspace = true }
-#axconfig = { workspace = true }
+axconfig = { workspace = true }
 #axalloc = { workspace = true, optional = true }
 #axmm = { workspace = true, optional = true }
 #axdriver = { workspace = true, optional = true }

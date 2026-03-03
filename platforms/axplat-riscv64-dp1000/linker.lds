@@ -14,6 +14,7 @@ SECTIONS
 {
     . = LOAD_OFFSET;
     _start = .;
+    _skernel = _start;
     .head.text : AT(ADDR(.head.text) - LOAD_OFFSET) {
         KEEP(*(.head.text))
         KEEP(*(.head.text2))
@@ -161,12 +162,14 @@ SECTIONS
     .data : AT(ADDR(.data) - LOAD_OFFSET) {
         . = ALIGN(2 * THREAD_SIZE);
         __start_init_stack = .;
+        boot_stack = __start_init_stack;
         init_thread_union = .;
         init_stack = .;
         KEEP(*(.data..init_task))
         KEEP(*(.data..init_thread_info))
         . = __start_init_stack + THREAD_SIZE;
         __end_init_stack = .;
+        boot_stack_top = __end_init_stack;
 
         _sdata = .;
         . = ALIGN(4K);
@@ -193,6 +196,7 @@ SECTIONS
 
     . = ALIGN(4K);
     __bss_start = .;
+    _sbss = __bss_start;
     .sbss : AT(ADDR(.sbss) - LOAD_OFFSET) {
         *(.dynsbss)
         *(.sbss)
@@ -208,9 +212,11 @@ SECTIONS
         *(COMMON)
     }
     __bss_stop = .;
+    _ebss = __bss_stop;
 
     . = ALIGN(4K);
     _end = .;
+    _ekernel = _end;
 
 	/DISCARD/ : {
         *(.comment) *(.gnu*) *(.note*) *(.eh_frame*)

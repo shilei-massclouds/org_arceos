@@ -1,4 +1,13 @@
+use riscv::register::time;
+
 use axplat::time::TimeIf;
+
+const NANOS_PER_SEC: u64 = 1_000_000_000;
+
+// FixMe: `TIMER_FREQUENCY` should come from fdt other than axconfig.
+const NANOS_PER_TICK: u64 = NANOS_PER_SEC / crate::config::devices::TIMER_FREQUENCY as u64;
+/// RTC wall time offset in nanoseconds at monotonic time base.
+static mut RTC_EPOCHOFFSET_NANOS: u64 = 0;
 
 struct TimeIfImpl;
 
@@ -6,23 +15,23 @@ struct TimeIfImpl;
 impl TimeIf for TimeIfImpl {
     /// Returns the current clock time in hardware ticks.
     fn current_ticks() -> u64 {
-        todo!()
+        time::read() as u64
     }
 
     /// Converts hardware ticks to nanoseconds.
-    fn ticks_to_nanos(_ticks: u64) -> u64 {
-        todo!()
+    fn ticks_to_nanos(ticks: u64) -> u64 {
+        ticks * NANOS_PER_TICK
     }
 
     /// Converts nanoseconds to hardware ticks.
-    fn nanos_to_ticks(_nanos: u64) -> u64 {
-        todo!()
+    fn nanos_to_ticks(nanos: u64) -> u64 {
+        nanos / NANOS_PER_TICK
     }
 
     /// Return epoch offset in nanoseconds (wall time offset to monotonic
     /// clock start).
     fn epochoffset_nanos() -> u64 {
-        todo!()
+        unsafe { RTC_EPOCHOFFSET_NANOS }
     }
 
     /// Set a one-shot timer.
