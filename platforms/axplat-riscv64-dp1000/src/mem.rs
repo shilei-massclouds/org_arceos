@@ -9,8 +9,8 @@ impl MemIf for MemIfImpl {
     /// All memory ranges except reserved ranges (including the kernel loaded
     /// range) are free for allocation.
     fn phys_ram_ranges() -> &'static [RawRange] {
-        // FixMe: return ranges from fdt.
-        &[]
+        // FixMe: return real physical ram ranges from fdt.
+        &[(0x9000_0000, 0x800_0000)]
     }
 
     /// Returns all reserved physical memory ranges on the platform.
@@ -59,4 +59,5 @@ impl MemIf for MemIfImpl {
 unsafe extern "C" {
     fn linux_virt_to_phys(va: usize) -> usize;
     fn linux_phys_to_virt(pa: usize) -> usize;
+    fn _end();
 }

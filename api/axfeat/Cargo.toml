@@ -12,6 +12,9 @@ documentation = "https://arceos-org.github.io/arceos/axfeat/index.html"
 [features]
 default = []
 
+# Support linux modules
+linux-adaptor = []
+
 # Multicore
 smp = ["axhal/smp", "axruntime/smp", "axtask?/smp", "kspin/smp"]
 
@@ -28,11 +31,11 @@ defplat = ["axhal/defplat"]
 
 # Memory
 alloc = ["axalloc", "axruntime/alloc"]
-alloc-tlsf = ["axalloc/tlsf"]
-alloc-slab = ["axalloc/slab"]
-alloc-buddy = ["axalloc/buddy"]
-page-alloc-64g = ["axalloc/page-alloc-64g"] # up to 64G memory capacity
-page-alloc-4g = ["axalloc/page-alloc-4g"] # up to 4G memory capacity
+alloc-tlsf = ["axalloc?/tlsf"]
+alloc-slab = ["axalloc?/slab"]
+alloc-buddy = ["axalloc?/buddy"]
+page-alloc-64g = ["axalloc?/page-alloc-64g"] # up to 64G memory capacity
+page-alloc-4g = ["axalloc?/page-alloc-4g"] # up to 4G memory capacity
 paging = ["alloc", "axhal/paging", "axruntime/paging"]
 tls = ["alloc", "axhal/tls", "axruntime/tls", "axtask?/tls"]
 dma = ["alloc", "paging"]
@@ -72,13 +75,8 @@ log-level-info = ["axlog/log-level-info"]
 log-level-debug = ["axlog/log-level-debug"]
 log-level-trace = ["axlog/log-level-trace"]
 
-# Select alternatives for axruntime.
-axruntime = ["dep:axruntime"]
-axruntime_lx = ["dep:axruntime_lx"]
-
 [dependencies]
-axruntime = { workspace = true, optional = true }
-axruntime_lx = { workspace = true, optional = true }
+axruntime = { workspace = true }
 axhal = { workspace = true }
 axlog = { workspace = true }
 axalloc = { workspace = true, optional = true }

@@ -68,6 +68,9 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
         );
     }
 
+    #[cfg(feature = "alloc")]
+    init_allocator_early();
+
     /////////////
     // Body of rust_main().
     /////////////
@@ -86,6 +89,35 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
         //legacy_shutdown();
     }
     */
+}
+
+#[cfg(feature = "alloc")]
+fn init_allocator_early() {
+    use axhal::mem::{MemRegionFlags, memory_regions, phys_to_virt};
+
+    info!("Initialize global memory allocator...");
+    info!("  use {} allocator.", axalloc::global_allocator().name());
+
+    let mut max_region_size = 0;
+    let mut max_region_paddr = 0.into();
+    for r in memory_regions() {
+        if r.flags.contains(MemRegionFlags::FREE) && r.size > max_region_size {
+            max_region_size = r.size;
+            max_region_paddr = r.paddr;
+        }
+    }
+    for r in memory_regions() {
+        if r.flags.contains(MemRegionFlags::FREE) && r.paddr == max_region_paddr {
+            axalloc::global_init(phys_to_virt(r.paddr).as_usize(), r.size);
+            break;
+        }
+    }
+    for r in memory_regions() {
+        if r.flags.contains(MemRegionFlags::FREE) && r.paddr != max_region_paddr {
+            axalloc::global_add_memory(phys_to_virt(r.paddr).as_usize(), r.size)
+                .expect("add heap memory region failed");
+        }
+    }
 }
 
 #[cfg(feature = "multitask")]

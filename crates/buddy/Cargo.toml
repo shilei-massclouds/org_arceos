@@ -1,0 +1,17 @@
+[package]
+name = "buddy"
+version = "0.0.1"
+edition = "2021"
+authors = ["Yuekai Jia <equation618@gmail.com>"]
+description = "Linux-like buddy allocator algorithms in a unified interface"
+license = "GPL-3.0-or-later OR Apache-2.0 OR MulanPSL-2.0"
+homepage = "https://github.com/arceos-org/arceos"
+repository = "https://github.com/arceos-org/allocator"
+documentation = "https://arceos-org.github.io/allocator"
+
+[features]
+axerrno = ["dep:axerrno"]
+
+[dependencies]
+axerrno = { version = "0.1", optional = true }
+allocator = { git = "https://github.com/arceos-org/allocator.git", tag ="v0.1.1" }

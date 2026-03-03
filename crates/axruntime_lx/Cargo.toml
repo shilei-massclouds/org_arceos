@@ -1,5 +1,5 @@
 [package]
-name = "axruntime_lx"
+name = "axruntime"
 version.workspace = true
 edition.workspace = true
 authors = ["Yuekai Jia <equation618@gmail.com>"]
@@ -12,24 +12,32 @@ documentation = "https://arceos-org.github.io/arceos/axruntime/index.html"
 [features]
 default = []
 
-smp = ["axhal/smp", "axtask_lx?/smp"]
-#irq = ["axhal/irq", "axtask?/irq", "percpu"]
-#tls = ["axhal/tls", "axtask?/tls"]
-#alloc = ["axalloc"]
+smp = ["axhal/smp", "axtask?/smp"]
+alloc = ["axalloc"]
+multitask = ["axtask?/multitask"]
+
+# FixMe: handle display dependencies
 #paging = ["axhal/paging", "axmm"]
-#ipi = ["dep:axipi"]
-#
-multitask = ["axtask_lx/multitask"]
+paging = []
+#irq = ["axhal/irq", "axtask?/irq", "percpu"]
+irq = []
 #fs = ["axdriver", "axfs"]
+fs = []
 #net = ["axdriver", "axnet"]
+net = []
 #display = ["axdriver", "axdisplay"]
-#rtc = []
+display = []
+#ipi = ["dep:axipi"]
+ipi = []
+rtc = []
+#tls = ["axhal/tls", "axtask?/tls"]
+tls = []
 
 [dependencies]
 axhal = { workspace = true }
 axlog = { workspace = true }
 axconfig = { workspace = true }
-#axalloc = { workspace = true, optional = true }
+axalloc = { workspace = true, optional = true }
 #axmm = { workspace = true, optional = true }
 #axdriver = { workspace = true, optional = true }
 #axfs = { workspace = true, optional = true }
@@ -37,7 +45,7 @@ axconfig = { workspace = true }
 #axdisplay = { workspace = true, optional = true }
 #axipi = { workspace = true, optional = true }
 axplat = "0.3"
-axtask_lx = { workspace = true, optional = true }
+axtask = { workspace = true, optional = true }
 
 crate_interface = "0.1"
 #percpu = { version = "0.2", optional = true }

@@ -25,4 +25,4 @@ axplat = "0.3"
 sbi-rt = { version = "0.0.3", features = ["legacy"] }
 linux_config = { path = "../../crates/linux_config" }
 linux_adaptor = { path = "../../crates/linux_adaptor" }
-axcpu_lx = { path = "../../crates/axcpu_lx" }
+axcpu = { path = "../../crates/axcpu_lx" }

@@ -2,7 +2,6 @@
 resolver = "2"
 
 members = [
-    "modules/axalloc",
     "modules/axconfig",
     "modules/axdisplay",
     "modules/axdriver",
@@ -13,9 +12,7 @@ members = [
     "modules/axdma",
     "modules/axnet",
     "modules/axns",
-    "modules/axruntime",
     "modules/axsync",
-    "modules/axtask",
     "modules/axipi",
 
     "api/axfeat",
@@ -58,7 +55,6 @@ arceos_api = { path = "api/arceos_api" }
 arceos_posix_api = { path = "api/arceos_posix_api" }
 axfeat = { path = "api/axfeat" }
 
-axalloc = { path = "modules/axalloc" }
 axconfig = { path = "modules/axconfig" }
 axdisplay = { path = "modules/axdisplay" }
 axdriver = { path = "modules/axdriver" }
@@ -68,15 +64,15 @@ axlog = { path = "modules/axlog" }
 axmm = { path = "modules/axmm" }
 axnet = { path = "modules/axnet" }
 axns = { path = "modules/axns" }
-axruntime = { path = "modules/axruntime" }
 axsync = { path = "modules/axsync" }
-axtask = { path = "modules/axtask" }
 axdma = { path = "modules/axdma" }
 axipi = { path = "modules/axipi" }
 
-axruntime_lx = { path = "crates/axruntime_lx" }
+axruntime = { path = "crates/axruntime_lx" }
 axlds = { path = "crates/axlds" }
-axtask_lx = { path = "crates/axtask_lx" }
+axtask = { path = "crates/axtask_lx" }
+axcpu = { path = "crates/axcpu_lx" }
+axalloc = { path = "crates/axalloc_lx" }
 
 [profile.release]
 lto = true

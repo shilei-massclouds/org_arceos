@@ -1,16 +1,16 @@
 [package]
-name = "axtask_lx"
+name = "axtask"
 version.workspace = true
 edition.workspace = true
 authors = ["Yuekai Jia <equation618@gmail.com>"]
 description = "ArceOS task management module"
 license.workspace = true
 homepage.workspace = true
-repository = "https://github.com/arceos-org/arceos/tree/main/modules/axtask_lx"
-documentation = "https://arceos-org.github.io/arceos/axtask_lx/index.html"
+repository = "https://github.com/arceos-org/arceos/tree/main/modules/axtask"
+documentation = "https://arceos-org.github.io/arceos/axtask/index.html"
 
 [features]
-default = []
+default = ["irq"]
 
 multitask = []
 irq = []

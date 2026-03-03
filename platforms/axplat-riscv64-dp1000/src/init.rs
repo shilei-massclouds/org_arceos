@@ -29,7 +29,7 @@ impl InitIf for InitIfImpl {
     /// * Current monotonic time and wall time can be obtained.
     fn init_early(hartid: usize, dtb_pa: usize) {
         linux_adaptor::init_early(hartid, dtb_pa);
-        axcpu_lx::init::init_trap();
+        axcpu::init::init_trap();
         //crate::time::init_early();
     }
 

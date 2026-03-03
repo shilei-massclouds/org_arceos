@@ -1,0 +1,29 @@
+[package]
+name = "axalloc"
+version.workspace = true
+edition.workspace = true
+authors = ["Yuekai Jia <equation618@gmail.com>"]
+description = "ArceOS global memory allocator"
+license.workspace = true
+homepage.workspace = true
+repository = "https://github.com/arceos-org/arceos/tree/main/modules/axalloc"
+documentation = "https://arceos-org.github.io/arceos/axalloc/index.html"
+
+[features]
+default = []
+
+tlsf = []
+buddy = []
+slab = []
+page-alloc-4g = []
+page-alloc-64g = []
+
+[dependencies]
+log = "=0.4.21"
+kspin = "0.1"
+memory_addr = "0.4"
+axerrno = "0.1"
+allocator = { git = "https://github.com/arceos-org/allocator.git", tag ="v0.1.1", features = ["bitmap"] }
+
+# specify 'features = ["only-early"]' to only use 'memblock'
+linux_alloc = { path = "../linux_alloc", features = ["only-early"] }

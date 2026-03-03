@@ -80,10 +80,6 @@ log-level-info = ["axfeat/log-level-info"]
 log-level-debug = ["axfeat/log-level-debug"]
 log-level-trace = ["axfeat/log-level-trace"]
 
-# Select alternatives for axruntime.
-axruntime = ["arceos_api/axruntime", "axfeat/axruntime"]
-axruntime_lx = ["arceos_api/axruntime_lx", "axfeat/axruntime_lx"]
-
 [dependencies]
 axfeat = { workspace = true }
 arceos_api = { workspace = true }
