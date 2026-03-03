@@ -143,6 +143,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-memtest"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+ "rand",
+]
+
+[[package]]
 name = "arceos-shell"
 version = "0.1.0"
 dependencies = [

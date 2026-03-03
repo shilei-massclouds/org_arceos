@@ -12,3 +12,4 @@ rusty-tags.vi
 /.project*
 /.axconfig.*
 *.swp
+actual.out
