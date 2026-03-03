@@ -214,6 +214,10 @@ unittest:
 unittest_no_fail_fast:
 	$(call unit_test,--no-fail-fast)
 
+# FixMe: Just for convenience. Remove it later.
+test:
+	@./scripts/app_test.sh
+
 disk_img:
 ifneq ($(wildcard $(DISK_IMG)),)
 	@printf "$(YELLOW_C)warning$(END_C): disk image \"$(DISK_IMG)\" already exists!\n"
