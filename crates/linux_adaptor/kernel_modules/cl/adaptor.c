@@ -113,6 +113,6 @@ int linux_set_nice(pid_t pid, long nice)
 /* Export to rust crate 'memblock'. */
 void *linux_memblock_alloc(phys_addr_t size, phys_addr_t align)
 {
-	return memblock_alloc_try_nid(size, align, MEMBLOCK_LOW_LIMIT,
-				      MEMBLOCK_ALLOC_ACCESSIBLE, NUMA_NO_NODE);
+    return memblock_alloc_try_nid(size, align, MEMBLOCK_LOW_LIMIT,
+                MEMBLOCK_ALLOC_ACCESSIBLE, NUMA_NO_NODE);
 }

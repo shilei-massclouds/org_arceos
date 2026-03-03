@@ -26,4 +26,4 @@ axerrno = "0.1"
 allocator = { git = "https://github.com/arceos-org/allocator.git", tag ="v0.1.1", features = ["bitmap"] }
 
 # specify 'features = ["only-early"]' to only use 'memblock'
-linux_alloc = { path = "../linux_alloc", features = ["only-early"] }
+linux_alloc = { path = "../linux_alloc" }

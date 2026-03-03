@@ -13,12 +13,12 @@ documentation = "https://arceos-org.github.io/arceos/axruntime/index.html"
 default = []
 
 smp = ["axhal/smp", "axtask?/smp"]
-alloc = ["axalloc"]
+alloc = ["axalloc", "paging"]
 multitask = ["axtask?/multitask"]
 
 # FixMe: handle display dependencies
 #paging = ["axhal/paging", "axmm"]
-paging = []
+paging = ["axmm"]
 #irq = ["axhal/irq", "axtask?/irq", "percpu"]
 irq = []
 #fs = ["axdriver", "axfs"]
@@ -38,7 +38,7 @@ axhal = { workspace = true }
 axlog = { workspace = true }
 axconfig = { workspace = true }
 axalloc = { workspace = true, optional = true }
-#axmm = { workspace = true, optional = true }
+axmm = { workspace = true, optional = true }
 #axdriver = { workspace = true, optional = true }
 #axfs = { workspace = true, optional = true }
 #axnet = { workspace = true, optional = true }

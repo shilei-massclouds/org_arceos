@@ -71,6 +71,9 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     #[cfg(feature = "alloc")]
     init_allocator_early();
 
+    #[cfg(feature = "paging")]
+    axmm::init_memory_management();
+
     /////////////
     // Body of rust_main().
     /////////////
@@ -204,8 +207,6 @@ pub use self::mp::rust_main_secondary;
 use axmm_lx as aspace;
 #[cfg(not(feature = "linux-adaptor"))]
 use axmm as aspace;
-
-
 
 use core::sync::atomic::{AtomicUsize, Ordering};
 

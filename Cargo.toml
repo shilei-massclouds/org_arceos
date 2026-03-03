@@ -8,7 +8,6 @@ members = [
     "modules/axfs",
     "modules/axhal",
     "modules/axlog",
-    "modules/axmm",
     "modules/axdma",
     "modules/axnet",
     "modules/axns",
@@ -61,7 +60,6 @@ axdriver = { path = "modules/axdriver" }
 axfs = { path = "modules/axfs" }
 axhal = { path = "modules/axhal" }
 axlog = { path = "modules/axlog" }
-axmm = { path = "modules/axmm" }
 axnet = { path = "modules/axnet" }
 axns = { path = "modules/axns" }
 axsync = { path = "modules/axsync" }
@@ -73,6 +71,7 @@ axlds = { path = "crates/axlds" }
 axtask = { path = "crates/axtask_lx" }
 axcpu = { path = "crates/axcpu_lx" }
 axalloc = { path = "crates/axalloc_lx" }
+axmm = { path = "crates/axmm_lx" }
 
 [profile.release]
 lto = true
