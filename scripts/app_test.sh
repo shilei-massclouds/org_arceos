@@ -19,6 +19,7 @@ END_C="\x1b[0m"
 test_list=(
     "examples/helloworld"
     "examples/memtest"
+    "examples/exception"
 )
 
 function compare() {

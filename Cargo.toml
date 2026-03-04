@@ -28,6 +28,7 @@ members = [
     "examples/shell",
 
     "examples/memtest",
+    "examples/exception",
 
     "platforms/axplat-riscv64-dp1000",
 

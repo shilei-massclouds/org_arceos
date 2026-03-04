@@ -50,7 +50,7 @@ OUT_CONFIG ?= $(PWD)/.axconfig.toml
 UIMAGE ?= n
 
 # App options
-A ?= examples/memtest
+A ?= examples/exception
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=

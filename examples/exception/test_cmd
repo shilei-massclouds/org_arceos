@@ -1,1 +1,1 @@
-test_one "LOG=debug" "expect_debug_${ARCH}.out"
+test_one "LOG=debug" "expect_debug_${AX_ARCH}.out"
