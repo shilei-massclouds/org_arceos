@@ -150,6 +150,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-parallel"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+ "rand",
+]
+
+[[package]]
 name = "arceos-priority"
 version = "0.1.0"
 dependencies = [

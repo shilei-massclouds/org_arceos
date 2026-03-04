@@ -1,0 +1,34 @@
+part 0: ThreadId(2) \[0, 125000)
+part 1: ThreadId(3) \[125000, 250000)
+part 2: ThreadId(4) \[250000, 375000)
+part 3: ThreadId(5) \[375000, 500000)
+part 4: ThreadId(6) \[500000, 625000)
+part 5: ThreadId(7) \[625000, 750000)
+part 6: ThreadId(8) \[750000, 875000)
+part 7: ThreadId(9) \[875000, 1000000)
+part 8: ThreadId(10) \[1000000, 1125000)
+part 9: ThreadId(11) \[1125000, 1250000)
+part 10: ThreadId(12) \[1250000, 1375000)
+part 11: ThreadId(13) \[1375000, 1500000)
+part 12: ThreadId(14) \[1500000, 1625000)
+part 13: ThreadId(15) \[1625000, 1750000)
+part 14: ThreadId(16) \[1750000, 1875000)
+part 15: ThreadId(17) \[1875000, 2000000)
+part 0: ThreadId(2) finished
+part 15: ThreadId(17) finished
+part 6: ThreadId(8) finished
+part 3: ThreadId(5) finished
+part 1: ThreadId(3) finished
+part 7: ThreadId(9) finished
+part 2: ThreadId(4) finished
+part 9: ThreadId(11) finished
+part 10: ThreadId(12) finished
+part 4: ThreadId(6) finished
+part 11: ThreadId(13) finished
+part 12: ThreadId(14) finished
+part 5: ThreadId(7) finished
+part 8: ThreadId(10) finished
+part 14: ThreadId(16) finished
+part 13: ThreadId(15) finished
+sum = 87357182863
+Parallel summation tests run OK!

@@ -32,6 +32,7 @@ members = [
     "examples/task/sleep",
     "examples/task/yield",
     "examples/task/priority",
+    "examples/task/parallel",
 
     "platforms/axplat-riscv64-dp1000",
 
