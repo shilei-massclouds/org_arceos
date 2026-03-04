@@ -22,6 +22,7 @@ test_list=(
     "examples/exception"
     "examples/task/sleep"
     "examples/task/yield"
+    "examples/task/priority"
 )
 
 function compare() {

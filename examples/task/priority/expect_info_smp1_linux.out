@@ -1,0 +1,18 @@
+part 3: ThreadId(5) \[0, 40)
+part 4: ThreadId(6) \[0, 4)
+part 2: ThreadId(4) \[0, 40)
+part 1: ThreadId(3) \[0, 40)
+part 3: ThreadId(5) finished
+part 0: ThreadId(2) \[0, 40)
+part 4: ThreadId(6) finished
+part 2: ThreadId(4) finished
+part 1: ThreadId(3) finished
+part 0: ThreadId(2) finished
+sum = 3318102132
+leave time:
+task 0 =
+task 1 =
+task 2 =
+task 3 =
+task 4 =
+Priority tests run OK!
