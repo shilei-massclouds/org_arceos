@@ -20,6 +20,7 @@ test_list=(
     "examples/helloworld"
     "examples/memtest"
     "examples/exception"
+    "examples/task/sleep"
 )
 
 function compare() {
