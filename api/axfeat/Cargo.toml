@@ -30,7 +30,7 @@ myplat = ["axhal/myplat"]
 defplat = ["axhal/defplat"]
 
 # Memory
-alloc = ["axalloc", "axruntime/alloc"]
+alloc = ["axalloc", "axruntime/alloc", "axhal/alloc"]
 alloc-tlsf = ["axalloc?/tlsf"]
 alloc-slab = ["axalloc?/slab"]
 alloc-buddy = ["axalloc?/buddy"]

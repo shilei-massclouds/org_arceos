@@ -423,3 +423,4 @@ CL_MINE(zap_pid_ns_processes)
 CL_MINE(free_pipe_info)
 CL_MINE(getrusage)
 
+CL_MINE(secondary_start_sbi)

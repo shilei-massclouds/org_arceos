@@ -49,9 +49,8 @@ impl InitIf for InitIfImpl {
     ///
     /// # Arguments
     ///
-    /// * `cpu_id` is the logical CPU ID (0, 1, ..., N-1, N is the number of CPU
-    /// cores on the platform).
-    /// * `arg` is passed from the bootloader (typically the device tree blob
+    /// * `hartid` is the physical CPU ID.
+    /// * `dtb_pa` is passed from the bootloader (typically the device tree blob
     /// address).
     ///
     /// # Before calling this function
@@ -65,8 +64,11 @@ impl InitIf for InitIfImpl {
     /// * Interrupt controller is initialized (if applicable).
     /// * Timer interrupts are enabled (if applicable).
     /// * Other essential peripherals are initialized.
-    fn init_later(_cpu_id: usize, _arg: usize) {
-        todo!()
+    fn init_later(hartid: usize, dtb_pa: usize) {
+        linux_adaptor::init_later(hartid, dtb_pa);
+        //#[cfg(feature = "irq")]
+        //crate::irq::init_percpu();
+        //crate::time::init_percpu();
     }
 
     /// Initializes the platform at the later stage for secondary cores.

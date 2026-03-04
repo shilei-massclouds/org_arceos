@@ -43,10 +43,11 @@ impl PowerIf for PowerImpl {
 
     /// Get the number of CPU cores available on this platform.
     fn cpu_num() -> usize {
-        todo!()
+        unsafe { nr_cpu_ids }
     }
 }
 
 unsafe extern "C" {
     fn legacy_shutdown() -> !;
+    static nr_cpu_ids: usize;
 }

@@ -47,7 +47,6 @@ int riscv_of_processor_hartid(struct device_node *node, unsigned long *hart)
 	return 0;
 }
 
-#if 0
 int __init riscv_early_of_processor_hartid(struct device_node *node, unsigned long *hart)
 {
 	const char *isa;
@@ -118,7 +117,6 @@ old_interface:
 
 	return 0;
 }
-#endif /* CL */
 
 /*
  * Find hart ID of the CPU DT node under which given DT node falls.

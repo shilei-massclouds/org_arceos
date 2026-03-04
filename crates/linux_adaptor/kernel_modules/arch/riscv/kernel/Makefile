@@ -4,6 +4,7 @@ obj-y += sbi.o
 obj-y += sbi-ipi.o
 obj-y += sbi_ecall.o
 obj-y += setup.o
+obj-y += smpboot.o
 obj-y += smp.o
 obj-y += traps.o
 obj-y += irq.o
@@ -16,11 +17,10 @@ obj-y += vector.o
 obj-y += time.o
 obj-y += vendor_extensions.o
 obj-y += patch.o
+obj-y += cpu_ops.o
+obj-y += cpu_ops_sbi.o
 
 #obj-y += reset.o
-#obj-y += smpboot.o
-#obj-y += cpu_ops.o
-#obj-y += cpu_ops_sbi.o
 #obj-y += acpi.o
 
 obj-y += vendor_extensions/

@@ -17,6 +17,7 @@ rtc = ["axplat-x86-pc?/rtc", "axplat-aarch64-qemu-virt?/rtc", "axplat-riscv64-qe
 paging = ["axalloc", "page_table_multiarch"]
 tls = ["axcpu/tls"]
 uspace = ["paging", "axcpu/uspace"]
+alloc = ["axalloc"]
 
 # Custom or default platforms
 # FixMe: Don't introduce any 'myplat'.

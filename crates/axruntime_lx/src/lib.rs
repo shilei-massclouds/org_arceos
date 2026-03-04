@@ -74,6 +74,9 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     #[cfg(feature = "paging")]
     axmm::init_memory_management();
 
+    info!("Initialize platform devices...");
+    axhal::init_later(hartid, dtb_pa);
+
     /////////////
     // Body of rust_main().
     /////////////

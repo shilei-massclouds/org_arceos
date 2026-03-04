@@ -32,13 +32,6 @@ impl<const PAGE_SIZE: usize> BaseAllocator for BuddyAllocator<PAGE_SIZE> {
         //   - set up kernel memory allocators
         //
         unsafe {
-            misc_mem_init();
-            jump_label_init();
-            setup_nr_cpu_ids();
-            setup_per_cpu_areas();
-            boot_cpu_hotplug_init();
-            random_init_early(/* command_line */);
-
             mm_core_init_first_part();
         }
     }
@@ -87,11 +80,5 @@ impl<const PAGE_SIZE: usize> PageAllocator for BuddyAllocator<PAGE_SIZE> {
 }
 
 unsafe extern "C" {
-    fn misc_mem_init();
-    fn jump_label_init();
     fn mm_core_init_first_part();
-    fn setup_nr_cpu_ids();
-    fn setup_per_cpu_areas();
-    fn boot_cpu_hotplug_init();
-    fn random_init_early(/* command_line */);
 }

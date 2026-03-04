@@ -141,8 +141,10 @@ pub fn init_early(cpu_id: usize, arg: usize) {
 }
 
 /// Initializes the platform later stage.
-pub fn init_later(cpu_id: usize, arg: usize) {
-    axplat::init::init_later(cpu_id, arg);
+pub fn init_later(_cpu_id: usize, _arg: usize) {
+    #[cfg(feature = "alloc")]
+    axplat::init::init_later(_cpu_id, _arg);
+    #[cfg(feature = "alloc")]
     init_cpu_num();
 }
 
@@ -191,6 +193,7 @@ pub fn cpu_num() -> usize {
 }
 
 /// Initializes the CPU number information.
+#[allow(dead_code)]
 fn init_cpu_num() {
     #[cfg(feature = "smp")]
     {
