@@ -77,6 +77,9 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     info!("Initialize platform devices...");
     axhal::init_later(hartid, dtb_pa);
 
+    #[cfg(all(feature = "alloc", feature = "paging"))]
+    init_allocator_later();
+
     /////////////
     // Body of rust_main().
     /////////////
@@ -124,6 +127,11 @@ fn init_allocator_early() {
                 .expect("add heap memory region failed");
         }
     }
+}
+
+#[cfg(feature = "alloc")]
+fn init_allocator_later() {
+    axalloc::global_init_final();
 }
 
 #[cfg(feature = "multitask")]
@@ -372,11 +380,6 @@ fn init_allocator() {
                 .expect("add heap memory region failed");
         }
     }
-}
-
-#[cfg(feature = "alloc")]
-fn init_allocator_later() {
-    axalloc::global_init_final();
 }
 
 #[cfg(feature = "irq")]

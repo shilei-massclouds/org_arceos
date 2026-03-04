@@ -929,7 +929,6 @@ id_to_node(unsigned int id)
 	return &vmap_nodes[id % nr_vmap_nodes];
 }
 
-#if 0
 /*
  * We use the value 0 to represent "no node", that is why
  * an encoded value will be the node-id incremented by 1.
@@ -948,7 +947,6 @@ encode_vn_id(unsigned int node_id)
 	WARN_ONCE(1, "Encode wrong node id (%u)\n", node_id);
 	return 0;
 }
-#endif /* CL */
 
 /*
  * Returns an encoded node-id, the valid range is within
@@ -1886,7 +1884,6 @@ node_pool_add_va(struct vmap_node *n, struct vmap_area *va)
 	return true;
 }
 
-#if 0
 static struct vmap_area *
 node_pool_del_va(struct vmap_node *vn, unsigned long size,
 		unsigned long align, unsigned long vstart,
@@ -1928,7 +1925,6 @@ node_pool_del_va(struct vmap_node *vn, unsigned long size,
 
 	return va;
 }
-#endif /* CL */
 
 static struct vmap_area *
 node_alloc(unsigned long size, unsigned long align,
@@ -1948,15 +1944,12 @@ node_alloc(unsigned long size, unsigned long align,
 			nr_vmap_nodes == 1)
 		return NULL;
 
-#if 0
 	*vn_id = raw_smp_processor_id() % nr_vmap_nodes;
 	va = node_pool_del_va(id_to_node(*vn_id), size, align, vstart, vend);
 	*vn_id = encode_vn_id(*vn_id);
 
 	if (va)
 		*addr = va->va_start;
-#endif
-    PANIC("");
 
 	return va;
 }
