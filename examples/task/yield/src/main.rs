@@ -22,7 +22,7 @@ fn main() {
 
             let _order = FINISHED_TASKS.fetch_add(1, Ordering::Relaxed);
             #[cfg(feature = "axstd")]
-            if cfg!(all(not(feature = "sched-cfs"), not(feature = "linux-adaptor")))
+            if cfg!(not(feature = "sched-cfs"))
                 && thread::available_parallelism().unwrap().get() == 1
             {
                 assert!(_order == i); // FIFO scheduler

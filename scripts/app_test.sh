@@ -21,6 +21,7 @@ test_list=(
     "examples/memtest"
     "examples/exception"
     "examples/task/sleep"
+    "examples/task/yield"
 )
 
 function compare() {
@@ -108,9 +109,7 @@ for t in ${test_list[@]}; do
     source "$t/test_cmd"
 done
 
-#"rust/task/yield"
 #"rust/task/parallel"
-#"rust/task/sleep"
 #"rust/task/priority"
 #"rust/task/tls"
 #"rust/task/irq"
