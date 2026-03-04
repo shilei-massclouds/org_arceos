@@ -39,7 +39,7 @@ impl TimeIf for TimeIfImpl {
     /// A timer interrupt will be triggered at the specified monotonic time
     /// deadline (in nanoseconds).
     #[cfg(feature = "irq")]
-    fn set_oneshot_timer(deadline_ns: u64) {
+    fn set_oneshot_timer(_deadline_ns: u64) {
         todo!()
     }
 }

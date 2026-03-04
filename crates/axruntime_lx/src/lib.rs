@@ -86,7 +86,7 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     #[cfg(feature = "irq")]
     {
         info!("Initialize interrupt early...");
-        init_interrupt_early();
+        init_interrupt_earlier();
     }
 
     #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
@@ -112,7 +112,7 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     #[cfg(feature = "irq")]
     {
         info!("Initialize interrupt handlers...");
-        init_interrupt();
+        init_interrupt_later();
     }
 
     #[cfg(all(feature = "tls", not(feature = "multitask")))]
@@ -174,8 +174,13 @@ fn init_allocator_later() {
 }
 
 #[cfg(feature = "irq")]
-fn init_interrupt_early() {
+fn init_interrupt_earlier() {
     linux_adaptor::init_irq_earlier();
+}
+
+#[cfg(feature = "irq")]
+fn init_interrupt_later() {
+    // Dummy implementation
 }
 
 #[cfg(feature = "multitask")]

@@ -785,6 +785,7 @@ dependencies = [
  "axplat",
  "linux_adaptor",
  "linux_config",
+ "log",
  "riscv",
  "sbi-rt",
 ]
