@@ -14,7 +14,7 @@ default = []
 
 smp = ["axhal/smp", "axtask?/smp"]
 alloc = ["axalloc", "paging"]
-multitask = ["axtask?/multitask"]
+multitask = ["axtask/multitask"]
 
 # FixMe: handle display dependencies
 #paging = ["axhal/paging", "axmm"]

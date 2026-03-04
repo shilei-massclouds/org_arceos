@@ -29,6 +29,7 @@ members = [
 
     "examples/memtest",
     "examples/exception",
+    "examples/task/sleep",
 
     "platforms/axplat-riscv64-dp1000",
 

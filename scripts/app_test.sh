@@ -106,3 +106,13 @@ for t in ${test_list[@]}; do
     echo -e "${CYAN_C}Testing${END_C} $t:"
     source "$t/test_cmd"
 done
+
+#"rust/task/yield"
+#"rust/task/parallel"
+#"rust/task/sleep"
+#"rust/task/priority"
+#"rust/task/tls"
+#"rust/task/irq"
+#"rust/task/affinity"
+#"rust/task/wait_queue"
+
