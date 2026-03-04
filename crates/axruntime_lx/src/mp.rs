@@ -35,6 +35,7 @@ pub fn start_secondary_cpus(primary_cpu_id: usize) {
 /// It is called from the bootstrapping code in the specific platform crate.
 #[axplat::secondary_main]
 pub fn rust_main_secondary(cpu_id: usize) -> ! {
+    /*
     axhal::init_percpu_secondary(cpu_id);
     axhal::init_early_secondary(cpu_id);
 
@@ -71,4 +72,6 @@ pub fn rust_main_secondary(cpu_id: usize) -> ! {
     loop {
         axhal::asm::wait_for_irqs();
     }
+    */
+    todo!();
 }

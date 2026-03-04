@@ -55,7 +55,7 @@ void cl_early_init(unsigned long hartid, unsigned long dtb_pa)
  * late stage in start_kernel() [init/main.c]
  *   - the last part before kernel_init kthread being scheduling
  */
-void cl_late_init()
+void init_userboot_earlier()
 {
 #if 0
     setup_per_cpu_pageset();

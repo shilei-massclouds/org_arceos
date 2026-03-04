@@ -841,6 +841,8 @@ dependencies = [
  "axplat",
  "axtask",
  "crate_interface",
+ "ctor_bare",
+ "linux_adaptor",
 ]
 
 [[package]]

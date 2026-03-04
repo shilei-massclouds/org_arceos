@@ -89,24 +89,54 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
         init_interrupt_early();
     }
 
-    /////////////
-    // Body of rust_main().
-    /////////////
+    #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
+    {
+        #[allow(unused_variables)]
+        let all_devices = axdriver::init_drivers();
+
+        #[cfg(feature = "fs")]
+        axfs::init_filesystems(all_devices.block);
+
+        #[cfg(feature = "net")]
+        axnet::init_network(all_devices.net);
+
+        #[cfg(feature = "display")]
+        axdisplay::init_display(all_devices.display);
+    }
+
+    /*
+    #[cfg(feature = "smp")]
+    self::mp::start_secondary_cpus(hartid);
+    */
+
+    #[cfg(feature = "irq")]
+    {
+        info!("Initialize interrupt handlers...");
+        init_interrupt();
+    }
+
+    #[cfg(all(feature = "tls", not(feature = "multitask")))]
+    {
+        info!("Initialize thread local storage...");
+        init_tls();
+    }
+
+    prepare_for_uapp();
+
+    ctor_bare::call_ctors();
+
+    info!("Primary CPU {} init OK.", hartid);
+    /*
+    INITED_CPUS.fetch_add(1, Ordering::Release);
+
+    while !is_init_ok() {
+        core::hint::spin_loop();
+    }
+    */
 
     call_main();
 
     system_exit();
-
-    /*
-    unsafe extern "C" {
-        fn legacy_puts(s: &[u8]);
-        fn legacy_shutdown();
-    }
-    unsafe {
-        legacy_puts("rust_main: enter\n\0".as_bytes());
-        //legacy_shutdown();
-    }
-    */
 }
 
 #[cfg(feature = "alloc")]
@@ -172,6 +202,17 @@ fn system_exit() -> ! {
     axhal::power::system_off();
 }
 
+#[cfg(all(feature = "tls", not(feature = "multitask")))]
+fn init_tls() {
+    let main_tls = axhal::tls::TlsArea::alloc();
+    unsafe { axhal::asm::write_thread_pointer(main_tls.tls_ptr() as usize) };
+    core::mem::forget(main_tls);
+}
+
+fn prepare_for_uapp() {
+    linux_adaptor::prepare_for_userboot();
+}
+
 struct LogIfImpl;
 
 #[crate_interface::impl_interface]
@@ -217,7 +258,6 @@ fn is_init_ok() -> bool {
 unsafe extern "C" {
     /// Application's entry point.
     fn main();
-    //fn cl_late_init();
 }
 
 ///////////////////////////////////////
@@ -359,13 +399,6 @@ pub fn rust_main(cpu_id: usize, arg: usize) -> ! {
     system_exit();
 }
 
-fn prepare_for_uapp() {
-    #[cfg(feature = "linux-adaptor")]
-    unsafe {
-        cl_late_init();
-    }
-}
-
 
 #[cfg(feature = "alloc")]
 fn init_allocator() {
@@ -431,12 +464,5 @@ fn init_interrupt() {
 
     // Enable IRQs before starting app
     axhal::asm::enable_irqs();
-}
-
-#[cfg(all(feature = "tls", not(feature = "multitask")))]
-fn init_tls() {
-    let main_tls = axhal::tls::TlsArea::alloc();
-    unsafe { axhal::asm::write_thread_pointer(main_tls.tls_ptr() as usize) };
-    core::mem::forget(main_tls);
 }
 */

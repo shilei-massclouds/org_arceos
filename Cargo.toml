@@ -74,6 +74,7 @@ axtask = { path = "crates/axtask_lx" }
 axcpu = { path = "crates/axcpu_lx" }
 axalloc = { path = "crates/axalloc_lx" }
 axmm = { path = "crates/axmm_lx" }
+linux_adaptor = { path = "crates/linux_adaptor" }
 
 [profile.release]
 lto = true

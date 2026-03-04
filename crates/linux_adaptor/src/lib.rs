@@ -68,7 +68,11 @@ pub fn init_irq_earlier() {
 }
 
 /// Prepare utilities for user-app.
-pub fn prepare_for_uapp() {
+pub fn prepare_for_userboot() {
+    #[cfg(feature = "irq")]
+    unsafe {
+        init_userboot_earlier();
+    }
 }
 
 unsafe extern "C" {
@@ -98,4 +102,6 @@ unsafe extern "C" {
     fn timekeeping_init();
     fn time_init();
     fn random_init();
+    #[allow(dead_code)]
+    fn init_userboot_earlier();
 }
