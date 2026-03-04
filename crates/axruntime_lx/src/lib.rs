@@ -80,6 +80,15 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     #[cfg(all(feature = "alloc", feature = "paging"))]
     init_allocator_later();
 
+    #[cfg(feature = "multitask")]
+    axtask::init_scheduler();
+
+    #[cfg(feature = "irq")]
+    {
+        info!("Initialize interrupt early...");
+        init_interrupt_early();
+    }
+
     /////////////
     // Body of rust_main().
     /////////////
@@ -132,6 +141,11 @@ fn init_allocator_early() {
 #[cfg(feature = "alloc")]
 fn init_allocator_later() {
     axalloc::global_init_final();
+}
+
+#[cfg(feature = "irq")]
+fn init_interrupt_early() {
+    linux_adaptor::init_irq_earlier();
 }
 
 #[cfg(feature = "multitask")]
@@ -380,11 +394,6 @@ fn init_allocator() {
                 .expect("add heap memory region failed");
         }
     }
-}
-
-#[cfg(feature = "irq")]
-fn init_interrupt_early() {
-    axhal::irq::init_early();
 }
 
 #[cfg(feature = "irq")]
