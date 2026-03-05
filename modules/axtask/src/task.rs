@@ -5,22 +5,20 @@ use core::{
     alloc::Layout,
     cell::{Cell, UnsafeCell},
     fmt,
-    future::poll_fn,
     mem::ManuallyDrop,
     ops::Deref,
     ptr::NonNull,
     sync::atomic::{AtomicBool, AtomicI32, AtomicU8, AtomicU32, AtomicU64, Ordering},
-    task::{Context, Poll},
 };
 
 use axhal::context::TaskContext;
 #[cfg(feature = "tls")]
 use axhal::tls::TlsArea;
-use futures_util::task::AtomicWaker;
 use kspin::SpinNoIrq;
 use memory_addr::{VirtAddr, align_up_4k};
 
-use crate::{AxCpuMask, AxTask, AxTaskRef, future::block_on};
+use crate::{AxCpuMask, AxTask, AxTaskRef};
+use crate::WaitQueue;
 
 /// A unique identifier for a thread.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -69,6 +67,9 @@ pub struct TaskInner {
     /// CPU affinity mask.
     cpumask: SpinNoIrq<AxCpuMask>,
 
+    /// Mark whether the task is in the wait queue.
+    in_wait_queue: AtomicBool,
+
     /// Used to indicate the CPU ID where the task is running or will run.
     cpu_id: AtomicU32,
     /// Used to indicate whether the task is running on a CPU.
@@ -81,10 +82,10 @@ pub struct TaskInner {
     preempt_disable_count: AtomicUsize,
 
     interrupted: AtomicBool,
-    interrupt_waker: AtomicWaker,
+    interrupt_waker: WaitQueue,
 
     exit_code: AtomicI32,
-    wait_for_exit: AtomicWaker,
+    wait_for_exit: WaitQueue,
 
     kstack: Option<TaskStack>,
     ctx: UnsafeCell<TaskContext>,
@@ -173,13 +174,9 @@ impl TaskInner {
     ///
     /// It will return immediately if the task has already exited (but not dropped).
     pub fn join(&self) -> i32 {
-        block_on(poll_fn(|cx| {
-            if self.state() == TaskState::Exited {
-                return Poll::Ready(self.exit_code.load(Ordering::Acquire));
-            }
-            self.wait_for_exit.register(cx.waker());
-            Poll::Pending
-        }))
+        self.wait_for_exit
+            .wait_until(|| self.state() == TaskState::Exited);
+        self.exit_code.load(Ordering::Acquire)
     }
 
     /// Returns a reference to the task extended data.
@@ -234,17 +231,6 @@ impl TaskInner {
         *self.cpumask.lock() = cpumask
     }
 
-    /// Polls whether the task has been interrupted.
-    #[inline]
-    pub fn poll_interrupt(&self, cx: &Context) -> Poll<()> {
-        if self.interrupted.swap(false, Ordering::AcqRel) {
-            Poll::Ready(())
-        } else {
-            self.interrupt_waker.register(cx.waker());
-            Poll::Pending
-        }
-    }
-
     /// Clears the interrupt state of the task.
     #[inline]
     pub fn clear_interrupt(&self) {
@@ -255,7 +241,7 @@ impl TaskInner {
     #[inline]
     pub fn interrupt(&self) {
         self.interrupted.store(true, Ordering::Release);
-        self.interrupt_waker.wake();
+        self.interrupt_waker.notify_all(false);
     }
 }
 
@@ -271,6 +257,7 @@ impl TaskInner {
             state: AtomicU8::new(TaskState::Ready as u8),
             // By default, the task is allowed to run on all CPUs.
             cpumask: SpinNoIrq::new(crate::api::cpu_mask_full()),
+            in_wait_queue: AtomicBool::new(false),
             cpu_id: AtomicU32::new(0),
             #[cfg(feature = "smp")]
             on_cpu: AtomicBool::new(false),
@@ -279,9 +266,9 @@ impl TaskInner {
             #[cfg(feature = "preempt")]
             preempt_disable_count: AtomicUsize::new(0),
             interrupted: AtomicBool::new(false),
-            interrupt_waker: AtomicWaker::new(),
+            interrupt_waker: WaitQueue::new(),
             exit_code: AtomicI32::new(0),
-            wait_for_exit: AtomicWaker::new(),
+            wait_for_exit: WaitQueue::new(),
             kstack: None,
             ctx: UnsafeCell::new(TaskContext::new()),
             #[cfg(feature = "task-ext")]
@@ -361,6 +348,16 @@ impl TaskInner {
     }
 
     #[inline]
+    pub(crate) fn in_wait_queue(&self) -> bool {
+        self.in_wait_queue.load(Ordering::Acquire)
+    }
+
+    #[inline]
+    pub(crate) fn set_in_wait_queue(&self, in_wait_queue: bool) {
+        self.in_wait_queue.store(in_wait_queue, Ordering::Release);
+    }
+
+    #[inline]
     #[cfg(feature = "preempt")]
     pub(crate) fn set_preempt_pending(&self, pending: bool) {
         self.need_resched.store(pending, Ordering::Release)
@@ -405,7 +402,7 @@ impl TaskInner {
     pub(crate) fn notify_exit(&self, exit_code: i32) {
         self.set_state(TaskState::Exited);
         self.exit_code.store(exit_code, Ordering::Release);
-        self.wait_for_exit.wake();
+        self.wait_for_exit.notify_all(false);
     }
 
     #[inline]
