@@ -31,6 +31,15 @@ members = [
     "examples/httpclient",
     "examples/httpserver",
     "examples/shell",
+
+    "examples/task/affinity",
+    "examples/task/irq",
+    "examples/task/parallel",
+    "examples/task/priority",
+    "examples/task/sleep",
+    "examples/task/tls",
+    "examples/task/wait_queue",
+    "examples/task/yield",
 ]
 
 [workspace.package]
