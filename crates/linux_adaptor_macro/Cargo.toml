@@ -1,5 +1,5 @@
 [package]
-name = "linux_adaptor"
+name = "linux_adaptor_macro"
 version = "0.0.1"
 edition.workspace = true
 authors.workspace = true
@@ -10,10 +10,10 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
-[features]
-irq = []
+[lib]
+proc-macro = true
 
 [dependencies]
-axlog = { workspace = true }
-linux_config = { path = "../linux_config" }
-linux_adaptor_macro = { path = "../linux_adaptor_macro" }
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = "1.0"

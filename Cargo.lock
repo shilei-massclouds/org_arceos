@@ -1508,7 +1508,17 @@ name = "linux_adaptor"
 version = "0.0.1"
 dependencies = [
  "axlog",
+ "linux_adaptor_macro",
  "linux_config",
+]
+
+[[package]]
+name = "linux_adaptor_macro"
+version = "0.0.1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

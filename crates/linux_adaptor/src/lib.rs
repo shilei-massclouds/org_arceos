@@ -3,15 +3,76 @@
 //! # Cargo Feature
 //!
 //! - 'linux_adaptor': Enable this module
+//!
 
 #![no_std]
 
 #[macro_use]
 extern crate axlog;
 
+use linux_adaptor_macro::generate_state_callbacks;
+
+/// Linux Adaptor State
+#[generate_state_callbacks]
+pub enum LinuxAdaptorState {
+    BootEarlier,
+    BootLater,
+    SetupArchEarlier,
+    SetupArchLater,
+    NumberOfStates,
+}
+
+// generate_state_callbacks will create an array:
+//
+//   static StateCallbacks: [fn(); LinuxAdaptorState::NumberOfStates as usize] = [
+//      `State0`CB,
+//      `State1`CB,
+//      ... ...
+//      `StateN`CB,
+//   ];
+
+/*
+static StateCallbacks: [fn(); LinuxAdaptorState::NumberOfStates as usize] = [
+    BootEarlierCB,
+    BootLaterCB,
+    SetupArchEarlierCB,
+    SetupArchLaterCB,
+];
+*/
+
+#[allow(non_snake_case)]
+fn BootEarlierCB() {
+    ax_println!("BootEarlierCB");
+}
+
+#[allow(non_snake_case)]
+fn BootLaterCB() {
+    ax_println!("BootLaterCB");
+}
+
+#[allow(non_snake_case)]
+fn SetupArchEarlierCB() {
+    ax_println!("SetupArchEarlierCB");
+}
+
+#[allow(non_snake_case)]
+fn SetupArchLaterCB() {
+    ax_println!("SetupArchLaterCB");
+}
+
 /// Initialize adaptor at the early stage for linux modules.
 pub fn init_early(hartid: usize, dtb_pa: usize) {
     ax_println!("\nWith Linux Adaptor: hartid = {hartid}, dtb_pa = {dtb_pa:#X}");
+    ax_println!("BootEarlier {}", LinuxAdaptorState::NumberOfStates as u32);
+    {
+        ax_println!("+++++++++++");
+        StateCallbacks[LinuxAdaptorState::BootEarlier as usize]();
+        StateCallbacks[LinuxAdaptorState::BootLater as usize]();
+        StateCallbacks[LinuxAdaptorState::SetupArchEarlier as usize]();
+        StateCallbacks[LinuxAdaptorState::SetupArchLater as usize]();
+        ax_println!("-----------");
+    }
+
     unsafe {
         cl_early_init(hartid, dtb_pa);
     }
