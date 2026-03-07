@@ -85,6 +85,7 @@ pub fn init_later(_hartid: usize, _dtb_pa: usize) {
         unflatten_device_tree();
         misc_mem_init();
         setup_smp();
+        riscv_init_cbo_blocksizes();
         riscv_fill_hwcap();
 
         setup_nr_cpu_ids();
@@ -140,6 +141,7 @@ unsafe extern "C" {
     fn cl_early_init(hartid: usize, dtb_pa: usize);
     fn unflatten_device_tree();
     fn setup_smp();
+    fn riscv_init_cbo_blocksizes();
     fn riscv_fill_hwcap();
     fn misc_mem_init();
     fn jump_label_init();
