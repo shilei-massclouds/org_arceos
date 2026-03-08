@@ -7,14 +7,17 @@
 
 #![no_std]
 
+use core::sync::atomic::{AtomicUsize, Ordering};
+use linux_adaptor_macro::generate_state_callbacks;
+
 #[macro_use]
 extern crate axlog;
 
-use linux_adaptor_macro::generate_state_callbacks;
-
 /// Linux Adaptor State
 #[generate_state_callbacks]
+#[derive(PartialEq, PartialOrd)]
 pub enum LinuxAdaptorState {
+    Initial,
     BootEarlier,
     BootLater,
     SetupArchEarlier,
@@ -22,7 +25,8 @@ pub enum LinuxAdaptorState {
     NumberOfStates,
 }
 
-// generate_state_callbacks will create an array:
+//
+// Note: `generate_state_callbacks` on LinuxAdaptorState will create an array:
 //
 //   static StateCallbacks: [fn(); LinuxAdaptorState::NumberOfStates as usize] = [
 //      `State0`CB,
@@ -30,15 +34,39 @@ pub enum LinuxAdaptorState {
 //      ... ...
 //      `StateN`CB,
 //   ];
+//
 
-/*
-static StateCallbacks: [fn(); LinuxAdaptorState::NumberOfStates as usize] = [
-    BootEarlierCB,
-    BootLaterCB,
-    SetupArchEarlierCB,
-    SetupArchLaterCB,
-];
-*/
+/// Indicator of LinuxAdaptor's State.
+/// Since there's no atomic enum, convert LinuxAdaptorState to usize first
+/// and then to set or compare with it.
+static CURRENT_STATE: AtomicUsize = AtomicUsize::new(0);
+
+/// Adavance to the target `state` for LinuxAdaptor.
+///
+/// The states defined in LinuxAdaptorState is a continuous flow.
+/// LinuxAdaptor invokes the corresponding CBs step by step from
+/// `CURRENT_STATE` to the target `state` and update `CURRENT_STATE`.
+/// If the target `state` is already later than `CURRENT_STATE`, just
+/// do nothing.
+pub fn advance_to(state: LinuxAdaptorState) {
+    assert!(state < LinuxAdaptorState::NumberOfStates);
+
+    let state = state as usize;
+    let cur = CURRENT_STATE.fetch_max(state, Ordering::SeqCst);
+    if state <= cur {
+        return;
+    }
+
+    for index in cur..state {
+        // Note: index + 1 because the real range is (cur, state].
+        StateCallbacks[index + 1]();
+    }
+}
+
+#[allow(non_snake_case)]
+fn InitialCB() {
+    unreachable!();
+}
 
 #[allow(non_snake_case)]
 fn BootEarlierCB() {
@@ -63,15 +91,14 @@ fn SetupArchLaterCB() {
 /// Initialize adaptor at the early stage for linux modules.
 pub fn init_early(hartid: usize, dtb_pa: usize) {
     ax_println!("\nWith Linux Adaptor: hartid = {hartid}, dtb_pa = {dtb_pa:#X}");
-    ax_println!("BootEarlier {}", LinuxAdaptorState::NumberOfStates as u32);
-    {
-        ax_println!("+++++++++++");
-        StateCallbacks[LinuxAdaptorState::BootEarlier as usize]();
-        StateCallbacks[LinuxAdaptorState::BootLater as usize]();
-        StateCallbacks[LinuxAdaptorState::SetupArchEarlier as usize]();
-        StateCallbacks[LinuxAdaptorState::SetupArchLater as usize]();
-        ax_println!("-----------");
-    }
+
+    /////////////
+    advance_to(LinuxAdaptorState::SetupArchLater);
+    advance_to(LinuxAdaptorState::BootEarlier);
+    advance_to(LinuxAdaptorState::BootLater);
+    advance_to(LinuxAdaptorState::BootEarlier);
+    advance_to(LinuxAdaptorState::SetupArchEarlier);
+    /////////////
 
     unsafe {
         cl_early_init(hartid, dtb_pa);
