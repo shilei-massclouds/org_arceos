@@ -17,7 +17,8 @@ pub enum LinuxAdaptorState {
     SetupSlub,
     InitSched,
     InitIrq,
-    UserBootEarlier,
+    StartSchedEarlier,
+    InitSmp,
     NumberOfStates,
 }
 
@@ -139,9 +140,16 @@ fn InitIrqCB() {
 }
 
 #[allow(non_snake_case)]
-fn UserBootEarlierCB() {
+fn StartSchedEarlierCB() {
     unsafe {
-        userboot_earlier();
+        start_sched_earlier();
+    }
+}
+
+#[allow(non_snake_case)]
+fn InitSmpCB() {
+    unsafe {
+        init_smp();
     }
 }
 
@@ -155,5 +163,6 @@ unsafe extern "C" {
     fn mm_core_init_second_part();
     fn sched_init();
     fn cl_init_irq();
-    fn userboot_earlier();
+    fn start_sched_earlier();
+    fn init_smp();
 }

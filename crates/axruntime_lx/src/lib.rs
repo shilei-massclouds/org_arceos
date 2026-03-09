@@ -9,6 +9,9 @@ extern crate axlog;
 #[cfg(all(target_os = "none", not(test)))]
 mod lang_items;
 
+#[cfg(feature = "smp")]
+mod mp;
+
 #[cfg(feature = "irq")]
 use linux_adaptor::LinuxAdaptorState;
 
@@ -107,11 +110,6 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
         axdisplay::init_display(all_devices.display);
     }
 
-    /*
-    #[cfg(feature = "smp")]
-    self::mp::start_secondary_cpus(hartid);
-    */
-
     #[cfg(feature = "irq")]
     {
         info!("Initialize interrupt handlers...");
@@ -124,18 +122,18 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
         init_tls();
     }
 
-    prepare_for_uapp();
-
     ctor_bare::call_ctors();
 
-    info!("Primary CPU {} init OK.", hartid);
     /*
+    info!("Primary CPU {} init OK.", hartid);
     INITED_CPUS.fetch_add(1, Ordering::Release);
 
     while !is_init_ok() {
         core::hint::spin_loop();
     }
     */
+
+    start_sched_earlier();
 
     call_main();
 
@@ -187,9 +185,18 @@ fn init_interrupt_later() {
 }
 
 #[cfg(feature = "multitask")]
+fn init_thread_fn() {
+    #[cfg(feature = "smp")]
+    self::mp::start_secondary_cpus();
+
+    // Invoke app's main()
+    unsafe { main(); }
+}
+
+#[cfg(feature = "multitask")]
 fn call_main() {
     let task = axtask::spawn(|| {
-        unsafe { main(); }
+        init_thread_fn();
     });
     axtask::idle_loop(task);
 }
@@ -217,9 +224,9 @@ fn init_tls() {
     core::mem::forget(main_tls);
 }
 
-fn prepare_for_uapp() {
+fn start_sched_earlier() {
     #[cfg(feature = "irq")]
-    linux_adaptor::advance_to(LinuxAdaptorState::UserBootEarlier);
+    linux_adaptor::advance_to(LinuxAdaptorState::StartSchedEarlier);
 }
 
 struct LogIfImpl;

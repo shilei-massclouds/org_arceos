@@ -25,6 +25,8 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/hw_pressure.h>
 
+#include "adaptor.h"
+
 static DEFINE_PER_CPU(struct scale_freq_data __rcu *, sft_data);
 static struct cpumask scale_freq_counters_mask;
 static bool scale_freq_invariant;
@@ -158,12 +160,14 @@ void topology_set_freq_scale(const struct cpumask *cpus, unsigned long cur_freq,
 
 DEFINE_PER_CPU(unsigned long, cpu_scale) = SCHED_CAPACITY_SCALE;
 EXPORT_PER_CPU_SYMBOL_GPL(cpu_scale);
+#endif /* CL */
 
 void topology_set_cpu_scale(unsigned int cpu, unsigned long capacity)
 {
 	per_cpu(cpu_scale, cpu) = capacity;
 }
 
+#if 0
 DEFINE_PER_CPU(unsigned long, hw_pressure);
 
 /**
@@ -274,6 +278,7 @@ static void update_topology_flags_workfn(struct work_struct *work)
 	pr_debug("sched_domain hierarchy rebuilt, flags updated\n");
 	update_topology = 0;
 }
+#endif /* CL */
 
 static u32 *raw_capacity;
 
@@ -324,6 +329,7 @@ bool __init topology_parse_cpu_capacity(struct device_node *cpu_node, int cpu)
 	ret = of_property_read_u32(cpu_node, "capacity-dmips-mhz",
 				   &cpu_capacity);
 	if (!ret) {
+#if 0
 		if (!raw_capacity) {
 			raw_capacity = kcalloc(num_possible_cpus(),
 					       sizeof(*raw_capacity),
@@ -349,6 +355,8 @@ bool __init topology_parse_cpu_capacity(struct device_node *cpu_node, int cpu)
 				clk_get_rate(cpu_clk) / HZ_PER_KHZ;
 			clk_put(cpu_clk);
 		}
+#endif
+        PANIC("");
 	} else {
 		if (raw_capacity) {
 			pr_err("cpu_capacity: missing %pOF raw capacity\n",
@@ -362,6 +370,7 @@ bool __init topology_parse_cpu_capacity(struct device_node *cpu_node, int cpu)
 	return !ret;
 }
 
+#if 0
 void __weak freq_inv_set_max_ratio(int cpu, u64 max_rate)
 {
 }
@@ -508,7 +517,10 @@ static void parsing_done_workfn(struct work_struct *work)
 core_initcall(free_raw_capacity);
 #endif
 
+#endif /* CL */
+
 #if defined(CONFIG_ARM64) || defined(CONFIG_RISCV)
+
 /*
  * This function returns the logic cpu number of the node.
  * There are basically three kinds of return values:
@@ -730,6 +742,7 @@ static int __init parse_dt_topology(void)
 struct cpu_topology cpu_topology[NR_CPUS];
 EXPORT_SYMBOL_GPL(cpu_topology);
 
+#if 0
 const struct cpumask *cpu_coregroup_mask(int cpu)
 {
 	const cpumask_t *core_mask = cpumask_of_node(cpu_to_node(cpu));
@@ -769,6 +782,7 @@ const struct cpumask *cpu_clustergroup_mask(int cpu)
 
 	return &cpu_topology[cpu].cluster_sibling;
 }
+#endif /* CL */
 
 void update_siblings_masks(unsigned int cpuid)
 {
@@ -842,6 +856,7 @@ void __init reset_cpu_topology(void)
 	}
 }
 
+#if 0
 void remove_cpu_topology(unsigned int cpu)
 {
 	int sibling;
@@ -857,6 +872,7 @@ void remove_cpu_topology(unsigned int cpu)
 
 	clear_cpu_topology(cpu);
 }
+#endif /* CL */
 
 __weak int __init parse_acpi_topology(void)
 {
@@ -911,5 +927,3 @@ topology_populated:
 	update_siblings_masks(cpuid);
 }
 #endif
-
-#endif /* CL */

@@ -943,11 +943,13 @@ void smp_call_function(smp_call_func_t func, void *info, int wait)
 	preempt_enable();
 }
 EXPORT_SYMBOL(smp_call_function);
+#endif /* CL */
 
 /* Setup configured maximum number of CPUs to activate */
 unsigned int setup_max_cpus = NR_CPUS;
 EXPORT_SYMBOL(setup_max_cpus);
 
+#if 0
 
 /*
  * Setup routine for controlling SMP activation

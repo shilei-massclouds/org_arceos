@@ -12,7 +12,7 @@ documentation = "https://arceos-org.github.io/arceos/axruntime/index.html"
 [features]
 default = []
 
-smp = ["axhal/smp", "axtask?/smp"]
+smp = ["multitask", "axhal/smp", "axtask/smp"]
 alloc = ["axalloc", "paging"]
 multitask = ["axtask/multitask", "irq"]
 

@@ -38,10 +38,10 @@
 #include <asm/vector.h>
 
 #include "head.h"
+#include "adaptor.h"
 
 static DECLARE_COMPLETION(cpu_running);
 
-#if 0
 void __init smp_prepare_cpus(unsigned int max_cpus)
 {
 	int cpuid;
@@ -65,8 +65,6 @@ void __init smp_prepare_cpus(unsigned int max_cpus)
 		numa_store_cpu_info(cpuid);
 	}
 }
-
-#endif /* CL */
 
 #ifdef CONFIG_ACPI
 static unsigned int cpu_count = 1;

@@ -125,7 +125,7 @@ void cl_init_irq(void)
  * late stage in start_kernel() [init/main.c]
  *   - the last part before kernel_init kthread being scheduling
  */
-void userboot_earlier()
+void start_sched_earlier()
 {
 #if 0
     setup_per_cpu_pageset();
@@ -160,4 +160,10 @@ void userboot_earlier()
     pagecache_init();
 #endif
     signals_init();
+}
+
+void init_smp(void)
+{
+    smp_prepare_cpus(setup_max_cpus);
+    PANIC("");
 }
