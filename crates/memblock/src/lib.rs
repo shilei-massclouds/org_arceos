@@ -5,6 +5,7 @@
 use allocator::{AllocResult, BaseAllocator, ByteAllocator, PageAllocator};
 use core::alloc::Layout;
 use core::ptr::NonNull;
+use linux_adaptor::LinuxAdaptorState;
 
 #[cfg(feature = "axerrno")]
 use axerrno::AxError;
@@ -15,20 +16,7 @@ pub struct MemblockAllocator<const PAGE_SIZE: usize> {
 
 impl<const PAGE_SIZE: usize> BaseAllocator for MemblockAllocator<PAGE_SIZE> {
     fn init(&mut self, _start: usize, _size: usize) {
-        //
-        // parse_dtb() [arch/riscv/kernel/setup.c]
-        //   - get physical memory range from fdt
-        //
-        // sbi_init() [arch/riscv/kernel/setup.c]
-        //
-        // setup_bootmem() [arch/riscv/mm/init.c]
-        //   - reserve areas including kernel, initrd and fdt
-        //
-        unsafe {
-            parse_dtb();
-            sbi_init();
-            setup_bootmem();
-        }
+        linux_adaptor::advance_to(LinuxAdaptorState::SetupBootMem);
     }
     fn add_memory(&mut self, _start: usize, _size: usize) -> AllocResult {
         unimplemented!("No support for Memblock.");
@@ -105,9 +93,6 @@ impl<const PAGE_SIZE: usize> PageAllocator for MemblockAllocator<PAGE_SIZE> {
 }
 
 unsafe extern "C" {
-    fn parse_dtb();
-    fn sbi_init();
-    fn setup_bootmem();
     fn linux_memblock_alloc(size: usize, align: usize) -> usize;
     fn memblock_free(ptr: usize, size: usize);
 }

@@ -5,6 +5,8 @@
 #[macro_use]
 extern crate log;
 
+use linux_adaptor::LinuxAdaptorState;
+
 /// Initializes virtual memory management.
 ///
 /// It mainly sets up the kernel virtual memory address space and recreate a
@@ -12,17 +14,8 @@ extern crate log;
 pub fn init_memory_management() {
     info!("Initialize virtual memory management...");
 
-    unsafe {
-        setup_vm_final();
-
-        /* Depend on that Linear Mapping is ready */
-        memblock_allow_resize();
-    }
-}
-
-unsafe extern "C" {
-    fn setup_vm_final();
-    fn memblock_allow_resize();
+    linux_adaptor::advance_to(LinuxAdaptorState::SetupVMFinal);
+    linux_adaptor::advance_to(LinuxAdaptorState::SetupVMFinalLater);
 }
 
 /*

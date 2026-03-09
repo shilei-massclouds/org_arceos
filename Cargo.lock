@@ -645,6 +645,7 @@ dependencies = [
 name = "axmm"
 version = "0.2.0"
 dependencies = [
+ "linux_adaptor",
  "log",
 ]
 
@@ -975,6 +976,7 @@ version = "0.0.1"
 dependencies = [
  "allocator",
  "axerrno 0.1.2",
+ "linux_adaptor",
 ]
 
 [[package]]
@@ -1573,6 +1575,7 @@ version = "0.0.1"
 dependencies = [
  "allocator",
  "axerrno 0.1.2",
+ "linux_adaptor",
 ]
 
 [[package]]
@@ -1932,6 +1935,7 @@ version = "0.0.1"
 dependencies = [
  "allocator",
  "axerrno 0.1.2",
+ "linux_adaptor",
 ]
 
 [[package]]

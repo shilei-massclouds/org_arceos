@@ -1,4 +1,5 @@
 use axplat::init::InitIf;
+use linux_adaptor::LinuxAdaptorState;
 
 struct InitIfImpl;
 
@@ -27,8 +28,9 @@ impl InitIf for InitIfImpl {
     /// * Exception & interrupt handlers are set up.
     /// * Early console is initialized.
     /// * Current monotonic time and wall time can be obtained.
-    fn init_early(hartid: usize, dtb_pa: usize) {
-        linux_adaptor::init_early(hartid, dtb_pa);
+    fn init_early(_hartid: usize, _dtb_pa: usize) {
+        linux_adaptor::advance_to(LinuxAdaptorState::SetupArch);
+        // handle_exception_early has been setup in asm-boot.
         axcpu::init::init_trap();
         //crate::time::init_early();
     }
@@ -64,8 +66,8 @@ impl InitIf for InitIfImpl {
     /// * Interrupt controller is initialized (if applicable).
     /// * Timer interrupts are enabled (if applicable).
     /// * Other essential peripherals are initialized.
-    fn init_later(hartid: usize, dtb_pa: usize) {
-        linux_adaptor::init_later(hartid, dtb_pa);
+    fn init_later(_hartid: usize, _dtb_pa: usize) {
+        linux_adaptor::advance_to(LinuxAdaptorState::SetupArchLater);
         //#[cfg(feature = "irq")]
         //crate::irq::init_percpu();
         //crate::time::init_percpu();

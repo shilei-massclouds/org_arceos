@@ -5,6 +5,7 @@
 use allocator::{AllocResult, BaseAllocator, PageAllocator};
 #[cfg(feature = "axerrno")]
 use axerrno::AxError;
+use linux_adaptor::LinuxAdaptorState;
 
 /// Buddy Allocator used by Linux.
 pub struct BuddyAllocator<const PAGE_SIZE: usize> {
@@ -12,28 +13,7 @@ pub struct BuddyAllocator<const PAGE_SIZE: usize> {
 
 impl<const PAGE_SIZE: usize> BaseAllocator for BuddyAllocator<PAGE_SIZE> {
     fn init(&mut self, _start: usize, _size: usize) {
-        //
-        // misc_mem_init() [arch/riscv/mm/init.c]
-        //   - prepare node/zone/mem_map for buddy system
-        //
-        // jump_label_init() [init/main.c]
-        //
-        // setup_nr_cpu_ids() [init/main.c]
-        //
-        // setup_per_cpu_areas() [init/main.c]
-        //  - prepare percpu first chunk
-        //
-        // boot_cpu_hotplug_init() [init/main.c]
-        //
-        // random_init_early() [init/main.c]
-        //  - architectural and non-timekeeping rng init, before allocator init
-        //
-        // mm_core_init_first_part() [mm/mm_init.c]
-        //   - set up kernel memory allocators
-        //
-        unsafe {
-            mm_core_init_first_part();
-        }
+        linux_adaptor::advance_to(LinuxAdaptorState::SetupBuddy);
     }
     fn add_memory(&mut self, _start: usize, _size: usize) -> AllocResult {
         unimplemented!("No support for Buddy.add_memory()");
@@ -77,8 +57,4 @@ impl<const PAGE_SIZE: usize> PageAllocator for BuddyAllocator<PAGE_SIZE> {
     fn available_pages(&self) -> usize {
         unimplemented!("");
     }
-}
-
-unsafe extern "C" {
-    fn mm_core_init_first_part();
 }

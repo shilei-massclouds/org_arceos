@@ -5,6 +5,7 @@
 use allocator::{AllocResult, BaseAllocator, ByteAllocator};
 use core::alloc::Layout;
 use core::ptr::NonNull;
+use linux_adaptor::LinuxAdaptorState;
 
 #[cfg(feature = "axerrno")]
 use axerrno::AxError;
@@ -15,13 +16,7 @@ pub struct SlubAllocator {
 
 impl BaseAllocator for SlubAllocator {
     fn init(&mut self, _start: usize, _size: usize) {
-        //
-        // mm_core_init_second_part() [mm/mm_init.c]
-        //   - set up kernel memory allocators
-        //
-        unsafe {
-            mm_core_init_second_part();
-        }
+        linux_adaptor::advance_to(LinuxAdaptorState::SetupSlub);
     }
     fn add_memory(&mut self, _start: usize, _size: usize) -> AllocResult {
         unimplemented!("No support for Slub.add_memory()");
@@ -60,6 +55,5 @@ impl SlubAllocator {
 }
 
 unsafe extern "C" {
-    fn mm_core_init_second_part();
     fn linux_kmalloc_kernel(size: usize, align: usize) -> usize;
 }

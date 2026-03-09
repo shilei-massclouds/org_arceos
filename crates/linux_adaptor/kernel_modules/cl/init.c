@@ -11,6 +11,12 @@
 
 #include "adaptor.h"
 
+void parse_dtb(void);
+void sbi_init(void);
+void setup_bootmem(void);
+void unflatten_device_tree(void);
+void riscv_init_cbo_blocksizes(void);
+
 /* Untouched command line saved by arch-specific code. */
 char __initdata boot_command_line[COMMAND_LINE_SIZE];
 
@@ -24,10 +30,9 @@ char __initdata boot_command_line[COMMAND_LINE_SIZE];
 bool early_boot_irqs_disabled __read_mostly;
 
 /*
- * early stage in start_kernel() [init/main.c]
- *   - the first part before setup_arch()
+ * early stage before setup_arch in start_kernel [init/main.c]
  */
-void cl_early_init(unsigned long hartid, unsigned long dtb_pa)
+void cl_setup_arch_earlier(void)
 {
     set_task_stack_end_magic(&init_task);
     smp_setup_processor_id();
@@ -46,9 +51,40 @@ void cl_early_init(unsigned long hartid, unsigned long dtb_pa)
     boot_cpu_init();
     page_address_init();
     pr_notice("%s\n", linux_banner);
+}
 
-    /* setup_arch() will called in crate 'memblock'. */
-    //setup_arch(NULL /* cmdline_p */);
+/*
+ * setup memblock in setup_arch.
+ */
+void cl_setup_bootmem(void)
+{
+    //
+    // parse_dtb() [arch/riscv/kernel/setup.c]
+    //   - get physical memory range from fdt
+    //
+    // sbi_init() [arch/riscv/kernel/setup.c]
+    //
+    // setup_bootmem() [arch/riscv/mm/init.c]
+    //   - reserve areas including kernel, initrd and fdt
+    //
+    parse_dtb();
+    sbi_init();
+    setup_bootmem();
+}
+
+void cl_setup_arch_later(void)
+{
+    jump_label_init();
+    unflatten_device_tree();
+    misc_mem_init();
+    setup_smp();
+    riscv_init_cbo_blocksizes();
+    riscv_fill_hwcap();
+
+    setup_nr_cpu_ids();
+    setup_per_cpu_areas();
+    boot_cpu_hotplug_init();
+    random_init_early(boot_command_line/* command_line */);
 }
 
 /*
