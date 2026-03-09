@@ -897,6 +897,7 @@ name = "axtask"
 version = "0.2.0"
 dependencies = [
  "axhal",
+ "linux_adaptor",
  "log",
 ]
 

@@ -8,6 +8,7 @@
 #include <linux/memblock.h>
 #include <linux/pid_namespace.h>
 #include <linux/sched/clock.h>
+#include <linux/tick.h>
 
 #include "adaptor.h"
 
@@ -87,11 +88,44 @@ void cl_setup_arch_later(void)
     random_init_early(boot_command_line/* command_line */);
 }
 
+void cl_init_irq(void)
+{
+    /*
+     * irq depends on radix && maple
+     */
+    radix_tree_init();
+    maple_tree_init();
+
+    /*
+     * Allow workqueue creation and work item queueing/cancelling
+     * early.  Work item execution depends on kthreads and starts after
+     * workqueue_init().
+     */
+    workqueue_init_early();
+    rcu_init();
+
+    /* init some links before init_ISA_irqs() */
+    early_irq_init();
+    init_IRQ();
+    tick_init();
+    //rcu_init_nohz();
+    init_timers();
+    //srcu_init();
+    hrtimers_init();
+
+    softirq_init();
+    timekeeping_init();
+    time_init();
+
+    /* This must be after timekeeping is initialized */
+    random_init();
+}
+
 /*
  * late stage in start_kernel() [init/main.c]
  *   - the last part before kernel_init kthread being scheduling
  */
-void init_userboot_earlier()
+void userboot_earlier()
 {
 #if 0
     setup_per_cpu_pageset();

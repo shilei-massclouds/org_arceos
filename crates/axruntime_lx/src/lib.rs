@@ -9,6 +9,9 @@ extern crate axlog;
 #[cfg(all(target_os = "none", not(test)))]
 mod lang_items;
 
+#[cfg(feature = "irq")]
+use linux_adaptor::LinuxAdaptorState;
+
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.
       d88888                           d88P" "Y88b d88P  Y88b
@@ -175,7 +178,7 @@ fn init_allocator_later() {
 
 #[cfg(feature = "irq")]
 fn init_interrupt_earlier() {
-    linux_adaptor::init_irq_earlier();
+    linux_adaptor::advance_to(LinuxAdaptorState::InitIrq);
 }
 
 #[cfg(feature = "irq")]
@@ -215,7 +218,8 @@ fn init_tls() {
 }
 
 fn prepare_for_uapp() {
-    linux_adaptor::prepare_for_userboot();
+    #[cfg(feature = "irq")]
+    linux_adaptor::advance_to(LinuxAdaptorState::UserBootEarlier);
 }
 
 struct LogIfImpl;

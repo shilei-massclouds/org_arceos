@@ -2,6 +2,7 @@
 
 use alloc::{string::String, sync::Arc, boxed::Box};
 use core::ffi::{c_void, c_int, c_long};
+use linux_adaptor::LinuxAdaptorState;
 
 const MAX_NICE: isize =  19;
 const MIN_NICE: isize = -20;
@@ -116,9 +117,7 @@ pub fn init_scheduler() {
     //crate::timers::init();
 
     info!("  use linux scheduler.");
-    unsafe {
-        sched_init();
-    }
+    linux_adaptor::advance_to(LinuxAdaptorState::InitSched);
 }
 
 /*
@@ -291,7 +290,6 @@ pub fn idle_loop(idle: AxTaskRef) {
 }
 
 unsafe extern "C" {
-    fn sched_init();
     fn msleep(msecs: usize);
     fn linux_kernel_thread(f: LinuxThreadFn, opaque: *mut c_void) -> i32;
     fn linux_idle_loop(pid: i32);
