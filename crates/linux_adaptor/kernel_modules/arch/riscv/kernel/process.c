@@ -37,12 +37,12 @@ EXPORT_SYMBOL(__stack_chk_guard);
 
 extern asmlinkage void ret_from_fork(void);
 
-#if 0
 void noinstr arch_cpu_idle(void)
 {
 	cpu_do_idle();
 }
 
+#if 0
 int set_unalign_ctl(struct task_struct *tsk, unsigned int val)
 {
 	if (!unaligned_ctl_available())

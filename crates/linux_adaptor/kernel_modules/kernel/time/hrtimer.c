@@ -2267,7 +2267,6 @@ int hrtimers_cpu_starting(unsigned int cpu)
 	return 0;
 }
 
-#if 0
 #ifdef CONFIG_HOTPLUG_CPU
 
 static void migrate_hrtimer_list(struct hrtimer_clock_base *old_base,
@@ -2336,8 +2335,6 @@ int hrtimers_cpu_dying(unsigned int dying_cpu)
 }
 
 #endif /* CONFIG_HOTPLUG_CPU */
-
-#endif /* CL */
 
 void __init hrtimers_init(void)
 {

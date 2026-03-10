@@ -7958,7 +7958,6 @@ static void balance_push(struct rq *rq)
 {
 	struct task_struct *push_task = rq->curr;
 
-#if 0
 	lockdep_assert_rq_held(rq);
 
 	/*
@@ -7966,6 +7965,7 @@ static void balance_push(struct rq *rq)
 	 */
 	rq->balance_callback = &balance_push_callback;
 
+    printk("%s: cpu step0 (%u)\n", __func__, smp_processor_id());
 	/*
 	 * Only active while going offline and when invoked on the outgoing
 	 * CPU.
@@ -7973,6 +7973,8 @@ static void balance_push(struct rq *rq)
 	if (!cpu_dying(rq->cpu) || rq != this_rq())
 		return;
 
+    printk("%s: cpu step1 (%u)\n", __func__, smp_processor_id());
+#if 0
 	/*
 	 * Both the cpu-hotplug and stop task are in this case and are
 	 * required to complete the hotplug process.
