@@ -205,7 +205,6 @@ void __init smp_cpus_done(unsigned int max_cpus)
 {
 }
 
-#if 0
 /*
  * C entry point for a secondary processor.
  */
@@ -251,5 +250,3 @@ asmlinkage __visible void smp_callin(void)
 	local_irq_enable();
 	cpu_startup_entry(CPUHP_AP_ONLINE_IDLE);
 }
-
-#endif /* CL */

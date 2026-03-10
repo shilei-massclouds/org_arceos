@@ -67,7 +67,6 @@ int riscv_hartid_to_cpuid(unsigned long hartid)
 	return -ENOENT;
 }
 
-#if 0
 static void ipi_stop(void)
 {
 	set_cpu_online(smp_processor_id(), false);
@@ -100,7 +99,6 @@ static inline void ipi_cpu_crash_stop(unsigned int cpu, struct pt_regs *regs)
 	unreachable();
 }
 #endif
-#endif /* CL */
 
 static void send_ipi_mask(const struct cpumask *mask, enum ipi_message_type op)
 {
@@ -124,7 +122,6 @@ static irqreturn_t handle_IPI(int irq, void *data)
 	unsigned int cpu = smp_processor_id();
 	int ipi = irq - ipi_virq_base;
 
-#if 0
 	switch (ipi) {
 	case IPI_RESCHEDULE:
 		scheduler_ipi();
@@ -157,8 +154,6 @@ static irqreturn_t handle_IPI(int irq, void *data)
 		break;
 	}
 
-#endif
-    PANIC("");
 	return IRQ_HANDLED;
 }
 

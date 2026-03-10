@@ -117,9 +117,7 @@ void *linux_memblock_alloc(phys_addr_t size, phys_addr_t align)
                 MEMBLOCK_ALLOC_ACCESSIBLE, NUMA_NO_NODE);
 }
 
-// FixMe:
-void secondary_start_sbi(void)
+int cl_cpu_id(void)
 {
-    printk("%s: ...\n", __func__);
-    //PANIC("");
+    return smp_processor_id();
 }

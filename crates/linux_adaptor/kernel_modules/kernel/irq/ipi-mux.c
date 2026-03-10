@@ -60,7 +60,6 @@ static void ipi_mux_send_mask(struct irq_data *d, const struct cpumask *mask)
 	unsigned long pending;
 	int cpu;
 
-#if 0
 	for_each_cpu(cpu, mask) {
 		icpu = per_cpu_ptr(ipi_mux_pcpu, cpu);
 
@@ -89,8 +88,6 @@ static void ipi_mux_send_mask(struct irq_data *d, const struct cpumask *mask)
 		if (!(pending & ibit) && (atomic_read(&icpu->enable) & ibit))
 			ipi_mux_send(cpu);
 	}
-#endif /* CL */
-    PANIC("");
 }
 
 static const struct irq_chip ipi_mux_chip = {
@@ -119,7 +116,6 @@ static const struct irq_domain_ops ipi_mux_domain_ops = {
 	.free		= irq_domain_free_irqs_top,
 };
 
-#if 0
 /**
  * ipi_mux_process - Process multiplexed virtual IPIs
  */
@@ -146,7 +142,6 @@ void ipi_mux_process(void)
 	for_each_set_bit(hwirq, &ipis, BITS_PER_TYPE(int))
 		generic_handle_domain_irq(ipi_mux_domain, hwirq);
 }
-#endif /* CL */
 
 /**
  * ipi_mux_create - Create virtual IPIs multiplexed on top of a single

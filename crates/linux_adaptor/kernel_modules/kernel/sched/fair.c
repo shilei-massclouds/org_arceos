@@ -13323,8 +13323,7 @@ static void attach_task_cfs_rq(struct task_struct *p)
 
 static void switched_from_fair(struct rq *rq, struct task_struct *p)
 {
-	//detach_task_cfs_rq(p);
-    PANIC("");
+	detach_task_cfs_rq(p);
 }
 
 static void switched_to_fair(struct rq *rq, struct task_struct *p)

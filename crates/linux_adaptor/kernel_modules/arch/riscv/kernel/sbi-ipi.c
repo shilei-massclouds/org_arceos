@@ -27,10 +27,10 @@ static void sbi_ipi_handle(struct irq_desc *desc)
 
 	chained_irq_enter(chip, desc);
 
-#if 0
 	csr_clear(CSR_IP, IE_SIE);
 	ipi_mux_process();
 
+#if 0
 	chained_irq_exit(chip, desc);
 #endif
     PANIC("");

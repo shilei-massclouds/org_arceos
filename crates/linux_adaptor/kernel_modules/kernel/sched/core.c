@@ -5676,8 +5676,6 @@ void sched_tick(void)
 #endif
 }
 
-#if 0
-
 #ifdef CONFIG_NO_HZ_FULL
 
 struct tick_work {
@@ -5813,8 +5811,6 @@ int __init sched_tick_offload_init(void)
 static inline void sched_tick_start(int cpu) { }
 static inline void sched_tick_stop(int cpu) { }
 #endif
-
-#endif /* CL */
 
 #if defined(CONFIG_PREEMPTION) && (defined(CONFIG_DEBUG_PREEMPT) || \
 				defined(CONFIG_TRACE_PREEMPT_TOGGLE))
@@ -8302,12 +8298,9 @@ static void sched_rq_cpu_starting(unsigned int cpu)
 
 int sched_cpu_starting(unsigned int cpu)
 {
-#if 0
 	sched_core_cpu_starting(cpu);
 	sched_rq_cpu_starting(cpu);
 	sched_tick_start(cpu);
-#endif
-    PANIC("");
 	return 0;
 }
 

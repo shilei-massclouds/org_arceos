@@ -10,7 +10,13 @@
 #include <linux/sched/clock.h>
 #include <linux/tick.h>
 
+#define CREATE_TRACE_POINTS
+#include <trace/events/initcall.h>
+
 #include "adaptor.h"
+
+#define do_trace_initcall_start    trace_initcall_start
+#define do_trace_initcall_finish   trace_initcall_finish
 
 void parse_dtb(void);
 void sbi_init(void);
@@ -172,9 +178,66 @@ void start_kthreadd(void)
     rcu_read_unlock();
 }
 
+static void __init do_pre_smp_initcalls(void)
+{
+    initcall_entry_t *fn;
+
+    trace_initcall_level("early");
+    for (fn = __initcall_start; fn < __initcall0_start; fn++)
+        do_one_initcall(initcall_from_entry(fn));
+}
+
 void init_smp(void)
 {
     smp_prepare_cpus(setup_max_cpus);
+
+#if 0
+    workqueue_init();
+
+    init_mm_internals();
+
+    rcu_init_tasks_generic();
+#endif
+    do_pre_smp_initcalls();
+#if 0
+    lockup_detector_init();
+#endif
+
     smp_init();
     PANIC("");
+}
+
+static bool __init_or_module initcall_blacklisted(initcall_t fn)
+{
+    // FixMe: impl it.
+    return false;
+}
+
+int __init_or_module do_one_initcall(initcall_t fn)
+{
+    int count = preempt_count();
+    char msgbuf[64];
+    int ret;
+
+    if (initcall_blacklisted(fn))
+        return -EPERM;
+
+    do_trace_initcall_start(fn);
+    ret = fn();
+    do_trace_initcall_finish(fn, ret);
+
+    msgbuf[0] = 0;
+
+    if (preempt_count() != count) {
+        sprintf(msgbuf, "preemption imbalance ");
+        preempt_count_set(count);
+    }
+    if (irqs_disabled()) {
+        strlcat(msgbuf, "disabled interrupts ", sizeof(msgbuf));
+        local_irq_enable();
+    }
+    WARN(msgbuf[0], "initcall %pS returned with %s\n", fn, msgbuf);
+
+    add_latent_entropy();
+    return ret;
 }

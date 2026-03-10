@@ -124,6 +124,25 @@ unsafe extern "C" fn setup_trap_vector() -> ! {
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".head.text2")]
+unsafe extern "C" fn secondary_setup_trap_vector() -> ! {
+    core::arch::naked_asm!("
+    .align 2
+        /* Set trap vector to exception handler */
+        la a0, handle_exception
+        csrw stvec, a0
+
+        /*
+         * Set sup0 scratch register to 0, indicating to exception vector that
+         * we are presently executing in kernel.
+         */
+        csrw sscratch, zero
+        ret
+    ")
+}
+
+#[unsafe(naked)]
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".head.text2")]
 unsafe extern "C" fn relocate_enable_mmu() -> ! {
     core::arch::naked_asm!("
     .align 2
@@ -190,10 +209,45 @@ unsafe extern "C" fn relocate_enable_mmu() -> ! {
 #[cfg(feature = "smp")]
 #[unsafe(naked)]
 #[unsafe(no_mangle)]
-unsafe extern "C" fn _start_secondary() -> ! {
-    // a0 = hartid
-    // a1 = SP
+unsafe extern "C" fn secondary_start_sbi() -> ! {
     core::arch::naked_asm!("
-        j       .",
+        /* Mask all interrupts */
+        csrw sie, zero
+        csrw sip, zero
+
+        /* Load the global pointer */
+    .option push
+    .option norelax
+        la gp, __global_pointer$
+    .option pop
+
+        /*
+         * Disable FPU & VECTOR to detect illegal usage of
+         * floating point or vector in kernel space
+         */
+        li t0, {SR_FS_VS}
+        csrc sstatus, t0
+
+        /* Set trap vector to spin forever to help debug */
+        la a3, secondary_park
+        csrw stvec, a3
+
+        /* a0 contains the hartid & a1 contains boot data */
+        li a2, {SBI_HART_BOOT_TASK_PTR_OFFSET}
+        add a2, a2, a1
+        ld tp, (a2)
+        li a3, {SBI_HART_BOOT_STACK_PTR_OFFSET}
+        add a3, a3, a1
+        ld sp, (a3)
+
+        /* Enable virtual memory and relocate to virtual address */
+        la a0, swapper_pg_dir
+        call relocate_enable_mmu
+        call secondary_setup_trap_vector
+        call smp_callin
+        ",
+        SR_FS_VS = const SR_FS_VS,
+        SBI_HART_BOOT_TASK_PTR_OFFSET = const SBI_HART_BOOT_TASK_PTR_OFFSET,
+        SBI_HART_BOOT_STACK_PTR_OFFSET = const SBI_HART_BOOT_STACK_PTR_OFFSET,
     )
 }

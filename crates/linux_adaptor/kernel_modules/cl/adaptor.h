@@ -34,24 +34,36 @@ extern void end_global_trace(void);
 extern int clinux_starting;
 extern int clinux_started;
 
+static bool panic_handled[CONFIG_NR_CPUS];
+
+extern int cl_cpu_id(void);
+
 #define RAW_PANIC(args...) \
 do { \
-    legacy_puts("\n########################\n"); \
-    legacy_puts("\nRAW_PANIC: "); \
-    legacy_puts(__FUNCTION__); \
-    legacy_puts(" in ["); \
-    legacy_puts(__FILE__); \
-    legacy_puts("]\n"); \
-    legacy_puts("\n########################\n"); \
-    legacy_shutdown(); \
+    int cpu_id = cl_cpu_id(); \
+    if (!panic_handled[cpu_id]) { \
+        legacy_puts("\n########################\n"); \
+        legacy_puts("\nRAW_PANIC: "); \
+        legacy_puts(__FUNCTION__); \
+        legacy_puts(" in ["); \
+        legacy_puts(__FILE__); \
+        legacy_puts("]\n"); \
+        legacy_puts("\n########################\n"); \
+        legacy_shutdown(); \
+        panic_handled[cpu_id] = true; \
+    } \
 } while (0)
 
 #define PANIC(args...) \
 do { \
-    printk("\n########################\n"); \
-    printk("\nPANIC: %s(%s:%d) %s\n", __FUNCTION__, __FILE__, __LINE__, args); \
-    printk("\n########################\n"); \
-    legacy_shutdown(); \
+    int cpu_id = cl_cpu_id(); \
+    if (!panic_handled[cpu_id]) { \
+        printk("\n########################\n"); \
+        printk("\nPANIC: %s(%s:%d) %s\n", __FUNCTION__, __FILE__, __LINE__, args); \
+        printk("\n########################\n"); \
+        legacy_shutdown(); \
+        panic_handled[cpu_id] = true; \
+    } \
 } while (0)
 
 #define CL_ASSERT(cond, msg) \

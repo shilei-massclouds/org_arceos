@@ -788,7 +788,6 @@ int kthreadd(void *unused)
 	return 0;
 }
 
-#if 0
 void __kthread_init_worker(struct kthread_worker *worker,
 				const char *name,
 				struct lock_class_key *key)
@@ -937,6 +936,7 @@ kthread_create_worker(unsigned int flags, const char namefmt[], ...)
 }
 EXPORT_SYMBOL(kthread_create_worker);
 
+#if 0
 /**
  * kthread_create_worker_on_cpu - create a kthread worker and bind it
  *	to a given CPU and the associated NUMA node.

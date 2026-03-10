@@ -265,13 +265,13 @@ static inline void wait_for_ap_thread(struct cpuhp_cpu_state *st, bool bringup)
 	wait_for_completion(done);
 }
 
-#if 0
 static inline void complete_ap_thread(struct cpuhp_cpu_state *st, bool bringup)
 {
 	struct completion *done = bringup ? &st->done_up : &st->done_down;
 	complete(done);
 }
 
+#if 0
 /*
  * The former STARTING/DYING states, ran with IRQs disabled and must not fail.
  */
@@ -291,7 +291,6 @@ enum cpuhp_sync_state {
 	SYNC_STATE_ONLINE,
 };
 
-#if 0
 #ifdef CONFIG_HOTPLUG_CORE_SYNC
 /**
  * cpuhp_ap_update_sync_state - Update synchronization state during bringup/teardown
@@ -344,6 +343,7 @@ static bool cpuhp_wait_for_sync_state(unsigned int cpu, enum cpuhp_sync_state st
 static inline void cpuhp_ap_update_sync_state(enum cpuhp_sync_state state) { }
 #endif /* !CONFIG_HOTPLUG_CORE_SYNC */
 
+#if 0
 #ifdef CONFIG_HOTPLUG_CORE_SYNC_DEAD
 /**
  * cpuhp_ap_report_dead - Update synchronization state to DEAD
@@ -1001,7 +1001,6 @@ static inline int cpuhp_invoke_callback_range(bool bringup,
 	return __cpuhp_invoke_callback_range(bringup, cpu, st, target, false);
 }
 
-#if 0
 static inline void cpuhp_invoke_callback_range_nofail(bool bringup,
 						      unsigned int cpu,
 						      struct cpuhp_cpu_state *st,
@@ -1009,7 +1008,6 @@ static inline void cpuhp_invoke_callback_range_nofail(bool bringup,
 {
 	__cpuhp_invoke_callback_range(bringup, cpu, st, target, true);
 }
-#endif /* CL */
 
 static inline bool can_rollback_cpu(struct cpuhp_cpu_state *st)
 {
@@ -1604,7 +1602,6 @@ void smp_shutdown_nonboot_cpus(unsigned int primary_cpu)
 #define takedown_cpu		NULL
 #endif /*CONFIG_HOTPLUG_CPU*/
 
-#if 0
 /**
  * notify_cpu_starting(cpu) - Invoke the callbacks on the starting CPU
  * @cpu: cpu that just started
@@ -1625,7 +1622,6 @@ void notify_cpu_starting(unsigned int cpu)
 	 */
 	cpuhp_invoke_callback_range_nofail(true, cpu, st, target);
 }
-#endif /* CL */
 
 /*
  * Called from the idle task. Wake up the controlling task which brings the
@@ -1640,7 +1636,6 @@ void cpuhp_online_idle(enum cpuhp_state state)
 	if (state != CPUHP_AP_ONLINE_IDLE)
 		return;
 
-#if 0
 	cpuhp_ap_update_sync_state(SYNC_STATE_ONLINE);
 
 	/*
@@ -1650,6 +1645,7 @@ void cpuhp_online_idle(enum cpuhp_state state)
 	stop_machine_unpark(smp_processor_id());
 
 	st->state = CPUHP_AP_ONLINE_IDLE;
+#if 0
 	complete_ap_thread(st, true);
 #endif
     PANIC("");

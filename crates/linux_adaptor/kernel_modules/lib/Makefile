@@ -30,6 +30,7 @@ obj-y += timerqueue.o
 obj-y += bsearch.o
 obj-y += lockref.o
 obj-y += cpumask.o
+obj-y += llist.o
 
 obj-y += math/
 obj-y += crypto/
@@ -37,7 +38,7 @@ obj-y += crypto/
 #obj-y += klist.o
 #obj-y += devres.o errname.o
 #obj-y += sbitmap.o dec_and_lock.o
-#obj-y += sg_pool.o scatterlist.o errseq.o llist.o
+#obj-y += sg_pool.o scatterlist.o errseq.o
 #obj-y += iov_iter.o
 #obj-y += strncpy_from_user.o
 #obj-y += cmdline.o logic_pio.o

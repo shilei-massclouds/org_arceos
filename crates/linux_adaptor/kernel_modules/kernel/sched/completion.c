@@ -338,6 +338,7 @@ bool try_wait_for_completion(struct completion *x)
 	return ret;
 }
 EXPORT_SYMBOL(try_wait_for_completion);
+#endif /* CL */
 
 /**
  *	completion_done - Test to see if a completion has any waiters
@@ -365,4 +366,3 @@ bool completion_done(struct completion *x)
 	return true;
 }
 EXPORT_SYMBOL(completion_done);
-#endif /* CL */

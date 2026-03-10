@@ -379,7 +379,6 @@ static __always_inline void csd_unlock(call_single_data_t *csd)
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(call_single_data_t, csd_data);
 
-#if 0
 void __smp_call_single_queue(int cpu, struct llist_node *node)
 {
 	/*
@@ -423,6 +422,7 @@ void __smp_call_single_queue(int cpu, struct llist_node *node)
  */
 static int generic_exec_single(int cpu, call_single_data_t *csd)
 {
+#if 0
 	if (cpu == smp_processor_id()) {
 		smp_call_func_t func = csd->func;
 		void *info = csd->info;
@@ -447,10 +447,13 @@ static int generic_exec_single(int cpu, call_single_data_t *csd)
 	}
 
 	__smp_call_single_queue(cpu, &csd->node.llist);
+#endif
+    PANIC("");
 
 	return 0;
 }
 
+#if 0
 /**
  * generic_smp_call_function_single_interrupt - Execute SMP IPI callbacks
  *
@@ -627,7 +630,6 @@ void flush_smp_call_function_queue(void)
 	local_irq_restore(flags);
 }
 
-#if 0
 /*
  * smp_call_function_single - Run a function on a specific CPU
  * @func: The function to run. This must be fast and non-blocking.
@@ -693,6 +695,7 @@ int smp_call_function_single(int cpu, smp_call_func_t func, void *info,
 }
 EXPORT_SYMBOL(smp_call_function_single);
 
+#if 0
 /**
  * smp_call_function_single_async() - Run an asynchronous function on a
  * 			         specific CPU.

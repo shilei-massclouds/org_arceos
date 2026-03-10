@@ -32,6 +32,11 @@ pub const RISCV_LGPTR: usize = 3;
 // Defined in [include/generated/asm-offsets.h]
 pub const KERNEL_MAP_VIRT_ADDR: usize = 8;
 
+// FixMe:
+// Defined in [include/generated/asm-offsets.h]
+pub const SBI_HART_BOOT_TASK_PTR_OFFSET: usize = 0;
+pub const SBI_HART_BOOT_STACK_PTR_OFFSET: usize = 8;
+
 /*
  *  All offsets prefixed by PT_ according to struct pt_regs.
  *
