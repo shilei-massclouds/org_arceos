@@ -53,7 +53,6 @@ static DEFINE_PER_CPU(atomic_t, trigger_backtrace) = ATOMIC_INIT(1);
 
 static void __flush_smp_call_function_queue(bool warn_cpu_offline);
 
-#if 0
 int smpcfd_prepare_cpu(unsigned int cpu)
 {
 	struct call_function_data *cfd = &per_cpu(cfd_data, cpu);
@@ -76,6 +75,7 @@ int smpcfd_prepare_cpu(unsigned int cpu)
 	return 0;
 }
 
+#if 0
 int smpcfd_dead_cpu(unsigned int cpu)
 {
 	struct call_function_data *cfd = &per_cpu(cfd_data, cpu);
@@ -1013,7 +1013,6 @@ void __init setup_nr_cpu_ids(void)
 	set_nr_cpu_ids(find_last_bit(cpumask_bits(cpu_possible_mask), NR_CPUS) + 1);
 }
 
-#if 0
 /* Called by boot processor to activate the rest. */
 void __init smp_init(void)
 {
@@ -1026,6 +1025,7 @@ void __init smp_init(void)
 
 	bringup_nonboot_cpus(setup_max_cpus);
 
+#if 0
 	num_nodes = num_online_nodes();
 	num_cpus  = num_online_cpus();
 	pr_info("Brought up %d node%s, %d CPU%s\n",
@@ -1033,8 +1033,9 @@ void __init smp_init(void)
 
 	/* Any cleanup work */
 	smp_cpus_done(setup_max_cpus);
+#endif
+    PANIC("");
 }
-#endif /* CL */
 
 /*
  * on_each_cpu_cond(): Call a function on each processor for which

@@ -293,6 +293,7 @@ bool dec_rlimit_ucounts(struct ucounts *ucounts, enum rlimit_type type, long v)
 	}
 	return (new == 0);
 }
+#endif /* CL */
 
 static void do_dec_rlimit_put_ucounts(struct ucounts *ucounts,
 				struct ucounts *last, enum rlimit_type type)
@@ -312,6 +313,7 @@ void dec_rlimit_put_ucounts(struct ucounts *ucounts, enum rlimit_type type)
 	do_dec_rlimit_put_ucounts(ucounts, NULL, type);
 }
 
+#if 0
 long inc_rlimit_get_ucounts(struct ucounts *ucounts, enum rlimit_type type,
 			    bool override_rlimit)
 {

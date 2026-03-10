@@ -136,7 +136,6 @@ int __wake_up(struct wait_queue_head *wq_head, unsigned int mode,
 }
 EXPORT_SYMBOL(__wake_up);
 
-#if 0
 void __wake_up_on_current_cpu(struct wait_queue_head *wq_head, unsigned int mode, void *key)
 {
 	__wake_up_common_lock(wq_head, mode, 1, WF_CURRENT_CPU, key);
@@ -156,7 +155,6 @@ void __wake_up_locked_key(struct wait_queue_head *wq_head, unsigned int mode, vo
 	__wake_up_common(wq_head, mode, 1, 0, key);
 }
 EXPORT_SYMBOL_GPL(__wake_up_locked_key);
-#endif /* CL */
 
 /**
  * __wake_up_sync_key - wake up threads blocked on a waitqueue.

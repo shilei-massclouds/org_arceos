@@ -116,3 +116,10 @@ void *linux_memblock_alloc(phys_addr_t size, phys_addr_t align)
     return memblock_alloc_try_nid(size, align, MEMBLOCK_LOW_LIMIT,
                 MEMBLOCK_ALLOC_ACCESSIBLE, NUMA_NO_NODE);
 }
+
+// FixMe:
+void secondary_start_sbi(void)
+{
+    printk("%s: ...\n", __func__);
+    //PANIC("");
+}

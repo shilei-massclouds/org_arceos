@@ -2690,6 +2690,7 @@ signed long __sched schedule_timeout_idle(signed long timeout)
 	return schedule_timeout(timeout);
 }
 EXPORT_SYMBOL(schedule_timeout_idle);
+#endif /* CL */
 
 #ifdef CONFIG_HOTPLUG_CPU
 static void migrate_timer_list(struct timer_base *new_base, struct hlist_head *head)
@@ -2757,8 +2758,6 @@ int timers_dead_cpu(unsigned int cpu)
 }
 
 #endif /* CONFIG_HOTPLUG_CPU */
-
-#endif /* CL */
 
 static void __init init_timer_cpu(int cpu)
 {

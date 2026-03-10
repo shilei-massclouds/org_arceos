@@ -94,7 +94,6 @@ enum {
 	HP_THREAD_PARKED,
 };
 
-#if 0
 /**
  * smpboot_thread_fn - percpu hotplug thread loop function
  * @data:	thread data pointer
@@ -235,6 +234,7 @@ static void smpboot_unpark_thread(struct smp_hotplug_thread *ht, unsigned int cp
 		kthread_unpark(tsk);
 }
 
+#if 0
 int smpboot_unpark_threads(unsigned int cpu)
 {
 	struct smp_hotplug_thread *cur;
@@ -264,6 +264,7 @@ int smpboot_park_threads(unsigned int cpu)
 	mutex_unlock(&smpboot_threads_lock);
 	return 0;
 }
+#endif /* CL */
 
 static void smpboot_destroy_threads(struct smp_hotplug_thread *ht)
 {
@@ -279,7 +280,6 @@ static void smpboot_destroy_threads(struct smp_hotplug_thread *ht)
 		}
 	}
 }
-#endif /* CL */
 
 /**
  * smpboot_register_percpu_thread - Register a per_cpu thread related
@@ -293,7 +293,6 @@ int smpboot_register_percpu_thread(struct smp_hotplug_thread *plug_thread)
 	unsigned int cpu;
 	int ret = 0;
 
-#if 0
 	cpus_read_lock();
 	mutex_lock(&smpboot_threads_lock);
 	for_each_online_cpu(cpu) {
@@ -305,8 +304,6 @@ int smpboot_register_percpu_thread(struct smp_hotplug_thread *plug_thread)
 		smpboot_unpark_thread(plug_thread, cpu);
 	}
 	list_add(&plug_thread->list, &hotplug_threads);
-#endif
-    PANIC("");
 out:
 	mutex_unlock(&smpboot_threads_lock);
 	cpus_read_unlock();

@@ -18,6 +18,7 @@ pub enum LinuxAdaptorState {
     InitSched,
     InitIrq,
     StartSchedEarlier,
+    StartKThreadd,
     InitSmp,
     NumberOfStates,
 }
@@ -147,6 +148,13 @@ fn StartSchedEarlierCB() {
 }
 
 #[allow(non_snake_case)]
+fn StartKThreaddCB() {
+    unsafe {
+        start_kthreadd();
+    }
+}
+
+#[allow(non_snake_case)]
 fn InitSmpCB() {
     unsafe {
         init_smp();
@@ -164,5 +172,6 @@ unsafe extern "C" {
     fn sched_init();
     fn cl_init_irq();
     fn start_sched_earlier();
+    fn start_kthreadd();
     fn init_smp();
 }

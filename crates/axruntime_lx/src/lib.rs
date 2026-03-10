@@ -198,6 +198,9 @@ fn call_main() {
     let task = axtask::spawn(|| {
         init_thread_fn();
     });
+
+    linux_adaptor::advance_to(LinuxAdaptorState::StartKThreadd);
+
     axtask::idle_loop(task);
 }
 

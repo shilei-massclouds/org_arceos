@@ -1,1 +1,1 @@
-kernel/rcu/update.o kernel/rcu/tree.o kernel/rcu/rcu_segcblist.o
+kernel/rcu/update.o kernel/rcu/tree.o kernel/rcu/rcu_segcblist.o kernel/rcu/sync.o

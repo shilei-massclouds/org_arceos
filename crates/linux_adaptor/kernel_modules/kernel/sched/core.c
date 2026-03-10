@@ -2128,6 +2128,7 @@ inline int task_curr(const struct task_struct *p)
 {
 	return cpu_curr(task_cpu(p)) == p;
 }
+#endif /* CL */
 
 /*
  * ->switching_to() is called with the pi_lock and rq_lock held and must not
@@ -2159,7 +2160,6 @@ void check_class_changed(struct rq *rq, struct task_struct *p,
 	} else if (oldprio != p->prio || dl_task(p))
 		p->sched_class->prio_changed(rq, p, oldprio);
 }
-#endif /* CL */
 
 void wakeup_preempt(struct rq *rq, struct task_struct *p, int flags)
 {
@@ -2188,7 +2188,6 @@ int __task_state_match(struct task_struct *p, unsigned int state)
 	return 0;
 }
 
-#if 0
 static __always_inline
 int task_state_match(struct task_struct *p, unsigned int state)
 {
@@ -2320,8 +2319,6 @@ unsigned long wait_task_inactive(struct task_struct *p, unsigned int match_state
 
 	return ncsw;
 }
-
-#endif /* CL */
 
 #ifdef CONFIG_SMP
 
@@ -7105,7 +7102,6 @@ int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flag
 }
 EXPORT_SYMBOL(default_wake_function);
 
-#if 0
 const struct sched_class *__setscheduler_class(int policy, int prio)
 {
 	if (dl_prio(prio))
@@ -7122,6 +7118,7 @@ const struct sched_class *__setscheduler_class(int policy, int prio)
 	return &fair_sched_class;
 }
 
+#if 0
 #ifdef CONFIG_RT_MUTEXES
 
 /*

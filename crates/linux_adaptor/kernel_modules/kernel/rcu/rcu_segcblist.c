@@ -469,6 +469,7 @@ void rcu_segcblist_insert_pend_cbs(struct rcu_segcblist *rsclp,
 	WRITE_ONCE(*rsclp->tails[RCU_NEXT_TAIL], rclp->head);
 	WRITE_ONCE(rsclp->tails[RCU_NEXT_TAIL], rclp->tail);
 }
+#endif /* CL */
 
 /*
  * Advance the callbacks in the specified rcu_segcblist structure based
@@ -515,7 +516,6 @@ void rcu_segcblist_advance(struct rcu_segcblist *rsclp, unsigned long seq)
 		rsclp->gp_seq[j] = rsclp->gp_seq[i];
 	}
 }
-#endif /* CL */
 
 /*
  * "Accelerate" callbacks based on more-accurate grace-period information.

@@ -16,6 +16,8 @@
 #include "sched.h"
 #include "autogroup.h"
 
+#include "adaptor.h"
+
 static inline int __normal_prio(int policy, int rt_prio, int nice)
 {
 	int prio;
@@ -287,6 +289,7 @@ static struct task_struct *find_get_task(pid_t pid)
 DEFINE_CLASS(find_get_task, struct task_struct *, if (_T) put_task_struct(_T),
 	     find_get_task(pid), pid_t pid)
 
+#endif /* CL */
 /*
  * sched_setparam() passes in -1 for its policy, to let the functions
  * it calls know not to change it.
@@ -336,6 +339,7 @@ static void __setscheduler_params(struct task_struct *p,
 	set_load_weight(p, true);
 }
 
+#if 0
 /*
  * Check the target process has a UID that matches the current process's:
  */
@@ -348,6 +352,8 @@ static bool check_same_owner(struct task_struct *p)
 	return (uid_eq(cred->euid, pcred->euid) ||
 		uid_eq(cred->euid, pcred->uid));
 }
+
+#endif /* CL */
 
 #ifdef CONFIG_UCLAMP_TASK
 
@@ -472,6 +478,7 @@ static int user_check_sched_setscheduler(struct task_struct *p,
 					 const struct sched_attr *attr,
 					 int policy, int reset_on_fork)
 {
+#if 0
 	if (fair_policy(policy)) {
 		if (attr->sched_nice < task_nice(p) &&
 		    !is_nice_reduction(p, attr->sched_nice))
@@ -516,6 +523,9 @@ static int user_check_sched_setscheduler(struct task_struct *p,
 	/* Normal users shall not reset the sched_reset_on_fork flag: */
 	if (p->sched_reset_on_fork && !reset_on_fork)
 		goto req_priv;
+
+#endif
+    PANIC("");
 
 	return 0;
 
@@ -790,6 +800,8 @@ static int _sched_setscheduler(struct task_struct *p, int policy,
 
 	return __sched_setscheduler(p, &attr, check, true);
 }
+
+#if 0
 /**
  * sched_setscheduler - change the scheduling policy and/or RT priority of a thread.
  * @p: the task in question.
@@ -818,6 +830,7 @@ int sched_setattr_nocheck(struct task_struct *p, const struct sched_attr *attr)
 	return __sched_setscheduler(p, attr, false, true);
 }
 EXPORT_SYMBOL_GPL(sched_setattr_nocheck);
+#endif /* CL */
 
 /**
  * sched_setscheduler_nocheck - change the scheduling policy and/or RT priority of a thread from kernel-space.
@@ -838,6 +851,7 @@ int sched_setscheduler_nocheck(struct task_struct *p, int policy,
 	return _sched_setscheduler(p, policy, param, false);
 }
 
+#if 0
 /*
  * SCHED_FIFO is a broken scheduler model; that is, it is fundamentally
  * incapable of resource management, which is the one thing an OS really should

@@ -385,6 +385,8 @@ static void cpuhp_bp_sync_dead(unsigned int cpu)
 static inline void cpuhp_bp_sync_dead(unsigned int cpu) { }
 #endif /* !CONFIG_HOTPLUG_CORE_SYNC_DEAD */
 
+#endif /* CL */
+
 #ifdef CONFIG_HOTPLUG_CORE_SYNC_FULL
 /**
  * cpuhp_ap_sync_alive - Synchronize AP with the control CPU once it is alive
@@ -458,14 +460,11 @@ static inline int cpuhp_bp_sync_alive(unsigned int cpu) { return 0; }
 static inline bool cpuhp_can_boot_ap(unsigned int cpu) { return true; }
 #endif /* !CONFIG_HOTPLUG_CORE_SYNC_FULL */
 
-#endif /* CL */
-
 /* Serializes the updates to cpu_online_mask, cpu_present_mask */
 static DEFINE_MUTEX(cpu_add_remove_lock);
 bool cpuhp_tasks_frozen;
 EXPORT_SYMBOL_GPL(cpuhp_tasks_frozen);
 
-#if 0
 /*
  * The following two APIs (cpu_maps_update_begin/done) must be used when
  * attempting to serialize the updates to cpu_online_mask & cpu_present_mask.
@@ -479,7 +478,6 @@ void cpu_maps_update_done(void)
 {
 	mutex_unlock(&cpu_add_remove_lock);
 }
-#endif
 
 /*
  * If set, cpu_up and cpu_down will return -EBUSY and do nothing.
@@ -602,7 +600,6 @@ static void lockdep_release_cpus_lock(void)
 
 #endif	/* CONFIG_HOTPLUG_CPU */
 
-#if 0
 /*
  * Architectures that need SMT-specific errata handling during SMT hotplug
  * should override this.
@@ -764,7 +761,6 @@ cpuhp_reset_state(int cpu, struct cpuhp_cpu_state *st,
 	if (cpu_dying(cpu) != !bringup)
 		set_cpu_dying(cpu, !bringup);
 }
-#endif /* CL */
 
 /* Regular hotplug invocation of the AP hotplug thread */
 static void __cpuhp_kick_ap(struct cpuhp_cpu_state *st)
@@ -783,7 +779,6 @@ static void __cpuhp_kick_ap(struct cpuhp_cpu_state *st)
 	wait_for_ap_thread(st, st->bringup);
 }
 
-#if 0
 static int cpuhp_kick_ap(int cpu, struct cpuhp_cpu_state *st,
 			 enum cpuhp_state target)
 {
@@ -800,6 +795,7 @@ static int cpuhp_kick_ap(int cpu, struct cpuhp_cpu_state *st,
 	return ret;
 }
 
+#if 0
 static int bringup_wait_for_ap_online(unsigned int cpu)
 {
 	struct cpuhp_cpu_state *st = per_cpu_ptr(&cpuhp_state, cpu);
@@ -873,7 +869,6 @@ static int bringup_cpu(unsigned int cpu)
 	struct task_struct *idle = idle_thread_get(cpu);
 	int ret;
 
-#if 0
 	if (!cpuhp_can_boot_ap(cpu))
 		return -EAGAIN;
 
@@ -892,6 +887,7 @@ static int bringup_cpu(unsigned int cpu)
 	if (ret)
 		goto out_unlock;
 
+#if 0
 	ret = cpuhp_bp_sync_alive(cpu);
 	if (ret)
 		goto out_unlock;
@@ -904,14 +900,14 @@ static int bringup_cpu(unsigned int cpu)
 
 	if (st->target <= CPUHP_AP_ONLINE_IDLE)
 		return 0;
+#endif
+    PANIC("");
 
 	return cpuhp_kick_ap(cpu, st, st->target);
 
 out_unlock:
 	irq_unlock_sparse();
 	return ret;
-#endif
-    PANIC("");
 }
 #endif
 
@@ -930,7 +926,6 @@ static int finish_cpu(unsigned int cpu)
 	return 0;
 }
 
-#if 0
 /*
  * Hotplug state machine related functions
  */
@@ -1006,6 +1001,7 @@ static inline int cpuhp_invoke_callback_range(bool bringup,
 	return __cpuhp_invoke_callback_range(bringup, cpu, st, target, false);
 }
 
+#if 0
 static inline void cpuhp_invoke_callback_range_nofail(bool bringup,
 						      unsigned int cpu,
 						      struct cpuhp_cpu_state *st,
@@ -1013,6 +1009,7 @@ static inline void cpuhp_invoke_callback_range_nofail(bool bringup,
 {
 	__cpuhp_invoke_callback_range(bringup, cpu, st, target, true);
 }
+#endif /* CL */
 
 static inline bool can_rollback_cpu(struct cpuhp_cpu_state *st)
 {
@@ -1035,6 +1032,7 @@ static int cpuhp_up_callbacks(unsigned int cpu, struct cpuhp_cpu_state *st,
 	int ret = 0;
 
 	ret = cpuhp_invoke_callback_range(true, cpu, st, target);
+#if 0
 	if (ret) {
 		pr_debug("CPU UP failed (%d) CPU %u state %s (%d)\n",
 			 ret, cpu, cpuhp_get_step(st->state)->name,
@@ -1045,6 +1043,8 @@ static int cpuhp_up_callbacks(unsigned int cpu, struct cpuhp_cpu_state *st,
 			WARN_ON(cpuhp_invoke_callback_range(false, cpu, st,
 							    prev_state));
 	}
+#endif
+    PANIC("");
 	return ret;
 }
 
@@ -1078,6 +1078,7 @@ static void cpuhp_thread_fun(unsigned int cpu)
 	bool bringup = st->bringup;
 	enum cpuhp_state state;
 
+#if 0
 	if (WARN_ON_ONCE(!st->should_run))
 		return;
 
@@ -1135,8 +1136,9 @@ end:
 
 	if (!st->should_run)
 		complete_ap_thread(st, bringup);
+#endif
+    PANIC("");
 }
-#endif /* CL */
 
 /* Invoke a single callback on a remote cpu */
 static int
@@ -1190,7 +1192,6 @@ cpuhp_invoke_ap_callback(int cpu, enum cpuhp_state state, bool bringup,
 	return ret;
 }
 
-#if 0
 static int cpuhp_kick_ap_work(unsigned int cpu)
 {
 	struct cpuhp_cpu_state *st = per_cpu_ptr(&cpuhp_state, cpu);
@@ -1236,7 +1237,6 @@ void __init cpuhp_threads_init(void)
 	BUG_ON(smpboot_register_percpu_thread(&cpuhp_threads));
 	kthread_unpark(this_cpu_read(cpuhp_state.thread));
 }
-#endif /* CL */
 
 #ifdef CONFIG_HOTPLUG_CPU
 #ifndef arch_clear_mm_cpumask_cpu
@@ -1655,7 +1655,6 @@ void cpuhp_online_idle(enum cpuhp_state state)
     PANIC("");
 }
 
-#if 0
 /* Requires cpu_add_remove_lock to be held */
 static int _cpu_up(unsigned int cpu, int tasks_frozen, enum cpuhp_state target)
 {
@@ -1753,6 +1752,7 @@ out:
 	return err;
 }
 
+#if 0
 /**
  * cpu_device_up - Bring up a cpu device
  * @dev: Pointer to the cpu device to online
@@ -1804,6 +1804,7 @@ int bringup_hibernate_cpu(unsigned int sleep_cpu)
 	}
 	return 0;
 }
+#endif /* CL */
 
 static void __init cpuhp_bringup_mask(const struct cpumask *mask, unsigned int ncpus,
 				      enum cpuhp_state target)
@@ -1924,6 +1925,7 @@ void __init bringup_nonboot_cpus(unsigned int max_cpus)
 	cpuhp_bringup_mask(cpu_present_mask, max_cpus, CPUHP_ONLINE);
 }
 
+#if 0
 #ifdef CONFIG_PM_SLEEP_SMP
 static cpumask_var_t frozen_cpus;
 

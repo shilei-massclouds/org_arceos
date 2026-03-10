@@ -446,6 +446,7 @@ __sigqueue_alloc(int sig, struct task_struct *t, gfp_t gfp_flags,
 	}
 	return q;
 }
+#endif /* CL */
 
 static void __sigqueue_free(struct sigqueue *q)
 {
@@ -485,6 +486,7 @@ void flush_signals(struct task_struct *t)
 }
 EXPORT_SYMBOL(flush_signals);
 
+#if 0
 #ifdef CONFIG_POSIX_TIMERS
 static void __flush_itimer_signals(struct sigpending *pending)
 {
@@ -521,6 +523,8 @@ void flush_itimer_signals(void)
 }
 #endif
 
+#endif /* CL */
+
 void ignore_signals(struct task_struct *t)
 {
 	int i;
@@ -531,6 +535,7 @@ void ignore_signals(struct task_struct *t)
 	flush_signals(t);
 }
 
+#if 0
 /*
  * Flush all handlers for a task.
  */

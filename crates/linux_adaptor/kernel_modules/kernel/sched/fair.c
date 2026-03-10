@@ -8849,11 +8849,8 @@ static void set_task_max_allowed_capacity(struct task_struct *p)
 
 static void set_cpus_allowed_fair(struct task_struct *p, struct affinity_context *ctx)
 {
-#if 0
 	set_cpus_allowed_common(p, ctx);
 	set_task_max_allowed_capacity(p);
-#endif
-    PANIC("");
 }
 
 static int

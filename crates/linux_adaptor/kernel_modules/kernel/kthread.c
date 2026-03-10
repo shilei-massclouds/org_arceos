@@ -150,6 +150,7 @@ void free_kthread_struct(struct task_struct *k)
 	kfree(kthread->full_name);
 	kfree(kthread);
 }
+#endif /* CL */
 
 /**
  * kthread_should_stop - should this kthread return now?
@@ -186,6 +187,7 @@ bool kthread_should_park(void)
 }
 EXPORT_SYMBOL_GPL(kthread_should_park);
 
+#if 0
 bool kthread_should_stop_or_park(void)
 {
 	struct kthread *kthread = __to_kthread(current);
@@ -270,6 +272,7 @@ void *kthread_probe_data(struct task_struct *task)
 		copy_from_kernel_nofault(&data, &kthread->data, sizeof(data));
 	return data;
 }
+#endif /* CL */
 
 static void __kthread_parkme(struct kthread *self)
 {
@@ -305,8 +308,6 @@ void kthread_parkme(void)
 	__kthread_parkme(to_kthread(current));
 }
 EXPORT_SYMBOL_GPL(kthread_parkme);
-
-#endif /* CL */
 
 /**
  * kthread_exit - Cause the current kthread return @result to kthread_stop().
@@ -347,6 +348,7 @@ void __noreturn kthread_complete_and_exit(struct completion *comp, long code)
 	kthread_exit(code);
 }
 EXPORT_SYMBOL(kthread_complete_and_exit);
+#endif /* CL */
 
 static int kthread(void *_create)
 {
@@ -401,8 +403,6 @@ static int kthread(void *_create)
 	kthread_exit(ret);
 }
 
-#endif /* CL */
-
 /* called from kernel_clone() to get node information for about to be created task */
 int tsk_fork_get_node(struct task_struct *tsk)
 {
@@ -413,7 +413,6 @@ int tsk_fork_get_node(struct task_struct *tsk)
 	return NUMA_NO_NODE;
 }
 
-#if 0
 static void create_kthread(struct kthread_create_info *create)
 {
 	int pid;
@@ -597,7 +596,6 @@ struct task_struct *kthread_create_on_cpu(int (*threadfn)(void *data),
 	return p;
 }
 EXPORT_SYMBOL(kthread_create_on_cpu);
-#endif /* CL */
 
 void kthread_set_per_cpu(struct task_struct *k, int cpu)
 {
@@ -625,7 +623,6 @@ bool kthread_is_per_cpu(struct task_struct *p)
 	return test_bit(KTHREAD_IS_PER_CPU, &kthread->flags);
 }
 
-#if 0
 /**
  * kthread_unpark - unpark a thread created by kthread_create().
  * @k:		thread created by kthread_create().
@@ -696,6 +693,7 @@ int kthread_park(struct task_struct *k)
 }
 EXPORT_SYMBOL_GPL(kthread_park);
 
+#if 0
 /**
  * kthread_stop - stop a thread created by kthread_create().
  * @k: thread created by kthread_create().
@@ -750,6 +748,7 @@ int kthread_stop_put(struct task_struct *k)
 	return ret;
 }
 EXPORT_SYMBOL(kthread_stop_put);
+#endif /* CL */
 
 int kthreadd(void *unused)
 {
@@ -789,6 +788,7 @@ int kthreadd(void *unused)
 	return 0;
 }
 
+#if 0
 void __kthread_init_worker(struct kthread_worker *worker,
 				const char *name,
 				struct lock_class_key *key)

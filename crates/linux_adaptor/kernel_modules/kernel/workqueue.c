@@ -1054,7 +1054,6 @@ static void worker_enter_idle(struct worker *worker)
 	WARN_ON_ONCE(pool->nr_workers == pool->nr_idle && pool->nr_running);
 }
 
-#if 0
 /**
  * worker_leave_idle - leave idle state
  * @worker: worker which is leaving idle state
@@ -1074,7 +1073,6 @@ static void worker_leave_idle(struct worker *worker)
 	pool->nr_idle--;
 	list_del_init(&worker->entry);
 }
-#endif /* CL */
 
 /**
  * find_worker_executing_work - find worker which is executing a work
@@ -1412,6 +1410,7 @@ void wq_worker_running(struct task_struct *task)
 
 	WRITE_ONCE(worker->sleeping, 0);
 }
+#endif /* CL */
 
 /**
  * wq_worker_sleeping - a worker is going to sleep
@@ -1439,6 +1438,7 @@ void wq_worker_sleeping(struct task_struct *task)
 	if (READ_ONCE(worker->sleeping))
 		return;
 
+#if 0
 	WRITE_ONCE(worker->sleeping, 1);
 	raw_spin_lock_irq(&pool->lock);
 
@@ -1457,8 +1457,11 @@ void wq_worker_sleeping(struct task_struct *task)
 		worker->current_pwq->stats[PWQ_STAT_CM_WAKEUP]++;
 
 	raw_spin_unlock_irq(&pool->lock);
+#endif
+    PANIC("");
 }
 
+#if 0
 /**
  * wq_worker_tick - a scheduler tick occurred while a kworker is running
  * @task: task currently running
@@ -3032,7 +3035,6 @@ static void pool_mayday_timeout(struct timer_list *t)
 	mod_timer(&pool->mayday_timer, jiffies + MAYDAY_INTERVAL);
 }
 
-#if 0
 /**
  * maybe_create_worker - create a new worker if necessary
  * @pool: pool to create a new worker for
@@ -3121,7 +3123,6 @@ static bool manage_workers(struct worker *worker)
 	rcuwait_wake_up(&manager_wait);
 	return true;
 }
-#endif /* CL */
 
 /**
  * process_one_work - process single work
@@ -3333,7 +3334,6 @@ static void set_pf_worker(bool val)
 	mutex_unlock(&wq_pool_attach_mutex);
 }
 
-#if 0
 /**
  * worker_thread - the worker thread function
  * @__worker: self
@@ -3419,7 +3419,6 @@ sleep:
 	schedule();
 	goto woke_up;
 }
-#endif /* CL */
 
 /**
  * rescuer_thread - the rescuer thread function
@@ -5397,6 +5396,7 @@ int apply_workqueue_attrs(struct workqueue_struct *wq,
 
 	return ret;
 }
+#endif /* CL */
 
 /**
  * unbound_wq_update_pwq - update a pwq slot for CPU hot[un]plug
@@ -5466,7 +5466,6 @@ out_unlock:
 	mutex_unlock(&wq->mutex);
 	put_pwq_unlocked(old_pwq);
 }
-#endif /* CL */
 
 static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 {
@@ -6481,6 +6480,7 @@ void wq_worker_comm(char *buf, size_t size, struct task_struct *task)
 
 	mutex_unlock(&wq_pool_attach_mutex);
 }
+#endif /* CL */
 
 #ifdef CONFIG_SMP
 
@@ -6643,6 +6643,7 @@ int workqueue_prepare_cpu(unsigned int cpu)
 	}
 	return 0;
 }
+#endif /* CL */
 
 int workqueue_online_cpu(unsigned int cpu)
 {
@@ -6723,6 +6724,7 @@ int workqueue_offline_cpu(unsigned int cpu)
 	return 0;
 }
 
+#if 0
 struct work_for_cpu {
 	struct work_struct work;
 	long (*fn)(void *);
@@ -6788,6 +6790,7 @@ long work_on_cpu_safe_key(int cpu, long (*fn)(void *),
 EXPORT_SYMBOL_GPL(work_on_cpu_safe_key);
 #endif /* CONFIG_SMP */
 
+#if 0
 #ifdef CONFIG_FREEZER
 
 /**

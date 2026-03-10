@@ -172,7 +172,6 @@ void __init setup_smp(void)
 			set_cpu_possible(cpuid, true);
 }
 
-#if 0
 static int start_secondary_cpu(int cpu, struct task_struct *tidle)
 {
 	if (cpu_ops->cpu_start)
@@ -206,6 +205,7 @@ void __init smp_cpus_done(unsigned int max_cpus)
 {
 }
 
+#if 0
 /*
  * C entry point for a secondary processor.
  */

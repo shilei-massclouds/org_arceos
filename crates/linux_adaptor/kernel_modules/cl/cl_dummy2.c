@@ -97,9 +97,6 @@ static DEFINE_RAW_SPINLOCK(s2idle_lock);
 // drivers/cpufreq/cpufreq.c
 DEFINE_PER_CPU(unsigned long, cpufreq_pressure);
 
-// kernel/events/core.c
-struct static_key perf_swevent_enabled[PERF_COUNT_SW_MAX];
-
 // kernel/profile.c
 int prof_on __read_mostly;
 
@@ -136,6 +133,8 @@ void key_put(struct key *key)
 }
 
 // kernel/events/core.c
+struct static_key perf_swevent_enabled[PERF_COUNT_SW_MAX];
+
 int perf_event_init_task(struct task_struct *child, u64 clone_flags)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -144,6 +143,17 @@ int perf_event_init_task(struct task_struct *child, u64 clone_flags)
 void perf_event_fork(struct task_struct *task)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void perf_event_comm(struct task_struct *task, bool exec)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int perf_event_init_cpu(unsigned int cpu)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
 }
 
 // kernel/auditsc.c

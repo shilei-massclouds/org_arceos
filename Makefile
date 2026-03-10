@@ -232,6 +232,9 @@ clean: clean_c
 clean_dist: clean
 	make -C crates/linux_adaptor/kernel_modules clean
 
+symtab:
+	riscv64-linux-gnu-nm --numeric-sort $(OUT_DIR)/$(APP_NAME)_riscv64-dp1000.elf > kernel.syms
+
 clean_c::
 	rm -rf ulib/axlibc/build_*
 	rm -rf $(app-objs)
@@ -239,4 +242,4 @@ clean_c::
 .PHONY: all defconfig oldconfig \
 	build disasm run justrun debug \
 	clippy doc doc_check_missing fmt fmt_c unittest unittest_no_fail_fast \
-	disk_img clean clean_dist clean_c
+	disk_img clean clean_dist clean_c symtab

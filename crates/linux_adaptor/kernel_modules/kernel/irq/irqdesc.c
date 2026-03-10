@@ -440,7 +440,6 @@ struct irq_desc *irq_to_desc(unsigned int irq)
 EXPORT_SYMBOL_GPL(irq_to_desc);
 #endif
 
-#if 0
 void irq_lock_sparse(void)
 {
 	mutex_lock(&sparse_irq_lock);
@@ -450,7 +449,6 @@ void irq_unlock_sparse(void)
 {
 	mutex_unlock(&sparse_irq_lock);
 }
-#endif /* CL */
 
 static struct irq_desc *alloc_desc(int irq, int node, unsigned int flags,
 				   const struct cpumask *affinity,

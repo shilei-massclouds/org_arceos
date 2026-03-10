@@ -1807,12 +1807,9 @@ static int copy_fs(unsigned long clone_flags, struct task_struct *tsk)
 		spin_unlock(&fs->lock);
 		return 0;
 	}
-#if 0
 	tsk->fs = copy_fs_struct(fs);
 	if (!tsk->fs)
 		return -ENOMEM;
-#endif
-    PANIC("");
 	return 0;
 }
 
@@ -2747,8 +2744,6 @@ fork_out:
 	return ERR_PTR(retval);
 }
 
-#if 0
-
 static inline void init_idle_pids(struct task_struct *idle)
 {
 	enum pid_type type;
@@ -2785,6 +2780,7 @@ struct task_struct * __init fork_idle(int cpu)
 	return task;
 }
 
+#if 0
 /*
  * This is like kernel_clone(), but shaved down and tailored to just
  * creating io_uring workers. It returns a created task, or an error pointer.

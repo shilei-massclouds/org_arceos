@@ -162,8 +162,19 @@ void start_sched_earlier()
     signals_init();
 }
 
+void start_kthreadd(void)
+{
+    int pid;
+
+    pid = kernel_thread(kthreadd, NULL, NULL, CLONE_FS | CLONE_FILES);
+    rcu_read_lock();
+    kthreadd_task = find_task_by_pid_ns(pid, &init_pid_ns);
+    rcu_read_unlock();
+}
+
 void init_smp(void)
 {
     smp_prepare_cpus(setup_max_cpus);
+    smp_init();
     PANIC("");
 }

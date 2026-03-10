@@ -14,6 +14,7 @@
  */
 
 #include <linux/mmu_context.h>
+#include <linux/sched/debug.h>
 
 #include "sched.h"
 
@@ -83,6 +84,7 @@ void complete_all(struct completion *x)
 	raw_spin_unlock_irqrestore(&x->wait.lock, flags);
 }
 EXPORT_SYMBOL(complete_all);
+#endif /* CL */
 
 static inline long __sched
 do_wait_for_common(struct completion *x,
@@ -134,11 +136,13 @@ wait_for_common(struct completion *x, long timeout, int state)
 	return __wait_for_common(x, schedule_timeout, timeout, state);
 }
 
+#if 0
 static long __sched
 wait_for_common_io(struct completion *x, long timeout, int state)
 {
 	return __wait_for_common(x, io_schedule_timeout, timeout, state);
 }
+#endif /* CL */
 
 /**
  * wait_for_completion: - waits for completion of a task
@@ -175,6 +179,7 @@ wait_for_completion_timeout(struct completion *x, unsigned long timeout)
 }
 EXPORT_SYMBOL(wait_for_completion_timeout);
 
+#if 0
 /**
  * wait_for_completion_io: - waits for completion of a task
  * @x:  holds the state of this particular completion
@@ -246,6 +251,7 @@ wait_for_completion_interruptible_timeout(struct completion *x,
 	return wait_for_common(x, timeout, TASK_INTERRUPTIBLE);
 }
 EXPORT_SYMBOL(wait_for_completion_interruptible_timeout);
+#endif /* CL */
 
 /**
  * wait_for_completion_killable: - waits for completion of a task (killable)
@@ -266,6 +272,7 @@ int __sched wait_for_completion_killable(struct completion *x)
 }
 EXPORT_SYMBOL(wait_for_completion_killable);
 
+#if 0
 int __sched wait_for_completion_state(struct completion *x, unsigned int state)
 {
 	long t = wait_for_common(x, MAX_SCHEDULE_TIMEOUT, state);
