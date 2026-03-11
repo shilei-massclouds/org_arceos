@@ -28,26 +28,19 @@ impl PowerIf for PowerImpl {
 
     /// Shutdown the whole system.
     fn system_off() -> ! {
+        info!("Shutting down...");
         unsafe {
             legacy_shutdown();
         }
-        /*
-        info!("Shutting down...");
-        sbi_rt::system_reset(sbi_rt::Shutdown, sbi_rt::NoReason);
-        warn!("It should shutdown!");
-        loop {
-            axcpu::asm::halt();
-        }
-        */
     }
 
     /// Get the number of CPU cores available on this platform.
     fn cpu_num() -> usize {
-        unsafe { nr_cpu_ids }
+        unsafe { cl_get_nr_cpu_ids() }
     }
 }
 
 unsafe extern "C" {
     fn legacy_shutdown() -> !;
-    static nr_cpu_ids: usize;
+    fn cl_get_nr_cpu_ids() -> usize;
 }

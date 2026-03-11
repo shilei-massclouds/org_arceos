@@ -88,14 +88,12 @@ void swait_uninterruptible(struct swait_queue_head *wq)
     struct swait_queue wait;
     INIT_LIST_HEAD(&wait.task_list);
 
-    printk("%s: ..\n", __func__);
     if (prepare_to_swait_event(wq, &wait, TASK_UNINTERRUPTIBLE)) {
         return;
     }
 
     schedule();
     finish_swait(wq, &wait);
-    printk("%s: ok!\n", __func__);
 }
 
 int swait_count_sleepers(struct swait_queue_head *wq)
@@ -140,4 +138,9 @@ void *linux_memblock_alloc(phys_addr_t size, phys_addr_t align)
 int cl_cpu_id(void)
 {
     return smp_processor_id();
+}
+
+unsigned int cl_get_nr_cpu_ids(void)
+{
+    return nr_cpu_ids;
 }

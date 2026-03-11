@@ -25,6 +25,7 @@ if [ -z "$1" ]; then
         "examples/task/yield"
         "examples/task/priority"
         "examples/task/parallel"
+        "examples/task/irq"
     )
 else
     test_list="$@"
@@ -115,7 +116,6 @@ for t in ${test_list[@]}; do
     source "$t/test_cmd"
 done
 
-#"rust/task/irq"
 #"rust/task/affinity"
 #"rust/task/wait_queue"
 

@@ -1,2 +1,1 @@
-test_one "" "expect_info_smp1_fifo.out"
-test_one "SMP=4" "expect_info_smp4_fifo.out"
+test_one "LOG=info" "expect_info_smp8_linux.out"
