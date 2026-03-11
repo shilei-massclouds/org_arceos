@@ -1645,10 +1645,7 @@ void cpuhp_online_idle(enum cpuhp_state state)
 	stop_machine_unpark(smp_processor_id());
 
 	st->state = CPUHP_AP_ONLINE_IDLE;
-#if 0
 	complete_ap_thread(st, true);
-#endif
-    PANIC("");
 }
 
 /* Requires cpu_add_remove_lock to be held */
@@ -2681,7 +2678,9 @@ void __cpuhp_remove_state(enum cpuhp_state state, bool invoke)
 	cpus_read_unlock();
 }
 EXPORT_SYMBOL(__cpuhp_remove_state);
+#endif /* CL */
 
+#if 0
 #ifdef CONFIG_HOTPLUG_SMT
 static void cpuhp_offline_cpu_device(unsigned int cpu)
 {
@@ -2770,6 +2769,9 @@ int cpuhp_smt_enable(void)
 }
 #endif
 
+#endif /* CL */
+
+#if 0
 #if defined(CONFIG_SYSFS) && defined(CONFIG_HOTPLUG_CPU)
 static ssize_t state_show(struct device *dev,
 			  struct device_attribute *attr, char *buf)
@@ -3101,6 +3103,8 @@ static int __init cpuhp_sysfs_init(void)
 device_initcall(cpuhp_sysfs_init);
 #endif /* CONFIG_SYSFS && CONFIG_HOTPLUG_CPU */
 
+#endif /* CL */
+
 /*
  * cpu_bit_bitmap[] is a special, "compressed" data structure that
  * represents all NR_CPUS bits binary values of 1<<nr.
@@ -3128,8 +3132,6 @@ EXPORT_SYMBOL_GPL(cpu_bit_bitmap);
 
 const DECLARE_BITMAP(cpu_all_bits, NR_CPUS) = CPU_BITS_ALL;
 EXPORT_SYMBOL(cpu_all_bits);
-
-#endif
 
 #ifdef CONFIG_INIT_ALL_POSSIBLE
 struct cpumask __cpu_possible_mask __ro_after_init
