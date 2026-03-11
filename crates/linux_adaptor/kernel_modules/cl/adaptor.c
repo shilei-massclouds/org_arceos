@@ -73,7 +73,6 @@ int swait_timeout_until(struct swait_queue_head *wq,
                         void *opaque)
 {
     long timeout = msecs_to_jiffies(msecs);
-    printk("%s: msecs(%lu) timeout(%lu)\n", __func__, msecs, timeout);
     return swait_event_timeout_exclusive(*wq, condition(opaque), timeout);
 }
 
@@ -82,6 +81,27 @@ void swait_until(struct swait_queue_head *wq,
                  void *opaque)
 {
     swait_event_exclusive(*wq, condition(opaque));
+}
+
+void swait_uninterruptible(struct swait_queue_head *wq)
+{
+    struct swait_queue wait;
+    INIT_LIST_HEAD(&wait.task_list);
+
+    printk("%s: ..\n", __func__);
+    if (prepare_to_swait_event(wq, &wait, TASK_UNINTERRUPTIBLE)) {
+        return;
+    }
+
+    schedule();
+    finish_swait(wq, &wait);
+    printk("%s: ok!\n", __func__);
+}
+
+int swait_count_sleepers(struct swait_queue_head *wq)
+{
+	smp_mb();
+	return list_count_nodes(&wq->task_list);
 }
 
 /*

@@ -115,7 +115,6 @@ for t in ${test_list[@]}; do
     source "$t/test_cmd"
 done
 
-#"rust/task/tls"
 #"rust/task/irq"
 #"rust/task/affinity"
 #"rust/task/wait_queue"
