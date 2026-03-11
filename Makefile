@@ -216,7 +216,11 @@ unittest_no_fail_fast:
 
 # FixMe: Just for convenience. Remove it later.
 test:
+ifneq ($(filter command line,$(origin A)),)
+	@./scripts/app_test.sh $(A)
+else
 	@./scripts/app_test.sh
+endif
 
 disk_img:
 ifneq ($(wildcard $(DISK_IMG)),)

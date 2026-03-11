@@ -2544,8 +2544,6 @@ struct vmap_block {
 /* Queue of free and dirty vmap blocks, for allocation and flushing purposes */
 static DEFINE_PER_CPU(struct vmap_block_queue, vmap_block_queue);
 
-#if 0
-
 /*
  * In order to fast access to any "vmap_block" associated with a
  * specific address, we use a hash.
@@ -2612,6 +2610,7 @@ static unsigned long addr_to_vb_idx(unsigned long addr)
 	return addr;
 }
 
+#if 0
 static void *vmap_block_vaddr(unsigned long va_start, unsigned long pages_off)
 {
 	unsigned long addr;
@@ -2691,6 +2690,7 @@ static void *new_vmap_block(unsigned int order, gfp_t gfp_mask)
 
 	return vaddr;
 }
+#endif /* CL */
 
 static void free_vmap_block(struct vmap_block *vb)
 {
@@ -2746,7 +2746,6 @@ static void free_purged_blocks(struct list_head *purge_list)
 		free_vmap_block(vb);
 	}
 }
-#endif /* CL */
 
 static void purge_fragmented_blocks(int cpu)
 {
@@ -2880,6 +2879,7 @@ static void vb_free(unsigned long addr, unsigned long size)
 	} else
 		spin_unlock(&vb->lock);
 }
+#endif /* CL */
 
 static void _vm_unmap_aliases(unsigned long start, unsigned long end, int flush)
 {
@@ -2933,6 +2933,7 @@ static void _vm_unmap_aliases(unsigned long start, unsigned long end, int flush)
 	mutex_unlock(&vmap_purge_lock);
 }
 
+#if 0
 /**
  * vm_unmap_aliases - unmap outstanding lazy aliases in the vmap layer
  *
@@ -3281,7 +3282,6 @@ struct vm_struct *remove_vm_area(const void *addr)
 	return vm;
 }
 
-#if 0
 static inline void set_area_direct_map(const struct vm_struct *area,
 				       int (*set_direct_map)(struct page *page))
 {
@@ -3329,7 +3329,6 @@ static void vm_reset_perms(struct vm_struct *area)
 	_vm_unmap_aliases(start, end, flush_dmap);
 	set_area_direct_map(area, set_direct_map_default_noflush);
 }
-#endif /* CL */
 
 static void delayed_vfree_work(struct work_struct *w)
 {
@@ -3340,7 +3339,6 @@ static void delayed_vfree_work(struct work_struct *w)
 		vfree(llnode);
 }
 
-#if 0
 /**
  * vfree_atomic - release memory allocated by vmalloc()
  * @addr:	  memory base address
@@ -3364,7 +3362,6 @@ void vfree_atomic(const void *addr)
 	if (addr && llist_add((struct llist_node *)addr, &p->list))
 		schedule_work(&p->wq);
 }
-#endif /* CL */
 
 /**
  * vfree - Release memory allocated by vmalloc()
@@ -3388,7 +3385,6 @@ void vfree(const void *addr)
 	struct vm_struct *vm;
 	int i;
 
-#if 0
 	if (unlikely(in_interrupt())) {
 		vfree_atomic(addr);
 		return;
@@ -3410,6 +3406,7 @@ void vfree(const void *addr)
 
 	if (unlikely(vm->flags & VM_FLUSH_RESET_PERMS))
 		vm_reset_perms(vm);
+#if 0
 	for (i = 0; i < vm->nr_pages; i++) {
 		struct page *page = vm->pages[i];
 

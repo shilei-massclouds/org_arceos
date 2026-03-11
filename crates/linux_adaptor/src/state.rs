@@ -59,7 +59,6 @@ pub fn advance_to(state: LinuxAdaptorState) {
     for index in cur..state {
         // Note: index + 1 because the real range is (cur, state].
         StateCallbacks[index + 1]();
-        ax_println!("############## {:?} #########", index+1);
     }
 }
 

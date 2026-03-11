@@ -1,1 +1,1 @@
-test_one "LOG=debug" "expect_debug_smp1_linux.out"
+test_one "LOG=debug" "expect_debug_smp8_linux.out"

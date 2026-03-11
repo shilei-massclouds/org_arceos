@@ -16,15 +16,19 @@ CYAN_C="\x1b[36;1m"
 BLOD_C="\x1b[1m"
 END_C="\x1b[0m"
 
-test_list=(
-    "examples/helloworld"
-    "examples/memtest"
-    "examples/exception"
-    "examples/task/sleep"
-    "examples/task/yield"
-    "examples/task/priority"
-    "examples/task/parallel"
-)
+if [ -z "$1" ]; then
+    test_list=(
+        "examples/helloworld"
+        "examples/memtest"
+        "examples/exception"
+        "examples/task/sleep"
+        "examples/task/yield"
+        "examples/task/priority"
+        "examples/task/parallel"
+    )
+else
+    test_list="$@"
+fi
 
 function compare() {
     local actual=$1
