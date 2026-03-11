@@ -55,7 +55,6 @@ void complete(struct completion *x)
 }
 EXPORT_SYMBOL(complete);
 
-#if 0
 /**
  * complete_all: - signals all threads waiting on this completion
  * @x:  holds the state of this particular completion
@@ -84,7 +83,6 @@ void complete_all(struct completion *x)
 	raw_spin_unlock_irqrestore(&x->wait.lock, flags);
 }
 EXPORT_SYMBOL(complete_all);
-#endif /* CL */
 
 static inline long __sched
 do_wait_for_common(struct completion *x,

@@ -4,7 +4,10 @@
  * The implementation of the wait_bit*() and related waiting APIs:
  */
 
+#include <linux/hash.h>
+#include <linux/sched.h>
 #include <linux/wait.h>
+#include <linux/wait_bit.h>
 
 #define WAIT_TABLE_BITS 8
 #define WAIT_TABLE_SIZE (1 << WAIT_TABLE_BITS)
@@ -120,6 +123,7 @@ int __sched out_of_line_wait_on_bit_lock(void *word, int bit,
 	return __wait_on_bit_lock(wq_head, &wq_entry, action, mode);
 }
 EXPORT_SYMBOL(out_of_line_wait_on_bit_lock);
+#endif /* CL */
 
 void __wake_up_bit(struct wait_queue_head *wq_head, void *word, int bit)
 {
@@ -130,6 +134,7 @@ void __wake_up_bit(struct wait_queue_head *wq_head, void *word, int bit)
 }
 EXPORT_SYMBOL(__wake_up_bit);
 
+#if 0
 /**
  * wake_up_bit - wake up a waiter on a bit
  * @word: the word being waited on, a kernel virtual address
@@ -152,6 +157,7 @@ void wake_up_bit(void *word, int bit)
 	__wake_up_bit(bit_waitqueue(word, bit), word, bit);
 }
 EXPORT_SYMBOL(wake_up_bit);
+#endif /* CL */
 
 wait_queue_head_t *__var_waitqueue(void *p)
 {
@@ -159,6 +165,7 @@ wait_queue_head_t *__var_waitqueue(void *p)
 }
 EXPORT_SYMBOL(__var_waitqueue);
 
+#if 0
 static int
 var_wake_function(struct wait_queue_entry *wq_entry, unsigned int mode,
 		  int sync, void *arg)
@@ -190,6 +197,7 @@ void init_wait_var_entry(struct wait_bit_queue_entry *wbq_entry, void *var, int 
 	};
 }
 EXPORT_SYMBOL(init_wait_var_entry);
+#endif /* CL */
 
 void wake_up_var(void *var)
 {
@@ -197,6 +205,7 @@ void wake_up_var(void *var)
 }
 EXPORT_SYMBOL(wake_up_var);
 
+#if 0
 __sched int bit_wait(struct wait_bit_key *word, int mode)
 {
 	schedule();

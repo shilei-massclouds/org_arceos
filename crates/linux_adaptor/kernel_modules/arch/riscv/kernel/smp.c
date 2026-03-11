@@ -338,12 +338,15 @@ bool smp_crash_stop_failed(void)
 }
 #endif
 
+#endif /* CL */
+
 void arch_smp_send_reschedule(int cpu)
 {
 	send_ipi_single(cpu, IPI_RESCHEDULE);
 }
 EXPORT_SYMBOL_GPL(arch_smp_send_reschedule);
 
+#if 0
 static void riscv_backtrace_ipi(cpumask_t *mask)
 {
 	send_ipi_mask(mask, IPI_CPU_BACKTRACE);

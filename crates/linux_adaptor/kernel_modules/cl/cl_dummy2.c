@@ -311,3 +311,10 @@ void __warn_printk(const char *fmt, ...)
 
 	return r;
 }
+
+// kernel/watchdog.c
+int lockup_detector_online_cpu(unsigned int cpu)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

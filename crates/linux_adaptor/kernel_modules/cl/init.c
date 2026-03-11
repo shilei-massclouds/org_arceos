@@ -204,7 +204,6 @@ void init_smp(void)
 #endif
 
     smp_init();
-    PANIC("");
 }
 
 static bool __init_or_module initcall_blacklisted(initcall_t fn)

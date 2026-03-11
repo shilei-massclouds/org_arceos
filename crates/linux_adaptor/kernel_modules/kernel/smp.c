@@ -453,7 +453,6 @@ static int generic_exec_single(int cpu, call_single_data_t *csd)
 	return 0;
 }
 
-#if 0
 /**
  * generic_smp_call_function_single_interrupt - Execute SMP IPI callbacks
  *
@@ -464,7 +463,6 @@ void generic_smp_call_function_single_interrupt(void)
 {
 	__flush_smp_call_function_queue(true);
 }
-#endif /* CL */
 
 /**
  * __flush_smp_call_function_queue - Flush pending smp-call-function callbacks
@@ -488,7 +486,6 @@ static void __flush_smp_call_function_queue(bool warn_cpu_offline)
 	static bool warned;
 	atomic_t *tbt;
 
-#if 0
 	lockdep_assert_irqs_disabled();
 
 	/* Allow waiters to send backtrace NMI from here onwards */
@@ -596,8 +593,6 @@ static void __flush_smp_call_function_queue(bool warn_cpu_offline)
 		csd = llist_entry(entry, typeof(*csd), node.llist);
 		csd_do_func(sched_ttwu_pending, entry, csd);
 	}
-#endif
-    PANIC("");
 }
 
 /**
@@ -1028,7 +1023,6 @@ void __init smp_init(void)
 
 	bringup_nonboot_cpus(setup_max_cpus);
 
-#if 0
 	num_nodes = num_online_nodes();
 	num_cpus  = num_online_cpus();
 	pr_info("Brought up %d node%s, %d CPU%s\n",
@@ -1036,8 +1030,6 @@ void __init smp_init(void)
 
 	/* Any cleanup work */
 	smp_cpus_done(setup_max_cpus);
-#endif
-    PANIC("");
 }
 
 /*

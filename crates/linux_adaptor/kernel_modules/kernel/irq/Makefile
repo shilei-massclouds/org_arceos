@@ -9,6 +9,7 @@ obj-y += dummychip.o
 obj-y += resend.o
 obj-y += ipi.o
 obj-y += ipi-mux.o
+obj-y += cpuhotplug.o
 obj-y += pm.o
 obj-y += proc.o
 obj-y += spurious.o

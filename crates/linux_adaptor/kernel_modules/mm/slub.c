@@ -4710,7 +4710,6 @@ static inline struct kmem_cache *cache_from_obj(struct kmem_cache *s, void *x)
 	return cachep;
 }
 
-#if 0
 /**
  * kmem_cache_free - Deallocate an object
  * @s: The cache the allocation was from.
@@ -4728,7 +4727,6 @@ void kmem_cache_free(struct kmem_cache *s, void *x)
 	slab_free(s, virt_to_slab(x), x, _RET_IP_);
 }
 EXPORT_SYMBOL(kmem_cache_free);
-#endif /* CL */
 
 static void free_large_kmalloc(struct folio *folio, void *object)
 {

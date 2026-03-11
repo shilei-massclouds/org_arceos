@@ -271,7 +271,6 @@ static inline void complete_ap_thread(struct cpuhp_cpu_state *st, bool bringup)
 	complete(done);
 }
 
-#if 0
 /*
  * The former STARTING/DYING states, ran with IRQs disabled and must not fail.
  */
@@ -279,7 +278,6 @@ static bool cpuhp_is_atomic_state(enum cpuhp_state state)
 {
 	return CPUHP_AP_IDLE_DEAD <= state && state < CPUHP_AP_ONLINE;
 }
-#endif /* CL */
 
 /* Synchronization state management */
 enum cpuhp_sync_state {
@@ -795,7 +793,6 @@ static int cpuhp_kick_ap(int cpu, struct cpuhp_cpu_state *st,
 	return ret;
 }
 
-#if 0
 static int bringup_wait_for_ap_online(unsigned int cpu)
 {
 	struct cpuhp_cpu_state *st = per_cpu_ptr(&cpuhp_state, cpu);
@@ -819,8 +816,6 @@ static int bringup_wait_for_ap_online(unsigned int cpu)
 		return -ECANCELED;
 	return 0;
 }
-
-#endif /* CL */
 
 #ifdef CONFIG_HOTPLUG_SPLIT_STARTUP
 static int cpuhp_kick_ap_alive(unsigned int cpu)
@@ -887,7 +882,6 @@ static int bringup_cpu(unsigned int cpu)
 	if (ret)
 		goto out_unlock;
 
-#if 0
 	ret = cpuhp_bp_sync_alive(cpu);
 	if (ret)
 		goto out_unlock;
@@ -900,8 +894,6 @@ static int bringup_cpu(unsigned int cpu)
 
 	if (st->target <= CPUHP_AP_ONLINE_IDLE)
 		return 0;
-#endif
-    PANIC("");
 
 	return cpuhp_kick_ap(cpu, st, st->target);
 
@@ -1030,7 +1022,6 @@ static int cpuhp_up_callbacks(unsigned int cpu, struct cpuhp_cpu_state *st,
 	int ret = 0;
 
 	ret = cpuhp_invoke_callback_range(true, cpu, st, target);
-#if 0
 	if (ret) {
 		pr_debug("CPU UP failed (%d) CPU %u state %s (%d)\n",
 			 ret, cpu, cpuhp_get_step(st->state)->name,
@@ -1041,8 +1032,6 @@ static int cpuhp_up_callbacks(unsigned int cpu, struct cpuhp_cpu_state *st,
 			WARN_ON(cpuhp_invoke_callback_range(false, cpu, st,
 							    prev_state));
 	}
-#endif
-    PANIC("");
 	return ret;
 }
 
@@ -1076,7 +1065,6 @@ static void cpuhp_thread_fun(unsigned int cpu)
 	bool bringup = st->bringup;
 	enum cpuhp_state state;
 
-#if 0
 	if (WARN_ON_ONCE(!st->should_run))
 		return;
 
@@ -1134,8 +1122,6 @@ end:
 
 	if (!st->should_run)
 		complete_ap_thread(st, bringup);
-#endif
-    PANIC("");
 }
 
 /* Invoke a single callback on a remote cpu */

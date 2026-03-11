@@ -61,6 +61,7 @@ void rcu_cblist_flush_enqueue(struct rcu_cblist *drclp,
 		WRITE_ONCE(srclp->len, 1);
 	}
 }
+#endif /* CL */
 
 /*
  * Dequeue the oldest rcu_head structure from the specified callback
@@ -79,7 +80,6 @@ struct rcu_head *rcu_cblist_dequeue(struct rcu_cblist *rclp)
 		rclp->tail = &rclp->head;
 	return rhp;
 }
-#endif /* CL */
 
 /* Set the length of an rcu_segcblist structure. */
 static void rcu_segcblist_set_len(struct rcu_segcblist *rsclp, long v)
@@ -373,6 +373,7 @@ bool rcu_segcblist_entrain(struct rcu_segcblist *rsclp,
 		WRITE_ONCE(rsclp->tails[i], &rhp->next);
 	return true;
 }
+#endif /* CL */
 
 /*
  * Extract only those callbacks ready to be invoked from the specified
@@ -397,6 +398,7 @@ void rcu_segcblist_extract_done_cbs(struct rcu_segcblist *rsclp,
 	rcu_segcblist_set_seglen(rsclp, RCU_DONE_TAIL, 0);
 }
 
+#if 0
 /*
  * Extract only those callbacks still pending (not yet ready to be
  * invoked) from the specified rcu_segcblist structure and place them in
@@ -431,6 +433,7 @@ void rcu_segcblist_insert_count(struct rcu_segcblist *rsclp,
 {
 	rcu_segcblist_add_len(rsclp, rclp->len);
 }
+#endif /* CL */
 
 /*
  * Move callbacks from the specified rcu_cblist to the beginning of the
@@ -455,6 +458,7 @@ void rcu_segcblist_insert_done_cbs(struct rcu_segcblist *rsclp,
 	rclp->tail = &rclp->head;
 }
 
+#if 0
 /*
  * Move callbacks from the specified rcu_cblist to the end of the
  * new-callbacks segment of the specified rcu_segcblist.
