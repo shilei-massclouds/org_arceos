@@ -34,6 +34,7 @@ members = [
     "examples/task/priority",
     "examples/task/parallel",
     "examples/task/irq",
+    "examples/task/wait_queue",
 
     "platforms/axplat-riscv64-dp1000",
 

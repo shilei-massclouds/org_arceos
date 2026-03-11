@@ -26,6 +26,7 @@ if [ -z "$1" ]; then
         "examples/task/priority"
         "examples/task/parallel"
         "examples/task/irq"
+        "examples/task/wait_queue"
     )
 else
     test_list="$@"
@@ -117,5 +118,3 @@ for t in ${test_list[@]}; do
 done
 
 #"rust/task/affinity"
-#"rust/task/wait_queue"
-

@@ -1,0 +1,34 @@
+smp = 8
+build_mode = release
+log_level = info
+
+Hello, main task
+wait_queue: test_wait()
+wait_queue: test_wait() OK!
+wait_timeout_until: tests begin
+wait_timeout_until: test tasks woken up by notification, spawn 16 tasks...
+wait_timeout_until: sleep for 100ms to let all tasks start
+wait_timeout_until: wake up all tasks who are waiting for timeout through notification
+wait_timeout_until: tasks woken up by notification test OK!
+wait_timeout_until: test tasks woken up by timeout, spawn 16 tasks...
+wait_timeout_until: wait for all tasks to finish
+wait_timeout_until: tasks woken up by timeout test OK!
+wait_timeout_until: test tasks woken up by notification or timeout, spawn 16 tasks...
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: ThreadId([0-9]\+) woken up by notification
+wait_timeout_until: test tasks woken up by notification or timeout, test OK!
+Shutting down...

@@ -1,0 +1,1 @@
+test_one "LOG=info" "expect_info_smp8_linux.out"

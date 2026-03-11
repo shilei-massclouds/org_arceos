@@ -50,7 +50,7 @@ OUT_CONFIG ?= $(PWD)/.axconfig.toml
 UIMAGE ?= n
 
 # App options
-A ?= examples/task/irq
+A ?= examples/task/wait_queue
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=
