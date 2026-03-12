@@ -4347,7 +4347,6 @@ void *__kmalloc_cache_node_noprof(struct kmem_cache *s, gfp_t gfpflags,
 }
 EXPORT_SYMBOL(__kmalloc_cache_node_noprof);
 
-#if 0
 static noinline void free_to_partial_list(
 	struct kmem_cache *s, struct slab *slab,
 	void *head, void *tail, int bulk_cnt,
@@ -4408,7 +4407,6 @@ static noinline void free_to_partial_list(
 		free_slab(s, slab_free);
 	}
 }
-#endif /* CL */
 
 /*
  * Slow path handling. This may still be called frequently since objects
@@ -4431,7 +4429,6 @@ static void __slab_free(struct kmem_cache *s, struct slab *slab,
 	unsigned long flags;
 	bool on_node_partial;
 
-#if 0
 	stat(s, FREE_SLOWPATH);
 
 	if (IS_ENABLED(CONFIG_SLUB_TINY) || kmem_cache_debug(s)) {
@@ -4494,6 +4491,7 @@ static void __slab_free(struct kmem_cache *s, struct slab *slab,
 		return;
 	}
 
+#if 0
 	/*
 	 * This slab was partially empty but not on the per-node partial list,
 	 * in which case we shouldn't manipulate its list, just return.

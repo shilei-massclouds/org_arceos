@@ -35,6 +35,7 @@ members = [
     "examples/task/parallel",
     "examples/task/irq",
     "examples/task/wait_queue",
+    "examples/task/affinity",
 
     "platforms/axplat-riscv64-dp1000",
 
@@ -80,6 +81,8 @@ axcpu = { path = "crates/axcpu_lx" }
 axalloc = { path = "crates/axalloc_lx" }
 axmm = { path = "crates/axmm_lx" }
 linux_adaptor = { path = "crates/linux_adaptor" }
+percpu = { path = "crates/percpu_lx" }
+percpu_macros = { path = "crates/percpu_macros_lx" }
 
 [profile.release]
 lto = true

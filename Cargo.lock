@@ -21,6 +21,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "affinity"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -345,7 +352,7 @@ dependencies = [
  "memory_addr",
  "page_table_entry",
  "page_table_multiarch",
- "percpu",
+ "percpu 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "riscv",
  "static_assertions",
  "tock-registers 0.9.0",
@@ -368,7 +375,7 @@ dependencies = [
  "memory_addr",
  "page_table_entry",
  "page_table_multiarch",
- "percpu",
+ "percpu 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "riscv",
  "static_assertions",
  "tock-registers 0.9.0",
@@ -593,7 +600,7 @@ dependencies = [
  "log",
  "memory_addr",
  "page_table_multiarch",
- "percpu",
+ "percpu 0.2.3",
 ]
 
 [[package]]
@@ -615,7 +622,7 @@ dependencies = [
  "kspin",
  "lazyinit",
  "log",
- "percpu",
+ "percpu 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -851,7 +858,7 @@ dependencies = [
  "lazyinit",
  "log",
  "multiboot",
- "percpu",
+ "percpu 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "raw-cpuid 11.6.0",
  "uart_16550",
  "x2apic",
@@ -874,6 +881,7 @@ dependencies = [
  "crate_interface",
  "ctor_bare",
  "linux_adaptor",
+ "percpu 0.2.3",
 ]
 
 [[package]]
@@ -903,9 +911,12 @@ dependencies = [
 name = "axtask"
 version = "0.2.0"
 dependencies = [
+ "axconfig",
  "axhal",
+ "cpumask",
  "linux_adaptor",
  "log",
+ "percpu 0.2.3",
 ]
 
 [[package]]
@@ -1126,6 +1137,15 @@ name = "core_detect"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f8f80099a98041a3d1622845c271458a2d73e688351bf3cb999266764b81d48"
+
+[[package]]
+name = "cpumask"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe4266f1bd910c087ff8c7848882217b2b079742877b21d29614c11c16087d70"
+dependencies = [
+ "bitmaps",
+]
 
 [[package]]
 name = "crate_interface"
@@ -1685,13 +1705,29 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 [[package]]
 name = "percpu"
 version = "0.2.3"
+dependencies = [
+ "percpu_macros 0.2.3",
+]
+
+[[package]]
+name = "percpu"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4099d82fafe5de80d486915dadfba68f99ea9eabe1ee4486711d8b77bc836484"
 dependencies = [
  "cfg-if",
- "percpu_macros",
+ "percpu_macros 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "spin 0.10.0",
  "x86",
+]
+
+[[package]]
+name = "percpu_macros"
+version = "0.2.3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

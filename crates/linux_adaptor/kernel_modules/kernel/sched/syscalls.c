@@ -262,6 +262,7 @@ int sched_core_idle_cpu(int cpu)
 }
 
 #endif
+#endif /* CL */
 
 /**
  * find_process_by_pid - find a process with a matching PID value.
@@ -289,7 +290,6 @@ static struct task_struct *find_get_task(pid_t pid)
 DEFINE_CLASS(find_get_task, struct task_struct *, if (_T) put_task_struct(_T),
 	     find_get_task(pid), pid_t pid)
 
-#endif /* CL */
 /*
  * sched_setparam() passes in -1 for its policy, to let the functions
  * it calls know not to change it.
@@ -339,7 +339,6 @@ static void __setscheduler_params(struct task_struct *p,
 	set_load_weight(p, true);
 }
 
-#if 0
 /*
  * Check the target process has a UID that matches the current process's:
  */
@@ -352,8 +351,6 @@ static bool check_same_owner(struct task_struct *p)
 	return (uid_eq(cred->euid, pcred->euid) ||
 		uid_eq(cred->euid, pcred->uid));
 }
-
-#endif /* CL */
 
 #ifdef CONFIG_UCLAMP_TASK
 
@@ -1183,6 +1180,7 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
 
 	return sched_attr_copy_to_user(uattr, &kattr, usize);
 }
+#endif /* CL */
 
 #ifdef CONFIG_SMP
 int dl_task_check_affinity(struct task_struct *p, const struct cpumask *mask)
@@ -1275,6 +1273,16 @@ long sched_setaffinity(pid_t pid, const struct cpumask *in_mask)
 	struct cpumask *user_mask;
 	int retval;
 
+    /*
+    {
+        // FixMe: remove it.
+        int cpu;
+        for_each_cpu(cpu, in_mask) {
+            printk("%s: cpu(%u)\n", __func__, cpu);
+        }
+    }
+    */
+
 	CLASS(find_get_task, p)(pid);
 	if (!p)
 		return -ESRCH;
@@ -1315,6 +1323,7 @@ long sched_setaffinity(pid_t pid, const struct cpumask *in_mask)
 	return retval;
 }
 
+#if 0
 static int get_user_cpu_mask(unsigned long __user *user_mask_ptr, unsigned len,
 			     struct cpumask *new_mask)
 {

@@ -995,8 +995,6 @@ static inline bool set_nr_if_polling(struct task_struct *p)
 #endif
 #endif
 
-#if 0
-
 static bool __wake_q_add(struct wake_q_head *head, struct task_struct *task)
 {
 	struct wake_q_node *node = &task->wake_q;
@@ -1083,7 +1081,6 @@ void wake_up_q(struct wake_q_head *head)
 		put_task_struct(task);
 	}
 }
-#endif /* CL */
 
 /*
  * resched_curr - mark rq's current task 'to be rescheduled now'.
@@ -2094,7 +2091,6 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 	ASSERT_EXCLUSIVE_WRITER(p->on_rq);
 }
 
-#if 0
 void deactivate_task(struct rq *rq, struct task_struct *p, int flags)
 {
 	SCHED_WARN_ON(flags & DEQUEUE_SLEEP);
@@ -2109,7 +2105,6 @@ void deactivate_task(struct rq *rq, struct task_struct *p, int flags)
 
 	dequeue_task(rq, p, flags);
 }
-#endif /* CL */
 
 static void block_task(struct rq *rq, struct task_struct *p, int flags)
 {

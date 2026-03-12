@@ -144,3 +144,19 @@ unsigned int cl_get_nr_cpu_ids(void)
 {
     return nr_cpu_ids;
 }
+
+void *cl_this_cpu_ptr(void *pcp, int size)
+{
+    switch (size) {
+    case 1:
+        return this_cpu_ptr((unsigned char *)pcp);
+    case 2:
+        return this_cpu_ptr((unsigned short *)pcp);
+    case 4:
+        return this_cpu_ptr((unsigned int *)pcp);
+    case 8:
+        return this_cpu_ptr((unsigned long *)pcp);
+    default:
+    }
+    PANIC("unknown type size!");
+}

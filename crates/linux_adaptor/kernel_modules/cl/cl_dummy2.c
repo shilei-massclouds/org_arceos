@@ -126,6 +126,18 @@ int security_prepare_creds(struct cred *new, const struct cred *old, gfp_t gfp)
     return 0;
 }
 
+int security_task_alloc(struct task_struct *task, unsigned long clone_flags)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_task_setscheduler(struct task_struct *p)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
 // security/keys/key.c
 void key_put(struct key *key)
 {
@@ -158,13 +170,6 @@ int perf_event_init_cpu(unsigned int cpu)
 
 // kernel/auditsc.c
 int audit_alloc(struct task_struct *tsk)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return 0;
-}
-
-// security/security.c
-int security_task_alloc(struct task_struct *task, unsigned long clone_flags)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;

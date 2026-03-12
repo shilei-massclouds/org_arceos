@@ -125,3 +125,12 @@ pub(crate) fn init_secondary(cpu_id: usize) {
         IS_BSP.write_current_raw(false);
     }
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ax_init_ap_percpu(cpuid: usize) {
+    // FixMe:
+    unsafe {
+        CPU_ID.write_current_raw(cpuid);
+        IS_BSP.write_current_raw(false);
+    }
+}

@@ -27,6 +27,7 @@ if [ -z "$1" ]; then
         "examples/task/parallel"
         "examples/task/irq"
         "examples/task/wait_queue"
+        "examples/task/affinity"
     )
 else
     test_list="$@"
@@ -116,5 +117,3 @@ for t in ${test_list[@]}; do
     echo -e "${CYAN_C}Testing${END_C} $t:"
     source "$t/test_cmd"
 done
-
-#"rust/task/affinity"

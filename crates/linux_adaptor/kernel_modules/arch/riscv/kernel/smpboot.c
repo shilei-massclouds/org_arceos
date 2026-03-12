@@ -213,6 +213,12 @@ asmlinkage __visible void smp_callin(void)
 	struct mm_struct *mm = &init_mm;
 	unsigned int curr_cpuid = smp_processor_id();
 
+    // FixMe:
+    {
+        extern void ax_init_ap_percpu(unsigned int cpuid);
+        ax_init_ap_percpu(curr_cpuid);
+    }
+
 	if (has_vector()) {
 		/*
 		 * Return as early as possible so the hart with a mismatching

@@ -1,13 +1,14 @@
 //! Task APIs for multi-task configuration.
 
 use alloc::{string::String, sync::Arc, boxed::Box};
-use core::ffi::{c_void, c_int, c_long};
+use core::ffi::{c_void, c_int, c_long, c_char};
 use linux_adaptor::LinuxAdaptorState;
 
 const MAX_NICE: isize =  19;
 const MIN_NICE: isize = -20;
 
-pub struct AxCpuMask;
+/// The wrapper type for [`cpumask::CpuMask`] with SMP configuration.
+pub type AxCpuMask = cpumask::CpuMask<{ axconfig::plat::MAX_CPU_NUM }>;
 
 /*
 use kernel_guard::NoPreemptIrqSave;
@@ -51,9 +52,6 @@ where
 }
 
 /*
-/// The wrapper type for [`cpumask::CpuMask`] with SMP configuration.
-pub type AxCpuMask = cpumask::CpuMask<{ axconfig::plat::MAX_CPU_NUM }>;
-
 cfg_if::cfg_if! {
     if #[cfg(feature = "sched-rr")] {
         const MAX_TIME_SLICE: usize = 5;
@@ -237,8 +235,19 @@ pub fn set_priority(nice: isize) -> bool {
 /// Returns `true` if the affinity is set successfully.
 ///
 /// TODO: support set the affinity for other tasks.
-pub fn set_current_affinity(_cpumask: AxCpuMask) -> bool {
-    unimplemented!("set_current_affinity");
+pub fn set_current_affinity(cpumask: AxCpuMask) -> bool {
+    //error!("...");
+    let mut i = 0;
+    let mut mask: [u8; 8] = [0; 8];
+    for byte in cpumask.as_bytes() {
+        mask[i] = *byte;
+        i += 1;
+    }
+    //error!("cpumask: {}", u64::from_le_bytes(mask));
+    let pid = current().id().as_u64() as i32;
+    unsafe {
+        sched_setaffinity(pid, mask.as_ptr()) == 0
+    }
 }
 
 /// Current task gives up the CPU time voluntarily, and switches to another
@@ -296,6 +305,7 @@ unsafe extern "C" {
     fn kthread_exit(exit_code: i32);
     fn schedule();
     fn linux_set_nice(pid: c_int, nice: c_long) -> c_int;
+    fn sched_setaffinity(pid: c_int, mask: *const c_char) -> c_int;
 }
 
 /*
