@@ -2,12 +2,11 @@
 
 /// Initialize all per-CPU data areas.
 pub fn init() -> usize {
-    todo!();
+    0
 }
 
 /// Initializes the per-CPU data register.
 pub fn init_percpu_reg(_cpu_id: usize) {
-    todo!();
 }
 
 /*

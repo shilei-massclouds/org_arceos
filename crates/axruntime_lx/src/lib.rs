@@ -83,6 +83,11 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     info!("Initialize platform devices...");
     axhal::init_later(hartid, dtb_pa);
 
+    // Logic ID of Primary CPU must be ZERO.
+    // Note: `init_percpu` must be after axhal::init_later in which
+    // linux setups its percpu first chunk.
+    axhal::init_percpu(0);
+
     #[cfg(all(feature = "alloc", feature = "paging"))]
     init_allocator_later();
 
