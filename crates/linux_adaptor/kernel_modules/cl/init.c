@@ -36,6 +36,29 @@ char __initdata boot_command_line[COMMAND_LINE_SIZE];
  */
 bool early_boot_irqs_disabled __read_mostly;
 
+static initcall_entry_t *initcall_levels[] __initdata = {
+    __initcall0_start,
+    __initcall1_start,
+    __initcall2_start,
+    __initcall3_start,
+    __initcall4_start,
+    __initcall5_start,
+    __initcall6_start,
+    __initcall7_start,
+    __initcall_end,
+};
+
+static const char *initcall_level_names[] __initdata = {
+    "pure",
+    "core",
+    "postcore",
+    "arch",
+    "subsys",
+    "fs",
+    "device",
+    "late",
+};
+
 /*
  * early stage before setup_arch in start_kernel [init/main.c]
  */
@@ -239,4 +262,55 @@ int __init_or_module do_one_initcall(initcall_t fn)
 
     add_latent_entropy();
     return ret;
+}
+
+void cl_driver_init()
+{
+    //PANIC("");
+    printk("%s: Warning!!! -------------------- IMPL IT ------------------------------\n", __func__);
+}
+
+static int __init ignore_unknown_bootoption(char *param, char *val,
+                   const char *unused, void *arg)
+{
+    return 0;
+}
+
+static void __init do_initcall_level(int level, char *command_line)
+{
+    initcall_entry_t *fn;
+
+    parse_args(initcall_level_names[level],
+           command_line, __start___param,
+           __stop___param - __start___param,
+           level, level,
+           NULL, ignore_unknown_bootoption);
+
+    trace_initcall_level(initcall_level_names[level]);
+    for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
+        do_one_initcall(initcall_from_entry(fn));
+}
+
+static void __init do_initcalls(void)
+{
+    int level;
+    size_t len = saved_command_line_len + 1;
+    char *command_line;
+
+    command_line = kzalloc(len, GFP_KERNEL);
+    if (!command_line)
+        panic("%s: Failed to allocate %zu bytes\n", __func__, len);
+
+    for (level = 0; level < ARRAY_SIZE(initcall_levels) - 1; level++) {
+        /* Parser modifies command_line, restore it each time */
+        strcpy(command_line, saved_command_line);
+        do_initcall_level(level, command_line);
+    }
+
+    kfree(command_line);
+}
+
+void cl_do_initcalls()
+{
+    PANIC("");
 }

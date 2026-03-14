@@ -194,12 +194,27 @@ fn init_interrupt_later() {
 }
 
 #[cfg(feature = "multitask")]
+// As Linux `kernel_init`
 fn init_thread_fn() {
+    //
+    // kernel_init_freeable
+    //
+
+    // smp_init
     #[cfg(feature = "smp")]
     self::mp::start_secondary_cpus();
 
+    #[cfg(feature = "linux-block")]
+    do_basic_setup();
+
     // Invoke app's main()
     unsafe { main(); }
+}
+
+#[cfg(feature = "linux-block")]
+fn do_basic_setup() {
+    linux_adaptor::advance_to(LinuxAdaptorState::InitDriver);
+    linux_adaptor::advance_to(LinuxAdaptorState::DoInitCalls);
 }
 
 #[cfg(feature = "multitask")]
