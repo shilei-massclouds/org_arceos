@@ -2,13 +2,32 @@
 
 #![no_std]
 
-/*
-#![no_std]
-#![feature(doc_auto_cfg)]
-#![feature(associated_type_defaults)]
-
 #[macro_use]
 extern crate log;
+
+/// A structure that contains all device drivers, organized by their category.
+#[derive(Default)]
+pub struct AllDevices;
+
+impl AllDevices {
+    /// Returns the device model used, either `dyn` or `static`.
+    ///
+    /// See the [crate-level documentation](crate) for more details.
+    pub const fn device_model() -> &'static str {
+        "linux"
+    }
+}
+
+/// Probes and initializes all device drivers, returns the [`AllDevices`] struct.
+pub fn init_drivers() -> AllDevices {
+    info!("Initialize device drivers...");
+    info!("  device model: {}", AllDevices::device_model());
+    AllDevices::default()
+}
+
+/*
+#![feature(doc_auto_cfg)]
+#![feature(associated_type_defaults)]
 
 #[cfg(feature = "dyn")]
 extern crate alloc;

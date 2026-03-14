@@ -419,6 +419,7 @@ version = "0.2.0"
 dependencies = [
  "axdriver_block",
  "axdriver_net",
+ "log",
 ]
 
 [[package]]
@@ -821,6 +822,7 @@ version = "0.2.0"
 dependencies = [
  "axalloc",
  "axconfig",
+ "axdriver_lx",
  "axhal",
  "axlog",
  "axmm",

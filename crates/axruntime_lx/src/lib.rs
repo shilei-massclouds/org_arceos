@@ -100,6 +100,9 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
         init_interrupt_earlier();
     }
 
+    #[cfg(feature = "linux-block")]
+    let _ = axdriver::init_drivers();
+    /*
     #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
     {
         #[allow(unused_variables)]
@@ -114,6 +117,7 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
         #[cfg(feature = "display")]
         axdisplay::init_display(all_devices.display);
     }
+    */
 
     #[cfg(feature = "irq")]
     {
