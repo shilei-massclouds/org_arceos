@@ -71,6 +71,7 @@ driver-ramdisk = ["axfeat/driver-ramdisk"]
 driver-ixgbe = ["axfeat/driver-ixgbe"]
 driver-fxmac = ["axfeat/driver-fxmac"]
 driver-bcm2835-sdhci = ["axfeat/driver-bcm2835-sdhci"]
+driver-linux-block = ["axfeat/driver-linux-block"]
 
 # Logging
 log-level-off = ["axfeat/log-level-off"]
