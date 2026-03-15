@@ -165,6 +165,11 @@ SECTIONS
 
         __end_rodata = .;
     }
+    __param : AT(ADDR(__param) - LOAD_OFFSET) {
+        __start___param = .;
+        KEEP(*(__param))
+        __stop___param = .;
+    }
     .srodata : {
         *(.srodata*)
     }

@@ -853,7 +853,6 @@ char *skip_spaces(const char *str)
 }
 EXPORT_SYMBOL(skip_spaces);
 
-#if 0
 /**
  * strim - Removes leading and trailing whitespace from @s.
  * @s: The string to be stripped.
@@ -880,6 +879,7 @@ char *strim(char *s)
 }
 EXPORT_SYMBOL(strim);
 
+#if 0
 /**
  * sysfs_streq - return true if strings are equal, modulo trailing newline
  * @s1: one string

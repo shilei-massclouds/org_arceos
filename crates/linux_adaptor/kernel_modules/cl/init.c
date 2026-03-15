@@ -9,6 +9,7 @@
 #include <linux/pid_namespace.h>
 #include <linux/sched/clock.h>
 #include <linux/tick.h>
+#include <linux/moduleparam.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -26,6 +27,18 @@ void riscv_init_cbo_blocksizes(void);
 
 /* Untouched command line saved by arch-specific code. */
 char __initdata boot_command_line[COMMAND_LINE_SIZE];
+/* Untouched saved command line (eg. for /proc) */
+char *saved_command_line __ro_after_init;
+unsigned int saved_command_line_len __ro_after_init;
+/* Command line for parameter parsing */
+static char *static_command_line;
+/* Untouched extra command line */
+static char *extra_command_line;
+/* Extra init arguments */
+static char *extra_init_args;
+
+#define bootconfig_found false
+#define initargs_offs 0
 
 /*
  * Debug helper: via this flag we know that we are in 'early bootup code'
@@ -102,6 +115,72 @@ void cl_setup_bootmem(void)
     setup_bootmem();
 }
 
+/*
+ * We need to store the untouched command line for future reference.
+ * We also need to store the touched command line since the parameter
+ * parsing is performed in place, and we should allow a component to
+ * store reference of name/value for future reference.
+ */
+static void __init setup_command_line(char *command_line)
+{
+    size_t len, xlen = 0, ilen = 0;
+
+    if (extra_command_line)
+        xlen = strlen(extra_command_line);
+    if (extra_init_args) {
+        extra_init_args = strim(extra_init_args); /* remove trailing space */
+        ilen = strlen(extra_init_args) + 4; /* for " -- " */
+    }
+
+    len = xlen + strlen(boot_command_line) + ilen + 1;
+
+    saved_command_line = memblock_alloc(len, SMP_CACHE_BYTES);
+    if (!saved_command_line)
+        panic("%s: Failed to allocate %zu bytes\n", __func__, len);
+
+    len = xlen + strlen(command_line) + 1;
+
+    static_command_line = memblock_alloc(len, SMP_CACHE_BYTES);
+    if (!static_command_line)
+        panic("%s: Failed to allocate %zu bytes\n", __func__, len);
+
+    if (xlen) {
+        /*
+         * We have to put extra_command_line before boot command
+         * lines because there could be dashes (separator of init
+         * command line) in the command lines.
+         */
+        strcpy(saved_command_line, extra_command_line);
+        strcpy(static_command_line, extra_command_line);
+    }
+    strcpy(saved_command_line + xlen, boot_command_line);
+    strcpy(static_command_line + xlen, command_line);
+
+    if (ilen) {
+        /*
+         * Append supplemental init boot args to saved_command_line
+         * so that user can check what command line options passed
+         * to init.
+         * The order should always be
+         * " -- "[bootconfig init-param][cmdline init-param]
+         */
+        if (initargs_offs) {
+            len = xlen + initargs_offs;
+            strcpy(saved_command_line + len, extra_init_args);
+            len += ilen - 4;    /* strlen(extra_init_args) */
+            strcpy(saved_command_line + len,
+                boot_command_line + initargs_offs - 1);
+        } else {
+            len = strlen(saved_command_line);
+            strcpy(saved_command_line + len, " -- ");
+            len += 4;
+            strcpy(saved_command_line + len, extra_init_args);
+        }
+    }
+
+    saved_command_line_len = strlen(saved_command_line);
+}
+
 void cl_setup_arch_later(void)
 {
     jump_label_init();
@@ -111,6 +190,7 @@ void cl_setup_arch_later(void)
     riscv_init_cbo_blocksizes();
     riscv_fill_hwcap();
 
+    setup_command_line(boot_command_line/* command_line */);
     setup_nr_cpu_ids();
     setup_per_cpu_areas();
     boot_cpu_hotplug_init();
@@ -287,8 +367,10 @@ static void __init do_initcall_level(int level, char *command_line)
            NULL, ignore_unknown_bootoption);
 
     trace_initcall_level(initcall_level_names[level]);
-    for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
+    for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++) {
+        printk("%s: --- level(%s) ---\n", __func__, initcall_level_names[level]);
         do_one_initcall(initcall_from_entry(fn));
+    }
 }
 
 static void __init do_initcalls(void)
@@ -312,5 +394,5 @@ static void __init do_initcalls(void)
 
 void cl_do_initcalls()
 {
-    PANIC("");
+    do_initcalls();
 }

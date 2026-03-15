@@ -293,6 +293,7 @@ repeat:
 	if (unlikely(zap_leader))
 		goto repeat;
 }
+#endif /* CL */
 
 int rcuwait_wake_up(struct rcuwait *w)
 {
@@ -322,8 +323,6 @@ int rcuwait_wake_up(struct rcuwait *w)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(rcuwait_wake_up);
-
-#endif /* CL */
 
 /*
  * Determine if a process group is "orphaned", according to the POSIX

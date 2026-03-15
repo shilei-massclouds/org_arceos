@@ -323,3 +323,66 @@ int lockup_detector_online_cpu(unsigned int cpu)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+// drivers/base/bus.c
+int subsys_virtual_register(const struct bus_type *subsys,
+                const struct attribute_group **groups)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// fs/proc/proc_sysctl.c
+struct ctl_table_header *register_sysctl_sz(const char *path, struct ctl_table *table,
+                        size_t table_size)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return NULL;
+}
+
+// drivers/base/syscore.c
+void register_syscore_ops(struct syscore_ops *ops)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// fs/debugfs/inode.c
+struct dentry *debugfs_create_dir(const char *name, struct dentry *parent)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return NULL;
+}
+
+struct dentry *debugfs_create_file(const char *name, umode_t mode,
+                   struct dentry *parent, void *data,
+                   const struct file_operations *fops)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return NULL;
+}
+
+// fs/proc/proc_sysctl.c
+void __init __register_sysctl_init(const char *path, struct ctl_table *table,
+                 const char *table_name, size_t table_size)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// fs/sysfs/dir.c
+int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int sysfs_create_groups(struct kobject *kobj,
+            const struct attribute_group **groups)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void kernfs_get(struct kernfs_node *kn)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

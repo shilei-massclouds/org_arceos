@@ -168,7 +168,6 @@ static void percpu_rwsem_wait(struct percpu_rw_semaphore *sem, bool reader)
 	__set_current_state(TASK_RUNNING);
 }
 
-#if 0
 bool __sched __percpu_down_read(struct percpu_rw_semaphore *sem, bool try)
 {
 	if (__percpu_down_read_trylock(sem))
@@ -186,7 +185,6 @@ bool __sched __percpu_down_read(struct percpu_rw_semaphore *sem, bool try)
 	return true;
 }
 EXPORT_SYMBOL_GPL(__percpu_down_read);
-#endif /* CL */
 
 #define per_cpu_sum(var)						\
 ({									\

@@ -21,8 +21,6 @@
 
 #include "adaptor.h"
 
-#if 0
-
 /**
  * kobject_namespace() - Return @kobj's namespace tag.
  * @kobj: kobject in question
@@ -107,6 +105,7 @@ static int create_dir(struct kobject *kobj)
 	return 0;
 }
 
+#if 0
 static int get_kobj_path_length(const struct kobject *kobj)
 {
 	int length = 1;
@@ -173,6 +172,7 @@ retry:
 	return path;
 }
 EXPORT_SYMBOL_GPL(kobject_get_path);
+#endif /* CL */
 
 /* add the kobject to its kset's list */
 static void kobj_kset_join(struct kobject *kobj)
@@ -197,7 +197,6 @@ static void kobj_kset_leave(struct kobject *kobj)
 	spin_unlock(&kobj->kset->list_lock);
 	kset_put(kobj->kset);
 }
-#endif /* CL */
 
 static void kobject_init_internal(struct kobject *kobj)
 {
@@ -211,7 +210,6 @@ static void kobject_init_internal(struct kobject *kobj)
 	kobj->state_initialized = 1;
 }
 
-#if 0
 static int kobject_add_internal(struct kobject *kobj)
 {
 	int error = 0;
@@ -322,7 +320,6 @@ int kobject_set_name(struct kobject *kobj, const char *fmt, ...)
 	return retval;
 }
 EXPORT_SYMBOL(kobject_set_name);
-#endif /* CL */
 
 /**
  * kobject_init() - Initialize a kobject structure.
@@ -635,6 +632,7 @@ void kobject_del(struct kobject *kobj)
 	kobject_put(parent);
 }
 EXPORT_SYMBOL(kobject_del);
+#endif /* CL */
 
 /**
  * kobject_get() - Increment refcount for object.
@@ -653,6 +651,7 @@ struct kobject *kobject_get(struct kobject *kobj)
 }
 EXPORT_SYMBOL(kobject_get);
 
+#if 0
 struct kobject * __must_check kobject_get_unless_zero(struct kobject *kobj)
 {
 	if (!kobj)
@@ -811,6 +810,7 @@ struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)
 	return kobj;
 }
 EXPORT_SYMBOL_GPL(kobject_create_and_add);
+#endif /* CL */
 
 /**
  * kset_init() - Initialize a kset for use.
@@ -886,6 +886,7 @@ int kset_register(struct kset *k)
 }
 EXPORT_SYMBOL(kset_register);
 
+#if 0
 /**
  * kset_unregister() - Remove a kset.
  * @k: kset.
@@ -926,6 +927,7 @@ struct kobject *kset_find_obj(struct kset *kset, const char *name)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(kset_find_obj);
+#endif /* CL */
 
 static void kset_release(struct kobject *kobj)
 {
@@ -1024,6 +1026,7 @@ struct kset *kset_create_and_add(const char *name,
 }
 EXPORT_SYMBOL_GPL(kset_create_and_add);
 
+#if 0 
 
 static DEFINE_SPINLOCK(kobj_ns_type_lock);
 static const struct kobj_ns_type_operations *kobj_ns_ops_tbl[KOBJ_NS_TYPES];
@@ -1062,6 +1065,7 @@ int kobj_ns_type_registered(enum kobj_ns_type type)
 
 	return registered;
 }
+#endif /* CL */
 
 const struct kobj_ns_type_operations *kobj_child_ns_ops(const struct kobject *parent)
 {
@@ -1078,6 +1082,7 @@ const struct kobj_ns_type_operations *kobj_ns_ops(const struct kobject *kobj)
 	return kobj_child_ns_ops(kobj->parent);
 }
 
+#if 0
 bool kobj_ns_current_may_mount(enum kobj_ns_type type)
 {
 	bool may_mount = true;

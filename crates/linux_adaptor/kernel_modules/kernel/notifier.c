@@ -394,6 +394,7 @@ int blocking_notifier_call_chain(struct blocking_notifier_head *nh,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
+#endif /* CL */
 
 /*
  *	Raw notifier chain routines.  There is no protection;
@@ -417,6 +418,7 @@ int raw_notifier_chain_register(struct raw_notifier_head *nh,
 }
 EXPORT_SYMBOL_GPL(raw_notifier_chain_register);
 
+#if 0
 /**
  *	raw_notifier_chain_unregister - Remove notifier from a raw notifier chain
  *	@nh: Pointer to head of the raw notifier chain

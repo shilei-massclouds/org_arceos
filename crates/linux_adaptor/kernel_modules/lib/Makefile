@@ -31,6 +31,7 @@ obj-y += bsearch.o
 obj-y += lockref.o
 obj-y += cpumask.o
 obj-y += llist.o
+obj-y += kobject_uevent.o
 
 obj-y += math/
 obj-y += crypto/
