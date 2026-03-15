@@ -7259,7 +7259,7 @@ static int __init slab_sysfs_init(void)
 	mutex_unlock(&slab_mutex);
 #endif
     // FixMe
-    pr_warn("%s: --- Impl it ---\n", __func__);
+    pr_warn("WARNING:%s: --- Impl it ---\n", __func__);
 	return 0;
 }
 late_initcall(slab_sysfs_init);

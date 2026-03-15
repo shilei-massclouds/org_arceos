@@ -111,7 +111,6 @@ int of_n_addr_cells(struct device_node *np)
 }
 EXPORT_SYMBOL(of_n_addr_cells);
 
-#if 0
 int of_bus_n_size_cells(struct device_node *np)
 {
 	u32 cells;
@@ -133,6 +132,7 @@ int of_n_size_cells(struct device_node *np)
 }
 EXPORT_SYMBOL(of_n_size_cells);
 
+#if 0
 #ifdef CONFIG_NUMA
 int __weak of_node_to_nid(struct device_node *np)
 {
@@ -743,7 +743,6 @@ struct device_node *of_get_next_cpu_node(struct device_node *prev)
 }
 EXPORT_SYMBOL(of_get_next_cpu_node);
 
-#if 0
 /**
  * of_get_compatible_child - Find compatible child node
  * @parent:	parent node
@@ -768,7 +767,6 @@ struct device_node *of_get_compatible_child(const struct device_node *parent,
 	return child;
 }
 EXPORT_SYMBOL(of_get_compatible_child);
-#endif /* CL */
 
 /**
  * of_get_child_by_name - Find the child node by name for a given parent
@@ -1041,7 +1039,6 @@ const struct of_device_id *__of_match_node(const struct of_device_id *matches,
 	return best_match;
 }
 
-#if 0
 /**
  * of_match_node - Tell if a device_node has a matching of_match structure
  * @matches:	array of of device match structures to search in
@@ -1061,7 +1058,6 @@ const struct of_device_id *of_match_node(const struct of_device_id *matches,
 	return match;
 }
 EXPORT_SYMBOL(of_match_node);
-#endif /* CL */
 
 /**
  * of_find_matching_node_and_match - Find a node based on an of_device_id

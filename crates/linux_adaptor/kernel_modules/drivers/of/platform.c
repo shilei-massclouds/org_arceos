@@ -7,6 +7,9 @@
  *    sparc{,64}/kernel/of_device.c by Stephen Rothwell
  */
 
+// FixMe
+#define DEBUG
+
 #define pr_fmt(fmt)	"OF: " fmt
 
 #include <linux/errno.h>
@@ -90,12 +93,12 @@ EXPORT_SYMBOL(of_device_unregister);
 
 #ifdef CONFIG_OF_ADDRESS
 
-#if 0
 static const struct of_device_id of_skipped_node_table[] = {
 	{ .compatible = "operating-points-v2", },
 	{} /* Empty terminated list */
 };
 
+#if 0
 /*
  * The following routines scan a subtree and registers a device for
  * each applicable node.
@@ -153,6 +156,7 @@ struct platform_device *of_device_alloc(struct device_node *np,
 	return dev;
 }
 EXPORT_SYMBOL(of_device_alloc);
+#endif /* CL */
 
 /**
  * of_platform_device_create_pdata - Alloc, initialize and register an of_device
@@ -172,8 +176,14 @@ static struct platform_device *of_platform_device_create_pdata(
 {
 	struct platform_device *dev;
 
+	//pr_debug("create platform device: %pOF\n", np);
+    // FixMe
+    if (strcmp(np->name, "poweroff") == 0) {
 	pr_debug("create platform device: %pOF\n", np);
+        PANIC("");
+    }
 
+#if 0
 	if (!of_device_is_available(np) ||
 	    of_node_test_and_set_flag(np, OF_POPULATED))
 		return NULL;
@@ -193,6 +203,7 @@ static struct platform_device *of_platform_device_create_pdata(
 		platform_device_put(dev);
 		goto err_clear_flag;
 	}
+#endif /* CL */
 
 	return dev;
 
@@ -214,7 +225,8 @@ struct platform_device *of_platform_device_create(struct device_node *np,
 					    const char *bus_id,
 					    struct device *parent)
 {
-	return of_platform_device_create_pdata(np, bus_id, NULL, parent);
+	//return of_platform_device_create_pdata(np, bus_id, NULL, parent);
+    PANIC("");
 }
 EXPORT_SYMBOL(of_platform_device_create);
 
@@ -349,6 +361,8 @@ static int of_platform_bus_create(struct device_node *bus,
 	void *platform_data = NULL;
 	int rc = 0;
 
+    printk("NOTE:%s: REMOVE this line bus(%s)\n", __func__, bus->name);
+
 	/* Make sure it has a compatible property */
 	if (strict && (!of_get_property(bus, "compatible", NULL))) {
 		pr_debug("%s() - skipping %pOF, no compatible prop\n",
@@ -387,6 +401,7 @@ static int of_platform_bus_create(struct device_node *bus,
 	if (!dev || !of_match_node(matches, bus))
 		return 0;
 
+#if 0
 	for_each_child_of_node_scoped(bus, child) {
 		pr_debug("   create child: %pOF\n", child);
 		rc = of_platform_bus_create(child, matches, lookup, &dev->dev, strict);
@@ -394,9 +409,12 @@ static int of_platform_bus_create(struct device_node *bus,
 			break;
 	}
 	of_node_set_flag(bus, OF_POPULATED_BUS);
+#endif
+    PANIC("");
 	return rc;
 }
 
+#if 0
 /**
  * of_platform_bus_probe() - Probe the device-tree for platform buses
  * @root: parent of the first level to probe or NULL for the root of the tree
@@ -437,6 +455,7 @@ int of_platform_bus_probe(struct device_node *root,
 	return rc;
 }
 EXPORT_SYMBOL(of_platform_bus_probe);
+#endif /* CL */
 
 /**
  * of_platform_populate() - Populate platform_devices from device tree data
@@ -477,11 +496,14 @@ int of_platform_populate(struct device_node *root,
 		if (rc)
 			break;
 	}
+#if 0
 	device_links_supplier_sync_state_resume();
 
 	of_node_set_flag(root, OF_POPULATED_BUS);
 
 	of_node_put(root);
+#endif
+    PANIC("");
 	return rc;
 }
 EXPORT_SYMBOL_GPL(of_platform_populate);
@@ -505,13 +527,11 @@ static const struct of_device_id reserved_mem_matches[] = {
 	{ .compatible = "google,open-dice" },
 	{}
 };
-#endif /* CL */
 
 static int __init of_platform_default_populate_init(void)
 {
 	struct device_node *node;
 
-    printk("%s: ...\n", __func__);
 	device_links_supplier_sync_state_pause();
 
 	if (IS_ENABLED(CONFIG_PPC)) {
@@ -568,7 +588,6 @@ static int __init of_platform_default_populate_init(void)
 		}
 
 	} else {
-#if 0
 		/*
 		 * Handle certain compatibles explicitly, since we don't want to create
 		 * platform_devices for every node in /reserved-memory with a
@@ -602,14 +621,11 @@ static int __init of_platform_default_populate_init(void)
 
 		/* Populate everything else. */
 		of_platform_default_populate(NULL, NULL, NULL);
-#endif
-        PANIC("");
 	}
 
 	return 0;
 }
-// FixMe
-//arch_initcall_sync(of_platform_default_populate_init);
+arch_initcall_sync(of_platform_default_populate_init);
 
 #if 0
 static int __init of_platform_sync_state_init(void)

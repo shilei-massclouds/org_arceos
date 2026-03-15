@@ -724,7 +724,6 @@ unsigned int fwnode_count_parents(const struct fwnode_handle *fwnode)
 }
 EXPORT_SYMBOL_GPL(fwnode_count_parents);
 
-#if 0
 /**
  * fwnode_get_nth_parent - Return an nth parent of a node
  * @fwnode: The node the parent of which is requested
@@ -753,6 +752,7 @@ struct fwnode_handle *fwnode_get_nth_parent(struct fwnode_handle *fwnode,
 }
 EXPORT_SYMBOL_GPL(fwnode_get_nth_parent);
 
+#if 0
 /**
  * fwnode_get_next_child_node - Return the next child node handle for a node
  * @fwnode: Firmware node to find the next child node for.

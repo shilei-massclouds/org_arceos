@@ -2443,7 +2443,7 @@ asmlinkage __visible int _printk(const char *fmt, ...)
 	int r;
 
 	va_start(args, fmt);
-    /* Fixme: */
+    /* FixMe: */
 #if 0
 	r = vprintk(fmt, args);
 #else
