@@ -176,12 +176,7 @@ static struct platform_device *of_platform_device_create_pdata(
 {
 	struct platform_device *dev;
 
-	//pr_debug("create platform device: %pOF\n", np);
-    // FixMe
-    if (strcmp(np->name, "poweroff") == 0) {
 	pr_debug("create platform device: %pOF\n", np);
-        PANIC("");
-    }
 
 #if 0
 	if (!of_device_is_available(np) ||
@@ -361,8 +356,6 @@ static int of_platform_bus_create(struct device_node *bus,
 	void *platform_data = NULL;
 	int rc = 0;
 
-    printk("NOTE:%s: REMOVE this line bus(%s)\n", __func__, bus->name);
-
 	/* Make sure it has a compatible property */
 	if (strict && (!of_get_property(bus, "compatible", NULL))) {
 		pr_debug("%s() - skipping %pOF, no compatible prop\n",
@@ -496,14 +489,11 @@ int of_platform_populate(struct device_node *root,
 		if (rc)
 			break;
 	}
-#if 0
 	device_links_supplier_sync_state_resume();
 
 	of_node_set_flag(root, OF_POPULATED_BUS);
 
 	of_node_put(root);
-#endif
-    PANIC("");
 	return rc;
 }
 EXPORT_SYMBOL_GPL(of_platform_populate);

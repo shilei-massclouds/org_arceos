@@ -1101,6 +1101,7 @@ int device_links_check_suppliers(struct device *dev)
 
 	return ret ? ret : fwnode_ret;
 }
+#endif /* CL */
 
 /**
  * __device_links_queue_sync_state - Queue a device for sync_state() callback
@@ -1180,7 +1181,6 @@ static void device_links_flush_sync_list(struct list_head *list,
 		put_device(dev);
 	}
 }
-#endif /* CL */
 
 void device_links_supplier_sync_state_pause(void)
 {
@@ -1189,7 +1189,6 @@ void device_links_supplier_sync_state_pause(void)
 	device_links_write_unlock();
 }
 
-#if 0
 void device_links_supplier_sync_state_resume(void)
 {
 	struct device *dev, *tmp;
@@ -1218,6 +1217,7 @@ out:
 	device_links_flush_sync_list(&sync_list, NULL);
 }
 
+#if 0
 static int sync_state_resume_initcall(void)
 {
 	device_links_supplier_sync_state_resume();
@@ -3779,6 +3779,7 @@ int device_register(struct device *dev)
 	return device_add(dev);
 }
 EXPORT_SYMBOL_GPL(device_register);
+#endif /* CL */
 
 /**
  * get_device - increment reference count for device.
@@ -3806,6 +3807,7 @@ void put_device(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(put_device);
 
+#if 0
 bool kill_device(struct device *dev)
 {
 	/*
