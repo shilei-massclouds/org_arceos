@@ -1,1 +1,0 @@
-kernel/trace/trace_syscalls.o kernel/trace/power-traces.o

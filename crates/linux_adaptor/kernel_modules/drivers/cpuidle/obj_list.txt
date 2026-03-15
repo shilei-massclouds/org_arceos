@@ -1,1 +1,0 @@
-drivers/cpuidle/cpuidle.o drivers/cpuidle/driver.o

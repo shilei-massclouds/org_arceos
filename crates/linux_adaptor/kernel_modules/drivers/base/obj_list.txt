@@ -1,1 +1,1 @@
-drivers/base/core.o drivers/base/property.o drivers/base/swnode.o drivers/base/cpu.o drivers/base/arch_topology.o drivers/base/cacheinfo.o drivers/base/platform.o drivers/base/class.o drivers/base/power/main.o drivers/base/power/runtime.o
+drivers/base/core.o drivers/base/property.o drivers/base/swnode.o drivers/base/cpu.o drivers/base/arch_topology.o drivers/base/cacheinfo.o drivers/base/platform.o drivers/base/class.o drivers/base/bus.o drivers/base/power/main.o drivers/base/power/runtime.o

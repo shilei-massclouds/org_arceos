@@ -10,8 +10,9 @@ obj-y += arch_topology.o
 obj-y += cacheinfo.o
 obj-y += platform.o
 obj-y += class.o
+obj-y += bus.o
 
-#obj-y += property.o syscore.o bus.o
+#obj-y += property.o syscore.o
 #obj-y += devres.o dd.o driver.o trace.o
 #obj-y += map.o firmware.o
 

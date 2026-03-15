@@ -105,7 +105,6 @@ static int create_dir(struct kobject *kobj)
 	return 0;
 }
 
-#if 0
 static int get_kobj_path_length(const struct kobject *kobj)
 {
 	int length = 1;
@@ -172,7 +171,6 @@ retry:
 	return path;
 }
 EXPORT_SYMBOL_GPL(kobject_get_path);
-#endif /* CL */
 
 /* add the kobject to its kset's list */
 static void kobj_kset_join(struct kobject *kobj)
@@ -586,6 +584,7 @@ out:
 	return error;
 }
 EXPORT_SYMBOL_GPL(kobject_move);
+#endif /* CL */
 
 static void __kobject_del(struct kobject *kobj)
 {
@@ -613,6 +612,7 @@ static void __kobject_del(struct kobject *kobj)
 	kobj->parent = NULL;
 }
 
+#if 0
 /**
  * kobject_del() - Unlink kobject from hierarchy.
  * @kobj: object.
@@ -661,6 +661,7 @@ struct kobject * __must_check kobject_get_unless_zero(struct kobject *kobj)
 	return kobj;
 }
 EXPORT_SYMBOL(kobject_get_unless_zero);
+#endif /* CL */
 
 /*
  * kobject_cleanup - free kobject resources.
@@ -704,6 +705,7 @@ static void kobject_cleanup(struct kobject *kobj)
 	kobject_put(parent);
 }
 
+#if 0
 #ifdef CONFIG_DEBUG_KOBJECT_RELEASE
 static void kobject_delayed_cleanup(struct work_struct *work)
 {
@@ -711,6 +713,7 @@ static void kobject_delayed_cleanup(struct work_struct *work)
 				     struct kobject, release));
 }
 #endif
+#endif /* CL */
 
 static void kobject_release(struct kref *kref)
 {
@@ -810,7 +813,6 @@ struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)
 	return kobj;
 }
 EXPORT_SYMBOL_GPL(kobject_create_and_add);
-#endif /* CL */
 
 /**
  * kset_init() - Initialize a kset for use.
@@ -886,7 +888,6 @@ int kset_register(struct kset *k)
 }
 EXPORT_SYMBOL(kset_register);
 
-#if 0
 /**
  * kset_unregister() - Remove a kset.
  * @k: kset.
@@ -900,6 +901,7 @@ void kset_unregister(struct kset *k)
 }
 EXPORT_SYMBOL(kset_unregister);
 
+#if 0
 /**
  * kset_find_obj() - Search for object in kset.
  * @kset: kset we're looking in.

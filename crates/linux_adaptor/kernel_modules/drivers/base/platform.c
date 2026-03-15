@@ -881,12 +881,14 @@ void platform_driver_unregister(struct platform_driver *drv)
 	driver_unregister(&drv->driver);
 }
 EXPORT_SYMBOL_GPL(platform_driver_unregister);
+#endif /* CL */
 
 static int platform_probe_fail(struct platform_device *pdev)
 {
 	return -ENXIO;
 }
 
+#if 0
 static int is_bound_to_driver(struct device *dev, void *driver)
 {
 	if (dev->driver == driver)
@@ -1079,6 +1081,7 @@ void platform_unregister_drivers(struct platform_driver * const *drivers,
 	}
 }
 EXPORT_SYMBOL_GPL(platform_unregister_drivers);
+#endif /* CL */
 
 static const struct platform_device_id *platform_match_id(
 			const struct platform_device_id *id,
@@ -1094,6 +1097,7 @@ static const struct platform_device_id *platform_match_id(
 	return NULL;
 }
 
+#if 0
 #ifdef CONFIG_PM_SLEEP
 
 static int platform_legacy_suspend(struct device *dev, pm_message_t mesg)
@@ -1237,6 +1241,7 @@ int platform_pm_restore(struct device *dev)
 }
 
 #endif /* CONFIG_HIBERNATE_CALLBACKS */
+#endif /* CL */
 
 /* modalias support enables more hands-off userspace setup:
  * (a) environment variable lets new-style hotplug events work once system is
@@ -1321,7 +1326,6 @@ static const struct attribute_group platform_dev_group = {
 	.is_visible = platform_dev_attrs_visible,
 };
 __ATTRIBUTE_GROUPS(platform_dev);
-
 
 /**
  * platform_match - bind platform device to platform driver.
@@ -1492,6 +1496,7 @@ const struct bus_type platform_bus_type = {
 };
 EXPORT_SYMBOL_GPL(platform_bus_type);
 
+#if 0
 static inline int __platform_match(struct device *dev, const void *drv)
 {
 	return platform_match(dev, (struct device_driver *)drv);
@@ -1525,12 +1530,9 @@ int __init platform_bus_init(void)
 		put_device(&platform_bus);
 		return error;
 	}
-#if 0
-	error =  bus_register(&platform_bus_type);
+	error = bus_register(&platform_bus_type);
 	if (error)
 		device_unregister(&platform_bus);
-#endif
-    PANIC("");
 
 	return error;
 }

@@ -123,6 +123,7 @@ void device_pm_unlock(void)
 {
 	mutex_unlock(&dpm_list_mtx);
 }
+#endif /* CL */
 
 /**
  * device_pm_add - Add a device to the PM core's list of active devices.
@@ -146,6 +147,7 @@ void device_pm_add(struct device *dev)
 	mutex_unlock(&dpm_list_mtx);
 }
 
+#if 0
 /**
  * device_pm_remove - Remove a device from the PM core's list of active devices.
  * @dev: Device to be removed from the list.
@@ -1967,6 +1969,7 @@ void dpm_for_each_dev(void *data, void (*fn)(struct device *, void *))
 	device_pm_unlock();
 }
 EXPORT_SYMBOL_GPL(dpm_for_each_dev);
+#endif /* CL */
 
 static bool pm_ops_is_empty(const struct dev_pm_ops *ops)
 {
@@ -1999,6 +2002,7 @@ void device_pm_check_callbacks(struct device *dev)
 	spin_unlock_irqrestore(&dev->power.lock, flags);
 }
 
+#if 0
 bool dev_pm_skip_suspend(struct device *dev)
 {
 	return dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&

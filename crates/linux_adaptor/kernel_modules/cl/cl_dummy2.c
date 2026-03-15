@@ -400,3 +400,28 @@ void sysfs_remove_file_ns(struct kobject *kobj, const struct attribute *attr,
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+void sysfs_remove_groups(struct kobject *kobj,
+             const struct attribute_group **groups)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void sysfs_delete_link(struct kobject *kobj, struct kobject *targ,
+            const char *name)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// drivers/base/power/sysfs.c
+int dpm_sysfs_add(struct device *dev)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// net/core/skbuff.c
+void consume_skb(struct sk_buff *skb)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

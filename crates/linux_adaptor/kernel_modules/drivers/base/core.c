@@ -287,6 +287,7 @@ static bool device_is_ancestor(struct device *dev, struct device *target)
 	}
 	return false;
 }
+#endif /* CL */
 
 #define DL_MARKER_FLAGS		(DL_FLAG_INFERRED | \
 				 DL_FLAG_CYCLE | \
@@ -296,6 +297,7 @@ static inline bool device_link_flag_is_sync_state_only(u32 flags)
 	return (flags & ~DL_MARKER_FLAGS) == DL_FLAG_SYNC_STATE_ONLY;
 }
 
+#if 0
 /**
  * device_is_dependent - Check if one device depends on another one
  * @dev: Device to check dependencies for.
@@ -1655,6 +1657,7 @@ static void device_links_purge(struct device *dev)
 
 	device_links_write_unlock();
 }
+#endif /* CL */
 
 #define FW_DEVLINK_FLAGS_PERMISSIVE	(DL_FLAG_INFERRED | \
 					 DL_FLAG_SYNC_STATE_ONLY)
@@ -1664,6 +1667,7 @@ static void device_links_purge(struct device *dev)
 					 DL_FLAG_PM_RUNTIME)
 
 static u32 fw_devlink_flags = FW_DEVLINK_FLAGS_RPM;
+#if 0
 static int __init fw_devlink_setup(char *arg)
 {
 	if (!arg)
@@ -1721,12 +1725,14 @@ static inline u32 fw_devlink_get_flags(u8 fwlink_flags)
 
 	return fw_devlink_flags;
 }
+#endif /* CL */
 
 static bool fw_devlink_is_permissive(void)
 {
 	return fw_devlink_flags == FW_DEVLINK_FLAGS_PERMISSIVE;
 }
 
+#if 0
 bool fw_devlink_is_strict(void)
 {
 	return fw_devlink_strict && !fw_devlink_is_permissive();
@@ -1750,6 +1756,7 @@ static void fw_devlink_parse_fwtree(struct fwnode_handle *fwnode)
 	while ((child = fwnode_get_next_available_child_node(fwnode, child)))
 		fw_devlink_parse_fwtree(child);
 }
+#endif /* CL */
 
 static void fw_devlink_relax_link(struct device_link *link)
 {
@@ -1765,6 +1772,7 @@ static void fw_devlink_relax_link(struct device_link *link)
 		dev_name(link->supplier));
 }
 
+#if 0
 static int fw_devlink_no_driver(struct device *dev, void *data)
 {
 	struct device_link *link = to_devlink(dev);
@@ -1877,6 +1885,7 @@ void __init wait_for_init_devices_probe(void)
 	wait_for_device_probe();
 	fw_devlink_best_effort = false;
 }
+#endif /* CL */
 
 static void fw_devlink_unblock_consumers(struct device *dev)
 {
@@ -1891,6 +1900,7 @@ static void fw_devlink_unblock_consumers(struct device *dev)
 	device_links_write_unlock();
 }
 
+#if 0
 #define get_dev_from_fwnode(fwnode)	get_device((fwnode)->dev)
 
 static bool fwnode_init_without_drv(struct fwnode_handle *fwnode)
@@ -2325,11 +2335,13 @@ static void __fw_devlink_link_to_suppliers(struct device *dev,
 	while ((child = fwnode_get_next_available_child_node(fwnode, child)))
 		__fw_devlink_link_to_suppliers(dev, child);
 }
+#endif /* CL */
 
 static void fw_devlink_link_device(struct device *dev)
 {
 	struct fwnode_handle *fwnode = dev->fwnode;
 
+#if 0
 	if (!fw_devlink_flags)
 		return;
 
@@ -2339,6 +2351,8 @@ static void fw_devlink_link_device(struct device *dev)
 
 	__fw_devlink_link_to_consumers(dev);
 	__fw_devlink_link_to_suppliers(dev, fwnode);
+#endif
+    PANIC("");
 }
 
 /* Device links support end. */
@@ -2372,8 +2386,6 @@ int lock_device_hotplug_sysfs(void)
 	msleep(5);
 	return restart_syscall();
 }
-
-#endif /* CL */
 
 #ifdef CONFIG_BLOCK
 static inline int device_is_not_partition(struct device *dev)
@@ -2614,8 +2626,6 @@ static const struct kobj_type device_ktype = {
 	.get_ownership	= device_get_ownership,
 };
 
-#if 0
-
 static int dev_uevent_filter(const struct kobject *kobj)
 {
 	const struct kobj_type *ktype = get_ktype(kobj);
@@ -2675,6 +2685,7 @@ static int dev_uevent(const struct kobject *kobj, struct kobj_uevent_env *env)
 	const struct device *dev = kobj_to_dev(kobj);
 	int retval = 0;
 
+#if 0
 	/* add device node properties if present */
 	if (MAJOR(dev->devt)) {
 		const char *tmp;
@@ -2732,6 +2743,8 @@ static int dev_uevent(const struct kobject *kobj, struct kobj_uevent_env *env)
 				 "returned %d\n", dev_name(dev),
 				 __func__, retval);
 	}
+#endif
+    PANIC("");
 
 	return retval;
 }
@@ -2741,7 +2754,6 @@ static const struct kset_uevent_ops device_uevent_ops = {
 	.name =		dev_uevent_name,
 	.uevent =	dev_uevent,
 };
-#endif /* CL */
 
 static ssize_t uevent_show(struct device *dev, struct device_attribute *attr,
 			   char *buf)
@@ -2852,7 +2864,6 @@ static ssize_t removable_show(struct device *dev, struct device_attribute *attr,
 }
 static DEVICE_ATTR_RO(removable);
 
-#if 0
 int device_add_groups(struct device *dev, const struct attribute_group **groups)
 {
 	return sysfs_create_groups(&dev->kobj, groups);
@@ -2871,6 +2882,7 @@ union device_attr_group_devres {
 	const struct attribute_group **groups;
 };
 
+#if 0
 static void devm_attr_group_remove(struct device *dev, void *res)
 {
 	union device_attr_group_devres *devres = res;
@@ -2911,6 +2923,7 @@ int devm_device_add_group(struct device *dev, const struct attribute_group *grp)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(devm_device_add_group);
+#endif /* CL */
 
 static int device_add_attrs(struct device *dev)
 {
@@ -2978,7 +2991,6 @@ static int device_add_attrs(struct device *dev)
 
 	return error;
 }
-#endif /* CL */
 
 static void device_remove_attrs(struct device *dev)
 {
@@ -3669,7 +3681,6 @@ int device_add(struct device *dev)
 	error = device_add_class_symlinks(dev);
 	if (error)
 		goto SymlinkError;
-#if 0
 	error = device_add_attrs(dev);
 	if (error)
 		goto AttrsError;
@@ -3682,6 +3693,7 @@ int device_add(struct device *dev)
 	device_pm_add(dev);
 
 	if (MAJOR(dev->devt)) {
+#if 0
 		error = device_create_file(dev, &dev_attr_dev);
 		if (error)
 			goto DevAttrError;
@@ -3691,6 +3703,8 @@ int device_add(struct device *dev)
 			goto SysEntryError;
 
 		devtmpfs_create_node(dev);
+#endif
+        PANIC("devt");
 	}
 
 	/* Notify clients of device addition.  This call must come
@@ -3743,8 +3757,6 @@ int device_add(struct device *dev)
 		mutex_unlock(&sp->mutex);
 		subsys_put(sp);
 	}
-#endif 
-    PANIC("");
 done:
 	put_device(dev);
 	return error;
@@ -3966,6 +3978,7 @@ static struct device *prev_device(struct klist_iter *i)
 	}
 	return dev;
 }
+#endif /* CL */
 
 static struct device *next_device(struct klist_iter *i)
 {
@@ -3980,6 +3993,7 @@ static struct device *next_device(struct klist_iter *i)
 	return dev;
 }
 
+#if 0
 /**
  * device_get_devnode - path of device node file
  * @dev: device
@@ -4023,6 +4037,7 @@ const char *device_get_devnode(const struct device *dev,
 		return NULL;
 	return *tmp = s;
 }
+#endif /* CL */
 
 /**
  * device_for_each_child - device child iterator.
@@ -4054,6 +4069,7 @@ int device_for_each_child(struct device *parent, void *data,
 }
 EXPORT_SYMBOL_GPL(device_for_each_child);
 
+#if 0
 /**
  * device_for_each_child_reverse - device child iterator in reversed order.
  * @parent: parent struct device.
@@ -4201,6 +4217,7 @@ struct device *device_find_any_child(struct device *parent)
 	return device_find_child(parent, NULL, match_any);
 }
 EXPORT_SYMBOL_GPL(device_find_any_child);
+#endif /* CL */
 
 int __init devices_init(void)
 {
@@ -4319,6 +4336,7 @@ struct root_device {
 	struct module *owner;
 };
 
+#if 0
 static inline struct root_device *to_root_device(struct device *d)
 {
 	return container_of(d, struct root_device, dev);

@@ -275,8 +275,10 @@ static void cleanup_uevent_env(struct subprocess_info *info)
 	kfree(info->data);
 }
 #endif
+#endif /* CL */
 
 #ifdef CONFIG_NET
+#if 0
 static struct sk_buff *alloc_uevent_skb(struct kobj_uevent_env *env,
 					const char *action_string,
 					const char *devpath)
@@ -306,6 +308,7 @@ static struct sk_buff *alloc_uevent_skb(struct kobj_uevent_env *env,
 
 	return skb;
 }
+#endif /* CL */
 
 static int uevent_net_broadcast_untagged(struct kobj_uevent_env *env,
 					 const char *action_string,
@@ -318,6 +321,7 @@ static int uevent_net_broadcast_untagged(struct kobj_uevent_env *env,
 	/* send netlink message */
 	mutex_lock(&uevent_sock_mutex);
 	list_for_each_entry(ue_sk, &uevent_sock_list, list) {
+#if 0
 		struct sock *uevent_sock = ue_sk->sk;
 
 		if (!netlink_has_listeners(uevent_sock, 1))
@@ -335,6 +339,8 @@ static int uevent_net_broadcast_untagged(struct kobj_uevent_env *env,
 		/* ENOBUFS should be handled in userspace */
 		if (retval == -ENOBUFS || retval == -ESRCH)
 			retval = 0;
+#endif
+        PANIC("");
 	}
 	mutex_unlock(&uevent_sock_mutex);
 	consume_skb(skb);
@@ -351,6 +357,7 @@ static int uevent_net_broadcast_tagged(struct sock *usk,
 	struct sk_buff *skb = NULL;
 	int ret = 0;
 
+#if 0
 	skb = alloc_uevent_skb(env, action_string, devpath);
 	if (!skb)
 		return -ENOMEM;
@@ -376,6 +383,8 @@ static int uevent_net_broadcast_tagged(struct sock *usk,
 	/* ENOBUFS should be handled in userspace */
 	if (ret == -ENOBUFS || ret == -ESRCH)
 		ret = 0;
+#endif
+    PANIC("");
 
 	return ret;
 }
@@ -461,7 +470,6 @@ static void zap_modalias_env(struct kobj_uevent_env *env)
 		env->buflen -= len;
 	}
 }
-#endif /* CL */
 
 /**
  * kobject_uevent_env - send an uevent with environmental data
@@ -508,7 +516,6 @@ int kobject_uevent_env(struct kobject *kobj, enum kobject_action action,
 		return -EINVAL;
 	}
 
-#if 0
 	kset = top_kobj->kset;
 	uevent_ops = kset->uevent_ops;
 
@@ -639,9 +646,6 @@ int kobject_uevent_env(struct kobject *kobj, enum kobject_action action,
 	}
 #endif
 
-#endif
-    PANIC("");
-
 exit:
 	kfree(devpath);
 	kfree(env);
@@ -664,7 +668,6 @@ int kobject_uevent(struct kobject *kobj, enum kobject_action action)
 }
 EXPORT_SYMBOL_GPL(kobject_uevent);
 
-#if 0
 /**
  * add_uevent_var - add key value string to the environment buffer
  * @env: environment buffer structure
@@ -700,6 +703,7 @@ int add_uevent_var(struct kobj_uevent_env *env, const char *format, ...)
 }
 EXPORT_SYMBOL_GPL(add_uevent_var);
 
+#if 0
 #if defined(CONFIG_NET)
 static int uevent_net_broadcast(struct sock *usk, struct sk_buff *skb,
 				struct netlink_ext_ack *extack)
