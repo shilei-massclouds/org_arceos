@@ -1,0 +1,1 @@
+drivers/base/power/main.o drivers/base/power/runtime.o

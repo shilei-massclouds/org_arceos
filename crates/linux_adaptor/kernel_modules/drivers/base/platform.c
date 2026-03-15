@@ -519,6 +519,7 @@ int platform_add_devices(struct platform_device **devs, int num)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(platform_add_devices);
+#endif /* CL */
 
 struct platform_object {
 	struct platform_device pdev;
@@ -594,6 +595,7 @@ struct platform_device *platform_device_alloc(const char *name, int id)
 }
 EXPORT_SYMBOL_GPL(platform_device_alloc);
 
+#if 0
 /**
  * platform_device_add_resources - add resources to a platform device
  * @pdev: platform device allocated by platform_device_alloc to add resources to
@@ -1508,6 +1510,7 @@ struct device *platform_find_device_by_driver(struct device *start,
 			       __platform_match);
 }
 EXPORT_SYMBOL_GPL(platform_find_device_by_driver);
+#endif /* CL */
 
 void __weak __init early_platform_cleanup(void) { }
 
@@ -1522,10 +1525,12 @@ int __init platform_bus_init(void)
 		put_device(&platform_bus);
 		return error;
 	}
+#if 0
 	error =  bus_register(&platform_bus_type);
 	if (error)
 		device_unregister(&platform_bus);
+#endif
+    PANIC("");
 
 	return error;
 }
-#endif /* CL */

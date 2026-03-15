@@ -98,7 +98,6 @@ static const struct of_device_id of_skipped_node_table[] = {
 	{} /* Empty terminated list */
 };
 
-#if 0
 /*
  * The following routines scan a subtree and registers a device for
  * each applicable node.
@@ -156,7 +155,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
 	return dev;
 }
 EXPORT_SYMBOL(of_device_alloc);
-#endif /* CL */
 
 /**
  * of_platform_device_create_pdata - Alloc, initialize and register an of_device
@@ -178,7 +176,6 @@ static struct platform_device *of_platform_device_create_pdata(
 
 	pr_debug("create platform device: %pOF\n", np);
 
-#if 0
 	if (!of_device_is_available(np) ||
 	    of_node_test_and_set_flag(np, OF_POPULATED))
 		return NULL;
@@ -187,6 +184,7 @@ static struct platform_device *of_platform_device_create_pdata(
 	if (!dev)
 		goto err_clear_flag;
 
+#if 0
 	dev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
 	if (!dev->dev.dma_mask)
 		dev->dev.dma_mask = &dev->dev.coherent_dma_mask;
@@ -199,6 +197,7 @@ static struct platform_device *of_platform_device_create_pdata(
 		goto err_clear_flag;
 	}
 #endif /* CL */
+    PANIC("");
 
 	return dev;
 

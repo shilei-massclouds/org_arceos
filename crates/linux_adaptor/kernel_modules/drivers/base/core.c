@@ -36,6 +36,7 @@
 #include "base.h"
 #include "physical_location.h"
 #include "power/power.h"
+#include "adaptor.h"
 
 /* Device links support. */
 static LIST_HEAD(deferred_sync);
@@ -1018,6 +1019,7 @@ static bool dev_is_best_effort(struct device *dev)
 	return (fw_devlink_best_effort && dev->can_match) ||
 		(dev->fwnode && (dev->fwnode->flags & FWNODE_FLAG_BEST_EFFORT));
 }
+#endif /* CL */
 
 static struct fwnode_handle *fwnode_links_check_suppliers(
 						struct fwnode_handle *fwnode)
@@ -1035,6 +1037,7 @@ static struct fwnode_handle *fwnode_links_check_suppliers(
 	return NULL;
 }
 
+#if 0
 /**
  * device_links_check_suppliers - Check presence of supplier drivers.
  * @dev: Consumer device.
@@ -1237,6 +1240,7 @@ static void device_link_drop_managed(struct device_link *link)
 	WRITE_ONCE(link->status, DL_STATE_NONE);
 	kref_put(&link->kref, __device_link_del);
 }
+#endif /* CL */
 
 static ssize_t waiting_for_supplier_show(struct device *dev,
 					 struct device_attribute *attr,
@@ -1252,6 +1256,7 @@ static ssize_t waiting_for_supplier_show(struct device *dev,
 }
 static DEVICE_ATTR_RO(waiting_for_supplier);
 
+#if 0
 /**
  * device_links_force_bind - Prepares device to be force bound
  * @dev: Consumer device.
@@ -2368,6 +2373,8 @@ int lock_device_hotplug_sysfs(void)
 	return restart_syscall();
 }
 
+#endif /* CL */
+
 #ifdef CONFIG_BLOCK
 static inline int device_is_not_partition(struct device *dev)
 {
@@ -2394,6 +2401,7 @@ static void device_platform_notify_remove(struct device *dev)
 	acpi_device_notify_remove(dev);
 }
 
+#if 0
 /**
  * dev_driver_string - Return a device's driver name, if at all possible
  * @dev: struct device to get the name of
@@ -2415,6 +2423,7 @@ const char *dev_driver_string(const struct device *dev)
 	return drv ? drv->name : dev_bus_name(dev);
 }
 EXPORT_SYMBOL(dev_driver_string);
+#endif /* CL */
 
 #define to_dev_attr(_attr) container_of(_attr, struct device_attribute, attr)
 
@@ -2451,6 +2460,7 @@ static const struct sysfs_ops dev_sysfs_ops = {
 	.store	= dev_attr_store,
 };
 
+#if 0
 #define to_ext_attr(x) container_of(x, struct dev_ext_attribute, attr)
 
 ssize_t device_store_ulong(struct device *dev,
@@ -2538,6 +2548,7 @@ ssize_t device_show_string(struct device *dev,
 	return sysfs_emit(buf, "%s\n", (char *)ea->var);
 }
 EXPORT_SYMBOL_GPL(device_show_string);
+#endif /* CL */
 
 /**
  * device_release - free device structure.
@@ -2603,6 +2614,7 @@ static const struct kobj_type device_ktype = {
 	.get_ownership	= device_get_ownership,
 };
 
+#if 0
 
 static int dev_uevent_filter(const struct kobject *kobj)
 {
@@ -2729,6 +2741,7 @@ static const struct kset_uevent_ops device_uevent_ops = {
 	.name =		dev_uevent_name,
 	.uevent =	dev_uevent,
 };
+#endif /* CL */
 
 static ssize_t uevent_show(struct device *dev, struct device_attribute *attr,
 			   char *buf)
@@ -2839,6 +2852,7 @@ static ssize_t removable_show(struct device *dev, struct device_attribute *attr,
 }
 static DEVICE_ATTR_RO(removable);
 
+#if 0
 int device_add_groups(struct device *dev, const struct attribute_group **groups)
 {
 	return sysfs_create_groups(&dev->kobj, groups);
@@ -2964,6 +2978,7 @@ static int device_add_attrs(struct device *dev)
 
 	return error;
 }
+#endif /* CL */
 
 static void device_remove_attrs(struct device *dev)
 {
@@ -2997,6 +3012,7 @@ static DEVICE_ATTR_RO(dev);
 /* /sys/devices/ */
 struct kset *devices_kset;
 
+#if 0
 /**
  * devices_kset_move_before - Move device in the devices_kset's list.
  * @deva: Device to move.
@@ -3140,6 +3156,7 @@ static void klist_children_put(struct klist_node *n)
 
 	put_device(dev);
 }
+#endif /* CL */
 
 /**
  * device_initialize - init device structure.
@@ -3185,6 +3202,7 @@ void device_initialize(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(device_initialize);
 
+#if 0
 struct kobject *virtual_device_parent(void)
 {
 	static struct kobject *virtual_dir = NULL;
@@ -3244,9 +3262,11 @@ static struct kobject *class_dir_create_and_add(struct subsys_private *sp,
 	}
 	return &dir->kobj;
 }
+#endif /* CL */
 
 static DEFINE_MUTEX(gdp_mutex);
 
+#if 0
 static struct kobject *get_device_parent(struct device *dev,
 					 struct device *parent)
 {
@@ -3310,6 +3330,7 @@ static struct kobject *get_device_parent(struct device *dev,
 		return &parent->kobj;
 	return NULL;
 }
+#endif /* CL */
 
 static inline bool live_in_glue_dir(struct kobject *kobj,
 				    struct device *dev)
@@ -3423,6 +3444,7 @@ static void cleanup_glue_dir(struct device *dev, struct kobject *glue_dir)
 	kobject_put(glue_dir);
 	mutex_unlock(&gdp_mutex);
 }
+#if 0
 
 static int device_add_class_symlinks(struct device *dev)
 {
@@ -3468,6 +3490,7 @@ exit:
 	subsys_put(sp);
 	return error;
 }
+#endif /* CL */
 
 static void device_remove_class_symlinks(struct device *dev)
 {
@@ -3486,6 +3509,7 @@ static void device_remove_class_symlinks(struct device *dev)
 	subsys_put(sp);
 }
 
+#if 0
 /**
  * dev_set_name - set a device name
  * @dev: device
@@ -3548,6 +3572,7 @@ static int device_private_init(struct device *dev)
 	INIT_LIST_HEAD(&dev->p->deferred_probe);
 	return 0;
 }
+#endif /* CL */
 
 /**
  * device_add - add device to device hierarchy.
@@ -3589,6 +3614,7 @@ int device_add(struct device *dev)
 	if (!dev)
 		goto done;
 
+#if 0
 	if (!dev->p) {
 		error = device_private_init(dev);
 		if (error)
@@ -3721,6 +3747,8 @@ int device_add(struct device *dev)
 		mutex_unlock(&sp->mutex);
 		subsys_put(sp);
 	}
+#endif 
+    PANIC("");
 done:
 	put_device(dev);
 	return error;
@@ -3779,7 +3807,6 @@ int device_register(struct device *dev)
 	return device_add(dev);
 }
 EXPORT_SYMBOL_GPL(device_register);
-#endif /* CL */
 
 /**
  * get_device - increment reference count for device.

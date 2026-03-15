@@ -1,1 +1,1 @@
-kernel/dma/swiotlb.o
+kernel/dma/swiotlb.o kernel/dma/mapping.o

@@ -1,3 +1,5 @@
 # Makefile for 'driver/base/power'
 
-obj-y += qos.o
+obj-y += main.o
+obj-y += runtime.o
+#obj-y += qos.o

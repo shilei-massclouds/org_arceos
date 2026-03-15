@@ -52,8 +52,6 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/swiotlb.h>
 
-#include "adaptor.h"
-
 #define SLABS_PER_PAGE (1 << (PAGE_SHIFT - IO_TLB_SHIFT))
 
 /*
@@ -206,7 +204,7 @@ setup_io_tlb_npages(char *str)
 	return 0;
 }
 early_param("swiotlb", setup_io_tlb_npages);
-#endif
+#endif /* CL */
 
 unsigned long swiotlb_size_or_default(void)
 {
@@ -227,7 +225,7 @@ void __init swiotlb_adjust_size(unsigned long size)
 	default_nslabs = ALIGN(size >> IO_TLB_SHIFT, IO_TLB_SEGSIZE);
 	if (round_up_default_nslabs())
 		size = default_nslabs << IO_TLB_SHIFT;
-	pr_info("SWIOTLB bounce buffer size adjusted to %luMB\n", size >> 20);
+	pr_info("SWIOTLB bounce buffer size adjusted to %luMB", size >> 20);
 }
 
 void swiotlb_print_info(void)
@@ -248,12 +246,12 @@ static inline unsigned long io_tlb_offset(unsigned long val)
 	return val & (IO_TLB_SEGSIZE - 1);
 }
 
-#if 0
 static inline unsigned long nr_slots(u64 val)
 {
 	return DIV_ROUND_UP(val, IO_TLB_SIZE);
 }
 
+#if 0
 /*
  * Early SWIOTLB allocation may be too early to allow an architecture to
  * perform the desired operations.  This function allows the architecture to
@@ -270,7 +268,7 @@ void __init swiotlb_update_mem_attributes(void)
 	bytes = PAGE_ALIGN(mem->nslabs << IO_TLB_SHIFT);
 	set_memory_decrypted((unsigned long)mem->vaddr, bytes >> PAGE_SHIFT);
 }
-#endif
+#endif /* CL */
 
 static void swiotlb_init_io_tlb_pool(struct io_tlb_pool *mem, phys_addr_t start,
 		unsigned long nslabs, bool late_alloc, unsigned int nareas)
@@ -819,6 +817,7 @@ static void swiotlb_del_pool(struct device *dev, struct io_tlb_pool *pool)
 }
 
 #endif	/* CONFIG_SWIOTLB_DYNAMIC */
+#endif /* CL */
 
 /**
  * swiotlb_dev_init() - initialize swiotlb fields in &struct device
@@ -834,6 +833,7 @@ void swiotlb_dev_init(struct device *dev)
 #endif
 }
 
+#if 0
 /**
  * swiotlb_align_offset() - Get required offset into an IO TLB allocation.
  * @dev:         Owning device.
@@ -1624,7 +1624,7 @@ size_t swiotlb_max_mapping_size(struct device *dev)
 
 	return ((size_t)IO_TLB_SIZE) * IO_TLB_SEGSIZE - min_align;
 }
-#endif
+#endif /* CL */
 
 /**
  * is_swiotlb_allocated() - check if the default software IO TLB is initialized
@@ -1890,5 +1890,4 @@ static int __init rmem_swiotlb_setup(struct reserved_mem *rmem)
 
 RESERVEDMEM_OF_DECLARE(dma, "restricted-dma-pool", rmem_swiotlb_setup);
 #endif /* CONFIG_DMA_RESTRICTED_POOL */
-
-#endif
+#endif /* CL */

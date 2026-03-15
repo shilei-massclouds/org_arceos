@@ -36,6 +36,7 @@ struct scatterlist *sg_next(struct scatterlist *sg)
 }
 EXPORT_SYMBOL(sg_next);
 
+#if 0
 /**
  * sg_nents - return total count of entries in scatterlist
  * @sg:		The scatterlist
@@ -1431,3 +1432,4 @@ ssize_t extract_iter_to_sg(struct iov_iter *iter, size_t maxsize,
 	}
 }
 EXPORT_SYMBOL_GPL(extract_iter_to_sg);
+#endif /* CL */

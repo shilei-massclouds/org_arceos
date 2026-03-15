@@ -24,6 +24,7 @@ void sbi_init(void);
 void setup_bootmem(void);
 void unflatten_device_tree(void);
 void riscv_init_cbo_blocksizes(void);
+int platform_bus_init(void);
 
 /* Untouched command line saved by arch-specific code. */
 char __initdata boot_command_line[COMMAND_LINE_SIZE];
@@ -346,8 +347,8 @@ int __init_or_module do_one_initcall(initcall_t fn)
 
 void cl_driver_init()
 {
-    //PANIC("");
-    printk("%s: Warning!!! -------------------- IMPL IT ------------------------------\n", __func__);
+    platform_bus_init();
+    PANIC("");
 }
 
 static int __init ignore_unknown_bootoption(char *param, char *val,

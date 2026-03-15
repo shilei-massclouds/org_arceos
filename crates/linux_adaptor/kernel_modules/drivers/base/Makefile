@@ -15,4 +15,4 @@ obj-y += platform.o
 #obj-y += class.o map.o firmware.o
 
 #obj-y += regmap/
-#obj-y += power/
+obj-y += power/
