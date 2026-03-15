@@ -752,7 +752,6 @@ struct fwnode_handle *fwnode_get_nth_parent(struct fwnode_handle *fwnode,
 }
 EXPORT_SYMBOL_GPL(fwnode_get_nth_parent);
 
-#if 0
 /**
  * fwnode_get_next_child_node - Return the next child node handle for a node
  * @fwnode: Firmware node to find the next child node for.
@@ -798,6 +797,7 @@ fwnode_get_next_available_child_node(const struct fwnode_handle *fwnode,
 }
 EXPORT_SYMBOL_GPL(fwnode_get_next_available_child_node);
 
+#if 0
 /**
  * device_get_next_child_node - Return the next child node handle for a device
  * @dev: Device to find the next child node for.
@@ -876,7 +876,6 @@ struct fwnode_handle *fwnode_handle_get(struct fwnode_handle *fwnode)
 }
 EXPORT_SYMBOL_GPL(fwnode_handle_get);
 
-#if 0
 /**
  * fwnode_device_is_available - check if a device is available for use
  * @fwnode: Pointer to the fwnode of the device.
@@ -898,6 +897,7 @@ bool fwnode_device_is_available(const struct fwnode_handle *fwnode)
 }
 EXPORT_SYMBOL_GPL(fwnode_device_is_available);
 
+#if 0
 /**
  * device_get_child_node_count - return the number of child nodes for device
  * @dev: Device to count the child nodes for

@@ -414,6 +414,7 @@ struct device *bus_find_device(const struct bus_type *bus,
 	return dev;
 }
 EXPORT_SYMBOL_GPL(bus_find_device);
+#endif /* CL */
 
 static struct device_driver *next_driver(struct klist_iter *i)
 {
@@ -466,7 +467,6 @@ int bus_for_each_drv(const struct bus_type *bus, struct device_driver *start,
 	return error;
 }
 EXPORT_SYMBOL_GPL(bus_for_each_drv);
-#endif /* CL */
 
 /**
  * bus_add_device - add device to bus

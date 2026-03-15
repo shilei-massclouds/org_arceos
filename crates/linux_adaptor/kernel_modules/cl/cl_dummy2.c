@@ -425,3 +425,10 @@ void consume_skb(struct sk_buff *skb)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+int sysfs_create_link(struct kobject *kobj, struct kobject *target,
+              const char *name)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

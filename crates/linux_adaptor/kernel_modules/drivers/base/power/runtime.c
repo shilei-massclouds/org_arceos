@@ -20,7 +20,6 @@
 
 typedef int (*pm_callback_t)(struct device *);
 
-#if 0
 static pm_callback_t __rpm_get_callback(struct device *dev, size_t cb_offset)
 {
 	pm_callback_t cb;
@@ -54,6 +53,7 @@ static pm_callback_t __rpm_get_callback(struct device *dev, size_t cb_offset)
 static int rpm_resume(struct device *dev, int rpmflags);
 static int rpm_suspend(struct device *dev, int rpmflags);
 
+#if 0
 /**
  * update_pm_runtime_accounting - Update the time accounting of power states
  * @dev: Device to update the accounting for
@@ -253,6 +253,7 @@ void pm_runtime_set_memalloc_noio(struct device *dev, bool enable)
 	mutex_unlock(&dev_hotplug_mutex);
 }
 EXPORT_SYMBOL_GPL(pm_runtime_set_memalloc_noio);
+#endif /* CL */
 
 /**
  * rpm_check_suspend_allowed - Test whether a device may be suspended.
@@ -284,6 +285,7 @@ static int rpm_check_suspend_allowed(struct device *dev)
 	return retval;
 }
 
+#if 0
 static int rpm_get_suppliers(struct device *dev)
 {
 	struct device_link *link;
@@ -453,6 +455,7 @@ static int rpm_callback(int (*cb)(struct device *), struct device *dev)
 	dev->power.runtime_error = retval;
 	return retval != -EACCES ? retval : -EIO;
 }
+#endif /* CL */
 
 /**
  * rpm_idle - Notify device bus type if the device can be suspended.
@@ -501,6 +504,7 @@ static int rpm_idle(struct device *dev, int rpmflags)
 
 	callback = RPM_GET_CALLBACK(dev, runtime_idle);
 
+#if 0
 	/* If no callback assume success. */
 	if (!callback || dev->power.no_callbacks)
 		goto out;
@@ -532,6 +536,8 @@ static int rpm_idle(struct device *dev, int rpmflags)
 
 	dev->power.idle_notification = false;
 	wake_up_all(&dev->power.wait_queue);
+#endif
+    PANIC("");
 
  out:
 	trace_rpm_return_int(dev, _THIS_IP_, retval);
@@ -566,6 +572,7 @@ static int rpm_suspend(struct device *dev, int rpmflags)
 	struct device *parent = NULL;
 	int retval;
 
+#if 0
 	trace_rpm_suspend(dev, rpmflags);
 
  repeat:
@@ -743,6 +750,8 @@ static int rpm_suspend(struct device *dev, int rpmflags)
 		pm_runtime_cancel_pending(dev);
 	}
 	goto out;
+#endif
+    PANIC("");
 }
 
 /**
@@ -784,6 +793,7 @@ static int rpm_resume(struct device *dev, int rpmflags)
 	if (retval)
 		goto out;
 
+#if 0
 	/*
 	 * Other scheduled or pending requests need to be canceled.  Small
 	 * optimization: If an autosuspend timer is running, leave it running
@@ -929,6 +939,8 @@ static int rpm_resume(struct device *dev, int rpmflags)
 
 	if (retval >= 0)
 		rpm_idle(dev, RPM_ASYNC);
+#endif
+    PANIC("");
 
  out:
 	if (parent && !dev->power.irq_safe) {
@@ -943,7 +955,6 @@ static int rpm_resume(struct device *dev, int rpmflags)
 
 	return retval;
 }
-#endif /* CL */
 
 /**
  * pm_runtime_work - Universal runtime PM work function.
@@ -1060,6 +1071,7 @@ int pm_schedule_suspend(struct device *dev, unsigned int delay)
 	return retval;
 }
 EXPORT_SYMBOL_GPL(pm_schedule_suspend);
+#endif /* CL */
 
 static int rpm_drop_usage_count(struct device *dev)
 {
@@ -1118,6 +1130,7 @@ int __pm_runtime_idle(struct device *dev, int rpmflags)
 }
 EXPORT_SYMBOL_GPL(__pm_runtime_idle);
 
+#if 0
 /**
  * __pm_runtime_suspend - Entry point for runtime put/suspend operations.
  * @dev: Device to suspend.
@@ -1155,6 +1168,7 @@ int __pm_runtime_suspend(struct device *dev, int rpmflags)
 	return retval;
 }
 EXPORT_SYMBOL_GPL(__pm_runtime_suspend);
+#endif /* CL */
 
 /**
  * __pm_runtime_resume - Entry point for runtime resume operations.
@@ -1185,6 +1199,8 @@ int __pm_runtime_resume(struct device *dev, int rpmflags)
 	return retval;
 }
 EXPORT_SYMBOL_GPL(__pm_runtime_resume);
+
+#if 0
 
 /**
  * pm_runtime_get_conditional - Conditionally bump up device usage counter.

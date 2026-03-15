@@ -340,6 +340,7 @@ int blocking_notifier_chain_unregister(struct blocking_notifier_head *nh,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(blocking_notifier_chain_unregister);
+#endif /* CL */
 
 int blocking_notifier_call_chain_robust(struct blocking_notifier_head *nh,
 		unsigned long val_up, unsigned long val_down, void *v)
@@ -394,7 +395,6 @@ int blocking_notifier_call_chain(struct blocking_notifier_head *nh,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
-#endif /* CL */
 
 /*
  *	Raw notifier chain routines.  There is no protection;

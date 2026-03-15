@@ -2,6 +2,7 @@
 
 obj-y += trace_syscalls.o
 obj-y += power-traces.o
+obj-y += rpm-traces.o
 
 #obj-y += trace.o
 

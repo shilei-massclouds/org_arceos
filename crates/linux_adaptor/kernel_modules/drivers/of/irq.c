@@ -730,6 +730,7 @@ struct irq_domain *of_msi_map_get_device_domain(struct device *dev, u32 id,
 	__of_msi_map_id(dev, &np, id);
 	return irq_find_matching_host(np, bus_token);
 }
+#endif /* CL */
 
 /**
  * of_msi_get_domain - Use msi-parent to find the relevant MSI domain
@@ -770,5 +771,3 @@ void of_msi_configure(struct device *dev, struct device_node *np)
 			   of_msi_get_domain(dev, np, DOMAIN_BUS_PLATFORM_MSI));
 }
 EXPORT_SYMBOL_GPL(of_msi_configure);
-
-#endif /* CL */

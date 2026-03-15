@@ -103,6 +103,7 @@ int fwnode_link_add(struct fwnode_handle *con, struct fwnode_handle *sup,
 
 	return __fwnode_link_add(con, sup, flags);
 }
+#endif /* CL */
 
 /**
  * __fwnode_link_del - Delete a link between two fwnode_handles.
@@ -132,6 +133,7 @@ static void __fwnode_link_cycle(struct fwnode_link *link)
 	link->flags |= FWLINK_FLAG_CYCLE;
 }
 
+#if 0
 /**
  * fwnode_links_purge_suppliers - Delete all supplier links of fwnode_handle.
  * @fwnode: fwnode whose supplier links need to be deleted
@@ -266,6 +268,7 @@ int device_links_read_lock_held(void)
 {
 	return srcu_read_lock_held(&device_links_srcu);
 }
+#endif /* CL */
 
 static void device_link_synchronize_removal(void)
 {
@@ -287,7 +290,6 @@ static bool device_is_ancestor(struct device *dev, struct device *target)
 	}
 	return false;
 }
-#endif /* CL */
 
 #define DL_MARKER_FLAGS		(DL_FLAG_INFERRED | \
 				 DL_FLAG_CYCLE | \
@@ -297,7 +299,6 @@ static inline bool device_link_flag_is_sync_state_only(u32 flags)
 	return (flags & ~DL_MARKER_FLAGS) == DL_FLAG_SYNC_STATE_ONLY;
 }
 
-#if 0
 /**
  * device_is_dependent - Check if one device depends on another one
  * @dev: Device to check dependencies for.
@@ -405,6 +406,7 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
 	return 0;
 }
 
+#if 0
 /**
  * device_pm_move_to_tail - Move set of devices to the end of device lists
  * @dev: Device to move
@@ -424,6 +426,7 @@ void device_pm_move_to_tail(struct device *dev)
 	device_pm_unlock();
 	device_links_read_unlock(idx);
 }
+#endif /* CL */
 
 #define to_devlink(dev)	container_of((dev), struct device_link, link_dev)
 
@@ -544,6 +547,7 @@ static void devlink_dev_release(struct device *dev)
 	queue_work(device_link_wq, &link->rm_work);
 }
 
+#if 0
 /**
  * device_link_wait_removal - Wait for ongoing devlink removal jobs to terminate
  */
@@ -557,6 +561,7 @@ void device_link_wait_removal(void)
 	flush_workqueue(device_link_wq);
 }
 EXPORT_SYMBOL_GPL(device_link_wait_removal);
+#endif /* CL */
 
 static struct class devlink_class = {
 	.name = "devlink",
@@ -564,6 +569,7 @@ static struct class devlink_class = {
 	.dev_release = devlink_dev_release,
 };
 
+#if 0
 static int devlink_add_symlinks(struct device *dev)
 {
 	char *buf_con __free(kfree) = NULL, *buf_sup __free(kfree) = NULL;
@@ -661,6 +667,8 @@ static int __init devlink_class_init(void)
 	return ret;
 }
 postcore_initcall(devlink_class_init);
+
+#endif /* CL */
 
 #define DL_MANAGED_LINK_FLAGS (DL_FLAG_AUTOREMOVE_CONSUMER | \
 			       DL_FLAG_AUTOREMOVE_SUPPLIER | \
@@ -931,6 +939,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(device_link_add);
 
+#if 0
 static void __device_link_del(struct kref *kref)
 {
 	struct device_link *link = container_of(kref, struct device_link, kref);
@@ -1685,6 +1694,7 @@ static int __init fw_devlink_setup(char *arg)
 	return 0;
 }
 early_param("fw_devlink", fw_devlink_setup);
+#endif /* CL */
 
 static bool fw_devlink_strict;
 static int __init fw_devlink_strict_setup(char *arg)
@@ -1702,6 +1712,7 @@ static int fw_devlink_sync_state;
 static int fw_devlink_sync_state = FW_DEVLINK_SYNC_STATE_TIMEOUT;
 #endif
 
+#if 0
 static int __init fw_devlink_sync_state_setup(char *arg)
 {
 	if (!arg)
@@ -1717,6 +1728,7 @@ static int __init fw_devlink_sync_state_setup(char *arg)
 	return -EINVAL;
 }
 early_param("fw_devlink.sync_state", fw_devlink_sync_state_setup);
+#endif /* CL */
 
 static inline u32 fw_devlink_get_flags(u8 fwlink_flags)
 {
@@ -1725,14 +1737,12 @@ static inline u32 fw_devlink_get_flags(u8 fwlink_flags)
 
 	return fw_devlink_flags;
 }
-#endif /* CL */
 
 static bool fw_devlink_is_permissive(void)
 {
 	return fw_devlink_flags == FW_DEVLINK_FLAGS_PERMISSIVE;
 }
 
-#if 0
 bool fw_devlink_is_strict(void)
 {
 	return fw_devlink_strict && !fw_devlink_is_permissive();
@@ -1756,7 +1766,6 @@ static void fw_devlink_parse_fwtree(struct fwnode_handle *fwnode)
 	while ((child = fwnode_get_next_available_child_node(fwnode, child)))
 		fw_devlink_parse_fwtree(child);
 }
-#endif /* CL */
 
 static void fw_devlink_relax_link(struct device_link *link)
 {
@@ -1900,7 +1909,6 @@ static void fw_devlink_unblock_consumers(struct device *dev)
 	device_links_write_unlock();
 }
 
-#if 0
 #define get_dev_from_fwnode(fwnode)	get_device((fwnode)->dev)
 
 static bool fwnode_init_without_drv(struct fwnode_handle *fwnode)
@@ -2335,13 +2343,11 @@ static void __fw_devlink_link_to_suppliers(struct device *dev,
 	while ((child = fwnode_get_next_available_child_node(fwnode, child)))
 		__fw_devlink_link_to_suppliers(dev, child);
 }
-#endif /* CL */
 
 static void fw_devlink_link_device(struct device *dev)
 {
 	struct fwnode_handle *fwnode = dev->fwnode;
 
-#if 0
 	if (!fw_devlink_flags)
 		return;
 
@@ -2351,8 +2357,6 @@ static void fw_devlink_link_device(struct device *dev)
 
 	__fw_devlink_link_to_consumers(dev);
 	__fw_devlink_link_to_suppliers(dev, fwnode);
-#endif
-    PANIC("");
 }
 
 /* Device links support end. */
@@ -2685,9 +2689,9 @@ static int dev_uevent(const struct kobject *kobj, struct kobj_uevent_env *env)
 	const struct device *dev = kobj_to_dev(kobj);
 	int retval = 0;
 
-#if 0
 	/* add device node properties if present */
 	if (MAJOR(dev->devt)) {
+#if 0
 		const char *tmp;
 		const char *name;
 		umode_t mode = 0;
@@ -2707,6 +2711,8 @@ static int dev_uevent(const struct kobject *kobj, struct kobj_uevent_env *env)
 				add_uevent_var(env, "DEVGID=%u", from_kgid(&init_user_ns, gid));
 			kfree(tmp);
 		}
+#endif
+        PANIC("devt");
 	}
 
 	if (dev->type && dev->type->name)
@@ -2743,8 +2749,6 @@ static int dev_uevent(const struct kobject *kobj, struct kobj_uevent_env *env)
 				 "returned %d\n", dev_name(dev),
 				 __func__, retval);
 	}
-#endif
-    PANIC("");
 
 	return retval;
 }
@@ -5234,6 +5238,7 @@ void device_set_of_node_from_dev(struct device *dev, const struct device *dev2)
 	dev->of_node_reused = true;
 }
 EXPORT_SYMBOL_GPL(device_set_of_node_from_dev);
+#endif /* CL */
 
 void device_set_node(struct device *dev, struct fwnode_handle *fwnode)
 {
@@ -5242,6 +5247,7 @@ void device_set_node(struct device *dev, struct fwnode_handle *fwnode)
 }
 EXPORT_SYMBOL_GPL(device_set_node);
 
+#if 0
 int device_match_name(struct device *dev, const void *name)
 {
 	return sysfs_streq(dev_name(dev), name);

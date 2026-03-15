@@ -1071,7 +1071,6 @@ of_fwnode_device_get_match_data(const struct fwnode_handle *fwnode,
 	return of_device_get_match_data(dev);
 }
 
-#if 0
 static void of_link_to_phandle(struct device_node *con_np,
 			      struct device_node *sup_np,
 			      u8 flags)
@@ -1458,7 +1457,6 @@ static int of_link_property(struct device_node *con_np, const char *prop_name)
 	}
 	return 0;
 }
-#endif /* CL */
 
 static void __iomem *of_fwnode_iomap(struct fwnode_handle *fwnode, int index)
 {
@@ -1481,7 +1479,6 @@ static int of_fwnode_add_links(struct fwnode_handle *fwnode)
 	struct property *p;
 	struct device_node *con_np = to_of_node(fwnode);
 
-#if 0
 	if (IS_ENABLED(CONFIG_X86))
 		return 0;
 
@@ -1490,8 +1487,6 @@ static int of_fwnode_add_links(struct fwnode_handle *fwnode)
 
 	for_each_property_of_node(con_np, p)
 		of_link_property(con_np, p->name);
-#endif
-    PANIC("");
 
 	return 0;
 }

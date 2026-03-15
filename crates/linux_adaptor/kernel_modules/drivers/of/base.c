@@ -645,7 +645,6 @@ struct device_node *of_get_next_child(const struct device_node *node,
 	return next;
 }
 EXPORT_SYMBOL(of_get_next_child);
-#if 0
 
 static struct device_node *of_get_next_status_child(const struct device_node *node,
 						    struct device_node *prev,
@@ -685,6 +684,7 @@ struct device_node *of_get_next_available_child(const struct device_node *node,
 }
 EXPORT_SYMBOL(of_get_next_available_child);
 
+#if 0
 /**
  * of_get_next_reserved_child - Find the next reserved child node
  * @node:	parent node

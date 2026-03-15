@@ -56,6 +56,7 @@ struct platform_device *of_find_device_by_node(struct device_node *np)
 	return dev ? to_platform_device(dev) : NULL;
 }
 EXPORT_SYMBOL(of_find_device_by_node);
+#endif /* CL */
 
 int of_device_add(struct platform_device *ofdev)
 {
@@ -76,6 +77,7 @@ int of_device_add(struct platform_device *ofdev)
 	return device_add(&ofdev->dev);
 }
 
+#if 0
 int of_device_register(struct platform_device *pdev)
 {
 	device_initialize(&pdev->dev);
@@ -184,7 +186,6 @@ static struct platform_device *of_platform_device_create_pdata(
 	if (!dev)
 		goto err_clear_flag;
 
-#if 0
 	dev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
 	if (!dev->dev.dma_mask)
 		dev->dev.dma_mask = &dev->dev.coherent_dma_mask;
@@ -196,9 +197,6 @@ static struct platform_device *of_platform_device_create_pdata(
 		platform_device_put(dev);
 		goto err_clear_flag;
 	}
-#endif /* CL */
-    PANIC("");
-
 	return dev;
 
 err_clear_flag:
