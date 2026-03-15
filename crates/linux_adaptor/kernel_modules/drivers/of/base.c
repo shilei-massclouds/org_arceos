@@ -382,7 +382,6 @@ int of_device_is_compatible(const struct device_node *device,
 }
 EXPORT_SYMBOL(of_device_is_compatible);
 
-#if 0
 /** Checks if the device is compatible with any of the entries in
  *  a NULL terminated array of strings. Returns the best match
  *  score or 0.
@@ -405,6 +404,7 @@ int of_device_compatible_match(const struct device_node *device,
 	return score;
 }
 EXPORT_SYMBOL_GPL(of_device_compatible_match);
+#if 0
 
 /**
  * of_machine_compatible_match - Test root of device tree against a compatible array
@@ -578,7 +578,6 @@ struct device_node *of_get_parent(const struct device_node *node)
 }
 EXPORT_SYMBOL(of_get_parent);
 
-#if 0
 /**
  * of_get_next_parent - Iterate to a node's parent
  * @node:	Node to get parent of
@@ -605,7 +604,6 @@ struct device_node *of_get_next_parent(struct device_node *node)
 	return parent;
 }
 EXPORT_SYMBOL(of_get_next_parent);
-#endif /* CL */
 
 static struct device_node *__of_get_next_child(const struct device_node *node,
 						struct device_node *prev)

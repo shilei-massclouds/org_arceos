@@ -87,7 +87,6 @@ struct device_node *of_irq_find_parent(struct device_node *child)
 }
 EXPORT_SYMBOL_GPL(of_irq_find_parent);
 
-#if  0
 /*
  * These interrupt controllers abuse interrupt-map for unspeakable
  * reasons and rely on the core code to *ignore* it (the drivers do
@@ -417,6 +416,7 @@ int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_ar
 }
 EXPORT_SYMBOL_GPL(of_irq_parse_one);
 
+#if 0
 /**
  * of_irq_to_resource - Decode a node's IRQ and return it as a resource
  * @dev: pointer to device tree node

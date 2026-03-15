@@ -107,7 +107,6 @@ void device_pm_sleep_init(struct device *dev)
 	INIT_LIST_HEAD(&dev->power.entry);
 }
 
-#if 0
 /**
  * device_pm_lock - Lock the list of active devices used by the PM core.
  */
@@ -123,7 +122,6 @@ void device_pm_unlock(void)
 {
 	mutex_unlock(&dpm_list_mtx);
 }
-#endif /* CL */
 
 /**
  * device_pm_add - Add a device to the PM core's list of active devices.
@@ -196,6 +194,7 @@ void device_pm_move_after(struct device *deva, struct device *devb)
 	/* Delete deva from dpm_list and reinsert after devb. */
 	list_move(&deva->power.entry, &devb->power.entry);
 }
+#endif /* CL */
 
 /**
  * device_pm_move_last - Move device to end of the PM core's list of devices.
@@ -208,6 +207,7 @@ void device_pm_move_last(struct device *dev)
 	list_move_tail(&dev->power.entry, &dpm_list);
 }
 
+#if 0
 static ktime_t initcall_debug_start(struct device *dev, void *cb)
 {
 	if (!pm_print_times_enabled)

@@ -1868,6 +1868,7 @@ void pm_runtime_put_suppliers(struct device *dev)
 
 	device_links_read_unlock(idx);
 }
+#endif /* CL */
 
 void pm_runtime_new_link(struct device *dev)
 {
@@ -1876,6 +1877,7 @@ void pm_runtime_new_link(struct device *dev)
 	spin_unlock_irq(&dev->power.lock);
 }
 
+#if 0
 static void pm_runtime_drop_link_count(struct device *dev)
 {
 	spin_lock_irq(&dev->power.lock);

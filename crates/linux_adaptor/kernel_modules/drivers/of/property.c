@@ -124,7 +124,6 @@ static void *of_find_property_value_of_size(const struct device_node *np,
 	return prop->value;
 }
 
-#if 0
 /**
  * of_property_read_u32_index - Find and read a u32 from a multi-value property.
  *
@@ -159,6 +158,7 @@ int of_property_read_u32_index(const struct device_node *np,
 }
 EXPORT_SYMBOL_GPL(of_property_read_u32_index);
 
+#if 0
 /**
  * of_property_read_u64_index - Find and read a u64 from a multi-value property.
  *

@@ -48,7 +48,6 @@ static bool fw_devlink_drv_reg_done;
 static bool fw_devlink_best_effort;
 static struct workqueue_struct *device_link_wq;
 
-#if 0
 /**
  * __fwnode_link_add - Create a link between two fwnode_handles.
  * @con: Consumer end of the link.
@@ -103,7 +102,6 @@ int fwnode_link_add(struct fwnode_handle *con, struct fwnode_handle *sup,
 
 	return __fwnode_link_add(con, sup, flags);
 }
-#endif /* CL */
 
 /**
  * __fwnode_link_del - Delete a link between two fwnode_handles.
@@ -3060,6 +3058,7 @@ static void devices_kset_move_after(struct device *deva, struct device *devb)
 	list_move(&deva->kobj.entry, &devb->kobj.entry);
 	spin_unlock(&devices_kset->list_lock);
 }
+#endif /* CL */
 
 /**
  * devices_kset_move_last - move the device to the end of devices_kset's list.
@@ -3074,7 +3073,6 @@ void devices_kset_move_last(struct device *dev)
 	list_move_tail(&dev->kobj.entry, &devices_kset->list);
 	spin_unlock(&devices_kset->list_lock);
 }
-#endif /* CL */
 
 /**
  * device_create_file - create sysfs attribute file for device.

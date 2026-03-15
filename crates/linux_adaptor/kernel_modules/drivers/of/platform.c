@@ -391,7 +391,6 @@ static int of_platform_bus_create(struct device_node *bus,
 	if (!dev || !of_match_node(matches, bus))
 		return 0;
 
-#if 0
 	for_each_child_of_node_scoped(bus, child) {
 		pr_debug("   create child: %pOF\n", child);
 		rc = of_platform_bus_create(child, matches, lookup, &dev->dev, strict);
@@ -399,8 +398,6 @@ static int of_platform_bus_create(struct device_node *bus,
 			break;
 	}
 	of_node_set_flag(bus, OF_POPULATED_BUS);
-#endif
-    PANIC("");
 	return rc;
 }
 
