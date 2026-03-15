@@ -1,1 +1,0 @@
-drivers/irqchip/irqchip.o drivers/irqchip/irq-riscv-intc.o

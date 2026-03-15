@@ -1,1 +1,0 @@
-init/init_task.o init/initramfs.o init/do_mounts_initrd.o init/version-timestamp.o
