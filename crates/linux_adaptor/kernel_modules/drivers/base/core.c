@@ -3058,6 +3058,7 @@ void devices_kset_move_last(struct device *dev)
 	list_move_tail(&dev->kobj.entry, &devices_kset->list);
 	spin_unlock(&devices_kset->list_lock);
 }
+#endif /* CL */
 
 /**
  * device_create_file - create sysfs attribute file for device.
@@ -3096,6 +3097,7 @@ void device_remove_file(struct device *dev,
 }
 EXPORT_SYMBOL_GPL(device_remove_file);
 
+#if 0
 /**
  * device_remove_file_self - remove sysfs attribute file from its own method.
  * @dev: device.
@@ -3140,6 +3142,7 @@ void device_remove_bin_file(struct device *dev,
 		sysfs_remove_bin_file(&dev->kobj, attr);
 }
 EXPORT_SYMBOL_GPL(device_remove_bin_file);
+#endif /* CL */
 
 static void klist_children_get(struct klist_node *n)
 {
@@ -3156,7 +3159,6 @@ static void klist_children_put(struct klist_node *n)
 
 	put_device(dev);
 }
-#endif /* CL */
 
 /**
  * device_initialize - init device structure.
@@ -3202,7 +3204,6 @@ void device_initialize(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(device_initialize);
 
-#if 0
 struct kobject *virtual_device_parent(void)
 {
 	static struct kobject *virtual_dir = NULL;
@@ -3262,11 +3263,9 @@ static struct kobject *class_dir_create_and_add(struct subsys_private *sp,
 	}
 	return &dir->kobj;
 }
-#endif /* CL */
 
 static DEFINE_MUTEX(gdp_mutex);
 
-#if 0
 static struct kobject *get_device_parent(struct device *dev,
 					 struct device *parent)
 {
@@ -3330,7 +3329,6 @@ static struct kobject *get_device_parent(struct device *dev,
 		return &parent->kobj;
 	return NULL;
 }
-#endif /* CL */
 
 static inline bool live_in_glue_dir(struct kobject *kobj,
 				    struct device *dev)
@@ -3444,7 +3442,6 @@ static void cleanup_glue_dir(struct device *dev, struct kobject *glue_dir)
 	kobject_put(glue_dir);
 	mutex_unlock(&gdp_mutex);
 }
-#if 0
 
 static int device_add_class_symlinks(struct device *dev)
 {
@@ -3490,7 +3487,6 @@ exit:
 	subsys_put(sp);
 	return error;
 }
-#endif /* CL */
 
 static void device_remove_class_symlinks(struct device *dev)
 {
@@ -3509,7 +3505,6 @@ static void device_remove_class_symlinks(struct device *dev)
 	subsys_put(sp);
 }
 
-#if 0
 /**
  * dev_set_name - set a device name
  * @dev: device
@@ -3527,6 +3522,7 @@ int dev_set_name(struct device *dev, const char *fmt, ...)
 }
 EXPORT_SYMBOL_GPL(dev_set_name);
 
+#if 0
 /* select a /sys/dev/ directory for the device */
 static struct kobject *device_to_dev_kobj(struct device *dev)
 {
@@ -3560,6 +3556,7 @@ static void device_remove_sys_dev_entry(struct device *dev)
 		sysfs_remove_link(kobj, devt_str);
 	}
 }
+#endif /* CL */
 
 static int device_private_init(struct device *dev)
 {
@@ -3572,7 +3569,6 @@ static int device_private_init(struct device *dev)
 	INIT_LIST_HEAD(&dev->p->deferred_probe);
 	return 0;
 }
-#endif /* CL */
 
 /**
  * device_add - add device to device hierarchy.
@@ -3614,7 +3610,6 @@ int device_add(struct device *dev)
 	if (!dev)
 		goto done;
 
-#if 0
 	if (!dev->p) {
 		error = device_private_init(dev);
 		if (error)
@@ -3674,6 +3669,7 @@ int device_add(struct device *dev)
 	error = device_add_class_symlinks(dev);
 	if (error)
 		goto SymlinkError;
+#if 0
 	error = device_add_attrs(dev);
 	if (error)
 		goto AttrsError;
@@ -4936,6 +4932,7 @@ void device_shutdown(void)
 	}
 	spin_unlock(&devices_kset->list_lock);
 }
+#endif /* CL */
 
 /*
  * Device logging functions
@@ -5066,6 +5063,7 @@ define_dev_printk_level(_dev_info, KERN_INFO);
 
 #endif
 
+#if 0
 /**
  * dev_err_probe - probe error check and log helper
  * @dev: the pointer to the struct device

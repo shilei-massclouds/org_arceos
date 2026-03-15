@@ -59,7 +59,6 @@ static const char *kobject_actions[] = {
 	[KOBJ_UNBIND] =		"unbind",
 };
 
-#if 0
 static int kobject_action_type(const char *buf, size_t count,
 			       enum kobject_action *type,
 			       const char **args)
@@ -233,6 +232,7 @@ out:
 	return r;
 }
 
+#if 0
 #ifdef CONFIG_UEVENT_HELPER
 static int kobj_usermode_filter(struct kobject *kobj)
 {
@@ -486,7 +486,6 @@ int kobject_uevent_env(struct kobject *kobj, enum kobject_action action,
 	int i = 0;
 	int retval = 0;
 
-#if 0
 	/*
 	 * Mark "remove" event done regardless of result, for some subsystems
 	 * do not want to re-trigger "remove" event via automatic cleanup.
@@ -509,6 +508,7 @@ int kobject_uevent_env(struct kobject *kobj, enum kobject_action action,
 		return -EINVAL;
 	}
 
+#if 0
 	kset = top_kobj->kset;
 	uevent_ops = kset->uevent_ops;
 

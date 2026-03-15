@@ -24,6 +24,8 @@ void sbi_init(void);
 void setup_bootmem(void);
 void unflatten_device_tree(void);
 void riscv_init_cbo_blocksizes(void);
+
+int classes_init(void);
 int platform_bus_init(void);
 
 /* Untouched command line saved by arch-specific code. */
@@ -347,6 +349,7 @@ int __init_or_module do_one_initcall(initcall_t fn)
 
 void cl_driver_init()
 {
+    classes_init();
     platform_bus_init();
     PANIC("");
 }

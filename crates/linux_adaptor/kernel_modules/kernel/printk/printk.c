@@ -2348,6 +2348,7 @@ void printk_legacy_allow_panic_sync(void)
 			console_unlock();
 	}
 }
+#endif /* CL */
 
 asmlinkage int vprintk_emit(int facility, int level,
 			    const struct dev_printk_info *dev_info,
@@ -2356,6 +2357,7 @@ asmlinkage int vprintk_emit(int facility, int level,
 	struct console_flush_type ft;
 	int printed_len;
 
+#if 0
 	/* Suppress unimportant messages after panic happens */
 	if (unlikely(suppress_printk))
 		return 0;
@@ -2411,11 +2413,14 @@ asmlinkage int vprintk_emit(int facility, int level,
 		defer_console_output();
 	else
 		wake_up_klogd();
+#endif
+    PANIC("");
 
 	return printed_len;
 }
 EXPORT_SYMBOL(vprintk_emit);
 
+#if 0
 int vprintk_default(const char *fmt, va_list args)
 {
 	return vprintk_emit(0, LOGLEVEL_DEFAULT, NULL, fmt, args);

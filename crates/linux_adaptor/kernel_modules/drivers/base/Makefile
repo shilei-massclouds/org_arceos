@@ -9,10 +9,11 @@ obj-y += cpu.o
 obj-y += arch_topology.o
 obj-y += cacheinfo.o
 obj-y += platform.o
+obj-y += class.o
 
 #obj-y += property.o syscore.o bus.o
 #obj-y += devres.o dd.o driver.o trace.o
-#obj-y += class.o map.o firmware.o
+#obj-y += map.o firmware.o
 
 #obj-y += regmap/
 obj-y += power/

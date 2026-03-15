@@ -62,7 +62,6 @@ EXPORT_SYMBOL_GPL(is_software_node);
 				     struct swnode, fwnode) : NULL;	\
 	})
 
-#if 0
 static inline struct swnode *dev_to_swnode(struct device *dev)
 {
 	struct fwnode_handle *fwnode = dev_fwnode(dev);
@@ -76,6 +75,7 @@ static inline struct swnode *dev_to_swnode(struct device *dev)
 	return to_swnode(fwnode);
 }
 
+#if 0
 static struct swnode *
 software_node_to_swnode(const struct software_node *node)
 {
@@ -1070,6 +1070,7 @@ int device_create_managed_software_node(struct device *dev,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(device_create_managed_software_node);
+#endif /* CL */
 
 void software_node_notify(struct device *dev)
 {
@@ -1126,5 +1127,3 @@ static void __exit software_node_exit(void)
 	kset_unregister(swnode_kset);
 }
 __exitcall(software_node_exit);
-
-#endif /* CL */

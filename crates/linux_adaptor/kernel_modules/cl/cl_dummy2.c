@@ -386,3 +386,17 @@ void kernfs_get(struct kernfs_node *kn)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+// fs/sysfs/file.c
+int sysfs_create_file_ns(struct kobject *kobj, const struct attribute *attr,
+             const void *ns)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void sysfs_remove_file_ns(struct kobject *kobj, const struct attribute *attr,
+              const void *ns)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

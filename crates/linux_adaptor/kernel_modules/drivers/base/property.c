@@ -20,7 +20,6 @@
 
 #include "adaptor.h"
 
-#if 0
 struct fwnode_handle *__dev_fwnode(struct device *dev)
 {
 	return IS_ENABLED(CONFIG_OF) && dev->of_node ?
@@ -28,6 +27,7 @@ struct fwnode_handle *__dev_fwnode(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(__dev_fwnode);
 
+#if 0
 const struct fwnode_handle *__dev_fwnode_const(const struct device *dev)
 {
 	return IS_ENABLED(CONFIG_OF) && dev->of_node ?
