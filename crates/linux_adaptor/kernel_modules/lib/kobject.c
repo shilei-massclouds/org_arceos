@@ -651,7 +651,6 @@ struct kobject *kobject_get(struct kobject *kobj)
 }
 EXPORT_SYMBOL(kobject_get);
 
-#if 0
 struct kobject * __must_check kobject_get_unless_zero(struct kobject *kobj)
 {
 	if (!kobj)
@@ -661,7 +660,6 @@ struct kobject * __must_check kobject_get_unless_zero(struct kobject *kobj)
 	return kobj;
 }
 EXPORT_SYMBOL(kobject_get_unless_zero);
-#endif /* CL */
 
 /*
  * kobject_cleanup - free kobject resources.
@@ -901,7 +899,6 @@ void kset_unregister(struct kset *k)
 }
 EXPORT_SYMBOL(kset_unregister);
 
-#if 0
 /**
  * kset_find_obj() - Search for object in kset.
  * @kset: kset we're looking in.
@@ -929,7 +926,6 @@ struct kobject *kset_find_obj(struct kset *kset, const char *name)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(kset_find_obj);
-#endif /* CL */
 
 static void kset_release(struct kobject *kobj)
 {

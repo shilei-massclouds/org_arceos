@@ -35,6 +35,7 @@ obj-y += kobject_uevent.o
 obj-y += scatterlist.o
 obj-y += klist.o
 obj-y += logic_pio.o
+obj-y += cmdline.o
 
 obj-y += math/
 obj-y += crypto/
@@ -44,5 +45,4 @@ obj-y += crypto/
 #obj-y += sg_pool.o errseq.o
 #obj-y += iov_iter.o
 #obj-y += strncpy_from_user.o
-#obj-y += cmdline.o
 #obj-y += group_cpus.o

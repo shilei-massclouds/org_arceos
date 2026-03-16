@@ -103,7 +103,6 @@ static void bus_put(const struct bus_type *bus)
 	subsys_put(sp);
 }
 
-#if 0
 static ssize_t drv_attr_show(struct kobject *kobj, struct attribute *attr,
 			     char *buf)
 {
@@ -145,7 +144,6 @@ static const struct kobj_type driver_ktype = {
 	.sysfs_ops	= &driver_sysfs_ops,
 	.release	= driver_release,
 };
-#endif /* CL */
 
 /*
  * sysfs bindings for buses
@@ -324,7 +322,6 @@ static ssize_t drivers_probe_store(const struct bus_type *bus,
 	return err;
 }
 
-#if 0
 static struct device *next_device(struct klist_iter *i)
 {
 	struct klist_node *n = klist_next(i);
@@ -378,6 +375,7 @@ int bus_for_each_dev(const struct bus_type *bus, struct device *start,
 }
 EXPORT_SYMBOL_GPL(bus_for_each_dev);
 
+#if 0
 /**
  * bus_find_device - device iterator for locating a particular device.
  * @bus: bus type
@@ -593,15 +591,12 @@ static int __must_check add_bind_files(struct device_driver *drv)
 {
 	int ret;
 
-#if 0
 	ret = driver_create_file(drv, &driver_attr_unbind);
 	if (ret == 0) {
 		ret = driver_create_file(drv, &driver_attr_bind);
 		if (ret)
 			driver_remove_file(drv, &driver_attr_unbind);
 	}
-#endif
-    PANIC("");
 	return ret;
 }
 
@@ -635,7 +630,6 @@ static void remove_probe_files(const struct bus_type *bus)
 	bus_remove_file(bus, &bus_attr_drivers_probe);
 }
 
-#if 0
 static ssize_t uevent_store(struct device_driver *drv, const char *buf,
 			    size_t count)
 {
@@ -763,6 +757,7 @@ void bus_remove_driver(struct device_driver *drv)
 	subsys_put(sp);
 }
 
+#if 0
 /* Helper for bus_rescan_devices's iter */
 static int __must_check bus_rescan_devices_helper(struct device *dev,
 						  void *data)
@@ -1318,6 +1313,7 @@ int subsys_virtual_register(const struct bus_type *subsys,
 	return subsys_register(subsys, groups, virtual_dir);
 }
 EXPORT_SYMBOL_GPL(subsys_virtual_register);
+#endif /* CL */
 
 /**
  * driver_find - locate driver on a bus by its name.
@@ -1369,6 +1365,7 @@ bool bus_is_registered(const struct bus_type *bus)
 	return is_initialized;
 }
 
+#if 0
 /**
  * bus_get_dev_root - return a pointer to the "device root" of a bus
  * @bus: bus to return the device root of.

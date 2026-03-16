@@ -169,6 +169,7 @@ struct device *driver_find_device(const struct device_driver *drv,
 	return dev;
 }
 EXPORT_SYMBOL_GPL(driver_find_device);
+#endif /* CL */
 
 /**
  * driver_create_file - create sysfs file for driver.
@@ -212,7 +213,6 @@ void driver_remove_groups(const struct device_driver *drv,
 {
 	sysfs_remove_groups(&drv->p->kobj, groups);
 }
-#endif /* CL */
 
 /**
  * driver_register - register driver with bus
@@ -227,7 +227,6 @@ int driver_register(struct device_driver *drv)
 	int ret;
 	struct device_driver *other;
 
-#if 0
 	if (!bus_is_registered(drv->bus)) {
 		pr_err("Driver '%s' was unable to register with bus_type '%s' because the bus was not initialized.\n",
 			   drv->name, drv->bus->name);
@@ -257,9 +256,6 @@ int driver_register(struct device_driver *drv)
 	}
 	kobject_uevent(&drv->p->kobj, KOBJ_ADD);
 	deferred_probe_extend_timeout();
-#endif
-    PANIC("");
-
 	return ret;
 }
 EXPORT_SYMBOL_GPL(driver_register);

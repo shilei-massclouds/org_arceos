@@ -76,7 +76,6 @@ static void __device_set_deferred_probe_reason(const struct device *dev, char *r
 	dev->p->deferred_probe_reason = reason;
 }
 
-#if 0
 /*
  * deferred_probe_work_func() - Retry probing devices in the active list.
  */
@@ -144,6 +143,7 @@ void driver_deferred_probe_add(struct device *dev)
 	mutex_unlock(&deferred_probe_mutex);
 }
 
+#if 0
 void driver_deferred_probe_del(struct device *dev)
 {
 	mutex_lock(&deferred_probe_mutex);
@@ -220,6 +220,7 @@ void device_unblock_probing(void)
 	defer_all_probes = false;
 	driver_deferred_probe_trigger();
 }
+#endif /* CL */
 
 /**
  * device_set_deferred_probe_reason() - Set defer probe reason message for device
@@ -239,6 +240,7 @@ void device_set_deferred_probe_reason(const struct device *dev, struct va_format
 	mutex_unlock(&deferred_probe_mutex);
 }
 
+#if 0
 /*
  * deferred_devs_show() - Show the devices in the deferred probe pending list.
  */
@@ -257,6 +259,7 @@ static int deferred_devs_show(struct seq_file *s, void *data)
 	return 0;
 }
 DEFINE_SHOW_ATTRIBUTE(deferred_devs);
+#endif /* CL */
 
 #ifdef CONFIG_MODULES
 static int driver_deferred_probe_timeout = 10;
@@ -264,6 +267,7 @@ static int driver_deferred_probe_timeout = 10;
 static int driver_deferred_probe_timeout;
 #endif
 
+#if 0
 static int __init deferred_probe_timeout_setup(char *str)
 {
 	int timeout;
@@ -302,6 +306,7 @@ int driver_deferred_probe_check_state(struct device *dev)
 	return -EPROBE_DEFER;
 }
 EXPORT_SYMBOL_GPL(driver_deferred_probe_check_state);
+#endif /* CL */
 
 static void deferred_probe_timeout_work_func(struct work_struct *work)
 {
@@ -336,6 +341,7 @@ void deferred_probe_extend_timeout(void)
 	}
 }
 
+#if 0
 /**
  * deferred_probe_initcall() - Enable probing of deferred devices
  *
@@ -572,7 +578,6 @@ static void device_remove(struct device *dev)
 		dev->driver->remove(dev);
 }
 
-#if 0
 static int call_driver_probe(struct device *dev, const struct device_driver *drv)
 {
 	int ret = 0;
@@ -750,6 +755,7 @@ static int really_probe_debug(struct device *dev, const struct device_driver *dr
 	return ret;
 }
 
+#if 0
 /**
  * driver_probe_done
  * Determine if the probe sequence is finished or not.
@@ -778,6 +784,7 @@ void wait_for_device_probe(void)
 	async_synchronize_full();
 }
 EXPORT_SYMBOL_GPL(wait_for_device_probe);
+#endif /* CL */
 
 static int __driver_probe_device(const struct device_driver *drv, struct device *dev)
 {
@@ -855,6 +862,7 @@ static inline bool cmdline_requested_async_probing(const char *drv_name)
 	return (async_probe_default != async_drv);
 }
 
+#if 0
 /* The option format is "driver_async_probe=drv_name1,drv_name2,..." */
 static int __init save_async_options(char *buf)
 {
@@ -867,6 +875,7 @@ static int __init save_async_options(char *buf)
 	return 1;
 }
 __setup("driver_async_probe=", save_async_options);
+#endif /* CL */
 
 static bool driver_allows_async_probing(const struct device_driver *drv)
 {
@@ -887,7 +896,6 @@ static bool driver_allows_async_probing(const struct device_driver *drv)
 		return false;
 	}
 }
-#endif /* CL */
 
 struct device_attach_data {
 	struct device *dev;
@@ -1120,7 +1128,6 @@ static void __device_driver_unlock(struct device *dev, struct device *parent)
 		device_unlock(parent);
 }
 
-#if 0
 /**
  * device_driver_attach - attach a specific driver to a specific device
  * @drv: Driver to attach
@@ -1244,7 +1251,6 @@ int driver_attach(const struct device_driver *drv)
 	return bus_for_each_dev(drv->bus, NULL, (void *)drv, __driver_attach);
 }
 EXPORT_SYMBOL_GPL(driver_attach);
-#endif /* CL */
 
 /*
  * __device_release_driver() must be called with @dev lock held.
@@ -1331,7 +1337,6 @@ void device_release_driver(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(device_release_driver);
 
-#if 0
 /**
  * device_driver_detach - detach driver from a specific device
  * @dev: device to detach driver from
@@ -1372,5 +1377,3 @@ void driver_detach(const struct device_driver *drv)
 		put_device(dev);
 	}
 }
-
-#endif /* CL */

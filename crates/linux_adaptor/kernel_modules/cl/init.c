@@ -42,6 +42,9 @@ static char *extra_command_line;
 /* Extra init arguments */
 static char *extra_init_args;
 
+/* From 'init/main.c' */
+bool initcall_debug;
+
 #define bootconfig_found false
 #define initargs_offs 0
 

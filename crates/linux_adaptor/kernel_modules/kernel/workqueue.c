@@ -2026,7 +2026,6 @@ out_put:
 	put_pwq(pwq);
 }
 
-#if 0
 /**
  * try_to_grab_pending - steal work item from worklist and disable irq
  * @work: work item to steal
@@ -2171,7 +2170,6 @@ static bool work_grab_pending(struct work_struct *work, u32 cflags,
 		cpu_relax();
 	}
 }
-#endif /* CL */
 
 /**
  * insert_work - insert a work into a pool
@@ -4298,6 +4296,7 @@ bool flush_rcu_work(struct rcu_work *rwork)
 	}
 }
 EXPORT_SYMBOL(flush_rcu_work);
+#endif /* CL */
 
 static void work_offqd_disable(struct work_offq_data *offqd)
 {
@@ -4309,6 +4308,7 @@ static void work_offqd_disable(struct work_offq_data *offqd)
 		WARN_ONCE(true, "workqueue: work disable count overflowed\n");
 }
 
+#if 0
 static void work_offqd_enable(struct work_offq_data *offqd)
 {
 	if (likely(offqd->disable > 0))
@@ -4316,6 +4316,7 @@ static void work_offqd_enable(struct work_offq_data *offqd)
 	else
 		WARN_ONCE(true, "workqueue: work disable count underflowed\n");
 }
+#endif /* CL */
 
 static bool __cancel_work(struct work_struct *work, u32 cflags)
 {
@@ -4336,6 +4337,7 @@ static bool __cancel_work(struct work_struct *work, u32 cflags)
 	return ret;
 }
 
+#if 0
 static bool __cancel_work_sync(struct work_struct *work, u32 cflags)
 {
 	bool ret;
@@ -4359,6 +4361,7 @@ static bool __cancel_work_sync(struct work_struct *work, u32 cflags)
 
 	return ret;
 }
+#endif /* CL */
 
 /*
  * See cancel_delayed_work()
@@ -4369,6 +4372,7 @@ bool cancel_work(struct work_struct *work)
 }
 EXPORT_SYMBOL(cancel_work);
 
+#if 0
 /**
  * cancel_work_sync - cancel a work and wait for it to finish
  * @work: the work to cancel
@@ -4392,6 +4396,7 @@ bool cancel_work_sync(struct work_struct *work)
 	return __cancel_work_sync(work, 0);
 }
 EXPORT_SYMBOL_GPL(cancel_work_sync);
+#endif /* CL */
 
 /**
  * cancel_delayed_work - cancel a delayed work
@@ -4415,6 +4420,7 @@ bool cancel_delayed_work(struct delayed_work *dwork)
 }
 EXPORT_SYMBOL(cancel_delayed_work);
 
+#if 0
 /**
  * cancel_delayed_work_sync - cancel a delayed work and wait for it to finish
  * @dwork: the delayed work cancel

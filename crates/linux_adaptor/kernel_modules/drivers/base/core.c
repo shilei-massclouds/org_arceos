@@ -251,7 +251,6 @@ static inline void device_links_write_unlock(void)
 	mutex_unlock(&device_links_lock);
 }
 
-#if 0
 int device_links_read_lock(void) __acquires(&device_links_srcu)
 {
 	return srcu_read_lock(&device_links_srcu);
@@ -262,6 +261,7 @@ void device_links_read_unlock(int idx) __releases(&device_links_srcu)
 	srcu_read_unlock(&device_links_srcu, idx);
 }
 
+#if 0
 int device_links_read_lock_held(void)
 {
 	return srcu_read_lock_held(&device_links_srcu);
@@ -1005,6 +1005,7 @@ void device_link_remove(void *consumer, struct device *supplier)
 	device_links_write_unlock();
 }
 EXPORT_SYMBOL_GPL(device_link_remove);
+#endif /* CL */
 
 static void device_links_missing_supplier(struct device *dev)
 {
@@ -1028,7 +1029,6 @@ static bool dev_is_best_effort(struct device *dev)
 	return (fw_devlink_best_effort && dev->can_match) ||
 		(dev->fwnode && (dev->fwnode->flags & FWNODE_FLAG_BEST_EFFORT));
 }
-#endif /* CL */
 
 static struct fwnode_handle *fwnode_links_check_suppliers(
 						struct fwnode_handle *fwnode)
@@ -1046,7 +1046,6 @@ static struct fwnode_handle *fwnode_links_check_suppliers(
 	return NULL;
 }
 
-#if 0
 /**
  * device_links_check_suppliers - Check presence of supplier drivers.
  * @dev: Consumer device.
@@ -1113,7 +1112,6 @@ int device_links_check_suppliers(struct device *dev)
 
 	return ret ? ret : fwnode_ret;
 }
-#endif /* CL */
 
 /**
  * __device_links_queue_sync_state - Queue a device for sync_state() callback
@@ -1779,7 +1777,6 @@ static void fw_devlink_relax_link(struct device_link *link)
 		dev_name(link->supplier));
 }
 
-#if 0
 static int fw_devlink_no_driver(struct device *dev, void *data)
 {
 	struct device_link *link = to_devlink(dev);
@@ -1837,6 +1834,7 @@ void fw_devlink_probing_done(void)
 	device_links_flush_sync_list(&sync_list, NULL);
 }
 
+#if 0
 /**
  * wait_for_init_devices_probe - Try to probe any device needed for init
  *
@@ -2415,7 +2413,6 @@ static void device_platform_notify_remove(struct device *dev)
 	acpi_device_notify_remove(dev);
 }
 
-#if 0
 /**
  * dev_driver_string - Return a device's driver name, if at all possible
  * @dev: struct device to get the name of
@@ -2437,7 +2434,6 @@ const char *dev_driver_string(const struct device *dev)
 	return drv ? drv->name : dev_bus_name(dev);
 }
 EXPORT_SYMBOL(dev_driver_string);
-#endif /* CL */
 
 #define to_dev_attr(_attr) container_of(_attr, struct device_attribute, attr)
 
@@ -5083,7 +5079,6 @@ define_dev_printk_level(_dev_info, KERN_INFO);
 
 #endif
 
-#if 0
 /**
  * dev_err_probe - probe error check and log helper
  * @dev: the pointer to the struct device
@@ -5150,6 +5145,7 @@ int dev_err_probe(const struct device *dev, int err, const char *fmt, ...)
 }
 EXPORT_SYMBOL_GPL(dev_err_probe);
 
+#if 0
 static inline bool fwnode_is_primary(struct fwnode_handle *fwnode)
 {
 	return fwnode && !IS_ERR(fwnode->secondary);

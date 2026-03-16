@@ -16,7 +16,6 @@
 #include "of_private.h"
 #include "adaptor.h"
 
-#if 0
 /**
  * of_match_device - Tell if a struct device matches an of_device_id list
  * @matches: array of of device match structures to search in
@@ -34,6 +33,7 @@ const struct of_device_id *of_match_device(const struct of_device_id *matches,
 }
 EXPORT_SYMBOL(of_match_device);
 
+#if 0
 static void
 of_dma_set_restricted_buffer(struct device *dev, struct device_node *np)
 {

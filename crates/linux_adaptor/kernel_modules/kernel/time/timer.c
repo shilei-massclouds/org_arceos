@@ -1448,8 +1448,6 @@ static int __timer_delete(struct timer_list *timer, bool shutdown)
 	return ret;
 }
 
-#if 0
-
 /**
  * timer_delete - Deactivate a timer
  * @timer:	The timer to be deactivated
@@ -1470,6 +1468,7 @@ int timer_delete(struct timer_list *timer)
 }
 EXPORT_SYMBOL(timer_delete);
 
+#if 0
 /**
  * timer_shutdown - Deactivate a timer and prevent rearming
  * @timer:	The timer to be deactivated

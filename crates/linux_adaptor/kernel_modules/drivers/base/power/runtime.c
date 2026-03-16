@@ -125,6 +125,7 @@ u64 pm_runtime_suspended_time(struct device *dev)
 	return rpm_get_accounted_time(dev, true);
 }
 EXPORT_SYMBOL_GPL(pm_runtime_suspended_time);
+#endif /* CL */
 
 /**
  * pm_runtime_deactivate_timer - Deactivate given device's suspend timer.
@@ -138,6 +139,7 @@ static void pm_runtime_deactivate_timer(struct device *dev)
 	}
 }
 
+#if 0
 /**
  * pm_runtime_cancel_pending - Deactivate suspend timer and cancel requests.
  * @dev: Device to handle.
@@ -1403,6 +1405,7 @@ int __pm_runtime_set_status(struct device *dev, unsigned int status)
 	return error;
 }
 EXPORT_SYMBOL_GPL(__pm_runtime_set_status);
+#endif /* CL */
 
 /**
  * __pm_runtime_barrier - Cancel pending requests and wait for completions.
@@ -1486,6 +1489,7 @@ int pm_runtime_barrier(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(pm_runtime_barrier);
 
+#if 0
 /**
  * __pm_runtime_disable - Disable runtime PM of a device.
  * @dev: Device to handle.
@@ -1826,6 +1830,7 @@ void pm_runtime_remove(struct device *dev)
 	__pm_runtime_disable(dev, false);
 	pm_runtime_reinit(dev);
 }
+#endif /* CL */
 
 /**
  * pm_runtime_get_suppliers - Resume and reference-count supplier devices.
@@ -1868,7 +1873,6 @@ void pm_runtime_put_suppliers(struct device *dev)
 
 	device_links_read_unlock(idx);
 }
-#endif /* CL */
 
 void pm_runtime_new_link(struct device *dev)
 {

@@ -4,5 +4,4 @@ obj-y += update.o
 obj-y += tree.o
 obj-y += rcu_segcblist.o
 obj-y += sync.o
-
-#obj-y += srcutree.o
+obj-y += srcutree.o

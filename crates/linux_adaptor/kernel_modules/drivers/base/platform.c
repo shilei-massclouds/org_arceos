@@ -856,6 +856,7 @@ err:
 	return pdev;
 }
 EXPORT_SYMBOL_GPL(platform_device_register_full);
+#endif /* CL */
 
 /**
  * __platform_driver_register - register a driver for platform-level devices
@@ -872,6 +873,7 @@ int __platform_driver_register(struct platform_driver *drv,
 }
 EXPORT_SYMBOL_GPL(__platform_driver_register);
 
+#if 0
 /**
  * platform_driver_unregister - unregister a driver for platform-level devices
  * @drv: platform driver structure
