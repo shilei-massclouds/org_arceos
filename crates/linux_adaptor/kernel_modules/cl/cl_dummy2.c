@@ -444,3 +444,7 @@ void sysfs_remove_link(struct kobject *kobj, const char *name)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+// FixMe
+// drivers/pci/pci-driver.c
+const struct bus_type pci_bus_type;

@@ -52,6 +52,7 @@ bool of_graph_is_present(const struct device_node *node)
 	return !!port;
 }
 EXPORT_SYMBOL(of_graph_is_present);
+#endif /* CL */
 
 /**
  * of_property_count_elems_of_size - Count the number of elements in a property
@@ -86,7 +87,6 @@ int of_property_count_elems_of_size(const struct device_node *np,
 	return prop->length / elem_size;
 }
 EXPORT_SYMBOL_GPL(of_property_count_elems_of_size);
-#endif /* CL */
 
 /**
  * of_find_property_value_of_size

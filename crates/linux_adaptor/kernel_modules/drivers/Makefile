@@ -9,6 +9,8 @@ obj-y += char/
 obj-y += cpuidle/
 obj-y += virtio/
 obj-y += pinctrl/
+obj-y += iommu/
+obj-y += pmdomain/
 
 #obj-y += block/
 #obj-y += gpio/

@@ -27,7 +27,6 @@ int pinctrl_bind_pins(struct device *dev)
 	if (dev->of_node_reused)
 		return 0;
 
-    printk("%s: step1 (%s)\n", __func__, dev_name(dev));
 	dev->pins = devm_kzalloc(dev, sizeof(*(dev->pins)), GFP_KERNEL);
 	if (!dev->pins)
 		return -ENOMEM;

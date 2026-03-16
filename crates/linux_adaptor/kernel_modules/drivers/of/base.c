@@ -1544,6 +1544,7 @@ put:
 	return ret;
 }
 EXPORT_SYMBOL(of_parse_phandle_with_args_map);
+#endif /* CL */
 
 /**
  * of_count_phandle_with_args() - Find the number of phandles references in a property
@@ -1597,6 +1598,7 @@ int of_count_phandle_with_args(const struct device_node *np, const char *list_na
 }
 EXPORT_SYMBOL(of_count_phandle_with_args);
 
+#if 0
 static struct property *__of_remove_property_from_list(struct property **list, struct property *prop)
 {
 	struct property **next;
