@@ -8,6 +8,8 @@ obj-y += clk/
 obj-y += char/
 obj-y += cpuidle/
 obj-y += virtio/
+obj-y += pinctrl/
+
 #obj-y += block/
 #obj-y += gpio/
 #obj-y += pci/

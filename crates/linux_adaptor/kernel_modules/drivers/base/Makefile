@@ -13,9 +13,11 @@ obj-y += class.o
 obj-y += bus.o
 obj-y += dd.o
 obj-y += driver.o
+obj-y += pinctrl.o
+obj-y += devres.o
+obj-y += trace.o
 
 #obj-y += property.o syscore.o
-#obj-y += devres.o trace.o
 #obj-y += map.o firmware.o
 
 obj-y += power/

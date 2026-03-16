@@ -600,7 +600,6 @@ u64 of_translate_address(struct device_node *dev, const __be32 *in_addr)
 }
 EXPORT_SYMBOL(of_translate_address);
 
-#if 0
 #ifdef CONFIG_HAS_DMA
 struct device_node *__of_get_dma_parent(const struct device_node *np)
 {
@@ -631,6 +630,7 @@ static struct device_node *of_get_next_dma_parent(struct device_node *np)
 	return parent;
 }
 
+#if 0
 u64 of_translate_dma_address(struct device_node *dev, const __be32 *in_addr)
 {
 	struct device_node *host;
@@ -789,8 +789,10 @@ int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
 	return parser_init(parser, node, "dma-ranges");
 }
 EXPORT_SYMBOL_GPL(of_pci_dma_range_parser_init);
+#endif /* CL */
 #define of_dma_range_parser_init of_pci_dma_range_parser_init
 
+#if 0
 struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
 						struct of_pci_range *range)
 {
@@ -873,7 +875,6 @@ static u64 of_translate_ioport(struct device_node *dev, const __be32 *in_addr,
 	return port;
 }
 
-#if 0
 #ifdef CONFIG_HAS_DMA
 /**
  * of_dma_get_range - Get DMA range info and put it into a map array
@@ -958,6 +959,7 @@ int of_dma_get_range(struct device_node *np, const struct bus_dma_region **map)
 }
 #endif /* CONFIG_HAS_DMA */
 
+#if 0
 /**
  * of_dma_get_max_cpu_address - Gets highest CPU address suitable for DMA
  * @np: The node to start searching from or NULL to start from the root
@@ -999,6 +1001,7 @@ phys_addr_t __init of_dma_get_max_cpu_address(struct device_node *np)
 
 	return max_cpu_addr;
 }
+#endif /* CL */
 
 /**
  * of_dma_is_coherent - Check if device is coherent
@@ -1025,7 +1028,6 @@ bool of_dma_is_coherent(struct device_node *np)
 	return dma_default_coherent;
 }
 EXPORT_SYMBOL_GPL(of_dma_is_coherent);
-#endif /* CL */
 
 /**
  * of_mmio_is_nonposted - Check if device uses non-posted MMIO

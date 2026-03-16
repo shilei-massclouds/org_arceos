@@ -738,7 +738,6 @@ u8 kmalloc_size_index[24] __ro_after_init = {
 	2	/* 192 */
 };
 
-#if 0
 size_t kmalloc_size_roundup(size_t size)
 {
 	if (size && size <= KMALLOC_MAX_CACHE_SIZE) {
@@ -761,8 +760,6 @@ size_t kmalloc_size_roundup(size_t size)
 
 }
 EXPORT_SYMBOL(kmalloc_size_roundup);
-
-#endif
 
 #ifdef CONFIG_ZONE_DMA
 #define KMALLOC_DMA_NAME(sz)	.name[KMALLOC_DMA] = "dma-kmalloc-" #sz,
@@ -984,7 +981,6 @@ void __init create_kmalloc_caches(void)
 						       0, SLAB_NO_MERGE, NULL);
 }
 
-#if 0
 /**
  * __ksize -- Report full size of underlying allocation
  * @object: pointer to the object
@@ -1021,6 +1017,7 @@ size_t __ksize(const void *object)
 	return slab_ksize(folio_slab(folio)->slab_cache);
 }
 
+#if 0
 gfp_t kmalloc_fix_flags(gfp_t flags)
 {
 	gfp_t invalid_mask = flags & GFP_SLAB_BUG_MASK;
@@ -1319,6 +1316,7 @@ void kfree_sensitive(const void *p)
 	kfree(mem);
 }
 EXPORT_SYMBOL(kfree_sensitive);
+#endif /* CL */
 
 size_t ksize(const void *objp)
 {
@@ -1349,5 +1347,3 @@ EXPORT_TRACEPOINT_SYMBOL(kmalloc);
 EXPORT_TRACEPOINT_SYMBOL(kmem_cache_alloc);
 EXPORT_TRACEPOINT_SYMBOL(kfree);
 EXPORT_TRACEPOINT_SYMBOL(kmem_cache_free);
-
-#endif
