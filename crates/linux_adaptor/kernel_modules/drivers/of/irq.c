@@ -450,6 +450,7 @@ int of_irq_to_resource(struct device_node *dev, int index, struct resource *r)
 	return irq;
 }
 EXPORT_SYMBOL_GPL(of_irq_to_resource);
+#endif /* CL */
 
 /**
  * of_irq_get - Decode a node's IRQ and return it as a Linux IRQ number
@@ -484,6 +485,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(of_irq_get);
 
+#if 0
 /**
  * of_irq_get_byname - Decode a node's IRQ and return it as a Linux IRQ number
  * @dev: pointer to device tree node

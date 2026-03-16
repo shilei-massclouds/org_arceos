@@ -153,7 +153,6 @@ devm_platform_ioremap_resource_byname(struct platform_device *pdev,
 EXPORT_SYMBOL_GPL(devm_platform_ioremap_resource_byname);
 #endif /* CONFIG_HAS_IOMEM */
 
-#if 0
 /**
  * platform_get_irq_optional - get an optional IRQ for a device
  * @dev: platform device
@@ -274,6 +273,7 @@ int platform_get_irq(struct platform_device *dev, unsigned int num)
 }
 EXPORT_SYMBOL_GPL(platform_get_irq);
 
+#if 0
 /**
  * platform_irq_count - Count the number of IRQs a platform device uses
  * @dev: platform device

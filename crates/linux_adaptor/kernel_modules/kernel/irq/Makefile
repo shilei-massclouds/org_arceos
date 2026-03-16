@@ -13,6 +13,6 @@ obj-y += cpuhotplug.o
 obj-y += pm.o
 obj-y += proc.o
 obj-y += spurious.o
+obj-y += msi.o
 
-#obj-y += msi.o
 #obj-y += devres.o affinity.o

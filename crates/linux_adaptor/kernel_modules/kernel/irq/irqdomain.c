@@ -890,7 +890,6 @@ out:
 }
 EXPORT_SYMBOL_GPL(irq_create_mapping_affinity);
 
-#if 0
 static int irq_domain_translate(struct irq_domain *d,
 				struct irq_fwspec *fwspec,
 				irq_hw_number_t *hwirq, unsigned int *type)
@@ -1035,7 +1034,6 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
 	return irq_create_fwspec_mapping(&fwspec);
 }
 EXPORT_SYMBOL_GPL(irq_create_of_mapping);
-#endif /* CL */
 
 /**
  * irq_dispose_mapping() - Unmap an interrupt
@@ -1203,6 +1201,7 @@ const struct irq_domain_ops irq_domain_simple_ops = {
 	.xlate = irq_domain_xlate_onetwocell,
 };
 EXPORT_SYMBOL_GPL(irq_domain_simple_ops);
+#endif /* CL */
 
 /**
  * irq_domain_translate_onecell() - Generic translate for direct one cell
@@ -1225,6 +1224,7 @@ int irq_domain_translate_onecell(struct irq_domain *d,
 }
 EXPORT_SYMBOL_GPL(irq_domain_translate_onecell);
 
+#if 0
 /**
  * irq_domain_translate_twocell() - Generic translate for direct two cell
  * bindings

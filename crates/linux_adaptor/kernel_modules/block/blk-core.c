@@ -51,8 +51,6 @@
 #include "blk-throttle.h"
 #include "blk-ioprio.h"
 
-#include "adaptor.h"
-
 struct dentry *blk_debugfs_root;
 
 EXPORT_TRACEPOINT_SYMBOL_GPL(block_bio_remap);
@@ -167,8 +165,6 @@ static const struct {
 	/* everything else not covered above: */
 	[BLK_STS_IOERR]		= { -EIO,	"I/O" },
 };
-
-#if 0
 
 blk_status_t errno_to_blk_status(int errno)
 {
@@ -1211,11 +1207,8 @@ struct blk_plug_cb *blk_check_plugged(blk_plug_cb_fn unplug, void *data,
 }
 EXPORT_SYMBOL(blk_check_plugged);
 
-#endif /* CL */
-
 void __blk_flush_plug(struct blk_plug *plug, bool from_schedule)
 {
-#if 0
 	if (!list_empty(&plug->cb_list))
 		flush_plug_callbacks(plug, from_schedule);
 	blk_mq_flush_plug_list(plug, from_schedule);
@@ -1230,11 +1223,8 @@ void __blk_flush_plug(struct blk_plug *plug, bool from_schedule)
 
 	plug->cur_ktime = 0;
 	current->flags &= ~PF_BLOCK_TS;
-#endif
-    PANIC("");
 }
 
-#if 0
 /**
  * blk_finish_plug - mark the end of a batch of submitted I/O
  * @plug:	The &struct blk_plug passed to blk_start_plug()
@@ -1286,5 +1276,3 @@ int __init blk_dev_init(void)
 
 	return 0;
 }
-
-#endif /* CL */

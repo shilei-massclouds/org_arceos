@@ -38,7 +38,6 @@ int pinctrl_bind_pins(struct device *dev)
 		goto cleanup_alloc;
 	}
 
-#if 0
 	dev->pins->default_state = pinctrl_lookup_state(dev->pins->p,
 					PINCTRL_STATE_DEFAULT);
 	if (IS_ERR(dev->pins->default_state)) {
@@ -46,6 +45,7 @@ int pinctrl_bind_pins(struct device *dev)
 		ret = 0;
 		goto cleanup_get;
 	}
+#if 0
 
 	dev->pins->init_state = pinctrl_lookup_state(dev->pins->p,
 					PINCTRL_STATE_INIT);

@@ -5078,6 +5078,7 @@ void page_frag_free(void *addr)
 		free_unref_page(page, compound_order(page));
 }
 EXPORT_SYMBOL(page_frag_free);
+#endif /* CL */
 
 static void *make_alloc_exact(unsigned long addr, unsigned int order,
 		size_t size)
@@ -5128,6 +5129,7 @@ void *alloc_pages_exact_noprof(size_t size, gfp_t gfp_mask)
 }
 EXPORT_SYMBOL(alloc_pages_exact_noprof);
 
+#if 0
 /**
  * alloc_pages_exact_nid - allocate an exact number of physically-contiguous
  *			   pages on a node.

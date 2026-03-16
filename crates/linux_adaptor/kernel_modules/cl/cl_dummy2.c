@@ -448,3 +448,15 @@ void sysfs_remove_link(struct kobject *kobj, const char *name)
 // FixMe
 // drivers/pci/pci-driver.c
 const struct bus_type pci_bus_type;
+
+// kernel/hung_task.c
+/*
+ * Zero means infinite timeout - no checking done:
+ */
+unsigned long __read_mostly sysctl_hung_task_timeout_secs = CONFIG_DEFAULT_HUNG_TASK_TIMEOUT;
+
+/*
+ * Flag that puts the machine in "laptop mode". Doubles as a timeout in jiffies:
+ * a full sync is triggered after this time elapses without any disk activity.
+ */
+int laptop_mode;

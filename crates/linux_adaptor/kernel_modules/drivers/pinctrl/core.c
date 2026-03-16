@@ -1227,7 +1227,6 @@ void pinctrl_put(struct pinctrl *p)
 }
 EXPORT_SYMBOL_GPL(pinctrl_put);
 
-#if 0
 /**
  * pinctrl_lookup_state() - retrieves a state handle from a pinctrl handle
  * @p: the pinctrl handle to retrieve the state from
@@ -1252,7 +1251,6 @@ struct pinctrl_state *pinctrl_lookup_state(struct pinctrl *p,
 	return state;
 }
 EXPORT_SYMBOL_GPL(pinctrl_lookup_state);
-#endif /* CL */
 
 static void pinctrl_link_add(struct pinctrl_dev *pctldev,
 			     struct device *consumer)
@@ -1411,7 +1409,6 @@ struct pinctrl *devm_pinctrl_get(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(devm_pinctrl_get);
 
-#if 0
 static int devm_pinctrl_match(struct device *dev, void *res, void *data)
 {
 	struct pinctrl **p = res;
@@ -1433,7 +1430,6 @@ void devm_pinctrl_put(struct pinctrl *p)
 			       devm_pinctrl_match, p));
 }
 EXPORT_SYMBOL_GPL(devm_pinctrl_put);
-#endif /* CL */
 
 /**
  * pinctrl_register_mappings() - register a set of pin controller mappings

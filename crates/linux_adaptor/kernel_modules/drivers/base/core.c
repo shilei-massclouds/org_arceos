@@ -5019,7 +5019,13 @@ int dev_printk_emit(int level, const struct device *dev, const char *fmt, ...)
 
 	va_start(args, fmt);
 
+    /* FixMe: */
+#if 0
 	r = dev_vprintk_emit(level, dev, fmt, args);
+#else
+    extern int cl_vprintk(const char *fmt, va_list args);
+    r = cl_vprintk(fmt, args);
+#endif
 
 	va_end(args);
 

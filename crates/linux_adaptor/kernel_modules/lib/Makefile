@@ -37,12 +37,13 @@ obj-y += klist.o
 obj-y += logic_pio.o
 obj-y += cmdline.o
 obj-y += devres.o
+obj-y += sbitmap.o
 
 obj-y += math/
 obj-y += crypto/
 
 #obj-y += errname.o
-#obj-y += sbitmap.o dec_and_lock.o
+#obj-y += dec_and_lock.o
 #obj-y += sg_pool.o errseq.o
 #obj-y += iov_iter.o
 #obj-y += strncpy_from_user.o

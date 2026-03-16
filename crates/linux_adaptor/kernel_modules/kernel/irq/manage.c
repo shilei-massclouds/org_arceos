@@ -1386,12 +1386,12 @@ EXPORT_SYMBOL_GPL(irq_wake_thread);
 
 static int irq_setup_forced_threading(struct irqaction *new)
 {
-#if 0
 	if (!force_irqthreads())
 		return 0;
 	if (new->flags & (IRQF_NO_THREAD | IRQF_PERCPU | IRQF_ONESHOT))
 		return 0;
 
+#if 0
 	/*
 	 * No further action required for interrupts which are requested as
 	 * threaded interrupts already
@@ -2130,6 +2130,7 @@ const void *free_nmi(unsigned int irq, void *dev_id)
 
 	return devname;
 }
+#endif /* CL */
 
 /**
  *	request_threaded_irq - allocate an interrupt line
@@ -2264,6 +2265,7 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
 }
 EXPORT_SYMBOL(request_threaded_irq);
 
+#if 0
 /**
  *	request_any_context_irq - allocate an interrupt line
  *	@irq: Interrupt line to allocate
