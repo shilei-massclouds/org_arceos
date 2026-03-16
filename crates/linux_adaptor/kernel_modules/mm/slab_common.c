@@ -562,12 +562,14 @@ int kmem_cache_shrink(struct kmem_cache *cachep)
 	return __kmem_cache_shrink(cachep);
 }
 EXPORT_SYMBOL(kmem_cache_shrink);
+#endif /* CL */
 
 bool slab_is_available(void)
 {
 	return slab_state >= UP;
 }
 
+#if 0
 #ifdef CONFIG_PRINTK
 static void kmem_obj_info(struct kmem_obj_info *kpp, void *object, struct slab *slab)
 {

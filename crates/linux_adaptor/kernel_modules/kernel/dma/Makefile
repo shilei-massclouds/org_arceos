@@ -2,5 +2,6 @@
 
 obj-y += swiotlb.o
 obj-y += mapping.o
-#obj-y += direct.o coherent.o
+obj-y += direct.o
+#obj-y += coherent.o
 #obj-y += pool.o

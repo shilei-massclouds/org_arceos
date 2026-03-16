@@ -131,7 +131,6 @@ static void __fwnode_link_cycle(struct fwnode_link *link)
 	link->flags |= FWLINK_FLAG_CYCLE;
 }
 
-#if 0
 /**
  * fwnode_links_purge_suppliers - Delete all supplier links of fwnode_handle.
  * @fwnode: fwnode whose supplier links need to be deleted
@@ -148,6 +147,7 @@ static void fwnode_links_purge_suppliers(struct fwnode_handle *fwnode)
 		__fwnode_link_del(link);
 }
 
+#if 0
 /**
  * fwnode_links_purge_consumers - Delete all consumer links of fwnode_handle.
  * @fwnode: fwnode whose consumer links need to be deleted
@@ -191,6 +191,7 @@ void fw_devlink_purge_absent_suppliers(struct fwnode_handle *fwnode)
 		fw_devlink_purge_absent_suppliers(child);
 }
 EXPORT_SYMBOL_GPL(fw_devlink_purge_absent_suppliers);
+#endif /* CL */
 
 /**
  * __fwnode_links_move_consumers - Move consumer from @from to @to fwnode_handle
@@ -236,7 +237,6 @@ static void __fw_devlink_pickup_dangling_consumers(struct fwnode_handle *fwnode,
 	fwnode_for_each_available_child_node(fwnode, child)
 		__fw_devlink_pickup_dangling_consumers(child, new_sup);
 }
-#endif /* CL */
 
 static DEFINE_MUTEX(device_links_lock);
 DEFINE_STATIC_SRCU(device_links_srcu);
@@ -937,7 +937,6 @@ out:
 }
 EXPORT_SYMBOL_GPL(device_link_add);
 
-#if 0
 static void __device_link_del(struct kref *kref)
 {
 	struct device_link *link = container_of(kref, struct device_link, kref);
@@ -951,6 +950,7 @@ static void __device_link_del(struct kref *kref)
 	device_unregister(&link->link_dev);
 }
 
+#if 0
 static void device_link_put_kref(struct device_link *link)
 {
 	if (link->flags & DL_FLAG_STATELESS)
@@ -1234,6 +1234,7 @@ static int sync_state_resume_initcall(void)
 	return 0;
 }
 late_initcall(sync_state_resume_initcall);
+#endif /* CL */
 
 static void __device_links_supplier_defer_sync(struct device *sup)
 {
@@ -1247,7 +1248,6 @@ static void device_link_drop_managed(struct device_link *link)
 	WRITE_ONCE(link->status, DL_STATE_NONE);
 	kref_put(&link->kref, __device_link_del);
 }
-#endif /* CL */
 
 static ssize_t waiting_for_supplier_show(struct device *dev,
 					 struct device_attribute *attr,
@@ -1298,6 +1298,7 @@ void device_links_force_bind(struct device *dev)
 
 	device_links_write_unlock();
 }
+#endif /* CL */
 
 /**
  * device_links_driver_bound - Update device links after probing its driver.
@@ -1498,6 +1499,7 @@ void device_links_no_driver(struct device *dev)
 	device_links_write_unlock();
 }
 
+#if 0
 /**
  * device_links_driver_cleanup - Update links after driver removal.
  * @dev: Device whose driver has just gone away.

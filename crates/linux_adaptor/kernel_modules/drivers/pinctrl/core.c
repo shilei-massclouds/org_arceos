@@ -1252,6 +1252,7 @@ struct pinctrl_state *pinctrl_lookup_state(struct pinctrl *p,
 	return state;
 }
 EXPORT_SYMBOL_GPL(pinctrl_lookup_state);
+#endif /* CL */
 
 static void pinctrl_link_add(struct pinctrl_dev *pctldev,
 			     struct device *consumer)
@@ -1377,7 +1378,6 @@ int pinctrl_select_state(struct pinctrl *p, struct pinctrl_state *state)
 	return pinctrl_commit_state(p, state);
 }
 EXPORT_SYMBOL_GPL(pinctrl_select_state);
-#endif /* CL */
 
 static void devm_pinctrl_release(struct device *dev, void *res)
 {
@@ -1553,6 +1553,7 @@ int pinctrl_force_default(struct pinctrl_dev *pctldev)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(pinctrl_force_default);
+#endif /* CL */
 
 /**
  * pinctrl_init_done() - tell pinctrl probe is done
@@ -1586,6 +1587,7 @@ int pinctrl_init_done(struct device *dev)
 	return ret;
 }
 
+#if 0
 static int pinctrl_select_bound_state(struct device *dev,
 				      struct pinctrl_state *state)
 {

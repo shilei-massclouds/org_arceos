@@ -143,7 +143,6 @@ void driver_deferred_probe_add(struct device *dev)
 	mutex_unlock(&deferred_probe_mutex);
 }
 
-#if 0
 void driver_deferred_probe_del(struct device *dev)
 {
 	mutex_lock(&deferred_probe_mutex);
@@ -197,6 +196,7 @@ void driver_deferred_probe_trigger(void)
 	queue_work(system_unbound_wq, &deferred_probe_work);
 }
 
+#if 0
 /**
  * device_block_probing() - Block/defer device's probes
  *

@@ -545,7 +545,6 @@ static int plic_probe(struct fwnode_handle *fwnode)
 	if (error)
 		goto fail_free_regs;
 
-    printk("------------- %s: nr_irqs(%u) nr_contexts(%u)\n", __func__, nr_irqs, nr_contexts);
 	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
 	if (!priv) {
 		error = -ENOMEM;

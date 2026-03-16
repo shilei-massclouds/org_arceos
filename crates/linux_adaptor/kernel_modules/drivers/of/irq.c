@@ -507,6 +507,7 @@ int of_irq_get_byname(struct device_node *dev, const char *name)
 	return of_irq_get(dev, index);
 }
 EXPORT_SYMBOL_GPL(of_irq_get_byname);
+#endif /* CL */
 
 /**
  * of_irq_count - Count the number of IRQs a node uses
@@ -525,6 +526,7 @@ int of_irq_count(struct device_node *dev)
 	return nr;
 }
 
+#if 0
 /**
  * of_irq_to_resource_table - Fill in resource table with node's IRQ info
  * @dev: pointer to device tree node

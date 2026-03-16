@@ -1119,6 +1119,7 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
 	return __of_address_to_resource(dev, -1, bar, r);
 }
 EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
+#endif /* CL */
 
 /**
  * of_iomap - Maps the memory mapped IO for a given device_node
@@ -1141,6 +1142,7 @@ void __iomem *of_iomap(struct device_node *np, int index)
 }
 EXPORT_SYMBOL(of_iomap);
 
+#if 0
 /*
  * of_io_request_and_map - Requests a resource and maps the memory mapped IO
  *			   for a given device_node

@@ -21,9 +21,11 @@ obj-y += swap.o
 obj-y += maccess.o
 obj-y += mmap.o
 obj-y += oom_kill.o
+obj-y += ioremap.o
+obj-y += pgtable-generic.o
 
 #obj-y += filemap.o page-writeback.o
-#obj-y += ioremap.o mempool.o
+#obj-y += mempool.o
 #obj-y += backing-dev.o list_lru.o
 #obj-y += truncate.o workingset.o readahead.o
 #obj-y += rmap.o dmapool.o

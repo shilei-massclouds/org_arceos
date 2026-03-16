@@ -17,6 +17,7 @@
 #include <linux/vmalloc.h>
 #include "debug.h"
 #include "direct.h"
+#include "adaptor.h"
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/dma.h>
@@ -117,6 +118,7 @@ void *dmam_alloc_attrs(struct device *dev, size_t size, dma_addr_t *dma_handle,
 	return vaddr;
 }
 EXPORT_SYMBOL(dmam_alloc_attrs);
+#endif /* CL */
 
 static bool dma_go_direct(struct device *dev, dma_addr_t mask,
 		const struct dma_map_ops *ops)
@@ -135,6 +137,7 @@ static bool dma_go_direct(struct device *dev, dma_addr_t mask,
 	return false;
 }
 
+#if 0
 
 /*
  * Check if the devices uses a direct mapping for streaming DMA operations.
@@ -146,6 +149,7 @@ static inline bool dma_alloc_direct(struct device *dev,
 {
 	return dma_go_direct(dev, dev->coherent_dma_mask, ops);
 }
+#endif /* CL */
 
 static inline bool dma_map_direct(struct device *dev,
 		const struct dma_map_ops *ops)
@@ -153,6 +157,7 @@ static inline bool dma_map_direct(struct device *dev,
 	return dma_go_direct(dev, *dev->dma_mask, ops);
 }
 
+#if 0
 dma_addr_t dma_map_page_attrs(struct device *dev, struct page *page,
 		size_t offset, size_t size, enum dma_data_direction dir,
 		unsigned long attrs)
@@ -358,6 +363,7 @@ void dma_unmap_resource(struct device *dev, dma_addr_t addr, size_t size,
 	debug_dma_unmap_resource(dev, addr, size, dir);
 }
 EXPORT_SYMBOL(dma_unmap_resource);
+#endif /* CL */
 
 #ifdef CONFIG_DMA_NEED_SYNC
 void __dma_sync_single_for_cpu(struct device *dev, dma_addr_t addr, size_t size,
@@ -468,6 +474,7 @@ static void dma_setup_need_sync(struct device *dev)
 static inline void dma_setup_need_sync(struct device *dev) { }
 #endif /* !CONFIG_DMA_NEED_SYNC */
 
+#if 0
 /*
  * The whole dma_get_sgtable() idea is fundamentally unsafe - it seems
  * that the intention is to allow exporting memory allocated via the
@@ -824,6 +831,7 @@ int dma_mmap_noncontiguous(struct device *dev, struct vm_area_struct *vma,
 	return dma_mmap_pages(dev, vma, size, sg_page(sgt->sgl));
 }
 EXPORT_SYMBOL_GPL(dma_mmap_noncontiguous);
+#endif /* CL */
 
 static int dma_supported(struct device *dev, u64 mask)
 {
@@ -848,6 +856,7 @@ static int dma_supported(struct device *dev, u64 mask)
 	return dma_direct_supported(dev, mask);
 }
 
+#if 0
 bool dma_pci_p2pdma_supported(struct device *dev)
 {
 	const struct dma_map_ops *ops = get_dma_ops(dev);
@@ -862,6 +871,7 @@ bool dma_pci_p2pdma_supported(struct device *dev)
 	return !ops;
 }
 EXPORT_SYMBOL_GPL(dma_pci_p2pdma_supported);
+#endif /* CL */
 
 int dma_set_mask(struct device *dev, u64 mask)
 {
@@ -898,6 +908,7 @@ int dma_set_coherent_mask(struct device *dev, u64 mask)
 }
 EXPORT_SYMBOL(dma_set_coherent_mask);
 
+#if 0
 static bool __dma_addressing_limited(struct device *dev)
 {
 	const struct dma_map_ops *ops = get_dma_ops(dev);

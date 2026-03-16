@@ -45,7 +45,6 @@ struct device platform_bus = {
 };
 EXPORT_SYMBOL_GPL(platform_bus);
 
-#if 0
 /**
  * platform_get_resource - get a resource for a device
  * @dev: platform device
@@ -69,6 +68,7 @@ struct resource *platform_get_resource(struct platform_device *dev,
 }
 EXPORT_SYMBOL_GPL(platform_get_resource);
 
+#if 0
 struct resource *platform_get_mem_or_io(struct platform_device *dev,
 					unsigned int num)
 {
@@ -83,6 +83,7 @@ struct resource *platform_get_mem_or_io(struct platform_device *dev,
 	return NULL;
 }
 EXPORT_SYMBOL_GPL(platform_get_mem_or_io);
+#endif /* CL */
 
 #ifdef CONFIG_HAS_IOMEM
 /**
@@ -152,6 +153,7 @@ devm_platform_ioremap_resource_byname(struct platform_device *pdev,
 EXPORT_SYMBOL_GPL(devm_platform_ioremap_resource_byname);
 #endif /* CONFIG_HAS_IOMEM */
 
+#if 0
 /**
  * platform_get_irq_optional - get an optional IRQ for a device
  * @dev: platform device
@@ -412,6 +414,7 @@ err_free_devres:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(devm_platform_get_irqs_affinity);
+#endif /* CL */
 
 /**
  * platform_get_resource_byname - get a resource for a device by name
@@ -438,6 +441,7 @@ struct resource *platform_get_resource_byname(struct platform_device *dev,
 }
 EXPORT_SYMBOL_GPL(platform_get_resource_byname);
 
+#if 0
 static int __platform_get_irq_byname(struct platform_device *dev,
 				     const char *name)
 {

@@ -3141,7 +3141,6 @@ unlock_out:
 	return ret;
 }
 
-#if 0
 /**
  * iommu_device_unuse_default_domain() - Device driver stops handling device
  *                                       DMA through the kernel DMA API.
@@ -3165,6 +3164,7 @@ void iommu_device_unuse_default_domain(struct device *dev)
 	mutex_unlock(&group->mutex);
 }
 
+#if 0
 static int __iommu_group_alloc_blocking_domain(struct iommu_group *group)
 {
 	struct iommu_domain *domain;

@@ -53,7 +53,6 @@ static pm_callback_t __rpm_get_callback(struct device *dev, size_t cb_offset)
 static int rpm_resume(struct device *dev, int rpmflags);
 static int rpm_suspend(struct device *dev, int rpmflags);
 
-#if 0
 /**
  * update_pm_runtime_accounting - Update the time accounting of power states
  * @dev: Device to update the accounting for
@@ -100,6 +99,7 @@ static void __update_runtime_status(struct device *dev, enum rpm_status status)
 	dev->power.runtime_status = status;
 }
 
+#if 0
 static u64 rpm_get_accounted_time(struct device *dev, bool suspended)
 {
 	u64 time;
@@ -287,7 +287,6 @@ static int rpm_check_suspend_allowed(struct device *dev)
 	return retval;
 }
 
-#if 0
 static int rpm_get_suppliers(struct device *dev)
 {
 	struct device_link *link;
@@ -310,6 +309,7 @@ static int rpm_get_suppliers(struct device *dev)
 	return 0;
 }
 
+#if 0
 /**
  * pm_runtime_release_supplier - Drop references to device link's supplier.
  * @link: Target device link.
@@ -330,6 +330,7 @@ void pm_runtime_release_supplier(struct device_link *link)
 	       atomic_read(&supplier->power.usage_count) > 0)
 		pm_runtime_put_noidle(supplier);
 }
+#endif /* CL */
 
 static void __rpm_put_suppliers(struct device *dev, bool try_to_suspend)
 {
@@ -348,6 +349,7 @@ static void rpm_put_suppliers(struct device *dev)
 	__rpm_put_suppliers(dev, true);
 }
 
+#if 0
 static void rpm_suspend_suppliers(struct device *dev)
 {
 	struct device_link *link;
@@ -1279,6 +1281,7 @@ int pm_runtime_get_if_in_use(struct device *dev)
 	return pm_runtime_get_conditional(dev, false);
 }
 EXPORT_SYMBOL_GPL(pm_runtime_get_if_in_use);
+#endif /* CL */
 
 /**
  * __pm_runtime_set_status - Set runtime PM status of a device.
@@ -1405,7 +1408,6 @@ int __pm_runtime_set_status(struct device *dev, unsigned int status)
 	return error;
 }
 EXPORT_SYMBOL_GPL(__pm_runtime_set_status);
-#endif /* CL */
 
 /**
  * __pm_runtime_barrier - Cancel pending requests and wait for completions.
@@ -1543,6 +1545,7 @@ void __pm_runtime_disable(struct device *dev, bool check_resume)
 	spin_unlock_irq(&dev->power.lock);
 }
 EXPORT_SYMBOL_GPL(__pm_runtime_disable);
+#endif /* CL */
 
 /**
  * pm_runtime_enable - Enable runtime PM of a device.
@@ -1575,6 +1578,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(pm_runtime_enable);
 
+#if 0
 static void pm_runtime_disable_action(void *data)
 {
 	pm_runtime_dont_use_autosuspend(data);
@@ -1801,7 +1805,6 @@ void pm_runtime_init(struct device *dev)
 	init_waitqueue_head(&dev->power.wait_queue);
 }
 
-#if 0
 /**
  * pm_runtime_reinit - Re-initialize runtime PM fields in given device object.
  * @dev: Device object to re-initialize.
@@ -1821,6 +1824,7 @@ void pm_runtime_reinit(struct device *dev)
 	}
 }
 
+#if 0
 /**
  * pm_runtime_remove - Prepare for removing a device from device hierarchy.
  * @dev: Device object being removed from device hierarchy.

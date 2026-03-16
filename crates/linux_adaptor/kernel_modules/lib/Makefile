@@ -36,11 +36,12 @@ obj-y += scatterlist.o
 obj-y += klist.o
 obj-y += logic_pio.o
 obj-y += cmdline.o
+obj-y += devres.o
 
 obj-y += math/
 obj-y += crypto/
 
-#obj-y += devres.o errname.o
+#obj-y += errname.o
 #obj-y += sbitmap.o dec_and_lock.o
 #obj-y += sg_pool.o errseq.o
 #obj-y += iov_iter.o

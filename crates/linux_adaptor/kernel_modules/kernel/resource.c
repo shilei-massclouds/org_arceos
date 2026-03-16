@@ -142,6 +142,7 @@ static int __init ioresources_init(void)
 __initcall(ioresources_init);
 
 #endif /* CONFIG_PROC_FS */
+#endif /* CL */
 
 static void free_resource(struct resource *res)
 {
@@ -189,6 +190,7 @@ static struct resource * __request_resource(struct resource *root, struct resour
 	}
 }
 
+#if 0
 static int __release_resource(struct resource *old, bool release_child)
 {
 	struct resource *tmp, **p, *chd;
@@ -1181,6 +1183,7 @@ resource_size_t resource_alignment(struct resource *res)
 		return 0;
 	}
 }
+#endif /* CL */
 
 /*
  * This is compatibility stuff for IO resources.
@@ -1233,6 +1236,7 @@ static void revoke_iomem(struct resource *res)
 static void revoke_iomem(struct resource *res) {}
 #endif
 
+#if 0
 struct address_space *iomem_get_mapping(void)
 {
 	/*
@@ -1243,6 +1247,7 @@ struct address_space *iomem_get_mapping(void)
 	 */
 	return smp_load_acquire(&iomem_inode)->i_mapping;
 }
+#endif /* CL */
 
 static int __request_region_locked(struct resource *res, struct resource *parent,
 				   resource_size_t start, resource_size_t n,
@@ -1376,6 +1381,7 @@ void __release_region(struct resource *parent, resource_size_t start,
 }
 EXPORT_SYMBOL(__release_region);
 
+#if 0
 #ifdef CONFIG_MEMORY_HOTREMOVE
 /**
  * release_mem_region_adjustable - release a previously reserved memory region
@@ -1619,6 +1625,7 @@ void devm_release_resource(struct device *dev, struct resource *new)
 			       new));
 }
 EXPORT_SYMBOL(devm_release_resource);
+#endif /* CL */
 
 struct region_devres {
 	struct resource *parent;
@@ -1678,6 +1685,7 @@ void __devm_release_region(struct device *dev, struct resource *parent,
 }
 EXPORT_SYMBOL(__devm_release_region);
 
+#if 0
 /*
  * Reserve I/O ports or memory based on "reserve=" kernel parameter.
  */

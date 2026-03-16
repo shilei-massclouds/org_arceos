@@ -91,8 +91,6 @@ struct vfree_deferred {
 };
 static DEFINE_PER_CPU(struct vfree_deferred, vfree_deferred);
 
-#if 0
-
 /*** Page table manipulation functions ***/
 static int vmap_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
 			phys_addr_t phys_addr, pgprot_t prot,
@@ -470,6 +468,7 @@ void vunmap_range_noflush(unsigned long start, unsigned long end)
 	__vunmap_range_noflush(start, end);
 }
 
+#if 0
 /**
  * vunmap_range - unmap kernel virtual addresses
  * @addr: start of the VM area to unmap
@@ -3429,7 +3428,6 @@ void vfree(const void *addr)
 }
 EXPORT_SYMBOL(vfree);
 
-#if 0
 /**
  * vunmap - release virtual mapping obtained by vmap()
  * @addr:   memory base address
@@ -3458,6 +3456,7 @@ void vunmap(const void *addr)
 }
 EXPORT_SYMBOL(vunmap);
 
+#if 0
 /**
  * vmap - map an array of pages into virtually contiguous space
  * @pages: array of page pointers
