@@ -432,3 +432,15 @@ int sysfs_create_link(struct kobject *kobj, struct kobject *target,
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int sysfs_create_group(struct kobject *kobj,
+               const struct attribute_group *grp)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void sysfs_remove_link(struct kobject *kobj, const char *name)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

@@ -7226,7 +7226,6 @@ static int __init slab_sysfs_init(void)
 	struct kmem_cache *s;
 	int err;
 
-#if 0
 	mutex_lock(&slab_mutex);
 
 	slab_kset = kset_create_and_add("slab", NULL, kernel_kobj);
@@ -7257,9 +7256,6 @@ static int __init slab_sysfs_init(void)
 	}
 
 	mutex_unlock(&slab_mutex);
-#endif
-    // FixMe
-    pr_warn("WARNING:%s: --- Impl it ---\n", __func__);
 	return 0;
 }
 late_initcall(slab_sysfs_init);

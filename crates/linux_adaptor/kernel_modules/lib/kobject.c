@@ -431,7 +431,6 @@ int kobject_add(struct kobject *kobj, struct kobject *parent,
 }
 EXPORT_SYMBOL(kobject_add);
 
-#if 0
 /**
  * kobject_init_and_add() - Initialize a kobject structure and add it to
  *                          the kobject hierarchy.
@@ -463,6 +462,7 @@ int kobject_init_and_add(struct kobject *kobj, const struct kobj_type *ktype,
 }
 EXPORT_SYMBOL_GPL(kobject_init_and_add);
 
+#if 0
 /**
  * kobject_rename() - Change the name of an object.
  * @kobj: object in question.
