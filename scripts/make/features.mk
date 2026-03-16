@@ -15,6 +15,11 @@
 ifeq ($(APP_TYPE), rust)
   ifneq ($(wildcard $(APP)/features.txt),)
     QEMU_FEAT = $(shell cat $(APP)/features.txt)
+    ifneq ($(filter bus-mmio,$(QEMU_FEAT)),)
+      override BUS = mmio
+    else ifneq ($(filter bus-pci,$(QEMU_FEAT)),)
+      override BUS = pci
+    endif
   endif
 endif
 
