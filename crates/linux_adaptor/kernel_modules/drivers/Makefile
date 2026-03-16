@@ -11,8 +11,8 @@ obj-y += virtio/
 obj-y += pinctrl/
 obj-y += iommu/
 obj-y += pmdomain/
+obj-y += block/
 
-#obj-y += block/
 #obj-y += gpio/
 #obj-y += pci/
 #obj-y += nvme/
