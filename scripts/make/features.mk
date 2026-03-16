@@ -11,6 +11,13 @@
 #   - `LIB_FEAT`: features to be enabled for the user library (crate `axstd`, `axlibc`).
 #   - `APP_FEAT`: features to be enabled for the Rust app.
 
+# App can require qemu to enable `BLK` by its features.txt
+ifeq ($(APP_TYPE), rust)
+  ifneq ($(wildcard $(APP)/features.txt),)
+    QEMU_FEAT = $(shell cat $(APP)/features.txt)
+  endif
+endif
+
 ifeq ($(APP_TYPE),c)
   ax_feat_prefix := axfeat/
   lib_feat_prefix := axlibc/
@@ -56,14 +63,10 @@ endif
 
 #
 # Handle platform-specific features.
-# If a platform has features.txt, it should specify axruntime or
-# its alternatives explicitly.
 #
 PLAT_FEATURES :=
 PLAT_FEAT_FILE := $(dir $(PLAT_CONFIG))features.txt
-ifeq ($(wildcard $(PLAT_FEAT_FILE)),)
-  ax_feat += axruntime
-else
+ifneq ($(wildcard $(PLAT_FEAT_FILE)),)
   ax_feat += $(shell cat $(PLAT_FEAT_FILE))
 endif
 

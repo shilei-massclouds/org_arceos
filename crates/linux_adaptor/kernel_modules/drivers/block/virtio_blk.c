@@ -1015,12 +1015,10 @@ static int init_vq(struct virtio_blk *vblk)
 	}
 
 	/* Discover virtqueues and write information to configuration.  */
-    printk("%s: step1\n", __func__);
 	err = virtio_find_vqs(vdev, num_vqs, vqs, vqs_info, &desc);
 	if (err)
 		goto out;
 
-    printk("%s: step2\n", __func__);
 	for (i = 0; i < num_vqs; i++) {
 		spin_lock_init(&vblk->vqs[i].lock);
 		vblk->vqs[i].vq = vqs[i];
@@ -1442,7 +1440,6 @@ static int virtblk_probe(struct virtio_device *vdev)
 	int err, index;
 	unsigned int queue_depth;
 
-    printk("%s: step1\n", __func__);
 	if (!vdev->config->get) {
 		dev_err(&vdev->dev, "%s failure: config access disabled\n",
 			__func__);
@@ -1467,12 +1464,10 @@ static int virtblk_probe(struct virtio_device *vdev)
 
 	INIT_WORK(&vblk->config_work, virtblk_config_changed_work);
 
-    printk("%s: step1.1\n", __func__);
 	err = init_vq(vblk);
 	if (err)
 		goto out_free_vblk;
 
-    printk("%s: step1.2\n", __func__);
 	/* Default queue sizing is to fill the ring. */
 	if (!virtblk_queue_depth) {
 		queue_depth = vblk->vqs[0].vq->num_free;
@@ -1501,7 +1496,6 @@ static int virtblk_probe(struct virtio_device *vdev)
 	if (err)
 		goto out_free_vq;
 
-    printk("%s: step1.3\n", __func__);
 	err = virtblk_read_limits(vblk, &lim);
 	if (err)
 		goto out_free_tags;
@@ -1542,12 +1536,10 @@ static int virtblk_probe(struct virtio_device *vdev)
 			goto out_cleanup_disk;
 	}
 
-    printk("%s: step2\n", __func__);
 	err = device_add_disk(&vdev->dev, vblk->disk, virtblk_attr_groups);
 	if (err)
 		goto out_cleanup_disk;
 
-    printk("%s: step3 disk_name(%s)\n", __func__, vblk->disk->disk_name);
 	return 0;
 
 out_cleanup_disk:
@@ -1691,11 +1683,6 @@ out_unregister_blkdev:
 out_destroy_workqueue:
 	destroy_workqueue(virtblk_wq);
 	return error;
-}
-
-void cl_virtio_blk_init(void)
-{
-    virtio_blk_init();
 }
 
 static void __exit virtio_blk_fini(void)
