@@ -2418,7 +2418,6 @@ static void cpuhp_rollback_install(int failedcpu, enum cpuhp_state state,
     PANIC("");
 }
 
-#if 0
 int __cpuhp_state_add_instance_cpuslocked(enum cpuhp_state state,
 					  struct hlist_node *node,
 					  bool invoke)
@@ -2475,7 +2474,6 @@ int __cpuhp_state_add_instance(enum cpuhp_state state, struct hlist_node *node,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(__cpuhp_state_add_instance);
-#endif
 
 /**
  * __cpuhp_setup_state_cpuslocked - Setup the callbacks for an hotplug machine state

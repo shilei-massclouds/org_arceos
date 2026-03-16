@@ -19,6 +19,7 @@
 #include <linux/blkdev.h>
 #include <linux/mutex.h>
 #include "base.h"
+#include "adaptor.h"
 
 /* /sys/class */
 static struct kset *class_kset;
@@ -66,7 +67,6 @@ done:
 	return sp;
 }
 
-#if 0
 static ssize_t class_attr_show(struct kobject *kobj, struct attribute *attr,
 			       char *buf)
 {
@@ -127,6 +127,7 @@ static const struct kobj_type class_ktype = {
 	.child_ns_type	= class_child_ns_type,
 };
 
+#if 0
 int class_create_file_ns(const struct class *cls, const struct class_attribute *attr,
 			 const void *ns)
 {
@@ -155,6 +156,7 @@ void class_remove_file_ns(const struct class *cls, const struct class_attribute 
 	subsys_put(sp);
 }
 EXPORT_SYMBOL_GPL(class_remove_file_ns);
+#endif /* CL */
 
 static struct device *klist_class_to_dev(struct klist_node *n)
 {
@@ -231,6 +233,7 @@ err_out:
 }
 EXPORT_SYMBOL_GPL(class_register);
 
+#if 0
 void class_unregister(const struct class *cls)
 {
 	struct subsys_private *sp = class_to_subsys(cls);

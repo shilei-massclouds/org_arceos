@@ -75,7 +75,6 @@ __setup_param("slub_merge", slub_merge, setup_slab_merge, 0);
 __setup("slab_nomerge", setup_slab_nomerge);
 __setup("slab_merge", setup_slab_merge);
 
-#if 0
 /*
  * Determine the size of a slab object
  */
@@ -84,8 +83,6 @@ unsigned int kmem_cache_size(struct kmem_cache *s)
 	return s->object_size;
 }
 EXPORT_SYMBOL(kmem_cache_size);
-
-#endif /* CL */
 
 #ifdef CONFIG_DEBUG_VM
 

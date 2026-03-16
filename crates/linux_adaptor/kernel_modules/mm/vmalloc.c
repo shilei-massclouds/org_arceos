@@ -4951,6 +4951,7 @@ void pcpu_free_vm_areas(struct vm_struct **vms, int nr_vms)
 	kfree(vms);
 }
 #endif	/* CONFIG_SMP */
+#endif /* CL */
 
 #ifdef CONFIG_PRINTK
 bool vmalloc_dump_obj(void *object)
@@ -4987,6 +4988,7 @@ bool vmalloc_dump_obj(void *object)
 }
 #endif
 
+#if 0
 #ifdef CONFIG_PROC_FS
 
 /*

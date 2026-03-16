@@ -1503,6 +1503,7 @@ static int virtblk_probe(struct virtio_device *vdev)
 	if (virtblk_get_cache_mode(vdev))
 		lim.features |= BLK_FEAT_WRITE_CACHE;
 
+    printk("%s: step1\n", __func__);
 	vblk->disk = blk_mq_alloc_disk(&vblk->tag_set, &lim, vblk);
 	if (IS_ERR(vblk->disk)) {
 		err = PTR_ERR(vblk->disk);
@@ -1511,6 +1512,7 @@ static int virtblk_probe(struct virtio_device *vdev)
 
 	virtblk_name_format("vd", index, vblk->disk->disk_name, DISK_NAME_LEN);
 
+    printk("%s: step2\n", __func__);
 	vblk->disk->major = major;
 	vblk->disk->first_minor = index_to_minor(index);
 	vblk->disk->minors = 1 << PART_BITS;
@@ -1518,6 +1520,7 @@ static int virtblk_probe(struct virtio_device *vdev)
 	vblk->disk->fops = &virtblk_fops;
 	vblk->index = index;
 
+    printk("%s: step3\n", __func__);
 	/* If disk is read-only in the host, the guest should obey */
 	if (virtio_has_feature(vdev, VIRTIO_BLK_F_RO))
 		set_disk_ro(vblk->disk, 1);

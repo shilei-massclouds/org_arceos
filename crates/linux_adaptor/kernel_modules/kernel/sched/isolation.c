@@ -88,6 +88,7 @@ void housekeeping_affine(struct task_struct *t, enum hk_type type)
 			set_cpus_allowed_ptr(t, housekeeping.cpumasks[type]);
 }
 EXPORT_SYMBOL_GPL(housekeeping_affine);
+#endif /* CL */
 
 bool housekeeping_test_cpu(int cpu, enum hk_type type)
 {
@@ -116,6 +117,7 @@ void __init housekeeping_init(void)
 	}
 }
 
+#if 0
 static void __init housekeeping_setup_type(enum hk_type type,
 					   cpumask_var_t housekeeping_staging)
 {

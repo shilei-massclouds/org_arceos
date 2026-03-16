@@ -8,6 +8,7 @@
 #include <linux/memblock.h>
 #include <linux/pid_namespace.h>
 #include <linux/sched/clock.h>
+#include <linux/sched/isolation.h>
 #include <linux/tick.h>
 #include <linux/moduleparam.h>
 
@@ -212,6 +213,12 @@ void cl_init_irq(void)
      */
     radix_tree_init();
     maple_tree_init();
+
+    /*
+     * Set up housekeeping before setting up workqueues to allow the unbound
+     * workqueue to take non-housekeeping into account.
+     */
+    housekeeping_init();
 
     /*
      * Allow workqueue creation and work item queueing/cancelling

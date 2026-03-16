@@ -38,6 +38,8 @@ obj-y += logic_pio.o
 obj-y += cmdline.o
 obj-y += devres.o
 obj-y += sbitmap.o
+obj-y += group_cpus.o
+obj-y += percpu-refcount.o
 
 obj-y += math/
 obj-y += crypto/
@@ -47,4 +49,3 @@ obj-y += crypto/
 #obj-y += sg_pool.o errseq.o
 #obj-y += iov_iter.o
 #obj-y += strncpy_from_user.o
-#obj-y += group_cpus.o

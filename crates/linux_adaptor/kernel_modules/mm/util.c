@@ -609,6 +609,7 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 	return vm_mmap_pgoff(file, addr, len, prot, flag, offset >> PAGE_SHIFT);
 }
 EXPORT_SYMBOL(vm_mmap);
+#endif /* CL */
 
 static gfp_t kmalloc_gfp_adjust(gfp_t flags, size_t size)
 {
@@ -684,7 +685,6 @@ void *__kvmalloc_node_noprof(DECL_BUCKET_PARAMS(size, b), gfp_t flags, int node)
 			node, __builtin_return_address(0));
 }
 EXPORT_SYMBOL(__kvmalloc_node_noprof);
-#endif /* CL */
 
 /**
  * kvfree() - Free memory.
@@ -1156,6 +1156,7 @@ int __weak memcmp_pages(struct page *page1, struct page *page2)
 	kunmap_local(addr1);
 	return ret;
 }
+#endif /* CL */
 
 #ifdef CONFIG_PRINTK
 /**
@@ -1195,6 +1196,7 @@ void mem_dump_obj(void *object)
 EXPORT_SYMBOL_GPL(mem_dump_obj);
 #endif
 
+#if 0
 /*
  * A driver might set a page logically offline -- PageOffline() -- and
  * turn the page inaccessible in the hypervisor; after that, access to page

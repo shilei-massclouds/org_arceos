@@ -460,3 +460,14 @@ unsigned long __read_mostly sysctl_hung_task_timeout_secs = CONFIG_DEFAULT_HUNG_
  * a full sync is triggered after this time elapses without any disk activity.
  */
 int laptop_mode;
+
+struct proc_dir_entry *proc_create_seq_private(const char *name, umode_t mode,
+        struct proc_dir_entry *parent, const struct seq_operations *ops,
+        unsigned int state_size, void *data)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return NULL;
+}
+
+// mm/page-writeback.c
+struct wb_domain global_wb_domain;
