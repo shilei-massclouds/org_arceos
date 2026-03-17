@@ -2269,6 +2269,7 @@ void __init init_cma_reserved_pageblock(struct page *page)
 	page_zone(page)->cma_pages += pageblock_nr_pages;
 }
 #endif
+#endif // CL
 
 void set_zone_contiguous(struct zone *zone)
 {
@@ -2338,7 +2339,6 @@ void __init page_alloc_init_late(void)
 
 	page_alloc_sysctl_init();
 }
-#endif /* CL */
 
 /*
  * Adaptive scale is meant to reduce sizes of hash tables on large memory
@@ -2608,7 +2608,6 @@ static void __init report_meminit(void)
 		pr_info("mem auto-init: clearing system memory may take some time...\n");
 }
 
-#if 0
 static void __init mem_init_print_info(void)
 {
 	unsigned long physpages, codesize, datasize, rosize, bss_size;
@@ -2659,7 +2658,6 @@ static void __init mem_init_print_info(void)
 #endif
 		);
 }
-#endif // CL
 
 /*
  * Set up kernel memory allocators

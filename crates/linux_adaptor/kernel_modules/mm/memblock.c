@@ -156,8 +156,8 @@ static __refdata struct memblock_type *memblock_memory = &memblock.memory;
 static int memblock_debug __initdata_memblock;
 static bool system_has_some_mirror __initdata_memblock;
 static int memblock_can_resize __initdata_memblock;
-//static int memblock_memory_in_slab __initdata_memblock;
-//static int memblock_reserved_in_slab __initdata_memblock;
+static int memblock_memory_in_slab __initdata_memblock;
+static int memblock_reserved_in_slab __initdata_memblock;
 
 bool __init_memblock memblock_has_mirror(void)
 {
@@ -361,7 +361,6 @@ static void __init_memblock memblock_remove_region(struct memblock_type *type, u
 	}
 }
 
-#if 0
 #ifndef CONFIG_ARCH_KEEP_MEMBLOCK
 /**
  * memblock_discard - discard memory and reserved arrays if they were allocated
@@ -392,7 +391,6 @@ void __init memblock_discard(void)
 
 	memblock_memory = NULL;
 }
-#endif
 #endif
 
 /**
@@ -1702,8 +1700,6 @@ void * __init memblock_alloc_try_nid(
 	return ptr;
 }
 
-#if 0
-
 /**
  * memblock_free_late - free pages directly to buddy allocator
  * @base: phys starting address of the  boot memory block
@@ -1729,7 +1725,6 @@ void __init memblock_free_late(phys_addr_t base, phys_addr_t size)
 		totalram_pages_inc();
 	}
 }
-#endif
 
 /*
  * Remaining API functions

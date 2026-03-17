@@ -20,6 +20,7 @@ pub enum LinuxAdaptorState {
     StartSchedEarlier,
     StartKThreadd,
     InitSmp,
+    InitPageAllocLater,
     InitDriver,
     DoInitCalls,
     NumberOfStates,
@@ -163,6 +164,13 @@ fn InitSmpCB() {
 }
 
 #[allow(non_snake_case)]
+fn InitPageAllocLaterCB() {
+    unsafe {
+        init_page_alloc_later();
+    }
+}
+
+#[allow(non_snake_case)]
 fn InitDriverCB() {
     unsafe {
         cl_driver_init();
@@ -189,6 +197,7 @@ unsafe extern "C" {
     fn start_sched_earlier();
     fn start_kthreadd();
     fn init_smp();
+    fn init_page_alloc_later();
     fn cl_driver_init();
     fn cl_do_initcalls();
 }

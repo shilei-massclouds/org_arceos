@@ -336,6 +336,11 @@ void init_smp(void)
     smp_init();
 }
 
+void init_page_alloc_later()
+{
+    page_alloc_init_late();
+}
+
 static bool __init_or_module initcall_blacklisted(initcall_t fn)
 {
     // FixMe: impl it.

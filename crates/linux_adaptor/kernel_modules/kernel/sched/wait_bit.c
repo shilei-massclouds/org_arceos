@@ -8,13 +8,14 @@
 #include <linux/sched.h>
 #include <linux/wait.h>
 #include <linux/wait_bit.h>
+#include <linux/sched/debug.h>
+#include <linux/sched/signal.h>
 
 #define WAIT_TABLE_BITS 8
 #define WAIT_TABLE_SIZE (1 << WAIT_TABLE_BITS)
 
 static wait_queue_head_t bit_wait_table[WAIT_TABLE_SIZE] __cacheline_aligned;
 
-#if 0
 wait_queue_head_t *bit_waitqueue(void *word, int bit)
 {
 	const int shift = BITS_PER_LONG == 32 ? 5 : 6;
@@ -38,6 +39,7 @@ int wake_bit_function(struct wait_queue_entry *wq_entry, unsigned mode, int sync
 }
 EXPORT_SYMBOL(wake_bit_function);
 
+#if 0
 /*
  * To allow interruptible waiting and asynchronous (i.e. non-blocking)
  * waiting, the actions of __wait_on_bit() and __wait_on_bit_lock() are
@@ -83,6 +85,7 @@ int __sched out_of_line_wait_on_bit_timeout(
 	return __wait_on_bit(wq_head, &wq_entry, action, mode);
 }
 EXPORT_SYMBOL_GPL(out_of_line_wait_on_bit_timeout);
+#endif /* CL */
 
 int __sched
 __wait_on_bit_lock(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *wbq_entry,
@@ -123,7 +126,6 @@ int __sched out_of_line_wait_on_bit_lock(void *word, int bit,
 	return __wait_on_bit_lock(wq_head, &wq_entry, action, mode);
 }
 EXPORT_SYMBOL(out_of_line_wait_on_bit_lock);
-#endif /* CL */
 
 void __wake_up_bit(struct wait_queue_head *wq_head, void *word, int bit)
 {
@@ -134,7 +136,6 @@ void __wake_up_bit(struct wait_queue_head *wq_head, void *word, int bit)
 }
 EXPORT_SYMBOL(__wake_up_bit);
 
-#if 0
 /**
  * wake_up_bit - wake up a waiter on a bit
  * @word: the word being waited on, a kernel virtual address
@@ -157,7 +158,6 @@ void wake_up_bit(void *word, int bit)
 	__wake_up_bit(bit_waitqueue(word, bit), word, bit);
 }
 EXPORT_SYMBOL(wake_up_bit);
-#endif /* CL */
 
 wait_queue_head_t *__var_waitqueue(void *p)
 {
@@ -215,6 +215,7 @@ __sched int bit_wait(struct wait_bit_key *word, int mode)
 	return 0;
 }
 EXPORT_SYMBOL(bit_wait);
+#endif // CL
 
 __sched int bit_wait_io(struct wait_bit_key *word, int mode)
 {
@@ -226,6 +227,7 @@ __sched int bit_wait_io(struct wait_bit_key *word, int mode)
 }
 EXPORT_SYMBOL(bit_wait_io);
 
+#if 0
 __sched int bit_wait_timeout(struct wait_bit_key *word, int mode)
 {
 	unsigned long now = READ_ONCE(jiffies);

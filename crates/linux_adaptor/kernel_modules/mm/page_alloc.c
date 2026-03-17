@@ -1332,7 +1332,6 @@ void __meminit __free_pages_core(struct page *page, unsigned int order,
 	__free_pages_ok(page, order, FPI_TO_TAIL);
 }
 
-#if 0
 /*
  * Check that the whole (or subset of) a pageblock given by the interval of
  * [start_pfn, end_pfn) is valid and within the same zone, before scanning it
@@ -1384,7 +1383,6 @@ struct page *__pageblock_pfn_to_page(unsigned long start_pfn,
 
 	return start_page;
 }
-#endif
 
 /*
  * The order of subdivision here is critical for the IO subsystem.
@@ -5206,7 +5204,6 @@ static unsigned long nr_free_zone_pages(int offset)
 	return sum;
 }
 
-#if 0
 /**
  * nr_free_buffer_pages - count number of pages beyond high watermark
  *
@@ -5221,7 +5218,6 @@ unsigned long nr_free_buffer_pages(void)
 	return nr_free_zone_pages(gfp_zone(GFP_USER));
 }
 EXPORT_SYMBOL_GPL(nr_free_buffer_pages);
-#endif
 
 static void zoneref_set_zone(struct zone *zone, struct zoneref *zoneref)
 {
@@ -5660,7 +5656,6 @@ static int zone_batchsize(struct zone *zone)
 #endif
 }
 
-#if 0
 static int percpu_pagelist_high_fraction;
 static int zone_highsize(struct zone *zone, int batch, int cpu_online,
 			 int high_fraction)
@@ -5735,7 +5730,6 @@ static void pageset_update(struct per_cpu_pages *pcp, unsigned long high_min,
 	WRITE_ONCE(pcp->high_min, high_min);
 	WRITE_ONCE(pcp->high_max, high_max);
 }
-#endif
 
 static void per_cpu_pages_init(struct per_cpu_pages *pcp, struct per_cpu_zonestat *pzstats)
 {
@@ -5760,7 +5754,6 @@ static void per_cpu_pages_init(struct per_cpu_pages *pcp, struct per_cpu_zonesta
 	pcp->free_count = 0;
 }
 
-#if 0
 static void __zone_set_pageset_high_and_batch(struct zone *zone, unsigned long high_min,
 					      unsigned long high_max, unsigned long batch)
 {
@@ -5809,6 +5802,7 @@ static void zone_set_pageset_high_and_batch(struct zone *zone, int cpu_online)
 					  new_batch);
 }
 
+#if 0
 void __meminit setup_zone_pageset(struct zone *zone)
 {
 	int cpu;
@@ -5830,6 +5824,7 @@ void __meminit setup_zone_pageset(struct zone *zone)
 
 	zone_set_pageset_high_and_batch(zone, 0);
 }
+#endif // CL
 
 /*
  * The zone indicated has a new number of managed_pages; batch sizes and percpu
@@ -5842,6 +5837,7 @@ static void zone_pcp_update(struct zone *zone, int cpu_online)
 	mutex_unlock(&pcp_batch_high_lock);
 }
 
+#if 0
 static void zone_pcp_update_cacheinfo(struct zone *zone, unsigned int cpu)
 {
 	struct per_cpu_pages *pcp;
@@ -6028,6 +6024,7 @@ void __init page_alloc_init_cpuhp(void)
 					page_alloc_cpu_dead);
 	WARN_ON(ret < 0);
 }
+#endif // CL
 
 /*
  * calculate_totalreserve_pages - called when sysctl_lowmem_reserve_ratio
@@ -6190,6 +6187,7 @@ void setup_per_zone_wmarks(void)
 		zone_pcp_update(zone, 0);
 }
 
+#if 0
 /*
  * Initialise min_free_kbytes.
  *
@@ -6247,6 +6245,7 @@ int __meminit init_per_zone_wmark_min(void)
 	return 0;
 }
 postcore_initcall(init_per_zone_wmark_min)
+#endif // CL
 
 /*
  * min_free_kbytes_sysctl_handler - just a wrapper around proc_dointvec() so
@@ -6284,6 +6283,7 @@ static int watermark_scale_factor_sysctl_handler(const struct ctl_table *table, 
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_NUMA
 static void setup_min_unmapped_ratio(void)
 {
@@ -6340,6 +6340,7 @@ static int sysctl_min_slab_ratio_sysctl_handler(const struct ctl_table *table, i
 	return 0;
 }
 #endif
+#endif // CL
 
 /*
  * lowmem_reserve_ratio_sysctl_handler - just a wrapper around
@@ -6479,6 +6480,7 @@ void __init page_alloc_sysctl_init(void)
 	register_sysctl_init("vm", page_alloc_sysctl_table);
 }
 
+#if 0
 #ifdef CONFIG_CONTIG_ALLOC
 /* Usage: See admin-guide/dynamic-debug-howto.rst */
 static void alloc_contig_dump_pages(struct list_head *page_list)

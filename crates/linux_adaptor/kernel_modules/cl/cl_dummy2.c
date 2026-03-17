@@ -40,6 +40,7 @@ enum system_states system_state __read_mostly;
 
 // mm/show_mem.c
 atomic_long_t _totalram_pages __read_mostly;
+unsigned long totalcma_pages __read_mostly;
 
 // kernel/utsname.c
 const struct proc_ns_operations utsns_operations;
