@@ -306,6 +306,7 @@ void __destroy_inode(struct inode *inode)
 	this_cpu_dec(nr_inodes);
 }
 EXPORT_SYMBOL(__destroy_inode);
+#endif // CL
 
 static void destroy_inode(struct inode *inode)
 {
@@ -322,6 +323,7 @@ static void destroy_inode(struct inode *inode)
 	call_rcu(&inode->i_rcu, i_callback);
 }
 
+#if 0
 /**
  * drop_nlink - directly drop an inode's link count
  * @inode: inode
@@ -443,7 +445,6 @@ static void init_once(void *foo)
 	inode_init_once(inode);
 }
 
-#if 0
 /*
  * get additional reference to inode; caller must already hold one.
  */
@@ -481,6 +482,7 @@ struct wait_queue_head *inode_bit_waitqueue(struct wait_bit_queue_entry *wqe,
 }
 EXPORT_SYMBOL(inode_bit_waitqueue);
 
+#if 0
 /*
  * Add inode to LRU if needed (inode is unused and clean).
  *
@@ -490,6 +492,7 @@ void inode_add_lru(struct inode *inode)
 {
 	__inode_add_lru(inode, false);
 }
+#endif /* CL */
 
 static void inode_lru_list_del(struct inode *inode)
 {
@@ -497,6 +500,7 @@ static void inode_lru_list_del(struct inode *inode)
 		this_cpu_dec(nr_unused);
 }
 
+#if 0
 static void inode_pin_lru_isolating(struct inode *inode)
 {
 	lockdep_assert_held(&inode->i_lock);
@@ -513,6 +517,7 @@ static void inode_unpin_lru_isolating(struct inode *inode)
 	inode_wake_up_bit(inode, __I_LRU_ISOLATING);
 	spin_unlock(&inode->i_lock);
 }
+#endif // CL
 
 static void inode_wait_for_lru_isolating(struct inode *inode)
 {
@@ -539,7 +544,6 @@ static void inode_wait_for_lru_isolating(struct inode *inode)
 	finish_wait(wq_head, &wqe.wq_entry);
 	WARN_ON(inode->i_state & I_LRU_ISOLATING);
 }
-#endif // CL
 
 /**
  * inode_sb_list_add - add inode to the superblock list of inodes
@@ -553,7 +557,6 @@ void inode_sb_list_add(struct inode *inode)
 }
 EXPORT_SYMBOL_GPL(inode_sb_list_add);
 
-#if 0
 static inline void inode_sb_list_del(struct inode *inode)
 {
 	if (!list_empty(&inode->i_sb_list)) {
@@ -593,6 +596,7 @@ void __insert_inode_hash(struct inode *inode, unsigned long hashval)
 }
 EXPORT_SYMBOL(__insert_inode_hash);
 
+#if 0
 /**
  *	__remove_inode_hash - remove an inode from the hash
  *	@inode: inode to unhash
@@ -689,6 +693,7 @@ void clear_inode(struct inode *inode)
 	inode->i_state = I_FREEING | I_CLEAR;
 }
 EXPORT_SYMBOL(clear_inode);
+#endif /* CL */
 
 /*
  * Free the inode passed in, removing it from the lists it is still connected
@@ -762,6 +767,7 @@ static void evict(struct inode *inode)
 	destroy_inode(inode);
 }
 
+#if 0
 /*
  * dispose_list - dispose of the contents of a local list
  * @head: the head of the list to free
@@ -969,8 +975,10 @@ long prune_icache_sb(struct super_block *sb, struct shrink_control *sc)
 	dispose_list(&freeable);
 	return freed;
 }
+#endif /* CL */
 
 static void __wait_on_freeing_inode(struct inode *inode, bool is_inode_hash_locked);
+#if 0
 /*
  * Called with the inode lock held.
  */
@@ -1011,6 +1019,7 @@ repeat:
 	rcu_read_unlock();
 	return NULL;
 }
+#endif // CL
 
 /*
  * find_inode_fast is the fast path version of find_inode, see the comment at
@@ -1053,6 +1062,7 @@ repeat:
 	return NULL;
 }
 
+#if 0
 /*
  * Each cpu owns a range of LAST_INO_BATCH numbers.
  * 'shared_last_ino' is dirtied only once out of LAST_INO_BATCH allocations,
@@ -1605,6 +1615,7 @@ again:
 	return inode;
 }
 EXPORT_SYMBOL(ilookup5);
+#endif // CL
 
 /**
  * ilookup - search for an inode in the inode cache
@@ -1634,6 +1645,7 @@ again:
 }
 EXPORT_SYMBOL(ilookup);
 
+#if 0
 /**
  * find_inode_nowait - find an inode in the inode cache
  * @sb:		super block of file system to search
@@ -1831,6 +1843,7 @@ int generic_delete_inode(struct inode *inode)
 	return 1;
 }
 EXPORT_SYMBOL(generic_delete_inode);
+#endif /* CL */
 
 /*
  * Called when we're dropping the last reference
@@ -1913,6 +1926,7 @@ retry:
 }
 EXPORT_SYMBOL(iput);
 
+#if 0
 #ifdef CONFIG_BLOCK
 /**
  *	bmap	- find a block number in a file
@@ -2367,6 +2381,7 @@ int inode_needs_sync(struct inode *inode)
 	return 0;
 }
 EXPORT_SYMBOL(inode_needs_sync);
+#endif // CL
 
 /*
  * If we try to find an inode in the inode hash while it is being
@@ -2405,7 +2420,6 @@ static void __wait_on_freeing_inode(struct inode *inode, bool is_inode_hash_lock
 		spin_lock(&inode_hash_lock);
 	rcu_read_lock();
 }
-#endif /* CL */
 
 static __initdata unsigned long ihash_entries;
 static int __init set_ihash_entries(char *str)

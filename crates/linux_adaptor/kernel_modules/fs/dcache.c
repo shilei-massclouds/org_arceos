@@ -1758,6 +1758,7 @@ struct dentry *d_alloc_cursor(struct dentry * parent)
 	}
 	return dentry;
 }
+#endif // CL
 
 /**
  * d_alloc_pseudo - allocate a dentry (for lookup-less filesystems)
@@ -1788,6 +1789,7 @@ struct dentry *d_alloc_pseudo(struct super_block *sb, const struct qstr *name)
 	return dentry;
 }
 
+#if 0
 struct dentry *d_alloc_name(struct dentry *parent, const char *name)
 {
 	struct qstr q;
@@ -3247,13 +3249,11 @@ void __init vfs_caches_init(void)
 
 	dcache_init();
 	inode_init();
-    // FixMe
-#if 0
 	files_init();
 	files_maxfiles_init();
-#endif
 	mnt_init();
 	bdev_cache_init();
+    // FixMe
 #if 0
 	chrdev_init();
 #endif

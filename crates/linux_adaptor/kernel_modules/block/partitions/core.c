@@ -85,7 +85,6 @@ static int (*const check_part[])(struct parsed_partitions *) = {
 	NULL
 };
 
-#if 0
 static struct parsed_partitions *allocate_partitions(struct gendisk *hd)
 {
 	struct parsed_partitions *state;
@@ -170,7 +169,6 @@ static struct parsed_partitions *check_partition(struct gendisk *hd)
 	free_partitions(state);
 	return ERR_PTR(res);
 }
-#endif /* CL */
 
 static ssize_t part_partition_show(struct device *dev,
 				   struct device_attribute *attr, char *buf)
@@ -276,6 +274,7 @@ void drop_partition(struct block_device *part)
 	device_del(&part->bd_device);
 	put_device(&part->bd_device);
 }
+#endif /* CL */
 
 static ssize_t whole_disk_show(struct device *dev,
 			       struct device_attribute *attr, char *buf)
@@ -398,6 +397,7 @@ out_put_disk:
 	return ERR_PTR(err);
 }
 
+#if 0
 static bool partition_overlaps(struct gendisk *disk, sector_t start,
 		sector_t length, int skip_partno)
 {
@@ -507,6 +507,7 @@ out_unlock:
 	mutex_unlock(&disk->open_mutex);
 	return ret;
 }
+#endif // CL
 
 static bool disk_unlock_native_capacity(struct gendisk *disk)
 {
@@ -724,5 +725,3 @@ out:
 	p->v = NULL;
 	return NULL;
 }
-
-#endif /* CL */

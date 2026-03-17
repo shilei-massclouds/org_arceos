@@ -294,9 +294,7 @@ void start_sched_earlier()
     net_ns_init();
 #endif
     vfs_caches_init();
-#if 0
     pagecache_init();
-#endif
     signals_init();
 }
 

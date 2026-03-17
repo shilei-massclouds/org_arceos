@@ -4012,7 +4012,6 @@ void *vmalloc_huge_noprof(unsigned long size, gfp_t gfp_mask)
 }
 EXPORT_SYMBOL_GPL(vmalloc_huge_noprof);
 
-#if 0
 /**
  * vzalloc - allocate virtually contiguous memory with zero fill
  * @size:    allocation size
@@ -4033,6 +4032,7 @@ void *vzalloc_noprof(unsigned long size)
 }
 EXPORT_SYMBOL(vzalloc_noprof);
 
+#if 0
 /**
  * vmalloc_user - allocate zeroed virtually contiguous memory for userspace
  * @size: allocation size

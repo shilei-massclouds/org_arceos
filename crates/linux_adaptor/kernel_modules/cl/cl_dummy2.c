@@ -459,12 +459,6 @@ const struct bus_type pci_bus_type;
  */
 unsigned long __read_mostly sysctl_hung_task_timeout_secs = CONFIG_DEFAULT_HUNG_TASK_TIMEOUT;
 
-/*
- * Flag that puts the machine in "laptop mode". Doubles as a timeout in jiffies:
- * a full sync is triggered after this time elapses without any disk activity.
- */
-int laptop_mode;
-
 struct proc_dir_entry *proc_create_seq_private(const char *name, umode_t mode,
         struct proc_dir_entry *parent, const struct seq_operations *ops,
         unsigned int state_size, void *data)
@@ -472,9 +466,6 @@ struct proc_dir_entry *proc_create_seq_private(const char *name, umode_t mode,
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return NULL;
 }
-
-// mm/page-writeback.c
-struct wb_domain global_wb_domain;
 
 struct proc_dir_entry *proc_create_single_data(const char *name, umode_t mode,
         struct proc_dir_entry *parent,
@@ -551,3 +542,16 @@ int proc_alloc_inum(unsigned int *inum)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int security_file_alloc(struct file *file)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// kernel/sysctl.c
+const unsigned long sysctl_long_vals[] = { 0, 1, LONG_MAX };
+EXPORT_SYMBOL_GPL(sysctl_long_vals);
+
+// mm/show_mem.c
+unsigned long totalreserve_pages __read_mostly;

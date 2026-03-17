@@ -3534,7 +3534,6 @@ int dev_set_name(struct device *dev, const char *fmt, ...)
 }
 EXPORT_SYMBOL_GPL(dev_set_name);
 
-#if 0
 /* select a /sys/dev/ directory for the device */
 static struct kobject *device_to_dev_kobj(struct device *dev)
 {
@@ -3558,6 +3557,7 @@ static int device_create_sys_dev_entry(struct device *dev)
 	return error;
 }
 
+#if 0
 static void device_remove_sys_dev_entry(struct device *dev)
 {
 	struct kobject *kobj = device_to_dev_kobj(dev);
@@ -3693,7 +3693,6 @@ int device_add(struct device *dev)
 	device_pm_add(dev);
 
 	if (MAJOR(dev->devt)) {
-#if 0
 		error = device_create_file(dev, &dev_attr_dev);
 		if (error)
 			goto DevAttrError;
@@ -3703,8 +3702,6 @@ int device_add(struct device *dev)
 			goto SysEntryError;
 
 		devtmpfs_create_node(dev);
-#endif
-        PANIC("devt");
 	}
 
 	/* Notify clients of device addition.  This call must come
@@ -4426,7 +4423,7 @@ void root_device_unregister(struct device *dev)
 	device_unregister(dev);
 }
 EXPORT_SYMBOL_GPL(root_device_unregister);
-
+#endif // CL
 
 static void device_create_release(struct device *dev)
 {
@@ -4510,6 +4507,7 @@ struct device *device_create(const struct class *class, struct device *parent,
 }
 EXPORT_SYMBOL_GPL(device_create);
 
+#if 0
 /**
  * device_create_with_groups - creates a device and registers it with sysfs
  * @class: pointer to the struct class that this device should be registered to

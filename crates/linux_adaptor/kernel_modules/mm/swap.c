@@ -49,7 +49,6 @@
 int page_cluster;
 const int page_cluster_max = 31;
 
-#if 0
 struct cpu_fbatches {
 	/*
 	 * The following folio batches are grouped together because they are protected
@@ -83,6 +82,7 @@ static void __page_cache_release(struct folio *folio, struct lruvec **lruvecp,
 	}
 }
 
+#if 0
 /*
  * This path almost never happens for VM activity - pages are normally freed
  * in batches.  But it gets used by networking - and for compound pages.
@@ -151,6 +151,7 @@ void put_pages_list(struct list_head *pages)
 	INIT_LIST_HEAD(pages);
 }
 EXPORT_SYMBOL(put_pages_list);
+#endif // CL
 
 typedef void (*move_fn_t)(struct lruvec *lruvec, struct folio *folio);
 
@@ -249,6 +250,7 @@ static void __folio_batch_add_and_move(struct folio_batch __percpu *fbatch,
 		offsetof(struct cpu_fbatches, op) >= offsetof(struct cpu_fbatches, lock_irq)	\
 	)
 
+#if 0
 static void lru_move_tail(struct lruvec *lruvec, struct folio *folio)
 {
 	if (folio_test_unevictable(folio))
@@ -497,6 +499,7 @@ void folio_mark_accessed(struct folio *folio)
 		folio_clear_idle(folio);
 }
 EXPORT_SYMBOL(folio_mark_accessed);
+#endif // CL
 
 /**
  * folio_add_lru - Add a folio to an LRU list.
@@ -522,6 +525,7 @@ void folio_add_lru(struct folio *folio)
 }
 EXPORT_SYMBOL(folio_add_lru);
 
+#if 0
 /**
  * folio_add_lru_vma() - Add a folio to the appropate LRU list for this VMA.
  * @folio: The folio to be added to the LRU.
@@ -895,9 +899,11 @@ void lru_add_drain_all(void)
 	lru_add_drain();
 }
 #endif /* CONFIG_SMP */
+#endif // CL
 
 atomic_t lru_disable_count = ATOMIC_INIT(0);
 
+#if 0
 /*
  * lru_cache_disable() needs to be called before we start compiling
  * a list of folios to be migrated using folio_isolate_lru().
@@ -929,6 +935,7 @@ void lru_cache_disable(void)
 	lru_add_and_bh_lrus_drain();
 #endif
 }
+#endif // CL
 
 /**
  * folios_put_refs - Reduce the reference count on a batch of folios.
@@ -1002,6 +1009,7 @@ void folios_put_refs(struct folio_batch *folios, unsigned int *refs)
 }
 EXPORT_SYMBOL(folios_put_refs);
 
+#if 0
 /**
  * release_pages - batched put_page()
  * @arg: array of pages to release

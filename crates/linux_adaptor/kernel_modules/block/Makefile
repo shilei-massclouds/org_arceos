@@ -13,13 +13,17 @@ obj-y += blk-mq-sched.o
 obj-y += blk-mq-virtio.o
 obj-y += blk-mq-cpumap.o
 obj-y += blk-mq-sysfs.o
+obj-y += blk-mq-debugfs.o
 obj-y += blk-merge.o
 obj-y += blk-timeout.o
 obj-y += blk-map.o
 obj-y += blk-rq-qos.o
+obj-y += blk-sysfs.o
+obj-y += blk-ia-ranges.o
 obj-y += elevator.o
 obj-y += mq-deadline.o
 obj-y += fops.o
+obj-y += disk-events.o
 
 #obj-y += early-lookup.o
 

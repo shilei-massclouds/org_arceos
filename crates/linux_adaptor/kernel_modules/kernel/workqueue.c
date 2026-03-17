@@ -3687,6 +3687,7 @@ void workqueue_softirq_dead(unsigned int cpu)
 		destroy_work_on_stack(&dead_work.work);
 	}
 }
+#endif /* CL */
 
 /**
  * check_flush_dependency - check for flush dependency sanity
@@ -3813,6 +3814,7 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
 	insert_work(pwq, &barr->work, head, work_flags);
 }
 
+#if 0
 /**
  * flush_workqueue_prep_pwqs - prepare pwqs for workqueue flushing
  * @wq: workqueue being flushed
@@ -3883,6 +3885,7 @@ static bool flush_workqueue_prep_pwqs(struct workqueue_struct *wq,
 
 	return wait;
 }
+#endif /* CL */
 
 static void touch_wq_lockdep_map(struct workqueue_struct *wq)
 {
@@ -3916,6 +3919,7 @@ static void touch_work_lockdep_map(struct work_struct *work,
 #endif
 }
 
+#if 0
 /**
  * __flush_workqueue - ensure that any scheduled work has run to completion.
  * @wq: workqueue to flush
@@ -4127,6 +4131,7 @@ reflush:
 	mutex_unlock(&wq->mutex);
 }
 EXPORT_SYMBOL_GPL(drain_workqueue);
+#endif /* CL */
 
 static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr,
 			     bool from_cancel)
@@ -4237,6 +4242,7 @@ out_destroy:
 	return true;
 }
 
+#if 0
 /**
  * flush_work - wait for a work to finish executing the last queueing instance
  * @work: the work to flush
@@ -4308,7 +4314,6 @@ static void work_offqd_disable(struct work_offq_data *offqd)
 		WARN_ONCE(true, "workqueue: work disable count overflowed\n");
 }
 
-#if 0
 static void work_offqd_enable(struct work_offq_data *offqd)
 {
 	if (likely(offqd->disable > 0))
@@ -4316,7 +4321,6 @@ static void work_offqd_enable(struct work_offq_data *offqd)
 	else
 		WARN_ONCE(true, "workqueue: work disable count underflowed\n");
 }
-#endif /* CL */
 
 static bool __cancel_work(struct work_struct *work, u32 cflags)
 {
@@ -4337,7 +4341,6 @@ static bool __cancel_work(struct work_struct *work, u32 cflags)
 	return ret;
 }
 
-#if 0
 static bool __cancel_work_sync(struct work_struct *work, u32 cflags)
 {
 	bool ret;
@@ -4361,7 +4364,6 @@ static bool __cancel_work_sync(struct work_struct *work, u32 cflags)
 
 	return ret;
 }
-#endif /* CL */
 
 /*
  * See cancel_delayed_work()
@@ -4420,7 +4422,6 @@ bool cancel_delayed_work(struct delayed_work *dwork)
 }
 EXPORT_SYMBOL(cancel_delayed_work);
 
-#if 0
 /**
  * cancel_delayed_work_sync - cancel a delayed work and wait for it to finish
  * @dwork: the delayed work cancel
@@ -4436,6 +4437,7 @@ bool cancel_delayed_work_sync(struct delayed_work *dwork)
 }
 EXPORT_SYMBOL(cancel_delayed_work_sync);
 
+#if 0
 /**
  * disable_work - Disable and cancel a work item
  * @work: work item to disable
@@ -4472,6 +4474,7 @@ bool disable_work_sync(struct work_struct *work)
 	return __cancel_work_sync(work, WORK_CANCEL_DISABLE);
 }
 EXPORT_SYMBOL_GPL(disable_work_sync);
+#endif // CL
 
 /**
  * enable_work - Enable a work item
@@ -4500,6 +4503,7 @@ bool enable_work(struct work_struct *work)
 }
 EXPORT_SYMBOL_GPL(enable_work);
 
+#if 0
 /**
  * disable_delayed_work - Disable and cancel a delayed work item
  * @dwork: delayed work item to disable

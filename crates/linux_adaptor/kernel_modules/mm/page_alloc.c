@@ -4863,7 +4863,6 @@ out:
 }
 EXPORT_SYMBOL(__alloc_pages_noprof);
 
-#if 0
 struct folio *__folio_alloc_noprof(gfp_t gfp, unsigned int order, int preferred_nid,
 		nodemask_t *nodemask)
 {
@@ -4872,7 +4871,6 @@ struct folio *__folio_alloc_noprof(gfp_t gfp, unsigned int order, int preferred_
 	return page_rmappable_folio(page);
 }
 EXPORT_SYMBOL(__folio_alloc_noprof);
-#endif /* CL */
 
 /*
  * Common helper functions. Never use with __GFP_HIGHMEM because the returned

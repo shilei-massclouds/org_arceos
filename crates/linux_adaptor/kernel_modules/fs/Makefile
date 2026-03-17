@@ -14,12 +14,14 @@ obj-y += fs_parser.o
 obj-y += libfs.o
 obj-y += mnt_idmapping.o
 obj-y += xattr.o
+obj-y += file_table.o
+obj-y += d_path.o
 
 #obj-y += sync.o
 #obj-y += buffer.o file_table.o bad_inode.o mbcache.o
 #obj-y += read_write.o readdir.o posix_acl.o
 #obj-y += stat.o char_dev.o open.o file.o
-#obj-y += locks.o d_path.o attr.o
+#obj-y += locks.o attr.o
 #
 #obj-y += iomap/
 #obj-y += proc/

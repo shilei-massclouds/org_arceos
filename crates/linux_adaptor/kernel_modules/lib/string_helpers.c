@@ -21,7 +21,6 @@
 #include <kunit/test.h>
 #include <kunit/test-bug.h>
 
-#if 0
 /**
  * string_get_size - get the size in the specified units
  * @size:	The size to be converted in blocks
@@ -139,6 +138,7 @@ int string_get_size(u64 size, u64 blk_size, const enum string_size_units units,
 }
 EXPORT_SYMBOL(string_get_size);
 
+#if 0
 /**
  * parse_int_array_user - Split string into a sequence of integers
  * @from:	The user space buffer to read from

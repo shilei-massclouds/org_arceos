@@ -186,6 +186,7 @@ u64 pm_runtime_autosuspend_expiration(struct device *dev)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(pm_runtime_autosuspend_expiration);
+#endif // CL
 
 static int dev_memalloc_noio(struct device *dev, void *data)
 {
@@ -255,7 +256,6 @@ void pm_runtime_set_memalloc_noio(struct device *dev, bool enable)
 	mutex_unlock(&dev_hotplug_mutex);
 }
 EXPORT_SYMBOL_GPL(pm_runtime_set_memalloc_noio);
-#endif /* CL */
 
 /**
  * rpm_check_suspend_allowed - Test whether a device may be suspended.
