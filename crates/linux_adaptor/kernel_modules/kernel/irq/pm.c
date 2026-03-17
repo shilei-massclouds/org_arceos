@@ -13,7 +13,6 @@
 
 #include "internals.h"
 
-#if 0
 bool irq_pm_check_wakeup(struct irq_desc *desc)
 {
 	if (irqd_is_wakeup_armed(&desc->irq_data)) {
@@ -26,7 +25,6 @@ bool irq_pm_check_wakeup(struct irq_desc *desc)
 	}
 	return false;
 }
-#endif /* CL */
 
 /*
  * Called from __setup_irq() with desc->lock held after @action has

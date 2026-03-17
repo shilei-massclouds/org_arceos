@@ -501,6 +501,7 @@ void handle_nested_irq(unsigned int irq)
 	wake_threads_waitq(desc);
 }
 EXPORT_SYMBOL_GPL(handle_nested_irq);
+#endif /* CL */
 
 static bool irq_check_poll(struct irq_desc *desc)
 {
@@ -534,6 +535,7 @@ static bool irq_may_run(struct irq_desc *desc)
 	return irq_check_poll(desc);
 }
 
+#if 0
 /**
  *	handle_simple_irq - Simple and software-decoded IRQs.
  *	@desc:	the interrupt description structure for this irq
@@ -607,6 +609,7 @@ out_unlock:
 	raw_spin_unlock(&desc->lock);
 }
 EXPORT_SYMBOL_GPL(handle_untracked_irq);
+#endif /* CL */
 
 /*
  * Called unconditionally from handle_level_irq() and only for oneshot
@@ -626,6 +629,7 @@ static void cond_unmask_irq(struct irq_desc *desc)
 		unmask_irq(desc);
 }
 
+#if 0
 /**
  *	handle_level_irq - Level type irq handler
  *	@desc:	the interrupt description structure for this irq
@@ -663,6 +667,7 @@ out_unlock:
 	raw_spin_unlock(&desc->lock);
 }
 EXPORT_SYMBOL_GPL(handle_level_irq);
+#endif /* CL */
 
 static void cond_unmask_eoi_irq(struct irq_desc *desc, struct irq_chip *chip)
 {
@@ -746,6 +751,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(handle_fasteoi_irq);
 
+#if 0
 /**
  *	handle_fasteoi_nmi - irq handler for NMI interrupt lines
  *	@desc:	the interrupt description structure for this irq

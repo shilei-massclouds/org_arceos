@@ -49,17 +49,18 @@ struct backing_file {
 	struct path user_path;
 };
 
-#if 0
 static inline struct backing_file *backing_file(struct file *f)
 {
 	return container_of(f, struct backing_file, file);
 }
 
+#if 0
 struct path *backing_file_user_path(struct file *f)
 {
 	return &backing_file(f)->user_path;
 }
 EXPORT_SYMBOL_GPL(backing_file_user_path);
+#endif // CL
 
 static inline void file_free(struct file *f)
 {
@@ -75,6 +76,7 @@ static inline void file_free(struct file *f)
 	}
 }
 
+#if 0
 /*
  * Return the total number of open files in the system
  */
@@ -409,6 +411,7 @@ struct file *alloc_file_clone(struct file *base, int flags,
 	}
 	return f;
 }
+#endif // CL
 
 /* the real guts of fput() - releasing the last reference to file
  */
@@ -512,6 +515,7 @@ void fput(struct file *file)
 	}
 }
 
+#if 0
 /*
  * synchronous analog of fput(); for kernel threads that might be needed
  * in some umount() (and thus can't use flush_delayed_fput() without

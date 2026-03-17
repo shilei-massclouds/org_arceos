@@ -30,7 +30,8 @@ obj-y += list_lru.o
 obj-y += shmem.o
 obj-y += filemap.o
 obj-y += page-writeback.o
+obj-y += workingset.o
 
-#obj-y += truncate.o workingset.o readahead.o
+#obj-y += truncate.o readahead.o
 #obj-y += rmap.o dmapool.o
 #obj-y += interval_tree.o

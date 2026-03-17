@@ -177,9 +177,4 @@ cleanup_sdb:
 	return -ENOMEM;
 }
 
-void cl_sg_pool_init(void)
-{
-    sg_pool_init();
-}
-
 subsys_initcall(sg_pool_init);

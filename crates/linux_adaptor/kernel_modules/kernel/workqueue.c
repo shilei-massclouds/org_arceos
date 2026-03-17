@@ -2496,6 +2496,7 @@ void delayed_work_timer_fn(struct timer_list *t)
 	__queue_work(dwork->cpu, dwork->wq, &dwork->work);
 }
 EXPORT_SYMBOL(delayed_work_timer_fn);
+#endif // CL
 
 static void __queue_delayed_work(int cpu, struct workqueue_struct *wq,
 				struct delayed_work *dwork, unsigned long delay)
@@ -2569,6 +2570,7 @@ bool queue_delayed_work_on(int cpu, struct workqueue_struct *wq,
 }
 EXPORT_SYMBOL(queue_delayed_work_on);
 
+#if 0
 /**
  * mod_delayed_work_on - modify delay of or queue a delayed work on specific CPU
  * @cpu: CPU number to execute work on

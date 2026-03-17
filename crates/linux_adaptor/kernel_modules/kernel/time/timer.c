@@ -1221,6 +1221,7 @@ int mod_timer_pending(struct timer_list *timer, unsigned long expires)
 	return __mod_timer(timer, expires, MOD_TIMER_PENDING_ONLY);
 }
 EXPORT_SYMBOL(mod_timer_pending);
+#endif // CL
 
 /**
  * mod_timer - Modify a timer's timeout
@@ -1255,6 +1256,7 @@ int mod_timer(struct timer_list *timer, unsigned long expires)
 }
 EXPORT_SYMBOL(mod_timer);
 
+#if 0
 /**
  * timer_reduce - Modify a timer's timeout if it would reduce the timeout
  * @timer:	The timer to be modified
@@ -1325,6 +1327,7 @@ void add_timer_local(struct timer_list *timer)
 	__mod_timer(timer, timer->expires, MOD_TIMER_NOTPENDING);
 }
 EXPORT_SYMBOL(add_timer_local);
+#endif // CL
 
 /**
  * add_timer_global() - Start a timer without TIMER_PINNED flag set
@@ -1400,8 +1403,6 @@ out_unlock:
 	raw_spin_unlock_irqrestore(&base->lock, flags);
 }
 EXPORT_SYMBOL_GPL(add_timer_on);
-
-#endif /* CL */
 
 /**
  * __timer_delete - Internal function: Deactivate a timer

@@ -1180,7 +1180,6 @@ static int wake_page_function(wait_queue_entry_t *wait, unsigned mode, int sync,
 	return (flags & WQ_FLAG_EXCLUSIVE) != 0;
 }
 
-#if 0
 static void folio_wake_bit(struct folio *folio, int bit_nr)
 {
 	wait_queue_head_t *q = folio_waitqueue(folio);
@@ -1208,7 +1207,6 @@ static void folio_wake_bit(struct folio *folio, int bit_nr)
 
 	spin_unlock_irqrestore(&q->lock, flags);
 }
-#endif // CL
 
 /*
  * A choice of three behaviors for folio_wait_bit_common():
@@ -1532,6 +1530,7 @@ void folio_unlock(struct folio *folio)
 		folio_wake_bit(folio, PG_locked);
 }
 EXPORT_SYMBOL(folio_unlock);
+#endif // CL
 
 /**
  * folio_end_read - End read on a folio.
@@ -1563,6 +1562,7 @@ void folio_end_read(struct folio *folio, bool success)
 }
 EXPORT_SYMBOL(folio_end_read);
 
+#if 0
 /**
  * folio_end_private_2 - Clear PG_private_2 and wake any waiters.
  * @folio: The folio.

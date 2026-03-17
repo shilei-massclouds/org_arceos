@@ -335,6 +335,7 @@ void lru_note_cost_refault(struct folio *folio)
 	lru_note_cost(folio_lruvec(folio), folio_is_file_lru(folio),
 		      folio_nr_pages(folio), 0);
 }
+#endif // CL
 
 static void lru_activate(struct lruvec *lruvec, struct folio *folio)
 {
@@ -499,7 +500,6 @@ void folio_mark_accessed(struct folio *folio)
 		folio_clear_idle(folio);
 }
 EXPORT_SYMBOL(folio_mark_accessed);
-#endif // CL
 
 /**
  * folio_add_lru - Add a folio to an LRU list.

@@ -732,6 +732,7 @@ char *kstrdup_quotable_file(struct file *file, gfp_t gfp)
 	return pathname;
 }
 EXPORT_SYMBOL_GPL(kstrdup_quotable_file);
+#endif // CL
 
 /*
  * Returns duplicate string in which the @old characters are replaced by @new.
@@ -748,6 +749,7 @@ char *kstrdup_and_replace(const char *src, char old, char new, gfp_t gfp)
 }
 EXPORT_SYMBOL_GPL(kstrdup_and_replace);
 
+#if 0
 /**
  * kasprintf_strarray - allocate and fill array of sequential strings
  * @gfp: flags for the slab allocator

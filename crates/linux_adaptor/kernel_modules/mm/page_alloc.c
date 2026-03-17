@@ -1171,7 +1171,6 @@ __always_inline bool free_pages_prepare(struct page *page,
 	return true;
 }
 
-#if 0
 /*
  * Frees a number of pages from the PCP lists
  * Assumes all pages on list are in same zone.
@@ -1229,7 +1228,6 @@ static void free_pcppages_bulk(struct zone *zone, int count,
 
 	spin_unlock_irqrestore(&zone->lock, flags);
 }
-#endif
 
 /* Split a multi-block free page into its individual pageblocks. */
 static void split_large_buddy(struct zone *zone, struct page *page,
@@ -2573,6 +2571,7 @@ void drain_all_pages(struct zone *zone)
 {
 	__drain_all_pages(zone, false);
 }
+#endif // CL
 
 static int nr_pcp_free(struct per_cpu_pages *pcp, int batch, int high, bool free_high)
 {
@@ -2742,6 +2741,7 @@ void free_unref_page(struct page *page, unsigned int order)
 	pcp_trylock_finish(UP_flags);
 }
 
+#if 0
 /*
  * Free a batch of folios
  */
@@ -3259,14 +3259,12 @@ bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
 	return false;
 }
 
-#if 0
 bool zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
 		      int highest_zoneidx, unsigned int alloc_flags)
 {
 	return __zone_watermark_ok(z, order, mark, highest_zoneidx, alloc_flags,
 					zone_page_state(z, NR_FREE_PAGES));
 }
-#endif
 
 static inline bool zone_watermark_fast(struct zone *z, unsigned int order,
 				unsigned long mark, int highest_zoneidx,
@@ -4892,7 +4890,6 @@ unsigned long get_zeroed_page_noprof(gfp_t gfp_mask)
 }
 EXPORT_SYMBOL(get_zeroed_page_noprof);
 
-#if 0
 /**
  * __free_pages - Free pages allocated with alloc_pages().
  * @page: The page pointer returned from alloc_pages().
@@ -4939,6 +4936,7 @@ void free_pages(unsigned long addr, unsigned int order)
 
 EXPORT_SYMBOL(free_pages);
 
+#if 0
 /*
  * Page Fragment:
  *  An arbitrary-length arbitrary-offset area of memory which resides

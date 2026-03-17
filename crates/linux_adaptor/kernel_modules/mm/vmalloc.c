@@ -3405,7 +3405,6 @@ void vfree(const void *addr)
 
 	if (unlikely(vm->flags & VM_FLUSH_RESET_PERMS))
 		vm_reset_perms(vm);
-#if 0
 	for (i = 0; i < vm->nr_pages; i++) {
 		struct page *page = vm->pages[i];
 
@@ -3423,8 +3422,6 @@ void vfree(const void *addr)
 		atomic_long_sub(vm->nr_pages, &nr_vmalloc_pages);
 	kvfree(vm->pages);
 	kfree(vm);
-#endif
-    PANIC("");
 }
 EXPORT_SYMBOL(vfree);
 

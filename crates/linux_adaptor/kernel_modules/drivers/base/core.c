@@ -2687,7 +2687,6 @@ static int dev_uevent(const struct kobject *kobj, struct kobj_uevent_env *env)
 
 	/* add device node properties if present */
 	if (MAJOR(dev->devt)) {
-#if 0
 		const char *tmp;
 		const char *name;
 		umode_t mode = 0;
@@ -2707,8 +2706,6 @@ static int dev_uevent(const struct kobject *kobj, struct kobj_uevent_env *env)
 				add_uevent_var(env, "DEVGID=%u", from_kgid(&init_user_ns, gid));
 			kfree(tmp);
 		}
-#endif
-        PANIC("devt");
 	}
 
 	if (dev->type && dev->type->name)
@@ -3990,7 +3987,6 @@ static struct device *next_device(struct klist_iter *i)
 	return dev;
 }
 
-#if 0
 /**
  * device_get_devnode - path of device node file
  * @dev: device
@@ -4034,7 +4030,6 @@ const char *device_get_devnode(const struct device *dev,
 		return NULL;
 	return *tmp = s;
 }
-#endif /* CL */
 
 /**
  * device_for_each_child - device child iterator.

@@ -50,6 +50,7 @@ irqreturn_t no_action(int cpl, void *dev_id)
 	return IRQ_NONE;
 }
 EXPORT_SYMBOL_GPL(no_action);
+#endif // CL
 
 static void warn_no_thread(unsigned int irq, struct irqaction *action)
 {
@@ -215,7 +216,6 @@ irqreturn_t handle_irq_event(struct irq_desc *desc)
 	irqd_clear(&desc->irq_data, IRQD_IRQ_INPROGRESS);
 	return ret;
 }
-#endif /* CL */
 
 #ifdef CONFIG_GENERIC_IRQ_MULTI_HANDLER
 int __init set_handle_irq(void (*handle_irq)(struct pt_regs *))
