@@ -556,3 +556,9 @@ EXPORT_SYMBOL_GPL(sysctl_long_vals);
 
 // mm/show_mem.c
 unsigned long totalreserve_pages __read_mostly;
+
+int security_inode_permission(struct inode *inode, int mask)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

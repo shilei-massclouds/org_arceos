@@ -411,6 +411,7 @@ static inline void mnt_dec_writers(struct mount *mnt)
 	mnt->mnt_writers--;
 #endif
 }
+#endif /* CL */
 
 static unsigned int mnt_get_writers(struct mount *mnt)
 {
@@ -428,6 +429,7 @@ static unsigned int mnt_get_writers(struct mount *mnt)
 #endif
 }
 
+#if 0
 static int mnt_is_readonly(struct vfsmount *mnt)
 {
 	if (READ_ONCE(mnt->mnt_sb->s_readonly_remount))
@@ -730,6 +732,7 @@ int sb_prepare_remount_readonly(struct super_block *sb)
 
 	return err;
 }
+#endif // CL
 
 static void free_vfsmnt(struct mount *mnt)
 {
@@ -770,6 +773,7 @@ int __legitimize_mnt(struct vfsmount *bastard, unsigned seq)
 	return -1;
 }
 
+#if 0
 /* call under rcu_read_lock */
 static bool legitimize_mnt(struct vfsmount *bastard, unsigned seq)
 {
@@ -942,6 +946,7 @@ done:
 	kfree(new);
 	return mp;
 }
+#endif /* CL */
 
 /*
  * vfsmount lock must be held.  Additionally, the caller is responsible
@@ -961,6 +966,7 @@ static void __put_mountpoint(struct mountpoint *mp, struct list_head *list)
 	}
 }
 
+#if 0
 /* called with namespace_lock and vfsmount lock */
 static void put_mountpoint(struct mountpoint *mp)
 {
@@ -993,6 +999,7 @@ static void __touch_mnt_namespace(struct mnt_namespace *ns)
 		wake_up_interruptible(&ns->poll);
 	}
 }
+#endif // CL
 
 /*
  * vfsmount lock must be held for write
@@ -1010,6 +1017,7 @@ static struct mountpoint *unhash_mnt(struct mount *mnt)
 	return mp;
 }
 
+#if 0
 /*
  * vfsmount lock must be held for write
  */
@@ -1358,6 +1366,7 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 	free_vfsmnt(mnt);
 	return ERR_PTR(err);
 }
+#endif /* CL */
 
 static void cleanup_mnt(struct mount *mnt)
 {
@@ -1479,7 +1488,6 @@ void mntput(struct vfsmount *mnt)
 	}
 }
 EXPORT_SYMBOL(mntput);
-#endif /* CL */
 
 struct vfsmount *mntget(struct vfsmount *mnt)
 {

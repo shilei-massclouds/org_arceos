@@ -266,7 +266,6 @@ getname_kernel(const char * filename)
 }
 EXPORT_SYMBOL(getname_kernel);
 
-#if 0
 void putname(struct filename *name)
 {
 	if (IS_ERR(name))
@@ -548,7 +547,6 @@ int inode_permission(struct mnt_idmap *idmap,
 	return security_inode_permission(inode, mask);
 }
 EXPORT_SYMBOL(inode_permission);
-#endif /* CL */
 
 /**
  * path_get - get a reference to a path
@@ -563,7 +561,6 @@ void path_get(const struct path *path)
 }
 EXPORT_SYMBOL(path_get);
 
-#if  0
 /**
  * path_put - put a reference to a path
  * @path: path to put the reference to
@@ -576,7 +573,6 @@ void path_put(const struct path *path)
 	mntput(path->mnt);
 }
 EXPORT_SYMBOL(path_put);
-#endif // CL
 
 #define EMBEDDED_LEVELS 2
 struct nameidata {

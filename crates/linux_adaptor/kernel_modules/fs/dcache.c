@@ -264,7 +264,6 @@ static inline int dentry_string_cmp(const unsigned char *cs, const unsigned char
 
 #endif
 
-#if 0
 static inline int dentry_cmp(const struct dentry *dentry, const unsigned char *ct, unsigned tcount)
 {
 	/*
@@ -287,7 +286,6 @@ static inline int dentry_cmp(const struct dentry *dentry, const unsigned char *c
 
 	return dentry_string_cmp(cs, ct, tcount);
 }
-#endif // CL
 
 struct external_name {
 	union {
@@ -1713,7 +1711,6 @@ static struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 	return dentry;
 }
 
-#if 0
 /**
  * d_alloc	-	allocate a dcache entry
  * @parent: parent of entry to allocate
@@ -1740,7 +1737,6 @@ struct dentry *d_alloc(struct dentry * parent, const struct qstr *name)
 	return dentry;
 }
 EXPORT_SYMBOL(d_alloc);
-#endif // CL
 
 struct dentry *d_alloc_anon(struct super_block *sb)
 {
@@ -2110,6 +2106,7 @@ struct dentry *d_add_ci(struct dentry *dentry, struct inode *inode,
 	return found;
 }
 EXPORT_SYMBOL(d_add_ci);
+#endif // CL
 
 /**
  * d_same_name - compare dentry name with case-exact name
@@ -2269,6 +2266,7 @@ struct dentry *__d_lookup_rcu(const struct dentry *parent,
 	return NULL;
 }
 
+#if 0
 /**
  * d_lookup - search for a dentry
  * @parent: parent dentry
@@ -2430,6 +2428,7 @@ void d_delete(struct dentry * dentry)
 	}
 }
 EXPORT_SYMBOL(d_delete);
+#endif // CL
 
 static void __d_rehash(struct dentry *entry)
 {
@@ -2440,6 +2439,7 @@ static void __d_rehash(struct dentry *entry)
 	hlist_bl_unlock(b);
 }
 
+#if 0
 /**
  * d_rehash	- add an entry back to the hash
  * @entry: dentry to add to the hash
@@ -2454,6 +2454,7 @@ void d_rehash(struct dentry * entry)
 	spin_unlock(&entry->d_lock);
 }
 EXPORT_SYMBOL(d_rehash);
+#endif // CL
 
 static inline unsigned start_dir_add(struct inode *dir)
 {
@@ -2622,6 +2623,7 @@ static wait_queue_head_t *__d_lookup_unhash(struct dentry *dentry)
 	return d_wait;
 }
 
+#if 0
 void __d_lookup_unhash_wake(struct dentry *dentry)
 {
 	spin_lock(&dentry->d_lock);
@@ -2629,6 +2631,7 @@ void __d_lookup_unhash_wake(struct dentry *dentry)
 	spin_unlock(&dentry->d_lock);
 }
 EXPORT_SYMBOL(__d_lookup_unhash_wake);
+#endif // CL
 
 /* inode->i_lock held if inode is non-NULL */
 
@@ -2678,6 +2681,7 @@ void d_add(struct dentry *entry, struct inode *inode)
 }
 EXPORT_SYMBOL(d_add);
 
+#if 0
 /**
  * d_exact_alias - find and hash an exact unhashed alias
  * @entry: dentry to add

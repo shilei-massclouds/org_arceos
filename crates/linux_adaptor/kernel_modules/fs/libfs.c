@@ -54,7 +54,6 @@ int simple_statfs(struct dentry *dentry, struct kstatfs *buf)
 }
 EXPORT_SYMBOL(simple_statfs);
 
-#if 0
 /*
  * Retaining negative dentries for an in-memory filesystem just wastes
  * memory and lookup time: arrange for them to be deleted immediately.
@@ -85,6 +84,7 @@ struct dentry *simple_lookup(struct inode *dir, struct dentry *dentry, unsigned 
 }
 EXPORT_SYMBOL(simple_lookup);
 
+#if 0
 int dcache_dir_open(struct inode *inode, struct file *file)
 {
 	file->private_data = d_alloc_cursor(file->f_path.dentry);
