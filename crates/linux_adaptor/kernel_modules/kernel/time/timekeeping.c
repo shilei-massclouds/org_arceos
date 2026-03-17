@@ -128,7 +128,6 @@ static inline void tk_normalize_xtime(struct timekeeper *tk)
 	}
 }
 
-#if 0
 static inline struct timespec64 tk_xtime(const struct timekeeper *tk)
 {
 	struct timespec64 ts;
@@ -137,7 +136,6 @@ static inline struct timespec64 tk_xtime(const struct timekeeper *tk)
 	ts.tv_nsec = (long)(tk->tkr_mono.xtime_nsec >> tk->tkr_mono.shift);
 	return ts;
 }
-#endif /* CL */
 
 static void tk_set_xtime(struct timekeeper *tk, const struct timespec64 *ts)
 {
@@ -2307,6 +2305,7 @@ void getboottime64(struct timespec64 *ts)
 	*ts = ktime_to_timespec64(t);
 }
 EXPORT_SYMBOL_GPL(getboottime64);
+#endif // CL
 
 void ktime_get_coarse_real_ts64(struct timespec64 *ts)
 {
@@ -2321,6 +2320,7 @@ void ktime_get_coarse_real_ts64(struct timespec64 *ts)
 }
 EXPORT_SYMBOL(ktime_get_coarse_real_ts64);
 
+#if 0
 void ktime_get_coarse_ts64(struct timespec64 *ts)
 {
 	struct timekeeper *tk = &tk_core.timekeeper;

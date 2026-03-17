@@ -106,8 +106,6 @@ EXPORT_SYMBOL_GPL(fs_kobj);
  */
 __cacheline_aligned_in_smp DEFINE_SEQLOCK(mount_lock);
 
-#if 0
-
 static int mnt_ns_cmp(u64 seq, const struct mnt_namespace *ns)
 {
 	u64 seq_b = ns->seq;
@@ -164,6 +162,7 @@ static void mnt_ns_tree_remove(struct mnt_namespace *ns)
 	mnt_ns_release(ns);
 }
 
+#if 0
 /*
  * Returns the mount namespace which either has the specified id, or has the
  * next smallest id afer the specified one.
@@ -210,6 +209,7 @@ static struct mnt_namespace *lookup_mnt_ns(u64 mnt_ns_id)
        refcount_inc(&ns->passive);
        return ns;
 }
+#endif // CL
 
 static inline void lock_mount_hash(void)
 {
@@ -221,6 +221,7 @@ static inline void unlock_mount_hash(void)
 	write_sequnlock(&mount_lock);
 }
 
+#if 0
 static inline struct hlist_head *m_hash(struct vfsmount *mnt, struct dentry *dentry)
 {
 	unsigned long tmp = ((unsigned long)mnt / L1_CACHE_BYTES);
@@ -235,6 +236,7 @@ static inline struct hlist_head *mp_hash(struct dentry *dentry)
 	tmp = tmp + (tmp >> mp_hash_shift);
 	return &mountpoint_hashtable[tmp & mp_hash_mask];
 }
+#endif // CL
 
 static int mnt_alloc_id(struct mount *mnt)
 {
@@ -252,6 +254,7 @@ static void mnt_free_id(struct mount *mnt)
 	ida_free(&mnt_id_ida, mnt->mnt_id);
 }
 
+#if 0
 /*
  * Allocate a new peer group ID
  */
@@ -308,6 +311,7 @@ int mnt_get_count(struct mount *mnt)
 	return mnt->mnt_count;
 #endif
 }
+#endif // CL
 
 static struct mount *alloc_vfsmnt(const char *name)
 {
@@ -364,6 +368,7 @@ out_free_cache:
 	return NULL;
 }
 
+#if 0
 /*
  * Most r/o checks on a fs are for operations that take
  * discrete amounts of time, like a write() or unlink().
@@ -1114,6 +1119,7 @@ void mnt_change_mountpoint(struct mount *parent, struct mountpoint *mp, struct m
 	put_mountpoint(old_mp);
 	mnt_add_count(old_parent, -1);
 }
+#endif // CL
 
 static inline struct mount *node_to_mount(struct rb_node *node)
 {
@@ -1138,6 +1144,7 @@ static void mnt_add_to_ns(struct mnt_namespace *ns, struct mount *mnt)
 	rb_insert_color(&mnt->mnt_node, &ns->mounts);
 }
 
+#if 0
 /*
  * vfsmount lock must be held for write
  */
@@ -1189,6 +1196,7 @@ static struct mount *skip_mnt_tree(struct mount *p)
 	}
 	return p;
 }
+#endif // CL
 
 /**
  * vfs_create_mount - Create a mount for a configured superblock
@@ -1267,6 +1275,7 @@ struct vfsmount *vfs_kern_mount(struct file_system_type *type,
 }
 EXPORT_SYMBOL_GPL(vfs_kern_mount);
 
+#if 0
 struct vfsmount *
 vfs_submount(const struct dentry *mountpoint, struct file_system_type *type,
 	     const char *name, void *data)
@@ -3870,6 +3879,7 @@ long do_mount(const char *dev_name, const char __user *dir_name,
 	path_put(&path);
 	return ret;
 }
+#endif // CL
 
 static struct ucounts *inc_mnt_namespaces(struct user_namespace *ns)
 {
@@ -3934,6 +3944,7 @@ static struct mnt_namespace *alloc_mnt_ns(struct user_namespace *user_ns, bool a
 	return new_ns;
 }
 
+#if 0
 __latent_entropy
 struct mnt_namespace *copy_mnt_ns(unsigned long flags, struct mnt_namespace *ns,
 		struct user_namespace *user_ns, struct fs_struct *new_fs)
@@ -5514,6 +5525,7 @@ SYSCALL_DEFINE4(listmount, const struct mnt_id_req __user *, req,
 
 	return ret;
 }
+#endif // CL
 
 static void __init init_mount_tree(void)
 {
@@ -5581,6 +5593,7 @@ void __init mnt_init(void)
 	init_mount_tree();
 }
 
+#if 0
 void put_mnt_ns(struct mnt_namespace *ns)
 {
 	if (!refcount_dec_and_test(&ns->ns.count))
@@ -5588,6 +5601,7 @@ void put_mnt_ns(struct mnt_namespace *ns)
 	drop_collected_mounts(&ns->root->mnt);
 	free_mnt_ns(ns);
 }
+#endif /* CL */
 
 struct vfsmount *kern_mount(struct file_system_type *type)
 {
@@ -5604,6 +5618,7 @@ struct vfsmount *kern_mount(struct file_system_type *type)
 }
 EXPORT_SYMBOL_GPL(kern_mount);
 
+#if 0
 void kern_unmount(struct vfsmount *mnt)
 {
 	/* release long term mount so mount point can be released */

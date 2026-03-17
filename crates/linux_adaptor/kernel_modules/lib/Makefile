@@ -40,6 +40,9 @@ obj-y += devres.o
 obj-y += sbitmap.o
 obj-y += group_cpus.o
 obj-y += percpu-refcount.o
+obj-y += flex_proportions.o
+obj-y += refcount.o
+obj-y += uuid.o
 
 obj-y += math/
 obj-y += crypto/

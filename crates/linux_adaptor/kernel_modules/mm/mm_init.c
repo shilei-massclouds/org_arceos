@@ -157,7 +157,7 @@ static __init int set_mminit_loglevel(char *str)
 	return 0;
 }
 early_param("mminit_loglevel", set_mminit_loglevel);
-#endif
+#endif /* CL */
 #endif /* CONFIG_DEBUG_MEMORY_INIT */
 
 struct kobject *mm_kobj;
@@ -222,7 +222,7 @@ static int __init mm_sysfs_init(void)
 }
 postcore_initcall(mm_sysfs_init);
 
-#endif
+#endif /* CL */
 
 static unsigned long arch_zone_lowest_possible_pfn[MAX_NR_ZONES] __initdata;
 static unsigned long arch_zone_highest_possible_pfn[MAX_NR_ZONES] __initdata;
@@ -268,7 +268,7 @@ static int __init cmdline_parse_core(char *p, unsigned long *core,
 	}
 	return 0;
 }
-#endif
+#endif /* CL */
 
 bool mirrored_kernelcore __initdata_memblock;
 
@@ -300,7 +300,7 @@ static int __init cmdline_parse_movablecore(char *p)
 				  &required_movablecore_percent);
 }
 early_param("movablecore", cmdline_parse_movablecore);
-#endif
+#endif /* CL */
 
 /*
  * early_calculate_totalpages()
@@ -1124,7 +1124,7 @@ void __ref memmap_init_zone_device(struct zone *zone,
 }
 #endif
 
-#endif
+#endif /* CL */
 
 /*
  * The zone ranges provided by the architecture do not include ZONE_MOVABLE
@@ -1195,7 +1195,7 @@ unsigned long __init absent_pages_in_range(unsigned long start_pfn,
 {
 	return __absent_pages_in_range(MAX_NUMNODES, start_pfn, end_pfn);
 }
-#endif
+#endif // CL
 
 /* Return the number of page frames in holes in a zone on a node */
 static unsigned long __init zone_absent_pages_in_node(int nid,
@@ -1571,7 +1571,7 @@ void __ref free_area_init_core_hotplug(struct pglist_data *pgdat)
 }
 #endif
 
-#endif
+#endif // CL
 
 static void __init free_area_init_core(struct pglist_data *pgdat)
 {
@@ -2338,6 +2338,7 @@ void __init page_alloc_init_late(void)
 
 	page_alloc_sysctl_init();
 }
+#endif /* CL */
 
 /*
  * Adaptive scale is meant to reduce sizes of hash tables on large memory
@@ -2461,7 +2462,6 @@ void *__init alloc_large_system_hash(const char *tablename,
 
 	return table;
 }
-#endif
 
 void __init memblock_free_pages(struct page *page, unsigned long pfn,
 							unsigned int order)
@@ -2581,7 +2581,7 @@ static void __init mem_debugging_and_hardening_init(void)
 	if (!IS_ENABLED(CONFIG_DEBUG_VM) && want_check_pages)
 		static_branch_enable(&check_pages_enabled);
 }
-#endif
+#endif // CL
 
 /* Report memory auto-initialization states for this boot. */
 static void __init report_meminit(void)
@@ -2659,7 +2659,7 @@ static void __init mem_init_print_info(void)
 #endif
 		);
 }
-#endif
+#endif // CL
 
 /*
  * Set up kernel memory allocators

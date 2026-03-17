@@ -31,6 +31,8 @@
 #include "../fs/internal.h"
 #include "blk.h"
 
+#include "adaptor.h"
+
 /* Should we allow writing to mounted block devices? */
 static bool bdev_allow_write_mounted = IS_ENABLED(CONFIG_BLK_DEV_WRITE_MOUNTED);
 

@@ -176,6 +176,7 @@ void *kvmemdup(const void *src, size_t len, gfp_t gfp)
 	return p;
 }
 EXPORT_SYMBOL(kvmemdup);
+#endif // CL
 
 /**
  * kmemdup_nul - Create a NUL-terminated string from unterminated data
@@ -202,6 +203,7 @@ char *kmemdup_nul(const char *s, size_t len, gfp_t gfp)
 }
 EXPORT_SYMBOL(kmemdup_nul);
 
+#if 0
 static kmem_buckets *user_buckets __ro_after_init;
 
 static int __init init_user_buckets(void)

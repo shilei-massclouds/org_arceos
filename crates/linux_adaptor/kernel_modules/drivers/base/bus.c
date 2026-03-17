@@ -1365,7 +1365,6 @@ bool bus_is_registered(const struct bus_type *bus)
 	return is_initialized;
 }
 
-#if 0
 /**
  * bus_get_dev_root - return a pointer to the "device root" of a bus
  * @bus: bus to return the device root of.
@@ -1391,7 +1390,6 @@ struct device *bus_get_dev_root(const struct bus_type *bus)
 	return dev_root;
 }
 EXPORT_SYMBOL_GPL(bus_get_dev_root);
-#endif /* CL */
 
 int __init buses_init(void)
 {

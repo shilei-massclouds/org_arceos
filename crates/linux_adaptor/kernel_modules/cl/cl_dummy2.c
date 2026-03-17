@@ -18,10 +18,6 @@
 #define pr_dummy(fmt, ...)
 #endif
 
-// lib/uuid.c
-const u8 guid_index[16] = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
-const u8 uuid_index[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-
 // kernel/elfcorehdr.c
 /*
  * stores the physical address of elf header of crash image
@@ -198,7 +194,9 @@ void tty_audit_fork(struct signal_struct *sig)
 }
 
 // net/core/net_namespace.c
-struct net init_net;
+struct net init_net = {
+    .ns.count = 1,
+};
 EXPORT_SYMBOL(init_net);
 
 // kernel/seccomp.c
@@ -382,6 +380,12 @@ int sysfs_create_groups(struct kobject *kobj,
     return 0;
 }
 
+// fs/kernfs/mount.c
+void __init kernfs_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
 void kernfs_get(struct kernfs_node *kn)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -471,3 +475,79 @@ struct proc_dir_entry *proc_create_seq_private(const char *name, umode_t mode,
 
 // mm/page-writeback.c
 struct wb_domain global_wb_domain;
+
+struct proc_dir_entry *proc_create_single_data(const char *name, umode_t mode,
+        struct proc_dir_entry *parent,
+        int (*show)(struct seq_file *, void *), void *data)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return NULL;
+}
+
+int security_fs_context_parse_param(struct fs_context *fc,
+                    struct fs_parameter *param)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_sb_alloc(struct super_block *sb)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_bdev_alloc(struct block_device *bdev)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+kuid_t make_kuid(struct user_namespace *ns, uid_t uid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return KUIDT_INIT(0);
+}
+
+kgid_t make_kgid(struct user_namespace *ns, gid_t gid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return KGIDT_INIT(0);
+}
+
+int security_inode_alloc(struct inode *inode, gfp_t gfp)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void security_d_instantiate(struct dentry *dentry, struct inode *inode)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_sb_set_mnt_opts(struct super_block *sb,
+                 void *mnt_opts,
+                 unsigned long kern_flags,
+                 unsigned long *set_kern_flags)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int __init sysfs_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void security_free_mnt_opts(void **mnt_opts)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int proc_alloc_inum(unsigned int *inum)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

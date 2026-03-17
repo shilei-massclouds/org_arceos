@@ -10,7 +10,6 @@
 
 #include "adaptor.h"
 
-#if 0
 /*
  * Replace the fs->{rootmnt,root} with {mnt,dentry}. Put the old values.
  * It can block.
@@ -50,6 +49,7 @@ void set_fs_pwd(struct fs_struct *fs, const struct path *path)
 		path_put(&old_pwd);
 }
 
+#if 0
 static inline int replace_path(struct path *p, const struct path *old, const struct path *new)
 {
 	if (likely(p->dentry != old->dentry || p->mnt != old->mnt))

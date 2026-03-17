@@ -127,6 +127,7 @@ void retire_userns_sysctls(struct user_namespace *ns)
 	kfree(tbl);
 #endif
 }
+#endif // CL
 
 static struct ucounts *find_ucounts(struct user_namespace *ns, kuid_t uid, struct hlist_head *hashent)
 {
@@ -139,6 +140,7 @@ static struct ucounts *find_ucounts(struct user_namespace *ns, kuid_t uid, struc
 	return NULL;
 }
 
+#if 0
 static void hlist_add_ucounts(struct ucounts *ucounts)
 {
 	struct hlist_head *hashent = ucounts_hashentry(ucounts->ns, ucounts->uid);
@@ -163,7 +165,6 @@ struct ucounts *get_ucounts(struct ucounts *ucounts)
 	return ucounts;
 }
 
-#if 0
 struct ucounts *alloc_ucounts(struct user_namespace *ns, kuid_t uid)
 {
 	struct hlist_head *hashent = ucounts_hashentry(ns, uid);
@@ -203,6 +204,7 @@ struct ucounts *alloc_ucounts(struct user_namespace *ns, kuid_t uid)
 	return ucounts;
 }
 
+#if 0
 void put_ucounts(struct ucounts *ucounts)
 {
 	unsigned long flags;
@@ -214,6 +216,7 @@ void put_ucounts(struct ucounts *ucounts)
 		kfree(ucounts);
 	}
 }
+#endif // CL
 
 static inline bool atomic_long_inc_below(atomic_long_t *v, int u)
 {
@@ -252,6 +255,7 @@ fail:
 	return NULL;
 }
 
+#if 0
 void dec_ucount(struct ucounts *ucounts, enum ucount_type type)
 {
 	struct ucounts *iter;

@@ -13,7 +13,6 @@
 
 #include "adaptor.h"
 
-#if 0
 int __percpu_init_rwsem(struct percpu_rw_semaphore *sem,
 			const char *name, struct lock_class_key *key)
 {
@@ -33,6 +32,7 @@ int __percpu_init_rwsem(struct percpu_rw_semaphore *sem,
 }
 EXPORT_SYMBOL_GPL(__percpu_init_rwsem);
 
+#if 0
 void percpu_free_rwsem(struct percpu_rw_semaphore *sem)
 {
 	/*

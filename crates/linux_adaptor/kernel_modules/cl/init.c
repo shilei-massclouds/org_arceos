@@ -203,7 +203,19 @@ void cl_setup_arch_later(void)
     setup_nr_cpu_ids();
     setup_per_cpu_areas();
     boot_cpu_hotplug_init();
+    /* Architectural and non-timekeeping rng init, before allocator init */
     random_init_early(boot_command_line/* command_line */);
+
+    /*
+     * These use large bootmem allocations and must precede
+     * initalization of page allocator
+     */
+    //setup_log_buf(0);
+    vfs_caches_init_early();
+#if 0
+    sort_main_extable();
+    trap_init();
+#endif
 }
 
 void cl_init_irq(void)
@@ -280,7 +292,9 @@ void start_sched_earlier()
     security_init();
     dbg_late_init();
     net_ns_init();
+#endif
     vfs_caches_init();
+#if 0
     pagecache_init();
 #endif
     signals_init();
