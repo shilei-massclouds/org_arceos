@@ -365,7 +365,6 @@ int disk_scan_partitions(struct gendisk *disk, blk_mode_t mode)
 	}
 
 	set_bit(GD_NEED_PART_SCAN, &disk->state);
-    printk("%s: REACH HERE step0\n", __func__);
 	file = bdev_file_open_by_dev(disk_devt(disk), mode & ~BLK_OPEN_EXCL,
 				     NULL, NULL);
 	if (IS_ERR(file))
@@ -373,17 +372,14 @@ int disk_scan_partitions(struct gendisk *disk, blk_mode_t mode)
 	else
 		fput(file);
 
-    printk("%s: REACH HERE step1\n", __func__);
 	/*
 	 * If blkdev_get_by_dev() failed early, GD_NEED_PART_SCAN is still set,
 	 * and this will cause that re-assemble partitioned raid device will
 	 * creat partition for underlying disk.
 	 */
 	clear_bit(GD_NEED_PART_SCAN, &disk->state);
-    printk("%s: REACH HERE step2\n", __func__);
 	if (!(mode & BLK_OPEN_EXCL))
 		bd_abort_claiming(disk->part0, disk_scan_partitions);
-    printk("%s: REACH HERE step3\n", __func__);
 	return ret;
 }
 
@@ -511,7 +507,6 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
 			set_bit(GD_NEED_PART_SCAN, &disk->state);
 
 		bdev_add(disk->part0, ddev->devt);
-    printk("%s: REACH HERE step1\n", __func__);
 		if (get_capacity(disk))
 			disk_scan_partitions(disk, BLK_OPEN_READ);
 
@@ -521,7 +516,6 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
 		 */
 		dev_set_uevent_suppress(ddev, 0);
 		disk_uevent(disk, KOBJ_ADD);
-    printk("%s: REACH HERE step2\n", __func__);
 	} else {
 		/*
 		 * Even if the block_device for a hidden gendisk is not
@@ -534,7 +528,6 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
 	blk_apply_bdi_limits(disk->bdi, &disk->queue->limits);
 	disk_add_events(disk);
 	set_bit(GD_ADDED, &disk->state);
-    printk("%s: REACH HERE step3\n", __func__);
 	return 0;
 
 out_unregister_bdi:
