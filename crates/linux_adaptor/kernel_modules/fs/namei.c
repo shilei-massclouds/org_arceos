@@ -46,7 +46,6 @@
 
 #include "adaptor.h"
 
-#if 0
 /* [Feb-1997 T. Schoebel-Theuer]
  * Fundamental changes in the pathname lookup mechanisms (namei)
  * were necessary because of omirr.  The reason is that omirr needs
@@ -128,6 +127,7 @@
 
 #define EMBEDDED_NAME_MAX	(PATH_MAX - offsetof(struct filename, iname))
 
+#if 0
 struct filename *
 getname_flags(const char __user *filename, int flags)
 {
@@ -227,6 +227,7 @@ getname(const char __user * filename)
 {
 	return getname_flags(filename, 0);
 }
+#endif // CL
 
 struct filename *
 getname_kernel(const char * filename)
@@ -265,6 +266,7 @@ getname_kernel(const char * filename)
 }
 EXPORT_SYMBOL(getname_kernel);
 
+#if 0
 void putname(struct filename *name)
 {
 	if (IS_ERR(name))
@@ -574,6 +576,7 @@ void path_put(const struct path *path)
 	mntput(path->mnt);
 }
 EXPORT_SYMBOL(path_put);
+#endif // CL
 
 #define EMBEDDED_LEVELS 2
 struct nameidata {
@@ -760,6 +763,7 @@ static bool legitimize_root(struct nameidata *nd)
 	return legitimize_path(nd, &nd->root, nd->root_seq);
 }
 
+#if 0
 /*
  * Path walking has 2 modes, rcu-walk and ref-walk (see
  * Documentation/filesystems/path-lookup.txt).  In situations when we can't
@@ -770,6 +774,7 @@ static bool legitimize_root(struct nameidata *nd)
  * (eg. a seqcount has changed), then failure is returned and it's up to caller
  * to restart the path walk from the beginning in ref-walk mode.
  */
+#endif // CL
 
 /**
  * try_to_unlazy - try to switch to ref-walk mode.
@@ -999,6 +1004,7 @@ static int nd_jump_root(struct nameidata *nd)
 	return 0;
 }
 
+#if 0
 /*
  * Helper to directly jump to a known parsed path from ->get_link,
  * caller must have taken a reference to path beforehand.
@@ -1030,6 +1036,7 @@ err:
 	path_put(path);
 	return error;
 }
+#endif // CL
 
 static inline void put_link(struct nameidata *nd)
 {
@@ -1139,6 +1146,7 @@ static inline int may_follow_link(struct nameidata *nd, const struct inode *inod
 	return -EACCES;
 }
 
+#if 0
 /**
  * safe_hardlink_source - Check for safe hardlink conditions
  * @idmap: idmap of the mount the inode was found from
@@ -1322,6 +1330,7 @@ int follow_up(struct path *path)
 	return 1;
 }
 EXPORT_SYMBOL(follow_up);
+#endif // CL
 
 static bool choose_mountpoint_rcu(struct mount *m, const struct path *root,
 				  struct path *path, unsigned *seqp)
@@ -1473,6 +1482,7 @@ static inline int traverse_mounts(struct path *path, bool *jumped,
 	return __traverse_mounts(path, flags, jumped, count, lookup_flags);
 }
 
+#if 0
 int follow_down_one(struct path *path)
 {
 	struct vfsmount *mounted;
@@ -1505,6 +1515,7 @@ int follow_down(struct path *path, unsigned int flags)
 	return ret;
 }
 EXPORT_SYMBOL(follow_down);
+#endif // CL
 
 /*
  * Try to skip to top of mountpoint pile in rcuwalk mode.  Fail if
@@ -1588,6 +1599,7 @@ static inline int handle_mounts(struct nameidata *nd, struct dentry *dentry,
 	return ret;
 }
 
+#if 0
 /*
  * This looks up the name in dcache and possibly revalidates the found dentry.
  * NULL is returned if the dentry does not exist in the cache.
@@ -1643,6 +1655,7 @@ struct dentry *lookup_one_qstr_excl(const struct qstr *name,
 	return dentry;
 }
 EXPORT_SYMBOL(lookup_one_qstr_excl);
+#endif // CL
 
 /**
  * lookup_fast - do fast lockless (but racy) lookup of a dentry
@@ -2624,6 +2637,7 @@ int filename_lookup(int dfd, struct filename *name, unsigned flags,
 	return retval;
 }
 
+#if 0
 /* Returns 0 and nd will be valid on success; Returns error, otherwise. */
 static int path_parentat(struct nameidata *nd, unsigned flags,
 				struct path *parent)
@@ -2715,6 +2729,7 @@ struct dentry *user_path_locked_at(int dfd, const char __user *name, struct path
 	return res;
 }
 EXPORT_SYMBOL(user_path_locked_at);
+#endif /* CL */
 
 int kern_path(const char *name, unsigned int flags, struct path *path)
 {
@@ -2727,6 +2742,7 @@ int kern_path(const char *name, unsigned int flags, struct path *path)
 }
 EXPORT_SYMBOL(kern_path);
 
+#if 0
 /**
  * vfs_path_parent_lookup - lookup a parent path relative to a dentry-vfsmount pair
  * @filename: filename structure
