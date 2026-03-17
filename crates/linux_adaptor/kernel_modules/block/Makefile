@@ -24,7 +24,6 @@ obj-y += elevator.o
 obj-y += mq-deadline.o
 obj-y += fops.o
 obj-y += disk-events.o
-
-#obj-y += early-lookup.o
+obj-y += early-lookup.o
 
 obj-y += partitions/

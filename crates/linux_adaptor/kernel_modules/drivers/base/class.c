@@ -308,6 +308,7 @@ void class_destroy(const struct class *cls)
 	class_unregister(cls);
 }
 EXPORT_SYMBOL_GPL(class_destroy);
+#endif // CL
 
 /**
  * class_dev_iter_init - initialize class device iterator
@@ -387,6 +388,7 @@ void class_dev_iter_exit(struct class_dev_iter *iter)
 }
 EXPORT_SYMBOL_GPL(class_dev_iter_exit);
 
+#if 0
 /**
  * class_for_each_device - device iterator
  * @class: the class we're iterating
@@ -433,6 +435,7 @@ int class_for_each_device(const struct class *class, const struct device *start,
 	return error;
 }
 EXPORT_SYMBOL_GPL(class_for_each_device);
+#endif // CL
 
 /**
  * class_find_device - device iterator for locating a particular device
@@ -483,6 +486,7 @@ struct device *class_find_device(const struct class *class, const struct device 
 }
 EXPORT_SYMBOL_GPL(class_find_device);
 
+#if 0
 int class_interface_register(struct class_interface *class_intf)
 {
 	struct subsys_private *sp;
