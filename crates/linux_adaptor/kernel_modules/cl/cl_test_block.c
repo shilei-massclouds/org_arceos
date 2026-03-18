@@ -13,7 +13,7 @@ static void test_read(dev_t devt)
 {
     char *buf;
     struct file *fp;
-    loff_t pos;
+    loff_t pos = 0;
 
     fp = bdev_file_open_by_dev(devt, BLK_OPEN_READ, NULL, NULL);
     if (IS_ERR(fp)) {
@@ -39,7 +39,7 @@ static void test_write(dev_t devt)
 {
     char *buf;
     struct file *fp;
-    loff_t pos;
+    loff_t pos = 0;
 
     fp = bdev_file_open_by_dev(devt, BLK_OPEN_WRITE, NULL, NULL);
     if (IS_ERR(fp)) {
@@ -58,6 +58,11 @@ static void test_write(dev_t devt)
     }
 
     free_pages_exact(buf, BUF_SIZE);
+
+    if (sync_file_range(fp, 0, 16, SYNC_FILE_RANGE_WRITE_AND_WAIT)) {
+        PANIC("failed to sync block device");
+    }
+
     bdev_fput(fp);
 }
 
@@ -70,6 +75,7 @@ void cl_test_block(void)
         PANIC("No block device!");
     }
 
-    //test_read(devt);
+    test_read(devt);
     test_write(devt);
+    test_read(devt);
 }

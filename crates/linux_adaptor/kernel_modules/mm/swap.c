@@ -250,7 +250,6 @@ static void __folio_batch_add_and_move(struct folio_batch __percpu *fbatch,
 		offsetof(struct cpu_fbatches, op) >= offsetof(struct cpu_fbatches, lock_irq)	\
 	)
 
-#if 0
 static void lru_move_tail(struct lruvec *lruvec, struct folio *folio)
 {
 	if (folio_test_unevictable(folio))
@@ -278,6 +277,7 @@ void folio_rotate_reclaimable(struct folio *folio)
 	folio_batch_add_and_move(folio, lru_move_tail, true);
 }
 
+#if 0
 void lru_note_cost(struct lruvec *lruvec, bool file,
 		   unsigned int nr_io, unsigned int nr_rotated)
 {
@@ -543,6 +543,7 @@ void folio_add_lru_vma(struct folio *folio, struct vm_area_struct *vma)
 	else
 		folio_add_lru(folio);
 }
+#endif // CL
 
 /*
  * If the folio cannot be invalidated, it is moved to the
@@ -684,6 +685,7 @@ void lru_add_drain_cpu(int cpu)
 	folio_activate_drain(cpu);
 }
 
+#if 0
 /**
  * deactivate_file_folio() - Deactivate a file folio.
  * @folio: Folio to deactivate.
@@ -734,6 +736,7 @@ void folio_mark_lazyfree(struct folio *folio)
 
 	folio_batch_add_and_move(folio, lru_lazyfree, true);
 }
+#endif // CL
 
 void lru_add_drain(void)
 {
@@ -743,6 +746,7 @@ void lru_add_drain(void)
 	mlock_drain_local();
 }
 
+#if 0
 /*
  * It's called from per-cpu workqueue context in SMP case so
  * lru_add_drain_cpu and invalidate_bh_lrus_cpu should run on
@@ -1049,6 +1053,7 @@ void release_pages(release_pages_arg arg, int nr)
 		folios_put_refs(&fbatch, refs);
 }
 EXPORT_SYMBOL(release_pages);
+#endif // CL
 
 /*
  * The folios which we're about to release may be in the deferred lru-addition
@@ -1070,6 +1075,7 @@ void __folio_batch_release(struct folio_batch *fbatch)
 }
 EXPORT_SYMBOL(__folio_batch_release);
 
+#if 0
 /**
  * folio_batch_remove_exceptionals() - Prune non-folios from a batch.
  * @fbatch: The batch to prune

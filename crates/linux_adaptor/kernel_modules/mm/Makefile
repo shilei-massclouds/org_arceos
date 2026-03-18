@@ -31,7 +31,9 @@ obj-y += shmem.o
 obj-y += filemap.o
 obj-y += page-writeback.o
 obj-y += workingset.o
+obj-y += rmap.o
+obj-y += mlock.o
 
 #obj-y += truncate.o readahead.o
-#obj-y += rmap.o dmapool.o
+#obj-y += dmapool.o
 #obj-y += interval_tree.o

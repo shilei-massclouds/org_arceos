@@ -589,6 +589,7 @@ int filemap_fdatawait_range_keep_errors(struct address_space *mapping,
 	return filemap_check_and_keep_errors(mapping);
 }
 EXPORT_SYMBOL(filemap_fdatawait_range_keep_errors);
+#endif // CL
 
 /**
  * file_fdatawait_range - wait for writeback to complete
@@ -615,6 +616,7 @@ int file_fdatawait_range(struct file *file, loff_t start_byte, loff_t end_byte)
 }
 EXPORT_SYMBOL(file_fdatawait_range);
 
+#if 0
 /**
  * filemap_fdatawait_keep_errors - wait for writeback without clearing errors
  * @mapping: address space structure to wait for
@@ -1620,6 +1622,7 @@ int folio_wait_private_2_killable(struct folio *folio)
 	return ret;
 }
 EXPORT_SYMBOL(folio_wait_private_2_killable);
+#endif // CL
 
 /**
  * folio_end_writeback - End writeback against a folio.
@@ -1659,6 +1662,7 @@ void folio_end_writeback(struct folio *folio)
 }
 EXPORT_SYMBOL(folio_end_writeback);
 
+#if 0
 /**
  * __folio_lock - Get a lock on the folio, assuming we need to sleep to get it.
  * @folio: The folio to lock

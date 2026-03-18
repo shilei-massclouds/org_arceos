@@ -581,7 +581,6 @@ static unsigned long wp_next_time(unsigned long cur_time)
 	return cur_time;
 }
 
-#if 0
 static void wb_domain_writeout_add(struct wb_domain *dom,
 				   struct fprop_local_percpu *completions,
 				   unsigned int max_prop_frac, long nr)
@@ -619,6 +618,7 @@ static inline void __wb_writeout_add(struct bdi_writeback *wb, long nr)
 				       wb->bdi->max_prop_frac, nr);
 }
 
+#if 0
 void wb_writeout_inc(struct bdi_writeback *wb)
 {
 	unsigned long flags;
@@ -1566,6 +1566,7 @@ void wb_update_bandwidth(struct bdi_writeback *wb)
 
 	__wb_update_bandwidth(&gdtc, NULL, false);
 }
+#endif // CL
 
 /* Interval after which we consider wb idle and don't estimate bandwidth */
 #define WB_BANDWIDTH_IDLE_JIF (HZ)
@@ -1584,7 +1585,6 @@ static void wb_bandwidth_estimate_start(struct bdi_writeback *wb)
 		spin_unlock(&wb->list_lock);
 	}
 }
-#endif // CL
 
 /*
  * After a task dirtied this many pages, balance_dirty_pages_ratelimited()
@@ -2410,7 +2410,6 @@ void __init page_writeback_init(void)
 #endif
 }
 
-#if 0
 /**
  * tag_pages_for_writeback - tag pages to be written by writeback
  * @mapping: address space structure to write
@@ -2727,6 +2726,7 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
 	return ret;
 }
 
+#if 0
 /*
  * For address_spaces which do not use buffers nor write back.
  */
@@ -2990,6 +2990,7 @@ void __folio_cancel_dirty(struct folio *folio)
 	}
 }
 EXPORT_SYMBOL(__folio_cancel_dirty);
+#endif // CL
 
 /*
  * Clear a folio's dirty flag, while caring for dirty memory accounting.
@@ -3191,6 +3192,7 @@ void __folio_start_writeback(struct folio *folio, bool keep_write)
 }
 EXPORT_SYMBOL(__folio_start_writeback);
 
+#if 0
 /**
  * folio_wait_writeback - Wait for a folio to finish writeback.
  * @folio: The folio to wait for.

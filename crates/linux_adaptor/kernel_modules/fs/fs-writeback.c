@@ -1303,6 +1303,7 @@ void inode_io_list_del(struct inode *inode)
 	spin_unlock(&wb->list_lock);
 }
 EXPORT_SYMBOL(inode_io_list_del);
+#endif // CL
 
 /*
  * mark an inode as under writeback on the sb
@@ -1340,6 +1341,7 @@ void sb_clear_inode_writeback(struct inode *inode)
 	}
 }
 
+#if 0
 /*
  * Redirty an inode: set its when-it-was dirtied timestamp and move it to the
  * furthest end of its superblock's dirty-inode list.

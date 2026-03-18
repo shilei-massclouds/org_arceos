@@ -376,7 +376,6 @@ static void end_buffer_async_read_io(struct buffer_head *bh, int uptodate)
 	end_buffer_async_read(bh, uptodate);
 }
 
-#if 0
 /*
  * Completion handler for block_write_full_folio() - folios which are unlocked
  * during I/O, and which have the writeback flag cleared upon I/O completion.
@@ -420,7 +419,6 @@ still_busy:
 	spin_unlock_irqrestore(&first->b_uptodate_lock, flags);
 	return;
 }
-#endif // CL
 
 /*
  * If a page's buffers are under async readin (end_buffer_async_read
@@ -449,7 +447,6 @@ static void mark_buffer_async_read(struct buffer_head *bh)
 	set_buffer_async_read(bh);
 }
 
-#if 0
 static void mark_buffer_async_write_endio(struct buffer_head *bh,
 					  bh_end_io_t *handler)
 {
@@ -457,6 +454,7 @@ static void mark_buffer_async_write_endio(struct buffer_head *bh,
 	set_buffer_async_write(bh);
 }
 
+#if 0
 void mark_buffer_async_write(struct buffer_head *bh)
 {
 	mark_buffer_async_write_endio(bh, end_buffer_async_write);
@@ -1221,7 +1219,6 @@ void mark_buffer_dirty(struct buffer_head *bh)
 }
 EXPORT_SYMBOL(mark_buffer_dirty);
 
-#if 0
 void mark_buffer_write_io_error(struct buffer_head *bh)
 {
 	set_buffer_write_io_error(bh);
@@ -1235,6 +1232,7 @@ void mark_buffer_write_io_error(struct buffer_head *bh)
 }
 EXPORT_SYMBOL(mark_buffer_write_io_error);
 
+#if 0
 /**
  * __brelse - Release a buffer.
  * @bh: The buffer to release.
@@ -1823,7 +1821,6 @@ static struct buffer_head *folio_create_buffers(struct folio *folio,
 	return bh;
 }
 
-#if 0
 /*
  * NOTE! All mapped/uptodate combinations are valid:
  *
@@ -2016,6 +2013,7 @@ recover:
 }
 EXPORT_SYMBOL(__block_write_full_folio);
 
+#if 0
 /*
  * If a folio has any new buffers, zero them out here, and mark them uptodate
  * and dirty so they'll be written out (in order to prevent uninitialised
@@ -2768,6 +2766,7 @@ unlock:
 	return err;
 }
 EXPORT_SYMBOL(block_truncate_page);
+#endif // CL
 
 /*
  * The generic ->writepage function for buffer-backed address_spaces
@@ -2800,6 +2799,7 @@ int block_write_full_folio(struct folio *folio, struct writeback_control *wbc,
 	return __block_write_full_folio(inode, folio, get_block, wbc);
 }
 
+#if 0
 sector_t generic_block_bmap(struct address_space *mapping, sector_t block,
 			    get_block_t *get_block)
 {
