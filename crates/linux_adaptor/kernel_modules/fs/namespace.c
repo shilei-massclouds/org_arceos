@@ -368,7 +368,6 @@ out_free_cache:
 	return NULL;
 }
 
-#if 0
 /*
  * Most r/o checks on a fs are for operations that take
  * discrete amounts of time, like a write() or unlink().
@@ -411,7 +410,6 @@ static inline void mnt_dec_writers(struct mount *mnt)
 	mnt->mnt_writers--;
 #endif
 }
-#endif /* CL */
 
 static unsigned int mnt_get_writers(struct mount *mnt)
 {
@@ -429,7 +427,6 @@ static unsigned int mnt_get_writers(struct mount *mnt)
 #endif
 }
 
-#if 0
 static int mnt_is_readonly(struct vfsmount *mnt)
 {
 	if (READ_ONCE(mnt->mnt_sb->s_readonly_remount))
@@ -511,6 +508,7 @@ int mnt_get_write_access(struct vfsmount *m)
 }
 EXPORT_SYMBOL_GPL(mnt_get_write_access);
 
+#if 0
 /**
  * mnt_want_write - get write access to a mount
  * @m: the mount on which to take a write
@@ -575,6 +573,7 @@ int mnt_want_write_file(struct file *file)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(mnt_want_write_file);
+#endif // CL
 
 /**
  * mnt_put_write_access - give up write access to a mount
@@ -592,6 +591,7 @@ void mnt_put_write_access(struct vfsmount *mnt)
 }
 EXPORT_SYMBOL_GPL(mnt_put_write_access);
 
+#if 0
 /**
  * mnt_drop_write - give up write access to a mount
  * @mnt: the mount on which to give up write access

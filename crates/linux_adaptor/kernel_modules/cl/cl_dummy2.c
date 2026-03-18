@@ -562,3 +562,9 @@ int security_inode_permission(struct inode *inode, int mask)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int security_file_permission(struct file *file, int mask)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

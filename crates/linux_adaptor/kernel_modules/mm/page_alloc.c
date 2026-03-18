@@ -5149,6 +5149,7 @@ void * __meminit alloc_pages_exact_nid_noprof(int nid, size_t size, gfp_t gfp_ma
 		return NULL;
 	return make_alloc_exact((unsigned long)page_address(p), order, size);
 }
+#endif // CL
 
 /**
  * free_pages_exact - release memory allocated via alloc_pages_exact()
@@ -5168,7 +5169,6 @@ void free_pages_exact(void *virt, size_t size)
 	}
 }
 EXPORT_SYMBOL(free_pages_exact);
-#endif
 
 /**
  * nr_free_zone_pages - count number of pages beyond high watermark

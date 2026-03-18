@@ -1676,6 +1676,7 @@ int __folio_lock_killable(struct folio *folio)
 					EXCLUSIVE);
 }
 EXPORT_SYMBOL_GPL(__folio_lock_killable);
+#endif // CL
 
 static int __folio_lock_async(struct folio *folio, struct wait_page_queue *wait)
 {
@@ -1703,6 +1704,7 @@ static int __folio_lock_async(struct folio *folio, struct wait_page_queue *wait)
 	return ret;
 }
 
+#if 0
 /*
  * Return values:
  * 0 - folio is locked.
@@ -2345,7 +2347,6 @@ static void shrink_readahead_size_eio(struct file_ra_state *ra)
 	ra->ra_pages /= 4;
 }
 
-#if 0
 /*
  * filemap_get_read_batch - Get a batch of folios for read
  *
@@ -2390,7 +2391,6 @@ retry:
 	}
 	rcu_read_unlock();
 }
-#endif // CL
 
 static int filemap_read_folio(struct file *file, filler_t filler,
 		struct folio *folio)
@@ -2418,7 +2418,6 @@ static int filemap_read_folio(struct file *file, filler_t filler,
 	return -EIO;
 }
 
-#if 0
 static bool filemap_range_uptodate(struct address_space *mapping,
 		loff_t pos, size_t count, struct folio *folio,
 		bool need_uptodate)
@@ -2755,6 +2754,7 @@ put_folios:
 }
 EXPORT_SYMBOL_GPL(filemap_read);
 
+#if 0
 int kiocb_write_and_wait(struct kiocb *iocb, size_t count)
 {
 	struct address_space *mapping = iocb->ki_filp->f_mapping;

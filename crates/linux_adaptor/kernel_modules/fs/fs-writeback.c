@@ -82,7 +82,6 @@ static inline struct inode *wb_inode(struct list_head *head)
 
 EXPORT_TRACEPOINT_SYMBOL_GPL(wbc_writepage);
 
-#if 0
 static bool wb_io_lists_populated(struct bdi_writeback *wb)
 {
 	if (wb_has_dirty_io(wb)) {
@@ -134,6 +133,7 @@ static bool inode_io_list_move_locked(struct inode *inode,
 	return false;
 }
 
+#if 0
 static void wb_wakeup(struct bdi_writeback *wb)
 {
 	spin_lock_irq(&wb->work_lock);
@@ -141,6 +141,7 @@ static void wb_wakeup(struct bdi_writeback *wb)
 		mod_delayed_work(bdi_wq, &wb->dwork, 0);
 	spin_unlock_irq(&wb->work_lock);
 }
+#endif // CL
 
 /*
  * This function is used when the first inode for this wb is marked dirty. It
@@ -167,6 +168,7 @@ static void wb_wakeup_delayed(struct bdi_writeback *wb)
 	spin_unlock_irq(&wb->work_lock);
 }
 
+#if 0
 static void finish_writeback_work(struct wb_writeback_work *work)
 {
 	struct wb_completion *done = work->done;
@@ -216,6 +218,7 @@ void wb_wait_for_completion(struct wb_completion *done)
 	atomic_dec(&done->cnt);		/* put down the initial count */
 	wait_event(*done->waitq, !atomic_read(&done->cnt));
 }
+#endif // CL
 
 #ifdef CONFIG_CGROUP_WRITEBACK
 
@@ -1187,6 +1190,7 @@ static void inode_cgwb_move_to_attached(struct inode *inode,
 	list_del_init(&inode->i_io_list);
 	wb_io_lists_depopulated(wb);
 }
+#endif // CL
 
 static struct bdi_writeback *
 locked_inode_to_wb_and_lock_list(struct inode *inode)
@@ -1200,6 +1204,7 @@ locked_inode_to_wb_and_lock_list(struct inode *inode)
 	return wb;
 }
 
+#if 0
 static struct bdi_writeback *inode_to_wb_and_lock_list(struct inode *inode)
 	__acquires(&wb->list_lock)
 {
@@ -1228,6 +1233,7 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
 
 #endif	/* CONFIG_CGROUP_WRITEBACK */
 
+#if 0
 /*
  * Add in the number of potentially dirty inodes, because each inode
  * write can dirty pagecache in the underlying blockdev.
@@ -2429,6 +2435,7 @@ int dirtytime_interval_handler(const struct ctl_table *table, int write,
 		mod_delayed_work(system_wq, &dirtytime_work, 0);
 	return ret;
 }
+#endif /* CL */
 
 /**
  * __mark_inode_dirty -	internal function to mark an inode dirty
@@ -2596,6 +2603,7 @@ out_unlock:
 }
 EXPORT_SYMBOL(__mark_inode_dirty);
 
+#if 0
 /*
  * The @s_sync_lock is used to serialise concurrent sync operations
  * to avoid lock contention problems with concurrent wait_sb_inodes() calls.

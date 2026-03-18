@@ -17,10 +17,11 @@ obj-y += xattr.o
 obj-y += file_table.o
 obj-y += d_path.o
 obj-y += buffer.o
+obj-y += read_write.o
 
 #obj-y += sync.o
 #obj-y += bad_inode.o mbcache.o
-#obj-y += read_write.o readdir.o posix_acl.o
+#obj-y += readdir.o posix_acl.o
 #obj-y += stat.o char_dev.o open.o file.o
 #obj-y += locks.o attr.o
 #

@@ -1952,6 +1952,7 @@ int bmap(struct inode *inode, sector_t *block)
 }
 EXPORT_SYMBOL(bmap);
 #endif
+#endif // CL
 
 /*
  * With relative atime, only update atime if the previous atime is
@@ -2154,6 +2155,7 @@ skip_update:
 }
 EXPORT_SYMBOL(touch_atime);
 
+#if 0
 /*
  * Return mask of changes for notify_change() that need to be done as a
  * response to write or truncate. Return 0 if nothing has to be changed.
