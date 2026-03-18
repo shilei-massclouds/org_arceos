@@ -100,8 +100,6 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
         init_interrupt_earlier();
     }
 
-    #[cfg(feature = "linux-block")]
-    let _ = axdriver::init_drivers();
     /*
     #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
     {
@@ -204,17 +202,15 @@ fn init_thread_fn() {
     #[cfg(feature = "smp")]
     self::mp::start_secondary_cpus();
 
-    #[cfg(feature = "linux-block")]
     do_basic_setup();
 
     // Invoke app's main()
     unsafe { main(); }
 }
 
-#[cfg(feature = "linux-block")]
 fn do_basic_setup() {
-    linux_adaptor::advance_to(LinuxAdaptorState::InitDriver);
-    linux_adaptor::advance_to(LinuxAdaptorState::DoInitCalls);
+    #[cfg(feature = "linux-block")]
+    let _ = axdriver::init_drivers();
 }
 
 #[cfg(feature = "multitask")]

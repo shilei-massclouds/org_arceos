@@ -5,6 +5,8 @@
 #[macro_use]
 extern crate log;
 
+use linux_adaptor::LinuxAdaptorState;
+
 /// A structure that contains all device drivers, organized by their category.
 #[derive(Default)]
 pub struct AllDevices;
@@ -22,6 +24,10 @@ impl AllDevices {
 pub fn init_drivers() -> AllDevices {
     info!("Initialize device drivers...");
     info!("  device model: {}", AllDevices::device_model());
+
+    linux_adaptor::advance_to(LinuxAdaptorState::InitDriver);
+    linux_adaptor::advance_to(LinuxAdaptorState::DoInitCalls);
+
     AllDevices::default()
 }
 

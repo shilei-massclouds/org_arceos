@@ -56,3 +56,4 @@ axdriver_net = { git = "https://github.com/arceos-org/axdriver_crates.git", tag 
 #axhal = { workspace = true, optional = true }
 #axconfig = { workspace = true, optional = true }
 #axdma = { workspace = true, optional = true }
+linux_adaptor = { workspace = true }
