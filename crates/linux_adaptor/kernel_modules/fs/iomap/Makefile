@@ -2,4 +2,8 @@
 
 ccflags-y += -I$(curdir)
 
-obj-y += fiemap.o iter.o trace.o
+obj-y += iter.o
+obj-y += buffered-io.o
+obj-y += trace.o
+
+#obj-y += fiemap.o

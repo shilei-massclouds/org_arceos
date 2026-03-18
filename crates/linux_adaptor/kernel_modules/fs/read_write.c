@@ -598,6 +598,7 @@ static ssize_t new_sync_write(struct file *filp, const char __user *buf, size_t 
 		*ppos = kiocb.ki_pos;
 	return ret;
 }
+#endif // CL
 
 /* caller is responsible for file_start_write/file_end_write */
 ssize_t __kernel_write_iter(struct file *file, struct iov_iter *from, loff_t *pos)
@@ -665,6 +666,7 @@ ssize_t kernel_write(struct file *file, const void *buf, size_t count,
 }
 EXPORT_SYMBOL(kernel_write);
 
+#if 0
 ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;

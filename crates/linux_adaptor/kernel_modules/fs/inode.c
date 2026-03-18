@@ -2234,6 +2234,7 @@ int file_remove_privs(struct file *file)
 	return file_remove_privs_flags(file, 0);
 }
 EXPORT_SYMBOL(file_remove_privs);
+#endif // CL
 
 static int inode_needs_update_time(struct inode *inode)
 {
@@ -2299,6 +2300,8 @@ int file_update_time(struct file *file)
 	return __file_update_time(file, ret);
 }
 EXPORT_SYMBOL(file_update_time);
+
+#if 0
 
 /**
  * file_modified_flags - handle mandated vfs changes when modifying a file

@@ -1510,6 +1510,7 @@ void folio_add_wait_queue(struct folio *folio, wait_queue_entry_t *waiter)
 	spin_unlock_irqrestore(&q->lock, flags);
 }
 EXPORT_SYMBOL_GPL(folio_add_wait_queue);
+#endif // CL
 
 /**
  * folio_unlock - Unlock a locked folio.
@@ -1530,7 +1531,6 @@ void folio_unlock(struct folio *folio)
 		folio_wake_bit(folio, PG_locked);
 }
 EXPORT_SYMBOL(folio_unlock);
-#endif // CL
 
 /**
  * folio_end_read - End read on a folio.

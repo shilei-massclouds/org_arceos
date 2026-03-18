@@ -834,6 +834,7 @@ struct anon_vma *folio_anon_vma(struct folio *folio)
 		return NULL;
 	return (void *)(mapping - PAGE_MAPPING_ANON);
 }
+#endif // CL
 
 /**
  * folio_mapping - Find the mapping where this folio is stored.
@@ -866,6 +867,7 @@ struct address_space *folio_mapping(struct folio *folio)
 }
 EXPORT_SYMBOL(folio_mapping);
 
+#if 0
 /**
  * folio_copy - Copy the contents of one folio to another.
  * @dst: Folio to copy to.

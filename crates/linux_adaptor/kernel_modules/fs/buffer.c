@@ -1149,6 +1149,7 @@ __getblk_slow(struct block_device *bdev, sector_t block,
 			return NULL;
 	}
 }
+#endif // CL
 
 /*
  * The relationship between dirty buffers and dirty pages:
@@ -1220,6 +1221,7 @@ void mark_buffer_dirty(struct buffer_head *bh)
 }
 EXPORT_SYMBOL(mark_buffer_dirty);
 
+#if 0
 void mark_buffer_write_io_error(struct buffer_head *bh)
 {
 	set_buffer_write_io_error(bh);
@@ -2056,6 +2058,7 @@ void folio_zero_new_buffers(struct folio *folio, size_t from, size_t to)
 	} while (bh != head);
 }
 EXPORT_SYMBOL(folio_zero_new_buffers);
+#endif // CL
 
 static int
 iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
@@ -2206,12 +2209,14 @@ int __block_write_begin_int(struct folio *folio, loff_t pos, unsigned len,
 	return err;
 }
 
+#if 0
 int __block_write_begin(struct folio *folio, loff_t pos, unsigned len,
 		get_block_t *get_block)
 {
 	return __block_write_begin_int(folio, pos, len, get_block, NULL);
 }
 EXPORT_SYMBOL(__block_write_begin);
+#endif // CL
 
 static void __block_commit_write(struct folio *folio, size_t from, size_t to)
 {
@@ -2252,6 +2257,7 @@ static void __block_commit_write(struct folio *folio, size_t from, size_t to)
 		folio_mark_uptodate(folio);
 }
 
+#if 0
 /*
  * block_write_begin takes care of the basic task of block allocation and
  * bringing partial write blocks uptodate first.
@@ -2281,6 +2287,7 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
 	return status;
 }
 EXPORT_SYMBOL(block_write_begin);
+#endif // CL
 
 int block_write_end(struct file *file, struct address_space *mapping,
 			loff_t pos, unsigned len, unsigned copied,
@@ -2315,6 +2322,7 @@ int block_write_end(struct file *file, struct address_space *mapping,
 }
 EXPORT_SYMBOL(block_write_end);
 
+#if 0
 int generic_write_end(struct file *file, struct address_space *mapping,
 			loff_t pos, unsigned len, unsigned copied,
 			struct folio *folio, void *fsdata)

@@ -666,7 +666,6 @@ int wb_domain_init(struct wb_domain *dom, gfp_t gfp)
 	return fprop_global_init(&dom->completions, gfp);
 }
 
-#if 0
 #ifdef CONFIG_CGROUP_WRITEBACK
 void wb_domain_exit(struct wb_domain *dom)
 {
@@ -682,6 +681,7 @@ void wb_domain_exit(struct wb_domain *dom)
  */
 static unsigned int bdi_min_ratio;
 
+#if 0
 static int bdi_check_pages_limit(unsigned long pages)
 {
 	unsigned long max_dirty_pages = global_dirtyable_memory();
@@ -840,6 +840,7 @@ int bdi_set_strict_limit(struct backing_dev_info *bdi, unsigned int strict_limit
 
 	return 0;
 }
+#endif // CL
 
 static unsigned long dirty_freerun_ceiling(unsigned long thresh,
 					   unsigned long bg_thresh)
@@ -947,6 +948,7 @@ static unsigned long __wb_calc_thresh(struct dirty_throttle_control *dtc,
 	return wb_thresh;
 }
 
+#if 0
 unsigned long wb_calc_thresh(struct bdi_writeback *wb, unsigned long thresh)
 {
 	struct dirty_throttle_control gdtc = { GDTC_INIT(wb) };
@@ -965,6 +967,7 @@ unsigned long cgwb_calc_thresh(struct bdi_writeback *wb)
 
 	return __wb_calc_thresh(&mdtc, mdtc.thresh);
 }
+#endif // CL
 
 /*
  *                           setpoint - dirty 3
@@ -1556,6 +1559,7 @@ static void __wb_update_bandwidth(struct dirty_throttle_control *gdtc,
 	spin_unlock(&wb->list_lock);
 }
 
+#if 0
 void wb_update_bandwidth(struct bdi_writeback *wb)
 {
 	struct dirty_throttle_control gdtc = { GDTC_INIT(wb) };
@@ -1580,6 +1584,7 @@ static void wb_bandwidth_estimate_start(struct bdi_writeback *wb)
 		spin_unlock(&wb->list_lock);
 	}
 }
+#endif // CL
 
 /*
  * After a task dirtied this many pages, balance_dirty_pages_ratelimited()
@@ -2136,6 +2141,7 @@ int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,
 }
 EXPORT_SYMBOL_GPL(balance_dirty_pages_ratelimited_flags);
 
+#if 0
 /**
  * balance_dirty_pages_ratelimited - balance dirty memory state.
  * @mapping: address_space which was dirtied.
@@ -2731,6 +2737,7 @@ bool noop_dirty_folio(struct address_space *mapping, struct folio *folio)
 	return false;
 }
 EXPORT_SYMBOL(noop_dirty_folio);
+#endif // CL
 
 /*
  * Helper function for set_page_dirty family.
@@ -2766,6 +2773,7 @@ static void folio_account_dirtied(struct folio *folio,
 	}
 }
 
+#if 0
 /*
  * Helper function for deaccounting dirty page without writeback.
  *
@@ -2780,6 +2788,7 @@ void folio_account_cleaned(struct folio *folio, struct bdi_writeback *wb)
 	wb_stat_mod(wb, WB_RECLAIMABLE, -nr);
 	task_io_account_cancelled_write(nr * PAGE_SIZE);
 }
+#endif // CL
 
 /*
  * Mark the folio dirty, and set it dirty in the page cache.
@@ -2812,6 +2821,7 @@ void __folio_mark_dirty(struct folio *folio, struct address_space *mapping,
 	xa_unlock_irqrestore(&mapping->i_pages, flags);
 }
 
+#if 0
 /**
  * filemap_dirty_folio - Mark a folio dirty for filesystems which do not use buffer_heads.
  * @mapping: Address space this folio belongs to.
@@ -3226,6 +3236,7 @@ int folio_wait_writeback_killable(struct folio *folio)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(folio_wait_writeback_killable);
+#endif // CL
 
 /**
  * folio_wait_stable() - wait for writeback to finish, if necessary.
@@ -3246,4 +3257,3 @@ void folio_wait_stable(struct folio *folio)
 		folio_wait_writeback(folio);
 }
 EXPORT_SYMBOL_GPL(folio_wait_stable);
-#endif // CL

@@ -2487,6 +2487,7 @@ bool queue_work_node(int node, struct workqueue_struct *wq,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(queue_work_node);
+#endif // CL
 
 void delayed_work_timer_fn(struct timer_list *t)
 {
@@ -2496,7 +2497,6 @@ void delayed_work_timer_fn(struct timer_list *t)
 	__queue_work(dwork->cpu, dwork->wq, &dwork->work);
 }
 EXPORT_SYMBOL(delayed_work_timer_fn);
-#endif // CL
 
 static void __queue_delayed_work(int cpu, struct workqueue_struct *wq,
 				struct delayed_work *dwork, unsigned long delay)
