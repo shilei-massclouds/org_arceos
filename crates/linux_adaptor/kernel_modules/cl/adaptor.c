@@ -1,3 +1,4 @@
+#include <linux/blkdev.h>
 #include <linux/cpu.h>
 #include <linux/mm.h>
 #include <linux/memblock.h>
@@ -159,4 +160,58 @@ void *cl_this_cpu_ptr(void *pcp, int size)
     default:
     }
     PANIC("unknown type size!");
+}
+
+dev_t cl_lookup_bdev(const char *dname)
+{
+    dev_t devt = 0;
+    if (early_lookup_bdev(dname, &devt)) {
+        PANIC("No block device.");
+    }
+    return devt;
+}
+
+int cl_bdev_capacity(dev_t devt)
+{
+	struct block_device *bdev;
+	bdev = blkdev_get_no_open(devt);
+	if (!bdev || !bdev->bd_disk) {
+        PANIC("no bdev!");
+    }
+    return get_capacity(bdev->bd_disk) * bdev_logical_block_size(bdev);
+}
+
+void cl_read_block(dev_t devt, void *buf, size_t count, loff_t pos)
+{
+    struct file *fp;
+    fp = bdev_file_open_by_dev(devt, BLK_OPEN_READ, NULL, NULL);
+    if (IS_ERR(fp)) {
+        PANIC("failed to open block device");
+    }
+
+    if (kernel_read(fp, buf, count, &pos) <= 0) {
+        PANIC("failed to read block device");
+    }
+    bdev_fput(fp);
+}
+
+void cl_write_block(dev_t devt, void *buf, size_t count, loff_t pos)
+{
+    struct file *fp;
+    loff_t old_pos = pos;
+
+    fp = bdev_file_open_by_dev(devt, BLK_OPEN_WRITE, NULL, NULL);
+    if (IS_ERR(fp)) {
+        PANIC("failed to open block device");
+    }
+
+    if (kernel_write(fp, buf, count, &pos) <= 0) {
+        PANIC("failed to write block device");
+    }
+
+    if (sync_file_range(fp, old_pos, count, SYNC_FILE_RANGE_WRITE_AND_WAIT)) {
+        PANIC("failed to sync block device");
+    }
+
+    bdev_fput(fp);
 }

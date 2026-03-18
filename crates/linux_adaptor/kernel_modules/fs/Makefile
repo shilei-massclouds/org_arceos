@@ -19,6 +19,7 @@ obj-y += d_path.o
 obj-y += buffer.o
 obj-y += read_write.o
 obj-y += sync.o
+obj-y += mpage.o
 
 #obj-y += bad_inode.o mbcache.o
 #obj-y += readdir.o posix_acl.o

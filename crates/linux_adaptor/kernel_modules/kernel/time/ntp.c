@@ -386,7 +386,6 @@ ktime_t ntp_get_next_leap(void)
 	return ret;
 }
 
-#if 0
 /*
  * this routine handles the overflow of the microsecond field
  *
@@ -494,6 +493,7 @@ out:
 	return leap;
 }
 
+#if 0
 #if defined(CONFIG_GENERIC_CMOS_UPDATE) || defined(CONFIG_RTC_SYSTOHC)
 static void sync_hw_clock(struct work_struct *work);
 static DECLARE_WORK(sync_work, sync_hw_clock);

@@ -210,6 +210,7 @@ fn init_thread_fn() {
 
 fn do_basic_setup() {
     #[cfg(feature = "linux-block")]
+    #[allow(unused_variables)]
     let all_devices = axdriver::init_drivers();
 
     #[cfg(feature = "fs")]

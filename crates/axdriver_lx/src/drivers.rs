@@ -1,5 +1,6 @@
 //! Defines types and probe methods of all supported devices.
 
+use core::ffi::{c_char, CStr};
 use axdriver_base::{DeviceType, DevResult, DevError};
 use axdriver_base::BaseDriverOps;
 use axdriver_block::BlockDriverOps;
@@ -13,22 +14,18 @@ pub trait DriverProbe {
     }
 }
 
-pub struct LinuxVirtIOBlkDrv;
-pub struct LinuxVirtIOBlkDev {
-    size: usize,
+pub struct LinuxBlkDev {
+    devt: usize,
+    capacity: usize,
 }
 
-impl DriverProbe for LinuxVirtIOBlkDrv {
-    fn probe_global() -> Option<AxDeviceEnum> {
-        Some(AxDeviceEnum::from_block(
-            LinuxVirtIOBlkDev {
-                size: 131072 * 512,
-            }
-        ))
+impl LinuxBlkDev {
+    fn new(devt: usize, capacity: usize) -> Self {
+        Self { devt, capacity }
     }
 }
 
-impl BaseDriverOps for LinuxVirtIOBlkDev {
+impl BaseDriverOps for LinuxBlkDev {
     fn device_type(&self) -> DeviceType {
         DeviceType::Block
     }
@@ -37,10 +34,10 @@ impl BaseDriverOps for LinuxVirtIOBlkDev {
     }
 }
 
-impl BlockDriverOps for LinuxVirtIOBlkDev {
+impl BlockDriverOps for LinuxBlkDev {
     #[inline]
     fn num_blocks(&self) -> u64 {
-        (self.size / BLOCK_SIZE) as u64
+        (self.capacity / BLOCK_SIZE) as u64
     }
 
     #[inline]
@@ -55,17 +52,14 @@ impl BlockDriverOps for LinuxVirtIOBlkDev {
         if buf.len() % BLOCK_SIZE != 0 {
             return Err(DevError::InvalidParam);
         }
-        if block_id * BLOCK_SIZE + buf.len() > self.size {
+        if block_id * BLOCK_SIZE + buf.len() > self.capacity {
             return Err(DevError::Io);
         }
 
-        /*
         unsafe {
-            cl_read_block(block_id, buf.as_mut_ptr(), buf.len())
+            cl_read_block(self.devt, buf.as_mut_ptr(), buf.len(), block_id * BLOCK_SIZE)
         };
         Ok(())
-        */
-        todo!();
     }
 
     fn write_block(&mut self, block_id: u64, buf: &[u8]) -> DevResult {
@@ -75,17 +69,14 @@ impl BlockDriverOps for LinuxVirtIOBlkDev {
         if buf.len() % BLOCK_SIZE != 0 {
             return Err(DevError::InvalidParam);
         }
-        if block_id * BLOCK_SIZE + buf.len() > self.size {
+        if block_id * BLOCK_SIZE + buf.len() > self.capacity {
             return Err(DevError::Io);
         }
 
-        /*
         unsafe {
-            cl_write_block(block_id, buf.as_ptr(), buf.len());
+            cl_write_block(self.devt, buf.as_ptr(), buf.len(), block_id * BLOCK_SIZE);
         }
         Ok(())
-        */
-        todo!();
     }
 
     fn flush(&mut self) -> DevResult {
@@ -93,7 +84,30 @@ impl BlockDriverOps for LinuxVirtIOBlkDev {
     }
 }
 
-register_block_driver!(LinuxVirtIOBlkDrv, LinuxVirtIOBlkDev);
+pub struct LinuxBlkDrv;
+
+impl DriverProbe for LinuxBlkDrv {
+    fn probe_global() -> Option<AxDeviceEnum> {
+        let dname = CStr::from_bytes_with_nul(b"/dev/vda\0").unwrap();
+        let devt = unsafe {
+            cl_lookup_bdev(dname.as_ptr())
+        };
+        let capacity = unsafe {
+            cl_bdev_capacity(devt)
+        };
+        let dev = LinuxBlkDev::new(devt, capacity);
+        Some(AxDeviceEnum::from_block(dev))
+    }
+}
+
+unsafe extern "C" {
+    fn cl_lookup_bdev(dname: *const c_char) -> usize;
+    fn cl_bdev_capacity(devt: usize) -> usize;
+    fn cl_read_block(devt: usize, buf: *mut u8, count: usize, pos: usize);
+    fn cl_write_block(devt: usize, buf: *const u8, count: usize, pos: usize);
+}
+
+register_block_driver!(LinuxBlkDrv, LinuxBlkDev);
 
 /*
 #![allow(unused_imports, dead_code)]

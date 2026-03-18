@@ -17,7 +17,7 @@ macro_rules! for_each_drivers {
 
         #[cfg(feature = "linux-block")]
         {
-            type $drv_type = crate::drivers::LinuxVirtIOBlkDrv;
+            type $drv_type = crate::drivers::LinuxBlkDrv;
             $code
         }
     }};

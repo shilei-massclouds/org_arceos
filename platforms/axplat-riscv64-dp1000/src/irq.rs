@@ -97,7 +97,7 @@ impl IrqIf for IrqIfImpl {
             @S_EXT => {
                 // TODO: get IRQ number from PLIC
                 if !IRQ_HANDLER_TABLE.handle(0) {
-                    warn!("Unhandled IRQ {}", 0);
+                    trace!("Unhandled IRQ {}", 0);
                 }
             },
             @EX_IRQ => {

@@ -2,7 +2,6 @@
  * Unikernel test for linux block driver
  */
 
-#include <linux/printk.h>
 #include <linux/blkdev.h>
 
 #include "adaptor.h"
