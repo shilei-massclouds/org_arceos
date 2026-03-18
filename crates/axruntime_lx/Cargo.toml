@@ -21,7 +21,7 @@ multitask = ["axtask/multitask", "irq"]
 paging = ["axmm"]
 irq = ["axhal/irq", "linux_adaptor/irq", "percpu"]
 #fs = ["axdriver", "axfs"]
-fs = []
+fs = ["linux-block", "dep:axfs"]
 #net = ["axdriver", "axnet"]
 net = []
 #display = ["axdriver", "axdisplay"]
@@ -31,7 +31,7 @@ ipi = []
 rtc = []
 #tls = ["axhal/tls", "axtask?/tls"]
 tls = []
-linux-block = ["dep:axdriver"]
+linux-block = ["axdriver/linux-block"]
 
 [dependencies]
 axhal = { workspace = true }
@@ -40,7 +40,7 @@ axconfig = { workspace = true }
 axalloc = { workspace = true, optional = true }
 axmm = { workspace = true, optional = true }
 axdriver = { workspace = true, optional = true }
-#axfs = { workspace = true, optional = true }
+axfs = { workspace = true, optional = true }
 #axnet = { workspace = true, optional = true }
 #axdisplay = { workspace = true, optional = true }
 #axipi = { workspace = true, optional = true }

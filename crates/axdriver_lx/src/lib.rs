@@ -5,11 +5,30 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+mod macros;
+
+mod drivers;
+mod structs;
+
+pub mod prelude;
+
+pub use self::structs::{AxDeviceContainer, AxDeviceEnum};
+
+#[cfg(feature = "block")]
+pub use self::structs::AxBlockDevice;
+
+use crate::prelude::DeviceType;
+use axdriver_base::BaseDriverOps;
 use linux_adaptor::LinuxAdaptorState;
 
 /// A structure that contains all device drivers, organized by their category.
 #[derive(Default)]
-pub struct AllDevices;
+pub struct AllDevices {
+    /// All block device drivers.
+    #[cfg(feature = "block")]
+    pub block: AxDeviceContainer<AxBlockDevice>,
+}
 
 impl AllDevices {
     /// Returns the device model used, either `dyn` or `static`.
@@ -17,6 +36,29 @@ impl AllDevices {
     /// See the [crate-level documentation](crate) for more details.
     pub const fn device_model() -> &'static str {
         "linux"
+    }
+
+    /// Probes all supported devices.
+    fn probe(&mut self) {
+        for_each_drivers!(type Driver, {
+            if let Some(dev) = Driver::probe_global() {
+                info!(
+                    "registered a new {:?} device: {:?}",
+                    dev.device_type(),
+                    dev.device_name(),
+                );
+                self.add_device(dev);
+            }
+        });
+    }
+
+    /// Adds one device into the corresponding container, according to its device category.
+    #[allow(dead_code)]
+    fn add_device(&mut self, dev: AxDeviceEnum) {
+        match dev {
+            #[cfg(feature = "block")]
+            AxDeviceEnum::Block(dev) => self.block.push(dev),
+        }
     }
 }
 
@@ -28,7 +70,19 @@ pub fn init_drivers() -> AllDevices {
     linux_adaptor::advance_to(LinuxAdaptorState::InitDriver);
     linux_adaptor::advance_to(LinuxAdaptorState::DoInitCalls);
 
-    AllDevices::default()
+    let mut all_devs = AllDevices::default();
+    all_devs.probe();
+
+    #[cfg(feature = "block")]
+    {
+        debug!("number of block devices: {}", all_devs.block.len());
+        for (i, dev) in all_devs.block.iter().enumerate() {
+            assert_eq!(dev.device_type(), DeviceType::Block);
+            debug!("  block device {}: {:?}", i, dev.device_name());
+        }
+    }
+
+    all_devs
 }
 
 /*

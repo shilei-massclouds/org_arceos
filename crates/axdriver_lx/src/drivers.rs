@@ -1,5 +1,101 @@
 //! Defines types and probe methods of all supported devices.
 
+use axdriver_base::{DeviceType, DevResult, DevError};
+use axdriver_base::BaseDriverOps;
+use axdriver_block::BlockDriverOps;
+use crate::AxDeviceEnum;
+
+const BLOCK_SIZE: usize = 512;
+
+pub trait DriverProbe {
+    fn probe_global() -> Option<AxDeviceEnum> {
+        None
+    }
+}
+
+pub struct LinuxVirtIOBlkDrv;
+pub struct LinuxVirtIOBlkDev {
+    size: usize,
+}
+
+impl DriverProbe for LinuxVirtIOBlkDrv {
+    fn probe_global() -> Option<AxDeviceEnum> {
+        Some(AxDeviceEnum::from_block(
+            LinuxVirtIOBlkDev {
+                size: 131072 * 512,
+            }
+        ))
+    }
+}
+
+impl BaseDriverOps for LinuxVirtIOBlkDev {
+    fn device_type(&self) -> DeviceType {
+        DeviceType::Block
+    }
+    fn device_name(&self) -> &str {
+        "linux_virtio_blk"
+    }
+}
+
+impl BlockDriverOps for LinuxVirtIOBlkDev {
+    #[inline]
+    fn num_blocks(&self) -> u64 {
+        (self.size / BLOCK_SIZE) as u64
+    }
+
+    #[inline]
+    fn block_size(&self) -> usize {
+        BLOCK_SIZE
+    }
+
+    fn read_block(&mut self, block_id: u64, buf: &mut [u8]) -> DevResult {
+        let block_id = block_id as usize;
+        info!("Read block: id [{}] size {}", block_id, buf.len());
+
+        if buf.len() % BLOCK_SIZE != 0 {
+            return Err(DevError::InvalidParam);
+        }
+        if block_id * BLOCK_SIZE + buf.len() > self.size {
+            return Err(DevError::Io);
+        }
+
+        /*
+        unsafe {
+            cl_read_block(block_id, buf.as_mut_ptr(), buf.len())
+        };
+        Ok(())
+        */
+        todo!();
+    }
+
+    fn write_block(&mut self, block_id: u64, buf: &[u8]) -> DevResult {
+        let block_id = block_id as usize;
+        info!("Write block: id [{}] size {}", block_id, buf.len());
+
+        if buf.len() % BLOCK_SIZE != 0 {
+            return Err(DevError::InvalidParam);
+        }
+        if block_id * BLOCK_SIZE + buf.len() > self.size {
+            return Err(DevError::Io);
+        }
+
+        /*
+        unsafe {
+            cl_write_block(block_id, buf.as_ptr(), buf.len());
+        }
+        Ok(())
+        */
+        todo!();
+    }
+
+    fn flush(&mut self) -> DevResult {
+        todo!();
+    }
+}
+
+register_block_driver!(LinuxVirtIOBlkDrv, LinuxVirtIOBlkDev);
+
+/*
 #![allow(unused_imports, dead_code)]
 
 use crate::AxDeviceEnum;
@@ -13,25 +109,6 @@ use axdriver_pci::{DeviceFunction, DeviceFunctionInfo, PciRoot};
 
 pub use super::dummy::*;
 
-pub trait DriverProbe {
-    fn probe_global() -> Option<AxDeviceEnum> {
-        None
-    }
-
-    #[cfg(bus = "mmio")]
-    fn probe_mmio(_mmio_base: usize, _mmio_size: usize) -> Option<AxDeviceEnum> {
-        None
-    }
-
-    #[cfg(bus = "pci")]
-    fn probe_pci(
-        _root: &mut PciRoot,
-        _bdf: DeviceFunction,
-        _dev_info: &DeviceFunctionInfo,
-    ) -> Option<AxDeviceEnum> {
-        None
-    }
-}
 
 #[cfg(net_dev = "virtio-net")]
 register_net_driver!(
@@ -174,3 +251,4 @@ cfg_if::cfg_if! {
         }
     }
 }
+*/

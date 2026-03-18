@@ -417,6 +417,7 @@ dependencies = [
 name = "axdriver_lx"
 version = "0.2.0"
 dependencies = [
+ "axdriver_base",
  "axdriver_block",
  "axdriver_net",
  "linux_adaptor",
@@ -824,6 +825,7 @@ dependencies = [
  "axalloc",
  "axconfig",
  "axdriver_lx",
+ "axfs",
  "axhal",
  "axlog",
  "axmm",
