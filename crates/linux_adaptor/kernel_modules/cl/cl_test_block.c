@@ -7,39 +7,26 @@
 
 #include "adaptor.h"
 
-#define BUF_SIZE PAGE_SIZE
-
-static void test_read(dev_t devt)
+static void read_block(dev_t devt, void *buf, size_t count, loff_t pos)
 {
-    char *buf;
     struct file *fp;
-    loff_t pos = 0;
-
     fp = bdev_file_open_by_dev(devt, BLK_OPEN_READ, NULL, NULL);
     if (IS_ERR(fp)) {
         PANIC("failed to open block device");
     }
     printk("Open block device for read ok!\n");
 
-    buf = alloc_pages_exact(BUF_SIZE, GFP_KERNEL);
-    if (!buf) {
-        PANIC("failed to alloc buffer");
-    }
-
-    if (kernel_read(fp, buf, BUF_SIZE, &pos) <= 0) {
+    if (kernel_read(fp, buf, count, &pos) <= 0) {
         PANIC("failed to read block device");
     }
-    printk("read: (%lx)\n", *((unsigned long *) buf));
-
-    free_pages_exact(buf, BUF_SIZE);
+    printk("Read block device ok!\n");
     bdev_fput(fp);
 }
 
-static void test_write(dev_t devt)
+static void write_block(dev_t devt, void *buf, size_t count, loff_t pos)
 {
-    char *buf;
     struct file *fp;
-    loff_t pos = 0;
+    loff_t old_pos = pos;
 
     fp = bdev_file_open_by_dev(devt, BLK_OPEN_WRITE, NULL, NULL);
     if (IS_ERR(fp)) {
@@ -47,35 +34,68 @@ static void test_write(dev_t devt)
     }
     printk("Open block device for write ok!\n");
 
-    buf = alloc_pages_exact(BUF_SIZE, GFP_KERNEL);
-    if (!buf) {
-        PANIC("failed to alloc buffer");
-    }
-    memset(buf, 'A', BUF_SIZE);
-
-    if (kernel_write(fp, buf, BUF_SIZE, &pos) <= 0) {
+    if (kernel_write(fp, buf, count, &pos) <= 0) {
         PANIC("failed to write block device");
     }
+    printk("Write block device ok!\n");
 
-    free_pages_exact(buf, BUF_SIZE);
-
-    if (sync_file_range(fp, 0, 16, SYNC_FILE_RANGE_WRITE_AND_WAIT)) {
+    if (sync_file_range(fp, old_pos, count, SYNC_FILE_RANGE_WRITE_AND_WAIT)) {
         PANIC("failed to sync block device");
     }
+    printk("Sync block device ok!\n");
 
     bdev_fput(fp);
 }
 
+#define BLK_SIZE 1024
+
+/* The initial magic of 'disk.img' created by ArceOS */
+unsigned long init_magic = 0x2e73666b6d9058eb;
+unsigned long test_magic = 0xa00afeedb00bfeed;
+
 void cl_test_block(void)
 {
+    char *buf;
     dev_t devt = 0;
     char dname[] = "/dev/vda";
 
     if (early_lookup_bdev(dname, &devt)) {
-        PANIC("No block device!");
+        PANIC("No block device.");
     }
 
-    test_read(devt);
-    test_write(devt);
-    test_read(devt);
+    buf = alloc_pages_exact(BLK_SIZE, GFP_KERNEL);
+    if (!buf) {
+        PANIC("failed to alloc buffer.");
+    }
+
+    /* Check the header magic of 'disk.img' */
+    read_block(devt, buf, BLK_SIZE, 0);
+    if (memcmp(buf, &init_magic, sizeof(init_magic))) {
+        printk("bad magic (%lx)\n", *((unsigned long *)buf));
+        PANIC("verify the init magic err.");
+    }
+
+    /* Overwrite the magic */
+    memcpy(buf, &test_magic, sizeof(test_magic));
+    write_block(devt, buf, BLK_SIZE, 0);
+
+    /* Check the new magic */
+    read_block(devt, buf, BLK_SIZE, 0);
+    if (memcmp(buf, &test_magic, sizeof(init_magic))) {
+        printk("bad magic (%lx)\n", *((unsigned long *)buf));
+        PANIC("verify the new magic err.");
+    }
+
+    /* Restore the old magic */
+    memcpy(buf, &init_magic, sizeof(test_magic));
+    write_block(devt, buf, BLK_SIZE, 0);
+
+    /* Makesure everything is fine */
+    read_block(devt, buf, BLK_SIZE, 0);
+    if (memcmp(buf, &init_magic, sizeof(init_magic))) {
+        printk("bad magic (%lx)\n", *((unsigned long *)buf));
+        PANIC("verify the init magic err.");
+    }
+
+    free_pages_exact(buf, BLK_SIZE);
 }

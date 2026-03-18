@@ -352,6 +352,7 @@ int do_wait_intr_irq(wait_queue_head_t *wq, wait_queue_entry_t *wait)
 	return 0;
 }
 EXPORT_SYMBOL(do_wait_intr_irq);
+#endif // CL
 
 /**
  * finish_wait - clean up after waiting in a queue
@@ -388,6 +389,7 @@ void finish_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_en
 }
 EXPORT_SYMBOL(finish_wait);
 
+#if 0
 int autoremove_wake_function(struct wait_queue_entry *wq_entry, unsigned mode, int sync, void *key)
 {
 	int ret = default_wake_function(wq_entry, mode, sync, key);

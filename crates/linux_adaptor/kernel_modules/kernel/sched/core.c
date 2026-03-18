@@ -7606,7 +7606,6 @@ static inline void preempt_dynamic_init(void) { }
 
 #endif /* CONFIG_PREEMPT_DYNAMIC */
 
-#if 0
 int io_schedule_prepare(void)
 {
 	int old_iowait = current->in_iowait;
@@ -7621,6 +7620,7 @@ void io_schedule_finish(int token)
 	current->in_iowait = token;
 }
 
+#if 0
 /*
  * This task is about to go to sleep on IO. Increment rq->nr_iowait so
  * that process accounting knows that this is a task in IO wait state.
@@ -7637,6 +7637,7 @@ long __sched io_schedule_timeout(long timeout)
 	return ret;
 }
 EXPORT_SYMBOL(io_schedule_timeout);
+#endif // CL
 
 void __sched io_schedule(void)
 {
@@ -7648,6 +7649,7 @@ void __sched io_schedule(void)
 }
 EXPORT_SYMBOL(io_schedule);
 
+#if 0
 void sched_show_task(struct task_struct *p)
 {
 	unsigned long free;

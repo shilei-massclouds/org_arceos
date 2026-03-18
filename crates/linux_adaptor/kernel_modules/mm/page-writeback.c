@@ -3192,7 +3192,6 @@ void __folio_start_writeback(struct folio *folio, bool keep_write)
 }
 EXPORT_SYMBOL(__folio_start_writeback);
 
-#if 0
 /**
  * folio_wait_writeback - Wait for a folio to finish writeback.
  * @folio: The folio to wait for.
@@ -3214,6 +3213,7 @@ void folio_wait_writeback(struct folio *folio)
 }
 EXPORT_SYMBOL_GPL(folio_wait_writeback);
 
+#if 0
 /**
  * folio_wait_writeback_killable - Wait for a folio to finish writeback.
  * @folio: The folio to wait for.
