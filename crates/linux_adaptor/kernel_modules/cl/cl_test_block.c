@@ -6,46 +6,6 @@
 
 #include "adaptor.h"
 
-static void read_block(dev_t devt, void *buf, size_t count, loff_t pos)
-{
-    struct file *fp;
-    fp = bdev_file_open_by_dev(devt, BLK_OPEN_READ, NULL, NULL);
-    if (IS_ERR(fp)) {
-        PANIC("failed to open block device");
-    }
-    printk("Open block device for read ok!\n");
-
-    if (kernel_read(fp, buf, count, &pos) <= 0) {
-        PANIC("failed to read block device");
-    }
-    printk("Read block device ok!\n");
-    bdev_fput(fp);
-}
-
-static void write_block(dev_t devt, void *buf, size_t count, loff_t pos)
-{
-    struct file *fp;
-    loff_t old_pos = pos;
-
-    fp = bdev_file_open_by_dev(devt, BLK_OPEN_WRITE, NULL, NULL);
-    if (IS_ERR(fp)) {
-        PANIC("failed to open block device");
-    }
-    printk("Open block device for write ok!\n");
-
-    if (kernel_write(fp, buf, count, &pos) <= 0) {
-        PANIC("failed to write block device");
-    }
-    printk("Write block device ok!\n");
-
-    if (sync_file_range(fp, old_pos, count, SYNC_FILE_RANGE_WRITE_AND_WAIT)) {
-        PANIC("failed to sync block device");
-    }
-    printk("Sync block device ok!\n");
-
-    bdev_fput(fp);
-}
-
 #define BLK_SIZE 1024
 
 /* The initial magic of 'disk.img' created by ArceOS */
@@ -68,7 +28,7 @@ void cl_test_block(void)
     }
 
     /* Check the header magic of 'disk.img' */
-    read_block(devt, buf, BLK_SIZE, 0);
+    cl_read_block(devt, buf, BLK_SIZE, 0);
     if (memcmp(buf, &init_magic, sizeof(init_magic))) {
         printk("bad magic (%lx)\n", *((unsigned long *)buf));
         PANIC("verify the init magic err.");
@@ -76,10 +36,10 @@ void cl_test_block(void)
 
     /* Overwrite the magic */
     memcpy(buf, &test_magic, sizeof(test_magic));
-    write_block(devt, buf, BLK_SIZE, 0);
+    cl_write_block(devt, buf, BLK_SIZE, 0);
 
     /* Check the new magic */
-    read_block(devt, buf, BLK_SIZE, 0);
+    cl_read_block(devt, buf, BLK_SIZE, 0);
     if (memcmp(buf, &test_magic, sizeof(init_magic))) {
         printk("bad magic (%lx)\n", *((unsigned long *)buf));
         PANIC("verify the new magic err.");
@@ -87,10 +47,10 @@ void cl_test_block(void)
 
     /* Restore the old magic */
     memcpy(buf, &init_magic, sizeof(test_magic));
-    write_block(devt, buf, BLK_SIZE, 0);
+    cl_write_block(devt, buf, BLK_SIZE, 0);
 
     /* Makesure everything is fine */
-    read_block(devt, buf, BLK_SIZE, 0);
+    cl_read_block(devt, buf, BLK_SIZE, 0);
     if (memcmp(buf, &init_magic, sizeof(init_magic))) {
         printk("bad magic (%lx)\n", *((unsigned long *)buf));
         PANIC("verify the init magic err.");

@@ -107,4 +107,7 @@ void ax_handle_ebreak(void *regs);
 void ax_handle_page_fault(void *regs);
 void ax_handle_irq(unsigned long cause);
 
+void cl_read_block(dev_t devt, void *buf, size_t count, loff_t pos);
+void cl_write_block(dev_t devt, void *buf, size_t count, loff_t pos);
+
 #endif /* _ADAPTOR_H_ */
