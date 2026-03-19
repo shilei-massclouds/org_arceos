@@ -182,8 +182,7 @@ fn main() {
     for _ in 0..TEST_NUM {
         #[cfg(feature = "axstd")]
         test_wait();
-        //#[cfg(feature = "axstd")]
-        //test_wait_timeout_until();
-        println!("\n========================\n");
+        #[cfg(feature = "axstd")]
+        test_wait_timeout_until();
     }
 }
