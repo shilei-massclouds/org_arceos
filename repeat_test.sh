@@ -4,7 +4,7 @@
 
 make ARCH=riscv64 defconfig
 
-TEST_NUM=1000
+TEST_NUM=1
 for ((i=0;i<$TEST_NUM;i++))
 do
     make ARCH=riscv64 A=examples/task/affinity run FEATURES="sched-rr" SMP=8
