@@ -1194,7 +1194,6 @@ version = "0.3.0-preview.3"
 dependencies = [
  "axsync",
  "axtask",
- "event-listener",
  "fastrand",
  "kspin",
  "lock_api",
