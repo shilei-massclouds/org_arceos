@@ -5,13 +5,14 @@
 #[cfg(feature = "axstd")]
 extern crate axstd as std;
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::thread;
-
 #[cfg(feature = "axstd")]
-use std::os::arceos::api::task::{ax_set_current_affinity, AxCpuMask};
+use std::os::arceos::api::task::{AxCpuMask, ax_set_current_affinity};
 #[cfg(feature = "axstd")]
 use std::os::arceos::modules::axhal::percpu::this_cpu_id;
+use std::{
+    sync::atomic::{AtomicUsize, Ordering},
+    thread,
+};
 
 const NUM_TASKS: usize = 10;
 const NUM_TIMES: usize = 100;

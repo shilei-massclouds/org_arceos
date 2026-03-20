@@ -7,8 +7,7 @@
 #[cfg(feature = "axstd")]
 extern crate axstd as std;
 
-use std::{ptr::addr_of, str::from_utf8_unchecked};
-use std::{thread, vec::Vec};
+use std::{ptr::addr_of, str::from_utf8_unchecked, thread, vec::Vec};
 
 #[thread_local]
 static mut BOOL: bool = true;

@@ -5,13 +5,16 @@
 #[cfg(feature = "axstd")]
 extern crate axstd as std;
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Mutex;
-use std::thread;
-use std::time::Duration;
-
 #[cfg(feature = "axstd")]
 use std::os::arceos::api::task::{self as api};
+use std::{
+    sync::{
+        Mutex,
+        atomic::{AtomicUsize, Ordering},
+    },
+    thread,
+    time::Duration,
+};
 
 const NUM_TASKS: usize = 16;
 
@@ -45,7 +48,7 @@ fn test_basic() {
         let lock = LOCK.lock();
         println!("Now threads count: {}", *lock);
         let counter = COUNTER.load(Ordering::Acquire);
-        //println!("threads started [{}].", counter);
+        // println!("threads started [{}].", counter);
         if counter == NUM_TASKS {
             break;
         }

@@ -5,12 +5,11 @@
 #[cfg(feature = "axstd")]
 extern crate axstd as std;
 
-use rand::{rngs::SmallRng, RngCore, SeedableRng};
-use std::thread;
-use std::{sync::Arc, vec::Vec};
-
 #[cfg(feature = "axstd")]
 use std::os::arceos::api::task::{self as api, AxWaitQueueHandle};
+use std::{sync::Arc, thread, vec::Vec};
+
+use rand::{RngCore, SeedableRng, rngs::SmallRng};
 
 const NUM_DATA: usize = 2_000_000;
 const NUM_TASKS: usize = 16;

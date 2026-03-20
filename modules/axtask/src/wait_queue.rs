@@ -3,9 +3,7 @@ use alloc::collections::VecDeque;
 use kernel_guard::{NoOp, NoPreemptIrqSave};
 use kspin::{SpinNoIrq, SpinNoIrqGuard};
 
-use crate::{
-    AxTaskRef, CurrentTask, select_run_queue, current_run_queue
-};
+use crate::{AxTaskRef, CurrentTask, current_run_queue, select_run_queue};
 
 /// A queue to store sleeping tasks.
 ///

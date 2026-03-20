@@ -5,9 +5,11 @@
 #[cfg(feature = "axstd")]
 extern crate axstd as std;
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::thread;
-use std::time::{Duration, Instant};
+use std::{
+    sync::atomic::{AtomicUsize, Ordering},
+    thread,
+    time::{Duration, Instant},
+};
 
 const NUM_TASKS: usize = 5;
 

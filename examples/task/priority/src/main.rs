@@ -5,12 +5,9 @@
 #[cfg(feature = "axstd")]
 extern crate axstd as std;
 
-use std::sync::Arc;
-use std::{thread, time};
-use std::{vec, vec::Vec};
-
 #[cfg(feature = "axstd")]
 use std::os::arceos::api::task::ax_set_current_priority;
+use std::{sync::Arc, thread, time, vec, vec::Vec};
 
 struct TaskParam {
     data_len: usize,
