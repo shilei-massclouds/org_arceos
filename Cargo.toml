@@ -42,6 +42,7 @@ members = [
     "examples/task/tls",
     "examples/task/wait_queue",
     "examples/task/yield",
+    "examples/task/mutex",
 ]
 default-members = [
     "modules/axalloc",

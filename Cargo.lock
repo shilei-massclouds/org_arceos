@@ -208,6 +208,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-mutex"
+version = "0.1.0"
+dependencies = [
+ "axstd",
+]
+
+[[package]]
 name = "arceos-parallel"
 version = "0.1.0"
 dependencies = [

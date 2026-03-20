@@ -14,4 +14,5 @@ do
     make ARCH=riscv64 A=examples/task/sleep run FEATURES="sched-rr" SMP=8
     make ARCH=riscv64 A=examples/task/wait_queue run FEATURES="sched-rr" SMP=8
     make ARCH=riscv64 A=examples/task/yield run FEATURES="sched-rr" SMP=8
+    make ARCH=riscv64 A=examples/task/mutex run FEATURES="sched-rr" SMP=8
 done
