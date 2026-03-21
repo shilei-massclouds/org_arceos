@@ -101,6 +101,7 @@ int smpcfd_dying_cpu(unsigned int cpu)
 	irq_work_run();
 	return 0;
 }
+#endif /* CL */
 
 void __init call_function_init(void)
 {
@@ -111,7 +112,6 @@ void __init call_function_init(void)
 
 	smpcfd_prepare_cpu(smp_processor_id());
 }
-#endif /* CL */
 
 static __always_inline void
 send_call_function_single_ipi(int cpu)

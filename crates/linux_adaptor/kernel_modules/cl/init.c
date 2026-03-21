@@ -11,6 +11,8 @@
 #include <linux/sched/isolation.h>
 #include <linux/tick.h>
 #include <linux/moduleparam.h>
+#include <linux/kfence.h>
+#include <linux/stackprotector.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -45,6 +47,8 @@ static char *extra_init_args;
 
 /* From 'init/main.c' */
 bool initcall_debug;
+
+static __initdata DECLARE_COMPLETION(kthreadd_done);
 
 #define bootconfig_found false
 #define initargs_offs 0
@@ -255,6 +259,20 @@ void cl_init_irq(void)
 
     /* This must be after timekeeping is initialized */
     random_init();
+
+    /* These make use of the fully initialized rng */
+    kfence_init();
+    boot_init_stack_canary();
+
+#if 0
+    perf_event_init();
+    profile_init();
+#endif
+    call_function_init();
+    WARN(!irqs_disabled(), "Interrupts were enabled early\n");
+
+    early_boot_irqs_disabled = false;
+    local_irq_enable();
 }
 
 /*
@@ -331,6 +349,14 @@ static void __init do_pre_smp_initcalls(void)
     trace_initcall_level("early");
     for (fn = __initcall_start; fn < __initcall0_start; fn++)
         do_one_initcall(initcall_from_entry(fn));
+}
+
+void prepare_kernel_init()
+{
+    /*
+     * Wait until kthreadd is all set-up.
+     */
+    wait_for_completion(&kthreadd_done);
 }
 
 void init_smp(void)
@@ -445,4 +471,47 @@ static void __init do_initcalls(void)
 void cl_do_initcalls()
 {
     do_initcalls();
+}
+
+void linux_idle_loop(pid_t pid)
+{
+    /*
+     * Enable might_sleep() and smp_processor_id() checks.
+     * They cannot be enabled earlier because with CONFIG_PREEMPTION=y
+     * kernel_thread() would trigger might_sleep() splats. With
+     * CONFIG_PREEMPT_VOLUNTARY=y the init task might have scheduled
+     * already, but it's stuck on the kthreadd_done completion.
+     */
+    system_state = SYSTEM_SCHEDULING;
+
+    complete(&kthreadd_done);
+
+    /*
+     * The boot idle thread must execute schedule()
+     * at least once to get things moving:
+     */
+    schedule_preempt_disabled();
+    /* Call into cpu_idle with preempt disabled */
+    cpu_startup_entry(CPUHP_ONLINE);
+}
+
+void cl_free_init_mem()
+{
+    system_state = SYSTEM_FREEING_INITMEM;
+#if 0
+    kprobe_free_init_mem();
+    ftrace_free_init_mem();
+    kgdb_free_init_mem();
+    exit_boot_config();
+    free_initmem();
+    mark_readonly();
+
+    /*
+     * Kernel mappings are now finalized - update the userspace page-table
+     * to finalize PTI.
+     */
+    pti_finalize();
+#endif
+
+    system_state = SYSTEM_RUNNING;
 }

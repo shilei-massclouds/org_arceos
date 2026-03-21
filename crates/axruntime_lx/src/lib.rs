@@ -194,6 +194,8 @@ fn init_interrupt_later() {
 #[cfg(feature = "multitask")]
 // As Linux `kernel_init`
 fn init_thread_fn() {
+    linux_adaptor::advance_to(LinuxAdaptorState::PrepareKernelInit);
+
     //
     // kernel_init_freeable
     //
@@ -203,6 +205,9 @@ fn init_thread_fn() {
     self::mp::start_secondary_cpus();
 
     do_basic_setup();
+
+    // free init mem and then set system_state to running
+    linux_adaptor::advance_to(LinuxAdaptorState::FreeInitMem);
 
     // Invoke app's main()
     unsafe { main(); }

@@ -7,6 +7,7 @@ use linux_adaptor_macro::generate_state_callbacks;
 #[generate_state_callbacks]
 #[derive(PartialEq, PartialOrd)]
 pub enum LinuxAdaptorState {
+    // boot thread (task 0)
     Initial,
     SetupArch,
     SetupBootMem,
@@ -19,10 +20,14 @@ pub enum LinuxAdaptorState {
     InitIrq,
     StartSchedEarlier,
     StartKThreadd,
+
+    // kernel_init thread (task 1)
+    PrepareKernelInit,
     InitSmp,
     InitPageAllocLater,
     InitDriver,
     DoInitCalls,
+    FreeInitMem,
     NumberOfStates,
 }
 
@@ -157,6 +162,13 @@ fn StartKThreaddCB() {
 }
 
 #[allow(non_snake_case)]
+fn PrepareKernelInitCB() {
+    unsafe {
+        prepare_kernel_init();
+    }
+}
+
+#[allow(non_snake_case)]
 fn InitSmpCB() {
     unsafe {
         init_smp();
@@ -184,6 +196,13 @@ fn DoInitCallsCB() {
     }
 }
 
+#[allow(non_snake_case)]
+fn FreeInitMemCB() {
+    unsafe {
+        cl_free_init_mem();
+    }
+}
+
 unsafe extern "C" {
     fn cl_setup_arch_earlier();
     fn cl_setup_bootmem();
@@ -196,8 +215,10 @@ unsafe extern "C" {
     fn cl_init_irq();
     fn start_sched_earlier();
     fn start_kthreadd();
+    fn prepare_kernel_init();
     fn init_smp();
     fn init_page_alloc_later();
     fn cl_driver_init();
     fn cl_do_initcalls();
+    fn cl_free_init_mem();
 }

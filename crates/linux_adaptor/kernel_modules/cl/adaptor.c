@@ -53,17 +53,6 @@ pid_t linux_kernel_thread(int (*fn)(void *), void *opaque)
     return kernel_thread(fn, opaque, NULL, CLONE_FS | CLONE_FILES);
 }
 
-void linux_idle_loop(pid_t pid)
-{
-    /*
-     * The boot idle thread must execute schedule()
-     * at least once to get things moving:
-     */
-    schedule_preempt_disabled();
-    /* Call into cpu_idle with preempt disabled */
-    cpu_startup_entry(CPUHP_ONLINE);
-}
-
 /*
  * Return 0 when the timer has expired
  * otherwise the remaining time in jiffies.
