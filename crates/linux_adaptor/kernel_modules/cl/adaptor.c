@@ -24,9 +24,16 @@ void *linux_kmalloc_kernel(size_t size, unsigned int align)
 {
     void *ret = kmalloc(size, GFP_KERNEL);
     if (ret == NULL) {
-        /* size is too large, try to use vmalloc */
+        /* size is too large, use vmalloc. BUT it is WRONG. */
+        /*
+         * FixMe:
+         * linux_kmalloc_kernel serves for Rust GlobalAllocator:alloc, which
+         * disables irqs and doesn't allow to sleep. But vmalloc MAY sleep.
+         */
         printk("kmalloc.size: 0x%lx, it's too large, use vmalloc instead.\n", size);
+        local_irq_enable();     /* FixMe: This is just a temporary trick. */
         ret = vmalloc(size);
+        local_irq_disable();    /* FixMe: This is just a temporary trick. */
     }
     CL_ASSERT(IS_ALIGNED((unsigned long)ret, align),
               "kmalloc error: NOT aligned");
