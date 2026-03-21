@@ -298,6 +298,22 @@ void start_sched_earlier()
     signals_init();
 }
 
+void pin_task_on_cpu(int pid, unsigned int cpu_id)
+{
+    struct task_struct *tsk;
+
+    /*
+     * Pin init on the boot CPU. Task migration is not properly working
+     * until sched_init_smp() has been run. It will set the allowed
+     * CPUs for init to the non isolated CPUs.
+     */
+    rcu_read_lock();
+    tsk = find_task_by_pid_ns(pid, &init_pid_ns);
+    tsk->flags |= PF_NO_SETAFFINITY;
+    set_cpus_allowed_ptr(tsk, cpumask_of(cpu_id));
+    rcu_read_unlock();
+}
+
 void start_kthreadd(void)
 {
     int pid;

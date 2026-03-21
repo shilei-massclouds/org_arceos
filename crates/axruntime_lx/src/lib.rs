@@ -219,9 +219,17 @@ fn do_basic_setup() {
 
 #[cfg(feature = "multitask")]
 fn call_main() {
+    /*
+     * We need to spawn init first so that it obtains pid 1, however
+     * the init task will end up wanting to create kthreads, which, if
+     * we schedule it before we create kthreadd, will OOPS.
+     */
     let task = axtask::spawn(|| {
         init_thread_fn();
     });
+    unsafe {
+        pin_task_on_cpu(task.id().as_u64() as usize, cl_cpu_id())
+    }
 
     linux_adaptor::advance_to(LinuxAdaptorState::StartKThreadd);
 
@@ -301,6 +309,9 @@ fn is_init_ok() -> bool {
 unsafe extern "C" {
     /// Application's entry point.
     fn main();
+
+    fn pin_task_on_cpu(pid: usize, cpu_id: usize);
+    fn cl_cpu_id() -> usize;
 }
 
 ///////////////////////////////////////
