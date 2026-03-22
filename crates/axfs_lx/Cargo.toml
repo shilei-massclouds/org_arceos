@@ -16,6 +16,7 @@ procfs = ["dep:axfs_ramfs"]
 sysfs = ["dep:axfs_ramfs"]
 fatfs = ["dep:fatfs"]
 myfs = ["dep:crate_interface"]
+linux-fs = []
 use-ramdisk = []
 
 default = ["devfs", "ramfs", "fatfs", "procfs", "sysfs"]

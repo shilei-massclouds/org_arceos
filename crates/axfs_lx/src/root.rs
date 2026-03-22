@@ -151,6 +151,8 @@ pub(crate) fn init_rootfs(disk: crate::dev::Disk) {
         if #[cfg(feature = "myfs")] { // override the default filesystem
             info!("rootfs: myfs");
             let main_fs = fs::myfs::new_myfs(disk);
+        } else if #[cfg(feature = "linux-fs")] {
+            let main_fs = fs::linux_fs::LinuxFileSystem::new(disk);
         } else if #[cfg(feature = "fatfs")] {
             info!("rootfs: fatfs");
             static FAT_FS: LazyInit<Arc<fs::fatfs::FatFileSystem>> = LazyInit::new();

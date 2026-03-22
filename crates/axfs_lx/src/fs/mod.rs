@@ -1,6 +1,8 @@
 cfg_if::cfg_if! {
     if #[cfg(feature = "myfs")] {
         pub mod myfs;
+    } else if #[cfg(feature = "linux-fs")] {
+        pub mod linux_fs;
     } else if #[cfg(feature = "fatfs")] {
         pub mod fatfs;
     }
