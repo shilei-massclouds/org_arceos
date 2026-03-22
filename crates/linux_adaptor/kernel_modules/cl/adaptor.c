@@ -167,7 +167,7 @@ dev_t cl_lookup_bdev(const char *dname)
     return devt;
 }
 
-int cl_bdev_capacity(dev_t devt)
+int cl_bdev_size(dev_t devt)
 {
 	struct block_device *bdev;
 	bdev = blkdev_get_no_open(devt);
@@ -177,22 +177,37 @@ int cl_bdev_capacity(dev_t devt)
     return get_capacity(bdev->bd_disk) * bdev_logical_block_size(bdev);
 }
 
-void cl_read_block(dev_t devt, void *buf, size_t count, loff_t pos)
+int cl_bdev_logic_block_size(dev_t devt)
 {
+	struct block_device *bdev;
+	bdev = blkdev_get_no_open(devt);
+	if (!bdev || !bdev->bd_disk) {
+        PANIC("no bdev!");
+    }
+    return bdev_logical_block_size(bdev);
+}
+
+int cl_read_block(dev_t devt, void *buf, size_t count, loff_t pos)
+{
+    int ret;
     struct file *fp;
     fp = bdev_file_open_by_dev(devt, BLK_OPEN_READ, NULL, NULL);
     if (IS_ERR(fp)) {
         PANIC("failed to open block device");
     }
 
-    if (kernel_read(fp, buf, count, &pos) <= 0) {
+    ret = kernel_read(fp, buf, count, &pos);
+    if (ret < 0) {
         PANIC("failed to read block device");
     }
     bdev_fput(fp);
+
+    return ret;
 }
 
-void cl_write_block(dev_t devt, void *buf, size_t count, loff_t pos)
+int cl_write_block(dev_t devt, void *buf, size_t count, loff_t pos)
 {
+    int ret;
     struct file *fp;
     loff_t old_pos = pos;
 
@@ -201,7 +216,8 @@ void cl_write_block(dev_t devt, void *buf, size_t count, loff_t pos)
         PANIC("failed to open block device");
     }
 
-    if (kernel_write(fp, buf, count, &pos) <= 0) {
+    ret = kernel_write(fp, buf, count, &pos);
+    if (ret < 0) {
         PANIC("failed to write block device");
     }
 
@@ -210,4 +226,16 @@ void cl_write_block(dev_t devt, void *buf, size_t count, loff_t pos)
     }
 
     bdev_fput(fp);
+
+    return ret;
+}
+
+dev_t cl_early_lookup_bdev(const char *name)
+{
+    dev_t devt = 0;
+
+    if (early_lookup_bdev(name, &devt)) {
+        return 0;
+    }
+    return devt;
 }

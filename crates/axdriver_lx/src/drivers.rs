@@ -92,17 +92,17 @@ impl DriverProbe for LinuxBlkDrv {
         let devt = unsafe {
             cl_lookup_bdev(dname.as_ptr())
         };
-        let capacity = unsafe {
-            cl_bdev_capacity(devt)
+        let size = unsafe {
+            cl_bdev_size(devt)
         };
-        let dev = LinuxBlkDev::new(devt, capacity);
+        let dev = LinuxBlkDev::new(devt, size);
         Some(AxDeviceEnum::from_block(dev))
     }
 }
 
 unsafe extern "C" {
     fn cl_lookup_bdev(dname: *const c_char) -> usize;
-    fn cl_bdev_capacity(devt: usize) -> usize;
+    fn cl_bdev_size(devt: usize) -> usize;
     fn cl_read_block(devt: usize, buf: *mut u8, count: usize, pos: usize);
     fn cl_write_block(devt: usize, buf: *const u8, count: usize, pos: usize);
 }

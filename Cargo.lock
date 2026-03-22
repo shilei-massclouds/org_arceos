@@ -204,7 +204,7 @@ dependencies = [
  "axdriver_lx",
  "axerrno 0.1.2",
  "axfeat",
- "axfs",
+ "axfs_lx",
  "axhal",
  "axio",
  "axipi",
@@ -224,7 +224,7 @@ dependencies = [
  "axconfig",
  "axerrno 0.1.2",
  "axfeat",
- "axfs",
+ "axfs_lx",
  "axhal",
  "axio",
  "axlog",
@@ -461,7 +461,7 @@ dependencies = [
  "axalloc",
  "axdisplay",
  "axdriver_lx",
- "axfs",
+ "axfs_lx",
  "axhal",
  "axipi",
  "axlog",
@@ -473,13 +473,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "axfs"
+name = "axfs_devfs_lx"
+version = "0.1.2"
+dependencies = [
+ "axfs_vfs",
+ "log",
+ "spin 0.9.8",
+]
+
+[[package]]
+name = "axfs_lx"
 version = "0.2.0"
 dependencies = [
  "axdriver_block",
  "axdriver_lx",
  "axerrno 0.1.2",
- "axfs_devfs",
+ "axfs_devfs_lx",
  "axfs_ramfs",
  "axfs_vfs",
  "axio",
@@ -492,17 +501,6 @@ dependencies = [
  "fatfs",
  "lazyinit",
  "log",
-]
-
-[[package]]
-name = "axfs_devfs"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81b87ae981272ca8d5d8f106a4452c63f4b5ac36e17ee8f848ee1b250538b9f8"
-dependencies = [
- "axfs_vfs",
- "log",
- "spin 0.9.8",
 ]
 
 [[package]]
@@ -825,7 +823,7 @@ dependencies = [
  "axalloc",
  "axconfig",
  "axdriver_lx",
- "axfs",
+ "axfs_lx",
  "axhal",
  "axlog",
  "axmm",
