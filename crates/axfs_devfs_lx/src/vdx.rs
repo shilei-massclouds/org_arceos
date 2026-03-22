@@ -1,6 +1,5 @@
 use alloc::ffi::CString;
 use alloc::format;
-use alloc::string::{String, ToString};
 use core::ffi::c_char;
 use axfs_vfs::{VfsNodeAttr, VfsNodeOps, VfsNodePerm, VfsNodeType, VfsResult, VfsError};
 
@@ -44,7 +43,6 @@ impl VfsNodeOps for VdxDev {
         let ret = unsafe {
             cl_read_block(self.devt, buf.as_mut_ptr(), buf.len(), offset as usize)
         };
-        log::error!("offset: {}, buf.len: {}, ret = {}", offset, buf.len(), ret);
         Ok(ret)
     }
 
@@ -52,7 +50,6 @@ impl VfsNodeOps for VdxDev {
         let ret = unsafe {
             cl_write_block(self.devt, buf.as_ptr(), buf.len(), offset as usize)
         };
-        log::error!("offset: {}, buf.len: {}, ret = {}", offset, buf.len(), ret);
         Ok(ret)
     }
 

@@ -1,10 +1,13 @@
 #![cfg_attr(feature = "axstd", no_std)]
 #![cfg_attr(feature = "axstd", no_main)]
 
+extern crate alloc;
+
 #[cfg(feature = "axstd")]
 use axstd::println;
 
-use axstd::fs::{self, File, FileType};
+use alloc::vec;
+use axstd::fs::File;
 use axstd::io::{Read, Write, Seek, SeekFrom};
 
 #[cfg_attr(feature = "axstd", unsafe(no_mangle))]
@@ -28,13 +31,12 @@ fn test_block() {
         .open(fname).unwrap();
 
     let metadata = file.metadata().unwrap();
-    println!("BlkDev '{}': {} bytes (occupy {} blocks)",
-        fname, metadata.size(), metadata.blocks());
-
-    // FixMe: alloc by Box<[u8;...]>
-    let mut buf = [0; BUF_SIZE];
+    println!("{:?} '{}': {} bytes (occupy {} blocks)",
+        metadata.file_type(), fname,
+        metadata.size(), metadata.blocks());
 
     /* Check the header magic of 'disk.img' */
+    let mut buf = vec![0; BUF_SIZE];
     let _ = file.seek(SeekFrom::Start(0));
     let n = file.read(&mut buf).unwrap();
     assert_eq!(n, BUF_SIZE);
@@ -50,6 +52,7 @@ fn test_block() {
     buf.fill(0);
     let _ = file.seek(SeekFrom::Start(0));
     let n = file.read(&mut buf).unwrap();
+    assert_eq!(n, BUF_SIZE);
     assert_eq!(&buf[..8], TEST_MAGIC.to_ne_bytes(), "verify the new magic err.");
 
     /* Restore the old magic */
@@ -61,5 +64,6 @@ fn test_block() {
     buf.fill(0);
     let _ = file.seek(SeekFrom::Start(0));
     let n = file.read(&mut buf).unwrap();
+    assert_eq!(n, BUF_SIZE);
     assert_eq!(&buf[..8], INIT_MAGIC.to_ne_bytes(), "verify the init magic (recovered) err.");
 }

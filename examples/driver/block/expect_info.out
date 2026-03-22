@@ -1,2 +1,3 @@
 Hello, Linux Block Driver!
+BlockDevice '/dev/vda': 67108864 bytes (occupy 131072 blocks)
 Linux Block Driver: test OK!
