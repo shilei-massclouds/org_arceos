@@ -30,6 +30,7 @@ const CMD_TABLE: &[(&str, CmdHandler)] = &[
     ("pwd", do_pwd),
     ("rm", do_rm),
     ("uname", do_uname),
+    ("test", do_test),
 ];
 
 fn file_type_to_char(ty: FileType) -> char {
@@ -267,6 +268,26 @@ fn do_uname(_args: &str) {
     let smp = "";
     let version = option_env!("CARGO_PKG_VERSION").unwrap_or("0.1.0");
     println!("ArceOS {version}{smp} {arch} {platform}");
+}
+
+fn do_test(_args: &str) {
+    do_uname("");
+
+    //
+    // Test at top cwd
+    //
+    print!("\nCurrent working dir: ");
+    do_pwd("");
+    do_ls(".");
+
+    println!("\nCreate file1 ..");
+    do_echo("hello > ./file1");
+
+    println!("\nCheck file1 ..");
+    do_cat("./file1");
+
+    println!("\nPrepare to exit ..");
+    do_exit("");
 }
 
 fn do_help(_args: &str) {

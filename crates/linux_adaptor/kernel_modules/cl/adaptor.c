@@ -239,3 +239,8 @@ dev_t cl_early_lookup_bdev(const char *name)
     }
     return devt;
 }
+
+int cl_irqs_disabled(void)
+{
+    return irqs_disabled();
+}

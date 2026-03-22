@@ -52,6 +52,7 @@ impl LinuxList {
 }
 
 unsafe impl Sync for LinuxList {}
+unsafe impl Send for LinuxList {}
 
 const ARCH_SPIN_LOCK_UNLOCKED: i32 = 0;
 const SPINLOCK_MAGIC: u32 = 0xdead4ead;
