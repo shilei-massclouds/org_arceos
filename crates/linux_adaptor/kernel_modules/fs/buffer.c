@@ -113,6 +113,7 @@ void buffer_check_dirty_writeback(struct folio *folio,
 		bh = bh->b_this_page;
 	} while (bh != head);
 }
+#endif // CL
 
 /*
  * Block until a buffer comes unlocked.  This doesn't stop it
@@ -124,7 +125,6 @@ void __wait_on_buffer(struct buffer_head * bh)
 	wait_on_bit_io(&bh->b_state, BH_Lock, TASK_UNINTERRUPTIBLE);
 }
 EXPORT_SYMBOL(__wait_on_buffer);
-#endif // CL
 
 static void buffer_io_error(struct buffer_head *bh, char *msg)
 {
@@ -134,7 +134,6 @@ static void buffer_io_error(struct buffer_head *bh, char *msg)
 			bh->b_bdev, (unsigned long long)bh->b_blocknr, msg);
 }
 
-#if 0
 /*
  * End-of-IO handler helper function which does not touch the bh after
  * unlocking it.
@@ -165,6 +164,7 @@ void end_buffer_read_sync(struct buffer_head *bh, int uptodate)
 }
 EXPORT_SYMBOL(end_buffer_read_sync);
 
+#if 0
 void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
 {
 	if (uptodate) {
@@ -3110,7 +3110,6 @@ static int buffer_exit_cpu_dead(unsigned int cpu)
 	return 0;
 }
 
-#if 0
 /**
  * bh_uptodate_or_lock - Test whether the buffer is uptodate
  * @bh: struct buffer_head
@@ -3156,6 +3155,7 @@ int __bh_read(struct buffer_head *bh, blk_opf_t op_flags, bool wait)
 }
 EXPORT_SYMBOL(__bh_read);
 
+#if 0
 /**
  * __bh_read_batch - Submit read for a batch of unlocked buffers
  * @nr: entry number of the buffer batch

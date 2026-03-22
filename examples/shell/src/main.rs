@@ -40,6 +40,12 @@ fn print_prompt() {
 
 #[cfg_attr(feature = "axstd", unsafe(no_mangle))]
 fn main() {
+    if cfg!(feature = "non-interactive") {
+        println!("Run basic tests in non-interractive mode.");
+        cmd::run_cmd("test".as_bytes());
+        return;
+    }
+
     let mut stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
 

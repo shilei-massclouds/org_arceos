@@ -246,7 +246,6 @@ static void wb_min_max_ratio(struct bdi_writeback *wb,
 
 #endif	/* CONFIG_CGROUP_WRITEBACK */
 
-#if 0
 /*
  * In a memory zone, there is a certain amount of pages we consider
  * available for the page cache, which is essentially the number of
@@ -298,7 +297,6 @@ static unsigned long node_dirtyable_memory(struct pglist_data *pgdat)
 
 	return nr_pages;
 }
-#endif // CL
 
 static unsigned long highmem_dirtyable_memory(unsigned long total)
 {
@@ -460,7 +458,6 @@ void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty)
 	*pdirty = gdtc.thresh;
 }
 
-#if 0
 /**
  * node_dirty_limit - maximum number of dirty pages allowed in a node
  * @pgdat: the node
@@ -507,7 +504,6 @@ bool node_dirty_ok(struct pglist_data *pgdat)
 
 	return nr_pages <= limit;
 }
-#endif // CL
 
 #ifdef CONFIG_SYSCTL
 static int dirty_background_ratio_handler(const struct ctl_table *table, int write,

@@ -39,7 +39,6 @@ int wake_bit_function(struct wait_queue_entry *wq_entry, unsigned mode, int sync
 }
 EXPORT_SYMBOL(wake_bit_function);
 
-#if 0
 /*
  * To allow interruptible waiting and asynchronous (i.e. non-blocking)
  * waiting, the actions of __wait_on_bit() and __wait_on_bit_lock() are
@@ -73,6 +72,7 @@ int __sched out_of_line_wait_on_bit(void *word, int bit,
 }
 EXPORT_SYMBOL(out_of_line_wait_on_bit);
 
+#if 0
 int __sched out_of_line_wait_on_bit_timeout(
 	void *word, int bit, wait_bit_action_f *action,
 	unsigned mode, unsigned long timeout)

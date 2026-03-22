@@ -274,17 +274,69 @@ fn do_test(_args: &str) {
     do_uname("");
 
     //
-    // Test at top cwd
+    // Run tests at top cwd
     //
-    print!("\nCurrent working dir: ");
+
+    print!("\ncwd: ");
     do_pwd("");
+
+    println!("");
     do_ls(".");
 
     println!("\nCreate file1 ..");
     do_echo("hello > ./file1");
+    println!("Create file1 ok!");
 
     println!("\nCheck file1 ..");
     do_cat("./file1");
+
+    println!("");
+    do_ls(".");
+
+    println!("\nRemove file1 ..");
+    do_rm("./file1");
+    println!("Remove file1 ok!");
+
+    //
+    // Make dir and run tests in it
+    //
+
+    println!("\nMake dir1 ..");
+    do_mkdir("./dir1");
+    println!("Make dir1 ok!");
+
+    println!("\nEnter into dir1 ..");
+    do_cd("./dir1");
+
+    print!("\ncwd: ");
+    do_pwd("");
+
+    println!("");
+    do_ls(".");
+
+    println!("\nCreate file2 ..");
+    do_echo("hello2 > ./file2");
+    println!("Create file2 ok!");
+
+    println!("\nCheck file2 ..");
+    do_cat("./file2");
+
+    println!("");
+    do_ls(".");
+
+    println!("\nRemove file2 ..");
+    do_rm("./file2");
+    println!("Remove file2 ok!");
+
+    do_cd("..");
+    println!("\nExit from dir1.");
+
+    print!("\ncwd: ");
+    do_pwd("");
+
+    println!("\nRemove dir1 ..");
+    do_rm("-d ./dir1");
+    println!("Remove dir1 ok!");
 
     println!("\nPrepare to exit ..");
     do_exit("");

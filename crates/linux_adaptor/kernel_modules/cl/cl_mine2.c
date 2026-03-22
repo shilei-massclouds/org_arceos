@@ -52,7 +52,6 @@ CL_MINE(add_taint)
 
 CL_MINE(__kernel_map_pages)
 
-CL_MINE(node_dirty_ok)
 CL_MINE(wakeup_kswapd)
 
 CL_MINE(decay_pcp_high)
@@ -728,8 +727,5 @@ CL_MINE(filemap_dirty_folio)
 CL_MINE(pagecache_isize_extended)
 CL_MINE(truncate_pagecache_range)
 
-CL_MINE(__wait_on_buffer)
-CL_MINE(bh_uptodate_or_lock)
 CL_MINE(clean_bdev_aliases)
 CL_MINE(folio_zero_new_buffers)
-CL_MINE(__bh_read)
