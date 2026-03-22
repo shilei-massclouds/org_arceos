@@ -3050,9 +3050,8 @@ out_clear_inode:
 		goto out_clear_inode;
 	d_instantiate_new(dentry, inode);
 	ext4_fc_track_create(handle, dentry);
-	if (IS_DIRSYNC(dir)) {
+	if (IS_DIRSYNC(dir))
 		ext4_handle_sync(handle);
-    }
 
 out_stop:
 	if (handle)

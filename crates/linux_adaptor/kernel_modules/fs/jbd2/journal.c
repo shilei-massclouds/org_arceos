@@ -3167,11 +3167,6 @@ static int __init journal_init(void)
 	return ret;
 }
 
-void cl_journal_init(void)
-{
-    journal_init();
-}
-
 static void __exit journal_exit(void)
 {
 #ifdef CONFIG_JBD2_DEBUG

@@ -26,9 +26,8 @@ obj-y += mpage.o
 #obj-y += stat.o char_dev.o open.o file.o
 #obj-y += locks.o attr.o
 
-
 #obj-y += proc/
-#obj-y += ext4/
-#obj-y += jbd2/
 
 obj-y += iomap/
+obj-y += ext4/
+obj-y += jbd2/

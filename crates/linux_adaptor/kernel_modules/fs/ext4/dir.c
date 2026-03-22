@@ -157,7 +157,6 @@ static int ext4_readdir(struct file *file, struct dir_context *ctx)
 		}
 	}
 
-    printk("%s: step2\n", __func__);
 	if (ext4_has_inline_data(inode)) {
 		int has_inline_data = 1;
 		err = ext4_read_inline_dir(file, ctx,
@@ -166,7 +165,6 @@ static int ext4_readdir(struct file *file, struct dir_context *ctx)
 			return err;
 	}
 
-    printk("%s: step3\n", __func__);
 	if (IS_ENCRYPTED(inode)) {
 		err = fscrypt_fname_alloc_buffer(EXT4_NAME_LEN, &fstr);
 		if (err < 0)

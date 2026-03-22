@@ -618,7 +618,6 @@ void jbd2_journal_commit_transaction(journal_t *journal)
 			jbd2_debug(4, "JBD2: got buffer %llu (%p)\n",
 				(unsigned long long)descriptor->b_blocknr,
 				descriptor->b_data);
-
 			tagp = &descriptor->b_data[sizeof(journal_header_t)];
 			space_left = descriptor->b_size -
 						sizeof(journal_header_t);
