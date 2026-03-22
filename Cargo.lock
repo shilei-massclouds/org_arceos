@@ -500,6 +500,7 @@ dependencies = [
  "crate_interface",
  "fatfs",
  "lazyinit",
+ "linux_adaptor",
  "log",
 ]
 

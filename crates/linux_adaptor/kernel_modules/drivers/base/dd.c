@@ -769,6 +769,7 @@ bool __init driver_probe_done(void)
 	pr_debug("%s: probe_count = %d\n", __func__, local_probe_count);
 	return !local_probe_count;
 }
+#endif // CL
 
 /**
  * wait_for_device_probe
@@ -784,7 +785,6 @@ void wait_for_device_probe(void)
 	async_synchronize_full();
 }
 EXPORT_SYMBOL_GPL(wait_for_device_probe);
-#endif /* CL */
 
 static int __driver_probe_device(const struct device_driver *drv, struct device *dev)
 {

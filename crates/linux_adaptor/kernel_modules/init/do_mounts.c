@@ -27,6 +27,7 @@
 #include <uapi/linux/mount.h>
 
 #include "do_mounts.h"
+#include "adaptor.h"
 
 int root_mountflags = MS_RDONLY | MS_SILENT;
 static char __initdata saved_root_name[64];
@@ -411,6 +412,7 @@ void __init mount_root(char *root_device_name)
 		break;
 	}
 }
+#endif // CL
 
 /* wait for any asynchronous scanning to complete */
 static void __init wait_for_root(char *root_device_name)
@@ -483,6 +485,7 @@ void __init prepare_namespace(void)
 
 	md_run_setup();
 
+    printk("------------ %s: saved_root_name(%s) ---------\n", __func__, saved_root_name);
 	if (saved_root_name[0])
 		ROOT_DEV = parse_root_device(saved_root_name);
 
@@ -497,7 +500,6 @@ out:
 	init_mount(".", "/", NULL, MS_MOVE, NULL);
 	init_chroot(".");
 }
-#endif // CL
 
 static bool is_tmpfs;
 static int rootfs_init_fs_context(struct fs_context *fc)

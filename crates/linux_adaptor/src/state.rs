@@ -27,6 +27,7 @@ pub enum LinuxAdaptorState {
     InitPageAllocLater,
     InitDriver,
     DoInitCalls,
+    PrepareNamespace,
     FreeInitMem,
     NumberOfStates,
 }
@@ -197,6 +198,13 @@ fn DoInitCallsCB() {
 }
 
 #[allow(non_snake_case)]
+fn PrepareNamespaceCB() {
+    unsafe {
+        cl_prepare_namespace();
+    }
+}
+
+#[allow(non_snake_case)]
 fn FreeInitMemCB() {
     unsafe {
         cl_free_init_mem();
@@ -220,5 +228,6 @@ unsafe extern "C" {
     fn init_page_alloc_later();
     fn cl_driver_init();
     fn cl_do_initcalls();
+    fn cl_prepare_namespace();
     fn cl_free_init_mem();
 }

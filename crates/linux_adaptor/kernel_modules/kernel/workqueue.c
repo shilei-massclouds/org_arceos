@@ -4244,7 +4244,6 @@ out_destroy:
 	return true;
 }
 
-#if 0
 /**
  * flush_work - wait for a work to finish executing the last queueing instance
  * @work: the work to flush
@@ -4263,6 +4262,7 @@ bool flush_work(struct work_struct *work)
 }
 EXPORT_SYMBOL_GPL(flush_work);
 
+#if 0
 /**
  * flush_delayed_work - wait for a dwork to finish executing the last queueing
  * @dwork: the delayed work to flush
@@ -6171,6 +6171,7 @@ void print_worker_info(const char *log_lvl, struct task_struct *task)
 		pr_cont("\n");
 	}
 }
+#endif // CL
 
 static void pr_cont_pool_info(struct worker_pool *pool)
 {
@@ -6185,6 +6186,7 @@ static void pr_cont_pool_info(struct worker_pool *pool)
 		pr_cont(" nice=%d", pool->attrs->nice);
 }
 
+#if 0
 static void pr_cont_worker_id(struct worker *worker)
 {
 	struct worker_pool *pool = worker->pool;
@@ -7476,7 +7478,6 @@ static void workqueue_sysfs_unregister(struct workqueue_struct *wq)
 static void workqueue_sysfs_unregister(struct workqueue_struct *wq)	{ }
 #endif	/* CONFIG_SYSFS */
 
-#if 0
 /*
  * Workqueue watchdog.
  *
@@ -7711,8 +7712,6 @@ static inline void wq_watchdog_init(void) { }
 
 #endif	/* CONFIG_WQ_WATCHDOG */
 
-#endif /* CL */
-
 static void bh_pool_kick_normal(struct irq_work *irq_work)
 {
 	raise_softirq_irqoff(TASKLET_SOFTIRQ);
@@ -7867,7 +7866,6 @@ void __init workqueue_init_early(void)
 	       !system_bh_wq || !system_bh_highpri_wq);
 }
 
-#if 0
 static void __init wq_cpu_intensive_thresh_init(void)
 {
 	unsigned long thresh;
@@ -7969,6 +7967,7 @@ void __init workqueue_init(void)
 	wq_watchdog_init();
 }
 
+#if 0
 /*
  * Initialize @pt by first initializing @pt->cpu_pod[] with pod IDs according to
  * @cpu_shares_pod(). Each subset of CPUs that share a pod is assigned a unique

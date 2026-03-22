@@ -39,8 +39,8 @@ obj-y += stop_machine.o
 obj-y += params.o
 obj-y += resource.o
 obj-y += auditsc.o
+obj-y += async.o
 
 #obj-y += tracepoint.o
-#obj-y += async.o
 
 obj-y += trace/

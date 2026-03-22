@@ -13,6 +13,7 @@
 #include <linux/moduleparam.h>
 #include <linux/kfence.h>
 #include <linux/stackprotector.h>
+#include <linux/init_syscalls.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -49,6 +50,14 @@ static char *extra_init_args;
 bool initcall_debug;
 
 static __initdata DECLARE_COMPLETION(kthreadd_done);
+
+/* From 'init/main.c' */
+/*
+ * This should be approx 2 Bo*oMips to start (note initial shift), and will
+ * still work even if initially too large, it will just take slightly longer
+ */
+unsigned long loops_per_jiffy = (1<<12);
+EXPORT_SYMBOL(loops_per_jiffy);
 
 #define bootconfig_found false
 #define initargs_offs 0
@@ -363,9 +372,9 @@ void init_smp(void)
 {
     smp_prepare_cpus(setup_max_cpus);
 
-#if 0
     workqueue_init();
 
+#if 0
     init_mm_internals();
 
     rcu_init_tasks_generic();
@@ -468,9 +477,14 @@ static void __init do_initcalls(void)
     kfree(command_line);
 }
 
-void cl_do_initcalls()
+void cl_do_initcalls(void)
 {
     do_initcalls();
+}
+
+void cl_prepare_namespace(void)
+{
+    prepare_namespace();
 }
 
 void linux_idle_loop(pid_t pid)

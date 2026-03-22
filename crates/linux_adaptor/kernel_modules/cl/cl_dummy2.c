@@ -565,3 +565,18 @@ int security_file_permission(struct file *file, int mask)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+// fs/proc/generic.c
+struct proc_dir_entry *proc_mkdir(const char *name,
+        struct proc_dir_entry *parent)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return NULL;
+}
+
+// init/do_mounts_initrd.c
+bool __init initrd_load(char *root_device_name)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return false;
+}
