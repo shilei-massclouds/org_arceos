@@ -47,8 +47,6 @@ impl BlockDriverOps for LinuxBlkDev {
 
     fn read_block(&mut self, block_id: u64, buf: &mut [u8]) -> DevResult {
         let block_id = block_id as usize;
-        info!("Read block: id [{}] size {}", block_id, buf.len());
-
         if buf.len() % BLOCK_SIZE != 0 {
             return Err(DevError::InvalidParam);
         }
@@ -64,8 +62,6 @@ impl BlockDriverOps for LinuxBlkDev {
 
     fn write_block(&mut self, block_id: u64, buf: &[u8]) -> DevResult {
         let block_id = block_id as usize;
-        info!("Write block: id [{}] size {}", block_id, buf.len());
-
         if buf.len() % BLOCK_SIZE != 0 {
             return Err(DevError::InvalidParam);
         }

@@ -149,8 +149,10 @@ impl VfsNodeOps for RootDirectory {
 pub(crate) fn init_rootfs(disk: crate::dev::Disk) {
     cfg_if::cfg_if! {
         if #[cfg(feature = "myfs")] { // override the default filesystem
+            info!("rootfs: myfs");
             let main_fs = fs::myfs::new_myfs(disk);
         } else if #[cfg(feature = "fatfs")] {
+            info!("rootfs: fatfs");
             static FAT_FS: LazyInit<Arc<fs::fatfs::FatFileSystem>> = LazyInit::new();
             FAT_FS.init_once(Arc::new(fs::fatfs::FatFileSystem::new(disk)));
             FAT_FS.init();

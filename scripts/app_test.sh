@@ -28,6 +28,7 @@ if [ -z "$1" ]; then
         "examples/task/irq"
         "examples/task/wait_queue"
         "examples/task/affinity"
+        "examples/shell"
         "examples/driver/block"
     )
 else

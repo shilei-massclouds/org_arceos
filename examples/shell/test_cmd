@@ -1,0 +1,1 @@
+test_one "LOG=info APP_FEATURES=non-interactive" "expect_info_fat32.out"

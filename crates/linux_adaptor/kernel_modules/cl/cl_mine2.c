@@ -399,7 +399,6 @@ CL_MINE(rcu_cblist_init)
 CL_MINE(flush_delayed_work)
 CL_MINE(ktime_get_mono_fast_ns)
 CL_MINE(autoremove_wake_function)
-CL_MINE(prepare_to_wait)
 CL_MINE(s2idle_wake)
 
 CL_MINE(async_synchronize_full)

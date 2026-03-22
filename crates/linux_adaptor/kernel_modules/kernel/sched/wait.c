@@ -221,6 +221,7 @@ void __wake_up_pollfree(struct wait_queue_head *wq_head)
 	/* POLLFREE must have cleared the queue. */
 	WARN_ON_ONCE(waitqueue_active(wq_head));
 }
+#endif // CL
 
 /*
  * Note: we use "set_current_state()" _after_ the wait-queue add,
@@ -248,6 +249,7 @@ prepare_to_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_ent
 }
 EXPORT_SYMBOL(prepare_to_wait);
 
+#if 0
 /* Returns true if we are the first waiter in the queue, false otherwise. */
 bool
 prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state)
