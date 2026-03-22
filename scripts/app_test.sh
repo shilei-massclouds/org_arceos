@@ -113,6 +113,10 @@ function test_one() {
     fi
 }
 
+# rebuild disk_img
+rm -f ./disk.img
+make disk_img
+
 for t in ${test_list[@]}; do
     APP=$t
     echo -e "${CYAN_C}Testing${END_C} $t:"

@@ -1559,14 +1559,12 @@ static void __wb_update_bandwidth(struct dirty_throttle_control *gdtc,
 	spin_unlock(&wb->list_lock);
 }
 
-#if 0
 void wb_update_bandwidth(struct bdi_writeback *wb)
 {
 	struct dirty_throttle_control gdtc = { GDTC_INIT(wb) };
 
 	__wb_update_bandwidth(&gdtc, NULL, false);
 }
-#endif // CL
 
 /* Interval after which we consider wb idle and don't estimate bandwidth */
 #define WB_BANDWIDTH_IDLE_JIF (HZ)
