@@ -133,7 +133,6 @@ __setup("rootflags=", root_data_setup);
 __setup("rootfstype=", fs_names_setup);
 __setup("rootdelay=", root_delay_setup);
 
-#if 0
 /* This can return zero length strings. Caller should check */
 static int __init split_fs_names(char *page, size_t size)
 {
@@ -187,6 +186,7 @@ out:
 	return ret;
 }
 
+#if 0
 void __init mount_root_generic(char *name, char *pretty_name, int flags)
 {
 	struct page *page = alloc_page(GFP_KERNEL);
@@ -256,6 +256,7 @@ retry:
 out:
 	put_page(page);
 }
+#endif // CL
  
 #ifdef CONFIG_ROOT_NFS
 
@@ -414,7 +415,6 @@ void __init mount_root(char *root_device_name)
 		break;
 	}
 }
-#endif // CL
 
 /* wait for any asynchronous scanning to complete */
 static void __init wait_for_root(char *root_device_name)
@@ -487,8 +487,6 @@ void __init prepare_namespace(void)
 
 	md_run_setup();
 
-    printk("------------ %s: saved_root_name(%s) ---------\n", __func__, saved_root_name);
-    PANIC("");
 	if (saved_root_name[0])
 		ROOT_DEV = parse_root_device(saved_root_name);
 
@@ -497,7 +495,9 @@ void __init prepare_namespace(void)
 
 	if (root_wait)
 		wait_for_root(saved_root_name);
+    printk("%s: step1\n", __func__);
 	mount_root(saved_root_name);
+    printk("%s: step2\n", __func__);
 out:
 	devtmpfs_mount();
 	init_mount(".", "/", NULL, MS_MOVE, NULL);

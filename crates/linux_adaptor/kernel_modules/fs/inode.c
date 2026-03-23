@@ -1060,7 +1060,6 @@ repeat:
 	return NULL;
 }
 
-#if 0
 /*
  * Each cpu owns a range of LAST_INO_BATCH numbers.
  * 'shared_last_ino' is dirtied only once out of LAST_INO_BATCH allocations,
@@ -1102,7 +1101,6 @@ unsigned int get_next_ino(void)
 	return res;
 }
 EXPORT_SYMBOL(get_next_ino);
-#endif /* CL */
 
 /**
  *	new_inode_pseudo	- obtain an inode
@@ -2483,7 +2481,6 @@ void __init inode_init(void)
 					0);
 }
 
-#if 0
 void init_special_inode(struct inode *inode, umode_t mode, dev_t rdev)
 {
 	inode->i_mode = mode;
@@ -2504,7 +2501,6 @@ void init_special_inode(struct inode *inode, umode_t mode, dev_t rdev)
 				  inode->i_ino);
 }
 EXPORT_SYMBOL(init_special_inode);
-#endif // CL
 
 /**
  * inode_init_owner - Init uid,gid,mode for new inode according to posix standards
@@ -2696,7 +2692,6 @@ struct timespec64 inode_set_ctime_current(struct inode *inode)
 }
 EXPORT_SYMBOL(inode_set_ctime_current);
 
-#if 0
 /**
  * in_group_or_capable - check whether caller is CAP_FSETID privileged
  * @idmap:	idmap of the mount @inode was found from
@@ -2746,4 +2741,3 @@ umode_t mode_strip_sgid(struct mnt_idmap *idmap,
 	return mode & ~S_ISGID;
 }
 EXPORT_SYMBOL(mode_strip_sgid);
-#endif /* CL */

@@ -2266,7 +2266,6 @@ struct dentry *__d_lookup_rcu(const struct dentry *parent,
 	return NULL;
 }
 
-#if 0
 /**
  * d_lookup - search for a dentry
  * @parent: parent dentry
@@ -2364,6 +2363,7 @@ next:
  	return found;
 }
 
+#if 0
 /**
  * d_hash_and_lookup - hash the qstr then search for a dentry
  * @dir: Directory to search in

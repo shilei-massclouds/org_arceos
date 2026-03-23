@@ -508,7 +508,6 @@ int mnt_get_write_access(struct vfsmount *m)
 }
 EXPORT_SYMBOL_GPL(mnt_get_write_access);
 
-#if 0
 /**
  * mnt_want_write - get write access to a mount
  * @m: the mount on which to take a write
@@ -529,7 +528,6 @@ int mnt_want_write(struct vfsmount *m)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(mnt_want_write);
-#endif // CL
 
 /**
  * mnt_get_write_access_file - get write access to a file's mount
@@ -593,7 +591,6 @@ void mnt_put_write_access(struct vfsmount *mnt)
 }
 EXPORT_SYMBOL_GPL(mnt_put_write_access);
 
-#if 0
 /**
  * mnt_drop_write - give up write access to a mount
  * @mnt: the mount on which to give up write access
@@ -608,7 +605,6 @@ void mnt_drop_write(struct vfsmount *mnt)
 	sb_end_write(mnt->mnt_sb);
 }
 EXPORT_SYMBOL_GPL(mnt_drop_write);
-#endif // CL
 
 void mnt_put_write_access_file(struct file *file)
 {

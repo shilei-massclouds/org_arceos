@@ -1595,7 +1595,6 @@ static inline int handle_mounts(struct nameidata *nd, struct dentry *dentry,
 	return ret;
 }
 
-#if 0
 /*
  * This looks up the name in dcache and possibly revalidates the found dentry.
  * NULL is returned if the dentry does not exist in the cache.
@@ -1651,7 +1650,6 @@ struct dentry *lookup_one_qstr_excl(const struct qstr *name,
 	return dentry;
 }
 EXPORT_SYMBOL(lookup_one_qstr_excl);
-#endif // CL
 
 /**
  * lookup_fast - do fast lockless (but racy) lookup of a dentry
@@ -2633,7 +2631,6 @@ int filename_lookup(int dfd, struct filename *name, unsigned flags,
 	return retval;
 }
 
-#if 0
 /* Returns 0 and nd will be valid on success; Returns error, otherwise. */
 static int path_parentat(struct nameidata *nd, unsigned flags,
 				struct path *parent)
@@ -2684,6 +2681,7 @@ static int filename_parentat(int dfd, struct filename *name,
 	return __filename_parentat(dfd, name, flags, parent, last, type, NULL);
 }
 
+#if 0
 /* does lookup, returns the object with parent locked */
 static struct dentry *__kern_path_locked(int dfd, struct filename *name, struct path *path)
 {
@@ -3112,6 +3110,7 @@ static int may_delete(struct mnt_idmap *idmap, struct inode *dir,
 		return -EBUSY;
 	return 0;
 }
+#endif // CL
 
 /*	Check whether we can create an object with dentry child in directory
  *  dir.
@@ -3136,6 +3135,7 @@ static inline int may_create(struct mnt_idmap *idmap,
 	return inode_permission(idmap, dir, MAY_WRITE | MAY_EXEC);
 }
 
+#if 0
 // p1 != p2, both are on the same filesystem, ->s_vfs_rename_mutex is held
 static struct dentry *lock_two_directories(struct dentry *p1, struct dentry *p2)
 {
@@ -3235,6 +3235,7 @@ void unlock_rename(struct dentry *p1, struct dentry *p2)
 	}
 }
 EXPORT_SYMBOL(unlock_rename);
+#endif // CL
 
 /**
  * vfs_prepare_mode - prepare the mode to be used for a new inode
@@ -3276,6 +3277,7 @@ static inline umode_t vfs_prepare_mode(struct mnt_idmap *idmap,
 	return mode;
 }
 
+#if 0
 /**
  * vfs_create - create new file
  * @idmap:	idmap of the mount the inode was found from
@@ -4009,6 +4011,7 @@ struct file *do_file_open_root(const struct path *root,
 	return file;
 }
 
+#endif // CL
 static struct dentry *filename_create(int dfd, struct filename *name,
 				      struct path *path, unsigned int lookup_flags)
 {
@@ -4097,6 +4100,7 @@ void done_path_create(struct path *path, struct dentry *dentry)
 }
 EXPORT_SYMBOL(done_path_create);
 
+#if 0
 inline struct dentry *user_path_create(int dfd, const char __user *pathname,
 				struct path *path, unsigned int lookup_flags)
 {
@@ -4107,6 +4111,7 @@ inline struct dentry *user_path_create(int dfd, const char __user *pathname,
 	return res;
 }
 EXPORT_SYMBOL(user_path_create);
+#endif // CL
 
 /**
  * vfs_mknod - create device node or file
@@ -4156,6 +4161,7 @@ int vfs_mknod(struct mnt_idmap *idmap, struct inode *dir,
 }
 EXPORT_SYMBOL(vfs_mknod);
 
+#if 0
 static int may_mknod(umode_t mode)
 {
 	switch (mode & S_IFMT) {
@@ -4234,6 +4240,7 @@ SYSCALL_DEFINE3(mknod, const char __user *, filename, umode_t, mode, unsigned, d
 {
 	return do_mknodat(AT_FDCWD, getname(filename), mode, dev);
 }
+#endif // CL
 
 /**
  * vfs_mkdir - create directory
@@ -4278,6 +4285,7 @@ int vfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
 }
 EXPORT_SYMBOL(vfs_mkdir);
 
+#if 0
 int do_mkdirat(int dfd, struct filename *name, umode_t mode)
 {
 	struct dentry *dentry;
@@ -4504,6 +4512,7 @@ out:
 	return error;
 }
 EXPORT_SYMBOL(vfs_unlink);
+#endif // CL
 
 /*
  * Make sure that the actual truncation of the file will occur outside its
@@ -4583,6 +4592,7 @@ slashes:
 	goto exit3;
 }
 
+#if 0
 SYSCALL_DEFINE3(unlinkat, int, dfd, const char __user *, pathname, int, flag)
 {
 	if ((flag & ~AT_REMOVEDIR) != 0)

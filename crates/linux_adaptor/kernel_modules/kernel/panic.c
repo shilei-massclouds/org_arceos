@@ -496,6 +496,7 @@ void panic(const char *fmt, ...)
     legacy_puts(buf);
     legacy_putchar('\n');
     legacy_shutdown();
+    while (1) {}
     // ===========================================
 }
 

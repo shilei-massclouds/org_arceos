@@ -75,6 +75,7 @@ void legacy_put_hex(unsigned long n)
 __weak void panic(const char *fmt, ...)
 {
     RAW_PANIC(fmt);
+    while (1) {}
 }
 
 // FixMe

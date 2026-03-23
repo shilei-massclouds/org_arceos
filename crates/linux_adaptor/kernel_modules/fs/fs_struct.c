@@ -160,14 +160,13 @@ int unshare_fs_struct(void)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(unshare_fs_struct);
+#endif // CL
 
 int current_umask(void)
 {
 	return current->fs->umask;
 }
 EXPORT_SYMBOL(current_umask);
-
-#endif /* CL */
 
 /* to be mentioned only in INIT_TASK */
 struct fs_struct init_fs = {

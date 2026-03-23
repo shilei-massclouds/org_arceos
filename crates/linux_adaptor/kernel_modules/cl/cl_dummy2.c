@@ -598,3 +598,51 @@ bool sysctl_is_alias(char *param)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return false;
 }
+
+int security_path_mkdir(const struct path *dir, struct dentry *dentry,
+            umode_t mode)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// kernel/umh.c
+void __usermodehelper_set_disable_depth(enum umh_disable_depth depth)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_inode_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_inode_init_security(struct inode *inode, struct inode *dir,
+                 const struct qstr *qstr,
+                 const initxattrs initxattrs, void *fs_data)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_path_mknod(const struct path *dir, struct dentry *dentry,
+            umode_t mode, unsigned int dev)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_inode_mknod(struct inode *dir, struct dentry *dentry,
+             umode_t mode, dev_t dev)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// kernel/capability.c
+bool capable(int cap)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return true;
+}

@@ -903,6 +903,7 @@ int simple_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
 	return 0;
 }
 EXPORT_SYMBOL(simple_setattr);
+#endif // CL
 
 static int simple_read_folio(struct file *file, struct folio *folio)
 {
@@ -999,6 +1000,7 @@ const struct address_space_operations ram_aops = {
 };
 EXPORT_SYMBOL(ram_aops);
 
+#if 0
 /*
  * the inodes created here are not hashed. If you use iunique to generate
  * unique inode values later for this filesystem, then you must take care

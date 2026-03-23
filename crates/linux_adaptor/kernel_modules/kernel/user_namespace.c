@@ -492,6 +492,7 @@ kgid_t make_kgid(struct user_namespace *ns, gid_t gid)
 	return KGIDT_INIT(map_id_down(&ns->gid_map, gid));
 }
 EXPORT_SYMBOL(make_kgid);
+#endif // CL
 
 /**
  *	from_kgid - Create a gid from a kgid user-namespace pair.
@@ -512,6 +513,7 @@ gid_t from_kgid(struct user_namespace *targ, kgid_t kgid)
 }
 EXPORT_SYMBOL(from_kgid);
 
+#if 0
 /**
  *	from_kgid_munged - Create a gid from a kgid user-namespace pair.
  *	@targ: The user namespace we want a gid in.
