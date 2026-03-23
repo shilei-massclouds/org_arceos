@@ -178,6 +178,7 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
 	put_bh(bh);
 }
 EXPORT_SYMBOL(end_buffer_write_sync);
+#endif // CL
 
 static struct buffer_head *
 __find_get_block_slow(struct block_device *bdev, sector_t block, bool atomic)
@@ -246,7 +247,6 @@ out_unlock:
 out:
 	return ret;
 }
-#endif // CL
 
 static void end_buffer_async_read(struct buffer_head *bh, int uptodate)
 {
@@ -977,6 +977,7 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size)
 	return folio_alloc_buffers(page_folio(page), size, gfp);
 }
 EXPORT_SYMBOL_GPL(alloc_page_buffers);
+#endif // CL
 
 static inline void link_dev_buffers(struct folio *folio,
 		struct buffer_head *head)
@@ -1149,7 +1150,6 @@ __getblk_slow(struct block_device *bdev, sector_t block,
 			return NULL;
 	}
 }
-#endif // CL
 
 /*
  * The relationship between dirty buffers and dirty pages:
@@ -1234,7 +1234,6 @@ void mark_buffer_write_io_error(struct buffer_head *bh)
 }
 EXPORT_SYMBOL(mark_buffer_write_io_error);
 
-#if 0
 /**
  * __brelse - Release a buffer.
  * @bh: The buffer to release.
@@ -1251,6 +1250,7 @@ void __brelse(struct buffer_head *bh)
 }
 EXPORT_SYMBOL(__brelse);
 
+#if 0
 /**
  * __bforget - Discard any dirty data in a buffer.
  * @bh: The buffer to forget.
@@ -1314,7 +1314,6 @@ struct bh_lru {
 
 static DEFINE_PER_CPU(struct bh_lru, bh_lrus) = {{ NULL }};
 
-#if 0
 #ifdef CONFIG_SMP
 #define bh_lru_lock()	local_irq_disable()
 #define bh_lru_unlock()	local_irq_enable()
@@ -1476,6 +1475,7 @@ struct buffer_head *bdev_getblk(struct block_device *bdev, sector_t block,
 }
 EXPORT_SYMBOL(bdev_getblk);
 
+#if 0
 /*
  * Do async read-ahead on a buffer..
  */

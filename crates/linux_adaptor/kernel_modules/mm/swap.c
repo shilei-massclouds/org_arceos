@@ -685,7 +685,6 @@ void lru_add_drain_cpu(int cpu)
 	folio_activate_drain(cpu);
 }
 
-#if 0
 /**
  * deactivate_file_folio() - Deactivate a file folio.
  * @folio: Folio to deactivate.
@@ -705,6 +704,7 @@ void deactivate_file_folio(struct folio *folio)
 	folio_batch_add_and_move(folio, lru_deactivate_file, true);
 }
 
+#if 0
 /*
  * folio_deactivate - deactivate a folio
  * @folio: folio to deactivate
@@ -746,7 +746,6 @@ void lru_add_drain(void)
 	mlock_drain_local();
 }
 
-#if 0
 /*
  * It's called from per-cpu workqueue context in SMP case so
  * lru_add_drain_cpu and invalidate_bh_lrus_cpu should run on
@@ -762,6 +761,7 @@ static void lru_add_and_bh_lrus_drain(void)
 	mlock_drain_local();
 }
 
+#if 0
 void lru_add_drain_cpu_zone(struct zone *zone)
 {
 	local_lock(&cpu_fbatches.lock);
@@ -770,6 +770,7 @@ void lru_add_drain_cpu_zone(struct zone *zone)
 	local_unlock(&cpu_fbatches.lock);
 	mlock_drain_local();
 }
+#endif // CL
 
 #ifdef CONFIG_SMP
 
@@ -903,7 +904,6 @@ void lru_add_drain_all(void)
 	lru_add_drain();
 }
 #endif /* CONFIG_SMP */
-#endif // CL
 
 atomic_t lru_disable_count = ATOMIC_INIT(0);
 
@@ -1075,7 +1075,6 @@ void __folio_batch_release(struct folio_batch *fbatch)
 }
 EXPORT_SYMBOL(__folio_batch_release);
 
-#if 0
 /**
  * folio_batch_remove_exceptionals() - Prune non-folios from a batch.
  * @fbatch: The batch to prune
@@ -1097,6 +1096,7 @@ void folio_batch_remove_exceptionals(struct folio_batch *fbatch)
 	fbatch->nr = j;
 }
 
+#if 0
 /*
  * Perform any setup for the swap system
  */

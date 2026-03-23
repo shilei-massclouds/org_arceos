@@ -761,7 +761,6 @@ void shrinker_register(struct shrinker *shrinker)
 }
 EXPORT_SYMBOL_GPL(shrinker_register);
 
-#if 0
 static void shrinker_free_rcu_cb(struct rcu_head *head)
 {
 	struct shrinker *shrinker = container_of(head, struct shrinker, rcu);
@@ -813,5 +812,3 @@ void shrinker_free(struct shrinker *shrinker)
 	call_rcu(&shrinker->rcu, shrinker_free_rcu_cb);
 }
 EXPORT_SYMBOL_GPL(shrinker_free);
-
-#endif /* CL */

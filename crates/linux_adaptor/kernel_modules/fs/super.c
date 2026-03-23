@@ -283,14 +283,12 @@ static void destroy_super_work(struct work_struct *work)
 	kfree(s);
 }
 
-#if 0
 static void destroy_super_rcu(struct rcu_head *head)
 {
 	struct super_block *s = container_of(head, struct super_block, rcu);
 	INIT_WORK(&s->destroy_work, destroy_super_work);
 	schedule_work(&s->destroy_work);
 }
-#endif // CL
 
 /* Free a superblock that has never been seen by anyone */
 static void destroy_unused_super(struct super_block *s)
@@ -398,7 +396,6 @@ fail:
 	return NULL;
 }
 
-#if 0
 /* Superblock refcounting  */
 
 /*
@@ -493,7 +490,6 @@ void deactivate_locked_super(struct super_block *s)
 }
 
 EXPORT_SYMBOL(deactivate_locked_super);
-#endif // CL
 
 /**
  *	deactivate_super	-	drop an active reference to superblock
@@ -602,6 +598,7 @@ void retire_super(struct super_block *sb)
 	super_unlock_excl(sb);
 }
 EXPORT_SYMBOL(retire_super);
+#endif // CL
 
 /**
  *	generic_shutdown_super	-	common helper for ->kill_sb()
@@ -691,7 +688,6 @@ void generic_shutdown_super(struct super_block *sb)
 }
 
 EXPORT_SYMBOL(generic_shutdown_super);
-#endif // CL
 
 bool mount_capable(struct fs_context *fc)
 {
@@ -1340,7 +1336,6 @@ static int set_bdev_super(struct super_block *s, void *data)
 	return 0;
 }
 
-#if 0
 static int super_s_dev_set(struct super_block *s, struct fs_context *fc)
 {
 	return set_bdev_super(s, fc->sget_key);
@@ -1378,7 +1373,6 @@ struct super_block *sget_dev(struct fs_context *fc, dev_t dev)
 	return sget_fc(fc, super_s_dev_test, super_s_dev_set);
 }
 EXPORT_SYMBOL(sget_dev);
-#endif // CL
 
 #ifdef CONFIG_BLOCK
 /*

@@ -39,7 +39,6 @@ static inline void __clear_shadow_entry(struct address_space *mapping,
 	xas_store(&xas, NULL);
 }
 
-#if 0
 static void clear_shadow_entries(struct address_space *mapping,
 				 struct folio_batch *fbatch, pgoff_t *indices)
 {
@@ -64,7 +63,6 @@ static void clear_shadow_entries(struct address_space *mapping,
 		inode_add_lru(mapping->host);
 	spin_unlock(&mapping->host->i_lock);
 }
-#endif // CL
 
 /*
  * Unconditionally remove exceptional entries. Usually called from truncate
@@ -251,6 +249,7 @@ int generic_error_remove_folio(struct address_space *mapping,
 	return truncate_inode_folio(mapping, folio);
 }
 EXPORT_SYMBOL(generic_error_remove_folio);
+#endif // CL
 
 /**
  * mapping_evict_folio() - Remove an unused folio from the page-cache.
@@ -279,7 +278,6 @@ long mapping_evict_folio(struct address_space *mapping, struct folio *folio)
 
 	return remove_mapping(mapping, folio);
 }
-#endif // CL
 
 /**
  * truncate_inode_pages_range - truncate range of pages specified by start & end byte offsets
@@ -463,6 +461,7 @@ void truncate_inode_pages_final(struct address_space *mapping)
 	truncate_inode_pages(mapping, 0);
 }
 EXPORT_SYMBOL(truncate_inode_pages_final);
+#endif // CL
 
 /**
  * mapping_try_invalidate - Invalidate all the evictable folios of one inode
@@ -544,6 +543,7 @@ unsigned long invalidate_mapping_pages(struct address_space *mapping,
 }
 EXPORT_SYMBOL(invalidate_mapping_pages);
 
+#if 0
 /*
  * This is like mapping_evict_folio(), except it ignores the folio's
  * refcount.  We do this because invalidate_inode_pages2() needs stronger

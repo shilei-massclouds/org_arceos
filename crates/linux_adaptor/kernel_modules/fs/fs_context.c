@@ -79,7 +79,6 @@ static int vfs_parse_sb_flag(struct fs_context *fc, const char *key)
 	return -ENOPARAM;
 }
 
-#if 0
 /**
  * vfs_parse_fs_param_source - Handle setting "source" via parameter
  * @fc: The filesystem context to modify
@@ -108,7 +107,6 @@ int vfs_parse_fs_param_source(struct fs_context *fc, struct fs_parameter *param)
 	return 0;
 }
 EXPORT_SYMBOL(vfs_parse_fs_param_source);
-#endif // CL
 
 /**
  * vfs_parse_fs_param - Add a single parameter to a superblock config

@@ -477,7 +477,7 @@ int security_fs_context_parse_param(struct fs_context *fc,
                     struct fs_parameter *param)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return 0;
+    return -ENOPARAM;
 }
 
 int security_sb_alloc(struct super_block *sb)

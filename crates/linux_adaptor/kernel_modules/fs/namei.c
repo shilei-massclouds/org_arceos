@@ -3337,6 +3337,7 @@ int vfs_mkobj(struct dentry *dentry, umode_t mode,
 	return error;
 }
 EXPORT_SYMBOL(vfs_mkobj);
+#endif // CL
 
 bool may_open_dev(const struct path *path)
 {
@@ -3344,6 +3345,7 @@ bool may_open_dev(const struct path *path)
 		!(path->mnt->mnt_sb->s_iflags & SB_I_NODEV);
 }
 
+#if 0
 static int may_open(struct mnt_idmap *idmap, const struct path *path,
 		    int acc_mode, int flag)
 {
