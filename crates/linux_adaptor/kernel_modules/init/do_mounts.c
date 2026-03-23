@@ -42,6 +42,7 @@ static int __init load_ramdisk(char *str)
 	return 1;
 }
 __setup("load_ramdisk=", load_ramdisk);
+#endif // CL
 
 static int __init readonly(char *str)
 {
@@ -70,6 +71,7 @@ static int __init root_dev_setup(char *line)
 
 __setup("root=", root_dev_setup);
 
+#if 0
 static int __init rootwait_setup(char *str)
 {
 	if (*str)
@@ -486,6 +488,7 @@ void __init prepare_namespace(void)
 	md_run_setup();
 
     printk("------------ %s: saved_root_name(%s) ---------\n", __func__, saved_root_name);
+    PANIC("");
 	if (saved_root_name[0])
 		ROOT_DEV = parse_root_device(saved_root_name);
 

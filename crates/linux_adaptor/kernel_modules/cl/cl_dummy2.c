@@ -580,3 +580,21 @@ bool __init initrd_load(char *root_device_name)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return false;
 }
+
+// security/security.c
+void security_file_release(struct file *file)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void security_file_free(struct file *file)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// fs/proc/proc_sysctl.c
+bool sysctl_is_alias(char *param)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return false;
+}

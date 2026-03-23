@@ -20,11 +20,13 @@ obj-y += buffer.o
 obj-y += read_write.o
 obj-y += sync.o
 obj-y += mpage.o
+obj-y += locks.o
+obj-y += fcntl.o
 
 #obj-y += bad_inode.o mbcache.o
 #obj-y += readdir.o posix_acl.o
 #obj-y += stat.o char_dev.o open.o file.o
-#obj-y += locks.o attr.o
+#obj-y += attr.o
 
 #obj-y += proc/
 

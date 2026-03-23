@@ -934,7 +934,6 @@ static int free_tail_page_prepare(struct page *head_page, struct page *page)
 	struct folio *folio = (struct folio *)head_page;
 	int ret = 1;
 
-#if 0
 	/*
 	 * We rely page->lru.next never has bit 0 set, unless the page
 	 * is PageTail(). Let's make sure that's true even for poisoned ->lru.
@@ -992,8 +991,6 @@ out:
 	page->mapping = NULL;
 	clear_compound_head(page);
 	return ret;
-#endif
-    PANIC("");
 }
 
 /*
@@ -2741,7 +2738,6 @@ void free_unref_page(struct page *page, unsigned int order)
 	pcp_trylock_finish(UP_flags);
 }
 
-#if 0
 /*
  * Free a batch of folios
  */
@@ -2839,7 +2835,6 @@ void free_unref_folios(struct folio_batch *folios)
 	}
 	folio_batch_reinit(folios);
 }
-#endif /* CL */
 
 /*
  * split_page takes a non-compound higher-order page, and splits it into

@@ -482,7 +482,6 @@ struct wait_queue_head *inode_bit_waitqueue(struct wait_bit_queue_entry *wqe,
 }
 EXPORT_SYMBOL(inode_bit_waitqueue);
 
-#if 0
 /*
  * Add inode to LRU if needed (inode is unused and clean).
  *
@@ -492,7 +491,6 @@ void inode_add_lru(struct inode *inode)
 {
 	__inode_add_lru(inode, false);
 }
-#endif /* CL */
 
 static void inode_lru_list_del(struct inode *inode)
 {

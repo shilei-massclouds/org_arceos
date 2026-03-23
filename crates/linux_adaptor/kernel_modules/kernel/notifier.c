@@ -563,6 +563,7 @@ int srcu_notifier_call_chain(struct srcu_notifier_head *nh,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(srcu_notifier_call_chain);
+#endif // CL
 
 /**
  *	srcu_init_notifier_head - Initialize an SRCU notifier head
@@ -587,6 +588,7 @@ EXPORT_SYMBOL_GPL(srcu_init_notifier_head);
 
 static ATOMIC_NOTIFIER_HEAD(die_chain);
 
+#if 0
 int notrace notify_die(enum die_val val, const char *str,
 	       struct pt_regs *regs, long err, int trap, int sig)
 {

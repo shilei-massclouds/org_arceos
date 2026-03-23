@@ -1,6 +1,7 @@
 # QEMU arguments
 
 QEMU := qemu-system-$(ARCH)
+ROOT_DEV ?= vda
 
 ifeq ($(BUS), mmio)
   vdev-suffix := device
@@ -85,6 +86,11 @@ qemu_args-$(GRAPHIC) += \
 
 ifeq ($(GRAPHIC), n)
   qemu_args-y += -nographic
+endif
+
+# App can require qemu to append boot_args by its features.txt
+ifneq ($(filter boot-args,$(QEMU_FEAT)),)
+  qemu_args-y += -append "earlycon=sbi root=/dev/$(ROOT_DEV) rw console=ttyS0"
 endif
 
 ifeq ($(QEMU_LOG), y)

@@ -47,6 +47,18 @@ static char *extra_command_line;
 static char *extra_init_args;
 
 /* From 'init/main.c' */
+
+/*
+ * Boot command-line arguments
+ */
+#define MAX_INIT_ARGS CONFIG_INIT_ENV_ARG_LIMIT
+#define MAX_INIT_ENVS CONFIG_INIT_ENV_ARG_LIMIT
+
+static const char *argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
+const char *envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
+static const char *panic_later, *panic_param;
+
+/* From 'init/main.c' */
 bool initcall_debug;
 
 static __initdata DECLARE_COMPLETION(kthreadd_done);
@@ -203,8 +215,171 @@ static void __init setup_command_line(char *command_line)
     saved_command_line_len = strlen(saved_command_line);
 }
 
+static bool __init obsolete_checksetup(char *line)
+{
+    const struct obs_kernel_param *p;
+    bool had_early_param = false;
+
+    p = __setup_start;
+    do {
+        int n = strlen(p->str);
+        if (parameqn(line, p->str, n)) {
+            if (p->early) {
+                /* Already done in parse_early_param?
+                 * (Needs exact match on param part).
+                 * Keep iterating, as we can have early
+                 * params and __setups of same names 8( */
+                if (line[n] == '\0' || line[n] == '=')
+                    had_early_param = true;
+            } else if (!p->setup_func) {
+                pr_warn("Parameter %s is obsolete, ignored\n",
+                    p->str);
+                return true;
+            } else if (p->setup_func(line + n))
+                return true;
+        }
+        p++;
+    } while (p < __setup_end);
+
+    return had_early_param;
+}
+
+/* Change NUL term back to "=", to make "param" the whole string. */
+static void __init repair_env_string(char *param, char *val)
+{
+    if (val) {
+        /* param=val or param="val"? */
+        if (val == param+strlen(param)+1)
+            val[-1] = '=';
+        else if (val == param+strlen(param)+2) {
+            val[-2] = '=';
+            memmove(val-1, val, strlen(val)+1);
+        } else
+            BUG();
+    }
+}
+
+/*
+ * Unknown boot options get handed to init, unless they look like
+ * unused parameters (modprobe will find them in /proc/cmdline).
+ */
+static int __init unknown_bootoption(char *param, char *val,
+				     const char *unused, void *arg)
+{
+	size_t len = strlen(param);
+
+	/* Handle params aliased to sysctls */
+	if (sysctl_is_alias(param))
+		return 0;
+
+	repair_env_string(param, val);
+
+	/* Handle obsolete-style parameters */
+	if (obsolete_checksetup(param))
+		return 0;
+
+	/* Unused module parameter. */
+	if (strnchr(param, len, '.'))
+		return 0;
+
+	if (panic_later)
+		return 0;
+
+	if (val) {
+		/* Environment option */
+		unsigned int i;
+		for (i = 0; envp_init[i]; i++) {
+			if (i == MAX_INIT_ENVS) {
+				panic_later = "env";
+				panic_param = param;
+			}
+			if (!strncmp(param, envp_init[i], len+1))
+				break;
+		}
+		envp_init[i] = param;
+	} else {
+		/* Command line option */
+		unsigned int i;
+		for (i = 0; argv_init[i]; i++) {
+			if (i == MAX_INIT_ARGS) {
+				panic_later = "init";
+				panic_param = param;
+			}
+		}
+		argv_init[i] = param;
+	}
+	return 0;
+}
+
+static void __init print_unknown_bootoptions(void)
+{
+    char *unknown_options;
+    char *end;
+    const char *const *p;
+    size_t len;
+
+    if (panic_later || (!argv_init[1] && !envp_init[2]))
+        return;
+
+    /*
+     * Determine how many options we have to print out, plus a space
+     * before each
+     */
+    len = 1; /* null terminator */
+    for (p = &argv_init[1]; *p; p++) {
+        len++;
+        len += strlen(*p);
+    }
+    for (p = &envp_init[2]; *p; p++) {
+        len++;
+        len += strlen(*p);
+    }
+
+    unknown_options = memblock_alloc(len, SMP_CACHE_BYTES);
+    if (!unknown_options) {
+        pr_err("%s: Failed to allocate %zu bytes\n",
+            __func__, len);
+        return;
+    }
+    end = unknown_options;
+
+    for (p = &argv_init[1]; *p; p++)
+        end += sprintf(end, " %s", *p);
+    for (p = &envp_init[2]; *p; p++)
+        end += sprintf(end, " %s", *p);
+
+    /* Start at unknown_options[1] to skip the initial space */
+    pr_notice("Unknown kernel command line parameters \"%s\", will be passed to user space.\n",
+        &unknown_options[1]);
+    memblock_free(unknown_options, len);
+}
+
+/* Anything after -- gets handed straight to init. */
+static int __init set_init_arg(char *param, char *val,
+                   const char *unused, void *arg)
+{
+    unsigned int i;
+
+    if (panic_later)
+        return 0;
+
+    repair_env_string(param, val);
+
+    for (i = 0; argv_init[i]; i++) {
+        if (i == MAX_INIT_ARGS) {
+            panic_later = "init";
+            panic_param = param;
+            return 0;
+        }
+    }
+    argv_init[i] = param;
+    return 0;
+}
+
 void cl_setup_arch_later(void)
 {
+    char *after_dashes;
+
     jump_label_init();
     unflatten_device_tree();
     misc_mem_init();
@@ -216,6 +391,22 @@ void cl_setup_arch_later(void)
     setup_nr_cpu_ids();
     setup_per_cpu_areas();
     boot_cpu_hotplug_init();
+
+    pr_notice("Kernel command line: %s\n", saved_command_line);
+    /* parameters may set static keys */
+    parse_early_param();
+    after_dashes = parse_args("Booting kernel",
+                  static_command_line, __start___param,
+                  __stop___param - __start___param,
+                  -1, -1, NULL, &unknown_bootoption);
+    print_unknown_bootoptions();
+    if (!IS_ERR_OR_NULL(after_dashes))
+        parse_args("Setting init args", after_dashes, NULL, 0, -1, -1,
+               NULL, set_init_arg);
+    if (extra_init_args)
+        parse_args("Setting extra init args", extra_init_args,
+               NULL, 0, -1, -1, NULL, set_init_arg);
+
     /* Architectural and non-timekeeping rng init, before allocator init */
     random_init_early(boot_command_line/* command_line */);
 
@@ -528,4 +719,44 @@ void cl_free_init_mem()
 #endif
 
     system_state = SYSTEM_RUNNING;
+}
+
+/* Check for early params. */
+static int __init do_early_param(char *param, char *val,
+                 const char *unused, void *arg)
+{
+    const struct obs_kernel_param *p;
+
+    for (p = __setup_start; p < __setup_end; p++) {
+        if ((p->early && parameq(param, p->str)) ||
+            (strcmp(param, "console") == 0 &&
+             strcmp(p->str, "earlycon") == 0)
+        ) {
+            if (p->setup_func(val) != 0)
+                pr_warn("Malformed early option '%s'\n", param);
+        }
+    }
+    /* We accept everything at this stage. */
+    return 0;
+}
+
+void __init parse_early_options(char *cmdline)
+{
+    parse_args("early options", cmdline, NULL, 0, 0, 0, NULL,
+           do_early_param);
+}
+
+/* Arch code calls this early on, or if not, just before other parsing. */
+void __init parse_early_param(void)
+{
+    static int done __initdata;
+    static char tmp_cmdline[COMMAND_LINE_SIZE] __initdata;
+
+    if (done)
+        return;
+
+    /* All fall through to do_early_param. */
+    strscpy(tmp_cmdline, boot_command_line, COMMAND_LINE_SIZE);
+    parse_early_options(tmp_cmdline);
+    done = 1;
 }

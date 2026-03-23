@@ -1790,10 +1790,17 @@ static void __init cpuhp_bringup_mask(const struct cpumask *mask, unsigned int n
 {
 	unsigned int cpu;
 
+    printk("------ %s: step0 current(%u:%u)\n",
+           __func__,
+           smp_processor_id(),
+           cpuid_to_hartid_map(0));
+
 	for_each_cpu(cpu, mask) {
 		struct cpuhp_cpu_state *st = per_cpu_ptr(&cpuhp_state, cpu);
 
+    printk("------ %s: step1 cpu(%u)\n", __func__, cpu);
 		if (cpu_up(cpu, target) && can_rollback_cpu(st)) {
+    printk("------ %s: step2\n", __func__);
 			/*
 			 * If this failed then cpu_up() might have only
 			 * rolled back to CPUHP_BP_KICK_AP for the final
@@ -1802,9 +1809,14 @@ static void __init cpuhp_bringup_mask(const struct cpumask *mask, unsigned int n
 			WARN_ON(cpuhp_invoke_callback_range(false, cpu, st, CPUHP_OFFLINE));
 		}
 
+    printk("------ %s: step3 ncpus(%u)\n", __func__, ncpus);
 		if (!--ncpus)
 			break;
 	}
+    printk("------ %s: stepN current(%u:%u)\n",
+           __func__,
+           smp_processor_id(),
+           cpuid_to_hartid_map(0));
 }
 
 #ifdef CONFIG_HOTPLUG_PARALLEL

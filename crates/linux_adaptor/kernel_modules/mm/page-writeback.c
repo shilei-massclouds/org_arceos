@@ -2767,7 +2767,6 @@ static void folio_account_dirtied(struct folio *folio,
 	}
 }
 
-#if 0
 /*
  * Helper function for deaccounting dirty page without writeback.
  *
@@ -2782,7 +2781,6 @@ void folio_account_cleaned(struct folio *folio, struct bdi_writeback *wb)
 	wb_stat_mod(wb, WB_RECLAIMABLE, -nr);
 	task_io_account_cancelled_write(nr * PAGE_SIZE);
 }
-#endif // CL
 
 /*
  * Mark the folio dirty, and set it dirty in the page cache.

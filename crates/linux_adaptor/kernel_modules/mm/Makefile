@@ -34,7 +34,7 @@ obj-y += workingset.o
 obj-y += rmap.o
 obj-y += mlock.o
 obj-y += readahead.o
+obj-y += truncate.o
 
-#obj-y += truncate.o
 #obj-y += dmapool.o
 #obj-y += interval_tree.o

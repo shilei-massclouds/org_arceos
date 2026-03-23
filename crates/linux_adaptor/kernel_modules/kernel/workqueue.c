@@ -1377,7 +1377,6 @@ restart:
 static void wq_cpu_intensive_report(work_func_t func) {}
 #endif	/* CONFIG_WQ_CPU_INTENSIVE_REPORT */
 
-#if 0
 /**
  * wq_worker_running - a worker is running again
  * @task: task waking up
@@ -1410,7 +1409,6 @@ void wq_worker_running(struct task_struct *task)
 
 	WRITE_ONCE(worker->sleeping, 0);
 }
-#endif /* CL */
 
 /**
  * wq_worker_sleeping - a worker is going to sleep

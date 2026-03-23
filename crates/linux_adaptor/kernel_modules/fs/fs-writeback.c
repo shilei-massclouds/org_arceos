@@ -168,7 +168,6 @@ static void wb_wakeup_delayed(struct bdi_writeback *wb)
 	spin_unlock_irq(&wb->work_lock);
 }
 
-#if 0
 static void finish_writeback_work(struct wb_writeback_work *work)
 {
 	struct wb_completion *done = work->done;
@@ -203,6 +202,7 @@ static void wb_queue_work(struct bdi_writeback *wb,
 	spin_unlock_irq(&wb->work_lock);
 }
 
+#if 0
 /**
  * wb_wait_for_completion - wait for completion of bdi_writeback_works
  * @done: target wb_completion
@@ -1190,7 +1190,6 @@ static void inode_cgwb_move_to_attached(struct inode *inode,
 	list_del_init(&inode->i_io_list);
 	wb_io_lists_depopulated(wb);
 }
-#endif // CL
 
 static struct bdi_writeback *
 locked_inode_to_wb_and_lock_list(struct inode *inode)
@@ -1204,7 +1203,6 @@ locked_inode_to_wb_and_lock_list(struct inode *inode)
 	return wb;
 }
 
-#if 0
 static struct bdi_writeback *inode_to_wb_and_lock_list(struct inode *inode)
 	__acquires(&wb->list_lock)
 {
@@ -1341,7 +1339,6 @@ void sb_clear_inode_writeback(struct inode *inode)
 	}
 }
 
-#if 0
 /*
  * Redirty an inode: set its when-it-was dirtied timestamp and move it to the
  * furthest end of its superblock's dirty-inode list.
@@ -1376,6 +1373,7 @@ static void redirty_tail_locked(struct inode *inode, struct bdi_writeback *wb)
 	inode_io_list_move_locked(inode, wb, &wb->b_dirty);
 }
 
+#if 0
 static void redirty_tail(struct inode *inode, struct bdi_writeback *wb)
 {
 	spin_lock(&inode->i_lock);
@@ -1390,6 +1388,7 @@ static void requeue_io(struct inode *inode, struct bdi_writeback *wb)
 {
 	inode_io_list_move_locked(inode, wb, &wb->b_more_io);
 }
+#endif // CL
 
 static void inode_sync_complete(struct inode *inode)
 {
@@ -1402,6 +1401,7 @@ static void inode_sync_complete(struct inode *inode)
 	inode_wake_up_bit(inode, __I_SYNC);
 }
 
+#if 0
 static bool inode_dirtied_after(struct inode *inode, unsigned long t)
 {
 	bool ret = time_after(inode->dirtied_when, t);
@@ -1500,6 +1500,7 @@ static void queue_io(struct bdi_writeback *wb, struct wb_writeback_work *work,
 		wb_io_lists_populated(wb);
 	trace_writeback_queue_io(wb, work, dirtied_before, moved);
 }
+#endif // CL
 
 static int write_inode(struct inode *inode, struct writeback_control *wbc)
 {
@@ -1514,6 +1515,7 @@ static int write_inode(struct inode *inode, struct writeback_control *wbc)
 	return 0;
 }
 
+#if 0
 /*
  * Wait for writeback on an inode to complete. Called with i_lock held.
  * Caller must make sure inode cannot go away when we drop i_lock.
@@ -1638,6 +1640,7 @@ static void requeue_inode(struct inode *inode, struct bdi_writeback *wb,
 		inode_cgwb_move_to_attached(inode, wb);
 	}
 }
+#endif // CL
 
 /*
  * Write out an inode and its dirty pages (or some of its dirty pages, depending
@@ -1820,6 +1823,7 @@ out:
 	return ret;
 }
 
+#if 0
 static long writeback_chunk_size(struct bdi_writeback *wb,
 				 struct wb_writeback_work *work)
 {
@@ -2811,6 +2815,7 @@ void sync_inodes_sb(struct super_block *sb)
 	wait_sb_inodes(sb);
 }
 EXPORT_SYMBOL(sync_inodes_sb);
+#endif // CL
 
 /**
  * write_inode_now	-	write an inode to disk
@@ -2839,6 +2844,7 @@ int write_inode_now(struct inode *inode, int sync)
 }
 EXPORT_SYMBOL(write_inode_now);
 
+#if 0
 /**
  * sync_inode_metadata - write an inode to disk
  * @inode: the inode to sync

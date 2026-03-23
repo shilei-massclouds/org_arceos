@@ -98,6 +98,11 @@ SECTIONS
         KEEP(*(__irqchip_of_table))
         KEEP(*(__irqchip_of_table_end))
 
+        . = ALIGN(16);
+        __setup_start = .;
+        KEEP(*(.init.setup))
+        __setup_end = .; 
+
         __initcall_start = .;
         KEEP(*(.initcallearly.init))
         __initcall0_start = .;

@@ -460,6 +460,7 @@ void mark_buffer_async_write(struct buffer_head *bh)
 	mark_buffer_async_write_endio(bh, end_buffer_async_write);
 }
 EXPORT_SYMBOL(mark_buffer_async_write);
+#endif // CL
 
 
 /*
@@ -521,6 +522,7 @@ static void __remove_assoc_queue(struct buffer_head *bh)
 	bh->b_assoc_map = NULL;
 }
 
+#if 0
 int inode_has_buffers(struct inode *inode)
 {
 	return !list_empty(&inode->i_data.i_private_list);
@@ -1531,6 +1533,7 @@ struct buffer_head *__bread_gfp(struct block_device *bdev, sector_t block,
 	return bh;
 }
 EXPORT_SYMBOL(__bread_gfp);
+#endif // CL
 
 static void __invalidate_bh_lrus(struct bh_lru *b)
 {
@@ -1573,6 +1576,7 @@ void invalidate_bh_lrus(void)
 }
 EXPORT_SYMBOL_GPL(invalidate_bh_lrus);
 
+#if 0
 /*
  * It's called from workqueue context so we need a bh_lru_lock to close
  * the race with preemption/irq.
@@ -1603,7 +1607,6 @@ void folio_set_bh(struct buffer_head *bh, struct folio *folio,
 }
 EXPORT_SYMBOL(folio_set_bh);
 
-#if 0
 /*
  * Called when truncating a buffer on a page completely.
  */
@@ -1690,7 +1693,6 @@ out:
 	return;
 }
 EXPORT_SYMBOL(block_invalidate_folio);
-#endif // CL
 
 /*
  * We attach and possibly dirty the buffers atomically wrt
@@ -2929,6 +2931,7 @@ int sync_dirty_buffer(struct buffer_head *bh)
 	return __sync_dirty_buffer(bh, REQ_SYNC);
 }
 EXPORT_SYMBOL(sync_dirty_buffer);
+#endif // CL
 
 static inline int buffer_busy(struct buffer_head *bh)
 {
@@ -3035,7 +3038,6 @@ out:
 	return ret;
 }
 EXPORT_SYMBOL(try_to_free_buffers);
-#endif // CL
 
 /*
  * Buffer-head allocation

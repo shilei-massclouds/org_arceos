@@ -155,6 +155,7 @@ static void page_cache_delete(struct address_space *mapping,
 	/* Leave page->index set: truncation lookup relies upon it */
 	mapping->nrpages -= nr;
 }
+#endif // CL
 
 static void filemap_unaccount_folio(struct address_space *mapping,
 		struct folio *folio)
@@ -220,6 +221,7 @@ static void filemap_unaccount_folio(struct address_space *mapping,
 		folio_account_cleaned(folio, inode_to_wb(mapping->host));
 }
 
+#if 0
 /*
  * Delete a page from the page cache and free it. Caller has to make
  * sure the page is locked and that nobody else uses it - or that usage
@@ -233,6 +235,7 @@ void __filemap_remove_folio(struct folio *folio, void *shadow)
 	filemap_unaccount_folio(mapping, folio);
 	page_cache_delete(mapping, folio, shadow);
 }
+#endif // CL
 
 void filemap_free_folio(struct address_space *mapping, struct folio *folio)
 {
@@ -248,6 +251,7 @@ void filemap_free_folio(struct address_space *mapping, struct folio *folio)
 	folio_put_refs(folio, refs);
 }
 
+#if 0
 /**
  * filemap_remove_folio - Remove folio from page cache.
  * @folio: The folio.
@@ -271,6 +275,7 @@ void filemap_remove_folio(struct folio *folio)
 
 	filemap_free_folio(mapping, folio);
 }
+#endif // CL
 
 /*
  * page_cache_delete_batch - delete several folios from page cache
@@ -351,7 +356,6 @@ void delete_from_page_cache_batch(struct address_space *mapping,
 	for (i = 0; i < folio_batch_count(fbatch); i++)
 		filemap_free_folio(mapping, fbatch->folios[i]);
 }
-#endif // CL
 
 int filemap_check_errors(struct address_space *mapping)
 {
@@ -543,7 +547,6 @@ static void __filemap_fdatawait_range(struct address_space *mapping,
 	}
 }
 
-#if 0
 /**
  * filemap_fdatawait_range - wait for writeback to complete
  * @mapping:		address space structure to wait for
@@ -568,6 +571,7 @@ int filemap_fdatawait_range(struct address_space *mapping, loff_t start_byte,
 }
 EXPORT_SYMBOL(filemap_fdatawait_range);
 
+#if 0
 /**
  * filemap_fdatawait_range_keep_errors - wait for writeback to complete
  * @mapping:		address space structure to wait for
@@ -2056,7 +2060,6 @@ reset:
 	goto retry;
 }
 
-#if 0
 /**
  * find_get_entries - gang pagecache lookup
  * @mapping:	The address_space to search
@@ -2180,6 +2183,7 @@ put:
 	return folio_batch_count(fbatch);
 }
 
+#if 0
 /**
  * filemap_get_folios - Get a batch of folios
  * @mapping:	The address_space to search
@@ -4231,6 +4235,7 @@ ssize_t generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 	return ret;
 }
 EXPORT_SYMBOL(generic_file_write_iter);
+#endif // CL
 
 /**
  * filemap_release_folio() - Release fs-specific metadata on a folio.
@@ -4265,6 +4270,7 @@ bool filemap_release_folio(struct folio *folio, gfp_t gfp)
 }
 EXPORT_SYMBOL(filemap_release_folio);
 
+#if 0
 /**
  * filemap_invalidate_inode - Invalidate/forcibly write back a range of an inode's pagecache
  * @inode: The inode to flush

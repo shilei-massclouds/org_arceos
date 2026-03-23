@@ -78,6 +78,7 @@ static void maybe_kfree_parameter(void *param)
 	}
 	spin_unlock(&kmalloced_params_lock);
 }
+#endif /* CL */
 
 static char dash2underscore(char c)
 {
@@ -101,7 +102,6 @@ bool parameq(const char *a, const char *b)
 {
 	return parameqn(a, b, strlen(a)+1);
 }
-#endif /* CL */
 
 static bool param_check_unsafe(const struct kernel_param *kp)
 {

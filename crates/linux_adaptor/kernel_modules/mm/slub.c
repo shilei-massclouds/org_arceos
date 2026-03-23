@@ -4491,7 +4491,6 @@ static void __slab_free(struct kmem_cache *s, struct slab *slab,
 		return;
 	}
 
-#if 0
 	/*
 	 * This slab was partially empty but not on the per-node partial list,
 	 * in which case we shouldn't manipulate its list, just return.
@@ -4504,6 +4503,7 @@ static void __slab_free(struct kmem_cache *s, struct slab *slab,
 	if (unlikely(!new.inuse && n->nr_partial >= s->min_partial))
 		goto slab_empty;
 
+#if 0
 	/*
 	 * Objects left in the slab. If it was not on the partial list before
 	 * then add it.
@@ -4513,6 +4513,8 @@ static void __slab_free(struct kmem_cache *s, struct slab *slab,
 		stat(s, FREE_ADD_PARTIAL);
 	}
 	spin_unlock_irqrestore(&n->list_lock, flags);
+#endif
+    PANIC("");
 	return;
 
 slab_empty:
@@ -4527,8 +4529,6 @@ slab_empty:
 	spin_unlock_irqrestore(&n->list_lock, flags);
 	stat(s, FREE_SLAB);
 	discard_slab(s, slab);
-#endif
-    PANIC("");
 }
 
 #ifndef CONFIG_SLUB_TINY
