@@ -215,6 +215,7 @@ void __thaw_task(struct task_struct *p)
 unlock:
 	spin_unlock_irqrestore(&freezer_lock, flags);
 }
+#endif /* CL */
 
 /**
  * set_freezable - make %current freezable
@@ -237,5 +238,3 @@ bool set_freezable(void)
 	return try_to_freeze();
 }
 EXPORT_SYMBOL(set_freezable);
-
-#endif /* CL */

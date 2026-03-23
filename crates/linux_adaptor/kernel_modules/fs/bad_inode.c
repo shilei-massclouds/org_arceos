@@ -1,3 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ *  linux/fs/bad_inode.c
+ *
+ *  Copyright (C) 1997, Stephen Tweedie
+ *
+ *  Provide stub functions for unreadable inodes
+ *
+ *  Fabian Frederick : August 2003 - All file operations assigned to EIO
+ */
+
 #include <linux/fs.h>
 #include <linux/export.h>
 #include <linux/stat.h>
@@ -150,46 +161,79 @@ static int bad_inode_set_acl(struct mnt_idmap *idmap,
 
 static const struct inode_operations bad_inode_ops =
 {
-    .create     = bad_inode_create,
-    .lookup     = bad_inode_lookup,
-    .link       = bad_inode_link,
-    .unlink     = bad_inode_unlink,
-    .symlink    = bad_inode_symlink,
-    .mkdir      = bad_inode_mkdir,
-    .rmdir      = bad_inode_rmdir,
-    .mknod      = bad_inode_mknod,
-    .rename     = bad_inode_rename2,
-    .readlink   = bad_inode_readlink,
-    .permission = bad_inode_permission,
-    .getattr    = bad_inode_getattr,
-    .setattr    = bad_inode_setattr,
-    .listxattr  = bad_inode_listxattr,
-    .get_link   = bad_inode_get_link,
-    .get_inode_acl  = bad_inode_get_acl,
-    .fiemap     = bad_inode_fiemap,
-    .update_time    = bad_inode_update_time,
-    .atomic_open    = bad_inode_atomic_open,
-    .tmpfile    = bad_inode_tmpfile,
-    .set_acl    = bad_inode_set_acl,
+	.create		= bad_inode_create,
+	.lookup		= bad_inode_lookup,
+	.link		= bad_inode_link,
+	.unlink		= bad_inode_unlink,
+	.symlink	= bad_inode_symlink,
+	.mkdir		= bad_inode_mkdir,
+	.rmdir		= bad_inode_rmdir,
+	.mknod		= bad_inode_mknod,
+	.rename		= bad_inode_rename2,
+	.readlink	= bad_inode_readlink,
+	.permission	= bad_inode_permission,
+	.getattr	= bad_inode_getattr,
+	.setattr	= bad_inode_setattr,
+	.listxattr	= bad_inode_listxattr,
+	.get_link	= bad_inode_get_link,
+	.get_inode_acl	= bad_inode_get_acl,
+	.fiemap		= bad_inode_fiemap,
+	.update_time	= bad_inode_update_time,
+	.atomic_open	= bad_inode_atomic_open,
+	.tmpfile	= bad_inode_tmpfile,
+	.set_acl	= bad_inode_set_acl,
 };
+
+
+/*
+ * When a filesystem is unable to read an inode due to an I/O error in
+ * its read_inode() function, it can call make_bad_inode() to return a
+ * set of stubs which will return EIO errors as required. 
+ *
+ * We only need to do limited initialisation: all other fields are
+ * preinitialised to zero automatically.
+ */
+ 
+/**
+ *	make_bad_inode - mark an inode bad due to an I/O error
+ *	@inode: Inode to mark bad
+ *
+ *	When an inode cannot be read due to a media or remote network
+ *	failure this function makes the inode "bad" and causes I/O operations
+ *	on it to fail from this point on.
+ */
+ 
+void make_bad_inode(struct inode *inode)
+{
+	remove_inode_hash(inode);
+
+	inode->i_mode = S_IFREG;
+	simple_inode_init_ts(inode);
+	inode->i_op = &bad_inode_ops;	
+	inode->i_opflags &= ~IOP_XATTR;
+	inode->i_fop = &bad_file_ops;	
+}
+EXPORT_SYMBOL(make_bad_inode);
 
 /*
  * This tests whether an inode has been flagged as bad. The test uses
  * &bad_inode_ops to cover the case of invalidated inodes as well as
  * those created by make_bad_inode() above.
  */
-
+ 
 /**
- *  is_bad_inode - is an inode errored
- *  @inode: inode to test
+ *	is_bad_inode - is an inode errored
+ *	@inode: inode to test
  *
- *  Returns true if the inode in question has been marked as bad.
+ *	Returns true if the inode in question has been marked as bad.
  */
-
+ 
 bool is_bad_inode(struct inode *inode)
 {
-    return (inode->i_op == &bad_inode_ops);
+	return (inode->i_op == &bad_inode_ops);	
 }
+
+EXPORT_SYMBOL(is_bad_inode);
 
 /**
  * iget_failed - Mark an under-construction inode as dead and release it
@@ -199,28 +243,8 @@ bool is_bad_inode(struct inode *inode)
  */
 void iget_failed(struct inode *inode)
 {
-    printk("%s: .. ino(%u)\n", __func__, inode->i_ino);
-    make_bad_inode(inode);
-    unlock_new_inode(inode);
-    iput(inode);
+	make_bad_inode(inode);
+	unlock_new_inode(inode);
+	iput(inode);
 }
-
-/**
- *  make_bad_inode - mark an inode bad due to an I/O error
- *  @inode: Inode to mark bad
- *
- *  When an inode cannot be read due to a media or remote network
- *  failure this function makes the inode "bad" and causes I/O operations
- *  on it to fail from this point on.
- */
-
-void make_bad_inode(struct inode *inode)
-{
-    remove_inode_hash(inode);
-
-    inode->i_mode = S_IFREG;
-    simple_inode_init_ts(inode);
-    inode->i_op = &bad_inode_ops;
-    inode->i_opflags &= ~IOP_XATTR;
-    inode->i_fop = &bad_file_ops;
-}
+EXPORT_SYMBOL(iget_failed);

@@ -659,3 +659,31 @@ int security_sb_mount(const char *dev_name, const struct path *path,
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+void __init crypto_init_proc(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_task_setioprio(struct task_struct *p, int ioprio)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void security_sb_free(struct super_block *sb)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_sb_kern_mount(const struct super_block *sb)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_path_chroot(const struct path *path)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

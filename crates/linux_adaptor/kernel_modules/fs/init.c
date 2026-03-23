@@ -41,6 +41,7 @@ int __init init_umount(const char *name, int flags)
 		return ret;
 	return path_umount(&path, flags);
 }
+#endif // CL
 
 int __init init_chdir(const char *filename)
 {
@@ -80,6 +81,7 @@ dput_and_out:
 	return error;
 }
 
+#if 0
 int __init init_chown(const char *filename, uid_t user, gid_t group, int flags)
 {
 	int lookup_flags = (flags & AT_SYMLINK_NOFOLLOW) ? 0 : LOOKUP_FOLLOW;

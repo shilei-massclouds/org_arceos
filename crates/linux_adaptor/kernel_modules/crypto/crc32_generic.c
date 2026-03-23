@@ -117,11 +117,6 @@ static int __init crc32_mod_init(void)
 	return crypto_register_shash(&alg);
 }
 
-void cl_crc32_mod_init(void)
-{
-    crc32_mod_init();
-}
-
 static void __exit crc32_mod_fini(void)
 {
 	crypto_unregister_shash(&alg);

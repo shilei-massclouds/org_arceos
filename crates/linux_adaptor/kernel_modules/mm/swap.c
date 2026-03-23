@@ -82,7 +82,6 @@ static void __page_cache_release(struct folio *folio, struct lruvec **lruvecp,
 	}
 }
 
-#if 0
 /*
  * This path almost never happens for VM activity - pages are normally freed
  * in batches.  But it gets used by networking - and for compound pages.
@@ -96,7 +95,6 @@ static void page_cache_release(struct folio *folio)
 	if (lruvec)
 		unlock_page_lruvec_irqrestore(lruvec, flags);
 }
-#endif /* CL */
 
 void __folio_put(struct folio *folio)
 {
@@ -110,13 +108,10 @@ void __folio_put(struct folio *folio)
 		return;
 	}
 
-#if 0
 	page_cache_release(folio);
 	folio_unqueue_deferred_split(folio);
 	mem_cgroup_uncharge(folio);
 	free_unref_page(&folio->page, folio_order(folio));
-#endif
-    PANIC("");
 }
 EXPORT_SYMBOL(__folio_put);
 

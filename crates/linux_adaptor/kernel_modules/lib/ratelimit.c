@@ -12,8 +12,6 @@
 #include <linux/jiffies.h>
 #include <linux/export.h>
 
-#include "adaptor.h"
-
 /*
  * __ratelimit - rate limiting
  * @rs: ratelimit_state data
@@ -28,10 +26,6 @@
  */
 int ___ratelimit(struct ratelimit_state *rs, const char *func)
 {
-    PANIC("");
-    pr_notice("%s: No impl.", __func__);
-    return 0;
-#if 0
 	/* Paired with WRITE_ONCE() in .proc_handler().
 	 * Changing two values seperately could be inconsistent
 	 * and some message could be lost.  (See: net_ratelimit_state).
@@ -78,5 +72,5 @@ int ___ratelimit(struct ratelimit_state *rs, const char *func)
 	raw_spin_unlock_irqrestore(&rs->lock, flags);
 
 	return ret;
-#endif
 }
+EXPORT_SYMBOL(___ratelimit);

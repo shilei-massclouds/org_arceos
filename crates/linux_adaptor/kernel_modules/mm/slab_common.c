@@ -1290,6 +1290,7 @@ void *krealloc_noprof(const void *p, size_t new_size, gfp_t flags)
 	return ret;
 }
 EXPORT_SYMBOL(krealloc_noprof);
+#endif // CL
 
 /**
  * kfree_sensitive - Clear sensitive information in memory before freeing
@@ -1315,7 +1316,6 @@ void kfree_sensitive(const void *p)
 	kfree(mem);
 }
 EXPORT_SYMBOL(kfree_sensitive);
-#endif /* CL */
 
 size_t ksize(const void *objp)
 {

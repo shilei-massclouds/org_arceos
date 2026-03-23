@@ -20,6 +20,7 @@ obj-y += blk-map.o
 obj-y += blk-rq-qos.o
 obj-y += blk-sysfs.o
 obj-y += blk-ia-ranges.o
+obj-y += blk-ioc.o
 obj-y += elevator.o
 obj-y += mq-deadline.o
 obj-y += fops.o

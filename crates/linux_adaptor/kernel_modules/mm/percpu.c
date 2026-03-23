@@ -206,7 +206,6 @@ static void pcpu_schedule_balance_work(void)
 		schedule_work(&pcpu_balance_work);
 }
 
-#if 0
 /**
  * pcpu_addr_in_chunk - check if the address is served from this chunk
  * @chunk: chunk of interest
@@ -228,7 +227,6 @@ static bool pcpu_addr_in_chunk(struct pcpu_chunk *chunk, void *addr)
 
 	return addr >= start_addr && addr < end_addr;
 }
-#endif
 
 static int __pcpu_size_to_slot(int size)
 {
@@ -1595,7 +1593,6 @@ static int __init pcpu_verify_alloc_info(const struct pcpu_alloc_info *ai);
 #include "percpu-vm.c"
 #endif
 
-#if 0
 /**
  * pcpu_chunk_addr_search - determine chunk containing specified address
  * @addr: address for which the chunk needs to be determined.
@@ -1626,7 +1623,6 @@ static struct pcpu_chunk *pcpu_chunk_addr_search(void *addr)
 	addr += pcpu_unit_offsets[raw_smp_processor_id()];
 	return pcpu_get_page_chunk(pcpu_addr_to_page(addr));
 }
-#endif
 
 #ifdef CONFIG_MEMCG
 static bool pcpu_memcg_pre_alloc_hook(size_t size, gfp_t gfp,
@@ -2247,7 +2243,6 @@ void free_percpu(void __percpu *ptr)
 	if (!ptr)
 		return;
 
-#if 0
 	kmemleak_free_percpu(ptr);
 
 	addr = __pcpu_ptr_to_addr(ptr);
@@ -2285,8 +2280,6 @@ void free_percpu(void __percpu *ptr)
 
 	if (need_balance)
 		pcpu_schedule_balance_work();
-#endif
-    PANIC("");
 }
 EXPORT_SYMBOL_GPL(free_percpu);
 

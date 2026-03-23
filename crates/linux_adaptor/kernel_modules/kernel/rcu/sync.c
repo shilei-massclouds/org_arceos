@@ -166,7 +166,6 @@ void rcu_sync_exit(struct rcu_sync *rsp)
 	spin_unlock_irq(&rsp->rss_lock);
 }
 
-#if 0
 /**
  * rcu_sync_dtor() - Clean up an rcu_sync structure
  * @rsp: Pointer to rcu_sync structure to be cleaned up
@@ -189,4 +188,3 @@ void rcu_sync_dtor(struct rcu_sync *rsp)
 		WARN_ON_ONCE(rsp->gp_state != GP_IDLE);
 	}
 }
-#endif /* CL */

@@ -2651,7 +2651,6 @@ signed long __sched schedule_timeout(signed long timeout)
 }
 EXPORT_SYMBOL(schedule_timeout);
 
-#if 0
 /*
  * We can use __set_current_state() here because schedule_timeout() calls
  * schedule() unconditionally.
@@ -2663,6 +2662,7 @@ signed long __sched schedule_timeout_interruptible(signed long timeout)
 }
 EXPORT_SYMBOL(schedule_timeout_interruptible);
 
+#if 0
 signed long __sched schedule_timeout_killable(signed long timeout)
 {
 	__set_current_state(TASK_KILLABLE);

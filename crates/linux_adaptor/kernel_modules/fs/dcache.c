@@ -458,7 +458,6 @@ static void d_lru_del(struct dentry *dentry)
 			&dentry->d_sb->s_dentry_lru, &dentry->d_lru));
 }
 
-#if 0
 static void d_shrink_del(struct dentry *dentry)
 {
 	D_FLAG_VERIFY(dentry, DCACHE_SHRINK_LIST | DCACHE_LRU_LIST);
@@ -475,6 +474,7 @@ static void d_shrink_add(struct dentry *dentry, struct list_head *list)
 	this_cpu_inc(nr_dentry_unused);
 }
 
+#if 0
 /*
  * These can only be called under the global LRU lock, ie during the
  * callback for freeing the LRU list. "isolate" removes it from the
@@ -875,7 +875,6 @@ void dput(struct dentry *dentry)
 }
 EXPORT_SYMBOL(dput);
 
-#if 0
 static void to_shrink_list(struct dentry *dentry, struct list_head *list)
 __must_hold(&dentry->d_lock)
 {
@@ -898,6 +897,7 @@ void dput_to_list(struct dentry *dentry, struct list_head *list)
 	spin_unlock(&dentry->d_lock);
 }
 
+#if 0
 struct dentry *dget_parent(struct dentry *dentry)
 {
 	int gotref;
@@ -1060,6 +1060,7 @@ void d_prune_aliases(struct inode *inode)
 	shrink_dentry_list(&dispose);
 }
 EXPORT_SYMBOL(d_prune_aliases);
+#endif // CL
 
 static inline void shrink_kill(struct dentry *victim)
 {
@@ -1096,6 +1097,7 @@ void shrink_dentry_list(struct list_head *list)
 	}
 }
 
+#if 0
 static enum lru_status dentry_lru_isolate(struct list_head *item,
 		struct list_lru_one *lru, spinlock_t *lru_lock, void *arg)
 {
@@ -1377,6 +1379,7 @@ int path_has_submounts(const struct path *parent)
 	return data.mounted;
 }
 EXPORT_SYMBOL(path_has_submounts);
+#endif // CL
 
 /*
  * Called by mount code to set a mountpoint and check if the mountpoint is
@@ -1414,6 +1417,7 @@ out:
 	return ret;
 }
 
+#if 0
 /*
  * Search the dentry child list of the specified parent,
  * and move any unused dentries to the end of the unused
@@ -3136,6 +3140,7 @@ void d_tmpfile(struct file *file, struct inode *inode)
 	d_instantiate(dentry, inode);
 }
 EXPORT_SYMBOL(d_tmpfile);
+#endif // CL
 
 /*
  * Obtain inode number of the parent dentry.
@@ -3164,7 +3169,6 @@ ino_t d_parent_ino(struct dentry *dentry)
 	return ret;
 }
 EXPORT_SYMBOL(d_parent_ino);
-#endif /* CL */
 
 static __initdata unsigned long dhash_entries;
 static int __init set_dhash_entries(char *str)

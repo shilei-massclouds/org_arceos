@@ -27,8 +27,9 @@ obj-y += char_dev.o
 obj-y += pipe.o
 obj-y += nsfs.o
 obj-y += posix_acl.o
+obj-y += bad_inode.o
+obj-y += mbcache.o
 
-#obj-y += bad_inode.o mbcache.o
 #obj-y += readdir.o
 #obj-y += stat.o open.o file.o
 #obj-y += attr.o
@@ -39,3 +40,4 @@ obj-y += iomap/
 obj-y += ramfs/
 obj-y += ext4/
 obj-y += jbd2/
+obj-y += notify/

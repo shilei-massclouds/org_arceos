@@ -275,7 +275,6 @@ static int cmp_map_id(const void *k, const void *e)
 	return 1;
 }
 
-#if 0
 /*
  * map_id_range_down_max - Find idmap via binary search in ordered idmap array.
  * Can only be called if number of mappings exceeds UID_GID_MAP_MAX_BASE_EXTENTS.
@@ -341,8 +340,6 @@ u32 map_id_down(struct uid_gid_map *map, u32 id)
 {
 	return map_id_range_down(map, id, 1);
 }
-
-#endif /* CL */
 
 /*
  * map_id_up_base - Find idmap via binary search in static extent array.
@@ -541,6 +538,7 @@ gid_t from_kgid_munged(struct user_namespace *targ, kgid_t kgid)
 	return gid;
 }
 EXPORT_SYMBOL(from_kgid_munged);
+#endif // CL
 
 /**
  *	make_kprojid - Map a user-namespace projid pair into a kprojid.
@@ -562,6 +560,7 @@ kprojid_t make_kprojid(struct user_namespace *ns, projid_t projid)
 }
 EXPORT_SYMBOL(make_kprojid);
 
+#if 0
 /**
  *	from_kprojid - Create a projid from a kprojid user-namespace pair.
  *	@targ: The user namespace we want a projid in.

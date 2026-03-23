@@ -926,6 +926,7 @@ time64_t ktime_get_seconds(void)
 	return tk->ktime_sec;
 }
 EXPORT_SYMBOL_GPL(ktime_get_seconds);
+#endif // CL
 
 /**
  * ktime_get_real_seconds - Get the seconds portion of CLOCK_REALTIME
@@ -956,6 +957,7 @@ time64_t ktime_get_real_seconds(void)
 }
 EXPORT_SYMBOL_GPL(ktime_get_real_seconds);
 
+#if 0
 /**
  * __ktime_get_real_seconds - The same as ktime_get_real_seconds
  * but without the sequence counter protect. This internal function

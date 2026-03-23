@@ -772,7 +772,6 @@ int __legitimize_mnt(struct vfsmount *bastard, unsigned seq)
 	return -1;
 }
 
-#if 0
 /* call under rcu_read_lock */
 static bool legitimize_mnt(struct vfsmount *bastard, unsigned seq)
 {
@@ -849,6 +848,8 @@ struct vfsmount *lookup_mnt(const struct path *path)
 	rcu_read_unlock();
 	return m;
 }
+
+#if 0
 
 /*
  * __is_local_mountpoint - Test to see if dentry is a mountpoint in the
@@ -1022,7 +1023,6 @@ static void umount_mnt(struct mount *mnt)
 	put_mountpoint(unhash_mnt(mnt));
 }
 
-#if 0
 /*
  * vfsmount lock must be held for write
  */
@@ -1037,7 +1037,6 @@ void mnt_set_mountpoint(struct mount *mnt,
 	child_mnt->mnt_mp = mp;
 	hlist_add_head(&child_mnt->mnt_mp_list, &mp->m_list);
 }
-#endif // CL
 
 /**
  * mnt_set_mountpoint_beneath - mount a mount beneath another one
@@ -2385,7 +2384,6 @@ static int invent_group_ids(struct mount *mnt, bool recurse)
 	return 0;
 }
 
-#if 0
 int count_mounts(struct mnt_namespace *ns, struct mount *mnt)
 {
 	unsigned int max = READ_ONCE(sysctl_mount_max);
@@ -2408,7 +2406,6 @@ int count_mounts(struct mnt_namespace *ns, struct mount *mnt)
 	ns->pending_mounts += mounts;
 	return 0;
 }
-#endif // CL
 
 enum mnt_tree_flags_t {
 	MNT_TREE_MOVE = BIT(0),
@@ -5697,6 +5694,7 @@ bool current_chrooted(void)
 
 	return chrooted;
 }
+#endif // CL
 
 static bool mnt_already_visible(struct mnt_namespace *ns,
 				const struct super_block *sb,
@@ -5785,6 +5783,7 @@ static bool mount_too_revealing(const struct super_block *sb, int *new_mnt_flags
 	return !mnt_already_visible(ns, sb, new_mnt_flags);
 }
 
+#if 0
 bool mnt_may_suid(struct vfsmount *mnt)
 {
 	/*

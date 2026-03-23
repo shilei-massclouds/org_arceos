@@ -1573,6 +1573,7 @@ int generic_file_fsync(struct file *file, loff_t start, loff_t end,
 	return blkdev_issue_flush(inode->i_sb->s_bdev);
 }
 EXPORT_SYMBOL(generic_file_fsync);
+#endif // CL
 
 /**
  * generic_check_addressable - Check addressability of file system
@@ -1603,6 +1604,7 @@ int generic_check_addressable(unsigned blocksize_bits, u64 num_blocks)
 }
 EXPORT_SYMBOL(generic_check_addressable);
 
+#if 0
 /*
  * No-op implementation of ->fsync for in-memory filesystems.
  */
@@ -1698,6 +1700,7 @@ const char *simple_get_link(struct dentry *dentry, struct inode *inode,
 	return inode->i_link;
 }
 EXPORT_SYMBOL(simple_get_link);
+#endif // CL
 
 const struct inode_operations simple_symlink_inode_operations = {
 	.get_link = simple_get_link,
@@ -1759,7 +1762,7 @@ static const struct file_operations empty_dir_operations = {
 	.fsync		= noop_fsync,
 };
 
-
+#if 0
 void make_empty_dir_inode(struct inode *inode)
 {
 	set_nlink(inode, 2);
@@ -1775,6 +1778,7 @@ void make_empty_dir_inode(struct inode *inode)
 	inode->i_opflags &= ~IOP_XATTR;
 	inode->i_fop = &empty_dir_operations;
 }
+#endif // CL
 
 bool is_empty_dir_inode(struct inode *inode)
 {
@@ -1782,6 +1786,7 @@ bool is_empty_dir_inode(struct inode *inode)
 		(inode->i_op == &empty_dir_inode_operations);
 }
 
+#if 0
 #if IS_ENABLED(CONFIG_UNICODE)
 /**
  * generic_ci_d_compare - generic d_compare implementation for casefolding filesystems
@@ -1948,6 +1953,7 @@ static const struct dentry_operations generic_encrypted_dentry_ops = {
 	.d_revalidate = fscrypt_d_revalidate,
 };
 #endif
+#endif // CL
 
 /**
  * generic_set_sb_d_ops - helper for choosing the set of
@@ -1976,7 +1982,6 @@ void generic_set_sb_d_ops(struct super_block *sb)
 #endif
 }
 EXPORT_SYMBOL(generic_set_sb_d_ops);
-#endif // CL
 
 /**
  * inode_maybe_inc_iversion - increments i_version

@@ -32,7 +32,6 @@ int __percpu_init_rwsem(struct percpu_rw_semaphore *sem,
 }
 EXPORT_SYMBOL_GPL(__percpu_init_rwsem);
 
-#if 0
 void percpu_free_rwsem(struct percpu_rw_semaphore *sem)
 {
 	/*
@@ -47,7 +46,6 @@ void percpu_free_rwsem(struct percpu_rw_semaphore *sem)
 	sem->read_count = NULL; /* catch use after free bugs */
 }
 EXPORT_SYMBOL_GPL(percpu_free_rwsem);
-#endif /* CL */
 
 static bool __percpu_down_read_trylock(struct percpu_rw_semaphore *sem)
 {

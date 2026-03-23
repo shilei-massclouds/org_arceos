@@ -360,6 +360,7 @@ void clear_nlink(struct inode *inode)
 	}
 }
 EXPORT_SYMBOL(clear_nlink);
+#endif // CL
 
 /**
  * set_nlink - directly set an inode's link count
@@ -382,7 +383,6 @@ void set_nlink(struct inode *inode, unsigned int nlink)
 	}
 }
 EXPORT_SYMBOL(set_nlink);
-#endif // CL
 
 /**
  * inc_nlink - directly increment an inode's link count
@@ -1161,6 +1161,7 @@ void lockdep_annotate_inode_mutex_key(struct inode *inode)
 }
 EXPORT_SYMBOL(lockdep_annotate_inode_mutex_key);
 #endif
+#endif // CL
 
 /**
  * unlock_new_inode - clear the I_NEW state and wake up any waiters
@@ -1186,6 +1187,7 @@ void unlock_new_inode(struct inode *inode)
 }
 EXPORT_SYMBOL(unlock_new_inode);
 
+#if 0
 void discard_new_inode(struct inode *inode)
 {
 	lockdep_annotate_inode_mutex_key(inode);
@@ -1398,6 +1400,7 @@ again:
 	return inode;
 }
 EXPORT_SYMBOL_GPL(iget5_locked_rcu);
+#endif // CL
 
 /**
  * iget_locked - obtain an inode from a mounted file system
@@ -1471,6 +1474,7 @@ again:
 }
 EXPORT_SYMBOL(iget_locked);
 
+#if 0
 /*
  * search the inode cache for a matching inode number.
  * If we find one, then the inode number we are trying to
@@ -1922,7 +1926,6 @@ retry:
 }
 EXPORT_SYMBOL(iput);
 
-#if 0
 #ifdef CONFIG_BLOCK
 /**
  *	bmap	- find a block number in a file
@@ -1948,7 +1951,6 @@ int bmap(struct inode *inode, sector_t *block)
 }
 EXPORT_SYMBOL(bmap);
 #endif
-#endif // CL
 
 /*
  * With relative atime, only update atime if the previous atime is
@@ -2594,6 +2596,7 @@ void inode_dio_wait_interruptible(struct inode *inode)
 				     inode_dio_finished(inode));
 }
 EXPORT_SYMBOL(inode_dio_wait_interruptible);
+#endif // CL
 
 /*
  * inode_set_flags - atomically set some inode flags
@@ -2619,6 +2622,7 @@ void inode_set_flags(struct inode *inode, unsigned int flags,
 }
 EXPORT_SYMBOL(inode_set_flags);
 
+#if 0
 void inode_nohighmem(struct inode *inode)
 {
 	mapping_set_gfp_mask(inode->i_mapping, GFP_USER);
