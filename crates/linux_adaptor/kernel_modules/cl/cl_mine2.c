@@ -550,8 +550,11 @@ CL_MINE(bdi_set_min_ratio_no_scale)
 CL_MINE(bdi_set_min_ratio)
 CL_MINE(wb_calc_thresh)
 CL_MINE(debugfs_remove)
-CL_MINE(wb_workfn)
 CL_MINE(laptop_mode_timer_fn)
+
+CL_MINE(wb_over_bg_thresh)
+CL_MINE(set_worker_desc)
+CL_MINE(current_is_workqueue_rescuer)
 
 CL_MINE(clear_inode)
 CL_MINE(proc_doulongvec_minmax)

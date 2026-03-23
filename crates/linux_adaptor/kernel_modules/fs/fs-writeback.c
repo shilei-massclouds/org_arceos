@@ -133,7 +133,6 @@ static bool inode_io_list_move_locked(struct inode *inode,
 	return false;
 }
 
-#if 0
 static void wb_wakeup(struct bdi_writeback *wb)
 {
 	spin_lock_irq(&wb->work_lock);
@@ -141,7 +140,6 @@ static void wb_wakeup(struct bdi_writeback *wb)
 		mod_delayed_work(bdi_wq, &wb->dwork, 0);
 	spin_unlock_irq(&wb->work_lock);
 }
-#endif // CL
 
 /*
  * This function is used when the first inode for this wb is marked dirty. It
@@ -1231,7 +1229,6 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
 
 #endif	/* CONFIG_CGROUP_WRITEBACK */
 
-#if 0
 /*
  * Add in the number of potentially dirty inodes, because each inode
  * write can dirty pagecache in the underlying blockdev.
@@ -1242,6 +1239,7 @@ static unsigned long get_nr_dirty_pages(void)
 		get_nr_dirty_inodes();
 }
 
+#if 0
 static void wb_start_writeback(struct bdi_writeback *wb, enum wb_reason reason)
 {
 	if (!wb_has_dirty_io(wb))
@@ -1373,7 +1371,6 @@ static void redirty_tail_locked(struct inode *inode, struct bdi_writeback *wb)
 	inode_io_list_move_locked(inode, wb, &wb->b_dirty);
 }
 
-#if 0
 static void redirty_tail(struct inode *inode, struct bdi_writeback *wb)
 {
 	spin_lock(&inode->i_lock);
@@ -1388,7 +1385,6 @@ static void requeue_io(struct inode *inode, struct bdi_writeback *wb)
 {
 	inode_io_list_move_locked(inode, wb, &wb->b_more_io);
 }
-#endif // CL
 
 static void inode_sync_complete(struct inode *inode)
 {
@@ -1401,7 +1397,6 @@ static void inode_sync_complete(struct inode *inode)
 	inode_wake_up_bit(inode, __I_SYNC);
 }
 
-#if 0
 static bool inode_dirtied_after(struct inode *inode, unsigned long t)
 {
 	bool ret = time_after(inode->dirtied_when, t);
@@ -1500,7 +1495,6 @@ static void queue_io(struct bdi_writeback *wb, struct wb_writeback_work *work,
 		wb_io_lists_populated(wb);
 	trace_writeback_queue_io(wb, work, dirtied_before, moved);
 }
-#endif // CL
 
 static int write_inode(struct inode *inode, struct writeback_control *wbc)
 {
@@ -1542,6 +1536,7 @@ void inode_wait_for_writeback(struct inode *inode)
 	}
 	finish_wait(wq_head, &wqe.wq_entry);
 }
+#endif // CL
 
 /*
  * Sleep until I_SYNC is cleared. This function must be called with i_lock
@@ -1640,7 +1635,6 @@ static void requeue_inode(struct inode *inode, struct bdi_writeback *wb,
 		inode_cgwb_move_to_attached(inode, wb);
 	}
 }
-#endif // CL
 
 /*
  * Write out an inode and its dirty pages (or some of its dirty pages, depending
@@ -1823,7 +1817,6 @@ out:
 	return ret;
 }
 
-#if 0
 static long writeback_chunk_size(struct bdi_writeback *wb,
 				 struct wb_writeback_work *work)
 {
@@ -2277,7 +2270,6 @@ static long wb_check_start_all(struct bdi_writeback *wb)
 	return nr_pages;
 }
 
-
 /*
  * Retrieve work items and do the writeback they describe
  */
@@ -2349,6 +2341,7 @@ void wb_workfn(struct work_struct *work)
 		wb_wakeup_delayed(wb);
 }
 
+#if 0
 /*
  * Start writeback of all dirty pages on this bdi.
  */
