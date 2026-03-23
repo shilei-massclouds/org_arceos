@@ -1436,7 +1436,6 @@ void wq_worker_sleeping(struct task_struct *task)
 	if (READ_ONCE(worker->sleeping))
 		return;
 
-#if 0
 	WRITE_ONCE(worker->sleeping, 1);
 	raw_spin_lock_irq(&pool->lock);
 
@@ -1455,8 +1454,6 @@ void wq_worker_sleeping(struct task_struct *task)
 		worker->current_pwq->stats[PWQ_STAT_CM_WAKEUP]++;
 
 	raw_spin_unlock_irq(&pool->lock);
-#endif
-    PANIC("");
 }
 
 /**

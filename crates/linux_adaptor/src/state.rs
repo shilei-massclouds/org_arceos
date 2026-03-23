@@ -199,6 +199,7 @@ fn DoInitCallsCB() {
 
 #[allow(non_snake_case)]
 fn PrepareNamespaceCB() {
+    #[cfg(feature = "linux-fs")]
     unsafe {
         cl_prepare_namespace();
     }
@@ -228,6 +229,7 @@ unsafe extern "C" {
     fn init_page_alloc_later();
     fn cl_driver_init();
     fn cl_do_initcalls();
+    #[allow(dead_code)]
     fn cl_prepare_namespace();
     fn cl_free_init_mem();
 }

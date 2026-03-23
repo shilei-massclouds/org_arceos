@@ -691,6 +691,7 @@ void generic_shutdown_super(struct super_block *sb)
 }
 
 EXPORT_SYMBOL(generic_shutdown_super);
+#endif // CL
 
 bool mount_capable(struct fs_context *fc)
 {
@@ -699,7 +700,6 @@ bool mount_capable(struct fs_context *fc)
 	else
 		return ns_capable(fc->user_ns, CAP_SYS_ADMIN);
 }
-#endif // CL
 
 /**
  * sget_fc - Find or create a superblock
@@ -1332,6 +1332,7 @@ int get_tree_keyed(struct fs_context *fc,
 	return vfs_get_super(fc, test_keyed_super, fill_super);
 }
 EXPORT_SYMBOL(get_tree_keyed);
+#endif // CL
 
 static int set_bdev_super(struct super_block *s, void *data)
 {
@@ -1339,6 +1340,7 @@ static int set_bdev_super(struct super_block *s, void *data)
 	return 0;
 }
 
+#if 0
 static int super_s_dev_set(struct super_block *s, struct fs_context *fc)
 {
 	return set_bdev_super(s, fc->sget_key);
@@ -1376,6 +1378,7 @@ struct super_block *sget_dev(struct fs_context *fc, dev_t dev)
 	return sget_fc(fc, super_s_dev_test, super_s_dev_set);
 }
 EXPORT_SYMBOL(sget_dev);
+#endif // CL
 
 #ifdef CONFIG_BLOCK
 /*
@@ -1731,6 +1734,8 @@ void kill_block_super(struct super_block *sb)
 
 EXPORT_SYMBOL(kill_block_super);
 #endif
+
+#if 0
 
 struct dentry *mount_nodev(struct file_system_type *fs_type,
 	int flags, void *data,

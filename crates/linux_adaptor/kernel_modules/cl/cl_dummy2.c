@@ -646,3 +646,16 @@ bool capable(int cap)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return true;
 }
+
+bool ns_capable(struct user_namespace *ns, int cap)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return true;
+}
+
+int security_sb_mount(const char *dev_name, const struct path *path,
+              const char *type, unsigned long flags, void *data)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

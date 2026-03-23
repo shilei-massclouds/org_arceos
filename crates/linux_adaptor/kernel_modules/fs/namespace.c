@@ -36,6 +36,7 @@
 
 #include "pnode.h"
 #include "internal.h"
+#include "adaptor.h"
 
 /* Maximum number of mounts in a mount namespace */
 static unsigned int sysctl_mount_max __read_mostly = 100000;
@@ -221,7 +222,6 @@ static inline void unlock_mount_hash(void)
 	write_sequnlock(&mount_lock);
 }
 
-#if 0
 static inline struct hlist_head *m_hash(struct vfsmount *mnt, struct dentry *dentry)
 {
 	unsigned long tmp = ((unsigned long)mnt / L1_CACHE_BYTES);
@@ -236,7 +236,6 @@ static inline struct hlist_head *mp_hash(struct dentry *dentry)
 	tmp = tmp + (tmp >> mp_hash_shift);
 	return &mountpoint_hashtable[tmp & mp_hash_mask];
 }
-#endif // CL
 
 static int mnt_alloc_id(struct mount *mnt)
 {
@@ -254,7 +253,6 @@ static void mnt_free_id(struct mount *mnt)
 	ida_free(&mnt_id_ida, mnt->mnt_id);
 }
 
-#if 0
 /*
  * Allocate a new peer group ID
  */
@@ -276,7 +274,6 @@ void mnt_release_group_id(struct mount *mnt)
 	ida_free(&mnt_group_ida, mnt->mnt_group_id);
 	mnt->mnt_group_id = 0;
 }
-#endif /* CL */
 
 /*
  * vfsmount lock must be held for read
@@ -619,6 +616,7 @@ void mnt_drop_write_file(struct file *file)
 	sb_end_write(file_inode(file)->i_sb);
 }
 EXPORT_SYMBOL(mnt_drop_write_file);
+#endif // CL
 
 /**
  * mnt_hold_writers - prevent write access to the given mount
@@ -702,6 +700,7 @@ static int mnt_make_readonly(struct mount *mnt)
 	return ret;
 }
 
+#if 0
 int sb_prepare_remount_readonly(struct super_block *sb)
 {
 	struct mount *mnt;
@@ -882,6 +881,7 @@ bool __is_local_mountpoint(struct dentry *dentry)
 
 	return is_covered;
 }
+#endif // CL
 
 static struct mountpoint *lookup_mountpoint(struct dentry *dentry)
 {
@@ -946,7 +946,6 @@ done:
 	kfree(new);
 	return mp;
 }
-#endif /* CL */
 
 /*
  * vfsmount lock must be held.  Additionally, the caller is responsible
@@ -966,7 +965,6 @@ static void __put_mountpoint(struct mountpoint *mp, struct list_head *list)
 	}
 }
 
-#if 0
 /* called with namespace_lock and vfsmount lock */
 static void put_mountpoint(struct mountpoint *mp)
 {
@@ -999,7 +997,6 @@ static void __touch_mnt_namespace(struct mnt_namespace *ns)
 		wake_up_interruptible(&ns->poll);
 	}
 }
-#endif // CL
 
 /*
  * vfsmount lock must be held for write
@@ -1017,7 +1014,6 @@ static struct mountpoint *unhash_mnt(struct mount *mnt)
 	return mp;
 }
 
-#if 0
 /*
  * vfsmount lock must be held for write
  */
@@ -1026,6 +1022,7 @@ static void umount_mnt(struct mount *mnt)
 	put_mountpoint(unhash_mnt(mnt));
 }
 
+#if 0
 /*
  * vfsmount lock must be held for write
  */
@@ -1040,6 +1037,7 @@ void mnt_set_mountpoint(struct mount *mnt,
 	child_mnt->mnt_mp = mp;
 	hlist_add_head(&child_mnt->mnt_mp_list, &mp->m_list);
 }
+#endif // CL
 
 /**
  * mnt_set_mountpoint_beneath - mount a mount beneath another one
@@ -1113,6 +1111,7 @@ static void attach_mnt(struct mount *mnt, struct mount *parent,
 	__attach_mnt(mnt, mnt->mnt_parent);
 }
 
+#if 0
 void mnt_change_mountpoint(struct mount *parent, struct mountpoint *mp, struct mount *mnt)
 {
 	struct mountpoint *old_mp = mnt->mnt_mp;
@@ -1152,7 +1151,6 @@ static void mnt_add_to_ns(struct mnt_namespace *ns, struct mount *mnt)
 	rb_insert_color(&mnt->mnt_node, &ns->mounts);
 }
 
-#if 0
 /*
  * vfsmount lock must be held for write
  */
@@ -1195,6 +1193,7 @@ static struct mount *next_mnt(struct mount *p, struct mount *root)
 	return list_entry(next, struct mount, mnt_child);
 }
 
+#if 0
 static struct mount *skip_mnt_tree(struct mount *p)
 {
 	struct list_head *prev = p->mnt_mounts.prev;
@@ -1298,6 +1297,7 @@ vfs_submount(const struct dentry *mountpoint, struct file_system_type *type,
 	return vfs_kern_mount(type, SB_SUBMOUNT, name, data);
 }
 EXPORT_SYMBOL_GPL(vfs_submount);
+#endif // CL
 
 static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 					int flag)
@@ -1366,7 +1366,6 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 	free_vfsmnt(mnt);
 	return ERR_PTR(err);
 }
-#endif /* CL */
 
 static void cleanup_mnt(struct mount *mnt)
 {
@@ -1701,6 +1700,7 @@ int may_umount(struct vfsmount *mnt)
 }
 
 EXPORT_SYMBOL(may_umount);
+#endif // CL
 
 static void namespace_unlock(void)
 {
@@ -1830,6 +1830,7 @@ static void umount_tree(struct mount *mnt, enum umount_tree_flags how)
 
 static void shrink_submounts(struct mount *mnt);
 
+#if 0
 static int do_umount_root(struct super_block *sb)
 {
 	int ret = 0;
@@ -1985,6 +1986,7 @@ out_unlock:
 	unlock_mount_hash();
 	namespace_unlock();
 }
+#endif // CL
 
 /*
  * Is the caller allowed to modify his namespace?
@@ -2003,6 +2005,7 @@ static void warn_mandlock(void)
 		     "=======================================================\n");
 }
 
+#if 0
 static int can_umount(const struct path *path, int flags)
 {
 	struct mount *mnt = real_mount(path->mnt);
@@ -2071,6 +2074,7 @@ SYSCALL_DEFINE1(oldumount, char __user *, name)
 }
 
 #endif
+#endif // CL
 
 static bool is_mnt_ns_file(struct dentry *dentry)
 {
@@ -2085,6 +2089,7 @@ static bool is_mnt_ns_file(struct dentry *dentry)
 	return ns->ops == &mntns_operations;
 }
 
+#if 0
 struct ns_common *from_mnt_ns(struct mnt_namespace *mnt)
 {
 	return &mnt->ns;
@@ -2121,6 +2126,7 @@ struct mnt_namespace *__lookup_next_mnt_ns(struct mnt_namespace *mntns, bool pre
 		return mntns;
 	}
 }
+#endif // CL
 
 static bool mnt_ns_loop(struct dentry *dentry)
 {
@@ -2135,6 +2141,7 @@ static bool mnt_ns_loop(struct dentry *dentry)
 	return current->nsproxy->mnt_ns->seq >= mnt_ns->seq;
 }
 
+#if 0
 struct mount *copy_tree(struct mount *src_root, struct dentry *dentry,
 					int flag)
 {
@@ -2219,10 +2226,12 @@ struct vfsmount *collect_mounts(const struct path *path)
 		return ERR_CAST(tree);
 	return &tree->mnt;
 }
+#endif // CL
 
 static void free_mnt_ns(struct mnt_namespace *);
 static struct mnt_namespace *alloc_mnt_ns(struct user_namespace *, bool);
 
+#if 0
 void dissolve_on_fput(struct vfsmount *mnt)
 {
 	struct mnt_namespace *ns;
@@ -2320,6 +2329,7 @@ int iterate_mounts(int (*f)(struct vfsmount *, void *), void *arg,
 	}
 	return 0;
 }
+#endif // CL
 
 static void lock_mnt_tree(struct mount *mnt)
 {
@@ -2375,6 +2385,7 @@ static int invent_group_ids(struct mount *mnt, bool recurse)
 	return 0;
 }
 
+#if 0
 int count_mounts(struct mnt_namespace *ns, struct mount *mnt)
 {
 	unsigned int max = READ_ONCE(sysctl_mount_max);
@@ -2397,6 +2408,7 @@ int count_mounts(struct mnt_namespace *ns, struct mount *mnt)
 	ns->pending_mounts += mounts;
 	return 0;
 }
+#endif // CL
 
 enum mnt_tree_flags_t {
 	MNT_TREE_MOVE = BIT(0),
@@ -2830,6 +2842,7 @@ out:
 	return err;
 }
 
+#if 0
 static struct file *open_detached_copy(struct path *path, bool recursive)
 {
 	struct user_namespace *user_ns = current->nsproxy->mnt_ns->user_ns;
@@ -2918,6 +2931,7 @@ SYSCALL_DEFINE3(open_tree, int, dfd, const char __user *, filename, unsigned, fl
 	fd_install(fd, file);
 	return fd;
 }
+#endif // CL
 
 /*
  * Don't allow locked mount flags to be cleared.
@@ -3124,6 +3138,7 @@ out:
 	return ret;
 }
 
+#if 0
 static int do_set_group(struct path *from_path, struct path *to_path)
 {
 	struct mount *from, *to;
@@ -3195,6 +3210,7 @@ out:
 	namespace_unlock();
 	return err;
 }
+#endif // CL
 
 /**
  * path_overmounted - check if path is overmounted
@@ -3551,6 +3567,7 @@ static int do_new_mount(struct path *path, const char *fstype, int sb_flags,
 	return err;
 }
 
+#if 0
 int finish_automount(struct vfsmount *m, const struct path *path)
 {
 	struct dentry *dentry = path->dentry;
@@ -3780,6 +3797,7 @@ static char *copy_mount_string(const void __user *data)
 {
 	return data ? strndup_user(data, PATH_MAX) : NULL;
 }
+#endif // CL
 
 /*
  * Flags is a 32-bit value that allows up to 31 non-fs dependent flags to
@@ -3874,6 +3892,7 @@ int path_mount(const char *dev_name, struct path *path,
 			    data_page);
 }
 
+#if 0
 long do_mount(const char *dev_name, const char __user *dir_name,
 		const char *type_page, unsigned long flags, void *data_page)
 {

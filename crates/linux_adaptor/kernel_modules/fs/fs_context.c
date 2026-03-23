@@ -428,6 +428,7 @@ err_fc:
 	return ERR_PTR(ret);
 }
 EXPORT_SYMBOL(vfs_dup_fs_context);
+#endif // CL
 
 /**
  * logfc - Log a message to a filesystem context
@@ -484,7 +485,6 @@ void logfc(struct fc_log *log, const char *prefix, char level, const char *fmt, 
 	va_end(va);
 }
 EXPORT_SYMBOL(logfc);
-#endif // CL
 
 /*
  * Free a logging structure.

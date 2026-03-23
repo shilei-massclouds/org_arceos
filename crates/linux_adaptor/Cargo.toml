@@ -12,6 +12,7 @@ categories.workspace = true
 
 [features]
 irq = []
+linux-fs = []
 
 [dependencies]
 axlog = { workspace = true }

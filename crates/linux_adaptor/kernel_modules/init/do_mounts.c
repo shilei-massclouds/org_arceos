@@ -186,7 +186,6 @@ out:
 	return ret;
 }
 
-#if 0
 void __init mount_root_generic(char *name, char *pretty_name, int flags)
 {
 	struct page *page = alloc_page(GFP_KERNEL);
@@ -256,7 +255,6 @@ retry:
 out:
 	put_page(page);
 }
-#endif // CL
  
 #ifdef CONFIG_ROOT_NFS
 
@@ -495,9 +493,7 @@ void __init prepare_namespace(void)
 
 	if (root_wait)
 		wait_for_root(saved_root_name);
-    printk("%s: step1\n", __func__);
 	mount_root(saved_root_name);
-    printk("%s: step2\n", __func__);
 out:
 	devtmpfs_mount();
 	init_mount(".", "/", NULL, MS_MOVE, NULL);

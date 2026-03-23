@@ -257,7 +257,6 @@ enum {
 	DIR_OFFSET_MAX		= DIR_OFFSET_EOD - 1,
 };
 
-#if 0
 static void offset_set(struct dentry *dentry, long offset)
 {
 	dentry->d_fsdata = (void *)offset;
@@ -267,7 +266,6 @@ static long dentry2offset(struct dentry *dentry)
 {
 	return (long)dentry->d_fsdata;
 }
-#endif // CL
 
 static struct lock_class_key simple_offset_lock_class;
 
@@ -283,7 +281,6 @@ void simple_offset_init(struct offset_ctx *octx)
 	octx->next_offset = DIR_OFFSET_MIN;
 }
 
-#if 0
 /**
  * simple_offset_add - Add an entry to a directory's offset map
  * @octx: directory offset ctx to be updated
@@ -310,6 +307,7 @@ int simple_offset_add(struct offset_ctx *octx, struct dentry *dentry)
 	return 0;
 }
 
+#if 0
 static int simple_offset_replace(struct offset_ctx *octx, struct dentry *dentry,
 				 long offset)
 {
@@ -1978,6 +1976,7 @@ void generic_set_sb_d_ops(struct super_block *sb)
 #endif
 }
 EXPORT_SYMBOL(generic_set_sb_d_ops);
+#endif // CL
 
 /**
  * inode_maybe_inc_iversion - increments i_version
@@ -2030,6 +2029,7 @@ bool inode_maybe_inc_iversion(struct inode *inode, bool force)
 }
 EXPORT_SYMBOL(inode_maybe_inc_iversion);
 
+#if 0
 /**
  * inode_query_iversion - read i_version for later use
  * @inode: inode from which i_version should be read
