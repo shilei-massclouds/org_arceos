@@ -25,6 +25,7 @@
 #     - `GRAPHIC`: Enable display devices and graphic output (virtio-gpu)
 #     - `BUS`: Device bus type: mmio, pci
 #     - `MEM`: Memory size (default is 128M)
+#     - `FS_TYPE`: FileSystem type on disk image
 #     - `DISK_IMG`: Path to the virtual disk image
 #     - `ACCEL`: Enable hardware acceleration (KVM on linux)
 #     - `QEMU_LOG`: Enable QEMU logging (log file is "qemu.log")
@@ -64,6 +65,7 @@ MEM ?= 128M
 ACCEL ?=
 QEMU_ARGS ?=
 
+FS_TYPE ?= fat32
 DISK_IMG ?= disk.img
 QEMU_LOG ?= n
 NET_DUMP ?= n
@@ -226,7 +228,7 @@ disk_img:
 ifneq ($(wildcard $(DISK_IMG)),)
 	@printf "$(YELLOW_C)warning$(END_C): disk image \"$(DISK_IMG)\" already exists!\n"
 else
-	$(call make_disk_image,fat32,$(DISK_IMG))
+	$(call make_disk_image,$(FS_TYPE),$(DISK_IMG))
 endif
 
 clean: clean_c
