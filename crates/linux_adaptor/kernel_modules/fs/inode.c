@@ -323,7 +323,6 @@ static void destroy_inode(struct inode *inode)
 	call_rcu(&inode->i_rcu, i_callback);
 }
 
-#if 0
 /**
  * drop_nlink - directly drop an inode's link count
  * @inode: inode
@@ -344,6 +343,7 @@ void drop_nlink(struct inode *inode)
 }
 EXPORT_SYMBOL(drop_nlink);
 
+#if 0
 /**
  * clear_nlink - directly zero an inode's link count
  * @inode: inode

@@ -129,7 +129,25 @@ impl VfsNodeOps for DirNode {
     }
 
     fn remove(&self, path: &str) -> VfsResult {
-        todo!();
+        let path = self.full_path(path);
+        let c_path = CString::new(path.clone()).unwrap();
+
+        if let Some((ty, _sz)) = self.exist(&path) {
+            let ret = match ty {
+                VfsNodeType::File => unsafe { cl_sys_unlink(c_path.as_ptr()) },
+                VfsNodeType::Dir => unsafe { cl_sys_rmdir(c_path.as_ptr()) },
+                _ => {
+                    return Err(VfsError::Unsupported);
+                },
+            };
+            if ret < 0 {
+                ax_err!(Io)
+            } else {
+                Ok(())
+            }
+        } else {
+            Err(VfsError::NotFound)
+        }
     }
 
     fn read_dir(&self, start_idx: usize, dirents: &mut [VfsDirEntry]) -> VfsResult<usize> {
@@ -255,14 +273,13 @@ unsafe extern "C" {
     fn cl_sys_lseek(fd: usize, offset: usize, whence: usize);
     fn cl_sys_write(fd: usize, buf: *const u8, count: usize) -> i32;
     fn cl_sys_read(fd: usize, buf: *mut u8, count: usize) -> i32;
+
+    fn cl_sys_unlink(path: *const c_char) -> i32;
+    fn cl_sys_rmdir(path: *const c_char) -> i32;
 }
 
 /*
 unsafe extern "C" {
-    fn cl_sys_unlink(path: *const c_char) -> i32;
-
-    fn cl_sys_mkdir(path: *const c_char, mode: usize) -> i32;
-    fn cl_sys_rmdir(path: *const c_char) -> i32;
 
     fn cl_sys_getdents64(fd: usize, buf: *mut u8, len: usize) -> i32;
 

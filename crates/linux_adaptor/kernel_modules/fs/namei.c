@@ -3034,6 +3034,7 @@ int user_path_at(int dfd, const char __user *name, unsigned flags,
 	return ret;
 }
 EXPORT_SYMBOL(user_path_at);
+#endif // CL
 
 int __check_sticky(struct mnt_idmap *idmap, struct inode *dir,
 		   struct inode *inode)
@@ -3110,7 +3111,6 @@ static int may_delete(struct mnt_idmap *idmap, struct inode *dir,
 		return -EBUSY;
 	return 0;
 }
-#endif // CL
 
 /*	Check whether we can create an object with dentry child in directory
  *  dir.
@@ -4446,6 +4446,7 @@ SYSCALL_DEFINE1(rmdir, const char __user *, pathname)
 {
 	return do_rmdir(AT_FDCWD, getname(pathname));
 }
+#endif // CL
 
 /**
  * vfs_unlink - unlink a filesystem object
@@ -4516,7 +4517,6 @@ out:
 	return error;
 }
 EXPORT_SYMBOL(vfs_unlink);
-#endif // CL
 
 /*
  * Make sure that the actual truncation of the file will occur outside its

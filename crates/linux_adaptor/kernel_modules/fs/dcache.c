@@ -2391,6 +2391,7 @@ struct dentry *d_hash_and_lookup(struct dentry *dir, struct qstr *name)
 	return d_lookup(dir, name);
 }
 EXPORT_SYMBOL(d_hash_and_lookup);
+#endif // CL
 
 /*
  * When a file is deleted, we have two options:
@@ -2432,7 +2433,6 @@ void d_delete(struct dentry * dentry)
 	}
 }
 EXPORT_SYMBOL(d_delete);
-#endif // CL
 
 static void __d_rehash(struct dentry *entry)
 {

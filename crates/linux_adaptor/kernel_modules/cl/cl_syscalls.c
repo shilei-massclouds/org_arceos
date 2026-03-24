@@ -131,3 +131,13 @@ int cl_sys_read(unsigned int fd, char *buf, size_t count)
 {
 	return ksys_read(fd, buf, count);
 }
+
+int cl_sys_unlink(const char *pathname)
+{
+	return do_unlinkat(AT_FDCWD, getname_kernel(pathname));
+}
+
+int cl_sys_rmdir(const char *pathname)
+{
+    PANIC("rmdir");
+}
