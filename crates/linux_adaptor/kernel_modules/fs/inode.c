@@ -341,7 +341,6 @@ void drop_nlink(struct inode *inode)
 }
 EXPORT_SYMBOL(drop_nlink);
 
-#if 0
 /**
  * clear_nlink - directly zero an inode's link count
  * @inode: inode
@@ -358,7 +357,6 @@ void clear_nlink(struct inode *inode)
 	}
 }
 EXPORT_SYMBOL(clear_nlink);
-#endif // CL
 
 /**
  * set_nlink - directly set an inode's link count

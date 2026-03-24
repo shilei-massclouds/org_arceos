@@ -1220,6 +1220,7 @@ void shrink_dcache_sb(struct super_block *sb)
 	} while (list_lru_count(&sb->s_dentry_lru) > 0);
 }
 EXPORT_SYMBOL(shrink_dcache_sb);
+#endif // CL
 
 /**
  * enum d_walk_ret - action to talke during tree walk
@@ -1348,6 +1349,7 @@ struct check_mount {
 	unsigned int mounted;
 };
 
+#if 0
 static enum d_walk_ret path_check_mount(void *data, struct dentry *dentry)
 {
 	struct check_mount *info = data;
@@ -1419,7 +1421,6 @@ out:
 	return ret;
 }
 
-#if 0
 /*
  * Search the dentry child list of the specified parent,
  * and move any unused dentries to the end of the unused
@@ -1537,6 +1538,7 @@ void shrink_dcache_parent(struct dentry *parent)
 }
 EXPORT_SYMBOL(shrink_dcache_parent);
 
+#if 0
 static enum d_walk_ret umount_check(void *_data, struct dentry *dentry)
 {
 	/* it has busy descendents; complain about those instead */

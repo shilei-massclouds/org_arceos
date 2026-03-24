@@ -171,7 +171,7 @@ int cl_sys_unlink(const char *pathname)
 
 int cl_sys_rmdir(const char *pathname)
 {
-    PANIC("rmdir");
+	return do_rmdir(AT_FDCWD, getname_kernel(pathname));
 }
 
 /*

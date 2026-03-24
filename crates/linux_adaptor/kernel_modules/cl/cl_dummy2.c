@@ -767,3 +767,15 @@ int security_inode_unlink(struct inode *dir, struct dentry *dentry)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int security_path_rmdir(const struct path *dir, struct dentry *dentry)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_inode_rmdir(struct inode *dir, struct dentry *dentry)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
