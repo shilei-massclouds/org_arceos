@@ -204,7 +204,6 @@ struct ucounts *alloc_ucounts(struct user_namespace *ns, kuid_t uid)
 	return ucounts;
 }
 
-#if 0
 void put_ucounts(struct ucounts *ucounts)
 {
 	unsigned long flags;
@@ -216,7 +215,6 @@ void put_ucounts(struct ucounts *ucounts)
 		kfree(ucounts);
 	}
 }
-#endif // CL
 
 static inline bool atomic_long_inc_below(atomic_long_t *v, int u)
 {
@@ -284,7 +282,6 @@ long inc_rlimit_ucounts(struct ucounts *ucounts, enum rlimit_type type, long v)
 	return ret;
 }
 
-#if 0
 bool dec_rlimit_ucounts(struct ucounts *ucounts, enum rlimit_type type, long v)
 {
 	struct ucounts *iter;
@@ -297,7 +294,6 @@ bool dec_rlimit_ucounts(struct ucounts *ucounts, enum rlimit_type type, long v)
 	}
 	return (new == 0);
 }
-#endif /* CL */
 
 static void do_dec_rlimit_put_ucounts(struct ucounts *ucounts,
 				struct ucounts *last, enum rlimit_type type)

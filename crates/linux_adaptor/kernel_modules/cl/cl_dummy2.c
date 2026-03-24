@@ -779,3 +779,44 @@ int security_inode_rmdir(struct inode *dir, struct dentry *dentry)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+void tty_kref_put(struct tty_struct *tty)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// fs/proc/base.c
+void proc_flush_pid(struct pid *pid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void perf_event_delayed_put(struct task_struct *task)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void __io_uring_free(struct task_struct *tsk)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void security_task_free(struct task_struct *task)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void security_cred_free(struct cred *cred)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void groups_free(struct group_info *group_info)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void bpf_task_storage_free(struct task_struct *task)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

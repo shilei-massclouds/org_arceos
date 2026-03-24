@@ -131,7 +131,6 @@ bool set_kthread_struct(struct task_struct *p)
 	return true;
 }
 
-#if 0
 void free_kthread_struct(struct task_struct *k)
 {
 	struct kthread *kthread;
@@ -150,7 +149,6 @@ void free_kthread_struct(struct task_struct *k)
 	kfree(kthread->full_name);
 	kfree(kthread);
 }
-#endif /* CL */
 
 /**
  * kthread_should_stop - should this kthread return now?

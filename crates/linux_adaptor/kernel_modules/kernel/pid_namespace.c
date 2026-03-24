@@ -66,12 +66,14 @@ static struct ucounts *inc_pid_namespaces(struct user_namespace *ns)
 {
 	return inc_ucount(ns, current_euid(), UCOUNT_PID_NAMESPACES);
 }
+#endif /* CL */
 
 static void dec_pid_namespaces(struct ucounts *ucounts)
 {
 	dec_ucount(ucounts, UCOUNT_PID_NAMESPACES);
 }
 
+#if 0
 static struct pid_namespace *create_pid_namespace(struct user_namespace *user_ns,
 	struct pid_namespace *parent_pid_ns)
 {
@@ -126,6 +128,7 @@ out_dec:
 out:
 	return ERR_PTR(err);
 }
+#endif /* CL */
 
 static void delayed_free_pidns(struct rcu_head *p)
 {
@@ -145,6 +148,7 @@ static void destroy_pid_namespace(struct pid_namespace *ns)
 	call_rcu(&ns->rcu, delayed_free_pidns);
 }
 
+#if 0
 struct pid_namespace *copy_pid_ns(unsigned long flags,
 	struct user_namespace *user_ns, struct pid_namespace *old_ns)
 {
@@ -160,7 +164,6 @@ void put_pid_ns(struct pid_namespace *ns)
 {
 	struct pid_namespace *parent;
 
-#if 0
 	while (ns != &init_pid_ns) {
 		parent = ns->parent;
 		if (!refcount_dec_and_test(&ns->ns.count))
@@ -168,8 +171,6 @@ void put_pid_ns(struct pid_namespace *ns)
 		destroy_pid_namespace(ns);
 		ns = parent;
 	}
-#endif
-    PANIC("");
 }
 EXPORT_SYMBOL_GPL(put_pid_ns);
 

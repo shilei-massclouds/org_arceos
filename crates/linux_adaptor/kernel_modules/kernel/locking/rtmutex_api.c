@@ -483,6 +483,7 @@ void __sched rt_mutex_postunlock(struct rt_wake_q_head *wqh)
 {
 	rt_mutex_wake_up_q(wqh);
 }
+#endif // CL
 
 #ifdef CONFIG_DEBUG_RT_MUTEXES
 void rt_mutex_debug_task_free(struct task_struct *task)
@@ -492,6 +493,7 @@ void rt_mutex_debug_task_free(struct task_struct *task)
 }
 #endif
 
+#if 0
 #ifdef CONFIG_PREEMPT_RT
 /* Mutexes */
 void __mutex_rt_init(struct mutex *mutex, const char *name,

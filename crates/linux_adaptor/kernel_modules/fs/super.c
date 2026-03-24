@@ -540,7 +540,6 @@ static bool grab_super(struct super_block *sb)
 	return false;
 }
 
-#if 0
 /*
  *	super_trylock_shared - try to grab ->s_umount shared
  *	@sb: reference we are trying to grab
@@ -570,6 +569,7 @@ bool super_trylock_shared(struct super_block *sb)
 	return false;
 }
 
+#if 0
 /**
  *	retire_super	-	prevents superblock from being reused
  *	@sb: superblock to retire

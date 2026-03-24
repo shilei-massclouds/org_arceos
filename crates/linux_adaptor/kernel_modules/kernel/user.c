@@ -123,12 +123,14 @@ static void uid_hash_insert(struct user_struct *up, struct hlist_head *hashent)
 {
 	hlist_add_head(&up->uidhash_node, hashent);
 }
+#endif // CL
 
 static void uid_hash_remove(struct user_struct *up)
 {
 	hlist_del_init(&up->uidhash_node);
 }
 
+#if 0
 static struct user_struct *uid_hash_find(kuid_t uid, struct hlist_head *hashent)
 {
 	struct user_struct *user;
@@ -151,6 +153,7 @@ static int user_epoll_alloc(struct user_struct *up)
 	return 0;
 #endif
 }
+#endif // CL
 
 static void user_epoll_free(struct user_struct *up)
 {
@@ -172,6 +175,7 @@ static void free_user(struct user_struct *up, unsigned long flags)
 	kmem_cache_free(uid_cachep, up);
 }
 
+#if 0
 /*
  * Locate the user_struct for the passed UID.  If found, take a ref on it.  The
  * caller must undo that ref with free_uid().
@@ -188,6 +192,7 @@ struct user_struct *find_user(kuid_t uid)
 	spin_unlock_irqrestore(&uidhash_lock, flags);
 	return ret;
 }
+#endif // CL
 
 void free_uid(struct user_struct *up)
 {
@@ -201,6 +206,7 @@ void free_uid(struct user_struct *up)
 }
 EXPORT_SYMBOL_GPL(free_uid);
 
+#if 0
 struct user_struct *alloc_uid(kuid_t uid)
 {
 	struct hlist_head *hashent = uidhashentry(uid);

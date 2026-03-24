@@ -3157,7 +3157,6 @@ int __bh_read(struct buffer_head *bh, blk_opf_t op_flags, bool wait)
 }
 EXPORT_SYMBOL(__bh_read);
 
-#if 0
 /**
  * __bh_read_batch - Submit read for a batch of unlocked buffers
  * @nr: entry number of the buffer batch
@@ -3196,7 +3195,6 @@ void __bh_read_batch(int nr, struct buffer_head *bhs[],
 	}
 }
 EXPORT_SYMBOL(__bh_read_batch);
-#endif // CL
 
 void __init buffer_init(void)
 {

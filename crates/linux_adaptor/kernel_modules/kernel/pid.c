@@ -126,7 +126,6 @@ void put_pid(struct pid *pid)
 }
 EXPORT_SYMBOL_GPL(put_pid);
 
-#if 0
 static void delayed_put_pid(struct rcu_head *rhp)
 {
 	struct pid *pid = container_of(rhp, struct pid, rcu);
@@ -165,7 +164,6 @@ void free_pid(struct pid *pid)
 
 	call_rcu(&pid->rcu, delayed_put_pid);
 }
-#endif /* CL */
 
 struct pid *alloc_pid(struct pid_namespace *ns, pid_t *set_tid,
 		      size_t set_tid_size)
@@ -349,7 +347,6 @@ void attach_pid(struct task_struct *task, enum pid_type type)
 	hlist_add_head_rcu(&task->pid_links[type], &pid->tasks[type]);
 }
 
-#if 0
 static void __change_pid(struct task_struct *task, enum pid_type type,
 			struct pid *new)
 {
@@ -379,6 +376,7 @@ void detach_pid(struct task_struct *task, enum pid_type type)
 	__change_pid(task, type, NULL);
 }
 
+#if 0
 void change_pid(struct task_struct *task, enum pid_type type,
 		struct pid *pid)
 {

@@ -593,7 +593,6 @@ void put_task_stack(struct task_struct *tsk)
 }
 #endif
 
-#if 0
 void free_task(struct task_struct *tsk)
 {
 #ifdef CONFIG_SECCOMP
@@ -625,6 +624,7 @@ void free_task(struct task_struct *tsk)
 }
 EXPORT_SYMBOL(free_task);
 
+#if 0
 static void dup_mm_exe_file(struct mm_struct *mm, struct mm_struct *oldmm)
 {
 	struct file *exe_file;
@@ -949,7 +949,6 @@ void __mmdrop(struct mm_struct *mm)
 }
 EXPORT_SYMBOL_GPL(__mmdrop);
 
-#if 0
 static void mmdrop_async_fn(struct work_struct *work)
 {
 	struct mm_struct *mm;
@@ -966,11 +965,8 @@ static void mmdrop_async(struct mm_struct *mm)
 	}
 }
 
-#endif /* CL */
-
 static inline void free_signal_struct(struct signal_struct *sig)
 {
-#if 0
 	taskstats_tgid_free(sig);
 	sched_autogroup_exit(sig);
 	/*
@@ -980,11 +976,8 @@ static inline void free_signal_struct(struct signal_struct *sig)
 	if (sig->oom_mm)
 		mmdrop_async(sig->oom_mm);
 	kmem_cache_free(signal_cachep, sig);
-#endif
-    PANIC("");
 }
 
-#if 0
 static inline void put_signal_struct(struct signal_struct *sig)
 {
 	if (refcount_dec_and_test(&sig->sigcnt))
@@ -1010,6 +1003,7 @@ void __put_task_struct(struct task_struct *tsk)
 }
 EXPORT_SYMBOL_GPL(__put_task_struct);
 
+#if 0
 void __put_task_struct_rcu_cb(struct rcu_head *rhp)
 {
 	struct task_struct *task = container_of(rhp, struct task_struct, rcu);
@@ -1868,7 +1862,6 @@ static int copy_sighand(unsigned long clone_flags, struct task_struct *tsk)
 	return 0;
 }
 
-#if 0
 void __cleanup_sighand(struct sighand_struct *sighand)
 {
 	if (refcount_dec_and_test(&sighand->count)) {
@@ -1880,7 +1873,6 @@ void __cleanup_sighand(struct sighand_struct *sighand)
 		kmem_cache_free(sighand_cachep, sighand);
 	}
 }
-#endif /* CL */
 
 /*
  * Initialize POSIX timer handling for a thread group.

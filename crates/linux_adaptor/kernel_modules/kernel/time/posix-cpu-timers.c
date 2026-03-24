@@ -515,6 +515,7 @@ out:
 
 	return ret;
 }
+#endif // CL
 
 static void cleanup_timerqueue(struct timerqueue_head *head)
 {
@@ -556,6 +557,7 @@ void posix_cpu_timers_exit_group(struct task_struct *tsk)
 	cleanup_timers(&tsk->signal->posix_cputimers);
 }
 
+#if 0
 /*
  * Insert the timer on the appropriate list before any timers that
  * expire later.  This must be called with the sighand lock held.

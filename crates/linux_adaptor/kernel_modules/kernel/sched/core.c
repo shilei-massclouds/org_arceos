@@ -7335,6 +7335,7 @@ EXPORT_SYMBOL(dynamic_might_resched);
 #endif
 #endif
 
+#endif // CL
 /*
  * __cond_resched_lock() - if a reschedule is pending, drop the given lock,
  * call schedule, and on return reacquire the lock.
@@ -7361,6 +7362,7 @@ int __cond_resched_lock(spinlock_t *lock)
 }
 EXPORT_SYMBOL(__cond_resched_lock);
 
+#if 0
 int __cond_resched_rwlock_read(rwlock_t *lock)
 {
 	int resched = should_resched(PREEMPT_LOCK_OFFSET);
@@ -7620,7 +7622,6 @@ void io_schedule_finish(int token)
 	current->in_iowait = token;
 }
 
-#if 0
 /*
  * This task is about to go to sleep on IO. Increment rq->nr_iowait so
  * that process accounting knows that this is a task in IO wait state.
@@ -7637,7 +7638,6 @@ long __sched io_schedule_timeout(long timeout)
 	return ret;
 }
 EXPORT_SYMBOL(io_schedule_timeout);
-#endif // CL
 
 void __sched io_schedule(void)
 {

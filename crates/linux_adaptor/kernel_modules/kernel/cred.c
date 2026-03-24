@@ -64,7 +64,6 @@ struct cred init_cred = {
 	.ucounts		= &init_ucounts,
 };
 
-#if 0
 /*
  * The RCU callback to actually dispose of a set of credentials
  */
@@ -143,6 +142,7 @@ void exit_creds(struct task_struct *tsk)
 #endif
 }
 
+#if 0
 /**
  * get_task_cred - Get another task's objective credentials
  * @task: The task to query

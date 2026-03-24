@@ -134,13 +134,11 @@ wait_for_common(struct completion *x, long timeout, int state)
 	return __wait_for_common(x, schedule_timeout, timeout, state);
 }
 
-#if 0
 static long __sched
 wait_for_common_io(struct completion *x, long timeout, int state)
 {
 	return __wait_for_common(x, io_schedule_timeout, timeout, state);
 }
-#endif /* CL */
 
 /**
  * wait_for_completion: - waits for completion of a task
@@ -191,6 +189,7 @@ void __sched wait_for_completion_io(struct completion *x)
 	wait_for_common_io(x, MAX_SCHEDULE_TIMEOUT, TASK_UNINTERRUPTIBLE);
 }
 EXPORT_SYMBOL(wait_for_completion_io);
+#endif // CL
 
 /**
  * wait_for_completion_io_timeout: - waits for completion of a task (w/timeout)
@@ -212,6 +211,7 @@ wait_for_completion_io_timeout(struct completion *x, unsigned long timeout)
 }
 EXPORT_SYMBOL(wait_for_completion_io_timeout);
 
+#if 0
 /**
  * wait_for_completion_interruptible: - waits for completion of a task (w/intr)
  * @x:  holds the state of this particular completion

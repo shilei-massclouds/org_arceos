@@ -124,6 +124,7 @@ static __init int kernel_exit_sysfs_init(void)
 }
 late_initcall(kernel_exit_sysfs_init);
 #endif
+#endif // CL
 
 static void __unhash_process(struct task_struct *p, bool group_dead)
 {
@@ -218,20 +219,16 @@ static void __exit_signal(struct task_struct *tsk)
 		tty_kref_put(tty);
 	}
 }
-#endif /* CL */
 
 static void delayed_put_task_struct(struct rcu_head *rhp)
 {
 	struct task_struct *tsk = container_of(rhp, struct task_struct, rcu);
 
-#if 0
 	kprobe_flush_task(tsk);
 	rethook_flush_task(tsk);
 	perf_event_delayed_put(tsk);
 	trace_sched_process_free(tsk);
 	put_task_struct(tsk);
-#endif
-    PANIC("");
 }
 
 void put_task_struct_rcu_user(struct task_struct *task)
@@ -240,7 +237,6 @@ void put_task_struct_rcu_user(struct task_struct *task)
 		call_rcu(&task->rcu, delayed_put_task_struct);
 }
 
-#if 0
 void __weak release_thread(struct task_struct *dead_task)
 {
 }
@@ -293,7 +289,6 @@ repeat:
 	if (unlikely(zap_leader))
 		goto repeat;
 }
-#endif /* CL */
 
 int rcuwait_wake_up(struct rcuwait *w)
 {
