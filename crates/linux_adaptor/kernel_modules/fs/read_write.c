@@ -697,7 +697,7 @@ ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_
 }
 
 /* file_ppos returns &file->f_pos or NULL if file is stream */
-static inline loff_t *file_ppos(struct file *file)
+inline loff_t *file_ppos(struct file *file)
 {
 	return file->f_mode & FMODE_STREAM ? NULL : &file->f_pos;
 }
@@ -1737,6 +1737,7 @@ out1:
 out2:
 	return ret;
 }
+#endif // CL
 
 /*
  * Don't operate on ranges the page cache doesn't support, and don't exceed the
@@ -1814,6 +1815,7 @@ ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
 }
 EXPORT_SYMBOL(generic_write_checks);
 
+#if 0
 /*
  * Performs common checks before doing a file copy/clone
  * from @file_in to @file_out.

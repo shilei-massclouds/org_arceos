@@ -2135,7 +2135,6 @@ int balance_dirty_pages_ratelimited_flags(struct address_space *mapping,
 }
 EXPORT_SYMBOL_GPL(balance_dirty_pages_ratelimited_flags);
 
-#if 0
 /**
  * balance_dirty_pages_ratelimited - balance dirty memory state.
  * @mapping: address_space which was dirtied.
@@ -2154,6 +2153,7 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
 }
 EXPORT_SYMBOL(balance_dirty_pages_ratelimited);
 
+#if 0
 /*
  * Similar to wb_dirty_limits, wb_bg_dirty_limits also calculates dirty
  * and thresh, but it's for background writeback.

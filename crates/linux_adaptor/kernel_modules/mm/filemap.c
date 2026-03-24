@@ -439,13 +439,13 @@ int __filemap_fdatawrite_range(struct address_space *mapping, loff_t start,
 	return filemap_fdatawrite_wbc(mapping, &wbc);
 }
 
-#if 0
 static inline int __filemap_fdatawrite(struct address_space *mapping,
 	int sync_mode)
 {
 	return __filemap_fdatawrite_range(mapping, 0, LLONG_MAX, sync_mode);
 }
 
+#if 0
 int filemap_fdatawrite(struct address_space *mapping)
 {
 	return __filemap_fdatawrite(mapping, WB_SYNC_ALL);
@@ -458,6 +458,7 @@ int filemap_fdatawrite_range(struct address_space *mapping, loff_t start,
 	return __filemap_fdatawrite_range(mapping, start, end, WB_SYNC_ALL);
 }
 EXPORT_SYMBOL(filemap_fdatawrite_range);
+#endif // CL
 
 /**
  * filemap_flush - mostly a non-blocking flush
@@ -474,6 +475,7 @@ int filemap_flush(struct address_space *mapping)
 }
 EXPORT_SYMBOL(filemap_flush);
 
+#if 0
 /**
  * filemap_range_has_page - check if a page exists in range.
  * @mapping:           address space within which to check
@@ -2183,7 +2185,6 @@ put:
 	return folio_batch_count(fbatch);
 }
 
-#if 0
 /**
  * filemap_get_folios - Get a batch of folios
  * @mapping:	The address_space to search
@@ -2205,6 +2206,7 @@ unsigned filemap_get_folios(struct address_space *mapping, pgoff_t *start,
 }
 EXPORT_SYMBOL(filemap_get_folios);
 
+#if 0
 /**
  * filemap_get_folios_contig - Get a batch of contiguous folios
  * @mapping:	The address_space to search
@@ -4060,6 +4062,7 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
 	return written;
 }
 EXPORT_SYMBOL(generic_file_direct_write);
+#endif // CL
 
 ssize_t generic_perform_write(struct kiocb *iocb, struct iov_iter *i)
 {
@@ -4150,6 +4153,7 @@ retry:
 }
 EXPORT_SYMBOL(generic_perform_write);
 
+#if 0
 /**
  * __generic_file_write_iter - write data to a file
  * @iocb:	IO state structure (file, offset, etc.)

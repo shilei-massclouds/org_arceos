@@ -2179,7 +2179,6 @@ int dentry_needs_remove_privs(struct mnt_idmap *idmap,
 	return mask;
 }
 
-#if 0
 static int __remove_privs(struct mnt_idmap *idmap,
 			  struct dentry *dentry, int kill)
 {
@@ -2220,6 +2219,7 @@ int file_remove_privs_flags(struct file *file, unsigned int flags)
 }
 EXPORT_SYMBOL_GPL(file_remove_privs_flags);
 
+#if 0
 /**
  * file_remove_privs - remove special file privileges (suid, capabilities)
  * @file: file to remove privileges from
@@ -2301,8 +2301,6 @@ int file_update_time(struct file *file)
 }
 EXPORT_SYMBOL(file_update_time);
 
-#if 0
-
 /**
  * file_modified_flags - handle mandated vfs changes when modifying a file
  * @file: file that was modified
@@ -2360,6 +2358,7 @@ int file_modified(struct file *file)
 }
 EXPORT_SYMBOL(file_modified);
 
+#if 0
 /**
  * kiocb_modified - handle mandated vfs changes when modifying a file
  * @iocb: iocb that was modified

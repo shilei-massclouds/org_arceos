@@ -13,6 +13,7 @@ int vfs_statx(int dfd, struct filename *filename, int flags,
 
 int filp_flush(struct file *filp, fl_owner_t id);
 off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence);
+extern inline loff_t *file_ppos(struct file *file);
 
 int cl_sys_mkdir(const char *pathname, umode_t mode)
 {
@@ -124,7 +125,22 @@ int cl_sys_lseek(unsigned int fd, off_t offset, unsigned int whence)
 
 int cl_sys_write(unsigned int fd, const char *buf, size_t count)
 {
-	return ksys_write(fd, buf, count);
+	struct fd f = fdget_pos(fd);
+	ssize_t ret = -EBADF;
+
+	if (fd_file(f)) {
+		loff_t pos, *ppos = file_ppos(fd_file(f));
+		if (ppos) {
+			pos = *ppos;
+			ppos = &pos;
+		}
+		ret = kernel_write(fd_file(f), buf, count, ppos);
+		if (ret >= 0 && ppos)
+			fd_file(f)->f_pos = pos;
+		fdput_pos(f);
+	}
+
+	return ret;
 }
 
 int cl_sys_read(unsigned int fd, char *buf, size_t count)
