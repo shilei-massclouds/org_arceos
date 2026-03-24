@@ -1824,6 +1824,7 @@ void unmap_page_range(struct mmu_gather *tlb,
 	tlb_end_vma(tlb, vma);
 }
 
+#endif // CL
 
 static void unmap_single_vma(struct mmu_gather *tlb,
 		struct vm_area_struct *vma, unsigned long start_addr,
@@ -1869,6 +1870,7 @@ static void unmap_single_vma(struct mmu_gather *tlb,
 	}
 }
 
+#if 0
 /**
  * unmap_vmas - unmap a range of memory covered by a list of vma's
  * @tlb: address of the caller's struct mmu_gather
@@ -1916,6 +1918,7 @@ void unmap_vmas(struct mmu_gather *tlb, struct ma_state *mas,
 	} while (vma && likely(!xa_is_zero(vma)));
 	mmu_notifier_invalidate_range_end(&range);
 }
+#endif // CL
 
 /**
  * zap_page_range_single - remove user pages in a given range
@@ -1950,6 +1953,7 @@ void zap_page_range_single(struct vm_area_struct *vma, unsigned long address,
 	hugetlb_zap_end(vma, details);
 }
 
+#if 0
 /**
  * zap_vma_ptes - remove ptes mapping the vma
  * @vma: vm_area_struct holding ptes to be zapped
@@ -3758,6 +3762,7 @@ static vm_fault_t do_wp_page(struct vm_fault *vmf)
 #endif
 	return wp_page_copy(vmf);
 }
+#endif // CL
 
 static void unmap_mapping_range_vma(struct vm_area_struct *vma,
 		unsigned long start_addr, unsigned long end_addr,
@@ -3787,6 +3792,7 @@ static inline void unmap_mapping_range_tree(struct rb_root_cached *root,
 	}
 }
 
+#if 0
 /**
  * unmap_mapping_folio() - Unmap single folio from processes.
  * @folio: The locked folio to be unmapped.
@@ -3820,6 +3826,7 @@ void unmap_mapping_folio(struct folio *folio)
 					 last_index, &details);
 	i_mmap_unlock_read(mapping);
 }
+#endif // CL
 
 /**
  * unmap_mapping_pages() - Unmap pages from processes.
@@ -3887,6 +3894,7 @@ void unmap_mapping_range(struct address_space *mapping,
 }
 EXPORT_SYMBOL(unmap_mapping_range);
 
+#if 0
 /*
  * Restore a potential device exclusive pte to a working pte entry
  */

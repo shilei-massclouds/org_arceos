@@ -76,7 +76,6 @@ static inline void file_free(struct file *f)
 	}
 }
 
-#if 0
 /*
  * Return the total number of open files in the system
  */
@@ -94,6 +93,7 @@ unsigned long get_max_files(void)
 }
 EXPORT_SYMBOL_GPL(get_max_files);
 
+#if 0
 #if defined(CONFIG_SYSCTL) && defined(CONFIG_PROC_FS)
 
 /*
@@ -183,7 +183,6 @@ static int init_file(struct file *f, int flags, const struct cred *cred)
 	return 0;
 }
 
-#if 0
 /* Find an unused file structure and return a pointer to it.
  * Returns an error pointer if some error happend e.g. we over file
  * structures limit, run out of memory or operation is not permitted.
@@ -234,7 +233,6 @@ over:
 	}
 	return ERR_PTR(-ENFILE);
 }
-#endif // CL
 
 /*
  * Variant of alloc_empty_file() that doesn't check and modify nr_files.
@@ -515,7 +513,6 @@ void fput(struct file *file)
 	}
 }
 
-#if 0
 /*
  * synchronous analog of fput(); for kernel threads that might be needed
  * in some umount() (and thus can't use flush_delayed_fput() without
@@ -532,7 +529,6 @@ void __fput_sync(struct file *file)
 
 EXPORT_SYMBOL(fput);
 EXPORT_SYMBOL(__fput_sync);
-#endif // CL
 
 void __init files_init(void)
 {

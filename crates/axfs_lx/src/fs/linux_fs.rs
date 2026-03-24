@@ -23,6 +23,9 @@ const S_IRUSR: usize = 0o400;
 const S_IWUSR: usize = 0o200;
 //const S_IXUSR: usize = 0o100;
 
+/// seek relative to beginning of file
+const SEEK_SET: usize = 0;
+
 pub struct LinuxFileSystem {
     root: Arc<DirNode>,
 }
@@ -178,21 +181,15 @@ impl VfsNodeOps for FileNode {
     }
 
     fn truncate(&self, size: u64) -> VfsResult {
-        /*
-        debug!("truncate '{}' to {}", self.path, size);
         let c_path = CString::new(self.path.clone()).unwrap();
         let ret = unsafe {
             cl_sys_truncate(c_path.as_ptr(), size as usize)
         };
         assert_eq!(ret, 0);
         Ok(())
-        */
-        todo!();
     }
 
     fn read_at(&self, offset: u64, buf: &mut [u8]) -> VfsResult<usize> {
-        /*
-        debug!("read '{}'", self.path);
         let c_path = CString::new(self.path.clone()).unwrap();
         let fd = unsafe {
             cl_sys_open(c_path.as_ptr(), O_RDONLY, 0)
@@ -210,13 +207,9 @@ impl VfsNodeOps for FileNode {
             }
             Ok(ret as usize)
         }
-        */
-        todo!();
     }
 
     fn write_at(&self, offset: u64, buf: &[u8]) -> VfsResult<usize> {
-        /*
-        debug!("write '{}'", self.path);
         let c_path = CString::new(self.path.clone()).unwrap();
         let fd = unsafe {
             cl_sys_open(c_path.as_ptr(), O_WRONLY, 0)
@@ -234,8 +227,6 @@ impl VfsNodeOps for FileNode {
             }
             Ok(ret as usize)
         }
-        */
-        todo!();
     }
 
     axfs_vfs::impl_vfs_non_dir_default! {}
@@ -259,24 +250,23 @@ unsafe extern "C" {
 
     fn cl_sys_open(fname: *const c_char, flags: usize, mode: usize) -> i32;
     fn cl_sys_close(fd: usize) -> i32;
+    fn cl_sys_truncate(path: *const c_char, len: usize) -> i32;
+
+    fn cl_sys_lseek(fd: usize, offset: usize, whence: usize);
+    fn cl_sys_write(fd: usize, buf: *const u8, count: usize) -> i32;
+    fn cl_sys_read(fd: usize, buf: *mut u8, count: usize) -> i32;
 }
 
 /*
 unsafe extern "C" {
-
-    fn cl_sys_truncate(path: *const c_char, len: usize) -> i32;
     fn cl_sys_unlink(path: *const c_char) -> i32;
-
-    fn cl_sys_lseek(fd: usize, offset: usize, whence: usize);
 
     fn cl_sys_mkdir(path: *const c_char, mode: usize) -> i32;
     fn cl_sys_rmdir(path: *const c_char) -> i32;
 
     fn cl_sys_getdents64(fd: usize, buf: *mut u8, len: usize) -> i32;
 
-    fn cl_sys_read(fd: usize, buf: *mut u8, count: usize) -> i32;
 
-    fn cl_sys_write(fd: usize, buf: *const u8, count: usize) -> i32;
 
 }
 */
@@ -308,7 +298,4 @@ const NAME_OFFSET: isize = 8 + 8 + 2 + 1;
 const DT_DIR: u8 = 4;
 const DT_REG: u8 = 8;
 
-
-/// seek relative to beginning of file
-const SEEK_SET: usize = 0;
 */

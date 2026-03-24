@@ -1000,7 +1000,6 @@ char *strreplace(char *str, char old, char new)
 }
 EXPORT_SYMBOL(strreplace);
 
-#if 0
 /**
  * memcpy_and_pad - Copy one buffer to another with padding
  * @dest: Where to copy to
@@ -1020,8 +1019,6 @@ void memcpy_and_pad(void *dest, size_t dest_len, const void *src, size_t count,
 	}
 }
 EXPORT_SYMBOL(memcpy_and_pad);
-
-#endif /* CL */
 
 #ifdef CONFIG_FORTIFY_SOURCE
 /* These are placeholders for fortify compile-time warnings. */

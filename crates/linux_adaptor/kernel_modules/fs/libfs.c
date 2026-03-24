@@ -868,6 +868,7 @@ int simple_rename(struct mnt_idmap *idmap, struct inode *old_dir,
 	return 0;
 }
 EXPORT_SYMBOL(simple_rename);
+#endif // CL
 
 /**
  * simple_setattr - setattr for simple filesystem
@@ -901,7 +902,6 @@ int simple_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
 	return 0;
 }
 EXPORT_SYMBOL(simple_setattr);
-#endif // CL
 
 static int simple_read_folio(struct file *file, struct folio *folio)
 {

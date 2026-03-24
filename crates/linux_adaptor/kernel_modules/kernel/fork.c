@@ -1835,14 +1835,11 @@ static int copy_files(unsigned long clone_flags, struct task_struct *tsk,
 		return 0;
 	}
 
-#if 0
 	newf = dup_fd(oldf, NULL);
 	if (IS_ERR(newf))
 		return PTR_ERR(newf);
 
 	tsk->files = newf;
-#endif
-    PANIC("");
 	return 0;
 }
 

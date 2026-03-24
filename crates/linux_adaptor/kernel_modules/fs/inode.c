@@ -2155,7 +2155,6 @@ skip_update:
 }
 EXPORT_SYMBOL(touch_atime);
 
-#if 0
 /*
  * Return mask of changes for notify_change() that need to be done as a
  * response to write or truncate. Return 0 if nothing has to be changed.
@@ -2180,6 +2179,7 @@ int dentry_needs_remove_privs(struct mnt_idmap *idmap,
 	return mask;
 }
 
+#if 0
 static int __remove_privs(struct mnt_idmap *idmap,
 			  struct dentry *dentry, int kill)
 {

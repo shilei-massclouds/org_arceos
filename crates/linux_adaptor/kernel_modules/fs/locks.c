@@ -175,7 +175,6 @@ static struct kmem_cache *flctx_cache __ro_after_init;
 static struct kmem_cache *filelock_cache __ro_after_init;
 static struct kmem_cache *filelease_cache __ro_after_init;
 
-#if 0
 static struct file_lock_context *
 locks_get_lock_context(struct inode *inode, int type)
 {
@@ -208,6 +207,7 @@ out:
 	return ctx;
 }
 
+#if 0
 static void
 locks_dump_ctx_list(struct list_head *list, char *list_type)
 {
@@ -262,6 +262,7 @@ locks_free_lock_context(struct inode *inode)
 		kmem_cache_free(flctx_cache, ctx);
 	}
 }
+#endif // CL
 
 static void locks_init_lock_heads(struct file_lock_core *flc)
 {
@@ -284,6 +285,7 @@ struct file_lock *locks_alloc_lock(void)
 }
 EXPORT_SYMBOL_GPL(locks_alloc_lock);
 
+#if 0
 /* Allocate an empty lock structure. */
 struct file_lease *locks_alloc_lease(void)
 {
@@ -295,6 +297,7 @@ struct file_lease *locks_alloc_lease(void)
 	return fl;
 }
 EXPORT_SYMBOL_GPL(locks_alloc_lease);
+#endif // CL
 
 void locks_release_private(struct file_lock *fl)
 {
@@ -322,6 +325,7 @@ void locks_release_private(struct file_lock *fl)
 }
 EXPORT_SYMBOL_GPL(locks_release_private);
 
+#if 0
 /**
  * locks_owner_has_blockers - Check for blocking lock requests
  * @flctx: file lock context
@@ -348,6 +352,7 @@ bool locks_owner_has_blockers(struct file_lock_context *flctx, fl_owner_t owner)
 	return false;
 }
 EXPORT_SYMBOL_GPL(locks_owner_has_blockers);
+#endif // CL
 
 /* Free a lock which is not in use. */
 void locks_free_lock(struct file_lock *fl)
@@ -386,12 +391,14 @@ void locks_init_lock(struct file_lock *fl)
 }
 EXPORT_SYMBOL(locks_init_lock);
 
+#if 0
 void locks_init_lease(struct file_lease *fl)
 {
 	memset(fl, 0, sizeof(*fl));
 	locks_init_lock_heads(&fl->c);
 }
 EXPORT_SYMBOL(locks_init_lease);
+#endif // CL
 
 /*
  * Initialize a new lock from an existing file_lock structure.
@@ -452,6 +459,7 @@ static void locks_move_blocks(struct file_lock *new, struct file_lock *fl)
 	spin_unlock(&blocked_lock_lock);
 }
 
+#if 0
 static inline int flock_translate_cmd(int cmd) {
 	switch (cmd) {
 	case LOCK_SH:
@@ -618,6 +626,7 @@ static struct file_lease *lease_alloc(struct file *filp, int type)
 	}
 	return fl;
 }
+#endif // CL
 
 /* Check if two locks overlap each other.
  */
@@ -726,6 +735,7 @@ static void __locks_wake_up_blocks(struct file_lock_core *blocker)
 	}
 }
 
+#if 0
 static int __locks_delete_block(struct file_lock_core *waiter)
 {
 	int status = -ENOENT;
@@ -781,6 +791,7 @@ int locks_delete_block(struct file_lock *waiter)
 	return __locks_delete_block(&waiter->c);
 }
 EXPORT_SYMBOL(locks_delete_block);
+#endif // CL
 
 /* Insert waiter into blocker's block list.
  * We use a circular list so that processes can be easily woken up in
@@ -825,6 +836,7 @@ new_blocker:
 	__locks_wake_up_blocks(waiter);
 }
 
+#if 0
 /* Must be called with flc_lock held. */
 static void locks_insert_block(struct file_lock_core *blocker,
 			       struct file_lock_core *waiter,
@@ -835,6 +847,7 @@ static void locks_insert_block(struct file_lock_core *blocker,
 	__locks_insert_block(blocker, waiter, conflict);
 	spin_unlock(&blocked_lock_lock);
 }
+#endif // CL
 
 /*
  * Wake up processes blocked waiting for blocker.
@@ -918,6 +931,7 @@ static bool posix_locks_conflict(struct file_lock_core *caller_flc,
 	return locks_conflict(caller_flc, sys_flc);
 }
 
+#if 0
 /* Determine if lock sys_fl blocks lock caller_fl. Used on xx_GETLK
  * path so checks for additional GETLK-specific things like F_UNLCK.
  */
@@ -990,6 +1004,7 @@ out:
 	return;
 }
 EXPORT_SYMBOL(posix_test_lock);
+#endif // CL
 
 /*
  * Deadlock detection:
@@ -1067,6 +1082,7 @@ static bool posix_locks_deadlock(struct file_lock *caller_fl,
 	return false;
 }
 
+#if 0
 /* Try to create a FLOCK lock on filp. We always insert new FLOCK locks
  * after any leases, but before any posix locks.
  *
@@ -1145,6 +1161,7 @@ out:
 	trace_flock_lock_inode(inode, request, error);
 	return error;
 }
+#endif // CL
 
 static int posix_lock_inode(struct inode *inode, struct file_lock *request,
 			    struct file_lock *conflock)
@@ -1406,6 +1423,7 @@ int posix_lock_file(struct file *filp, struct file_lock *fl,
 }
 EXPORT_SYMBOL(posix_lock_file);
 
+#if 0
 /**
  * posix_lock_inode_wait - Apply a POSIX-style lock to a file
  * @inode: inode of file to which lock request should be applied
@@ -2320,6 +2338,7 @@ out:
 	locks_free_lock(fl);
 	return error;
 }
+#endif // CL
 
 /**
  * vfs_lock_file - file byte range lock
@@ -2366,6 +2385,7 @@ int vfs_lock_file(struct file *filp, unsigned int cmd, struct file_lock *fl, str
 }
 EXPORT_SYMBOL_GPL(vfs_lock_file);
 
+#if 0
 static int do_lock_file_wait(struct file *filp, unsigned int cmd,
 			     struct file_lock *fl)
 {
@@ -2605,6 +2625,7 @@ out:
 	return error;
 }
 #endif /* BITS_PER_LONG == 32 */
+#endif // CL
 
 /*
  * This function is called when the file is being removed
@@ -2646,6 +2667,7 @@ void locks_remove_posix(struct file *filp, fl_owner_t owner)
 }
 EXPORT_SYMBOL(locks_remove_posix);
 
+#if 0
 /* The i_flctx must be valid when calling into here */
 static void
 locks_remove_flock(struct file *filp, struct file_lock_context *flctx)

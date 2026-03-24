@@ -693,3 +693,60 @@ int security_inode_getattr(const struct path *path)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int security_inode_create(struct inode *dir, struct dentry *dentry,
+              umode_t mode)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_file_open(struct file *file)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_file_post_open(struct file *file, int mask)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// fs/notify/dnotify/dnotify.c
+void dnotify_flush(struct file *filp, fl_owner_t id)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_path_truncate(const struct path *path)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_inode_need_killpriv(struct dentry *dentry)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_inode_setattr(struct mnt_idmap *idmap,
+               struct dentry *dentry, struct iattr *attr)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_inode_killpriv(struct mnt_idmap *idmap,
+                struct dentry *dentry)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void security_inode_post_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+                 int ia_valid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

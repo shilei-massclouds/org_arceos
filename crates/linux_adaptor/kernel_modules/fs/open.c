@@ -36,7 +36,6 @@
 
 #include "internal.h"
 
-#if 0
 int do_truncate(struct mnt_idmap *idmap, struct dentry *dentry,
 		loff_t length, unsigned int time_attrs, struct file *filp)
 {
@@ -120,6 +119,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(vfs_truncate);
 
+#if 0
 long do_sys_truncate(const char __user *pathname, loff_t length)
 {
 	unsigned int lookup_flags = LOOKUP_FOLLOW;
@@ -880,6 +880,7 @@ SYSCALL_DEFINE3(fchown, unsigned int, fd, uid_t, user, gid_t, group)
 {
 	return ksys_fchown(fd, user, group);
 }
+#endif // CL
 
 static inline int file_get_write_access(struct file *f)
 {
@@ -1022,6 +1023,7 @@ cleanup_file:
 	return error;
 }
 
+#if 0
 /**
  * finish_open - finish opening a file
  * @file: file pointer
@@ -1075,6 +1077,7 @@ char *file_path(struct file *filp, char *buf, int buflen)
 	return d_path(&filp->f_path, buf, buflen);
 }
 EXPORT_SYMBOL(file_path);
+#endif // CL
 
 /**
  * vfs_open - open the file at the given path
@@ -1098,6 +1101,7 @@ int vfs_open(const struct path *path, struct file *file)
 	return ret;
 }
 
+#if 0
 struct file *dentry_open(const struct path *path, int flags,
 			 const struct cred *cred)
 {
@@ -1514,11 +1518,13 @@ SYSCALL_DEFINE2(creat, const char __user *, pathname, umode_t, mode)
 }
 #endif
 
+#endif // CL
+
 /*
  * "id" is the POSIX thread ID. We use the
  * files pointer for this..
  */
-static int filp_flush(struct file *filp, fl_owner_t id)
+int filp_flush(struct file *filp, fl_owner_t id)
 {
 	int retval = 0;
 
@@ -1538,6 +1544,7 @@ static int filp_flush(struct file *filp, fl_owner_t id)
 	return retval;
 }
 
+#if 0
 int filp_close(struct file *filp, fl_owner_t id)
 {
 	int retval;
@@ -1610,6 +1617,7 @@ SYSCALL_DEFINE0(vhangup)
 	}
 	return -EPERM;
 }
+#endif // CL
 
 /*
  * Called when an inode is about to be open.
@@ -1626,6 +1634,7 @@ int generic_file_open(struct inode * inode, struct file * filp)
 
 EXPORT_SYMBOL(generic_file_open);
 
+#if 0
 /*
  * This is used by subsystems that don't want seekable
  * file descriptors. The function is not supposed to ever fail, the only

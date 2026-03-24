@@ -39,7 +39,6 @@ static inline bool unsigned_offsets(struct file *file)
 	return file->f_op->fop_flags & FOP_UNSIGNED_OFFSET;
 }
 
-#if 0
 /**
  * vfs_setpos_cookie - update the file offset for lseek and reset cookie
  * @file:	file structure in question
@@ -182,6 +181,7 @@ generic_file_llseek_size(struct file *file, loff_t offset, int whence,
 }
 EXPORT_SYMBOL(generic_file_llseek_size);
 
+#if 0
 /**
  * generic_llseek_cookie - versioned llseek implementation
  * @file:	file structure to seek on
@@ -375,6 +375,7 @@ out:
 	return retval;
 }
 EXPORT_SYMBOL(default_llseek);
+#endif // CL
 
 loff_t vfs_llseek(struct file *file, loff_t offset, int whence)
 {
@@ -384,7 +385,7 @@ loff_t vfs_llseek(struct file *file, loff_t offset, int whence)
 }
 EXPORT_SYMBOL(vfs_llseek);
 
-static off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence)
+off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence)
 {
 	off_t retval;
 	struct fd f = fdget_pos(fd);
@@ -402,6 +403,7 @@ static off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence)
 	return retval;
 }
 
+#if 0
 SYSCALL_DEFINE3(lseek, unsigned int, fd, off_t, offset, unsigned int, whence)
 {
 	return ksys_lseek(fd, offset, whence);
@@ -477,7 +479,6 @@ int rw_verify_area(int read_write, struct file *file, const loff_t *ppos, size_t
 }
 EXPORT_SYMBOL(rw_verify_area);
 
-#if 0
 static ssize_t new_sync_read(struct file *filp, char __user *buf, size_t len, loff_t *ppos)
 {
 	struct kiocb kiocb;
@@ -494,7 +495,6 @@ static ssize_t new_sync_read(struct file *filp, char __user *buf, size_t len, lo
 		*ppos = kiocb.ki_pos;
 	return ret;
 }
-#endif // CL
 
 static int warn_unsupported(struct file *file, const char *op)
 {
@@ -550,7 +550,6 @@ ssize_t kernel_read(struct file *file, void *buf, size_t count, loff_t *pos)
 }
 EXPORT_SYMBOL(kernel_read);
 
-#if 0
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
@@ -598,7 +597,6 @@ static ssize_t new_sync_write(struct file *filp, const char __user *buf, size_t 
 		*ppos = kiocb.ki_pos;
 	return ret;
 }
-#endif // CL
 
 /* caller is responsible for file_start_write/file_end_write */
 ssize_t __kernel_write_iter(struct file *file, struct iov_iter *from, loff_t *pos)
@@ -666,7 +664,6 @@ ssize_t kernel_write(struct file *file, const void *buf, size_t count,
 }
 EXPORT_SYMBOL(kernel_write);
 
-#if 0
 ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
@@ -724,10 +721,12 @@ ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count)
 	return ret;
 }
 
+#if 0
 SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
 {
 	return ksys_read(fd, buf, count);
 }
+#endif // CL
 
 ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
 {
@@ -749,6 +748,7 @@ ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
 	return ret;
 }
 
+#if 0
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 		size_t, count)
 {

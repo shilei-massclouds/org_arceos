@@ -131,7 +131,6 @@
 
 #include "internal.h"
 
-#if 0
 /*
  * Initialise a struct file's readahead state.  Assumes that the caller has
  * memset *ra to zero.
@@ -143,7 +142,6 @@ file_ra_state_init(struct file_ra_state *ra, struct address_space *mapping)
 	ra->prev_pos = -1;
 }
 EXPORT_SYMBOL_GPL(file_ra_state_init);
-#endif // CL
 
 static void read_pages(struct readahead_control *rac)
 {

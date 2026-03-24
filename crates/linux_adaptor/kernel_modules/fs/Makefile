@@ -31,10 +31,10 @@ obj-y += bad_inode.o
 obj-y += mbcache.o
 obj-y += stat.o
 obj-y += open.o
+obj-y += file.o
+obj-y += attr.o
 
 #obj-y += readdir.o
-#obj-y += file.o
-#obj-y += attr.o
 
 #obj-y += proc/
 
