@@ -112,7 +112,7 @@ efault:
  */
 long strncpy_from_user(char *dst, const char __user *src, long count)
 {
-    long retval;
+	unsigned long max_addr, src_addr;
 
 	might_fault();
 	if (should_fail_usercopy())
@@ -132,8 +132,25 @@ long strncpy_from_user(char *dst, const char __user *src, long count)
 		return retval;
 	}
 
-    /* Remove userspace check */
-    retval = do_strncpy_from_user(dst, src, count, count);
-    return retval;
+	max_addr = TASK_SIZE_MAX;
+	src_addr = (unsigned long)untagged_addr(src);
+	if (likely(src_addr < max_addr)) {
+		unsigned long max = max_addr - src_addr;
+		long retval;
+
+		/*
+		 * Truncate 'max' to the user-specified limit, so that
+		 * we only have one limit we need to check in the loop
+		 */
+		if (max > count)
+			max = count;
+
+		if (user_read_access_begin(src, max)) {
+			retval = do_strncpy_from_user(dst, src, count, max);
+			user_read_access_end();
+			return retval;
+		}
+	}
+	return -EFAULT;
 }
 EXPORT_SYMBOL(strncpy_from_user);

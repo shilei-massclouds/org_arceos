@@ -560,7 +560,6 @@ kprojid_t make_kprojid(struct user_namespace *ns, projid_t projid)
 }
 EXPORT_SYMBOL(make_kprojid);
 
-#if 0
 /**
  *	from_kprojid - Create a projid from a kprojid user-namespace pair.
  *	@targ: The user namespace we want a projid in.
@@ -580,6 +579,7 @@ projid_t from_kprojid(struct user_namespace *targ, kprojid_t kprojid)
 }
 EXPORT_SYMBOL(from_kprojid);
 
+#if 0
 /**
  *	from_kprojid_munged - Create a projiid from a kprojid user-namespace pair.
  *	@targ: The user namespace we want a projid in.

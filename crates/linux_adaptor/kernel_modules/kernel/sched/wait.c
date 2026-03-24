@@ -268,7 +268,6 @@ prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_ent
 }
 EXPORT_SYMBOL(prepare_to_wait_exclusive);
 
-#if 0
 void init_wait_entry(struct wait_queue_entry *wq_entry, int flags)
 {
 	wq_entry->flags = flags;
@@ -314,6 +313,7 @@ long prepare_to_wait_event(struct wait_queue_head *wq_head, struct wait_queue_en
 }
 EXPORT_SYMBOL(prepare_to_wait_event);
 
+#if 0
 /*
  * Note! These two wait functions are entered with the
  * wait-queue lock held (and interrupts off in the _irq

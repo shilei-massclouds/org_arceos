@@ -1710,10 +1710,12 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
 		return -EINVAL;
 	}
 
+    printk("%s: step1\n", __func__);
 	err = try_online_node(cpu_to_node(cpu));
 	if (err)
 		return err;
 
+    printk("%s: step2\n", __func__);
 	cpu_maps_update_begin();
 
 	if (cpu_hotplug_disabled) {
@@ -1725,6 +1727,7 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
 		goto out;
 	}
 
+    printk("%s: step3\n", __func__);
 	err = _cpu_up(cpu, 0, target);
 out:
 	cpu_maps_update_done();

@@ -127,7 +127,6 @@
 
 #define EMBEDDED_NAME_MAX	(PATH_MAX - offsetof(struct filename, iname))
 
-#if 0
 struct filename *
 getname_flags(const char __user *filename, int flags)
 {
@@ -227,7 +226,6 @@ getname(const char __user * filename)
 {
 	return getname_flags(filename, 0);
 }
-#endif // CL
 
 struct filename *
 getname_kernel(const char * filename)
@@ -1221,6 +1219,7 @@ int may_linkat(struct mnt_idmap *idmap, const struct path *link)
 	audit_log_path_denied(AUDIT_ANOM_LINK, "linkat");
 	return -EPERM;
 }
+#endif // CL
 
 /**
  * may_create_in_sticky - Check whether an O_CREAT open in a sticky directory
@@ -1294,6 +1293,7 @@ static int may_create_in_sticky(struct mnt_idmap *idmap, struct nameidata *nd,
 	return 0;
 }
 
+#if 0
 /*
  * follow_up - Find the mountpoint of path's vfsmount
  *
@@ -3345,7 +3345,6 @@ bool may_open_dev(const struct path *path)
 		!(path->mnt->mnt_sb->s_iflags & SB_I_NODEV);
 }
 
-#if 0
 static int may_open(struct mnt_idmap *idmap, const struct path *path,
 		    int acc_mode, int flag)
 {
@@ -3806,6 +3805,7 @@ static int do_open(struct nameidata *nd,
 	return error;
 }
 
+#if 0
 /**
  * vfs_tmpfile - create tmpfile
  * @idmap:	idmap of the mount the inode was found from
@@ -3895,6 +3895,7 @@ struct file *kernel_tmpfile_open(struct mnt_idmap *idmap,
 	return file;
 }
 EXPORT_SYMBOL(kernel_tmpfile_open);
+#endif // CL
 
 static int do_tmpfile(struct nameidata *nd, unsigned flags,
 		const struct open_flags *op,
@@ -3987,6 +3988,7 @@ struct file *do_filp_open(int dfd, struct filename *pathname,
 	return filp;
 }
 
+#if 0
 struct file *do_file_open_root(const struct path *root,
 		const char *name, const struct open_flags *op)
 {
@@ -4287,7 +4289,6 @@ int vfs_mkdir(struct mnt_idmap *idmap, struct inode *dir,
 }
 EXPORT_SYMBOL(vfs_mkdir);
 
-#if 0
 int do_mkdirat(int dfd, struct filename *name, umode_t mode)
 {
 	struct dentry *dentry;
@@ -4327,6 +4328,7 @@ SYSCALL_DEFINE2(mkdir, const char __user *, pathname, umode_t, mode)
 	return do_mkdirat(AT_FDCWD, getname(pathname), mode);
 }
 
+#if 0
 /**
  * vfs_rmdir - remove directory
  * @idmap:	idmap of the mount the inode was found from

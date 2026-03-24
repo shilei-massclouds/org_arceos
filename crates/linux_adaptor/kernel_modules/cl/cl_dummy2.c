@@ -687,3 +687,9 @@ int security_path_chroot(const struct path *path)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int security_inode_getattr(const struct path *path)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

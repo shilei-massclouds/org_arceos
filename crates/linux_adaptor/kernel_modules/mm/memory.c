@@ -6726,6 +6726,7 @@ void print_vma_addr(char *prefix, unsigned long ip)
 	}
 	mmap_read_unlock(mm);
 }
+#endif // CL
 
 #if defined(CONFIG_PROVE_LOCKING) || defined(CONFIG_DEBUG_ATOMIC_SLEEP)
 void __might_fault(const char *file, int line)
@@ -6739,6 +6740,7 @@ void __might_fault(const char *file, int line)
 EXPORT_SYMBOL(__might_fault);
 #endif
 
+#if 0
 #if defined(CONFIG_TRANSPARENT_HUGEPAGE) || defined(CONFIG_HUGETLBFS)
 /*
  * Process all subpages of the specified huge page with the specified

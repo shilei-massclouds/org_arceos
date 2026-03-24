@@ -1773,6 +1773,7 @@ struct inode *find_inode_by_ino_rcu(struct super_block *sb,
 	return NULL;
 }
 EXPORT_SYMBOL(find_inode_by_ino_rcu);
+#endif // CL
 
 int insert_inode_locked(struct inode *inode)
 {
@@ -1821,6 +1822,7 @@ int insert_inode_locked(struct inode *inode)
 }
 EXPORT_SYMBOL(insert_inode_locked);
 
+#if 0
 int insert_inode_locked4(struct inode *inode, unsigned long hashval,
 		int (*test)(struct inode *, void *), void *data)
 {

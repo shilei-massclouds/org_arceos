@@ -22,6 +22,7 @@ extern int cl_sys_write(unsigned int fd, const char *buf, size_t count);
 
 extern int cl_sys_unlink(const char *pathname);
 
+struct linux_dirent64;
 extern int cl_sys_getdents64(unsigned int fd,
                              struct linux_dirent64 *dirent,
                              unsigned int count);

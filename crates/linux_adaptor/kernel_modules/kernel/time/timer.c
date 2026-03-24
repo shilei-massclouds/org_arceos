@@ -350,7 +350,6 @@ static inline bool is_timers_nohz_active(void)
 static inline bool is_timers_nohz_active(void) { return false; }
 #endif /* NO_HZ_COMMON */
 
-#if 0
 static unsigned long round_jiffies_common(unsigned long j, int cpu,
 		bool force_up)
 {
@@ -391,6 +390,7 @@ static unsigned long round_jiffies_common(unsigned long j, int cpu,
 	return time_is_after_jiffies(j) ? j : original;
 }
 
+#if 0
 /**
  * __round_jiffies - function to round jiffies to a full second
  * @j: the time in (absolute) jiffies that should be rounded
@@ -487,6 +487,7 @@ unsigned long round_jiffies_relative(unsigned long j)
 	return __round_jiffies_relative(j, raw_smp_processor_id());
 }
 EXPORT_SYMBOL_GPL(round_jiffies_relative);
+#endif // CL
 
 /**
  * __round_jiffies_up - function to round jiffies up to a full second
@@ -504,6 +505,7 @@ unsigned long __round_jiffies_up(unsigned long j, int cpu)
 }
 EXPORT_SYMBOL_GPL(__round_jiffies_up);
 
+#if 0
 /**
  * __round_jiffies_up_relative - function to round jiffies up to a full second
  * @j: the time in (relative) jiffies that should be rounded
@@ -522,6 +524,7 @@ unsigned long __round_jiffies_up_relative(unsigned long j, int cpu)
 	return round_jiffies_common(j + j0, cpu, true) - j0;
 }
 EXPORT_SYMBOL_GPL(__round_jiffies_up_relative);
+#endif // CL
 
 /**
  * round_jiffies_up - function to round jiffies up to a full second
@@ -538,6 +541,7 @@ unsigned long round_jiffies_up(unsigned long j)
 }
 EXPORT_SYMBOL_GPL(round_jiffies_up);
 
+#if 0
 /**
  * round_jiffies_up_relative - function to round jiffies up to a full second
  * @j: the time in (relative) jiffies that should be rounded
@@ -1282,6 +1286,7 @@ int timer_reduce(struct timer_list *timer, unsigned long expires)
 	return __mod_timer(timer, expires, MOD_TIMER_REDUCE);
 }
 EXPORT_SYMBOL(timer_reduce);
+#endif // CL
 
 /**
  * add_timer - Start a timer
@@ -1311,6 +1316,7 @@ void add_timer(struct timer_list *timer)
 }
 EXPORT_SYMBOL(add_timer);
 
+#if 0
 /**
  * add_timer_local() - Start a timer on the local CPU
  * @timer:	The timer to be started

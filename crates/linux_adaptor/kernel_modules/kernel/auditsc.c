@@ -2196,7 +2196,6 @@ static struct audit_names *audit_alloc_name(struct audit_context *context,
 	return aname;
 }
 
-#if 0
 /**
  * __audit_reusename - fill out filename with info from existing entry
  * @uptr: userland ptr to pathname
@@ -2221,7 +2220,6 @@ __audit_reusename(const __user char *uptr)
 	}
 	return NULL;
 }
-#endif // CL
 
 /**
  * __audit_getname - add a name to the list

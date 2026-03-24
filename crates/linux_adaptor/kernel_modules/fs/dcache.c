@@ -939,6 +939,7 @@ repeat:
 	return ret;
 }
 EXPORT_SYMBOL(dget_parent);
+#endif // CL
 
 static struct dentry * __d_find_any_alias(struct inode *inode)
 {
@@ -951,6 +952,7 @@ static struct dentry * __d_find_any_alias(struct inode *inode)
 	return alias;
 }
 
+#if 0
 /**
  * d_find_any_alias - find any alias for a given inode
  * @inode: inode to find an alias for
@@ -1914,7 +1916,6 @@ void d_instantiate(struct dentry *entry, struct inode * inode)
 }
 EXPORT_SYMBOL(d_instantiate);
 
-#if 0
 /*
  * This should be equivalent to d_instantiate() + unlock_new_inode(),
  * with lockdep-related part of unlock_new_inode() done before
@@ -1941,7 +1942,6 @@ void d_instantiate_new(struct dentry *entry, struct inode *inode)
 	spin_unlock(&inode->i_lock);
 }
 EXPORT_SYMBOL(d_instantiate_new);
-#endif // CL
 
 struct dentry *d_make_root(struct inode *root_inode)
 {
@@ -2731,6 +2731,7 @@ struct dentry *d_exact_alias(struct dentry *entry, struct inode *inode)
 	return NULL;
 }
 EXPORT_SYMBOL(d_exact_alias);
+#endif // CL
 
 static void swap_names(struct dentry *dentry, struct dentry *target)
 {
@@ -2889,6 +2890,7 @@ static void __d_move(struct dentry *dentry, struct dentry *target,
 	spin_unlock(&dentry->d_lock);
 }
 
+#if 0
 /*
  * d_move - move a dentry
  * @dentry: entry to move
@@ -2924,6 +2926,7 @@ void d_exchange(struct dentry *dentry1, struct dentry *dentry2)
 
 	write_sequnlock(&rename_lock);
 }
+#endif // CL
 
 /**
  * d_ancestor - search for an ancestor
@@ -3055,6 +3058,7 @@ out:
 }
 EXPORT_SYMBOL(d_splice_alias);
 
+#if 0
 /*
  * Test whether new_dentry is a subdirectory of old_dentry.
  *
