@@ -2,6 +2,7 @@ use alloc::format;
 use alloc::sync::Arc;
 use alloc::string::String;
 use alloc::ffi::CString;
+use core::mem;
 use core::ffi::{c_char, CStr};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
@@ -23,8 +24,25 @@ const S_IRUSR: usize = 0o400;
 const S_IWUSR: usize = 0o200;
 //const S_IXUSR: usize = 0o100;
 
+/// Type for LinuxDirent64.d_type
+const DT_DIR: u8 = 4;
+const DT_REG: u8 = 8;
+
 /// seek relative to beginning of file
 const SEEK_SET: usize = 0;
+
+#[repr(C)]
+struct LinuxDirent64 {
+    d_ino:      u64,
+    d_off:      i64,
+    d_reclen:   u16,
+    d_type:     u8,
+
+    /* followed by d_name[] */
+}
+
+/// LinuxDirent64.d_name offset
+const NAME_OFFSET: isize = 8 + 8 + 2 + 1;
 
 pub struct LinuxFileSystem {
     root: Arc<DirNode>,
@@ -87,6 +105,7 @@ impl DirNode {
             panic!("unknown err for checking existence.");
         }
 
+        error!("lookup {} ty {}", path, ty);
         let r_type = match ty as u8 {
             DT_REG => VfsNodeType::File,
             DT_DIR => VfsNodeType::Dir,
@@ -151,15 +170,86 @@ impl VfsNodeOps for DirNode {
     }
 
     fn read_dir(&self, start_idx: usize, dirents: &mut [VfsDirEntry]) -> VfsResult<usize> {
-        todo!();
+        error!("read_dir: start_idx[{start_idx}] path: {}", self.path);
+        let last_count = self.last_count.load(Ordering::Relaxed);
+        assert!(start_idx == 0 || start_idx == last_count);
+        if start_idx != 0 {
+            error!("Note: alread used all entries and reset 'last_count' to zero.");
+            self.last_count.store(0, Ordering::Relaxed);
+            return Ok(0);
+        }
+
+        let c_path = CString::new(self.path.clone()).unwrap();
+
+        let mut buf: [u8; 512] = [0; 512];
+        let fd = unsafe { cl_sys_open(c_path.as_ptr(), O_DIRECTORY, 0) };
+        if fd < 0 {
+            panic!("bad dir fd.");
+        }
+
+        let count = unsafe {
+            cl_sys_getdents64(fd as usize, buf.as_mut_ptr(), buf.len())
+        };
+        if count < 0 {
+            panic!("get dents64 err: {}", count);
+        }
+
+        let mut count = count as usize;
+        assert!(count < buf.len());
+        error!("sizeof {}", mem::size_of::<LinuxDirent64>());
+        let mut idx = 0;
+        let mut ptr = buf.as_ptr();
+        while count > 0 {
+            let de_ptr = ptr as *const LinuxDirent64;
+            unsafe {
+                error!("LinuxDirent64: ino {}, off {:#x}, reclen {}, type {}",
+                   (*de_ptr).d_ino,
+                   (*de_ptr).d_off,
+                   (*de_ptr).d_reclen,
+                   (*de_ptr).d_type);
+            }
+            let reclen = unsafe { (*de_ptr).d_reclen } as usize;
+            let d_type = unsafe { (*de_ptr).d_type };
+            let d_name = unsafe { ptr.offset(NAME_OFFSET) };
+            let d_name = unsafe {
+                CStr::from_ptr(d_name)
+            };
+
+            error!("name: {}", d_name.to_str().unwrap());
+            let r_type = match d_type {
+                DT_REG => VfsNodeType::File,
+                DT_DIR => VfsNodeType::Dir,
+                _ => unimplemented!("{}", d_type),
+            };
+            dirents[idx] = VfsDirEntry::new(d_name.to_str().unwrap(), r_type);
+            idx += 1;
+
+            ptr = unsafe { ptr.offset(reclen as isize) };
+            count -= reclen;
+        }
+
+        if unsafe { cl_sys_close(fd as usize) } < 0 {
+            panic!("close dir fd err.");
+        }
+
+        self.last_count.store(idx, Ordering::Relaxed);
+        Ok(idx)
     }
 
     fn parent(&self) -> Option<VfsNodeRef> {
-        todo!();
+        let (prefix, _self) = split_path_reverse(&self.path);
+        let prefix = prefix?;
+        let parent = if prefix.len() == 0 {
+            "/"
+        } else {
+            prefix
+        };
+        error!("parent of {}: {}", self.path, parent);
+        Some(DirNode::new(parent) as VfsNodeRef)
     }
 
     fn get_attr(&self) -> VfsResult<VfsNodeAttr> {
-        todo!();
+        Ok(VfsNodeAttr::new_dir(4096, 0))
     }
 
     fn lookup(self: Arc<Self>, path: &str) -> VfsResult<VfsNodeRef> {
@@ -276,19 +366,9 @@ unsafe extern "C" {
 
     fn cl_sys_unlink(path: *const c_char) -> i32;
     fn cl_sys_rmdir(path: *const c_char) -> i32;
-}
-
-/*
-unsafe extern "C" {
 
     fn cl_sys_getdents64(fd: usize, buf: *mut u8, len: usize) -> i32;
-
-
-
 }
-*/
-
-/*
 
 fn split_path_reverse(path: &str) -> (Option<&str>, &str) {
     let trimmed_path = path.trim_end_matches('/');
@@ -296,23 +376,3 @@ fn split_path_reverse(path: &str) -> (Option<&str>, &str) {
         (Some(&trimmed_path[..n]), &trimmed_path[n + 1..])
     })
 }
-*/
-/*
-#[repr(C)]
-struct LinuxDirent64 {
-    d_ino:      u64,
-    d_off:      i64,
-    d_reclen:   u16,
-    d_type:     u8,
-
-    /* followed by d_name[] */
-}
-
-/// LinuxDirent64.d_name offset
-const NAME_OFFSET: isize = 8 + 8 + 2 + 1;
-
-/// Type for LinuxDirent64.d_type
-const DT_DIR: u8 = 4;
-const DT_REG: u8 = 8;
-
-*/

@@ -33,13 +33,12 @@ obj-y += stat.o
 obj-y += open.o
 obj-y += file.o
 obj-y += attr.o
-
-#obj-y += readdir.o
-
-#obj-y += proc/
+obj-y += readdir.o
 
 obj-y += iomap/
 obj-y += ramfs/
 obj-y += ext4/
 obj-y += jbd2/
 obj-y += notify/
+
+#obj-y += proc/

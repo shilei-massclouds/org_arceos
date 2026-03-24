@@ -2034,7 +2034,6 @@ bool inode_maybe_inc_iversion(struct inode *inode, bool force)
 }
 EXPORT_SYMBOL(inode_maybe_inc_iversion);
 
-#if 0
 /**
  * inode_query_iversion - read i_version for later use
  * @inode: inode from which i_version should be read
@@ -2073,6 +2072,7 @@ u64 inode_query_iversion(struct inode *inode)
 }
 EXPORT_SYMBOL(inode_query_iversion);
 
+#if 0
 ssize_t direct_write_fallback(struct kiocb *iocb, struct iov_iter *iter,
 		ssize_t direct_written, ssize_t buffered_written)
 {

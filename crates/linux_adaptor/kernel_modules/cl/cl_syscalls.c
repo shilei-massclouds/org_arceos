@@ -1,3 +1,5 @@
+#include <linux/types.h>
+#include <linux/dirent.h>
 #include <linux/fdtable.h>
 #include <linux/file.h>
 #include <linux/fs.h>
@@ -170,4 +172,90 @@ int cl_sys_unlink(const char *pathname)
 int cl_sys_rmdir(const char *pathname)
 {
     PANIC("rmdir");
+}
+
+/*
+ * getdents64
+ */
+
+int verify_dirent_name(const char *name, int len);
+
+struct getdents_callback64_kernel {
+	struct dir_context ctx;
+	struct linux_dirent64 *current_dir;
+	int prev_reclen;
+	int count;
+	int error;
+};
+
+static bool
+filldir64_kernel(struct dir_context *ctx,
+                 const char *name,
+                 int namlen,
+                 loff_t offset,
+                 u64 ino,
+                 unsigned int d_type)
+{
+	struct linux_dirent64 *dirent, *prev;
+	struct getdents_callback64_kernel *buf =
+		container_of(ctx, struct getdents_callback64_kernel, ctx);
+	int reclen = ALIGN(offsetof(struct linux_dirent64, d_name) + namlen + 1,
+		sizeof(u64));
+	int prev_reclen;
+
+	buf->error = verify_dirent_name(name, namlen);
+	if (unlikely(buf->error))
+		return false;
+	buf->error = -EINVAL;	/* only used if we fail.. */
+	if (reclen > buf->count)
+		return false;
+	prev_reclen = buf->prev_reclen;
+	if (prev_reclen && signal_pending(current))
+		return false;
+	dirent = buf->current_dir;
+	prev = (void *)dirent - prev_reclen;
+
+	/* This might be 'dirent->d_off', but if so it will get overwritten */
+	prev->d_off = offset;
+	dirent->d_ino = ino;
+	dirent->d_reclen = reclen;
+	dirent->d_type = d_type;
+    strncpy(dirent->d_name, name, namlen);
+
+	buf->prev_reclen = reclen;
+	buf->current_dir = (void *)dirent + reclen;
+	buf->count -= reclen;
+	return true;
+}
+
+int cl_sys_getdents64(unsigned int fd,
+                      struct linux_dirent64 *dirent,
+                      unsigned int count)
+{
+	struct fd f;
+	struct getdents_callback64_kernel buf = {
+		.ctx.actor = filldir64_kernel,
+		.count = count,
+		.current_dir = dirent
+	};
+	int error;
+
+	f = fdget_pos(fd);
+	if (!fd_file(f))
+		return -EBADF;
+
+	error = iterate_dir(fd_file(f), &buf.ctx);
+	if (error >= 0)
+		error = buf.error;
+	if (buf.prev_reclen) {
+		struct linux_dirent64 *lastdirent;
+		typeof(lastdirent->d_off) d_off = buf.ctx.pos;
+
+		lastdirent = (void *) buf.current_dir - buf.prev_reclen;
+
+        lastdirent->d_off = d_off;
+        error = count - buf.count;
+	}
+	fdput_pos(f);
+	return error;
 }

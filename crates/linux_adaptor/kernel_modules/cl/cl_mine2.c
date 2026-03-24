@@ -718,7 +718,6 @@ CL_MINE(sync_mapping_buffers)
 CL_MINE(iomap_swapfile_activate)
 CL_MINE(try_to_writeback_inodes_sb)
 CL_MINE(sync_inode_metadata)
-CL_MINE(inode_query_iversion)
 
 CL_MINE(d_mark_dontcache)
 CL_MINE(iomap_seek_data)
