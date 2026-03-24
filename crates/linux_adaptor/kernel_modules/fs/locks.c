@@ -207,7 +207,6 @@ out:
 	return ctx;
 }
 
-#if 0
 static void
 locks_dump_ctx_list(struct list_head *list, char *list_type)
 {
@@ -236,6 +235,7 @@ locks_check_ctx_lists(struct inode *inode)
 	}
 }
 
+#if 0
 static void
 locks_check_ctx_file_list(struct file *filp, struct list_head *list, char *list_type)
 {
@@ -251,6 +251,7 @@ locks_check_ctx_file_list(struct file *filp, struct list_head *list, char *list_
 				flc->flc_owner, flc->flc_flags,
 				flc->flc_type, flc->flc_pid);
 }
+#endif // CL
 
 void
 locks_free_lock_context(struct inode *inode)
@@ -262,7 +263,6 @@ locks_free_lock_context(struct inode *inode)
 		kmem_cache_free(flctx_cache, ctx);
 	}
 }
-#endif // CL
 
 static void locks_init_lock_heads(struct file_lock_core *flc)
 {

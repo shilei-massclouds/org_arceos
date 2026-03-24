@@ -145,7 +145,21 @@ int cl_sys_write(unsigned int fd, const char *buf, size_t count)
 
 int cl_sys_read(unsigned int fd, char *buf, size_t count)
 {
-	return ksys_read(fd, buf, count);
+	struct fd f = fdget_pos(fd);
+	ssize_t ret = -EBADF;
+
+	if (fd_file(f)) {
+		loff_t pos, *ppos = file_ppos(fd_file(f));
+		if (ppos) {
+			pos = *ppos;
+			ppos = &pos;
+		}
+		ret = kernel_read(fd_file(f), buf, count, ppos);
+		if (ret >= 0 && ppos)
+			fd_file(f)->f_pos = pos;
+		fdput_pos(f);
+	}
+	return ret;
 }
 
 int cl_sys_unlink(const char *pathname)

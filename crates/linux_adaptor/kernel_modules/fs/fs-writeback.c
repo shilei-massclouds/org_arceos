@@ -1280,6 +1280,7 @@ void wb_start_background_writeback(struct bdi_writeback *wb)
 	trace_writeback_wake_background(wb);
 	wb_wakeup(wb);
 }
+#endif // CL
 
 /*
  * Remove the inode from the writeback list it is on.
@@ -1299,7 +1300,6 @@ void inode_io_list_del(struct inode *inode)
 	spin_unlock(&wb->list_lock);
 }
 EXPORT_SYMBOL(inode_io_list_del);
-#endif // CL
 
 /*
  * mark an inode as under writeback on the sb
@@ -1509,7 +1509,6 @@ static int write_inode(struct inode *inode, struct writeback_control *wbc)
 	return 0;
 }
 
-#if 0
 /*
  * Wait for writeback on an inode to complete. Called with i_lock held.
  * Caller must make sure inode cannot go away when we drop i_lock.
@@ -1536,7 +1535,6 @@ void inode_wait_for_writeback(struct inode *inode)
 	}
 	finish_wait(wq_head, &wqe.wq_entry);
 }
-#endif // CL
 
 /*
  * Sleep until I_SYNC is cleared. This function must be called with i_lock

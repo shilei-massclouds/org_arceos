@@ -2946,6 +2946,7 @@ int set_page_dirty_lock(struct page *page)
 	return ret;
 }
 EXPORT_SYMBOL(set_page_dirty_lock);
+#endif // CL
 
 /*
  * This cancels just the dirty bit on the kernel page itself, it does NOT
@@ -2982,7 +2983,6 @@ void __folio_cancel_dirty(struct folio *folio)
 	}
 }
 EXPORT_SYMBOL(__folio_cancel_dirty);
-#endif // CL
 
 /*
  * Clear a folio's dirty flag, while caring for dirty memory accounting.

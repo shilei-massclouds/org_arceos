@@ -284,7 +284,6 @@ static struct inode *alloc_inode(struct super_block *sb)
 	return inode;
 }
 
-#if 0
 void __destroy_inode(struct inode *inode)
 {
 	BUG_ON(inode_has_buffers(inode));
@@ -306,7 +305,6 @@ void __destroy_inode(struct inode *inode)
 	this_cpu_dec(nr_inodes);
 }
 EXPORT_SYMBOL(__destroy_inode);
-#endif // CL
 
 static void destroy_inode(struct inode *inode)
 {
@@ -594,7 +592,6 @@ void __insert_inode_hash(struct inode *inode, unsigned long hashval)
 }
 EXPORT_SYMBOL(__insert_inode_hash);
 
-#if 0
 /**
  *	__remove_inode_hash - remove an inode from the hash
  *	@inode: inode to unhash
@@ -611,6 +608,7 @@ void __remove_inode_hash(struct inode *inode)
 }
 EXPORT_SYMBOL(__remove_inode_hash);
 
+#if 0
 void dump_mapping(const struct address_space *mapping)
 {
 	struct inode *host;
@@ -664,6 +662,7 @@ void dump_mapping(const struct address_space *mapping)
 	pr_warn("aops:%ps ino:%lx dentry name(?):\"%s\"\n",
 		a_ops, ino, fname);
 }
+#endif /* CL */
 
 void clear_inode(struct inode *inode)
 {
@@ -691,7 +690,6 @@ void clear_inode(struct inode *inode)
 	inode->i_state = I_FREEING | I_CLEAR;
 }
 EXPORT_SYMBOL(clear_inode);
-#endif /* CL */
 
 /*
  * Free the inode passed in, removing it from the lists it is still connected

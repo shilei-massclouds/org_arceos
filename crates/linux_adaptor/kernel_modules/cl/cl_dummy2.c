@@ -751,6 +751,11 @@ void security_inode_post_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
+void security_inode_free(struct inode *inode)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
 int security_path_unlink(const struct path *dir, struct dentry *dentry)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);

@@ -520,12 +520,12 @@ static void __remove_assoc_queue(struct buffer_head *bh)
 	bh->b_assoc_map = NULL;
 }
 
-#if 0
 int inode_has_buffers(struct inode *inode)
 {
 	return !list_empty(&inode->i_data.i_private_list);
 }
 
+#if 0
 /*
  * osync is designed to support O_SYNC io.  It waits synchronously for
  * all already-submitted IO to complete, but does not queue any new
@@ -857,6 +857,7 @@ static int fsync_buffers_list(spinlock_t *lock, struct list_head *list)
 	else
 		return err2;
 }
+#endif // CL
 
 /*
  * Invalidate any and all dirty buffers on a given inode.  We are
@@ -882,6 +883,7 @@ void invalidate_inode_buffers(struct inode *inode)
 }
 EXPORT_SYMBOL(invalidate_inode_buffers);
 
+#if 0
 /*
  * Remove any clean buffers from the inode's buffer list.  This is called
  * when we're trying to free the inode itself.  Those buffers can pin it.

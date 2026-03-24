@@ -426,7 +426,6 @@ void truncate_inode_pages(struct address_space *mapping, loff_t lstart)
 }
 EXPORT_SYMBOL(truncate_inode_pages);
 
-#if 0
 /**
  * truncate_inode_pages_final - truncate *all* pages before inode dies
  * @mapping: mapping to truncate
@@ -461,7 +460,6 @@ void truncate_inode_pages_final(struct address_space *mapping)
 	truncate_inode_pages(mapping, 0);
 }
 EXPORT_SYMBOL(truncate_inode_pages_final);
-#endif // CL
 
 /**
  * mapping_try_invalidate - Invalidate all the evictable folios of one inode

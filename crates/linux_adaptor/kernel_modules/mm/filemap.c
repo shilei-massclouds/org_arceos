@@ -2815,6 +2815,7 @@ int kiocb_invalidate_pages(struct kiocb *iocb, size_t count)
 					iocb->ki_flags & IOCB_NOWAIT);
 }
 EXPORT_SYMBOL_GPL(kiocb_invalidate_pages);
+#endif // CL
 
 /**
  * generic_file_read_iter - generic filesystem read routine
@@ -2883,6 +2884,7 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
 }
 EXPORT_SYMBOL(generic_file_read_iter);
 
+#if 0
 /*
  * Splice subpages from a folio into a pipe.
  */

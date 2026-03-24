@@ -915,7 +915,6 @@ void inode_add_bytes(struct inode *inode, loff_t bytes)
 
 EXPORT_SYMBOL(inode_add_bytes);
 
-#if 0
 void __inode_sub_bytes(struct inode *inode, loff_t bytes)
 {
 	inode->i_blocks -= bytes >> 9;
@@ -938,6 +937,7 @@ void inode_sub_bytes(struct inode *inode, loff_t bytes)
 
 EXPORT_SYMBOL(inode_sub_bytes);
 
+#if 0
 loff_t inode_get_bytes(struct inode *inode)
 {
 	loff_t ret;

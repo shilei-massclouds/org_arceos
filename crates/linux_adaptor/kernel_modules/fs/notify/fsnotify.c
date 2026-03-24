@@ -14,7 +14,6 @@
 #include <linux/fsnotify_backend.h>
 #include "fsnotify.h"
 
-#if 0
 /*
  * Clear all of the marks on an inode when it is being evicted from core
  */
@@ -24,6 +23,7 @@ void __fsnotify_inode_delete(struct inode *inode)
 }
 EXPORT_SYMBOL_GPL(__fsnotify_inode_delete);
 
+#if 0
 void __fsnotify_vfsmount_delete(struct vfsmount *mnt)
 {
 	fsnotify_clear_marks_by_mount(mnt);
