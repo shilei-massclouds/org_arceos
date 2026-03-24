@@ -105,7 +105,7 @@ impl DirNode {
             panic!("unknown err for checking existence.");
         }
 
-        error!("lookup {} ty {}", path, ty);
+        debug!("lookup {} ty {}", path, ty);
         let r_type = match ty as u8 {
             DT_REG => VfsNodeType::File,
             DT_DIR => VfsNodeType::Dir,
@@ -118,7 +118,7 @@ impl DirNode {
 impl VfsNodeOps for DirNode {
     fn create(&self, path: &str, ty: VfsNodeType) -> VfsResult {
         let path = self.full_path(path);
-        error!("create {ty:?} '{path}'");
+        debug!("create {ty:?} '{path}'");
         let c_path = CString::new(path).unwrap();
         match ty {
             VfsNodeType::Dir => {
@@ -170,11 +170,11 @@ impl VfsNodeOps for DirNode {
     }
 
     fn read_dir(&self, start_idx: usize, dirents: &mut [VfsDirEntry]) -> VfsResult<usize> {
-        error!("read_dir: start_idx[{start_idx}] path: {}", self.path);
+        debug!("read_dir: start_idx[{start_idx}] path: {}", self.path);
         let last_count = self.last_count.load(Ordering::Relaxed);
         assert!(start_idx == 0 || start_idx == last_count);
         if start_idx != 0 {
-            error!("Note: alread used all entries and reset 'last_count' to zero.");
+            debug!("Note: alread used all entries and reset 'last_count' to zero.");
             self.last_count.store(0, Ordering::Relaxed);
             return Ok(0);
         }
@@ -196,13 +196,13 @@ impl VfsNodeOps for DirNode {
 
         let mut count = count as usize;
         assert!(count < buf.len());
-        error!("sizeof {}", mem::size_of::<LinuxDirent64>());
+        debug!("sizeof {}", mem::size_of::<LinuxDirent64>());
         let mut idx = 0;
         let mut ptr = buf.as_ptr();
         while count > 0 {
             let de_ptr = ptr as *const LinuxDirent64;
             unsafe {
-                error!("LinuxDirent64: ino {}, off {:#x}, reclen {}, type {}",
+                debug!("LinuxDirent64: ino {}, off {:#x}, reclen {}, type {}",
                    (*de_ptr).d_ino,
                    (*de_ptr).d_off,
                    (*de_ptr).d_reclen,
@@ -215,7 +215,7 @@ impl VfsNodeOps for DirNode {
                 CStr::from_ptr(d_name)
             };
 
-            error!("name: {}", d_name.to_str().unwrap());
+            debug!("name: {}", d_name.to_str().unwrap());
             let r_type = match d_type {
                 DT_REG => VfsNodeType::File,
                 DT_DIR => VfsNodeType::Dir,
@@ -244,7 +244,7 @@ impl VfsNodeOps for DirNode {
         } else {
             prefix
         };
-        error!("parent of {}: {}", self.path, parent);
+        debug!("parent of {}: {}", self.path, parent);
         Some(DirNode::new(parent) as VfsNodeRef)
     }
 
@@ -254,7 +254,7 @@ impl VfsNodeOps for DirNode {
 
     fn lookup(self: Arc<Self>, path: &str) -> VfsResult<VfsNodeRef> {
         let path = self.full_path(path);
-        error!("lookup {}", path);
+        debug!("lookup {}", path);
         if let Some((ty, _sz)) = self.exist(&path) {
             match ty {
                 VfsNodeType::File => Ok(FileNode::new(&path) as VfsNodeRef),

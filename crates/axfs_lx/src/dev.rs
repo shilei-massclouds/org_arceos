@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use axdriver::prelude::*;
 
 const BLOCK_SIZE: usize = 512;
