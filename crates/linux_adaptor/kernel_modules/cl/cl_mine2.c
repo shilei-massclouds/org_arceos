@@ -544,10 +544,6 @@ CL_MINE(wb_calc_thresh)
 CL_MINE(debugfs_remove)
 CL_MINE(laptop_mode_timer_fn)
 
-CL_MINE(wb_over_bg_thresh)
-CL_MINE(set_worker_desc)
-CL_MINE(current_is_workqueue_rescuer)
-
 CL_MINE(proc_doulongvec_minmax)
 CL_MINE(generic_delete_inode)
 

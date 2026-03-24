@@ -6005,6 +6005,7 @@ struct work_struct *current_work(void)
 	return worker ? worker->current_work : NULL;
 }
 EXPORT_SYMBOL(current_work);
+#endif // CL
 
 /**
  * current_is_workqueue_rescuer - is %current workqueue rescuer?
@@ -6021,6 +6022,7 @@ bool current_is_workqueue_rescuer(void)
 	return worker && worker->rescue_wq;
 }
 
+#if 0
 /**
  * workqueue_congested - test whether a workqueue is congested
  * @cpu: CPU in question
@@ -6094,6 +6096,7 @@ unsigned int work_busy(struct work_struct *work)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(work_busy);
+#endif // CL
 
 /**
  * set_worker_desc - set description for the current work item
@@ -6118,6 +6121,7 @@ void set_worker_desc(const char *fmt, ...)
 }
 EXPORT_SYMBOL_GPL(set_worker_desc);
 
+#if 0
 /**
  * print_worker_info - print out worker information and description
  * @log_lvl: the log level to use when printing

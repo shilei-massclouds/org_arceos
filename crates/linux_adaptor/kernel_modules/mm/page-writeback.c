@@ -2153,7 +2153,6 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
 }
 EXPORT_SYMBOL(balance_dirty_pages_ratelimited);
 
-#if 0
 /*
  * Similar to wb_dirty_limits, wb_bg_dirty_limits also calculates dirty
  * and thresh, but it's for background writeback.
@@ -2205,7 +2204,6 @@ bool wb_over_bg_thresh(struct bdi_writeback *wb)
 
 	return false;
 }
-#endif // CL
 
 #ifdef CONFIG_SYSCTL
 /*
