@@ -6,7 +6,7 @@ use kernel_guard::{NoOp, NoPreemptIrqSave};
 use lazyinit::LazyInit;
 use timer_list::{TimerEvent, TimerList};
 
-use crate::{AxTaskRef, select_run_queue};
+use crate::{AxTaskRef, future::check_timer_events, select_run_queue};
 
 static TIMER_TICKET_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -78,6 +78,9 @@ pub fn check_events() {
             break;
         }
     }
+
+    // Handle async timer events
+    check_timer_events();
 }
 
 pub fn init() {
