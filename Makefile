@@ -231,6 +231,9 @@ else
 	$(call make_disk_image,$(FS_TYPE),$(DISK_IMG))
 endif
 
+rm_disk:
+	rm -f $(DISK_IMG)
+
 clean: clean_c
 	rm -rf $(APP)/*.bin $(APP)/*.elf $(OUT_CONFIG)
 	cargo clean
@@ -248,4 +251,4 @@ clean_c::
 .PHONY: all defconfig oldconfig \
 	build disasm run justrun debug \
 	clippy doc doc_check_missing fmt fmt_c unittest unittest_no_fail_fast \
-	disk_img clean clean_dist clean_c symtab
+	disk_img rm_disk clean clean_dist clean_c symtab

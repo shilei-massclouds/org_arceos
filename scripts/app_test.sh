@@ -114,9 +114,20 @@ function test_one() {
     fi
 }
 
-# rebuild disk_img
-rm -f ./disk.img
-make disk_img
+function run_action() {
+    local action=$1
+    local args=$2
+    local result="$APP/actual.out"
+    rm -f "$result"
+
+    echo -ne "    run \"${BLOD_C}$action${END_C}\" \"${BLOD_C}$args${END_C}\": "
+    make $action $args > "$result" 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "${RED_C}run action failed!${END_C}"
+    else
+        echo -e "${GREEN_C}ok!${END_C}"
+    fi
+}
 
 for t in ${test_list[@]}; do
     APP=$t

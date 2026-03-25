@@ -1,0 +1,56 @@
+VFS: Mounted root (ext4 filesystem) on device 254:0.
+Run basic tests in non-interractive mode.
+ArceOS 0.1.0 SMP riscv64 riscv64-dp1000
+
+cwd: /
+
+drwxr-xr-x     4096 dev
+drwxr-xr-x     4096 lost+found
+drwxr-xr-x     4096 proc
+drwxr-xr-x     4096 sys
+drwxr-xr-x     4096 tmp
+
+Create file1 ..
+Create file1 ok!
+
+Check file1 ..
+hello
+
+drwxr-xr-x     4096 dev
+\-rw-rw-rw-        6 file1
+drwxr-xr-x     4096 lost+found
+drwxr-xr-x     4096 proc
+drwxr-xr-x     4096 sys
+drwxr-xr-x     4096 tmp
+
+Remove file1 ..
+Remove file1 ok!
+
+Make dir1 ..
+Make dir1 ok!
+
+Enter into dir1 ..
+
+cwd: /dir1/
+
+
+Create file2 ..
+Create file2 ok!
+
+Check file2 ..
+hello2
+
+\-rw-rw-rw-        7 file2
+
+Remove file2 ..
+Remove file2 ok!
+
+Exit from dir1.
+
+cwd: /
+
+Remove dir1 ..
+Remove dir1 ok!
+
+Prepare to exit ..
+Bye~

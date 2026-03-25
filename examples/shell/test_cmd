@@ -1,1 +1,9 @@
+run_action "rm_disk"
+
+run_action "disk_img"
 test_one "LOG=info APP_FEATURES=non-interactive" "expect_info_fat32.out"
+run_action "rm_disk"
+
+run_action "disk_img" "FS_TYPE=ext4"
+test_one "APP_FEATURES=non-interactive FEATURES=linux-fs FS_TYPE=ext4" "expect_ext4.out"
+run_action "rm_disk"
