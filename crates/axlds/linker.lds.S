@@ -13,6 +13,12 @@ SECTIONS
         *(.text.boot)
         *(.text .text.*)
         . = ALIGN(4K);
+
+        .init_array : {
+            __init_array_start = .;
+            *(.init_array .init_array.*)
+            __init_array_end = .;
+        }
         _etext = .;
     }
 
@@ -21,12 +27,6 @@ SECTIONS
         *(.rodata .rodata.*)
         *(.srodata .srodata.*)
         *(.sdata2 .sdata2.*)
-    }
-
-    .init_array : ALIGN(0x10) {
-        __init_array_start = .;
-        *(.init_array .init_array.*)
-        __init_array_end = .;
     }
 
     . = ALIGN(4K);

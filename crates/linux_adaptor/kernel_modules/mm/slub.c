@@ -4503,7 +4503,6 @@ static void __slab_free(struct kmem_cache *s, struct slab *slab,
 	if (unlikely(!new.inuse && n->nr_partial >= s->min_partial))
 		goto slab_empty;
 
-#if 0
 	/*
 	 * Objects left in the slab. If it was not on the partial list before
 	 * then add it.
@@ -4513,8 +4512,6 @@ static void __slab_free(struct kmem_cache *s, struct slab *slab,
 		stat(s, FREE_ADD_PARTIAL);
 	}
 	spin_unlock_irqrestore(&n->list_lock, flags);
-#endif
-    PANIC("");
 	return;
 
 slab_empty:
