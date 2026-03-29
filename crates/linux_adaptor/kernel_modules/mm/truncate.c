@@ -169,7 +169,6 @@ static void truncate_cleanup_folio(struct folio *folio)
 	folio_clear_mappedtodisk(folio);
 }
 
-#if 0
 int truncate_inode_folio(struct address_space *mapping, struct folio *folio)
 {
 	if (folio->mapping != mapping)
@@ -179,7 +178,6 @@ int truncate_inode_folio(struct address_space *mapping, struct folio *folio)
 	filemap_remove_folio(folio);
 	return 0;
 }
-#endif // CL
 
 /*
  * Handle partial folios.  The folio may be entirely within the

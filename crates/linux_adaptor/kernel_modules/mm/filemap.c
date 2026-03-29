@@ -134,7 +134,6 @@ static void mapping_set_update(struct xa_state *xas,
 	xas_set_lru(xas, &shadow_nodes);
 }
 
-#if 0
 static void page_cache_delete(struct address_space *mapping,
 				   struct folio *folio, void *shadow)
 {
@@ -155,7 +154,6 @@ static void page_cache_delete(struct address_space *mapping,
 	/* Leave page->index set: truncation lookup relies upon it */
 	mapping->nrpages -= nr;
 }
-#endif // CL
 
 static void filemap_unaccount_folio(struct address_space *mapping,
 		struct folio *folio)
@@ -221,7 +219,6 @@ static void filemap_unaccount_folio(struct address_space *mapping,
 		folio_account_cleaned(folio, inode_to_wb(mapping->host));
 }
 
-#if 0
 /*
  * Delete a page from the page cache and free it. Caller has to make
  * sure the page is locked and that nobody else uses it - or that usage
@@ -235,7 +232,6 @@ void __filemap_remove_folio(struct folio *folio, void *shadow)
 	filemap_unaccount_folio(mapping, folio);
 	page_cache_delete(mapping, folio, shadow);
 }
-#endif // CL
 
 void filemap_free_folio(struct address_space *mapping, struct folio *folio)
 {
@@ -251,7 +247,6 @@ void filemap_free_folio(struct address_space *mapping, struct folio *folio)
 	folio_put_refs(folio, refs);
 }
 
-#if 0
 /**
  * filemap_remove_folio - Remove folio from page cache.
  * @folio: The folio.
@@ -275,7 +270,6 @@ void filemap_remove_folio(struct folio *folio)
 
 	filemap_free_folio(mapping, folio);
 }
-#endif // CL
 
 /*
  * page_cache_delete_batch - delete several folios from page cache
