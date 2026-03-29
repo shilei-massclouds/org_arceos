@@ -604,7 +604,6 @@ CL_MINE(splice_folio_into_pipe)
 CL_MINE(__folio_swap_cache_index)
 
 CL_MINE(truncate_inode_folio)
-CL_MINE(truncate_inode_partial_folio)
 CL_MINE(posix_acl_chmod)
 CL_MINE(inode_nohighmem)
 CL_MINE(check_move_unevictable_folios)

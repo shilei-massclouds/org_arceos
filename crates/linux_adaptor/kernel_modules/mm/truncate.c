@@ -179,6 +179,7 @@ int truncate_inode_folio(struct address_space *mapping, struct folio *folio)
 	filemap_remove_folio(folio);
 	return 0;
 }
+#endif // CL
 
 /*
  * Handle partial folios.  The folio may be entirely within the
@@ -232,6 +233,7 @@ bool truncate_inode_partial_folio(struct folio *folio, loff_t start, loff_t end)
 	return true;
 }
 
+#if 0
 /*
  * Used to get rid of pages on hardware memory corruption.
  */
