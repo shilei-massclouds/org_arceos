@@ -1,3 +1,4 @@
+.option arch, +a
 .section .irqentry.text, "ax"
 
 .macro asm_per_cpu dst sym tmp
@@ -128,13 +129,7 @@
     beq a2, zero, .Lnew_vmalloc_restore_context
 
     /* Atomically reset the current cpu bit in new_vmalloc */
-    //amoxor.d    a0, a1, (a0)
-    // Now 'amoxor.d' is unsupported in ArceOS asm.
-    // FixMe: use amoxor.d ===
-    ld  a2, 0(a0)
-    xor a2, a2, a1
-    sd  a2, 0(a0)
-    // FixMe: use amoxor.d ===
+    amoxor.d    a0, a1, (a0)
 
     /* Only emit a sfence.vma if the uarch caches invalid entries */
     //ALTERNATIVE("sfence.vma", "nop", 0, RISCV_ISA_EXT_SVVPTC, 1)
@@ -296,8 +291,8 @@ ret_from_exception:
      * arbitrarily large.
      */
     ld  a2, {PT_EPC}(sp)
-    // FixMe: Now 'sc.d' is unsupported in ArceOS asm.
-    //sc.d x0, a2, {PT_EPC}(sp)
+    /* Clear load reservation */
+    sc.d x0, a2, {PT_EPC}(sp)
 
     csrw sstatus, a0
     csrw sepc, a2
