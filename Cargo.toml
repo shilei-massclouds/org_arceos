@@ -41,6 +41,7 @@ members = [
 
     "crates/axlds",
     "crates/axtask_lx",
+    "crates/axstage",
 ]
 
 [workspace.package]
