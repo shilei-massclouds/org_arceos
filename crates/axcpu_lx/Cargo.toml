@@ -69,6 +69,10 @@ uspace = []
 name = "axcpu"
 path = "src/lib.rs"
 
+[dependencies]
+axstage = { workspace = true }
+inventory = { workspace = true }
+
 [dependencies.cfg-if]
 version = "1.0"
 

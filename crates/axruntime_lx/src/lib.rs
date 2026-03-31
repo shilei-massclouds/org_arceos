@@ -41,16 +41,19 @@ d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
 pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     axstage::init();
 
+    //
+    // Stages:
+    //
+    // PrepareSystem
+    // InitTrap
+    // SetupEarlyConsole
+    // SetupArchPre
+    // ShowBanner
+    // SetupArch
+    //
     while axstage::advance(hartid, dtb_pa) {}
-    /*
-    axstage::call(AxStage::SetupEarlyConsole, 0, 0);
-    axstage::call(AxStage::SetupArchPre, 0, 0);
-    axstage::call(AxStage::ShowBanner, 0, 0);
-    axstage::call(AxStage::SetupArch, 0, 0);
-    */
 
-    axhal::init_early(hartid, dtb_pa);
-
+    //axhal::init_early(hartid, dtb_pa);
 
     axhal::mem::init();
     info!("Found physcial memory regions:");

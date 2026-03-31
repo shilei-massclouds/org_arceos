@@ -9,6 +9,7 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 #[derive(Debug)]
 pub enum AxStage {
     PrepareSystem,
+    InitTrap,
     SetupEarlyConsole,
     SetupArchPre,
     ShowBanner,

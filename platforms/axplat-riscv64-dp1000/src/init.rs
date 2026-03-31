@@ -29,9 +29,9 @@ impl InitIf for InitIfImpl {
     /// * Early console is initialized.
     /// * Current monotonic time and wall time can be obtained.
     fn init_early(_hartid: usize, _dtb_pa: usize) {
-        linux_adaptor::advance_to(LinuxAdaptorState::SetupArch);
+        //linux_adaptor::advance_to(LinuxAdaptorState::SetupArch);
         // handle_exception_early has been setup in asm-boot.
-        axcpu::init::init_trap();
+        //axcpu::init::init_trap();
         //crate::time::init_early();
     }
 
