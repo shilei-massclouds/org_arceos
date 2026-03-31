@@ -27,14 +27,6 @@ const LOGO: &str = r#"
 d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
 "#;
 
-axstage::register!("Banner", AxStage::ShowBanner, |_, _| {
-    ax_println!("!!! Banner !!!");
-});
-
-axstage::register!("EarlyCon", AxStage::SetupEarlyConsole, |_, _| {
-    ax_println!("!!! EarlyCon !!!");
-});
-
 /// The main entry point of the ArceOS runtime.
 ///
 /// It is called from the bootstrapping code in the specific platform crate (see
@@ -47,34 +39,18 @@ axstage::register!("EarlyCon", AxStage::SetupEarlyConsole, |_, _| {
 /// secondary cores call [`rust_main_secondary`].
 #[cfg_attr(not(test), axplat::main)]
 pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
+    axstage::init();
+
+    while axstage::advance(hartid, dtb_pa) {}
+    /*
+    axstage::call(AxStage::SetupEarlyConsole, 0, 0);
+    axstage::call(AxStage::SetupArchPre, 0, 0);
+    axstage::call(AxStage::ShowBanner, 0, 0);
+    axstage::call(AxStage::SetupArch, 0, 0);
+    */
+
     axhal::init_early(hartid, dtb_pa);
 
-    ax_println!("{}", LOGO);
-
-    ax_println!(
-        "\
-        arch = {}\n\
-        platform = {}\n\
-        target = {}\n\
-        build_mode = {}\n\
-        log_level = {}\n\
-        ",
-        axconfig::ARCH,
-        axconfig::PLATFORM,
-        option_env!("AX_TARGET").unwrap_or(""),
-        option_env!("AX_MODE").unwrap_or(""),
-        option_env!("AX_LOG").unwrap_or(""),
-    );
-
-    axlog::init();
-    axlog::set_max_level(option_env!("AX_LOG").unwrap_or("")); // no effect if set `log-level-*` features
-    info!("Logging is enabled.");
-    info!("Primary hartid {} started, dtb_pa = {:#x}.", hartid, dtb_pa);
-
-    /////////////////////////////////////////
-    axstage::init();
-    axstage::call(/*AxStage::ShowBanner*/);
-    /////////////////////////////////////////
 
     axhal::mem::init();
     info!("Found physcial memory regions:");
@@ -160,6 +136,34 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
 
     system_exit();
 }
+
+axstage::register!("AxEarlyCon", AxStage::SetupEarlyConsole, |_, _| {
+    axlog::init();
+    axlog::set_max_level(option_env!("AX_LOG").unwrap_or("")); // no effect if set `log-level-*` features
+    debug!("[SetupEarlyConsole]: 'AxEarlyCon'");
+    info!("Logging is enabled.");
+});
+
+axstage::register!("AxBanner", AxStage::ShowBanner, |hartid, dtb_pa| {
+    ax_println!("{}", LOGO);
+
+    ax_println!(
+        "\
+        arch = {}\n\
+        platform = {}\n\
+        target = {}\n\
+        build_mode = {}\n\
+        log_level = {}\n\
+        ",
+        axconfig::ARCH,
+        axconfig::PLATFORM,
+        option_env!("AX_TARGET").unwrap_or(""),
+        option_env!("AX_MODE").unwrap_or(""),
+        option_env!("AX_LOG").unwrap_or(""),
+    );
+
+    info!("Primary hartid {} started, dtb_pa = {:#x}.", hartid, dtb_pa);
+});
 
 #[cfg(feature = "alloc")]
 fn init_allocator_early() {

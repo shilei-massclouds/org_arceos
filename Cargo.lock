@@ -843,6 +843,7 @@ name = "axstage"
 version = "0.2.0"
 dependencies = [
  "inventory",
+ "log",
 ]
 
 [[package]]

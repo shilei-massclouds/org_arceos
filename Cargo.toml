@@ -87,6 +87,7 @@ linux_adaptor = { path = "crates/linux_adaptor" }
 percpu = { path = "crates/percpu_lx" }
 percpu_macros = { path = "crates/percpu_macros_lx" }
 inventory = "0.3"
+log = "=0.4.21"
 
 [profile.release]
 lto = true

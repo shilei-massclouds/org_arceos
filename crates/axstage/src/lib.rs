@@ -3,9 +3,18 @@
 
 #![no_std]
 
+use core::sync::atomic::{AtomicUsize, Ordering};
+
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub enum AxStage {
+    PrepareSystem,
     SetupEarlyConsole,
+    SetupArchPre,
     ShowBanner,
+    SetupArch,
+
+    NumberOfStages,
 }
 
 type AxPluginInitFn = fn(arg0: usize, arg1: usize);
@@ -39,10 +48,45 @@ macro_rules! register {
     };
 }
 
-pub fn call() {
-    for plugin in inventory::iter::<AxPlugin> {
-        (plugin.init_fn)(0, 0);
+static CUR_STAGE: AtomicUsize = AtomicUsize::new(AxStage::PrepareSystem as usize);
+
+/// Call plugin on current stage and advance
+pub fn advance(arg0: usize, arg1: usize) -> bool {
+    let stage = CUR_STAGE.fetch_add(1, Ordering::SeqCst);
+    if stage == AxStage::NumberOfStages as usize {
+        return false;
     }
+    // Safety: stage is always a valid AxStage value (from AxStage as usize)
+    let stage = unsafe { core::mem::transmute_copy(&stage) };
+    call(stage, arg0, arg1);
+    true
+}
+
+/// Call all plugins registered on the `stage`
+/// Note: The order is not guaranteed.
+pub fn call(stage: AxStage, arg0: usize, arg1: usize) {
+    let mut found = false;
+    for plugin in inventory::iter::<AxPlugin> {
+        if plugin.stage == stage {
+            log::debug!("[{:?}]: '{}'", stage, plugin.name);
+            (plugin.init_fn)(arg0, arg1);
+            found = true;
+        }
+    }
+    if !found {
+        log::debug!("[{:?}]: No plugin", stage);
+    }
+}
+
+/// Call the plugin by 'name'
+pub fn call_exact(name: &str, arg0: usize, arg1: usize) {
+    for plugin in inventory::iter::<AxPlugin> {
+        if plugin.name == name {
+            log::debug!("[{:?}]: '{}'", plugin.stage, plugin.name);
+            return (plugin.init_fn)(arg0, arg1);
+        }
+    }
+    panic!("No plugin '{}'", name);
 }
 
 /// Call each constructor in the .init_array section
