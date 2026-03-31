@@ -14,6 +14,7 @@ mod mp;
 
 #[cfg(feature = "irq")]
 use linux_adaptor::LinuxAdaptorState;
+use axstage::{AxStage, AxPlugin};
 
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.
@@ -25,6 +26,14 @@ const LOGO: &str = r#"
  d8888888888 888     Y88b.    Y8b.     Y88b. .d88P Y88b  d88P
 d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
 "#;
+
+axstage::register!("Banner", AxStage::ShowBanner, |_, _| {
+    ax_println!("!!! Banner !!!");
+});
+
+axstage::register!("EarlyCon", AxStage::SetupEarlyConsole, |_, _| {
+    ax_println!("!!! EarlyCon !!!");
+});
 
 /// The main entry point of the ArceOS runtime.
 ///
@@ -61,6 +70,11 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     axlog::set_max_level(option_env!("AX_LOG").unwrap_or("")); // no effect if set `log-level-*` features
     info!("Logging is enabled.");
     info!("Primary hartid {} started, dtb_pa = {:#x}.", hartid, dtb_pa);
+
+    /////////////////////////////////////////
+    axstage::init();
+    axstage::call(/*AxStage::ShowBanner*/);
+    /////////////////////////////////////////
 
     axhal::mem::init();
     info!("Found physcial memory regions:");

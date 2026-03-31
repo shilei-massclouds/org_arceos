@@ -829,11 +829,20 @@ dependencies = [
  "axlog",
  "axmm",
  "axplat",
+ "axstage",
  "axtask",
  "crate_interface",
  "ctor_bare",
+ "inventory",
  "linux_adaptor",
  "percpu 0.2.3",
+]
+
+[[package]]
+name = "axstage"
+version = "0.2.0"
+dependencies = [
+ "inventory",
 ]
 
 [[package]]
@@ -1334,6 +1343,15 @@ name = "int_ratio"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6045ea39e8d2862506c0dff6c65d068da362335df698bb1634033492740d2170"
+
+[[package]]
+name = "inventory"
+version = "0.3.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4f0c30c76f2f4ccee3fe55a2435f691ca00c0e4bd87abe4f4a851b1d4dac39b"
+dependencies = [
+ "rustversion",
+]
 
 [[package]]
 name = "is_terminal_polyfill"

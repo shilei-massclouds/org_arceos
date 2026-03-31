@@ -73,6 +73,7 @@ axsync = { path = "modules/axsync" }
 axdma = { path = "modules/axdma" }
 axipi = { path = "modules/axipi" }
 
+axstage = { path = "crates/axstage" }
 axruntime = { path = "crates/axruntime_lx" }
 axlds = { path = "crates/axlds" }
 axtask = { path = "crates/axtask_lx" }
@@ -85,6 +86,7 @@ axfs_devfs = { path = "crates/axfs_devfs_lx", package = "axfs_devfs_lx" }
 linux_adaptor = { path = "crates/linux_adaptor" }
 percpu = { path = "crates/percpu_lx" }
 percpu_macros = { path = "crates/percpu_macros_lx" }
+inventory = "0.3"
 
 [profile.release]
 lto = true

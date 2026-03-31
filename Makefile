@@ -51,7 +51,7 @@ OUT_CONFIG ?= $(PWD)/.axconfig.toml
 UIMAGE ?= n
 
 # App options
-A ?= examples/shell
+A ?= examples/helloworld
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=

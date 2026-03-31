@@ -46,10 +46,12 @@ axfs = { workspace = true, optional = true }
 #axipi = { workspace = true, optional = true }
 axplat = "0.3"
 axtask = { workspace = true, optional = true }
+axstage = { workspace = true }
 
 crate_interface = "0.1"
 percpu = { workspace = true, optional = true }
 ctor_bare = "0.2"
+inventory = { workspace = true }
 
 #chrono = { version = "0.4.38", default-features = false }
 linux_adaptor = { workspace = true }
