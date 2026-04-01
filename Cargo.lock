@@ -208,7 +208,7 @@ dependencies = [
  "axhal",
  "axio",
  "axipi",
- "axlog",
+ "axlog_ex",
  "axmm",
  "axnet",
  "axruntime",
@@ -227,7 +227,7 @@ dependencies = [
  "axfs_lx",
  "axhal",
  "axio",
- "axlog",
+ "axlog_ex",
  "axnet",
  "axns",
  "axruntime",
@@ -466,7 +466,7 @@ dependencies = [
  "axfs_lx",
  "axhal",
  "axipi",
- "axlog",
+ "axlog_ex",
  "axnet",
  "axruntime",
  "axsync",
@@ -537,7 +537,7 @@ dependencies = [
  "axconfig",
  "axcpu 0.2.2",
  "axlds",
- "axlog",
+ "axlog_ex",
  "axplat",
  "axplat-aarch64-qemu-virt",
  "axplat-loongarch64-qemu-virt",
@@ -596,13 +596,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "axlog"
+name = "axlog_ex"
 version = "0.2.0"
 dependencies = [
- "axlog",
+ "axlog_ex",
+ "axstage",
  "cfg-if",
  "chrono",
  "crate_interface",
+ "inventory",
  "kspin",
  "log",
 ]
@@ -828,7 +830,7 @@ dependencies = [
  "axdriver_lx",
  "axfs_lx",
  "axhal",
- "axlog",
+ "axlog_ex",
  "axmm",
  "axplat",
  "axstage",
@@ -1456,7 +1458,7 @@ dependencies = [
 name = "linux_adaptor"
 version = "0.0.1"
 dependencies = [
- "axlog",
+ "axlog_ex",
  "linux_adaptor_macro",
  "linux_config",
 ]

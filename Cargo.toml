@@ -5,7 +5,6 @@ members = [
     "modules/axconfig",
     "modules/axdisplay",
     "modules/axhal",
-    "modules/axlog",
     "modules/axdma",
     "modules/axnet",
     "modules/axns",
@@ -42,6 +41,7 @@ members = [
     "crates/axlds",
     "crates/axtask_lx",
     "crates/axstage",
+    "crates/axlog_ex",
 ]
 
 [workspace.package]
@@ -66,7 +66,7 @@ axfeat = { path = "api/axfeat" }
 axconfig = { path = "modules/axconfig" }
 axdisplay = { path = "modules/axdisplay" }
 axhal = { path = "modules/axhal" }
-axlog = { path = "modules/axlog" }
+axlog = { path = "crates/axlog_ex", package = "axlog_ex" }
 axnet = { path = "modules/axnet" }
 axns = { path = "modules/axns" }
 axsync = { path = "modules/axsync" }

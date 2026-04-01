@@ -140,13 +140,6 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     system_exit();
 }
 
-axstage::register!("AxEarlyCon", AxStage::SetupEarlyConsole, |_, _| {
-    axlog::init();
-    axlog::set_max_level(option_env!("AX_LOG").unwrap_or("")); // no effect if set `log-level-*` features
-    debug!("[SetupEarlyConsole]: 'AxEarlyCon'");
-    info!("Logging is enabled.");
-});
-
 axstage::register!("AxBanner", AxStage::ShowBanner, |hartid, dtb_pa| {
     ax_println!("{}", LOGO);
 
