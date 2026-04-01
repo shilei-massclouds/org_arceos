@@ -285,6 +285,9 @@ version = "0.2.0"
 dependencies = [
  "allocator",
  "axerrno 0.1.2",
+ "axmem_lx",
+ "axstage",
+ "inventory",
  "kspin",
  "linux_alloc",
  "log",
@@ -610,6 +613,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "axmem_lx"
+version = "0.2.0"
+dependencies = [
+ "axplat",
+ "axstage",
+ "heapless 0.8.0",
+ "inventory",
+ "lazyinit",
+ "log",
+ "memory_addr",
+]
+
+[[package]]
 name = "axmm"
 version = "0.2.0"
 dependencies = [
@@ -831,6 +847,7 @@ dependencies = [
  "axfs_lx",
  "axhal",
  "axlog_ex",
+ "axmem_lx",
  "axmm",
  "axplat",
  "axstage",

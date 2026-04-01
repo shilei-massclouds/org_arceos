@@ -39,6 +39,7 @@ axlog = { workspace = true }
 axconfig = { workspace = true }
 axalloc = { workspace = true, optional = true }
 axmm = { workspace = true, optional = true }
+axmem = { workspace = true }
 axdriver = { workspace = true, optional = true }
 axfs = { workspace = true, optional = true }
 #axnet = { workspace = true, optional = true }

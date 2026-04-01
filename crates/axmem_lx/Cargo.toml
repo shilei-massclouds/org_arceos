@@ -1,0 +1,20 @@
+[package]
+name = "axmem_lx"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+memory_addr = "0.4"
+axplat = "0.3"
+lazyinit = "0.2"
+heapless = "0.8"
+log = { workspace = true }
+axstage = { workspace = true }
+inventory = { workspace = true }

@@ -44,31 +44,34 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     //
     // Stages:
     //
+    // [Task0]
     // PrepareSystem
     // InitTrap
     // SetupEarlyConsole
     // SetupArchPre
     // ShowBanner
     // SetupArch
+    // SetupEarlyAlloc
+    // SetupVM
+    // SetupAlloc
+    // SetupBuddy
+    // SetupSlub
+    // InitSched
+    // InitIRQ
+    // StartKInitdPre
+    // StartKInitd
+    // StartKThreadd
+    //
+    // [Task1]
+    // InitSMPPre
+    // InitSMP
+    // SetupAllocLate
+    // InitDriver
+    // InitFS
+    // BootAppPre
+    // BootApp
     //
     while axstage::advance(hartid, dtb_pa) {}
-
-    //axhal::init_early(hartid, dtb_pa);
-
-    axhal::mem::init();
-    info!("Found physcial memory regions:");
-    for r in axhal::mem::memory_regions() {
-        info!(
-            "  [{:x?}, {:x?}) {} ({:?})",
-            r.paddr,
-            r.paddr + r.size,
-            r.name,
-            r.flags
-        );
-    }
-
-    #[cfg(feature = "alloc")]
-    init_allocator_early();
 
     #[cfg(feature = "paging")]
     axmm::init_memory_management();
@@ -160,35 +163,6 @@ axstage::register!("AxBanner", AxStage::ShowBanner, |hartid, dtb_pa| {
 
     info!("Primary hartid {} started, dtb_pa = {:#x}.", hartid, dtb_pa);
 });
-
-#[cfg(feature = "alloc")]
-fn init_allocator_early() {
-    use axhal::mem::{MemRegionFlags, memory_regions, phys_to_virt};
-
-    info!("Initialize global memory allocator...");
-    info!("  use {} allocator.", axalloc::global_allocator().name());
-
-    let mut max_region_size = 0;
-    let mut max_region_paddr = 0.into();
-    for r in memory_regions() {
-        if r.flags.contains(MemRegionFlags::FREE) && r.size > max_region_size {
-            max_region_size = r.size;
-            max_region_paddr = r.paddr;
-        }
-    }
-    for r in memory_regions() {
-        if r.flags.contains(MemRegionFlags::FREE) && r.paddr == max_region_paddr {
-            axalloc::global_init(phys_to_virt(r.paddr).as_usize(), r.size);
-            break;
-        }
-    }
-    for r in memory_regions() {
-        if r.flags.contains(MemRegionFlags::FREE) && r.paddr != max_region_paddr {
-            axalloc::global_add_memory(phys_to_virt(r.paddr).as_usize(), r.size)
-                .expect("add heap memory region failed");
-        }
-    }
-}
 
 #[cfg(feature = "alloc")]
 fn init_allocator_later() {

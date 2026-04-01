@@ -8,12 +8,33 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum AxStage {
+    // [Task0]
     PrepareSystem,
     InitTrap,
     SetupEarlyConsole,
     SetupArchPre,
     ShowBanner,
+    DetectPhysMem,
     SetupArch,
+    SetupEarlyAlloc,
+    SetupVM,
+    SetupAlloc,
+    SetupBuddy,
+    SetupSlub,
+    InitSched,
+    InitIRQ,
+    StartKInitdPre,
+    StartKInitd,
+    StartKThreadd,
+    
+    // [Task1]
+    InitSMPPre,
+    InitSMP,
+    SetupAllocLate,
+    InitDriver,
+    InitFS,
+    BootAppPre,
+    BootApp,
 
     NumberOfStages,
 }

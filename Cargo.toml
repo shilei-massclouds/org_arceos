@@ -42,6 +42,7 @@ members = [
     "crates/axtask_lx",
     "crates/axstage",
     "crates/axlog_ex",
+    "crates/axmem_lx",
 ]
 
 [workspace.package]
@@ -80,6 +81,7 @@ axtask = { path = "crates/axtask_lx" }
 axcpu = { path = "crates/axcpu_lx" }
 axalloc = { path = "crates/axalloc_lx" }
 axmm = { path = "crates/axmm_lx" }
+axmem = { path = "crates/axmem_lx", package = "axmem_lx" }
 axdriver = { path = "crates/axdriver_lx", package = "axdriver_lx" }
 axfs = { path = "crates/axfs_lx", package = "axfs_lx" }
 axfs_devfs = { path = "crates/axfs_devfs_lx", package = "axfs_devfs_lx" }
