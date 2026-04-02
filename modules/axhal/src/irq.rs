@@ -10,6 +10,9 @@ pub use axplat::irq::{IpiTarget, send_ipi};
 #[cfg(feature = "ipi")]
 pub use axconfig::devices::IPI_IRQ;
 
+use axstage::{AxPlugin, AxStage};
+use linux_adaptor::LinuxAdaptorState;
+
 /// IRQ handler.
 ///
 /// # Warn
@@ -22,3 +25,8 @@ pub fn irq_handler(vector: usize) -> bool {
     drop(guard); // rescheduling may occur when preemption is re-enabled.
     true
 }
+
+axstage::register!("AxIRQ", AxStage::InitIRQ, |_, _| {
+    info!("Initialize interrupt ...");
+    linux_adaptor::advance_to(LinuxAdaptorState::InitIrq);
+});

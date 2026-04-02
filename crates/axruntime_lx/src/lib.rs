@@ -72,54 +72,7 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     //
     while axstage::advance(hartid, dtb_pa) {}
 
-    #[cfg(feature = "multitask")]
-    axtask::init_scheduler();
-
-    #[cfg(feature = "irq")]
-    {
-        info!("Initialize interrupt early...");
-        init_interrupt_earlier();
-    }
-
-    /*
-    #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
-    {
-        #[allow(unused_variables)]
-        let all_devices = axdriver::init_drivers();
-
-        #[cfg(feature = "fs")]
-        axfs::init_filesystems(all_devices.block);
-
-        #[cfg(feature = "net")]
-        axnet::init_network(all_devices.net);
-
-        #[cfg(feature = "display")]
-        axdisplay::init_display(all_devices.display);
-    }
-    */
-
-    #[cfg(feature = "irq")]
-    {
-        info!("Initialize interrupt handlers...");
-        init_interrupt_later();
-    }
-
-    #[cfg(all(feature = "tls", not(feature = "multitask")))]
-    {
-        info!("Initialize thread local storage...");
-        init_tls();
-    }
-
     ctor_bare::call_ctors();
-
-    /*
-    info!("Primary CPU {} init OK.", hartid);
-    INITED_CPUS.fetch_add(1, Ordering::Release);
-
-    while !is_init_ok() {
-        core::hint::spin_loop();
-    }
-    */
 
     start_sched_earlier();
 
@@ -148,16 +101,6 @@ axstage::register!("AxBanner", AxStage::ShowBanner, |hartid, dtb_pa| {
 
     info!("Primary hartid {} started, dtb_pa = {:#x}.", hartid, dtb_pa);
 });
-
-#[cfg(feature = "irq")]
-fn init_interrupt_earlier() {
-    linux_adaptor::advance_to(LinuxAdaptorState::InitIrq);
-}
-
-#[cfg(feature = "irq")]
-fn init_interrupt_later() {
-    // Dummy implementation
-}
 
 #[cfg(feature = "multitask")]
 // As Linux `kernel_init`
@@ -225,12 +168,14 @@ fn system_exit() -> ! {
     axhal::power::system_off();
 }
 
+/*
 #[cfg(all(feature = "tls", not(feature = "multitask")))]
 fn init_tls() {
     let main_tls = axhal::tls::TlsArea::alloc();
     unsafe { axhal::asm::write_thread_pointer(main_tls.tls_ptr() as usize) };
     core::mem::forget(main_tls);
 }
+*/
 
 fn start_sched_earlier() {
     #[cfg(feature = "irq")]

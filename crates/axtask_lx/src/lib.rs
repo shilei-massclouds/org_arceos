@@ -14,6 +14,12 @@ mod task;
 mod linux;
 mod wait_queue;
 
+use axstage::{AxPlugin, AxStage};
+
+axstage::register!("AxSched", AxStage::InitSched, |_, _| {
+    api::init_scheduler();
+});
+
 /*
 #![feature(doc_auto_cfg)]
 #![feature(linkage)]

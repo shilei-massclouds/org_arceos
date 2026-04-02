@@ -45,6 +45,9 @@ axlog = { workspace = true }
 axconfig = { workspace = true }
 axalloc = { workspace = true, optional = true }
 axlds = { workspace = true }
+axstage = { workspace = true }
+inventory = { workspace = true }
+linux_adaptor = { workspace = true }
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 axplat-x86-pc = { version = "0.3", optional = true }
