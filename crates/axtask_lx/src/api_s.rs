@@ -26,3 +26,8 @@ pub fn sleep_until(deadline: axhal::time::TimeValue) {
 axstage::register!("AxCallMain", AxStage::StartKInitd, |hartid, dtb_pa| {
     while axstage::advance(hartid, dtb_pa) {}
 });
+
+pub fn system_exit() -> ! {
+    debug!("main task exited: exit_code={}", 0);
+    axhal::power::system_off();
+}

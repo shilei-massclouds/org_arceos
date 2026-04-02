@@ -371,6 +371,10 @@ axstage::register!("AxIdle", AxStage::EnterIdle, |_, _| {
     idle_loop(IDLE_TASK_ID.load(Ordering::Acquire));
 });
 
+pub fn system_exit() -> ! {
+    exit(0);
+}
+
 unsafe extern "C" {
     fn pin_task_on_cpu(pid: usize, cpu_id: usize);
     fn cl_cpu_id() -> usize;

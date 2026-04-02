@@ -73,9 +73,7 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     //
     while axstage::advance(hartid, dtb_pa) {}
 
-    ctor_bare::call_ctors();
-
-    system_exit();
+    axtask::system_exit();
 }
 
 axstage::register!("AxBanner", AxStage::ShowBanner, |hartid, dtb_pa| {
@@ -108,17 +106,6 @@ axstage::register!("AxBootApp", AxStage::BootApp, |_, _| {
     // Invoke app's main()
     unsafe { main(); }
 });
-
-#[cfg(feature = "multitask")]
-fn system_exit() -> ! {
-    axtask::exit(0);
-}
-
-#[cfg(not(feature = "multitask"))]
-fn system_exit() -> ! {
-    debug!("main task exited: exit_code={}", 0);
-    axhal::power::system_off();
-}
 
 struct LogIfImpl;
 
