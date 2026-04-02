@@ -5,6 +5,8 @@
 #[macro_use]
 extern crate log;
 
+extern crate alloc;
+
 #[macro_use]
 mod macros;
 
@@ -18,19 +20,30 @@ pub use self::structs::{AxDeviceContainer, AxDeviceEnum};
 #[cfg(feature = "block")]
 pub use self::structs::AxBlockDevice;
 
+use alloc::sync::Arc;
+use lazyinit::LazyInit;
 use crate::prelude::DeviceType;
+use axsync::Mutex;
 use axdriver_base::BaseDriverOps;
 use linux_adaptor::LinuxAdaptorState;
+use axstage::{AxStage, AxPlugin};
+
+static ALL_DEVICES: LazyInit<Arc<Mutex<AllDevices>>> = LazyInit::new();
 
 /// A structure that contains all device drivers, organized by their category.
-#[derive(Default)]
 pub struct AllDevices {
     /// All block device drivers.
     #[cfg(feature = "block")]
-    pub block: AxDeviceContainer<AxBlockDevice>,
+    pub block: Option<AxDeviceContainer<AxBlockDevice>>,
 }
 
 impl AllDevices {
+    fn new() -> Self {
+        Self {
+            block: Some(AxDeviceContainer::<AxBlockDevice>::default()),
+        }
+    }
+
     /// Returns the device model used, either `dyn` or `static`.
     ///
     /// See the [crate-level documentation](crate) for more details.
@@ -57,33 +70,46 @@ impl AllDevices {
     fn add_device(&mut self, dev: AxDeviceEnum) {
         match dev {
             #[cfg(feature = "block")]
-            AxDeviceEnum::Block(dev) => self.block.push(dev),
+            AxDeviceEnum::Block(dev) => {
+                if let Some(block) = &mut self.block {
+                    block.push(dev);
+                }
+            },
         }
     }
 }
 
-/// Probes and initializes all device drivers, returns the [`AllDevices`] struct.
-pub fn init_drivers() -> AllDevices {
+/// Return `AllDevices` instance.
+pub fn get_all_devs() -> Arc<Mutex<AllDevices>> {
+    ALL_DEVICES.clone()
+}
+
+/// Probes and initializes all device drivers.
+fn init_drivers() {
     info!("Initialize device drivers...");
     info!("  device model: {}", AllDevices::device_model());
 
     linux_adaptor::advance_to(LinuxAdaptorState::InitDriver);
     linux_adaptor::advance_to(LinuxAdaptorState::DoInitCalls);
 
-    let mut all_devs = AllDevices::default();
+    let mut all_devs = AllDevices::new();
     all_devs.probe();
 
     #[cfg(feature = "block")]
-    {
-        debug!("number of block devices: {}", all_devs.block.len());
-        for (i, dev) in all_devs.block.iter().enumerate() {
+    if let Some(block) = &all_devs.block {
+        debug!("number of block devices: {}", block.len());
+        for (i, dev) in block.iter().enumerate() {
             assert_eq!(dev.device_type(), DeviceType::Block);
             debug!("  block device {}: {:?}", i, dev.device_name());
         }
     }
 
-    all_devs
+    ALL_DEVICES.init_once(Arc::new(Mutex::new(all_devs)));
 }
+
+axstage::register!("AxDriver", AxStage::InitDriver, |_, _| {
+    init_drivers();
+});
 
 /*
 #![feature(doc_auto_cfg)]

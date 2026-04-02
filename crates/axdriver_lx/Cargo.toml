@@ -43,6 +43,8 @@ fxmac = []
 
 [dependencies]
 log = "=0.4.21"
+lazyinit = "0.2"
+axsync = { workspace = true }
 #cfg-if = "1.0"
 #crate_interface = "0.1.4"
 axdriver_base = { git = "https://github.com/arceos-org/axdriver_crates.git", tag = "v0.1.2" }
@@ -56,3 +58,5 @@ axdriver_net = { git = "https://github.com/arceos-org/axdriver_crates.git", tag 
 #axconfig = { workspace = true, optional = true }
 #axdma = { workspace = true, optional = true }
 linux_adaptor = { workspace = true }
+axstage = { workspace = true }
+inventory = { workspace = true }

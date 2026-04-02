@@ -109,15 +109,6 @@ axstage::register!("AxBootApp", AxStage::BootApp, |_, _| {
     unsafe { main(); }
 });
 
-axstage::register!("AxFS", AxStage::InitFS, |_, _| {
-    #[cfg(feature = "linux-block")]
-    #[allow(unused_variables)]
-    let all_devices = axdriver::init_drivers();
-
-    #[cfg(feature = "fs")]
-    axfs::init_filesystems(all_devices.block);
-});
-
 #[cfg(feature = "multitask")]
 fn system_exit() -> ! {
     axtask::exit(0);
