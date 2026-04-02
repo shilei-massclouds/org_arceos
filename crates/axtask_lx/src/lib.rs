@@ -3,7 +3,11 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(doc_cfg)]
 
+#[cfg(feature = "multitask")]
 mod api;
+#[cfg(not(feature = "multitask"))]
+mod api_s;
+
 pub use self::api::*;
 
 #[macro_use]

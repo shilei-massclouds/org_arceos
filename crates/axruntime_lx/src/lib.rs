@@ -74,8 +74,6 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
 
     ctor_bare::call_ctors();
 
-    start_sched_earlier();
-
     call_main();
 
     system_exit();
@@ -135,6 +133,8 @@ fn do_basic_setup() {
 
 #[cfg(feature = "multitask")]
 fn call_main() {
+    linux_adaptor::advance_to(LinuxAdaptorState::StartSchedEarlier);
+
     /*
      * We need to spawn init first so that it obtains pid 1, however
      * the init task will end up wanting to create kthreads, which, if
@@ -178,8 +178,6 @@ fn init_tls() {
 */
 
 fn start_sched_earlier() {
-    #[cfg(feature = "irq")]
-    linux_adaptor::advance_to(LinuxAdaptorState::StartSchedEarlier);
 }
 
 struct LogIfImpl;
