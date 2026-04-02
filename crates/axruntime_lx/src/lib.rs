@@ -60,6 +60,7 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     // StartKInitdPre
     // StartKInitd
     // StartKThreadd
+    // EnterIdle
     //
     // [Task1]
     // InitSMPPre
@@ -73,8 +74,6 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     while axstage::advance(hartid, dtb_pa) {}
 
     ctor_bare::call_ctors();
-
-    call_main();
 
     system_exit();
 }
@@ -100,62 +99,24 @@ axstage::register!("AxBanner", AxStage::ShowBanner, |hartid, dtb_pa| {
     info!("Primary hartid {} started, dtb_pa = {:#x}.", hartid, dtb_pa);
 });
 
-#[cfg(feature = "multitask")]
-// As Linux `kernel_init`
-fn init_thread_fn() {
-    linux_adaptor::advance_to(LinuxAdaptorState::PrepareKernelInit);
-
-    //
-    // kernel_init_freeable
-    //
-
-    // smp_init
-    #[cfg(feature = "smp")]
-    self::mp::start_secondary_cpus();
-
-    do_basic_setup();
-
+axstage::register!("AxBootAppPre", AxStage::BootAppPre, |_, _| {
     // free init mem and then set system_state to running
     linux_adaptor::advance_to(LinuxAdaptorState::FreeInitMem);
+});
 
+axstage::register!("AxBootApp", AxStage::BootApp, |_, _| {
     // Invoke app's main()
     unsafe { main(); }
-}
+});
 
-fn do_basic_setup() {
+axstage::register!("AxFS", AxStage::InitFS, |_, _| {
     #[cfg(feature = "linux-block")]
     #[allow(unused_variables)]
     let all_devices = axdriver::init_drivers();
 
     #[cfg(feature = "fs")]
     axfs::init_filesystems(all_devices.block);
-}
-
-#[cfg(feature = "multitask")]
-fn call_main() {
-    linux_adaptor::advance_to(LinuxAdaptorState::StartSchedEarlier);
-
-    /*
-     * We need to spawn init first so that it obtains pid 1, however
-     * the init task will end up wanting to create kthreads, which, if
-     * we schedule it before we create kthreadd, will OOPS.
-     */
-    let task = axtask::spawn(|| {
-        init_thread_fn();
-    });
-    unsafe {
-        pin_task_on_cpu(task.id().as_u64() as usize, cl_cpu_id())
-    }
-
-    linux_adaptor::advance_to(LinuxAdaptorState::StartKThreadd);
-
-    axtask::idle_loop(task);
-}
-
-#[cfg(not(feature = "multitask"))]
-fn call_main() {
-    unsafe { main() };
-}
+});
 
 #[cfg(feature = "multitask")]
 fn system_exit() -> ! {
@@ -226,9 +187,6 @@ fn is_init_ok() -> bool {
 unsafe extern "C" {
     /// Application's entry point.
     fn main();
-
-    fn pin_task_on_cpu(pid: usize, cpu_id: usize);
-    fn cl_cpu_id() -> usize;
 }
 
 ///////////////////////////////////////

@@ -25,6 +25,7 @@ pub enum AxStage {
     StartKInitdPre,
     StartKInitd,
     StartKThreadd,
+    EnterIdle,
 
     // [Task1]
     InitSMPPre,

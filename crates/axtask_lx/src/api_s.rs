@@ -1,5 +1,7 @@
 //! Task APIs for single-task configuration.
 
+use axstage::{AxPlugin, AxStage};
+
 /// For single-task situation, we just relax the CPU and wait for incoming
 /// interrupts.
 pub fn yield_now() {
@@ -20,3 +22,7 @@ pub fn sleep(dur: core::time::Duration) {
 pub fn sleep_until(deadline: axhal::time::TimeValue) {
     axhal::time::busy_wait_until(deadline);
 }
+
+axstage::register!("AxCallMain", AxStage::StartKInitd, |hartid, dtb_pa| {
+    while axstage::advance(hartid, dtb_pa) {}
+});

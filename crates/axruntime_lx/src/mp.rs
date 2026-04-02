@@ -1,7 +1,8 @@
+use axstage::{AxStage, AxPlugin};
 use linux_adaptor::LinuxAdaptorState;
 
 #[allow(clippy::absurd_extreme_comparisons)]
-pub fn start_secondary_cpus() {
+fn start_secondary_cpus() {
     linux_adaptor::advance_to(LinuxAdaptorState::InitSmp);
 }
 
@@ -50,3 +51,7 @@ pub fn rust_main_secondary(_cpu_id: usize) -> ! {
     */
     todo!();
 }
+
+axstage::register!("AxInitSMP", AxStage::InitSMP, |_, _| {
+    start_secondary_cpus();
+});

@@ -2,6 +2,8 @@
 
 use alloc::{string::String, sync::Arc, boxed::Box};
 use core::ffi::{c_void, c_int, c_long, c_char};
+use core::sync::atomic::{AtomicU64, Ordering};
+use axstage::{AxPlugin, AxStage};
 use linux_adaptor::LinuxAdaptorState;
 
 const MAX_NICE: isize =  19;
@@ -292,9 +294,9 @@ pub fn exit(exit_code: i32) -> ! {
     unreachable!("exited!");
 }
 
-pub fn idle_loop(idle: AxTaskRef) {
+pub fn idle_loop(task_id: u64) {
     unsafe {
-        linux_idle_loop(idle.id().as_u64() as i32);
+        linux_idle_loop(task_id as i32);
     }
 }
 
@@ -321,3 +323,55 @@ pub fn run_idle() -> ! {
     }
 }
 */
+
+axstage::register!("AxStartKInitdPre", AxStage::StartKInitdPre, |_, _| {
+    linux_adaptor::advance_to(LinuxAdaptorState::StartSchedEarlier);
+});
+
+static IDLE_TASK_ID: AtomicU64 = AtomicU64::new(0);
+
+// As Linux `kernel_init`
+fn init_thread_fn(hartid: usize, dtb_pa: usize) {
+    // InitSMPPre
+    // InitSMP
+    // SetupAllocLate
+    // InitDriver
+    // InitFS
+    // BootAppPre
+    // BootApp
+
+    while axstage::advance(hartid, dtb_pa) {}
+}
+
+axstage::register!("AxInitSMPPre", AxStage::InitSMPPre, |_, _| {
+    linux_adaptor::advance_to(LinuxAdaptorState::PrepareKernelInit);
+});
+
+axstage::register!("AxStartKInitd", AxStage::StartKInitd, |hartid, dtb_pa| {
+    /*
+     * We need to spawn init first so that it obtains pid 1, however
+     * the init task will end up wanting to create kthreads, which, if
+     * we schedule it before we create kthreadd, will OOPS.
+     */
+    let task = spawn(move || {
+        init_thread_fn(hartid, dtb_pa);
+    });
+    unsafe {
+        pin_task_on_cpu(task.id().as_u64() as usize, cl_cpu_id())
+    }
+
+    IDLE_TASK_ID.store(task.id().as_u64(), Ordering::Release);
+});
+
+axstage::register!("AxStartKThreadd", AxStage::StartKThreadd, |_, _| {
+    linux_adaptor::advance_to(LinuxAdaptorState::StartKThreadd);
+});
+
+axstage::register!("AxIdle", AxStage::EnterIdle, |_, _| {
+    idle_loop(IDLE_TASK_ID.load(Ordering::Acquire));
+});
+
+unsafe extern "C" {
+    fn pin_task_on_cpu(pid: usize, cpu_id: usize);
+    fn cl_cpu_id() -> usize;
+}
