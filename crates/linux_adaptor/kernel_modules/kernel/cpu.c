@@ -1641,6 +1641,7 @@ static int _cpu_up(unsigned int cpu, int tasks_frozen, enum cpuhp_state target)
 	struct task_struct *idle;
 	int ret = 0;
 
+    printk("%s: step1\n", __func__);
 	cpus_write_lock();
 
 	if (!cpu_present(cpu)) {
@@ -1693,8 +1694,10 @@ static int _cpu_up(unsigned int cpu, int tasks_frozen, enum cpuhp_state target)
 	 * responsible for bringing it up to the target state.
 	 */
 	target = min((int)target, CPUHP_BRINGUP_CPU);
+    printk("%s: step2\n", __func__);
 	ret = cpuhp_up_callbacks(cpu, st, target);
 out:
+    printk("%s: step3\n", __func__);
 	cpus_write_unlock();
 	arch_smt_update();
 	return ret;
@@ -1710,12 +1713,10 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
 		return -EINVAL;
 	}
 
-    printk("%s: step1\n", __func__);
 	err = try_online_node(cpu_to_node(cpu));
 	if (err)
 		return err;
 
-    printk("%s: step2\n", __func__);
 	cpu_maps_update_begin();
 
 	if (cpu_hotplug_disabled) {
@@ -1727,7 +1728,6 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
 		goto out;
 	}
 
-    printk("%s: step3\n", __func__);
 	err = _cpu_up(cpu, 0, target);
 out:
 	cpu_maps_update_done();
@@ -1801,9 +1801,7 @@ static void __init cpuhp_bringup_mask(const struct cpumask *mask, unsigned int n
 	for_each_cpu(cpu, mask) {
 		struct cpuhp_cpu_state *st = per_cpu_ptr(&cpuhp_state, cpu);
 
-    printk("------ %s: step1 cpu(%u)\n", __func__, cpu);
 		if (cpu_up(cpu, target) && can_rollback_cpu(st)) {
-    printk("------ %s: step2\n", __func__);
 			/*
 			 * If this failed then cpu_up() might have only
 			 * rolled back to CPUHP_BP_KICK_AP for the final
@@ -1812,14 +1810,9 @@ static void __init cpuhp_bringup_mask(const struct cpumask *mask, unsigned int n
 			WARN_ON(cpuhp_invoke_callback_range(false, cpu, st, CPUHP_OFFLINE));
 		}
 
-    printk("------ %s: step3 ncpus(%u)\n", __func__, ncpus);
 		if (!--ncpus)
 			break;
 	}
-    printk("------ %s: stepN current(%u:%u)\n",
-           __func__,
-           smp_processor_id(),
-           cpuid_to_hartid_map(0));
 }
 
 #ifdef CONFIG_HOTPLUG_PARALLEL
