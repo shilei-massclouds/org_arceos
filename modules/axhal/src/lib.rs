@@ -115,14 +115,12 @@ pub use axcpu::asm;
 
 #[cfg(feature = "smp")]
 pub use axplat::init::{init_early_secondary, init_later_secondary};
-#[cfg(feature = "smp")]
-use core::sync::atomic::{AtomicUsize, Ordering};
 
 /// Initializes CPU-local data structures for the primary core.
 ///
 /// This function should be called as early as possible, as other initializations
 /// may acess the CPU-local data.
-pub fn init_percpu(cpu_id: usize) {
+pub fn init_percpu(_cpu_id: usize) {
     //self::percpu::init_primary(cpu_id);
     todo!();
 }
@@ -132,14 +130,14 @@ pub fn init_percpu(cpu_id: usize) {
 /// This function should be called as early as possible, as other initializations
 /// may acess the CPU-local data.
 #[cfg(feature = "smp")]
-pub fn init_percpu_secondary(cpu_id: usize) {
+pub fn init_percpu_secondary(_cpu_id: usize) {
     //self::percpu::init_secondary(cpu_id);
     todo!();
 }
 
 /// Initializes the platform and boot argument.
 /// This function should be called as early as possible.
-pub fn init_early(cpu_id: usize, arg: usize) {
+pub fn init_early(_cpu_id: usize, _arg: usize) {
     //BOOT_ARG.init_once(arg);
     //axplat::init::init_early(cpu_id, arg);
     todo!();

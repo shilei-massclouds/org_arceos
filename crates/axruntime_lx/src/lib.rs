@@ -120,18 +120,6 @@ fn system_exit() -> ! {
     axhal::power::system_off();
 }
 
-/*
-#[cfg(all(feature = "tls", not(feature = "multitask")))]
-fn init_tls() {
-    let main_tls = axhal::tls::TlsArea::alloc();
-    unsafe { axhal::asm::write_thread_pointer(main_tls.tls_ptr() as usize) };
-    core::mem::forget(main_tls);
-}
-*/
-
-fn start_sched_earlier() {
-}
-
 struct LogIfImpl;
 
 #[crate_interface::impl_interface]
