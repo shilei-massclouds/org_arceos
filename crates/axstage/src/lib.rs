@@ -20,8 +20,6 @@ pub enum AxStage {
     SetupVM,
     InitPerCPU,
     SetupAlloc,
-    SetupBuddy,
-    SetupSlub,
     InitSched,
     InitIRQ,
     StartKInitdPre,

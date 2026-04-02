@@ -16,7 +16,7 @@ default = []
 linux-adaptor = []
 
 # Multicore
-smp = ["axhal/smp", "axruntime/smp", "axruntime/percpu", "axtask?/smp", "kspin/smp"]
+smp = ["multitask", "alloc", "axhal/smp", "axruntime/smp", "axruntime/percpu", "axtask?/smp", "kspin/smp"]
 
 # Floating point/SIMD
 fp-simd = ["axhal/fp-simd"]

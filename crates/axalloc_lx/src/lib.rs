@@ -267,3 +267,7 @@ axstage::register!("AxEarlyAlloc", AxStage::SetupEarlyAlloc, |_, _| {
         }
     }
 });
+
+axstage::register!("AxAlloc", AxStage::SetupAlloc, |_, _| {
+    global_init_final();
+});

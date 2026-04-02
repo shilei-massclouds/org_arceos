@@ -53,9 +53,8 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     // SetupArch
     // SetupEarlyAlloc
     // SetupVM
+    // InitPerCPU
     // SetupAlloc
-    // SetupBuddy
-    // SetupSlub
     // InitSched
     // InitIRQ
     // StartKInitdPre
@@ -72,9 +71,6 @@ pub fn rust_main(hartid: usize, dtb_pa: usize) -> ! {
     // BootApp
     //
     while axstage::advance(hartid, dtb_pa) {}
-
-    #[cfg(all(feature = "alloc", feature = "paging"))]
-    init_allocator_later();
 
     #[cfg(feature = "multitask")]
     axtask::init_scheduler();
@@ -152,11 +148,6 @@ axstage::register!("AxBanner", AxStage::ShowBanner, |hartid, dtb_pa| {
 
     info!("Primary hartid {} started, dtb_pa = {:#x}.", hartid, dtb_pa);
 });
-
-#[cfg(feature = "alloc")]
-fn init_allocator_later() {
-    axalloc::global_init_final();
-}
 
 #[cfg(feature = "irq")]
 fn init_interrupt_earlier() {

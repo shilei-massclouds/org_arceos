@@ -20,7 +20,7 @@ documentation = "https://arceos-org.github.io/arceos/axstd/index.html"
 default = []
 
 # Multicore
-smp = ["axfeat/smp", "kspin/smp"]
+smp = ["axfeat/smp", "kspin/smp", "multitask", "alloc"]
 
 # Floating point/SIMD
 fp-simd = ["axfeat/fp-simd"]
