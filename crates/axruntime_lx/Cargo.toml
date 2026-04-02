@@ -19,7 +19,7 @@ multitask = ["axtask/multitask", "irq"]
 # FixMe: handle display dependencies
 #paging = ["axhal/paging", "axmm"]
 paging = ["axmm"]
-irq = ["axhal/irq", "linux_adaptor/irq", "percpu"]
+irq = ["axhal/irq", "linux_adaptor/irq"]
 #fs = ["axdriver", "axfs"]
 fs = ["linux-block", "dep:axfs"]
 #net = ["axdriver", "axnet"]

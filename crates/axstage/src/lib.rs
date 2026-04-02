@@ -18,6 +18,7 @@ pub enum AxStage {
     SetupArch,
     SetupEarlyAlloc,
     SetupVM,
+    InitPerCPU,
     SetupAlloc,
     SetupBuddy,
     SetupSlub,
@@ -26,7 +27,7 @@ pub enum AxStage {
     StartKInitdPre,
     StartKInitd,
     StartKThreadd,
-    
+
     // [Task1]
     InitSMPPre,
     InitSMP,

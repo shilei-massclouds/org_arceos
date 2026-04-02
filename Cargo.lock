@@ -629,6 +629,8 @@ dependencies = [
 name = "axmm"
 version = "0.2.0"
 dependencies = [
+ "axstage",
+ "inventory",
  "linux_adaptor",
  "log",
 ]
@@ -1644,6 +1646,12 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 name = "percpu"
 version = "0.2.3"
 dependencies = [
+ "axconfig",
+ "axplat",
+ "axstage",
+ "inventory",
+ "linux_adaptor",
+ "log",
  "percpu_macros 0.2.3",
 ]
 

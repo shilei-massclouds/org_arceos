@@ -1,5 +1,12 @@
 //! CPU-local data structures.
 
+/// Returns the ID of the current CPU.
+#[inline]
+pub fn this_cpu_id() -> usize {
+    percpu_crate::this_cpu_id()
+}
+
+/*
 #[percpu::def_percpu]
 static CPU_ID: usize = 0;
 
@@ -8,12 +15,6 @@ static IS_BSP: bool = false;
 
 #[percpu::def_percpu]
 static CURRENT_TASK_PTR: usize = 0;
-
-/// Returns the ID of the current CPU.
-#[inline]
-pub fn this_cpu_id() -> usize {
-    CPU_ID.read_current()
-}
 
 /// Returns whether the current CPU is the primary CPU (aka the bootstrap
 /// processor or BSP)
@@ -128,9 +129,6 @@ pub(crate) fn init_secondary(cpu_id: usize) {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ax_init_ap_percpu(cpuid: usize) {
-    // FixMe:
-    unsafe {
-        CPU_ID.write_current_raw(cpuid);
-        IS_BSP.write_current_raw(false);
-    }
+    init_secondary(cpu_id);
 }
+*/

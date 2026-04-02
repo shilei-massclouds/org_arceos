@@ -6,17 +6,22 @@
 extern crate log;
 
 use linux_adaptor::LinuxAdaptorState;
+use axstage::{AxPlugin, AxStage};
 
 /// Initializes virtual memory management.
 ///
 /// It mainly sets up the kernel virtual memory address space and recreate a
 /// fine-grained kernel page table.
-pub fn init_memory_management() {
+fn init_memory_management() {
     info!("Initialize virtual memory management...");
 
     linux_adaptor::advance_to(LinuxAdaptorState::SetupVMFinal);
     linux_adaptor::advance_to(LinuxAdaptorState::SetupVMFinalLater);
 }
+
+axstage::register!("AxVM", AxStage::SetupVM, |_, _| {
+    init_memory_management();
+});
 
 /*
 extern crate alloc;

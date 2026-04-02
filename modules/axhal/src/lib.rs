@@ -42,6 +42,8 @@ extern crate axlog;
 #[macro_use]
 extern crate memory_addr;
 
+extern crate percpu as percpu_crate;
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "myplat")] {
         // link the custom platform crate in your application.
@@ -121,7 +123,8 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 /// This function should be called as early as possible, as other initializations
 /// may acess the CPU-local data.
 pub fn init_percpu(cpu_id: usize) {
-    self::percpu::init_primary(cpu_id);
+    //self::percpu::init_primary(cpu_id);
+    todo!();
 }
 
 /// Initializes CPU-local data structures for secondary cores.
@@ -130,22 +133,24 @@ pub fn init_percpu(cpu_id: usize) {
 /// may acess the CPU-local data.
 #[cfg(feature = "smp")]
 pub fn init_percpu_secondary(cpu_id: usize) {
-    self::percpu::init_secondary(cpu_id);
+    //self::percpu::init_secondary(cpu_id);
+    todo!();
 }
 
 /// Initializes the platform and boot argument.
 /// This function should be called as early as possible.
 pub fn init_early(cpu_id: usize, arg: usize) {
-    BOOT_ARG.init_once(arg);
-    axplat::init::init_early(cpu_id, arg);
+    //BOOT_ARG.init_once(arg);
+    //axplat::init::init_early(cpu_id, arg);
+    todo!();
 }
 
 /// Initializes the platform later stage.
 pub fn init_later(_cpu_id: usize, _arg: usize) {
-    #[cfg(feature = "alloc")]
-    axplat::init::init_later(_cpu_id, _arg);
-    #[cfg(feature = "alloc")]
-    init_cpu_num();
+    //#[cfg(feature = "alloc")]
+    //axplat::init::init_later(_cpu_id, _arg);
+    //init_cpu_num();
+    todo!();
 }
 
 use lazyinit::LazyInit;
@@ -157,11 +162,6 @@ static BOOT_ARG: LazyInit<usize> = LazyInit::new();
 pub fn get_bootarg() -> usize {
     *BOOT_ARG
 }
-
-/// The number of CPUs in the system. Based on the number declared by the
-/// platform crate and limited by the configured maximum CPU number.
-#[cfg(feature = "smp")]
-static CPU_NUM: AtomicUsize = AtomicUsize::new(1);
 
 /// Gets the number of CPUs running in the system.
 ///
@@ -184,37 +184,10 @@ pub fn cpu_num() -> usize {
         //
         // Acquire may result in a performance penalty, but this function is not
         // expected to be called frequently in normal operation.
-        CPU_NUM.load(Ordering::Acquire)
+        percpu_crate::cpu_num()
     }
     #[cfg(not(feature = "smp"))]
     {
         1
-    }
-}
-
-/// Initializes the CPU number information.
-#[allow(dead_code)]
-fn init_cpu_num() {
-    #[cfg(feature = "smp")]
-    {
-        let plat_cpu_num = axplat::power::cpu_num();
-        let max_cpu_num = axconfig::plat::MAX_CPU_NUM;
-        let cpu_num = plat_cpu_num.min(max_cpu_num);
-
-        info!("CPU number: max = {max_cpu_num}, platform = {plat_cpu_num}, use = {cpu_num}",);
-        ax_println!("smp = {}", cpu_num); // for test purposes
-
-        if plat_cpu_num > max_cpu_num {
-            warn!(
-                "platform declares more CPUs ({plat_cpu_num}) than configured max ({max_cpu_num}), \
-                only the first {max_cpu_num} CPUs will be used."
-            );
-        }
-
-        CPU_NUM.store(cpu_num, Ordering::Release);
-    }
-    #[cfg(not(feature = "smp"))]
-    {
-        ax_println!("smp = 1"); // for test purposes
     }
 }

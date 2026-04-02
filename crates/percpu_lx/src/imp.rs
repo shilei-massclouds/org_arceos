@@ -1,5 +1,23 @@
 //! Percpu implementation for Linux Adaptor
 
+use axstage::{AxPlugin, AxStage};
+use linux_adaptor::LinuxAdaptorState;
+use core::sync::atomic::{AtomicUsize, Ordering};
+use crate::def_percpu;
+
+#[def_percpu]
+static CPU_ID: usize = 0;
+
+#[def_percpu]
+static IS_BSP: bool = false;
+
+#[def_percpu]
+static CURRENT_TASK_PTR: usize = 0;
+
+/// The number of CPUs in the system. Based on the number declared by the
+/// platform crate and limited by the configured maximum CPU number.
+static CPU_NUM: AtomicUsize = AtomicUsize::new(1);
+
 /// Initialize all per-CPU data areas.
 pub fn init() -> usize {
     0
@@ -7,6 +25,68 @@ pub fn init() -> usize {
 
 /// Initializes the per-CPU data register.
 pub fn init_percpu_reg(_cpu_id: usize) {
+}
+
+pub fn this_cpu_id() -> usize {
+    CPU_ID.read_current()
+}
+
+/// Gets the number of CPUs running in the system.
+pub fn cpu_num() -> usize {
+    CPU_NUM.load(Ordering::Acquire)
+}
+
+/// Initializes the CPU number information.
+#[allow(dead_code)]
+pub fn init_cpu_num() {
+    let plat_cpu_num = axplat::power::cpu_num();
+    let max_cpu_num = axconfig::plat::MAX_CPU_NUM;
+    let cpu_num = plat_cpu_num.min(max_cpu_num);
+
+    info!("CPU number: max = {max_cpu_num}, platform = {plat_cpu_num}, use = {cpu_num}",);
+    info!("smp = {cpu_num}");
+
+    if plat_cpu_num > max_cpu_num {
+        warn!(
+            "platform declares more CPUs ({plat_cpu_num}) than configured max ({max_cpu_num}), \
+            only the first {max_cpu_num} CPUs will be used."
+        );
+    }
+
+    CPU_NUM.store(cpu_num, Ordering::Release);
+}
+
+#[allow(dead_code)]
+pub(crate) fn init_primary(cpu_id: usize) {
+    init();
+    init_percpu_reg(cpu_id);
+    unsafe {
+        CPU_ID.write_current_raw(cpu_id);
+        IS_BSP.write_current_raw(true);
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn init_secondary(cpu_id: usize) {
+    init_percpu_reg(cpu_id);
+    unsafe {
+        CPU_ID.write_current_raw(cpu_id);
+        IS_BSP.write_current_raw(false);
+    }
+}
+
+axstage::register!("AxPerCPU", AxStage::InitPerCPU, |_, _| {
+    // Logic ID of Primary CPU must be ZERO.
+    // Note: `init_percpu` must be after axhal::init_later in which
+    // linux setups its percpu first chunk.
+    linux_adaptor::advance_to(LinuxAdaptorState::SetupArchLater);
+    init_primary(0);
+    init_cpu_num();
+});
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ax_init_ap_percpu(cpu_id: usize) {
+    init_secondary(cpu_id);
 }
 
 /*

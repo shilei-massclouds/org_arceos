@@ -62,6 +62,14 @@ path = "tests/test_percpu.rs"
 [dependencies.percpu_macros]
 workspace = true
 
+[dependencies]
+log = { workspace = true }
+axconfig = { workspace = true }
+axplat = { workspace = true }
+axstage = { workspace = true }
+inventory = { workspace = true }
+linux_adaptor = { workspace = true }
+
 #[dependencies.cfg-if]
 #version = "1.0"
 #

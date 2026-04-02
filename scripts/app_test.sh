@@ -108,6 +108,7 @@ function test_one() {
         fi
         echo -e "${RED_C}actual output${END_C}:"
         cat "$actual"
+        exit $res
     else
         echo -e "${GREEN_C}passed!${END_C} $RUN_TIME"
         rm -f "$actual"

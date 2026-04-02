@@ -14,6 +14,9 @@ documentation = "https://arceos-org.github.io/arceos/axmm/index.html"
 [dependencies]
 log = "=0.4.21"
 linux_adaptor = { workspace = true }
+axstage = { workspace = true }
+inventory = { workspace = true }
+
 #axhal = { workspace = true, features = ["paging"] }
 #axalloc = { workspace = true }
 #axconfig = { workspace = true }

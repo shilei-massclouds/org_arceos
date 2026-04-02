@@ -1,5 +1,4 @@
 use axplat::init::InitIf;
-use linux_adaptor::LinuxAdaptorState;
 
 struct InitIfImpl;
 
@@ -67,7 +66,7 @@ impl InitIf for InitIfImpl {
     /// * Timer interrupts are enabled (if applicable).
     /// * Other essential peripherals are initialized.
     fn init_later(_hartid: usize, _dtb_pa: usize) {
-        linux_adaptor::advance_to(LinuxAdaptorState::SetupArchLater);
+        //linux_adaptor::advance_to(LinuxAdaptorState::SetupArchLater);
         //#[cfg(feature = "irq")]
         //crate::irq::init_percpu();
         //crate::time::init_percpu();
