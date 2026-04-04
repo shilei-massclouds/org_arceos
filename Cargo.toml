@@ -10,7 +10,6 @@ members = [
     "modules/axsync",
     "modules/axipi",
 
-    "api/axfeat",
     "api/arceos_api",
     "api/arceos_posix_api",
 
@@ -61,7 +60,7 @@ axlibc = { path = "ulib/axlibc" }
 
 arceos_api = { path = "api/arceos_api" }
 arceos_posix_api = { path = "api/arceos_posix_api" }
-axfeat = { path = "api/axfeat" }
+axfeat = { path = "crates/axfeat_lx", package = "axfeat_lx" }
 
 axconfig = { path = "modules/axconfig" }
 axdisplay = { path = "modules/axdisplay" }

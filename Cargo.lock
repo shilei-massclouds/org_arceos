@@ -203,7 +203,7 @@ dependencies = [
  "axdma",
  "axdriver_lx",
  "axerrno 0.1.2",
- "axfeat",
+ "axfeat_lx",
  "axfs_lx",
  "axhal_lx",
  "axio",
@@ -223,7 +223,7 @@ dependencies = [
  "axalloc",
  "axconfig",
  "axerrno 0.1.2",
- "axfeat",
+ "axfeat_lx",
  "axfs_lx",
  "axhal_lx",
  "axio",
@@ -464,7 +464,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "axfeat"
+name = "axfeat_lx"
 version = "0.2.0"
 dependencies = [
  "axalloc",
@@ -602,7 +602,7 @@ version = "0.2.0"
 dependencies = [
  "arceos_posix_api",
  "axerrno 0.1.2",
- "axfeat",
+ "axfeat_lx",
  "axio",
  "bindgen",
 ]
@@ -884,7 +884,7 @@ version = "0.2.0"
 dependencies = [
  "arceos_api",
  "axerrno 0.1.2",
- "axfeat",
+ "axfeat_lx",
  "axio",
  "kspin",
  "lock_api",
