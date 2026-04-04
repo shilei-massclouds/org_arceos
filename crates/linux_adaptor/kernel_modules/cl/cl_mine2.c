@@ -87,9 +87,6 @@ CL_MINE(seq_release)
 CL_MINE(trace_event_reg)
 CL_MINE(trace_event_raw_init)
 
-CL_MINE(osq_lock)
-CL_MINE(osq_unlock)
-
 CL_MINE(pcpu_get_vm_areas)
 
 CL_MINE(flush_tlb_kernel_range)

@@ -8,3 +8,4 @@ obj-y += rwsem.o
 obj-y += rtmutex_api.o
 obj-y += percpu-rwsem.o
 obj-y += qrwlock.o
+obj-y += osq_lock.o
