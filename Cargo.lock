@@ -205,13 +205,13 @@ dependencies = [
  "axerrno 0.1.2",
  "axfeat",
  "axfs_lx",
- "axhal",
+ "axhal_lx",
  "axio",
  "axipi",
  "axlog_ex",
  "axmm",
  "axnet",
- "axruntime",
+ "axruntime_lx",
  "axsync",
  "axtask",
 ]
@@ -225,12 +225,12 @@ dependencies = [
  "axerrno 0.1.2",
  "axfeat",
  "axfs_lx",
- "axhal",
+ "axhal_lx",
  "axio",
  "axlog_ex",
  "axnet",
  "axns",
- "axruntime",
+ "axruntime_lx",
  "axsync",
  "axtask",
  "bindgen",
@@ -389,7 +389,7 @@ dependencies = [
  "axalloc",
  "axconfig",
  "axerrno 0.1.2",
- "axhal",
+ "axhal_lx",
  "axmm",
  "kspin",
  "log",
@@ -471,11 +471,11 @@ dependencies = [
  "axdisplay",
  "axdriver_lx",
  "axfs_lx",
- "axhal",
+ "axhal_lx",
  "axipi",
  "axlog_ex",
  "axnet",
- "axruntime",
+ "axruntime_lx",
  "axsync",
  "axtask",
  "kspin",
@@ -538,7 +538,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "axhal"
+name = "axhal_lx"
 version = "0.2.0"
 dependencies = [
  "aarch64-cpu",
@@ -582,7 +582,7 @@ name = "axipi"
 version = "0.2.0"
 dependencies = [
  "axconfig",
- "axhal",
+ "axhal_lx",
  "kspin",
  "lazyinit",
  "log",
@@ -651,7 +651,7 @@ dependencies = [
  "axdriver_lx",
  "axdriver_net",
  "axerrno 0.1.2",
- "axhal",
+ "axhal_lx",
  "axio",
  "axsync",
  "axtask",
@@ -849,14 +849,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "axruntime"
+name = "axruntime_lx"
 version = "0.2.0"
 dependencies = [
  "axalloc",
  "axconfig",
  "axdriver_lx",
  "axfs_lx",
- "axhal",
+ "axhal_lx",
  "axlog_ex",
  "axmem_lx",
  "axmm",
@@ -906,7 +906,7 @@ name = "axtask"
 version = "0.2.0"
 dependencies = [
  "axconfig",
- "axhal",
+ "axhal_lx",
  "axstage",
  "cpumask",
  "inventory",

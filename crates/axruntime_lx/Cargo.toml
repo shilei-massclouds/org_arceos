@@ -1,13 +1,13 @@
 [package]
-name = "axruntime"
+name = "axruntime_lx"
 version.workspace = true
 edition.workspace = true
 authors = ["Yuekai Jia <equation618@gmail.com>"]
 description = "Runtime library of ArceOS"
 license.workspace = true
 homepage.workspace = true
-repository = "https://github.com/arceos-org/arceos/tree/main/modules/axruntime"
-documentation = "https://arceos-org.github.io/arceos/axruntime/index.html"
+repository = "https://github.com/arceos-org/arceos/tree/main/modules/axruntime_lx"
+documentation = "https://arceos-org.github.io/arceos/axruntime_lx/index.html"
 
 [features]
 default = []

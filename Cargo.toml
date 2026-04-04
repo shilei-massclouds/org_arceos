@@ -4,7 +4,6 @@ resolver = "2"
 members = [
     "modules/axconfig",
     "modules/axdisplay",
-    "modules/axhal",
     "modules/axdma",
     "modules/axnet",
     "modules/axns",
@@ -66,7 +65,6 @@ axfeat = { path = "api/axfeat" }
 
 axconfig = { path = "modules/axconfig" }
 axdisplay = { path = "modules/axdisplay" }
-axhal = { path = "modules/axhal" }
 axlog = { path = "crates/axlog_ex", package = "axlog_ex" }
 axnet = { path = "modules/axnet" }
 axns = { path = "modules/axns" }
@@ -75,7 +73,8 @@ axdma = { path = "modules/axdma" }
 axipi = { path = "modules/axipi" }
 
 axstage = { path = "crates/axstage" }
-axruntime = { path = "crates/axruntime_lx" }
+axhal = { path = "crates/axhal_lx", package = "axhal_lx" }
+axruntime = { path = "crates/axruntime_lx", package = "axruntime_lx" }
 axlds = { path = "crates/axlds" }
 axtask = { path = "crates/axtask_lx" }
 axcpu = { path = "crates/axcpu_lx" }
