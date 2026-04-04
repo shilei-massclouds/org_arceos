@@ -328,7 +328,6 @@ CL_MINE(send_sig)
 CL_MINE(__audit_fd_pair)
 CL_MINE(do_proc_douintvec)
 
-CL_MINE(schedule_hrtimeout)
 CL_MINE(rt_mutex_setprio)
 CL_MINE(io_wq_worker_sleeping)
 CL_MINE(nmi_cpu_backtrace)

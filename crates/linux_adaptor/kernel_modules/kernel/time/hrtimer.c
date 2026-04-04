@@ -450,12 +450,8 @@ static inline void debug_hrtimer_deactivate(struct hrtimer *timer)
 	debug_object_deactivate(timer, &hrtimer_debug_descr);
 }
 
-#endif /* CL */
-
 static void __hrtimer_init(struct hrtimer *timer, clockid_t clock_id,
 			   enum hrtimer_mode mode);
-
-#if 0
 
 void hrtimer_init_on_stack(struct hrtimer *timer, clockid_t clock_id,
 			   enum hrtimer_mode mode)
@@ -2001,7 +1997,6 @@ void hrtimer_run_queues(void)
 	raw_spin_unlock_irqrestore(&cpu_base->lock, flags);
 }
 
-#if 0
 /*
  * Sleep related functions:
  */
@@ -2090,6 +2085,7 @@ void hrtimer_init_sleeper(struct hrtimer_sleeper *sl, clockid_t clock_id,
 }
 EXPORT_SYMBOL_GPL(hrtimer_init_sleeper);
 
+#if 0
 int nanosleep_copyout(struct restart_block *restart, struct timespec64 *ts)
 {
 	switch(restart->nanosleep.type) {
@@ -2343,7 +2339,6 @@ void __init hrtimers_init(void)
 	open_softirq(HRTIMER_SOFTIRQ, hrtimer_run_softirq);
 }
 
-#if 0
 /**
  * schedule_hrtimeout_range_clock - sleep until timeout
  * @expires:	timeout value (ktime_t)
@@ -2463,5 +2458,3 @@ int __sched schedule_hrtimeout(ktime_t *expires,
 	return schedule_hrtimeout_range(expires, 0, mode);
 }
 EXPORT_SYMBOL_GPL(schedule_hrtimeout);
-
-#endif /* CL */
