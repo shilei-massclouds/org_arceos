@@ -3,6 +3,7 @@
 #include <linux/mm.h>
 #include <linux/memblock.h>
 #include <linux/vmalloc.h>
+#include <linux/kthread.h>
 
 #include "adaptor.h"
 
@@ -55,9 +56,9 @@ void set_current_need_resched()
     set_tsk_need_resched(current);
 }
 
-pid_t linux_kernel_thread(int (*fn)(void *), void *opaque)
+void set_kthreadd_task(pid_t pid)
 {
-    return kernel_thread(fn, opaque, NULL, CLONE_FS | CLONE_FILES);
+    kthreadd_task = find_task_by_pid_ns(pid, &init_pid_ns);
 }
 
 /*

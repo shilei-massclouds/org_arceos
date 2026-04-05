@@ -43,6 +43,15 @@ pub const SBI_HART_BOOT_STACK_PTR_OFFSET: usize = 8;
 
 /* set if fs info shared between processes */
 pub const CLONE_FS: usize = 0x00000200;
+/* set if open files shared between processes */
+pub const CLONE_FILES: usize = 0x00000400;
+
+// Defined in [include/linux/sched.h]
+/*
+ * Define the task command name length as enum,
+ * then it can be visible to BPF programs.
+ */
+pub const TASK_COMM_LEN: usize = 16;
 
 /*
  *  All offsets prefixed by PT_ according to struct pt_regs.

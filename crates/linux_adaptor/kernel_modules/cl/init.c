@@ -532,16 +532,6 @@ void pin_task_on_cpu(int pid, unsigned int cpu_id)
     rcu_read_unlock();
 }
 
-void start_kthreadd(void)
-{
-    int pid;
-
-    pid = kernel_thread(kthreadd, NULL, NULL, CLONE_FS | CLONE_FILES);
-    rcu_read_lock();
-    kthreadd_task = find_task_by_pid_ns(pid, &init_pid_ns);
-    rcu_read_unlock();
-}
-
 static void __init do_pre_smp_initcalls(void)
 {
     initcall_entry_t *fn;

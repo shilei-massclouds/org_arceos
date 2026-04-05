@@ -1,10 +1,13 @@
 //! Task APIs for multi-task configuration.
 
 use alloc::{string::String, sync::Arc, boxed::Box};
+use alloc::ffi::CString;
+use core::ptr;
 use core::ffi::{c_void, c_int, c_long, c_char};
 use core::sync::atomic::{AtomicU64, Ordering};
 use axstage::{AxPlugin, AxStage};
 use linux_adaptor::LinuxAdaptorState;
+use linux_config::{CLONE_FS, CLONE_FILES};
 
 const MAX_NICE: isize =  19;
 const MIN_NICE: isize = -20;
@@ -183,11 +186,11 @@ pub fn spawn_raw<F>(f: F, _name: String, _stack_size: usize) -> AxTaskRef
 where
     F: FnOnce() + Send + 'static,
 {
-    /* FixMe: handle _name and _statck_size in linux. */
+    /* FixMe: handle _statck_size in linux. */
     let opaque = Box::into_raw(Box::new(f)) as *mut c_void;
     let thread_fn = get_thread_fn::<F>();
     let pid = unsafe {
-        linux_kernel_thread(thread_fn, opaque)
+        kernel_thread(thread_fn, opaque, ptr::null(), 0)
     };
     crate::task::AxTask::new(pid)
 }
@@ -207,7 +210,7 @@ where
 }
 
 /// Create a user mode thread.
-/// Compatible with Linux `user_mode_thread`
+/// Compatible with Linux `user_mode_thread()`
 fn ax_user_mode_thread<F>(f: F, flags: usize) -> AxTaskRef
 where
     F: FnOnce() + Send + 'static,
@@ -216,6 +219,23 @@ where
     let thread_fn = get_thread_fn::<F>();
     let pid = unsafe {
         user_mode_thread(thread_fn, opaque, flags)
+    };
+    crate::task::AxTask::new(pid)
+}
+
+/// Create a kernel thread.
+/// Compatible with Linux `kernel_thread()`
+fn ax_kernel_thread<F>(f: F, name: &str, flags: usize) -> AxTaskRef
+where
+    F: FnOnce() + Send + 'static,
+{
+    assert!(name.len() < linux_config::TASK_COMM_LEN);
+
+    let opaque = Box::into_raw(Box::new(f)) as *mut c_void;
+    let thread_fn = get_thread_fn::<F>();
+    let c_name = CString::new(name).expect("bad task name");
+    let pid = unsafe {
+        kernel_thread(thread_fn, opaque, c_name.as_ptr(), flags)
     };
     crate::task::AxTask::new(pid)
 }
@@ -311,13 +331,17 @@ pub fn idle_loop(task_id: u64) {
 
 unsafe extern "C" {
     fn msleep(msecs: usize);
-    fn linux_kernel_thread(f: LinuxThreadFn, opaque: *mut c_void) -> i32;
     fn user_mode_thread(f: LinuxThreadFn, opaque: *mut c_void, flags: usize) -> i32;
+    fn kernel_thread(f: LinuxThreadFn, opaque: *mut c_void, name: *const c_char, flags: usize) -> i32;
     fn linux_idle_loop(pid: i32);
     fn kthread_exit(exit_code: i32);
     fn schedule();
     fn linux_set_nice(pid: c_int, nice: c_long) -> c_int;
     fn sched_setaffinity(pid: c_int, mask: *const c_char) -> c_int;
+    fn pin_task_on_cpu(pid: c_int, cpu_id: usize);
+    fn cl_cpu_id() -> usize;
+    fn set_kthreadd_task(pid: c_int);
+    fn kthreadd(unused: *const c_void);
 }
 
 /*
@@ -365,16 +389,22 @@ axstage::register!("AxStartKInitd", AxStage::StartKInitd, |hartid, dtb_pa| {
      */
     let task = ax_user_mode_thread(move || {
         init_thread_fn(hartid, dtb_pa);
-    }, linux_config::CLONE_FS);
+    }, CLONE_FS);
     unsafe {
-        pin_task_on_cpu(task.id().as_u64() as usize, cl_cpu_id())
+        pin_task_on_cpu(task.id().as_u64() as i32, cl_cpu_id())
     }
 
     IDLE_TASK_ID.store(task.id().as_u64(), Ordering::Release);
 });
 
 axstage::register!("AxStartKThreadd", AxStage::StartKThreadd, |_, _| {
-    linux_adaptor::advance_to(LinuxAdaptorState::StartKThreadd);
+    let task = ax_kernel_thread(move || {
+        unsafe { kthreadd(ptr::null()) };
+    }, "", CLONE_FS | CLONE_FILES);
+
+    unsafe {
+        set_kthreadd_task(task.id().as_u64() as i32);
+    }
 });
 
 axstage::register!("AxIdle", AxStage::EnterIdle, |_, _| {
@@ -383,9 +413,4 @@ axstage::register!("AxIdle", AxStage::EnterIdle, |_, _| {
 
 pub fn system_exit() -> ! {
     exit(0);
-}
-
-unsafe extern "C" {
-    fn pin_task_on_cpu(pid: usize, cpu_id: usize);
-    fn cl_cpu_id() -> usize;
 }

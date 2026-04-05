@@ -91,12 +91,9 @@ void chroot_fs_refs(const struct path *old_root, const struct path *new_root)
 
 void free_fs_struct(struct fs_struct *fs)
 {
-#if 0
 	path_put(&fs->root);
 	path_put(&fs->pwd);
 	kmem_cache_free(fs_cachep, fs);
-#endif
-    PANIC("");
 }
 
 void exit_fs(struct task_struct *tsk)

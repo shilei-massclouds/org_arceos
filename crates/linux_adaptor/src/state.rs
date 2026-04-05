@@ -19,7 +19,6 @@ pub enum LinuxAdaptorState {
     InitSched,
     InitIrq,
     StartSchedEarlier,
-    StartKThreadd,
 
     // kernel_init thread (task 1)
     PrepareKernelInit,
@@ -156,13 +155,6 @@ fn StartSchedEarlierCB() {
 }
 
 #[allow(non_snake_case)]
-fn StartKThreaddCB() {
-    unsafe {
-        start_kthreadd();
-    }
-}
-
-#[allow(non_snake_case)]
 fn PrepareKernelInitCB() {
     unsafe {
         prepare_kernel_init();
@@ -223,7 +215,6 @@ unsafe extern "C" {
     fn sched_init();
     fn cl_init_irq();
     fn start_sched_earlier();
-    fn start_kthreadd();
     fn prepare_kernel_init();
     fn init_smp();
     fn init_page_alloc_later();
