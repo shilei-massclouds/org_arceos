@@ -182,15 +182,16 @@ pub fn spawn_task(task: TaskInner) -> AxTaskRef {
 /// Spawns a new task with the given parameters.
 ///
 /// Returns the task reference.
-pub fn spawn_raw<F>(f: F, _name: String, _stack_size: usize) -> AxTaskRef
+pub fn spawn_raw<F>(f: F, name: String, _stack_size: usize) -> AxTaskRef
 where
     F: FnOnce() + Send + 'static,
 {
     /* FixMe: handle _statck_size in linux. */
     let opaque = Box::into_raw(Box::new(f)) as *mut c_void;
     let thread_fn = get_thread_fn::<F>();
+    let c_name = get_cname(&name);
     let pid = unsafe {
-        kernel_thread(thread_fn, opaque, ptr::null(), 0)
+        kernel_thread(thread_fn, opaque, c_name.as_ptr(), 0)
     };
     crate::task::AxTask::new(pid)
 }
@@ -229,15 +230,18 @@ fn ax_kernel_thread<F>(f: F, name: &str, flags: usize) -> AxTaskRef
 where
     F: FnOnce() + Send + 'static,
 {
-    assert!(name.len() < linux_config::TASK_COMM_LEN);
-
     let opaque = Box::into_raw(Box::new(f)) as *mut c_void;
     let thread_fn = get_thread_fn::<F>();
-    let c_name = CString::new(name).expect("bad task name");
+    let c_name = get_cname(&name);
     let pid = unsafe {
         kernel_thread(thread_fn, opaque, c_name.as_ptr(), flags)
     };
     crate::task::AxTask::new(pid)
+}
+
+fn get_cname(name: &str) -> CString {
+    assert!(name.len() < linux_config::TASK_COMM_LEN);
+    CString::new(name).expect("bad task name")
 }
 
 /// Set the priority for current task.
