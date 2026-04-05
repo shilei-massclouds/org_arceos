@@ -38,6 +38,13 @@ pub const SBI_HART_BOOT_TASK_PTR_OFFSET: usize = 0;
 pub const SBI_HART_BOOT_STACK_PTR_OFFSET: usize = 8;
 
 /*
+ * Cloning flags [include/uapi/linux/sched.h]
+ */
+
+/* set if fs info shared between processes */
+pub const CLONE_FS: usize = 0x00000200;
+
+/*
  *  All offsets prefixed by PT_ according to struct pt_regs.
  *
  *  struct pt_regs {

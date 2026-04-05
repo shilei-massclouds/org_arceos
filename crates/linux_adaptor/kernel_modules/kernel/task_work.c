@@ -6,7 +6,6 @@
 
 static struct callback_head work_exited; /* all we need is ->next == NULL */
 
-#if 0
 #ifdef CONFIG_IRQ_WORK
 static void task_work_set_notify_irq(struct irq_work *entry)
 {
@@ -110,6 +109,7 @@ int task_work_add(struct task_struct *task, struct callback_head *work,
 	return 0;
 }
 
+#if 0
 /**
  * task_work_cancel_match - cancel a pending work added by task_work_add()
  * @task: the task which should execute the work

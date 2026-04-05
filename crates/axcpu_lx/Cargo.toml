@@ -72,6 +72,7 @@ path = "src/lib.rs"
 [dependencies]
 axstage = { workspace = true }
 inventory = { workspace = true }
+linux_config = { workspace = true }
 
 [dependencies.cfg-if]
 version = "1.0"
@@ -117,10 +118,6 @@ version = "0.52"
 
 [target.'cfg(target_arch = "x86_64")'.dependencies.x86_64]
 version = "0.15.2"
-
-[dependencies.linux_config]
-path = "../../crates/linux_config"
-version = "0.2.0"
 
 [lints.clippy]
 new_without_default = "allow"

@@ -84,6 +84,7 @@ axdriver = { path = "crates/axdriver_lx", package = "axdriver_lx" }
 axfs = { path = "crates/axfs_lx", package = "axfs_lx" }
 axfs_devfs = { path = "crates/axfs_devfs_lx", package = "axfs_devfs_lx" }
 linux_adaptor = { path = "crates/linux_adaptor" }
+linux_config = { path = "crates/linux_config" }
 percpu = { path = "crates/percpu_lx" }
 percpu_macros = { path = "crates/percpu_macros_lx" }
 inventory = "0.3"

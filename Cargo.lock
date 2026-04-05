@@ -911,6 +911,7 @@ dependencies = [
  "cpumask",
  "inventory",
  "linux_adaptor",
+ "linux_config",
  "log",
  "percpu 0.2.3",
 ]

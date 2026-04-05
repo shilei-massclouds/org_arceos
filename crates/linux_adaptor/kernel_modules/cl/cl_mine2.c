@@ -307,7 +307,6 @@ CL_MINE(tick_init_highres)
 CL_MINE(tick_setup_sched_timer)
 
 CL_MINE(resched_latency_warn)
-CL_MINE(task_work_add)
 
 CL_MINE(workqueue_set_max_active)
 CL_MINE(bitmap_parse)

@@ -16,5 +16,5 @@ linux-fs = []
 
 [dependencies]
 axlog = { workspace = true }
-linux_config = { path = "../linux_config" }
+linux_config = { workspace = true }
 linux_adaptor_macro = { path = "../linux_adaptor_macro" }

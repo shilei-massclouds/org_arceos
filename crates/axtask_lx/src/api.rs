@@ -203,10 +203,19 @@ pub fn spawn<F>(f: F) -> AxTaskRef
 where
     F: FnOnce() + Send + 'static,
 {
+    spawn_raw(f, String::default(), axconfig::TASK_STACK_SIZE)
+}
+
+/// Create a user mode thread.
+/// Compatible with Linux `user_mode_thread`
+fn ax_user_mode_thread<F>(f: F, flags: usize) -> AxTaskRef
+where
+    F: FnOnce() + Send + 'static,
+{
     let opaque = Box::into_raw(Box::new(f)) as *mut c_void;
     let thread_fn = get_thread_fn::<F>();
     let pid = unsafe {
-        linux_kernel_thread(thread_fn, opaque)
+        user_mode_thread(thread_fn, opaque, flags)
     };
     crate::task::AxTask::new(pid)
 }
@@ -303,6 +312,7 @@ pub fn idle_loop(task_id: u64) {
 unsafe extern "C" {
     fn msleep(msecs: usize);
     fn linux_kernel_thread(f: LinuxThreadFn, opaque: *mut c_void) -> i32;
+    fn user_mode_thread(f: LinuxThreadFn, opaque: *mut c_void, flags: usize) -> i32;
     fn linux_idle_loop(pid: i32);
     fn kthread_exit(exit_code: i32);
     fn schedule();
@@ -353,9 +363,9 @@ axstage::register!("AxStartKInitd", AxStage::StartKInitd, |hartid, dtb_pa| {
      * the init task will end up wanting to create kthreads, which, if
      * we schedule it before we create kthreadd, will OOPS.
      */
-    let task = spawn(move || {
+    let task = ax_user_mode_thread(move || {
         init_thread_fn(hartid, dtb_pa);
-    });
+    }, linux_config::CLONE_FS);
     unsafe {
         pin_task_on_cpu(task.id().as_u64() as usize, cl_cpu_id())
     }

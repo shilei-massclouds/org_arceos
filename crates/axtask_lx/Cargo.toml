@@ -29,6 +29,7 @@ test = []
 log = "=0.4.21"
 axhal = { workspace = true }
 linux_adaptor = { workspace = true }
+linux_config = { workspace = true }
 axconfig = { workspace = true }
 percpu = { workspace = true, optional = true }
 #kspin = { version = "0.1", optional = true }
