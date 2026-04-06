@@ -75,6 +75,7 @@
 
 #include <trace/events/task.h>
 #include "internal.h"
+#include "adaptor.h"
 
 #include <trace/events/sched.h>
 
@@ -109,6 +110,7 @@ static inline void put_binfmt(struct linux_binfmt * fmt)
 {
 	module_put(fmt->module);
 }
+#endif // CL
 
 bool path_noexec(const struct path *path)
 {
@@ -116,6 +118,7 @@ bool path_noexec(const struct path *path)
 	       (path->mnt->mnt_sb->s_iflags & SB_I_NOEXEC);
 }
 
+#if 0
 #ifdef CONFIG_USELIB
 /*
  * Note that a shared library must be both readable and executable due to
@@ -175,6 +178,7 @@ out:
 	return error;
 }
 #endif /* #ifdef CONFIG_USELIB */
+#endif // CL
 
 #ifdef CONFIG_MMU
 /*
@@ -406,6 +410,7 @@ err:
 	return err;
 }
 
+#if 0
 struct user_arg_ptr {
 #ifdef CONFIG_COMPAT
 	bool is_compat;
@@ -467,6 +472,7 @@ static int count(struct user_arg_ptr argv, int max)
 	}
 	return i;
 }
+#endif // CL
 
 static int count_strings_kernel(const char *const *argv)
 {
@@ -559,6 +565,7 @@ static int bprm_stack_limits(struct linux_binprm *bprm)
 	return bprm_set_stack_limit(bprm, limit);
 }
 
+#if 0
 /*
  * 'copy_strings()' copies argument/environment strings from the old
  * processes's memory to the new process's stack.  The call to get_user_pages()
@@ -653,6 +660,7 @@ out:
 	}
 	return ret;
 }
+#endif // CL
 
 /*
  * Copy and argument/environment string from the kernel to the processes stack.
@@ -694,6 +702,7 @@ int copy_string_kernel(const char *arg, struct linux_binprm *bprm)
 }
 EXPORT_SYMBOL(copy_string_kernel);
 
+#if 0
 static int copy_strings_kernel(int argc, const char *const *argv,
 			       struct linux_binprm *bprm)
 {
@@ -877,6 +886,7 @@ out:
 EXPORT_SYMBOL(transfer_args_to_stack);
 
 #endif /* CONFIG_MMU */
+#endif // CL
 
 /*
  * On success, caller must call do_close_execat() on the returned
@@ -920,6 +930,7 @@ static struct file *do_open_execat(int fd, struct filename *name, int flags)
 	return no_free_ptr(file);
 }
 
+#if 0
 /**
  * open_exec - Open a path name for execution
  *
@@ -1498,6 +1509,7 @@ static int prepare_bprm_creds(struct linux_binprm *bprm)
 	mutex_unlock(&current->signal->cred_guard_mutex);
 	return -ENOMEM;
 }
+#endif // CL
 
 /* Matches do_open_execat() */
 static void do_close_execat(struct file *file)
@@ -1587,6 +1599,7 @@ out_free:
 	return ERR_PTR(retval);
 }
 
+#if 0
 int bprm_change_interp(const char *interp, struct linux_binprm *bprm)
 {
 	/* If a binfmt changed the interp, free it first. */
@@ -1993,6 +2006,7 @@ out_ret:
 	putname(filename);
 	return retval;
 }
+#endif // CL
 
 int kernel_execve(const char *kernel_filename,
 		  const char *const *argv, const char *const *envp)
@@ -2037,6 +2051,7 @@ int kernel_execve(const char *kernel_filename,
 		goto out_free;
 	bprm->exec = bprm->p;
 
+#if 0
 	retval = copy_strings_kernel(bprm->envc, envp, bprm);
 	if (retval < 0)
 		goto out_free;
@@ -2046,6 +2061,8 @@ int kernel_execve(const char *kernel_filename,
 		goto out_free;
 
 	retval = bprm_execve(bprm);
+#endif
+    PANIC("");
 out_free:
 	free_bprm(bprm);
 out_ret:
@@ -2053,6 +2070,7 @@ out_ret:
 	return retval;
 }
 
+#if 0
 static int do_execve(struct filename *filename,
 	const char __user *const __user *__argv,
 	const char __user *const __user *__envp)

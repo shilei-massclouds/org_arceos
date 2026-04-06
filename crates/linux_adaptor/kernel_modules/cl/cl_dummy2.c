@@ -820,3 +820,16 @@ void bpf_task_storage_free(struct task_struct *task)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+int security_inode_follow_link(struct dentry *dentry, struct inode *inode,
+                   bool rcu)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_vm_enough_memory_mm(struct mm_struct *mm, long pages)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

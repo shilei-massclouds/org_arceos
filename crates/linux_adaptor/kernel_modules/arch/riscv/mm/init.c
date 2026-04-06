@@ -67,10 +67,10 @@ EXPORT_SYMBOL(phys_ram_base);
 //unsigned long vmemmap_start_pfn __ro_after_init;
 //EXPORT_SYMBOL(vmemmap_start_pfn);
 //#endif
-//
-//unsigned long empty_zero_page[PAGE_SIZE / sizeof(unsigned long)]
-//							__page_aligned_bss;
-//EXPORT_SYMBOL(empty_zero_page);
+
+unsigned long empty_zero_page[PAGE_SIZE / sizeof(unsigned long)]
+							__page_aligned_bss;
+EXPORT_SYMBOL(empty_zero_page);
 
 extern char _start[];
 void *_dtb_early_va __initdata;
@@ -322,25 +322,25 @@ static pte_t fixmap_pte[PTRS_PER_PTE] __page_aligned_bss;
 
 pgd_t early_pg_dir[PTRS_PER_PGD] __initdata __aligned(PAGE_SIZE);
 
-//static const pgprot_t protection_map[16] = {
-//	[VM_NONE]					= PAGE_NONE,
-//	[VM_READ]					= PAGE_READ,
-//	[VM_WRITE]					= PAGE_COPY,
-//	[VM_WRITE | VM_READ]				= PAGE_COPY,
-//	[VM_EXEC]					= PAGE_EXEC,
-//	[VM_EXEC | VM_READ]				= PAGE_READ_EXEC,
-//	[VM_EXEC | VM_WRITE]				= PAGE_COPY_EXEC,
-//	[VM_EXEC | VM_WRITE | VM_READ]			= PAGE_COPY_EXEC,
-//	[VM_SHARED]					= PAGE_NONE,
-//	[VM_SHARED | VM_READ]				= PAGE_READ,
-//	[VM_SHARED | VM_WRITE]				= PAGE_SHARED,
-//	[VM_SHARED | VM_WRITE | VM_READ]		= PAGE_SHARED,
-//	[VM_SHARED | VM_EXEC]				= PAGE_EXEC,
-//	[VM_SHARED | VM_EXEC | VM_READ]			= PAGE_READ_EXEC,
-//	[VM_SHARED | VM_EXEC | VM_WRITE]		= PAGE_SHARED_EXEC,
-//	[VM_SHARED | VM_EXEC | VM_WRITE | VM_READ]	= PAGE_SHARED_EXEC
-//};
-//DECLARE_VM_GET_PAGE_PROT
+static const pgprot_t protection_map[16] = {
+	[VM_NONE]					= PAGE_NONE,
+	[VM_READ]					= PAGE_READ,
+	[VM_WRITE]					= PAGE_COPY,
+	[VM_WRITE | VM_READ]				= PAGE_COPY,
+	[VM_EXEC]					= PAGE_EXEC,
+	[VM_EXEC | VM_READ]				= PAGE_READ_EXEC,
+	[VM_EXEC | VM_WRITE]				= PAGE_COPY_EXEC,
+	[VM_EXEC | VM_WRITE | VM_READ]			= PAGE_COPY_EXEC,
+	[VM_SHARED]					= PAGE_NONE,
+	[VM_SHARED | VM_READ]				= PAGE_READ,
+	[VM_SHARED | VM_WRITE]				= PAGE_SHARED,
+	[VM_SHARED | VM_WRITE | VM_READ]		= PAGE_SHARED,
+	[VM_SHARED | VM_EXEC]				= PAGE_EXEC,
+	[VM_SHARED | VM_EXEC | VM_READ]			= PAGE_READ_EXEC,
+	[VM_SHARED | VM_EXEC | VM_WRITE]		= PAGE_SHARED_EXEC,
+	[VM_SHARED | VM_EXEC | VM_WRITE | VM_READ]	= PAGE_SHARED_EXEC
+};
+DECLARE_VM_GET_PAGE_PROT
 
 void __set_fixmap(enum fixed_addresses idx, phys_addr_t phys, pgprot_t prot)
 {

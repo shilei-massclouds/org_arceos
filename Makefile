@@ -236,7 +236,7 @@ else
 endif
 
 rm_disk:
-	rm -f $(DISK_IMG) $(ROOTFS_IMG)
+	rm -f $(DISK_IMG) #$(ROOTFS_IMG)
 
 rootfs:
 	@if [ ! -f $(ROOTFS_IMG) ]; then \

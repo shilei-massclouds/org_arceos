@@ -471,7 +471,6 @@ static inline void vma_lock_free(struct vm_area_struct *vma) {}
 
 #endif /* CONFIG_PER_VMA_LOCK */
 
-#if 0
 struct vm_area_struct *vm_area_alloc(struct mm_struct *mm)
 {
 	struct vm_area_struct *vma;
@@ -489,6 +488,7 @@ struct vm_area_struct *vm_area_alloc(struct mm_struct *mm)
 	return vma;
 }
 
+#if 0
 struct vm_area_struct *vm_area_dup(struct vm_area_struct *orig)
 {
 	struct vm_area_struct *new = kmem_cache_alloc(vm_area_cachep, GFP_KERNEL);
@@ -624,7 +624,6 @@ void free_task(struct task_struct *tsk)
 }
 EXPORT_SYMBOL(free_task);
 
-#if 0
 static void dup_mm_exe_file(struct mm_struct *mm, struct mm_struct *oldmm)
 {
 	struct file *exe_file;
@@ -830,6 +829,7 @@ static int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 #define mm_free_pgd(mm)
 #endif /* CONFIG_MMU */
 
+#if 0
 static void check_mm(struct mm_struct *mm)
 {
 	int i;
@@ -853,10 +853,12 @@ static void check_mm(struct mm_struct *mm)
 	VM_BUG_ON_MM(mm->pmd_huge_pte, mm);
 #endif
 }
+#endif // CL
 
 #define allocate_mm()	(kmem_cache_alloc(mm_cachep, GFP_KERNEL))
 #define free_mm(mm)	(kmem_cache_free(mm_cachep, (mm)))
 
+#if 0
 static void do_check_lazy_tlb(void *arg)
 {
 	struct mm_struct *mm = arg;
@@ -1241,6 +1243,7 @@ static int __init coredump_filter_setup(char *s)
 }
 
 __setup("coredump_filter=", coredump_filter_setup);
+#endif // CL
 
 #include <linux/init_task.h>
 
@@ -1251,8 +1254,6 @@ static void mm_init_aio(struct mm_struct *mm)
 	mm->ioctx_table = NULL;
 #endif
 }
-
-#endif /* CL */
 
 static __always_inline void mm_clear_owner(struct mm_struct *mm,
 					   struct task_struct *p)
@@ -1270,7 +1271,6 @@ static void mm_init_owner(struct mm_struct *mm, struct task_struct *p)
 #endif
 }
 
-#if 0
 static void mm_init_uprobes_state(struct mm_struct *mm)
 {
 #ifdef CONFIG_UPROBES
@@ -1363,6 +1363,7 @@ struct mm_struct *mm_alloc(void)
 }
 EXPORT_SYMBOL_IF_KUNIT(mm_alloc);
 
+#if 0
 static inline void __mmput(struct mm_struct *mm)
 {
 	VM_BUG_ON(atomic_read(&mm->mm_users));
@@ -3196,7 +3197,6 @@ static void sighand_ctor(void *data)
 	init_waitqueue_head(&sighand->signalfd_wqh);
 }
 
-#if 0
 void __init mm_cache_init(void)
 {
 	unsigned int mm_size;
@@ -3215,7 +3215,6 @@ void __init mm_cache_init(void)
 			sizeof_field(struct mm_struct, saved_auxv),
 			NULL);
 }
-#endif /* CL */
 
 void __init proc_caches_init(void)
 {

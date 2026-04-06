@@ -166,11 +166,11 @@ static int __init disable_randmaps(char *s)
 	return 1;
 }
 __setup("norandmaps", disable_randmaps);
+#endif // CL
 
 unsigned long zero_pfn __read_mostly;
 EXPORT_SYMBOL(zero_pfn);
 
-#endif
 
 unsigned long highest_memmap_pfn __read_mostly;
 
@@ -6962,7 +6962,6 @@ void ptlock_free(struct ptdesc *ptdesc)
 }
 #endif
 
-#if 0
 void vma_pgtable_walk_begin(struct vm_area_struct *vma)
 {
 	if (is_vm_hugetlb_page(vma))
@@ -6974,5 +6973,3 @@ void vma_pgtable_walk_end(struct vm_area_struct *vma)
 	if (is_vm_hugetlb_page(vma))
 		hugetlb_vma_unlock_read(vma);
 }
-
-#endif

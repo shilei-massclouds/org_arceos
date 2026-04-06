@@ -2720,7 +2720,9 @@ void __init mm_core_init_second_part(void)
 	/* Should be run after espfix64 is set up. */
 	pti_init();
 	kmsan_init_runtime();
+#endif
 	mm_cache_init();
+#if 0
 	execmem_init();
 #endif
 }

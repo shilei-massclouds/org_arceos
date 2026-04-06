@@ -14,6 +14,7 @@
 #include <linux/kfence.h>
 #include <linux/stackprotector.h>
 #include <linux/init_syscalls.h>
+#include <linux/binfmts.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -749,4 +750,38 @@ void __init parse_early_param(void)
     strscpy(tmp_cmdline, boot_command_line, COMMAND_LINE_SIZE);
     parse_early_options(tmp_cmdline);
     done = 1;
+}
+
+static int run_init_process(const char *init_filename)
+{
+    const char *const *p;
+
+    argv_init[0] = init_filename;
+    pr_info("Run %s as init process\n", init_filename);
+    pr_debug("  with arguments:\n");
+    for (p = argv_init; *p; p++)
+        pr_debug("    %s\n", *p);
+    pr_debug("  with environment:\n");
+    for (p = envp_init; *p; p++)
+        pr_debug("    %s\n", *p);
+    return kernel_execve(init_filename, argv_init, envp_init);
+}
+
+static int try_to_run_init_process(const char *init_filename)
+{
+    int ret;
+
+    ret = run_init_process(init_filename);
+
+    if (ret && ret != -ENOENT) {
+        pr_err("Starting init: %s exists but couldn't execute it (error %d)\n",
+               init_filename, ret);
+    }
+
+    return ret;
+}
+
+int cl_try_to_run_init_process(const char *init_filename)
+{
+    return try_to_run_init_process(init_filename);
 }

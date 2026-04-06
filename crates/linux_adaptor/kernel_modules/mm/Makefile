@@ -35,6 +35,9 @@ obj-y += rmap.o
 obj-y += mlock.o
 obj-y += readahead.o
 obj-y += truncate.o
+obj-y += vma.o
+obj-y += interval_tree.o
+obj-y += gup.o
+obj-y += secretmem.o
 
 #obj-y += dmapool.o
-#obj-y += interval_tree.o

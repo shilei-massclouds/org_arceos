@@ -938,6 +938,7 @@ mm_get_unmapped_area(struct mm_struct *mm, struct file *file,
 	return arch_get_unmapped_area(file, addr, len, pgoff, flags, 0);
 }
 EXPORT_SYMBOL(mm_get_unmapped_area);
+#endif // CL
 
 /**
  * find_vma_intersection() - Look up the first VMA which intersects the interval
@@ -976,6 +977,7 @@ struct vm_area_struct *find_vma(struct mm_struct *mm, unsigned long addr)
 }
 EXPORT_SYMBOL(find_vma);
 
+#if 0
 /**
  * find_vma_prev() - Find the VMA for a given address, or the next vma and
  * set %pprev to the previous VMA, if any.
@@ -1002,6 +1004,7 @@ find_vma_prev(struct mm_struct *mm, unsigned long addr,
 		vma = vma_next(&vmi);
 	return vma;
 }
+#endif // CL
 
 /*
  * Verify that the stack growth is acceptable and
@@ -1042,6 +1045,7 @@ static int acct_stack_growth(struct vm_area_struct *vma,
 	return 0;
 }
 
+#if 0
 #if defined(CONFIG_STACK_GROWSUP)
 /*
  * PA-RISC uses this for its stack.
@@ -1141,6 +1145,7 @@ static int expand_upwards(struct vm_area_struct *vma, unsigned long address)
 	return error;
 }
 #endif /* CONFIG_STACK_GROWSUP */
+#endif // CL
 
 /*
  * vma is the first one with address < vma->vm_start.  Have to extend vma.
@@ -1237,6 +1242,7 @@ int expand_downwards(struct vm_area_struct *vma, unsigned long address)
 /* enforced gap between the expanding stack and other mappings. */
 unsigned long stack_guard_gap = 256UL<<PAGE_SHIFT;
 
+#if 0
 static int __init cmdline_parse_stack_guard_gap(char *p)
 {
 	unsigned long val;
@@ -1976,6 +1982,7 @@ destroy:
 	mmap_write_unlock(mm);
 	vm_unacct_memory(nr_accounted);
 }
+#endif // CL
 
 /* Insert vm structure into process list sorted by address
  * and into the inode's i_mmap tree.  If vm_file is non-NULL
@@ -2019,6 +2026,7 @@ int insert_vm_struct(struct mm_struct *mm, struct vm_area_struct *vma)
 	return 0;
 }
 
+#if 0
 /*
  * Return true if the calling process may expand its vm space by the passed
  * number of pages
