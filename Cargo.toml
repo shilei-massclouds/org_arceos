@@ -34,6 +34,8 @@ members = [
 
     "examples/driver/block",
 
+    "examples/os/lk",
+
     "platforms/axplat-riscv64-dp1000",
 
     "crates/axlds",

@@ -15,6 +15,7 @@
 #     - `OUT_CONFIG`: Final config file that takes effect
 #     - `UIMAGE`: To generate U-Boot image
 #     - `LD_SCRIPT`: Use a custom linker script file.
+#     - `FS_TYPE`: FileSystem type on disk image
 # * App options:
 #     - `A` or `APP`: Path to the application
 #     - `FEATURES`: Features os ArceOS modules to be enabled.
@@ -25,7 +26,6 @@
 #     - `GRAPHIC`: Enable display devices and graphic output (virtio-gpu)
 #     - `BUS`: Device bus type: mmio, pci
 #     - `MEM`: Memory size (default is 128M)
-#     - `FS_TYPE`: FileSystem type on disk image
 #     - `DISK_IMG`: Path to the virtual disk image
 #     - `ACCEL`: Enable hardware acceleration (KVM on linux)
 #     - `QEMU_LOG`: Enable QEMU logging (log file is "qemu.log")
@@ -51,7 +51,7 @@ OUT_CONFIG ?= $(PWD)/.axconfig.toml
 UIMAGE ?= n
 
 # App options
-A ?= examples/helloworld
+A ?= examples/os/lk
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=
