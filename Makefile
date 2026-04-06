@@ -50,6 +50,10 @@ EXTRA_CONFIG ?=
 OUT_CONFIG ?= $(PWD)/.axconfig.toml
 UIMAGE ?= n
 
+# Extern rootfs disk source
+ROOTFS_URL = $(shell cat rootfs.src)
+ROOTFS_IMG = rootfs-$(ARCH).img
+
 # App options
 A ?= examples/os/lk
 APP ?= $(A)
@@ -232,7 +236,15 @@ else
 endif
 
 rm_disk:
-	rm -f $(DISK_IMG)
+	rm -f $(DISK_IMG) $(ROOTFS_IMG)
+
+rootfs:
+	@if [ ! -f $(ROOTFS_IMG) ]; then \
+		echo "Image not found, downloading..."; \
+		curl -f -L $(ROOTFS_URL)/$(ROOTFS_IMG).xz -O; \
+		xz -d $(ROOTFS_IMG).xz; \
+	fi
+	@cp $(ROOTFS_IMG) $(DISK_IMG)
 
 clean: clean_c
 	rm -rf $(APP)/*.bin $(APP)/*.elf $(OUT_CONFIG)
@@ -251,4 +263,4 @@ clean_c::
 .PHONY: all defconfig oldconfig \
 	build disasm run justrun debug \
 	clippy doc doc_check_missing fmt fmt_c unittest unittest_no_fail_fast \
-	disk_img rm_disk clean clean_dist clean_c symtab
+	disk_img rm_disk rootfs clean clean_dist clean_c symtab
