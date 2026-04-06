@@ -91,6 +91,7 @@
 #include "pgalloc-track.h"
 #include "internal.h"
 #include "swap.h"
+#include "adaptor.h"
 
 #if defined(LAST_CPUPID_NOT_IN_PAGE_FLAGS) && !defined(CONFIG_COMPILE_TEST)
 #warning Unfortunate NUMA and NUMA Balancing config, growing page-frame for last_cpupid.
@@ -3145,6 +3146,7 @@ pte_unlock:
 
 	return ret;
 }
+#endif // CL
 
 static gfp_t __get_fault_gfp_mask(struct vm_area_struct *vma)
 {
@@ -3160,6 +3162,7 @@ static gfp_t __get_fault_gfp_mask(struct vm_area_struct *vma)
 	return GFP_KERNEL;
 }
 
+#if 0
 /*
  * Notify the address space that the page is about to become writable so that
  * it can prohibit this or wait for the page to get into an appropriate state.
@@ -5833,6 +5836,7 @@ unlock:
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 	return 0;
 }
+#endif // CL
 
 /*
  * On entry, we hold either the VMA lock or the mmap_lock
@@ -5857,6 +5861,7 @@ static vm_fault_t __handle_mm_fault(struct vm_area_struct *vma,
 	p4d_t *p4d;
 	vm_fault_t ret;
 
+#if 0
 	pgd = pgd_offset(mm, address);
 	p4d = p4d_alloc(mm, pgd, address);
 	if (!p4d)
@@ -5934,6 +5939,8 @@ retry_pud:
 	}
 
 	return handle_pte_fault(&vmf);
+#endif
+    PANIC("");
 }
 
 /**
@@ -6074,6 +6081,7 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	vm_fault_t ret;
 	bool is_droppable;
 
+    printk("%s: step1 addr(%lx)\n", __func__, address);
 	__set_current_state(TASK_RUNNING);
 
 	ret = sanitize_fault_flags(vma, &flags);
@@ -6103,6 +6111,7 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	else
 		ret = __handle_mm_fault(vma, address, flags);
 
+#if 0
 	/*
 	 * Warning: It is no longer safe to dereference vma-> after this point,
 	 * because mmap_lock might have been dropped by __handle_mm_fault(), so
@@ -6126,6 +6135,8 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 		if (task_in_memcg_oom(current) && !(ret & VM_FAULT_OOM))
 			mem_cgroup_oom_synchronize(false);
 	}
+#endif
+    PANIC("");
 out:
 	mm_account_fault(mm, regs, address, flags, ret);
 
@@ -6133,6 +6144,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(handle_mm_fault);
 
+#if 0
 #ifdef CONFIG_LOCK_MM_AND_FIND_VMA
 #include <linux/extable.h>
 
