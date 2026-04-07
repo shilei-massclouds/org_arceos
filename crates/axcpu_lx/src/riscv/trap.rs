@@ -191,11 +191,11 @@ core::arch::global_asm!(
 );
 
 #[unsafe(no_mangle)]
-fn ax_handle_ebreak(ptr_regs: usize)
+fn ax_handle_ebreak(regs_ptr: usize)
 {
-    let ptr_regs = ptr_regs as *mut PtRegs;
+    let regs_ptr = regs_ptr as *mut PtRegs;
     unsafe {
-        handle_breakpoint(&mut ((*ptr_regs).epc))
+        handle_breakpoint(&mut ((*regs_ptr).epc))
     }
 }
 
@@ -205,33 +205,30 @@ fn handle_breakpoint(sepc: &mut usize) {
 }
 
 #[unsafe(no_mangle)]
-fn ax_handle_page_fault(ptr_regs: usize)
+fn ax_handle_page_fault(regs_ptr: usize)
 {
-    let ptr_regs = ptr_regs as *const PtRegs;
-    let regs = unsafe { &(*ptr_regs) };
+    let regs = regs_ptr as *const PtRegs;
+    let regs = unsafe { &(*regs) };
     let is_user = (regs.status & SR_SPP) == 0;
-    let flags = match regs.cause {
+    let mut flags = match regs.cause {
         EXC_INST_PAGE_FAULT => PageFaultFlags::EXECUTE,
         EXC_LOAD_PAGE_FAULT => PageFaultFlags::READ,
         EXC_STORE_PAGE_FAULT => PageFaultFlags::WRITE,
         _ => panic!("bad exception type {}", regs.cause),
     };
-    handle_page_fault(regs, flags, is_user);
-}
-
-fn handle_page_fault(tf: &PtRegs, mut access_flags: PageFaultFlags, is_user: bool) {
     if is_user {
-        access_flags |= PageFaultFlags::USER;
+        flags |= PageFaultFlags::USER;
     }
+
     let vaddr = va!(stval::read());
-    if !handle_trap!(PAGE_FAULT, vaddr, access_flags, is_user) {
+    if !handle_trap!(PAGE_FAULT, vaddr, flags, is_user, regs_ptr) {
         panic!(
             "Unhandled {} Page Fault @ {:#x}, fault_vaddr={:#x} ({:?}):\n{:#x?}",
             if is_user { "User" } else { "Supervisor" },
-            tf.epc,
+            regs.epc,
             vaddr,
-            access_flags,
-            tf
+            flags,
+            regs
         );
     }
 }

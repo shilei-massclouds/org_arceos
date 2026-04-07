@@ -3,6 +3,8 @@
 
 extern crate alloc;
 
+mod mm;
+
 #[cfg(feature = "axstd")]
 use axstd::println;
 

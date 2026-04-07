@@ -92,6 +92,7 @@ percpu_macros = { path = "crates/percpu_macros_lx" }
 inventory = "0.3"
 log = "=0.4.21"
 axplat = "0.3"
+linkme = "0.3.33"
 
 [profile.release]
 lto = true

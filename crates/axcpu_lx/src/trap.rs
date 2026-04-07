@@ -13,7 +13,7 @@ pub static IRQ: [fn(usize) -> bool];
 
 /// A slice of page fault handler functions.
 #[def_trap_handler]
-pub static PAGE_FAULT: [fn(VirtAddr, PageFaultFlags, bool) -> bool];
+pub static PAGE_FAULT: [fn(VirtAddr, PageFaultFlags, bool, usize) -> bool];
 
 /// A slice of syscall handler functions.
 #[cfg(feature = "uspace")]

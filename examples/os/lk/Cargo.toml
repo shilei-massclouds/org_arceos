@@ -7,3 +7,6 @@ edition.workspace = true
 
 [dependencies]
 axstd = { workspace = true, features = ["linux-fs"], optional = true }
+axhal = { workspace = true }
+linkme = { workspace = true }
+log = { workspace = true }

@@ -37,7 +37,7 @@ lazyinit = "0.2"
 percpu = { workspace = true }
 heapless = "0.8"
 memory_addr = "0.4"
-linkme = { version = "0.3.33", optional = true }
+linkme = { workspace = true, optional = true }
 page_table_multiarch = { version = "0.5", features = ["copy-from"], optional = true }
 axcpu = { workspace = true }
 axplat = "0.3"
