@@ -889,3 +889,32 @@ unsigned long mmap_min_addr;
 /* amount of vm to protect from userspace using CAP_SYS_RAWIO (DAC) */
 unsigned long dac_mmap_min_addr = CONFIG_DEFAULT_MMAP_MIN_ADDR;
 
+void perf_event_mmap(struct vm_area_struct *vma)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_mmap_file(struct file *file, unsigned long prot,
+               unsigned long flags)
+
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_mmap_addr(unsigned long addr)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int uprobe_mmap(struct vm_area_struct *vma)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void uprobe_munmap(struct vm_area_struct *vma, unsigned long start, unsigned long end)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

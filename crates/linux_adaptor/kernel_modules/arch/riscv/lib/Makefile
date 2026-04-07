@@ -9,4 +9,6 @@ obj-y += strcmp.o
 obj-y += strncmp.o
 obj-y += strlen.o
 obj-y += tishift.o
+obj-y += uaccess.o
+obj-y += riscv_v_helpers.o
 #obj-y += xor.o

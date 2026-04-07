@@ -77,7 +77,6 @@ int mmap_rnd_compat_bits __read_mostly = CONFIG_ARCH_MMAP_RND_COMPAT_BITS;
 static bool ignore_rlimit_data;
 core_param(ignore_rlimit_data, ignore_rlimit_data, bool, 0644);
 
-#if 0
 
 /* Update vma->vm_page_prot to reflect vma->vm_flags. */
 void vma_set_page_prot(struct vm_area_struct *vma)
@@ -113,6 +112,8 @@ static int check_brk_limits(unsigned long addr, unsigned long len)
 	return mlock_future_ok(current->mm, current->mm->def_flags, len)
 		? 0 : -EAGAIN;
 }
+
+#if 0
 static int do_brk_flags(struct vma_iterator *vmi, struct vm_area_struct *brkvma,
 		unsigned long addr, unsigned long request, unsigned long flags);
 SYSCALL_DEFINE1(brk, unsigned long, brk)
@@ -217,6 +218,7 @@ out:
 	mmap_write_unlock(mm);
 	return origbrk;
 }
+#endif // CL
 
 /*
  * If a hint addr is less than mmap_min_addr change hint to be as
@@ -507,6 +509,7 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
 	return addr;
 }
 
+#if 0
 unsigned long ksys_mmap_pgoff(unsigned long addr, unsigned long len,
 			      unsigned long prot, unsigned long flags,
 			      unsigned long fd, unsigned long pgoff)
@@ -582,6 +585,7 @@ SYSCALL_DEFINE1(old_mmap, struct mmap_arg_struct __user *, arg)
 			       a.offset >> PAGE_SHIFT);
 }
 #endif /* __ARCH_WANT_SYS_OLD_MMAP */
+#endif // CL
 
 /*
  * We account for memory if it's a private writeable mapping,
@@ -928,6 +932,7 @@ __get_unmapped_area(struct file *file, unsigned long addr, unsigned long len,
 	return error ? error : addr;
 }
 
+#if 0
 unsigned long
 mm_get_unmapped_area(struct mm_struct *mm, struct file *file,
 		     unsigned long addr, unsigned long len,
@@ -977,7 +982,6 @@ struct vm_area_struct *find_vma(struct mm_struct *mm, unsigned long addr)
 }
 EXPORT_SYMBOL(find_vma);
 
-#if 0
 /**
  * find_vma_prev() - Find the VMA for a given address, or the next vma and
  * set %pprev to the previous VMA, if any.
@@ -1004,7 +1008,6 @@ find_vma_prev(struct mm_struct *mm, unsigned long addr,
 		vma = vma_next(&vmi);
 	return vma;
 }
-#endif // CL
 
 /*
  * Verify that the stack growth is acceptable and
@@ -1255,6 +1258,7 @@ static int __init cmdline_parse_stack_guard_gap(char *p)
 	return 1;
 }
 __setup("stack_guard_gap=", cmdline_parse_stack_guard_gap);
+#endif // CL
 
 #ifdef CONFIG_STACK_GROWSUP
 int expand_stack_locked(struct vm_area_struct *vma, unsigned long address)
@@ -1304,6 +1308,7 @@ struct vm_area_struct *find_extend_vma_locked(struct mm_struct *mm, unsigned lon
 }
 #endif
 
+#if 0
 #if defined(CONFIG_STACK_GROWSUP)
 
 #define vma_expand_up(vma,addr) expand_upwards(vma, addr)
@@ -1370,6 +1375,7 @@ int do_munmap(struct mm_struct *mm, unsigned long start, size_t len,
 
 	return do_vmi_munmap(&vmi, mm, start, len, uf, false);
 }
+#endif // CL
 
 static unsigned long __mmap_region(struct file *file, unsigned long addr,
 		unsigned long len, vm_flags_t vm_flags, unsigned long pgoff,
@@ -1633,7 +1639,6 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
 	validate_mm(current->mm);
 	return ret;
 }
-#endif // CL
 
 static int __vm_munmap(unsigned long start, size_t len, bool unlock)
 {
@@ -1788,6 +1793,7 @@ out:
 		ret = 0;
 	return ret;
 }
+#endif // CL
 
 /*
  * do_brk_flags() - Increase the brk vma if the flags match.
@@ -1917,7 +1923,6 @@ limits_failed:
 	return ret;
 }
 EXPORT_SYMBOL(vm_brk_flags);
-#endif // CL
 
 /* Release all mmaps. */
 void exit_mmap(struct mm_struct *mm)
@@ -2028,7 +2033,6 @@ int insert_vm_struct(struct mm_struct *mm, struct vm_area_struct *vma)
 	return 0;
 }
 
-#if 0
 /*
  * Return true if the calling process may expand its vm space by the passed
  * number of pages
@@ -2070,6 +2074,7 @@ void vm_stat_account(struct mm_struct *mm, vm_flags_t flags, long npages)
 		mm->data_vm += npages;
 }
 
+#if 0
 static vm_fault_t special_mapping_fault(struct vm_fault *vmf);
 
 /*

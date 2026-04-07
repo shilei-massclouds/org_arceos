@@ -350,6 +350,7 @@ create_elf_tables(struct linux_binprm *bprm, const struct elfhdr *exec,
 		return -EFAULT;
 	return 0;
 }
+#endif // CL
 
 /*
  * Map "eppnt->p_filesz" bytes from "filep" offset "eppnt->p_offset"
@@ -448,7 +449,6 @@ static unsigned long elf_load(struct file *filep, unsigned long addr,
 	return map_addr;
 }
 
-
 static unsigned long total_mapping_size(const struct elf_phdr *phdr, int nr)
 {
 	elf_addr_t min_addr = -1;
@@ -465,7 +465,6 @@ static unsigned long total_mapping_size(const struct elf_phdr *phdr, int nr)
 	}
 	return pt_load ? (max_addr - min_addr) : 0;
 }
-#endif // CL
 
 static int elf_read(struct file *file, void *buf, size_t len, loff_t pos)
 {
@@ -478,7 +477,6 @@ static int elf_read(struct file *file, void *buf, size_t len, loff_t pos)
 	return 0;
 }
 
-#if 0
 static unsigned long maximum_alignment(struct elf_phdr *cmds, int nr)
 {
 	unsigned long alignment = 0;
@@ -498,7 +496,6 @@ static unsigned long maximum_alignment(struct elf_phdr *cmds, int nr)
 	/* ensure we align to at least one page */
 	return ELF_PAGEALIGN(alignment);
 }
-#endif // CL
 
 /**
  * load_elf_phdrs() - load ELF program headers
@@ -614,7 +611,6 @@ static inline int arch_check_elf(struct elfhdr *ehdr, bool has_interp,
 
 #endif /* !CONFIG_ARCH_BINFMT_ELF_STATE */
 
-#if 0
 static inline int make_prot(u32 p_flags, struct arch_elf_state *arch_state,
 			    bool has_interp, bool is_interp)
 {
@@ -630,6 +626,7 @@ static inline int make_prot(u32 p_flags, struct arch_elf_state *arch_state,
 	return arch_elf_adjust_prot(prot, arch_state, has_interp, is_interp);
 }
 
+#if 0
 /* This is much more generalized than the library routine read function,
    so we keep this separate.  Technically the library read function
    is only provided so that we can read a.out libraries that have
@@ -1018,7 +1015,6 @@ out_free_interp:
 
 	setup_new_exec(bprm);
 
-    printk("%s: step1\n", __func__);
 	/* Do this so that we can load the interpreter, if need be.  We will
 	   change some of these later */
 	retval = setup_arg_pages(bprm, randomize_stack_top(STACK_TOP),
@@ -1026,8 +1022,7 @@ out_free_interp:
 	if (retval < 0)
 		goto out_free_dentry;
 
-    printk("%s: step2\n", __func__);
-#if 0
+    printk("%s: step1\n", __func__);
 	elf_brk = 0;
 
 	start_code = ~0UL;
@@ -1240,6 +1235,8 @@ out_free_interp:
 			elf_brk = k;
 	}
 
+    printk("%s: step2\n", __func__);
+#if 0
 	e_entry = elf_ex->e_entry + load_bias;
 	phdr_addr += load_bias;
 	elf_brk += load_bias;

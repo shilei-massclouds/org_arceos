@@ -37,7 +37,6 @@ static DEFINE_PER_CPU(struct mlock_fbatch, mlock_fbatch) = {
 	.lock = INIT_LOCAL_LOCK(lock),
 };
 
-#if 0
 bool can_do_mlock(void)
 {
 	if (rlimit(RLIMIT_MEMLOCK) != 0)
@@ -47,7 +46,6 @@ bool can_do_mlock(void)
 	return false;
 }
 EXPORT_SYMBOL(can_do_mlock);
-#endif // CL
 
 /*
  * Mlocked folios are marked with the PG_mlocked flag for efficient testing

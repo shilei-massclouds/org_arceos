@@ -488,7 +488,6 @@ struct vm_area_struct *vm_area_alloc(struct mm_struct *mm)
 	return vma;
 }
 
-#if 0
 struct vm_area_struct *vm_area_dup(struct vm_area_struct *orig)
 {
 	struct vm_area_struct *new = kmem_cache_alloc(vm_area_cachep, GFP_KERNEL);
@@ -513,7 +512,6 @@ struct vm_area_struct *vm_area_dup(struct vm_area_struct *orig)
 
 	return new;
 }
-#endif // CL
 
 void __vm_area_free(struct vm_area_struct *vma)
 {
@@ -523,7 +521,6 @@ void __vm_area_free(struct vm_area_struct *vma)
 	kmem_cache_free(vm_area_cachep, vma);
 }
 
-#if 0
 #ifdef CONFIG_PER_VMA_LOCK
 static void vm_area_free_rcu_cb(struct rcu_head *head)
 {
@@ -544,8 +541,6 @@ void vm_area_free(struct vm_area_struct *vma)
 	__vm_area_free(vma);
 #endif
 }
-
-#endif /* CL */
 
 static void account_kernel_stack(struct task_struct *tsk, int account)
 {

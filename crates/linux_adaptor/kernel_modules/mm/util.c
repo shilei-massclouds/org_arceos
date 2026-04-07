@@ -577,6 +577,7 @@ int account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(account_locked_vm);
+#endif // CL
 
 unsigned long vm_mmap_pgoff(struct file *file, unsigned long addr,
 	unsigned long len, unsigned long prot,
@@ -613,7 +614,6 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 	return vm_mmap_pgoff(file, addr, len, prot, flag, offset >> PAGE_SHIFT);
 }
 EXPORT_SYMBOL(vm_mmap);
-#endif /* CL */
 
 static gfp_t kmalloc_gfp_adjust(gfp_t flags, size_t size)
 {
