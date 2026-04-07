@@ -2658,6 +2658,7 @@ void __audit_ipc_set_perm(unsigned long qbytes, uid_t uid, gid_t gid, umode_t mo
 	context->ipc.perm_mode = mode;
 	context->ipc.has_perm = 1;
 }
+#endif // CL
 
 void __audit_bprm(struct linux_binprm *bprm)
 {
@@ -2667,6 +2668,7 @@ void __audit_bprm(struct linux_binprm *bprm)
 	context->execve.argc = bprm->argc;
 }
 
+#if 0
 
 /**
  * __audit_socketcall - record audit data for sys_socketcall

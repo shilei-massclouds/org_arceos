@@ -84,11 +84,11 @@
 #include <trace/events/migrate.h>
 
 #include "internal.h"
+#include "adaptor.h"
 
 static struct kmem_cache *anon_vma_cachep;
 static struct kmem_cache *anon_vma_chain_cachep;
 
-#if 0
 static inline struct anon_vma *anon_vma_alloc(void)
 {
 	struct anon_vma *anon_vma;
@@ -260,6 +260,7 @@ static inline void unlock_anon_vma_root(struct anon_vma *root)
 		up_write(&root->rwsem);
 }
 
+#if 0
 /*
  * Attach the anon_vmas from src to dst.
  * Returns 0 on success, -ENOMEM on failure.
@@ -394,6 +395,7 @@ int anon_vma_fork(struct vm_area_struct *vma, struct vm_area_struct *pvma)
 	unlink_anon_vmas(vma);
 	return -ENOMEM;
 }
+#endif // CL
 
 void unlink_anon_vmas(struct vm_area_struct *vma)
 {
@@ -468,6 +470,7 @@ void __init anon_vma_init(void)
 			SLAB_PANIC|SLAB_ACCOUNT);
 }
 
+#if 0
 /*
  * Getting a lock on a stable anon_vma from a page off the LRU is tricky!
  *
@@ -634,6 +637,7 @@ out:
 	rcu_read_unlock();
 	return anon_vma;
 }
+#endif // CL
 
 #ifdef CONFIG_ARCH_WANT_BATCHED_UNMAP_TLB_FLUSH
 /*
@@ -769,6 +773,7 @@ static bool should_defer_flush(struct mm_struct *mm, enum ttu_flags flags)
 }
 #endif /* CONFIG_ARCH_WANT_BATCHED_UNMAP_TLB_FLUSH */
 
+#if 0
 /*
  * At what user virtual address is page expected in vma?
  * Caller should check the page is actually part of the vma.
@@ -1224,6 +1229,7 @@ void folio_move_anon_rmap(struct folio *folio, struct vm_area_struct *vma)
 	 */
 	WRITE_ONCE(folio->mapping, anon_vma);
 }
+#endif // CL
 
 /**
  * __folio_set_anon - set up a new anonymous rmap for a folio
@@ -1257,6 +1263,7 @@ static void __folio_set_anon(struct folio *folio, struct vm_area_struct *vma,
 	folio->index = linear_page_index(vma, address);
 }
 
+#if 0
 /**
  * __page_check_anon_rmap - sanity check anonymous rmap addition
  * @folio:	The folio containing @page.
@@ -1283,6 +1290,7 @@ static void __page_check_anon_rmap(struct folio *folio, struct page *page,
 	VM_BUG_ON_PAGE(page_to_pgoff(page) != linear_page_index(vma, address),
 		       page);
 }
+#endif // CL
 
 static void __folio_mod_stat(struct folio *folio, int nr, int nr_pmdmapped)
 {
@@ -1306,6 +1314,7 @@ static void __folio_mod_stat(struct folio *folio, int nr, int nr_pmdmapped)
 	}
 }
 
+#if 0
 static __always_inline void __folio_add_anon_rmap(struct folio *folio,
 		struct page *page, int nr_pages, struct vm_area_struct *vma,
 		unsigned long address, rmap_t flags, enum rmap_level level)
@@ -1399,6 +1408,7 @@ void folio_add_anon_rmap_pmd(struct folio *folio, struct page *page,
 	WARN_ON_ONCE(true);
 #endif
 }
+#endif // CL
 
 /**
  * folio_add_new_anon_rmap - Add mapping to a new anonymous folio.
@@ -1470,6 +1480,7 @@ void folio_add_new_anon_rmap(struct folio *folio, struct vm_area_struct *vma,
 	mod_mthp_stat(folio_order(folio), MTHP_STAT_NR_ANON, 1);
 }
 
+#if 0
 static __always_inline void __folio_add_file_rmap(struct folio *folio,
 		struct page *page, int nr_pages, struct vm_area_struct *vma,
 		enum rmap_level level)
@@ -1522,6 +1533,7 @@ void folio_add_file_rmap_pmd(struct folio *folio, struct page *page,
 	WARN_ON_ONCE(true);
 #endif
 }
+#endif // CL
 
 static __always_inline void __folio_remove_rmap(struct folio *folio,
 		struct page *page, int nr_pages, struct vm_area_struct *vma,
@@ -1612,6 +1624,7 @@ void folio_remove_rmap_ptes(struct folio *folio, struct page *page,
 	__folio_remove_rmap(folio, page, nr_pages, vma, RMAP_LEVEL_PTE);
 }
 
+#if 0
 /**
  * folio_remove_rmap_pmd - remove a PMD mapping from a page range of a folio
  * @folio:	The folio to remove the mapping from
@@ -2552,6 +2565,7 @@ int make_device_exclusive_range(struct mm_struct *mm, unsigned long start,
 }
 EXPORT_SYMBOL_GPL(make_device_exclusive_range);
 #endif
+#endif // CL
 
 void __put_anon_vma(struct anon_vma *anon_vma)
 {
@@ -2562,6 +2576,7 @@ void __put_anon_vma(struct anon_vma *anon_vma)
 		anon_vma_free(root);
 }
 
+#if 0
 static struct anon_vma *rmap_walk_anon_lock(struct folio *folio,
 					    struct rmap_walk_control *rwc)
 {

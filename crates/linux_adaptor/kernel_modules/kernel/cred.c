@@ -254,7 +254,6 @@ error:
 }
 EXPORT_SYMBOL(prepare_creds);
 
-#if 0
 /*
  * Prepare credentials for current to perform an execve()
  * - The caller must hold ->cred_guard_mutex
@@ -282,7 +281,6 @@ struct cred *prepare_exec_creds(void)
 
 	return new;
 }
-#endif /* CL */
 
 /*
  * Copy credentials for the new process created by fork()
@@ -465,6 +463,7 @@ int commit_creds(struct cred *new)
 	return 0;
 }
 EXPORT_SYMBOL(commit_creds);
+#endif // CL
 
 /**
  * abort_creds - Discard a set of credentials and unlock the current task
@@ -483,6 +482,7 @@ void abort_creds(struct cred *new)
 }
 EXPORT_SYMBOL(abort_creds);
 
+#if 0
 /**
  * override_creds - Override the current process's subjective credentials
  * @new: The credentials to be assigned

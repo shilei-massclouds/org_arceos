@@ -513,6 +513,7 @@ struct vm_area_struct *vm_area_dup(struct vm_area_struct *orig)
 
 	return new;
 }
+#endif // CL
 
 void __vm_area_free(struct vm_area_struct *vma)
 {
@@ -522,6 +523,7 @@ void __vm_area_free(struct vm_area_struct *vma)
 	kmem_cache_free(vm_area_cachep, vma);
 }
 
+#if 0
 #ifdef CONFIG_PER_VMA_LOCK
 static void vm_area_free_rcu_cb(struct rcu_head *head)
 {
@@ -829,7 +831,6 @@ static int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 #define mm_free_pgd(mm)
 #endif /* CONFIG_MMU */
 
-#if 0
 static void check_mm(struct mm_struct *mm)
 {
 	int i;
@@ -853,12 +854,10 @@ static void check_mm(struct mm_struct *mm)
 	VM_BUG_ON_MM(mm->pmd_huge_pte, mm);
 #endif
 }
-#endif // CL
 
 #define allocate_mm()	(kmem_cache_alloc(mm_cachep, GFP_KERNEL))
 #define free_mm(mm)	(kmem_cache_free(mm_cachep, (mm)))
 
-#if 0
 static void do_check_lazy_tlb(void *arg)
 {
 	struct mm_struct *mm = arg;
@@ -919,7 +918,6 @@ static void cleanup_lazy_tlbs(struct mm_struct *mm)
 	if (IS_ENABLED(CONFIG_DEBUG_VM_SHOOT_LAZIES))
 		on_each_cpu(do_check_lazy_tlb, (void *)mm, 1);
 }
-#endif /* CL */
 
 /*
  * Called when the last reference to the mm
@@ -928,7 +926,6 @@ static void cleanup_lazy_tlbs(struct mm_struct *mm)
  */
 void __mmdrop(struct mm_struct *mm)
 {
-#if 0
 	BUG_ON(mm == &init_mm);
 	WARN_ON_ONCE(mm == current->mm);
 
@@ -946,8 +943,6 @@ void __mmdrop(struct mm_struct *mm)
 	percpu_counter_destroy_many(mm->rss_stat, NR_MM_COUNTERS);
 
 	free_mm(mm);
-#endif
-    PANIC("");
 }
 EXPORT_SYMBOL_GPL(__mmdrop);
 
@@ -1363,7 +1358,6 @@ struct mm_struct *mm_alloc(void)
 }
 EXPORT_SYMBOL_IF_KUNIT(mm_alloc);
 
-#if 0
 static inline void __mmput(struct mm_struct *mm)
 {
 	VM_BUG_ON(atomic_read(&mm->mm_users));
@@ -1398,6 +1392,7 @@ void mmput(struct mm_struct *mm)
 }
 EXPORT_SYMBOL_GPL(mmput);
 
+#if 0
 #ifdef CONFIG_MMU
 static void mmput_async_fn(struct work_struct *work)
 {
@@ -1416,6 +1411,7 @@ void mmput_async(struct mm_struct *mm)
 }
 EXPORT_SYMBOL_GPL(mmput_async);
 #endif
+#endif // CL
 
 /**
  * set_mm_exe_file - change a reference to the mm's executable file
@@ -1458,6 +1454,7 @@ int set_mm_exe_file(struct mm_struct *mm, struct file *new_exe_file)
 	return 0;
 }
 
+#if 0
 /**
  * replace_mm_exe_file - replace a reference to the mm's executable file
  * @mm: The mm to change.

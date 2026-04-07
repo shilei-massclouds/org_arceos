@@ -833,3 +833,21 @@ int security_vm_enough_memory_mm(struct mm_struct *mm, long pages)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int security_bprm_creds_for_exec(struct linux_binprm *bprm)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_bprm_check(struct linux_binprm *bprm)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// kernel/events/uprobes.c
+void uprobe_clear_state(struct mm_struct *mm)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

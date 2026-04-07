@@ -5473,6 +5473,7 @@ unsigned int nr_iowait(void)
 
 	return sum;
 }
+#endif // CL
 
 #ifdef CONFIG_SMP
 
@@ -5507,6 +5508,7 @@ DEFINE_PER_CPU(struct kernel_cpustat, kernel_cpustat);
 EXPORT_PER_CPU_SYMBOL(kstat);
 EXPORT_PER_CPU_SYMBOL(kernel_cpustat);
 
+#if 0
 /*
  * The function fair_sched_class.update_curr accesses the struct curr
  * and its field curr->exec_start; when called from task_sched_runtime(),

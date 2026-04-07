@@ -39,5 +39,10 @@ obj-y += vma.o
 obj-y += interval_tree.o
 obj-y += gup.o
 obj-y += secretmem.o
+obj-y += folio-compat.o
+obj-y += mmu_gather.o
+obj-y += mmu_notifier.o
+obj-y += swap_state.o
+obj-y += swapfile.o
 
 #obj-y += dmapool.o

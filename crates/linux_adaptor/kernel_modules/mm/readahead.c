@@ -388,6 +388,7 @@ static unsigned long get_next_ra_size(struct file_ra_state *ra,
 		return 2 * cur;
 	return max;
 }
+#endif // CL
 
 /*
  * On-demand readahead design.
@@ -519,7 +520,6 @@ void page_cache_ra_order(struct readahead_control *ractl,
 fallback:
 	do_page_cache_ra(ractl, ra->size, ra->async_size);
 }
-#endif // CL
 
 static unsigned long ractl_max_pages(struct readahead_control *ractl,
 		unsigned long req_size)

@@ -15,6 +15,7 @@
 #include <linux/stackprotector.h>
 #include <linux/init_syscalls.h>
 #include <linux/binfmts.h>
+#include <linux/rmap.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -497,8 +498,8 @@ void start_sched_earlier()
 #endif
 
     pid_idr_init();
-#if 0
     anon_vma_init();
+#if 0
     thread_stack_cache_init();
 #endif
 

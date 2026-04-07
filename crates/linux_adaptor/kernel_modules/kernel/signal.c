@@ -755,6 +755,7 @@ still_pending:
 	__sigqueue_free(sync);
 	return info->si_signo;
 }
+#endif // CL
 
 /*
  * Tell a process that it has a new active signal..
@@ -784,6 +785,7 @@ void signal_wake_up_state(struct task_struct *t, unsigned int state)
 		kick_process(t);
 }
 
+#if 0
 /*
  * Remove signals in mask from the pending set and queue.
  * Returns 1 if any signals were found.
@@ -1202,7 +1204,6 @@ ret:
 	return ret;
 }
 
-#if 0
 static inline bool has_si_pid_and_uid(struct kernel_siginfo *info)
 {
 	bool ret = false;
@@ -1263,6 +1264,7 @@ int send_signal_locked(int sig, struct kernel_siginfo *info,
 	return __send_signal_locked(sig, info, t, type, force);
 }
 
+#if 0
 static void print_fatal_signal(int signr)
 {
 	struct pt_regs *regs = task_pt_regs(current);
@@ -1319,6 +1321,7 @@ int do_send_sig_info(int sig, struct kernel_siginfo *info, struct task_struct *p
 
 	return ret;
 }
+#endif // CL
 
 enum sig_handler {
 	HANDLER_CURRENT, /* If reachable use the current handler */
@@ -1373,6 +1376,7 @@ force_sig_info_to_task(struct kernel_siginfo *info, struct task_struct *t,
 	return ret;
 }
 
+#if 0
 int force_sig_info(struct kernel_siginfo *info)
 {
 	return force_sig_info_to_task(info, current, HANDLER_CURRENT);
@@ -1692,6 +1696,7 @@ void force_sig(int sig)
 	force_sig_info(&info);
 }
 EXPORT_SYMBOL(force_sig);
+#endif // CL
 
 void force_fatal_sig(int sig)
 {
@@ -1706,6 +1711,7 @@ void force_fatal_sig(int sig)
 	force_sig_info_to_task(&info, current, HANDLER_SIG_DFL);
 }
 
+#if 0
 void force_exit_sig(int sig)
 {
 	struct kernel_siginfo info;
@@ -3331,6 +3337,8 @@ COMPAT_SYSCALL_DEFINE2(rt_sigpending, compat_sigset_t __user *, uset,
 }
 #endif
 
+#endif // CL
+
 static const struct {
 	unsigned char limit, layout;
 } sig_sicodes[] = {
@@ -3347,6 +3355,7 @@ static const struct {
 	[SIGSYS]  = { NSIGSYS,  SIL_SYS },
 };
 
+#if 0
 static bool known_siginfo_layout(unsigned sig, int si_code)
 {
 	if (si_code == SI_KERNEL)
@@ -3365,6 +3374,7 @@ static bool known_siginfo_layout(unsigned sig, int si_code)
 		return true;
 	return false;
 }
+#endif // CL
 
 enum siginfo_layout siginfo_layout(unsigned sig, int si_code)
 {
@@ -3406,6 +3416,7 @@ enum siginfo_layout siginfo_layout(unsigned sig, int si_code)
 	return layout;
 }
 
+#if 0
 static inline char __user *si_expansion(const siginfo_t __user *info)
 {
 	return ((char __user *)info) + sizeof(struct kernel_siginfo);

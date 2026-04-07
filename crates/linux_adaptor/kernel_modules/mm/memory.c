@@ -109,8 +109,6 @@ static vm_fault_t do_fault(struct vm_fault *vmf);
 static vm_fault_t do_anonymous_page(struct vm_fault *vmf);
 static bool vmf_pte_changed(struct vm_fault *vmf);
 
-#if 0
-
 /*
  * Return true if the original pte was a uffd-wp pte marker (so the pte was
  * wr-protected).
@@ -124,7 +122,6 @@ static __always_inline bool vmf_orig_pte_uffd_wp(struct vm_fault *vmf)
 
 	return pte_marker_uffd_wp(vmf->orig_pte);
 }
-#endif
 
 /*
  * A number of key systems in x86 including ioremap() rely on the assumption
@@ -188,8 +185,6 @@ static int __init init_zero_pfn(void)
 early_initcall(init_zero_pfn);
 
 #endif
-
-#if 0
 
 void mm_trace_rss_stat(struct mm_struct *mm, int member)
 {
@@ -468,7 +463,6 @@ int __pte_alloc(struct mm_struct *mm, pmd_t *pmd)
 		pte_free(mm, new);
 	return 0;
 }
-#endif /* CL */
 
 int __pte_alloc_kernel(pmd_t *pmd)
 {
@@ -488,7 +482,6 @@ int __pte_alloc_kernel(pmd_t *pmd)
 	return 0;
 }
 
-#if 0
 static inline void init_rss_vec(int *rss)
 {
 	memset(rss, 0, sizeof(int) * NR_MM_COUNTERS);
@@ -672,6 +665,7 @@ out:
 	return pfn_to_page(pfn);
 }
 
+#if 0
 struct folio *vm_normal_folio(struct vm_area_struct *vma, unsigned long addr,
 			    pte_t pte)
 {
@@ -1068,6 +1062,7 @@ copy_pte:
 	__copy_present_ptes(dst_vma, src_vma, dst_pte, src_pte, pte, addr, 1);
 	return 1;
 }
+#endif // CL
 
 static inline struct folio *folio_prealloc(struct mm_struct *src_mm,
 		struct vm_area_struct *vma, unsigned long addr, bool need_zero)
@@ -1092,6 +1087,7 @@ static inline struct folio *folio_prealloc(struct mm_struct *src_mm,
 	return new_folio;
 }
 
+#if 0
 static int
 copy_pte_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
 	       pmd_t *dst_pmd, pmd_t *src_pmd, unsigned long addr,
@@ -1438,6 +1434,7 @@ copy_page_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma)
 		untrack_pfn_copy(dst_vma, pfn);
 	return ret;
 }
+#endif // CL
 
 /* Whether we should zap all COWed (private) pages too */
 static inline bool should_zap_cows(struct zap_details *details)
@@ -1825,8 +1822,6 @@ void unmap_page_range(struct mmu_gather *tlb,
 	tlb_end_vma(tlb, vma);
 }
 
-#endif // CL
-
 static void unmap_single_vma(struct mmu_gather *tlb,
 		struct vm_area_struct *vma, unsigned long start_addr,
 		unsigned long end_addr,
@@ -1871,7 +1866,6 @@ static void unmap_single_vma(struct mmu_gather *tlb,
 	}
 }
 
-#if 0
 /**
  * unmap_vmas - unmap a range of memory covered by a list of vma's
  * @tlb: address of the caller's struct mmu_gather
@@ -1919,7 +1913,6 @@ void unmap_vmas(struct mmu_gather *tlb, struct ma_state *mas,
 	} while (vma && likely(!xa_is_zero(vma)));
 	mmu_notifier_invalidate_range_end(&range);
 }
-#endif // CL
 
 /**
  * zap_page_range_single - remove user pages in a given range
@@ -3298,6 +3291,7 @@ static inline vm_fault_t vmf_can_call_fault(const struct vm_fault *vmf)
 	vma_end_read(vma);
 	return VM_FAULT_RETRY;
 }
+#endif // CL
 
 /**
  * __vmf_anon_prepare - Prepare to handle an anonymous fault.
@@ -3332,6 +3326,7 @@ vm_fault_t __vmf_anon_prepare(struct vm_fault *vmf)
 	return ret;
 }
 
+#if 0
 /*
  * Handle the case of a page which we actually need to copy to a new page,
  * either due to COW or unsharing.
@@ -3981,6 +3976,7 @@ static vm_fault_t pte_marker_clear(struct vm_fault *vmf)
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 	return 0;
 }
+#endif // CL
 
 static vm_fault_t do_pte_missing(struct vm_fault *vmf)
 {
@@ -3990,6 +3986,7 @@ static vm_fault_t do_pte_missing(struct vm_fault *vmf)
 		return do_fault(vmf);
 }
 
+#if 0
 /*
  * This is actually a page-missing access, but with uffd-wp special pte
  * installed.  It means this pte was wr-protected before being unmapped.
@@ -4662,6 +4659,7 @@ out_release:
 		put_swap_device(si);
 	return ret;
 }
+#endif // CL
 
 static bool pte_range_none(pte_t *pte, int nr_pages)
 {
@@ -4872,6 +4870,7 @@ oom:
 	return VM_FAULT_OOM;
 }
 
+#if 0
 /*
  * The mmap_lock must have been held on entry, and may have been
  * released depending on flags and vma->vm_ops->fault() return value.
@@ -5069,6 +5068,7 @@ void set_pte_range(struct vm_fault *vmf, struct folio *folio,
 	/* no need to invalidate: a not-present page won't be cached */
 	update_mmu_cache_range(vmf, vma, addr, vmf->pte, nr);
 }
+#endif // CL
 
 static bool vmf_pte_changed(struct vm_fault *vmf)
 {
@@ -5078,6 +5078,7 @@ static bool vmf_pte_changed(struct vm_fault *vmf)
 	return !pte_none(ptep_get(vmf->pte));
 }
 
+#if 0
 /**
  * finish_fault - finish page fault once we have prepared the page to fault
  *
@@ -5419,6 +5420,7 @@ static vm_fault_t do_shared_fault(struct vm_fault *vmf)
 	ret |= fault_dirty_shared_page(vmf);
 	return ret;
 }
+#endif // CL
 
 /*
  * We enter with non-exclusive mmap_lock (to exclude vma changes,
@@ -5434,6 +5436,7 @@ static vm_fault_t do_fault(struct vm_fault *vmf)
 	struct mm_struct *vm_mm = vma->vm_mm;
 	vm_fault_t ret;
 
+#if 0
 	/*
 	 * The VMA was not fully populated on mmap() or missing VM_DONTEXPAND
 	 */
@@ -5469,9 +5472,12 @@ static vm_fault_t do_fault(struct vm_fault *vmf)
 		pte_free(vm_mm, vmf->prealloc_pte);
 		vmf->prealloc_pte = NULL;
 	}
+#endif
+    PANIC("");
 	return ret;
 }
 
+#if 0
 int numa_migrate_check(struct folio *folio, struct vm_fault *vmf,
 		      unsigned long addr, int *flags,
 		      bool writable, int *last_cpupid)
@@ -5663,6 +5669,7 @@ out_map:
 		task_numa_fault(last_cpupid, nid, nr_pages, flags);
 	return 0;
 }
+#endif // CL
 
 static inline vm_fault_t create_huge_pmd(struct vm_fault *vmf)
 {
@@ -5795,6 +5802,7 @@ static vm_fault_t handle_pte_fault(struct vm_fault *vmf)
 	if (!vmf->pte)
 		return do_pte_missing(vmf);
 
+#if 0
 	if (!pte_present(vmf->orig_pte))
 		return do_swap_page(vmf);
 
@@ -5833,10 +5841,11 @@ static vm_fault_t handle_pte_fault(struct vm_fault *vmf)
 						     vmf->pte);
 	}
 unlock:
+#endif
+    PANIC("");
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 	return 0;
 }
-#endif // CL
 
 /*
  * On entry, we hold either the VMA lock or the mmap_lock
@@ -5861,7 +5870,6 @@ static vm_fault_t __handle_mm_fault(struct vm_area_struct *vma,
 	p4d_t *p4d;
 	vm_fault_t ret;
 
-#if 0
 	pgd = pgd_offset(mm, address);
 	p4d = p4d_alloc(mm, pgd, address);
 	if (!p4d)
@@ -5939,8 +5947,6 @@ retry_pud:
 	}
 
 	return handle_pte_fault(&vmf);
-#endif
-    PANIC("");
 }
 
 /**
@@ -6111,7 +6117,6 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	else
 		ret = __handle_mm_fault(vma, address, flags);
 
-#if 0
 	/*
 	 * Warning: It is no longer safe to dereference vma-> after this point,
 	 * because mmap_lock might have been dropped by __handle_mm_fault(), so
@@ -6135,8 +6140,6 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 		if (task_in_memcg_oom(current) && !(ret & VM_FAULT_OOM))
 			mem_cgroup_oom_synchronize(false);
 	}
-#endif
-    PANIC("");
 out:
 	mm_account_fault(mm, regs, address, flags, ret);
 

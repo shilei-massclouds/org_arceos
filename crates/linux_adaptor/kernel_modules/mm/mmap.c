@@ -1633,6 +1633,7 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
 	validate_mm(current->mm);
 	return ret;
 }
+#endif // CL
 
 static int __vm_munmap(unsigned long start, size_t len, bool unlock)
 {
@@ -1658,6 +1659,7 @@ int vm_munmap(unsigned long start, size_t len)
 }
 EXPORT_SYMBOL(vm_munmap);
 
+#if 0
 SYSCALL_DEFINE2(munmap, unsigned long, addr, size_t, len)
 {
 	addr = untagged_addr(addr);
@@ -1915,6 +1917,7 @@ limits_failed:
 	return ret;
 }
 EXPORT_SYMBOL(vm_brk_flags);
+#endif // CL
 
 /* Release all mmaps. */
 void exit_mmap(struct mm_struct *mm)
@@ -1982,7 +1985,6 @@ destroy:
 	mmap_write_unlock(mm);
 	vm_unacct_memory(nr_accounted);
 }
-#endif // CL
 
 /* Insert vm structure into process list sorted by address
  * and into the inode's i_mmap tree.  If vm_file is non-NULL

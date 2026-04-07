@@ -6,6 +6,7 @@
 
 #include "vma_internal.h"
 #include "vma.h"
+#include "adaptor.h"
 
 #if 0
 static inline bool is_mergeable_vma(struct vma_merge_struct *vmg, bool merge_next)
@@ -52,6 +53,7 @@ static inline bool are_anon_vmas_compatible(struct vm_area_struct *vma1,
 {
 	return is_mergeable_anon_vma(vma1->anon_vma, vma2->anon_vma, NULL);
 }
+#endif // CL
 
 /*
  * init_multi_vma_prep() - Initializer for struct vma_prepare
@@ -82,6 +84,7 @@ static void init_multi_vma_prep(struct vma_prepare *vp,
 
 }
 
+#if 0
 /*
  * Return true if we can merge this (vm_flags,anon_vma,file,vm_pgoff)
  * in front of (at a lower virtual address and file offset than) the vma.
@@ -139,7 +142,6 @@ static void __vma_link_file(struct vm_area_struct *vma,
 	flush_dcache_mmap_unlock(mapping);
 }
 
-#if 0
 /*
  * Requires inode->i_mapping->i_mmap_rwsem
  */
@@ -285,6 +287,7 @@ static void init_vma_prep(struct vma_prepare *vp, struct vm_area_struct *vma)
 	init_multi_vma_prep(vp, vma, NULL, NULL, NULL);
 }
 
+#if 0
 /*
  * Can the proposed VMA be merged with the left (previous) VMA taking into
  * account the start position of the proposed range.
@@ -322,6 +325,7 @@ static bool can_vma_merge_right(struct vma_merge_struct *vmg,
 	 */
 	return are_anon_vmas_compatible(vmg->prev, vmg->next);
 }
+#endif // CL
 
 /*
  * Close a vm structure and free it.
@@ -339,6 +343,7 @@ void remove_vma(struct vm_area_struct *vma, bool unreachable)
 		vm_area_free(vma);
 }
 
+#if 0
 /*
  * Get rid of page table information in the indicated region.
  *
@@ -361,6 +366,7 @@ void unmap_region(struct ma_state *mas, struct vm_area_struct *vma,
 		      /* mm_wr_locked = */ true);
 	tlb_finish_mmu(&tlb);
 }
+#endif // CL
 
 /*
  * __split_vma() bypasses sysctl_max_map_count checking.  We use this where it
@@ -456,6 +462,7 @@ out_free_vma:
 	return err;
 }
 
+#if 0
 /*
  * Split a vma into two pieces at address 'addr', a new vma is allocated
  * either for the first part or the tail.
@@ -1185,6 +1192,7 @@ void vms_complete_munmap_vmas(struct vma_munmap_struct *vms,
 
 	__mt_destroy(mas_detach->tree);
 }
+#endif // CL
 
 /*
  * vms_gather_munmap_vmas() - Put all VMAs within a range into a maple tree
@@ -1420,6 +1428,7 @@ int do_vmi_munmap(struct vma_iterator *vmi, struct mm_struct *mm,
 	return do_vmi_align_munmap(vmi, vma, mm, start, end, uf, unlock);
 }
 
+#if 0
 /*
  * We are about to modify one or multiple of a VMA's flags, policy, userfaultfd
  * context and anonymous VMA name within the range [start, end).
@@ -1550,6 +1559,7 @@ struct vm_area_struct *vma_merge_extend(struct vma_iterator *vmi,
 
 	return vma_merge_new_range(&vmg);
 }
+#endif // CL
 
 void unlink_file_vma_batch_init(struct unlink_vma_file_batch *vb)
 {
@@ -1592,6 +1602,7 @@ void unlink_file_vma_batch_final(struct unlink_vma_file_batch *vb)
 		unlink_file_vma_batch_process(vb);
 }
 
+#if 0
 /*
  * Unlink a file-based vm structure from its interval tree, to hide
  * vma from rmap and vmtruncate before freeing its page tables.
@@ -1729,6 +1740,7 @@ out_free_vma:
 out:
 	return NULL;
 }
+#endif // CL
 
 /*
  * Rough compatibility check to quickly see if it's even worth looking
@@ -1829,6 +1841,7 @@ struct anon_vma *find_mergeable_anon_vma(struct vm_area_struct *vma)
 	return anon_vma;
 }
 
+#if 0
 static bool vm_ops_needs_writenotify(const struct vm_operations_struct *vm_ops)
 {
 	return vm_ops && (vm_ops->page_mkwrite || vm_ops->pfn_mkwrite);

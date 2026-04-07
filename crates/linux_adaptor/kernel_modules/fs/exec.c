@@ -105,12 +105,12 @@ void unregister_binfmt(struct linux_binfmt * fmt)
 }
 
 EXPORT_SYMBOL(unregister_binfmt);
+#endif // CL
 
 static inline void put_binfmt(struct linux_binfmt * fmt)
 {
 	module_put(fmt->module);
 }
-#endif // CL
 
 bool path_noexec(const struct path *path)
 {
@@ -702,7 +702,6 @@ int copy_string_kernel(const char *arg, struct linux_binprm *bprm)
 }
 EXPORT_SYMBOL(copy_string_kernel);
 
-#if 0
 static int copy_strings_kernel(int argc, const char *const *argv,
 			       struct linux_binprm *bprm)
 {
@@ -717,6 +716,7 @@ static int copy_strings_kernel(int argc, const char *const *argv,
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_MMU
 
 /*
@@ -1490,6 +1490,7 @@ void finalize_exec(struct linux_binprm *bprm)
 	task_unlock(current->group_leader);
 }
 EXPORT_SYMBOL(finalize_exec);
+#endif // CL
 
 /*
  * Prepare credentials and lock ->cred_guard_mutex.
@@ -1509,7 +1510,6 @@ static int prepare_bprm_creds(struct linux_binprm *bprm)
 	mutex_unlock(&current->signal->cred_guard_mutex);
 	return -ENOMEM;
 }
-#endif // CL
 
 /* Matches do_open_execat() */
 static void do_close_execat(struct file *file)
@@ -1611,6 +1611,7 @@ int bprm_change_interp(const char *interp, struct linux_binprm *bprm)
 	return 0;
 }
 EXPORT_SYMBOL(bprm_change_interp);
+#endif // CL
 
 /*
  * determine how safe it is to execute the proposed program
@@ -1659,6 +1660,7 @@ static void check_unsafe_exec(struct linux_binprm *bprm)
 	spin_unlock(&p->fs->lock);
 }
 
+#if 0
 static void bprm_fill_uid(struct linux_binprm *bprm, struct file *file)
 {
 	/* Handle suid and sgid on files */
@@ -1722,6 +1724,7 @@ static int bprm_creds_from_file(struct linux_binprm *bprm)
 	bprm_fill_uid(bprm, file);
 	return security_bprm_creds_from_file(bprm, file);
 }
+#endif // CL
 
 /*
  * Fill the binprm structure from the inode.
@@ -1737,6 +1740,7 @@ static int prepare_binprm(struct linux_binprm *bprm)
 	return kernel_read(bprm->file, bprm->buf, BINPRM_BUF_SIZE, &pos);
 }
 
+#if 0
 /*
  * Arguments are '\0' separated strings found at the location bprm->p
  * points to; chop off the first by relocating brpm->p to right after
@@ -1772,6 +1776,7 @@ int remove_arg_zero(struct linux_binprm *bprm)
 	return 0;
 }
 EXPORT_SYMBOL(remove_arg_zero);
+#endif // CL
 
 #define printable(c) (((c)=='\t') || ((c)=='\n') || (0x20<=(c) && (c)<=0x7e))
 /*
@@ -1897,6 +1902,7 @@ static int bprm_execve(struct linux_binprm *bprm)
 	if (retval < 0)
 		goto out;
 
+#if 0
 	sched_mm_cid_after_execve(current);
 	/* execve succeeded */
 	current->in_execve = 0;
@@ -1904,6 +1910,8 @@ static int bprm_execve(struct linux_binprm *bprm)
 	user_events_execve(current);
 	acct_update_integrals(current);
 	task_numa_free(current, false);
+#endif
+    PANIC("");
 	return retval;
 
 out:
@@ -1922,6 +1930,7 @@ out:
 	return retval;
 }
 
+#if 0
 static int do_execveat_common(int fd, struct filename *filename,
 			      struct user_arg_ptr argv,
 			      struct user_arg_ptr envp,
@@ -2051,7 +2060,6 @@ int kernel_execve(const char *kernel_filename,
 		goto out_free;
 	bprm->exec = bprm->p;
 
-#if 0
 	retval = copy_strings_kernel(bprm->envc, envp, bprm);
 	if (retval < 0)
 		goto out_free;
@@ -2061,8 +2069,6 @@ int kernel_execve(const char *kernel_filename,
 		goto out_free;
 
 	retval = bprm_execve(bprm);
-#endif
-    PANIC("");
 out_free:
 	free_bprm(bprm);
 out_ret:

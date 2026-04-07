@@ -520,7 +520,6 @@ void folio_add_lru(struct folio *folio)
 }
 EXPORT_SYMBOL(folio_add_lru);
 
-#if 0
 /**
  * folio_add_lru_vma() - Add a folio to the appropate LRU list for this VMA.
  * @folio: The folio to be added to the LRU.
@@ -538,7 +537,6 @@ void folio_add_lru_vma(struct folio *folio, struct vm_area_struct *vma)
 	else
 		folio_add_lru(folio);
 }
-#endif // CL
 
 /*
  * If the folio cannot be invalidated, it is moved to the

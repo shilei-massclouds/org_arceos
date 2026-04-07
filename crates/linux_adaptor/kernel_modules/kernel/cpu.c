@@ -1021,7 +1021,9 @@ static int cpuhp_up_callbacks(unsigned int cpu, struct cpuhp_cpu_state *st,
 	enum cpuhp_state prev_state = st->state;
 	int ret = 0;
 
+    printk("%s: step1 (%u -> %u)\n", __func__, prev_state, target);
 	ret = cpuhp_invoke_callback_range(true, cpu, st, target);
+    printk("%s: step2\n", __func__);
 	if (ret) {
 		pr_debug("CPU UP failed (%d) CPU %u state %s (%d)\n",
 			 ret, cpu, cpuhp_get_step(st->state)->name,
@@ -1641,7 +1643,6 @@ static int _cpu_up(unsigned int cpu, int tasks_frozen, enum cpuhp_state target)
 	struct task_struct *idle;
 	int ret = 0;
 
-    printk("%s: step1\n", __func__);
 	cpus_write_lock();
 
 	if (!cpu_present(cpu)) {
@@ -1694,10 +1695,8 @@ static int _cpu_up(unsigned int cpu, int tasks_frozen, enum cpuhp_state target)
 	 * responsible for bringing it up to the target state.
 	 */
 	target = min((int)target, CPUHP_BRINGUP_CPU);
-    printk("%s: step2\n", __func__);
 	ret = cpuhp_up_callbacks(cpu, st, target);
 out:
-    printk("%s: step3\n", __func__);
 	cpus_write_unlock();
 	arch_smt_update();
 	return ret;
