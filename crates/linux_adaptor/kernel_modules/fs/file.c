@@ -810,7 +810,6 @@ struct file *file_close_fd(unsigned int fd)
 	return file;
 }
 
-#if 0
 void do_close_on_exec(struct files_struct *files)
 {
 	unsigned i;
@@ -847,6 +846,7 @@ void do_close_on_exec(struct files_struct *files)
 	spin_unlock(&files->file_lock);
 }
 
+#if 0
 static struct file *__get_file_rcu(struct file __rcu **f)
 {
 	struct file __rcu *file;

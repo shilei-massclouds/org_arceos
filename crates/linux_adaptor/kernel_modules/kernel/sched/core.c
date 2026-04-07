@@ -2112,7 +2112,6 @@ static void block_task(struct rq *rq, struct task_struct *p, int flags)
 		__block_task(rq, p);
 }
 
-#if 0
 /**
  * task_curr - is this task currently executing on a CPU?
  * @p: the task in question.
@@ -2123,7 +2122,6 @@ inline int task_curr(const struct task_struct *p)
 {
 	return cpu_curr(task_cpu(p)) == p;
 }
-#endif /* CL */
 
 /*
  * ->switching_to() is called with the pi_lock and rq_lock held and must not

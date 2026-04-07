@@ -347,6 +347,7 @@ void vma_set_file(struct vm_area_struct *vma, struct file *file)
 	fput(file);
 }
 EXPORT_SYMBOL(vma_set_file);
+#endif // CL
 
 #ifndef STACK_RND_MASK
 #define STACK_RND_MASK (0x7ff >> (PAGE_SHIFT - 12))     /* 8MB of VA */
@@ -502,6 +503,7 @@ void arch_pick_mmap_layout(struct mm_struct *mm, struct rlimit *rlim_stack)
 EXPORT_SYMBOL_IF_KUNIT(arch_pick_mmap_layout);
 #endif
 
+#if 0
 /**
  * __account_locked_vm - account locked pages to an mm's locked_vm
  * @mm:          mm to account against

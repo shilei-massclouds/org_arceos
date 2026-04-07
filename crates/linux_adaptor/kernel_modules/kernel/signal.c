@@ -69,7 +69,6 @@ static struct kmem_cache *sigqueue_cachep;
 
 int print_fatal_signals __read_mostly;
 
-#if 0
 static void __user *sig_handler(struct task_struct *t, int sig)
 {
 	return t->sighand->action[sig - 1].sa.sa_handler;
@@ -124,8 +123,6 @@ static bool sig_ignored(struct task_struct *t, int sig, bool force)
 
 	return sig_task_ignored(t, sig, force);
 }
-
-#endif /* CL */
 
 /*
  * Re-calculate pending state from the set of locally pending
@@ -248,6 +245,7 @@ int next_signal(struct sigpending *pending, sigset_t *mask)
 
 	return sig;
 }
+#endif // CL
 
 static inline void print_dropped_signal(int sig)
 {
@@ -263,6 +261,7 @@ static inline void print_dropped_signal(int sig)
 				current->comm, current->pid, sig);
 }
 
+#if 0
 /**
  * task_set_jobctl_pending - set jobctl pending bits
  * @task: target task
@@ -295,6 +294,7 @@ bool task_set_jobctl_pending(struct task_struct *task, unsigned long mask)
 	task->jobctl |= mask;
 	return true;
 }
+#endif // CL
 
 /**
  * task_clear_jobctl_trapping - clear jobctl trapping bit
@@ -345,6 +345,7 @@ void task_clear_jobctl_pending(struct task_struct *task, unsigned long mask)
 		task_clear_jobctl_trapping(task);
 }
 
+#if 0
 /**
  * task_participate_group_stop - participate in a group stop
  * @task: task participating in a group stop
@@ -401,6 +402,7 @@ void task_join_group_stop(struct task_struct *task)
 	/* Have the new thread join an on-going signal group stop */
 	task_set_jobctl_pending(task, mask | JOBCTL_STOP_PENDING);
 }
+#endif // CL
 
 /*
  * allocate a new signal queue record
@@ -446,7 +448,6 @@ __sigqueue_alloc(int sig, struct task_struct *t, gfp_t gfp_flags,
 	}
 	return q;
 }
-#endif /* CL */
 
 static void __sigqueue_free(struct sigqueue *q)
 {
@@ -486,7 +487,6 @@ void flush_signals(struct task_struct *t)
 }
 EXPORT_SYMBOL(flush_signals);
 
-#if 0
 #ifdef CONFIG_POSIX_TIMERS
 static void __flush_itimer_signals(struct sigpending *pending)
 {
@@ -523,8 +523,6 @@ void flush_itimer_signals(void)
 }
 #endif
 
-#endif /* CL */
-
 void ignore_signals(struct task_struct *t)
 {
 	int i;
@@ -535,7 +533,6 @@ void ignore_signals(struct task_struct *t)
 	flush_signals(t);
 }
 
-#if 0
 /*
  * Flush all handlers for a task.
  */
@@ -557,6 +554,7 @@ flush_signal_handlers(struct task_struct *t, int force_default)
 	}
 }
 
+#if 0
 bool unhandled_signal(struct task_struct *tsk, int sig)
 {
 	void __user *handler = tsk->sighand->action[sig-1].sa.sa_handler;
@@ -785,7 +783,6 @@ void signal_wake_up_state(struct task_struct *t, unsigned int state)
 		kick_process(t);
 }
 
-#if 0
 /*
  * Remove signals in mask from the pending set and queue.
  * Returns 1 if any signals were found.
@@ -815,6 +812,7 @@ static inline int is_si_special(const struct kernel_siginfo *info)
 	return info <= SEND_SIG_PRIV;
 }
 
+#if 0
 static inline bool si_fromuser(const struct kernel_siginfo *info)
 {
 	return info == SEND_SIG_NOINFO ||
@@ -875,6 +873,7 @@ static int check_kill_permission(int sig, struct kernel_siginfo *info,
 
 	return security_task_kill(t, info, sig, NULL);
 }
+#endif // CL
 
 /**
  * ptrace_trap_notify - schedule trap to notify ptracer
@@ -1082,7 +1081,6 @@ static inline bool legacy_queue(struct sigpending *signals, int sig)
 {
 	return (sig < SIGRTMIN) && sigismember(&signals->signal, sig);
 }
-#endif /* CL */
 
 static int __send_signal_locked(int sig, struct kernel_siginfo *info,
 				struct task_struct *t, enum pid_type type, bool force)
@@ -1092,7 +1090,6 @@ static int __send_signal_locked(int sig, struct kernel_siginfo *info,
 	int override_rlimit;
 	int ret = 0, result;
 
-#if 0
 	lockdep_assert_held(&t->sighand->siglock);
 
 	result = TRACE_SIGNAL_IGNORED;
@@ -1198,8 +1195,6 @@ out_set:
 
 	complete_signal(sig, t, type);
 ret:
-#endif
-    PANIC("");
 	trace_signal_generate(sig, info, t, type != PIDTYPE_PID, result);
 	return ret;
 }

@@ -101,6 +101,7 @@ void show_regs(struct pt_regs *regs)
 	if (!user_mode(regs))
 		dump_backtrace(regs, NULL, KERN_DEFAULT);
 }
+#endif // CL
 
 unsigned long arch_align_stack(unsigned long sp)
 {
@@ -109,6 +110,7 @@ unsigned long arch_align_stack(unsigned long sp)
 	return sp & ~0xf;
 }
 
+#if 0
 #ifdef CONFIG_COMPAT
 static bool compat_mode_supported __read_mostly;
 
@@ -161,6 +163,7 @@ void start_thread(struct pt_regs *regs, unsigned long pc,
 		regs->status |= SR_UXL_64;
 #endif
 }
+#endif // CL
 
 void flush_thread(void)
 {
@@ -182,7 +185,6 @@ void flush_thread(void)
 	clear_tsk_thread_flag(current, TIF_RISCV_V_DEFER_RESTORE);
 #endif
 }
-#endif // CL
 
 void arch_release_task_struct(struct task_struct *tsk)
 {

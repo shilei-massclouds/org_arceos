@@ -354,7 +354,6 @@ error_put:
 	return ret;
 }
 
-#if 0
 static bool cred_cap_issubset(const struct cred *set, const struct cred *subset)
 {
 	const struct user_namespace *set_ns = set->user_ns;
@@ -463,7 +462,6 @@ int commit_creds(struct cred *new)
 	return 0;
 }
 EXPORT_SYMBOL(commit_creds);
-#endif // CL
 
 /**
  * abort_creds - Discard a set of credentials and unlock the current task
@@ -586,6 +584,7 @@ int cred_fscmp(const struct cred *a, const struct cred *b)
 	return 0;
 }
 EXPORT_SYMBOL(cred_fscmp);
+#endif // CL
 
 int set_cred_ucounts(struct cred *new)
 {
@@ -606,8 +605,6 @@ int set_cred_ucounts(struct cred *new)
 
 	return 0;
 }
-
-#endif /* CL */
 
 /*
  * initialise the credentials stuff

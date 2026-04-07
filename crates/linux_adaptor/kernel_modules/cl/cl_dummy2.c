@@ -857,3 +857,28 @@ int security_bprm_creds_from_file(struct linux_binprm *bprm, const struct file *
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+void perf_event_exec(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void security_bprm_committing_creds(const struct linux_binprm *bprm)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void key_fsgid_changed(struct cred *new_cred)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void key_fsuid_changed(struct cred *new_cred)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void security_bprm_committed_creds(const struct linux_binprm *bprm)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

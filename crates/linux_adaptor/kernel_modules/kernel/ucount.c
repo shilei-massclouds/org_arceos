@@ -313,7 +313,6 @@ void dec_rlimit_put_ucounts(struct ucounts *ucounts, enum rlimit_type type)
 	do_dec_rlimit_put_ucounts(ucounts, NULL, type);
 }
 
-#if 0
 long inc_rlimit_get_ucounts(struct ucounts *ucounts, enum rlimit_type type,
 			    bool override_rlimit)
 {
@@ -346,7 +345,6 @@ dec_unwind:
 	do_dec_rlimit_put_ucounts(ucounts, iter, type);
 	return 0;
 }
-#endif /* CL */
 
 bool is_rlimit_overlimit(struct ucounts *ucounts, enum rlimit_type type, unsigned long rlimit)
 {

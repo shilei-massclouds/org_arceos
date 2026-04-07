@@ -51,7 +51,6 @@ struct nsproxy init_nsproxy = {
 #endif
 };
 
-#if 0
 static inline struct nsproxy *create_nsproxy(void)
 {
 	struct nsproxy *nsproxy;
@@ -146,7 +145,6 @@ out_ns:
 	kmem_cache_free(nsproxy_cachep, new_nsp);
 	return ERR_PTR(err);
 }
-#endif /* CL */
 
 /*
  * called from clone.  This now handles copy for nsproxy and all
@@ -268,7 +266,6 @@ void exit_task_namespaces(struct task_struct *p)
 	switch_task_namespaces(p, NULL);
 }
 
-#if 0
 int exec_task_namespaces(void)
 {
 	struct task_struct *tsk = current;
@@ -286,6 +283,7 @@ int exec_task_namespaces(void)
 	return 0;
 }
 
+#if 0
 static int check_setns_flags(unsigned long flags)
 {
 	if (!flags || (flags & ~(CLONE_NEWNS | CLONE_NEWUTS | CLONE_NEWIPC |

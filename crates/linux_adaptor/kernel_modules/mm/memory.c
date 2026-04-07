@@ -131,8 +131,6 @@ static __always_inline bool vmf_orig_pte_uffd_wp(struct vm_fault *vmf)
 void *high_memory;
 EXPORT_SYMBOL(high_memory);
 
-#if 0
-
 /*
  * Randomize the address space (stacks, mmaps, brk, etc.).
  *
@@ -145,6 +143,8 @@ int randomize_va_space __read_mostly =
 #else
 					2;
 #endif
+
+#if 0
 
 #ifndef arch_wants_old_prefaulted_pte
 static inline bool arch_wants_old_prefaulted_pte(void)

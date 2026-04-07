@@ -716,7 +716,6 @@ static int copy_strings_kernel(int argc, const char *const *argv,
 	return 0;
 }
 
-#if 0
 #ifdef CONFIG_MMU
 
 /*
@@ -886,7 +885,6 @@ out:
 EXPORT_SYMBOL(transfer_args_to_stack);
 
 #endif /* CONFIG_MMU */
-#endif // CL
 
 /*
  * On success, caller must call do_close_execat() on the returned
@@ -1301,12 +1299,10 @@ int begin_new_exec(struct linux_binprm * bprm)
 
 	bprm->mm = NULL;
 
-    printk("%s: step1\n", __func__);
 	retval = exec_task_namespaces();
 	if (retval)
 		goto out_unlock;
 
-    printk("%s: step2\n", __func__);
 #ifdef CONFIG_POSIX_TIMERS
 	spin_lock_irq(&me->sighand->siglock);
 	posix_cpu_timers_exit(me);
@@ -1322,7 +1318,6 @@ int begin_new_exec(struct linux_binprm * bprm)
 	if (retval)
 		goto out_unlock;
 
-    printk("%s: step3\n", __func__);
 	me->flags &= ~(PF_RANDOMIZE | PF_FORKNOEXEC |
 					PF_NOFREEZE | PF_NO_SETAFFINITY);
 	flush_thread();
@@ -1466,7 +1461,6 @@ void would_dump(struct linux_binprm *bprm, struct file *file)
 }
 EXPORT_SYMBOL(would_dump);
 
-#if 0
 void setup_new_exec(struct linux_binprm * bprm)
 {
 	/* Setup things that can depend upon the personality */
@@ -1486,6 +1480,7 @@ void setup_new_exec(struct linux_binprm * bprm)
 }
 EXPORT_SYMBOL(setup_new_exec);
 
+#if 0
 /* Runs immediately before start_thread() takes over. */
 void finalize_exec(struct linux_binprm *bprm)
 {
@@ -2145,6 +2140,7 @@ void set_binfmt(struct linux_binfmt *new)
 		__module_get(new->module);
 }
 EXPORT_SYMBOL(set_binfmt);
+#endif // CL
 
 /*
  * set_dumpable stores three-value SUID_DUMP_* into mm->flags.
@@ -2157,6 +2153,7 @@ void set_dumpable(struct mm_struct *mm, int value)
 	set_mask_bits(&mm->flags, MMF_DUMPABLE_MASK, value);
 }
 
+#if 0
 SYSCALL_DEFINE3(execve,
 		const char __user *, filename,
 		const char __user *const __user *, argv,

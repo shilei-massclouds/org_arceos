@@ -1012,7 +1012,6 @@ out_free_interp:
 	if (elf_read_implies_exec(*elf_ex, executable_stack))
 		current->personality |= READ_IMPLIES_EXEC;
 
-#if 0
 	const int snapshot_randomize_va_space = READ_ONCE(randomize_va_space);
 	if (!(current->personality & ADDR_NO_RANDOMIZE) && snapshot_randomize_va_space)
 		current->flags |= PF_RANDOMIZE;
@@ -1026,6 +1025,7 @@ out_free_interp:
 	if (retval < 0)
 		goto out_free_dentry;
 
+#if 0
 	elf_brk = 0;
 
 	start_code = ~0UL;
