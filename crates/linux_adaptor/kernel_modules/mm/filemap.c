@@ -1673,6 +1673,7 @@ void __folio_lock(struct folio *folio)
 				EXCLUSIVE);
 }
 EXPORT_SYMBOL(__folio_lock);
+#endif // CL
 
 int __folio_lock_killable(struct folio *folio)
 {
@@ -1680,7 +1681,6 @@ int __folio_lock_killable(struct folio *folio)
 					EXCLUSIVE);
 }
 EXPORT_SYMBOL_GPL(__folio_lock_killable);
-#endif // CL
 
 static int __folio_lock_async(struct folio *folio, struct wait_page_queue *wait)
 {
@@ -3128,6 +3128,7 @@ unlock:
 		return end;
 	return start;
 }
+#endif // CL
 
 #ifdef CONFIG_MMU
 #define MMAP_LOTSAMISS  (100)
@@ -3817,7 +3818,6 @@ int generic_file_readonly_mmap(struct file *file, struct vm_area_struct *vma)
 EXPORT_SYMBOL(filemap_page_mkwrite);
 EXPORT_SYMBOL(generic_file_mmap);
 EXPORT_SYMBOL(generic_file_readonly_mmap);
-#endif // CL
 
 static struct folio *do_read_cache_folio(struct address_space *mapping,
 		pgoff_t index, filler_t filler, struct file *file, gfp_t gfp)

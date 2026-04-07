@@ -918,3 +918,14 @@ void uprobe_munmap(struct vm_area_struct *vma, unsigned long start, unsigned lon
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+// kernel/printk/printk.c
+void console_unblank(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void wake_up_klogd(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

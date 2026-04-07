@@ -235,6 +235,7 @@ bool need_mlock_drain(int cpu)
 {
 	return folio_batch_count(&per_cpu(mlock_fbatch.fbatch, cpu));
 }
+#endif // CL
 
 /**
  * mlock_folio - mlock a folio already on (or temporarily off) LRU
@@ -260,7 +261,6 @@ void mlock_folio(struct folio *folio)
 		mlock_folio_batch(fbatch);
 	local_unlock(&mlock_fbatch.lock);
 }
-#endif // CL
 
 /**
  * mlock_new_folio - mlock a newly allocated folio not yet on LRU

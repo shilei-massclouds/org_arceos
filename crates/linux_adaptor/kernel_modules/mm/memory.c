@@ -144,8 +144,6 @@ int randomize_va_space __read_mostly =
 					2;
 #endif
 
-#if 0
-
 #ifndef arch_wants_old_prefaulted_pte
 static inline bool arch_wants_old_prefaulted_pte(void)
 {
@@ -158,6 +156,7 @@ static inline bool arch_wants_old_prefaulted_pte(void)
 }
 #endif
 
+#if 0
 static int __init disable_randmaps(char *s)
 {
 	randomize_va_space = 0;
@@ -3276,6 +3275,7 @@ static inline void wp_page_reuse(struct vm_fault *vmf, struct folio *folio)
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 	count_vm_event(PGREUSE);
 }
+#endif // CL
 
 /*
  * We could add a bitflag somewhere, but for now, we know that all
@@ -3291,7 +3291,6 @@ static inline vm_fault_t vmf_can_call_fault(const struct vm_fault *vmf)
 	vma_end_read(vma);
 	return VM_FAULT_RETRY;
 }
-#endif // CL
 
 /**
  * __vmf_anon_prepare - Prepare to handle an anonymous fault.
@@ -4870,7 +4869,6 @@ oom:
 	return VM_FAULT_OOM;
 }
 
-#if 0
 /*
  * The mmap_lock must have been held on entry, and may have been
  * released depending on flags and vma->vm_ops->fault() return value.
@@ -4932,6 +4930,7 @@ static vm_fault_t __do_fault(struct vm_fault *vmf)
 	return ret;
 }
 
+#if 0
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 static void deposit_prealloc_pte(struct vm_fault *vmf)
 {
@@ -5026,6 +5025,7 @@ vm_fault_t do_set_pmd(struct vm_fault *vmf, struct page *page)
 	return VM_FAULT_FALLBACK;
 }
 #endif
+#endif // CL
 
 /**
  * set_pte_range - Set a range of PTEs to point to pages in a folio.
@@ -5068,7 +5068,6 @@ void set_pte_range(struct vm_fault *vmf, struct folio *folio,
 	/* no need to invalidate: a not-present page won't be cached */
 	update_mmu_cache_range(vmf, vma, addr, vmf->pte, nr);
 }
-#endif // CL
 
 static bool vmf_pte_changed(struct vm_fault *vmf)
 {
@@ -5078,7 +5077,6 @@ static bool vmf_pte_changed(struct vm_fault *vmf)
 	return !pte_none(ptep_get(vmf->pte));
 }
 
-#if 0
 /**
  * finish_fault - finish page fault once we have prepared the page to fault
  *
@@ -5202,6 +5200,7 @@ unlock:
 static unsigned long fault_around_pages __read_mostly =
 	65536 >> PAGE_SHIFT;
 
+#if 0
 #ifdef CONFIG_DEBUG_FS
 static int fault_around_bytes_get(void *data, u64 *val)
 {
@@ -5304,12 +5303,14 @@ static inline bool should_fault_around(struct vm_fault *vmf)
 	/* A single page implies no faulting 'around' at all. */
 	return fault_around_pages > 1;
 }
+#endif // CL
 
 static vm_fault_t do_read_fault(struct vm_fault *vmf)
 {
 	vm_fault_t ret = 0;
 	struct folio *folio;
 
+#if 0
 	/*
 	 * Let's call ->map_pages() first and use ->fault() as fallback
 	 * if page by the offset is not ready to be mapped (cold cache or
@@ -5334,6 +5335,8 @@ static vm_fault_t do_read_fault(struct vm_fault *vmf)
 	folio_unlock(folio);
 	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY)))
 		folio_put(folio);
+#endif
+    PANIC("");
 	return ret;
 }
 
@@ -5385,6 +5388,7 @@ static vm_fault_t do_shared_fault(struct vm_fault *vmf)
 	vm_fault_t ret, tmp;
 	struct folio *folio;
 
+#if 0
 	ret = vmf_can_call_fault(vmf);
 	if (ret)
 		return ret;
@@ -5418,9 +5422,10 @@ static vm_fault_t do_shared_fault(struct vm_fault *vmf)
 	}
 
 	ret |= fault_dirty_shared_page(vmf);
+#endif
+    PANIC("");
 	return ret;
 }
-#endif // CL
 
 /*
  * We enter with non-exclusive mmap_lock (to exclude vma changes,
@@ -5436,7 +5441,6 @@ static vm_fault_t do_fault(struct vm_fault *vmf)
 	struct mm_struct *vm_mm = vma->vm_mm;
 	vm_fault_t ret;
 
-#if 0
 	/*
 	 * The VMA was not fully populated on mmap() or missing VM_DONTEXPAND
 	 */
@@ -5472,8 +5476,6 @@ static vm_fault_t do_fault(struct vm_fault *vmf)
 		pte_free(vm_mm, vmf->prealloc_pte);
 		vmf->prealloc_pte = NULL;
 	}
-#endif
-    PANIC("");
 	return ret;
 }
 

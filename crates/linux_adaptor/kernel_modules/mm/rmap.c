@@ -1156,6 +1156,7 @@ int pfn_mkclean_range(unsigned long pfn, unsigned long nr_pages, pgoff_t pgoff,
 
 	return page_vma_mkclean_one(&pvmw);
 }
+#endif // CL
 
 static __always_inline unsigned int __folio_add_rmap(struct folio *folio,
 		struct page *page, int nr_pages, enum rmap_level level,
@@ -1205,6 +1206,7 @@ static __always_inline unsigned int __folio_add_rmap(struct folio *folio,
 	return nr;
 }
 
+#if 0
 /**
  * folio_move_anon_rmap - move a folio to our anon_vma
  * @folio:	The folio to move to our anon_vma
@@ -1480,7 +1482,6 @@ void folio_add_new_anon_rmap(struct folio *folio, struct vm_area_struct *vma,
 	mod_mthp_stat(folio_order(folio), MTHP_STAT_NR_ANON, 1);
 }
 
-#if 0
 static __always_inline void __folio_add_file_rmap(struct folio *folio,
 		struct page *page, int nr_pages, struct vm_area_struct *vma,
 		enum rmap_level level)
@@ -1514,6 +1515,7 @@ void folio_add_file_rmap_ptes(struct folio *folio, struct page *page,
 	__folio_add_file_rmap(folio, page, nr_pages, vma, RMAP_LEVEL_PTE);
 }
 
+#if 0
 /**
  * folio_add_file_rmap_pmd - add a PMD mapping to a page range of a folio
  * @folio:	The folio to add the mapping to

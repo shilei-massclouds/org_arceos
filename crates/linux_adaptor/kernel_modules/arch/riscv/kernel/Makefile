@@ -23,4 +23,7 @@ obj-y += cpu_ops_sbi.o
 #obj-y += reset.o
 #obj-y += acpi.o
 
+obj-y += vdso.o
+
+obj-y += vdso/
 obj-y += vendor_extensions/

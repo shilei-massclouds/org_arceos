@@ -2074,7 +2074,6 @@ void vm_stat_account(struct mm_struct *mm, vm_flags_t flags, long npages)
 		mm->data_vm += npages;
 }
 
-#if 0
 static vm_fault_t special_mapping_fault(struct vm_fault *vmf);
 
 /*
@@ -2190,12 +2189,14 @@ out:
 	return ERR_PTR(ret);
 }
 
+#if 0
 bool vma_is_special_mapping(const struct vm_area_struct *vma,
 	const struct vm_special_mapping *sm)
 {
 	return vma->vm_private_data == sm &&
 		vma->vm_ops == &special_mapping_vmops;
 }
+#endif /* CL */
 
 /*
  * Called with mm->mmap_lock held for writing.
@@ -2214,8 +2215,6 @@ struct vm_area_struct *_install_special_mapping(
 	return __install_special_mapping(mm, addr, len, vm_flags, (void *)spec,
 					&special_mapping_vmops);
 }
-
-#endif /* CL */
 
 /*
  * initialise the percpu counter for VM

@@ -154,7 +154,6 @@ static int padzero(unsigned long address)
 #define ELF_BASE_PLATFORM NULL
 #endif
 
-#if 0
 static int
 create_elf_tables(struct linux_binprm *bprm, const struct elfhdr *exec,
 		unsigned long interp_load_addr,
@@ -350,7 +349,6 @@ create_elf_tables(struct linux_binprm *bprm, const struct elfhdr *exec,
 		return -EFAULT;
 	return 0;
 }
-#endif // CL
 
 /*
  * Map "eppnt->p_filesz" bytes from "filep" offset "eppnt->p_offset"
@@ -626,7 +624,6 @@ static inline int make_prot(u32 p_flags, struct arch_elf_state *arch_state,
 	return arch_elf_adjust_prot(prot, arch_state, has_interp, is_interp);
 }
 
-#if 0
 /* This is much more generalized than the library routine read function,
    so we keep this separate.  Technically the library read function
    is only provided so that we can read a.out libraries that have
@@ -709,7 +706,6 @@ static unsigned long load_elf_interp(struct elfhdr *interp_elf_ex,
 out:
 	return error;
 }
-#endif // CL
 
 /*
  * These are the functions used to load ELF style executables and shared
@@ -1022,7 +1018,6 @@ out_free_interp:
 	if (retval < 0)
 		goto out_free_dentry;
 
-    printk("%s: step1\n", __func__);
 	elf_brk = 0;
 
 	start_code = ~0UL;
@@ -1235,8 +1230,6 @@ out_free_interp:
 			elf_brk = k;
 	}
 
-    printk("%s: step2\n", __func__);
-#if 0
 	e_entry = elf_ex->e_entry + load_bias;
 	phdr_addr += load_bias;
 	elf_brk += load_bias;
@@ -1278,6 +1271,7 @@ out_free_interp:
 		}
 	}
 
+    printk("%s: step1\n", __func__);
 	kfree(elf_phdata);
 
 	set_binfmt(&elf_format);
@@ -1293,6 +1287,7 @@ out_free_interp:
 	if (retval < 0)
 		goto out;
 
+#if 0
 	mm = current->mm;
 	mm->end_code = end_code;
 	mm->start_code = start_code;
@@ -1300,6 +1295,7 @@ out_free_interp:
 	mm->end_data = end_data;
 	mm->start_stack = bprm->p;
 
+    printk("%s: step2\n", __func__);
 	/**
 	 * DOC: "brk" handling
 	 *

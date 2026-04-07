@@ -2128,6 +2128,8 @@ static int compat_do_execveat(int fd, struct filename *filename,
 }
 #endif
 
+#endif // CL
+
 void set_binfmt(struct linux_binfmt *new)
 {
 	struct mm_struct *mm = current->mm;
@@ -2140,7 +2142,6 @@ void set_binfmt(struct linux_binfmt *new)
 		__module_get(new->module);
 }
 EXPORT_SYMBOL(set_binfmt);
-#endif // CL
 
 /*
  * set_dumpable stores three-value SUID_DUMP_* into mm->flags.

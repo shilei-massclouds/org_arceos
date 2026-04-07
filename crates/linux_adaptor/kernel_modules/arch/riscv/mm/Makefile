@@ -9,3 +9,4 @@ obj-y += pgtable.o
 obj-y += tlbflush.o
 obj-y += context.o
 obj-y += fault.o
+obj-y += extable.o
