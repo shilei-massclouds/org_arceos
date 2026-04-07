@@ -360,6 +360,7 @@ const char *__clk_get_name(const struct clk *clk)
 	return !clk ? NULL : clk->core->name;
 }
 EXPORT_SYMBOL_GPL(__clk_get_name);
+#endif // CL
 
 const char *clk_hw_get_name(const struct clk_hw *hw)
 {
@@ -367,6 +368,7 @@ const char *clk_hw_get_name(const struct clk_hw *hw)
 }
 EXPORT_SYMBOL_GPL(clk_hw_get_name);
 
+#if 0
 struct clk_hw *__clk_get_hw(struct clk *clk)
 {
 	return !clk ? NULL : clk->core->hw;

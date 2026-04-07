@@ -28,7 +28,6 @@
  */
 DEFINE_MUTEX(text_mutex);
 
-#if 0
 extern struct exception_table_entry __start___ex_table[];
 extern struct exception_table_entry __stop___ex_table[];
 
@@ -65,7 +64,6 @@ const struct exception_table_entry *search_exception_tables(unsigned long addr)
 		e = search_bpf_extables(addr);
 	return e;
 }
-#endif /* CL */
 
 int notrace core_kernel_text(unsigned long addr)
 {

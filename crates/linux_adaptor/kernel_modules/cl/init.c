@@ -16,6 +16,7 @@
 #include <linux/init_syscalls.h>
 #include <linux/binfmts.h>
 #include <linux/rmap.h>
+#include <linux/extable.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -378,6 +379,8 @@ static int __init set_init_arg(char *param, char *val,
     return 0;
 }
 
+void __init __weak trap_init(void) { }
+
 void cl_setup_arch_later(void)
 {
     char *after_dashes;
@@ -418,10 +421,8 @@ void cl_setup_arch_later(void)
      */
     //setup_log_buf(0);
     vfs_caches_init_early();
-#if 0
     sort_main_extable();
     trap_init();
-#endif
 }
 
 void cl_init_irq(void)

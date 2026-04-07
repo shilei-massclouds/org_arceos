@@ -48,6 +48,7 @@ obj-y += errseq.o
 obj-y += sg_pool.o
 obj-y += iov_iter.o
 obj-y += strncpy_from_user.o
+obj-y += extable.o
 
 obj-y += math/
 obj-y += crypto/

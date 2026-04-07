@@ -168,13 +168,35 @@ SECTIONS
         *(__idle_sched_class)
         __sched_class_lowest = .;
 
-        __end_rodata = .;
+        . = ALIGN(8);
+        __start_ro_after_init = .;
+        *(.data..ro_after_init)
+        . = ALIGN(8);
+        __start___jump_table = .;
+        KEEP(*(__jump_table))
+        __stop___jump_table = .;
+        __end_ro_after_init = .;
+        . = ALIGN(8);
+        __start___tracepoints_ptrs = .;
+        KEEP(*(__tracepoints_ptrs))
+        __stop___tracepoints_ptrs = .;
+        *(__tracepoints_strings)
     }
     __param : AT(ADDR(__param) - LOAD_OFFSET) {
         __start___param = .;
         KEEP(*(__param))
         __stop___param = .;
     }
+
+    . = ALIGN(4);
+    __ex_table : AT(ADDR(__ex_table) - LOAD_OFFSET) {
+        __start___ex_table = .;
+        KEEP(*(__ex_table))
+        __stop___ex_table = .;
+    }
+
+    __end_rodata = .;
+
     .srodata : {
         *(.srodata*)
     }

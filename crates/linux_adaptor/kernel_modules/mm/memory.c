@@ -6146,7 +6146,6 @@ out:
 }
 EXPORT_SYMBOL_GPL(handle_mm_fault);
 
-#if 0
 #ifdef CONFIG_LOCK_MM_AND_FIND_VMA
 #include <linux/extable.h>
 
@@ -6263,6 +6262,7 @@ fail:
 }
 #endif
 
+#if 0
 #ifdef CONFIG_PER_VMA_LOCK
 /*
  * Lookup and lock a VMA under RCU protection. Returned VMA is guaranteed to be
