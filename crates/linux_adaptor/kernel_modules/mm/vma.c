@@ -475,6 +475,7 @@ static int split_vma(struct vma_iterator *vmi, struct vm_area_struct *vma,
 
 	return __split_vma(vmi, vma, addr, new_below);
 }
+#endif // CL
 
 /*
  * vma has some anon_vma assigned, and is already inserted on that
@@ -539,6 +540,7 @@ static int dup_anon_vma(struct vm_area_struct *dst,
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_DEBUG_VM_MAPLE_TREE
 void validate_mm(struct mm_struct *mm)
 {
@@ -590,6 +592,8 @@ void validate_mm(struct mm_struct *mm)
 	VM_BUG_ON_MM(bug, mm);
 }
 #endif /* CONFIG_DEBUG_VM_MAPLE_TREE */
+
+#endif // CL
 
 /* Actually perform the VMA merge operation. */
 static int commit_merge(struct vma_merge_struct *vmg,
@@ -644,6 +648,7 @@ static bool can_merge_remove_vma(struct vm_area_struct *vma)
 	return !vma->vm_ops || !vma->vm_ops->close;
 }
 
+#if 0
 /*
  * vma_merge_existing_range - Attempt to merge VMAs based on a VMA having its
  * attributes modified.
@@ -1002,6 +1007,7 @@ struct vm_area_struct *vma_merge_new_range(struct vma_merge_struct *vmg)
 
 	return NULL;
 }
+#endif // CL
 
 /*
  * vma_expand - Expand an existing VMA
@@ -1065,6 +1071,7 @@ nomem:
 	return -ENOMEM;
 }
 
+#if 0
 /*
  * vma_shrink() - Reduce an existing VMAs memory area
  * @vmi: The vma iterator

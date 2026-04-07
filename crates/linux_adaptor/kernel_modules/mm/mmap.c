@@ -2333,6 +2333,8 @@ static int __meminit init_reserve_notifier(void)
 }
 subsys_initcall(init_reserve_notifier);
 
+#endif // CL
+
 /*
  * Relocate a VMA downwards by shift bytes. There cannot be any VMAs between
  * this VMA and its relocated range, which will now reside at [vma->vm_start -
@@ -2415,5 +2417,3 @@ int relocate_vma_down(struct vm_area_struct *vma, unsigned long shift)
 	/* Shrink the vma to just the new range */
 	return vma_shrink(&vmi, vma, new_start, new_end, vma->vm_pgoff);
 }
-
-#endif /* CL */

@@ -882,3 +882,10 @@ void security_bprm_committed_creds(const struct linux_binprm *bprm)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+// security/min_addr.c
+/* amount of vm to protect from userspace access by both DAC and the LSM*/
+unsigned long mmap_min_addr;
+/* amount of vm to protect from userspace using CAP_SYS_RAWIO (DAC) */
+unsigned long dac_mmap_min_addr = CONFIG_DEFAULT_MMAP_MIN_ADDR;
+

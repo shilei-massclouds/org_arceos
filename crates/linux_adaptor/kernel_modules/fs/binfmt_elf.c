@@ -1018,6 +1018,7 @@ out_free_interp:
 
 	setup_new_exec(bprm);
 
+    printk("%s: step1\n", __func__);
 	/* Do this so that we can load the interpreter, if need be.  We will
 	   change some of these later */
 	retval = setup_arg_pages(bprm, randomize_stack_top(STACK_TOP),
@@ -1025,6 +1026,7 @@ out_free_interp:
 	if (retval < 0)
 		goto out_free_dentry;
 
+    printk("%s: step2\n", __func__);
 #if 0
 	elf_brk = 0;
 

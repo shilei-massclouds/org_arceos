@@ -44,5 +44,6 @@ obj-y += mmu_gather.o
 obj-y += mmu_notifier.o
 obj-y += swap_state.o
 obj-y += swapfile.o
+obj-y += mprotect.o
 
 #obj-y += dmapool.o
