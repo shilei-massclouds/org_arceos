@@ -1544,7 +1544,6 @@ int filp_flush(struct file *filp, fl_owner_t id)
 	return retval;
 }
 
-#if 0
 int filp_close(struct file *filp, fl_owner_t id)
 {
 	int retval;
@@ -1556,6 +1555,7 @@ int filp_close(struct file *filp, fl_owner_t id)
 }
 EXPORT_SYMBOL(filp_close);
 
+#if 0
 /*
  * Careful here! We test whether the file pointer is NULL before
  * releasing the fd. This ensures that one clone task can't release

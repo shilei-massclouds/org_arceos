@@ -406,7 +406,6 @@ out_release:
 	return ERR_PTR(error);
 }
 
-#if 0
 static struct fdtable *close_files(struct files_struct * files)
 {
 	/*
@@ -451,6 +450,7 @@ void put_files_struct(struct files_struct *files)
 	}
 }
 
+#if 0
 void exit_files(struct task_struct *tsk)
 {
 	struct files_struct * files = tsk->files;

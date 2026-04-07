@@ -81,7 +81,7 @@ struct task_struct init_task __aligned(L1_CACHE_BYTES) = {
 	.max_allowed_capacity	= SCHED_CAPACITY_SCALE,
 	.nr_cpus_allowed= NR_CPUS,
 	.mm		= NULL,
-	//.active_mm	= &init_mm,
+	.active_mm	= &init_mm,
 	.faults_disabled_mapping = NULL,
     /*
 	.restart_block	= {

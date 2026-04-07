@@ -6087,7 +6087,6 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	vm_fault_t ret;
 	bool is_droppable;
 
-    printk("%s: step1 addr(%lx)\n", __func__, address);
 	__set_current_state(TASK_RUNNING);
 
 	ret = sanitize_fault_flags(vma, &flags);

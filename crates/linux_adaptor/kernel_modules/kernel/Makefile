@@ -8,6 +8,7 @@ obj-y += entry/
 obj-y += irq/
 obj-y += rcu/
 obj-y += time/
+obj-y += futex/
 
 obj-y += panic.o
 obj-y += cpu.o

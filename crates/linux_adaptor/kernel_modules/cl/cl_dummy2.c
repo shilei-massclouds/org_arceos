@@ -851,3 +851,9 @@ void uprobe_clear_state(struct mm_struct *mm)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+int security_bprm_creds_from_file(struct linux_binprm *bprm, const struct file *file)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

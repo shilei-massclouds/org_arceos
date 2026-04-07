@@ -886,6 +886,7 @@ static void cleanup_lazy_tlbs(struct mm_struct *mm)
 		return;
 	}
 
+    printk("%s: step1\n", __func__);
 	/*
 	 * Lazy mm shootdown does not refcount "lazy tlb mm" usage, rather it
 	 * requires lazy mm users to switch to another mm when the refcount
@@ -915,6 +916,7 @@ static void cleanup_lazy_tlbs(struct mm_struct *mm)
 	 *   switching to avoid IPIs completely.
 	 */
 	on_each_cpu_mask(mm_cpumask(mm), do_shoot_lazy_tlb, (void *)mm, 1);
+    printk("%s: step2\n", __func__);
 	if (IS_ENABLED(CONFIG_DEBUG_VM_SHOOT_LAZIES))
 		on_each_cpu(do_check_lazy_tlb, (void *)mm, 1);
 }
@@ -1683,13 +1685,11 @@ void exit_mm_release(struct task_struct *tsk, struct mm_struct *mm)
 	mm_release(tsk, mm);
 }
 
-#if 0
 void exec_mm_release(struct task_struct *tsk, struct mm_struct *mm)
 {
 	futex_exec_release(tsk);
 	mm_release(tsk, mm);
 }
-#endif /* CL */
 
 /**
  * dup_mm() - duplicates an existing mm structure
@@ -3294,6 +3294,7 @@ static int unshare_fs(unsigned long unshare_flags, struct fs_struct **new_fsp)
 
 	return 0;
 }
+#endif // CL
 
 /*
  * Unshare file descriptor table if it is being shared
@@ -3313,6 +3314,7 @@ static int unshare_fd(unsigned long unshare_flags, struct files_struct **new_fdp
 	return 0;
 }
 
+#if 0
 /*
  * unshare allows a process to 'unshare' part of the process
  * context which was originally shared using clone.  copy_*
@@ -3444,6 +3446,7 @@ SYSCALL_DEFINE1(unshare, unsigned long, unshare_flags)
 {
 	return ksys_unshare(unshare_flags);
 }
+#endif // CL
 
 /*
  *	Helper to unshare the files of the current task.
@@ -3469,6 +3472,7 @@ int unshare_files(void)
 	return 0;
 }
 
+#if 0
 int sysctl_max_threads(const struct ctl_table *table, int write,
 		       void *buffer, size_t *lenp, loff_t *ppos)
 {

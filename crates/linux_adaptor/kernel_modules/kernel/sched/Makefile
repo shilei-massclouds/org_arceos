@@ -22,3 +22,4 @@ obj-y += cpupri.o
 obj-y += pelt.o
 obj-y += loadavg.o
 obj-y += cputime.o
+obj-y += membarrier.o

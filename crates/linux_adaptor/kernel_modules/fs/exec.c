@@ -86,7 +86,6 @@ int suid_dumpable = 0;
 static LIST_HEAD(formats);
 static DEFINE_RWLOCK(binfmt_lock);
 
-#if 0
 void __register_binfmt(struct linux_binfmt * fmt, int insert)
 {
 	write_lock(&binfmt_lock);
@@ -95,6 +94,7 @@ void __register_binfmt(struct linux_binfmt * fmt, int insert)
 	write_unlock(&binfmt_lock);
 }
 
+#if 0
 EXPORT_SYMBOL(__register_binfmt);
 
 void unregister_binfmt(struct linux_binfmt * fmt)
@@ -930,7 +930,6 @@ static struct file *do_open_execat(int fd, struct filename *name, int flags)
 	return no_free_ptr(file);
 }
 
-#if 0
 /**
  * open_exec - Open a path name for execution
  *
@@ -955,6 +954,7 @@ struct file *open_exec(const char *name)
 }
 EXPORT_SYMBOL(open_exec);
 
+#if 0
 #if defined(CONFIG_BINFMT_FLAT) || defined(CONFIG_BINFMT_ELF_FDPIC)
 ssize_t read_code(struct file *file, unsigned long addr, loff_t pos, size_t len)
 {
@@ -965,6 +965,8 @@ ssize_t read_code(struct file *file, unsigned long addr, loff_t pos, size_t len)
 }
 EXPORT_SYMBOL(read_code);
 #endif
+
+#endif // CL
 
 /*
  * Maps the mm_struct mm into the current task struct.
@@ -1169,7 +1171,6 @@ killed:
 	return -EAGAIN;
 }
 
-
 /*
  * This function makes sure the current process has its own signal table,
  * so that flush_signal_handlers can later reset the handlers without
@@ -1205,6 +1206,7 @@ static int unshare_sighand(struct task_struct *me)
 	return 0;
 }
 
+#if 0
 char *__get_task_comm(char *buf, size_t buf_size, struct task_struct *tsk)
 {
 	task_lock(tsk);
@@ -1230,7 +1232,6 @@ void __set_task_comm(struct task_struct *tsk, const char *buf, bool exec)
 	perf_event_comm(tsk, exec);
 }
 
-#if 0
 /*
  * Calling this is the point of no return. None of the failures will be
  * seen by userspace since either the process is already taking a fatal
@@ -1300,10 +1301,12 @@ int begin_new_exec(struct linux_binprm * bprm)
 
 	bprm->mm = NULL;
 
+    printk("%s: step1\n", __func__);
 	retval = exec_task_namespaces();
 	if (retval)
 		goto out_unlock;
 
+    printk("%s: step2\n", __func__);
 #ifdef CONFIG_POSIX_TIMERS
 	spin_lock_irq(&me->sighand->siglock);
 	posix_cpu_timers_exit(me);
@@ -1319,6 +1322,7 @@ int begin_new_exec(struct linux_binprm * bprm)
 	if (retval)
 		goto out_unlock;
 
+    printk("%s: step3\n", __func__);
 	me->flags &= ~(PF_RANDOMIZE | PF_FORKNOEXEC |
 					PF_NOFREEZE | PF_NO_SETAFFINITY);
 	flush_thread();
@@ -1462,6 +1466,7 @@ void would_dump(struct linux_binprm *bprm, struct file *file)
 }
 EXPORT_SYMBOL(would_dump);
 
+#if 0
 void setup_new_exec(struct linux_binprm * bprm)
 {
 	/* Setup things that can depend upon the personality */
@@ -1660,7 +1665,6 @@ static void check_unsafe_exec(struct linux_binprm *bprm)
 	spin_unlock(&p->fs->lock);
 }
 
-#if 0
 static void bprm_fill_uid(struct linux_binprm *bprm, struct file *file)
 {
 	/* Handle suid and sgid on files */
@@ -1724,7 +1728,6 @@ static int bprm_creds_from_file(struct linux_binprm *bprm)
 	bprm_fill_uid(bprm, file);
 	return security_bprm_creds_from_file(bprm, file);
 }
-#endif // CL
 
 /*
  * Fill the binprm structure from the inode.

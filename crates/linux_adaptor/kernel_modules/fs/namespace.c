@@ -5783,7 +5783,6 @@ static bool mount_too_revealing(const struct super_block *sb, int *new_mnt_flags
 	return !mnt_already_visible(ns, sb, new_mnt_flags);
 }
 
-#if 0
 bool mnt_may_suid(struct vfsmount *mnt)
 {
 	/*
@@ -5797,6 +5796,7 @@ bool mnt_may_suid(struct vfsmount *mnt)
 	       current_in_userns(mnt->mnt_sb->s_user_ns);
 }
 
+#if 0
 static struct ns_common *mntns_get(struct task_struct *task)
 {
 	struct ns_common *ns = NULL;
