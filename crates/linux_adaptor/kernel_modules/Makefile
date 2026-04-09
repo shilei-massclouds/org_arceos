@@ -23,6 +23,8 @@ clean:
 	$(Q)rm -f libclinux.a
 	$(Q)find . -name "*.o" | xargs rm -f
 	$(Q)find . -name "*.txt" | xargs rm -f
+	$(Q)find . -name "*.so" | xargs rm -f
+	$(Q)find . -name "*.so.dbg" | xargs rm -f
 
 FORCE:
 

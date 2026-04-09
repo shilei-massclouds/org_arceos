@@ -4,6 +4,7 @@ compat_vdso-objs := rt_sigreturn getcpu flush_icache note
 compat_vdso-export-syms := __compat_vdso_rt_sigreturn __compat_vdso_getcpu __compat_vdso_flush_icache
 
 obj-compat_vdso = $(addprefix $(curdir),$(addsuffix .o,$(compat_vdso-objs)))
+compat_vdso-objs-full = $(obj-compat_vdso)
 
 obj-y += compat_vdso.o
 
@@ -43,7 +44,7 @@ $(compat_vdso-so-dbg): $(compat_vdso-lds) $(obj-compat_vdso) FORCE
 	$(compat_vdso-objcopy) $(compat_vdso-export-flags) $@.tmp $@ && \
 	rm $@.tmp
 
-$(curdir)%.o: $(curdir)%.S
+$(compat_vdso-objs-full): $(curdir)%.o: $(curdir)%.S
 	$(compat_vdso-cc) -Wp,-MMD,$(curdir).$(@F).d $(compat_vdso-common-cflags) \
 		-DKBUILD_MODFILE='"$(curdir)$*"' -DKBUILD_MODNAME='"$*"' \
 		-D__KBUILD_MODNAME=kmod_$* $(compat_vdso-compat-cflags) -c -o $@ $<

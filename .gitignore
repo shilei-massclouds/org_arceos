@@ -16,3 +16,4 @@ actual.out
 *.syms
 tags
 CLAUDE.md
+.codex
