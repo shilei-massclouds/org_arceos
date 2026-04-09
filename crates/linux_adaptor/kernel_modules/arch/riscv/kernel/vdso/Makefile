@@ -1,16 +1,101 @@
 # Makefile for `arch/riscv/kernel/vdso`
 
-obj-vdso =
+vdso-asm-objs := rt_sigreturn getcpu flush_icache sys_hwprobe note
+vdso-c-objs := vgettimeofday hwprobe
+vdso-built-objs := $(vdso-asm-objs) $(vdso-c-objs)
+vdso-link-objs := $(vdso-built-objs)
+vdso-export-syms := __vdso_rt_sigreturn __vdso_vgettimeofday __vdso_getcpu \
+	__vdso_flush_icache __vdso_hwprobe __vdso_sys_hwprobe
+
+obj-vdso = $(addprefix $(curdir),$(addsuffix .o,$(vdso-built-objs)))
 
 obj-y += vdso.o
 
+vdso-cross-prefix := riscv64-linux-gnu-
+vdso-ld = $(vdso-cross-prefix)ld
+vdso-objcopy = $(vdso-cross-prefix)objcopy
+vdso-cc = $(vdso-cross-prefix)gcc
+
+vdso-lds = $(curdir)vdso.lds
+vdso-lds-src = $(vdso-lds).S
+vdso-so = $(curdir)vdso.so
+vdso-so-dbg = $(curdir)vdso.so.dbg
+vdso-asm-objs-full = $(addprefix $(curdir),$(addsuffix .o,$(vdso-asm-objs)))
+vdso-c-objs-full = $(addprefix $(curdir),$(addsuffix .o,$(vdso-c-objs)))
+vdso-link-objs-full = $(addprefix $(curdir),$(addsuffix .o,$(vdso-link-objs)))
+
+vdso-ldflags = -melf64lriscv -z noexecstack -shared -soname=linux-vdso.so.1 \
+	--build-id=sha1 --hash-style=both --eh-frame-hdr
+vdso-export-flags = $(addprefix -G ,$(vdso-export-syms))
+
+vdso-noarch-attr = -mno-riscv-attribute -Wa,-mno-arch-attr
+vdso-common-cppflags = -nostdinc -I./arch/riscv/include -I./arch/riscv/include/generated \
+	-I./include -I./arch/riscv/include/uapi -I./arch/riscv/include/generated/uapi \
+	-I./include/uapi -I./include/generated/uapi
+vdso-common-include-flags = -include ./include/linux/compiler-version.h \
+	-include ./include/linux/kconfig.h
+vdso-common-kbuild-flags = -D__KERNEL__ -fmacro-prefix-map=./=
+vdso-kbuild-modflags = -DKBUILD_MODFILE='"$(curdir)$1"' -DKBUILD_MODNAME='"$1"' \
+	-D__KBUILD_MODNAME=kmod_$1
+
+vdso-asm-cflags = $(vdso-common-cppflags) $(vdso-common-include-flags) \
+	$(vdso-common-kbuild-flags) -D__ASSEMBLY__ -fno-PIE -mabi=lp64 \
+	-march=rv64imafdcv_zicsr_zifencei $(vdso-noarch-attr)
+vdso-lds-cflags = $(vdso-common-cppflags) $(vdso-common-include-flags) \
+	$(vdso-common-kbuild-flags) -D__ASSEMBLY__
+vdso-vgettimeofday-src-include := /home/cloud/gitStudy/linux-6.12.37/lib/vdso/gettimeofday.c
+vdso-c-common-cflags = $(vdso-common-cppflags) $(vdso-common-include-flags) \
+	-include ./include/linux/compiler_types.h $(vdso-common-kbuild-flags) \
+	-std=gnu11 -fshort-wchar -funsigned-char -fno-common -fno-PIE \
+	-fno-strict-aliasing -mabi=lp64 -march=rv64imac_zicsr_zifencei \
+	-mno-save-restore -DCONFIG_PAGE_OFFSET=0xff60000000000000 -mcmodel=medany \
+	-fno-asynchronous-unwind-tables -fno-unwind-tables $(vdso-noarch-attr) \
+	-mstrict-align -fno-delete-null-pointer-checks -O2 \
+	-fno-allow-store-data-races -fstack-protector-strong \
+	-fno-omit-frame-pointer -fno-optimize-sibling-calls \
+	-fno-stack-clash-protection -fno-strict-overflow -fno-stack-check \
+	-fconserve-stack -fno-builtin-wcslen -fno-builtin-wcslen -Wall -Wextra \
+	-Wundef -Werror=implicit-function-declaration -Werror=implicit-int \
+	-Werror=return-type -Werror=strict-prototypes -Wno-format-security \
+	-Wno-trigraphs -Wno-frame-address -Wno-address-of-packed-member \
+	-Wmissing-declarations -Wmissing-prototypes -Wframe-larger-than=2048 \
+	-Wno-main -Wvla -Wno-pointer-sign -Wcast-function-type \
+	-Wno-array-bounds -Wno-stringop-overflow -Wno-alloc-size-larger-than \
+	-Wimplicit-fallthrough=5 -Werror=date-time \
+	-Werror=incompatible-pointer-types -Werror=designated-init \
+	-Wenum-conversion -Wunused -Wno-unused-but-set-variable \
+	-Wno-unused-const-variable -Wno-packed-not-aligned -Wno-format-overflow \
+	-Wno-format-truncation -Wno-stringop-truncation -Wno-override-init \
+	-Wno-missing-field-initializers -Wno-type-limits \
+	-Wno-shift-negative-value -Wno-maybe-uninitialized -Wno-sign-compare \
+	-Wno-unused-parameter -mstack-protector-guard=tls \
+	-mstack-protector-guard-reg=tp -mstack-protector-guard-offset=1232 \
+	-fno-stack-protector -DDISABLE_BRANCH_PROFILING -fno-builtin -fPIC
+vdso-vgettimeofday-extra-cflags = -include $(vdso-vgettimeofday-src-include)
+
 # Force vdso.so to be materialized before assembling vdso.o.
-$(curdir)vdso.o: $(curdir)vdso.so
+$(curdir)vdso.o: $(vdso-so)
+
+# preprocess rule for the linker script
+$(vdso-lds): $(vdso-lds-src)
+	$(vdso-cc) -E -P -C $(vdso-lds-cflags) -o $@ $<
 
 # strip rule for the .so file
-$(curdir)vdso.so: $(curdir)vdso.so.dbg FORCE
+$(vdso-so): $(vdso-so-dbg) FORCE
 	$(OBJCOPY) -S $< $@
 
 # link rule for the .so file, .lds has to be first
-$(curdir)vdso.so.dbg: $(curdir)vdso.lds $(obj-vdso) FORCE
-	riscv64-linux-gnu-ld -melf64lriscv -z noexecstack  -shared -soname=linux-vdso.so.1 --build-id=sha1 --hash-style=both --eh-frame-hdr -T arch/riscv/kernel/vdso/vdso.lds arch/riscv/kernel/vdso/rt_sigreturn.o arch/riscv/kernel/vdso/vgettimeofday.o arch/riscv/kernel/vdso/getcpu.o arch/riscv/kernel/vdso/flush_icache.o arch/riscv/kernel/vdso/hwprobe.o arch/riscv/kernel/vdso/sys_hwprobe.o arch/riscv/kernel/vdso/note.o -o arch/riscv/kernel/vdso/vdso.so.dbg.tmp && riscv64-linux-gnu-objcopy  -G __vdso_rt_sigreturn  -G __vdso_vgettimeofday  -G __vdso_getcpu  -G __vdso_flush_icache  -G __vdso_hwprobe  -G __vdso_sys_hwprobe arch/riscv/kernel/vdso/vdso.so.dbg.tmp arch/riscv/kernel/vdso/vdso.so.dbg && rm arch/riscv/kernel/vdso/vdso.so.dbg.tmp
+$(vdso-so-dbg): $(vdso-lds) $(obj-vdso) FORCE
+	$(vdso-ld) $(vdso-ldflags) -T $(vdso-lds) $(vdso-link-objs-full) -o $@.tmp && \
+	$(vdso-objcopy) $(vdso-export-flags) $@.tmp $@ && \
+	rm $@.tmp
+
+$(vdso-asm-objs-full): $(curdir)%.o: $(curdir)%.S
+	$(vdso-cc) -Wp,-MMD,$(curdir).$(@F).d $(vdso-asm-cflags) \
+		$(call vdso-kbuild-modflags,$*) -c -o $@ $<
+
+$(vdso-c-objs-full): $(curdir)%.o: $(curdir)%.c
+	$(vdso-cc) -Wp,-MMD,$(curdir).$(@F).d $(vdso-c-common-cflags) \
+		$(vdso-$*-extra-cflags) -DKBUILD_BASENAME='"$*"' \
+		$(call vdso-kbuild-modflags,$*) \
+		-c -o $@ $<
