@@ -26,4 +26,5 @@ obj-y += cpu_ops_sbi.o
 obj-y += vdso.o
 
 obj-y += vdso/
+obj-y += compat_vdso/
 obj-y += vendor_extensions/

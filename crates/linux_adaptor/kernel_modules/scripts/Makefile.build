@@ -22,7 +22,7 @@ $(obj): $(OBJS) $(OBJ_LIST) FORCE
 	$(Q)echo $(OBJS) $(_OBJS) > $@
 
 $(OBJ_LIST): FORCE
-	$(Q)$(MAKE) -f ./scripts/Makefile.build obj=$@
+	$(Q)$(MAKE) -f ./scripts/Makefile.build obj=$@ _build
 
 $(curdir)%.o: $(curdir)%.c
 	$(Q)printf "CC $@\n"

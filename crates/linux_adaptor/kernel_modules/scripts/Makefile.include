@@ -4,6 +4,7 @@
 CROSS_ = $(ARCH)-linux-gnu-
 CC = $(CROSS_)gcc
 AR = $(CROSS_)ar
+OBJCOPY = $(CROSS_)objcopy
 
 Q = @
 
