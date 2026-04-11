@@ -3034,6 +3034,7 @@ static inline int pte_unmap_same(struct vm_fault *vmf)
 	vmf->pte = NULL;
 	return same;
 }
+#endif // CL
 
 /*
  * Return:
@@ -3138,7 +3139,6 @@ pte_unlock:
 
 	return ret;
 }
-#endif // CL
 
 static gfp_t __get_fault_gfp_mask(struct vm_area_struct *vma)
 {
@@ -3154,7 +3154,6 @@ static gfp_t __get_fault_gfp_mask(struct vm_area_struct *vma)
 	return GFP_KERNEL;
 }
 
-#if 0
 /*
  * Notify the address space that the page is about to become writable so that
  * it can prohibit this or wait for the page to get into an appropriate state.
@@ -3275,7 +3274,6 @@ static inline void wp_page_reuse(struct vm_fault *vmf, struct folio *folio)
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 	count_vm_event(PGREUSE);
 }
-#endif // CL
 
 /*
  * We could add a bitflag somewhere, but for now, we know that all
@@ -3325,7 +3323,6 @@ vm_fault_t __vmf_anon_prepare(struct vm_fault *vmf)
 	return ret;
 }
 
-#if 0
 /*
  * Handle the case of a page which we actually need to copy to a new page,
  * either due to COW or unsharing.
@@ -3759,7 +3756,6 @@ static vm_fault_t do_wp_page(struct vm_fault *vmf)
 #endif
 	return wp_page_copy(vmf);
 }
-#endif // CL
 
 static void unmap_mapping_range_vma(struct vm_area_struct *vma,
 		unsigned long start_addr, unsigned long end_addr,
@@ -5238,6 +5234,8 @@ static int __init fault_around_debugfs(void)
 late_initcall(fault_around_debugfs);
 #endif
 
+#endif // CL
+
 /*
  * do_fault_around() tries to map few pages around the fault address. The hope
  * is that the pages will be needed soon and this will lower the number of
@@ -5303,14 +5301,12 @@ static inline bool should_fault_around(struct vm_fault *vmf)
 	/* A single page implies no faulting 'around' at all. */
 	return fault_around_pages > 1;
 }
-#endif // CL
 
 static vm_fault_t do_read_fault(struct vm_fault *vmf)
 {
 	vm_fault_t ret = 0;
 	struct folio *folio;
 
-#if 0
 	/*
 	 * Let's call ->map_pages() first and use ->fault() as fallback
 	 * if page by the offset is not ready to be mapped (cold cache or
@@ -5330,6 +5326,7 @@ static vm_fault_t do_read_fault(struct vm_fault *vmf)
 	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY)))
 		return ret;
 
+#if 0
 	ret |= finish_fault(vmf);
 	folio = page_folio(vmf->page);
 	folio_unlock(folio);
@@ -5580,6 +5577,7 @@ static void numa_rebuild_large_mapping(struct vm_fault *vmf, struct vm_area_stru
 		numa_rebuild_single_mapping(vmf, vma, addr, start_ptep, writable);
 	}
 }
+#endif // CL
 
 static vm_fault_t do_numa_page(struct vm_fault *vmf)
 {
@@ -5593,6 +5591,7 @@ static vm_fault_t do_numa_page(struct vm_fault *vmf)
 	pte_t pte, old_pte;
 	int flags = 0, nr_pages;
 
+#if 0
 	/*
 	 * The pte cannot be used safely until we verify, while holding the page
 	 * table lock, that its contents have not changed during fault handling.
@@ -5669,9 +5668,10 @@ out_map:
 
 	if (nid != NUMA_NO_NODE)
 		task_numa_fault(last_cpupid, nid, nr_pages, flags);
+#endif
+    PANIC("");
 	return 0;
 }
-#endif // CL
 
 static inline vm_fault_t create_huge_pmd(struct vm_fault *vmf)
 {
@@ -5804,7 +5804,6 @@ static vm_fault_t handle_pte_fault(struct vm_fault *vmf)
 	if (!vmf->pte)
 		return do_pte_missing(vmf);
 
-#if 0
 	if (!pte_present(vmf->orig_pte))
 		return do_swap_page(vmf);
 
@@ -5824,6 +5823,7 @@ static vm_fault_t handle_pte_fault(struct vm_fault *vmf)
 			entry = pte_mkdirty(entry);
 	}
 	entry = pte_mkyoung(entry);
+#if 0
 	if (ptep_set_access_flags(vmf->vma, vmf->address, vmf->pte, entry,
 				vmf->flags & FAULT_FLAG_WRITE)) {
 		update_mmu_cache_range(vmf, vmf->vma, vmf->address,
@@ -5842,9 +5842,9 @@ static vm_fault_t handle_pte_fault(struct vm_fault *vmf)
 			flush_tlb_fix_spurious_fault(vmf->vma, vmf->address,
 						     vmf->pte);
 	}
-unlock:
 #endif
     PANIC("");
+unlock:
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
 	return 0;
 }
@@ -6264,7 +6264,6 @@ fail:
 }
 #endif
 
-#if 0
 #ifdef CONFIG_PER_VMA_LOCK
 /*
  * Lookup and lock a VMA under RCU protection. Returned VMA is guaranteed to be
@@ -6315,8 +6314,6 @@ inval:
 	return NULL;
 }
 #endif /* CONFIG_PER_VMA_LOCK */
-
-#endif /* CL */
 
 #ifndef __PAGETABLE_P4D_FOLDED
 /*

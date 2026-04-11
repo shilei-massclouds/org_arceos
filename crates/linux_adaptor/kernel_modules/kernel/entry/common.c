@@ -81,6 +81,7 @@ noinstr void syscall_enter_from_user_mode_prepare(struct pt_regs *regs)
 	local_irq_enable();
 	instrumentation_end();
 }
+#endif // CL
 
 /* Workaround to allow gradual conversion of architecture code */
 void __weak arch_do_signal_or_restart(struct pt_regs *regs) { }
@@ -135,8 +136,6 @@ __always_inline unsigned long exit_to_user_mode_loop(struct pt_regs *regs,
 	/* Return the latest work state for arch_exit_to_user_mode() */
 	return ti_work;
 }
-
-#endif /* CL */
 
 /*
  * If SYSCALL_EMU is set, then the only reason to report is when
@@ -207,12 +206,9 @@ static void syscall_exit_to_user_mode_prepare(struct pt_regs *regs)
 
 static __always_inline void __syscall_exit_to_user_mode_work(struct pt_regs *regs)
 {
-#if 0
 	syscall_exit_to_user_mode_prepare(regs);
 	local_irq_disable_exit_to_user();
 	exit_to_user_mode_prepare(regs);
-#endif
-    PANIC("");
 }
 
 void syscall_exit_to_user_mode_work(struct pt_regs *regs)
@@ -222,22 +218,17 @@ void syscall_exit_to_user_mode_work(struct pt_regs *regs)
 
 __visible noinstr void syscall_exit_to_user_mode(struct pt_regs *regs)
 {
-#if 0
 	instrumentation_begin();
 	__syscall_exit_to_user_mode_work(regs);
 	instrumentation_end();
 	exit_to_user_mode();
-#endif
-    PANIC("");
 }
 
 noinstr void irqentry_enter_from_user_mode(struct pt_regs *regs)
 {
-	//enter_from_user_mode(regs);
-    PANIC("");
+	enter_from_user_mode(regs);
 }
 
-#if 0
 noinstr void irqentry_exit_to_user_mode(struct pt_regs *regs)
 {
 	instrumentation_begin();
@@ -245,7 +236,6 @@ noinstr void irqentry_exit_to_user_mode(struct pt_regs *regs)
 	instrumentation_end();
 	exit_to_user_mode();
 }
-#endif /* CL */
 
 noinstr irqentry_state_t irqentry_enter(struct pt_regs *regs)
 {

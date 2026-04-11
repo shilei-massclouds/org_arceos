@@ -20,6 +20,7 @@ obj-y += patch.o
 obj-y += cpu_ops.o
 obj-y += cpu_ops_sbi.o
 obj-y += cacheinfo.o
+obj-y += signal.o
 
 #obj-y += reset.o
 #obj-y += acpi.o

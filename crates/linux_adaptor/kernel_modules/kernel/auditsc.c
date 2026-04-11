@@ -67,6 +67,7 @@
 #include <uapi/linux/fanotify.h>
 
 #include "audit.h"
+#include "adaptor.h"
 
 /* flags stating the success for a syscall */
 #define AUDITSC_INVALID 0
@@ -2046,6 +2047,7 @@ void __audit_syscall_entry(int major, unsigned long a1, unsigned long a2,
 	context->current_state  = state;
 	ktime_get_coarse_real_ts64(&context->ctime);
 }
+#endif // CL
 
 /**
  * __audit_syscall_exit - deallocate audit context after a system call
@@ -2062,6 +2064,7 @@ void __audit_syscall_exit(int success, long return_code)
 {
 	struct audit_context *context = audit_context();
 
+#if 0
 	if (!context || context->dummy ||
 	    context->context != AUDIT_CTX_SYSCALL)
 		goto out;
@@ -2081,8 +2084,11 @@ void __audit_syscall_exit(int success, long return_code)
 
 out:
 	audit_reset_context(context);
+#endif
+    PANIC("");
 }
 
+#if 0
 static inline void handle_one(const struct inode *inode)
 {
 	struct audit_context *context;

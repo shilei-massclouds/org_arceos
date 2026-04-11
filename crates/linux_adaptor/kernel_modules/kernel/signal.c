@@ -1371,12 +1371,12 @@ force_sig_info_to_task(struct kernel_siginfo *info, struct task_struct *t,
 	return ret;
 }
 
-#if 0
 int force_sig_info(struct kernel_siginfo *info)
 {
 	return force_sig_info_to_task(info, current, HANDLER_CURRENT);
 }
 
+#if 0
 /*
  * Nuke all other threads in the group.
  */

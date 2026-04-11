@@ -929,3 +929,8 @@ void wake_up_klogd(void)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+void uprobe_notify_resume(struct pt_regs *regs)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

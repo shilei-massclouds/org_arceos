@@ -2066,7 +2066,6 @@ out_free:
 	free_bprm(bprm);
 out_ret:
 	putname(filename);
-    printk("%s: stepn \n", __func__);
 	return retval;
 }
 
