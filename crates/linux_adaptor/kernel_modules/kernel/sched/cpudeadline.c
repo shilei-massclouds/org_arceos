@@ -9,10 +9,10 @@
 
 #include <linux/cpumask.h>
 #include <linux/slab.h>
+#include <linux/sched/deadline.h>
 
 #include "cpudeadline.h"
 
-#if 0
 static inline int parent(int i)
 {
 	return (i - 1) >> 1;
@@ -106,6 +106,7 @@ static void cpudl_heapify(struct cpudl *cp, int idx)
 		cpudl_heapify_down(cp, idx);
 }
 
+#if 0
 static inline int cpudl_maximum(struct cpudl *cp)
 {
 	return cp->elements[0].cpu;
@@ -166,6 +167,7 @@ int cpudl_find(struct cpudl *cp, struct task_struct *p,
 	}
 	return 0;
 }
+#endif // CL
 
 /*
  * cpudl_clear - remove a CPU from the cpudl max-heap
@@ -206,6 +208,7 @@ void cpudl_clear(struct cpudl *cp, int cpu)
 	raw_spin_unlock_irqrestore(&cp->lock, flags);
 }
 
+#if 0
 /*
  * cpudl_set - update the cpudl max-heap
  * @cp: the cpudl max-heap context
@@ -253,7 +256,6 @@ void cpudl_set_freecpu(struct cpudl *cp, int cpu)
 	cpumask_set_cpu(cpu, cp->free_cpus);
 }
 
-#if 0
 /*
  * cpudl_clear_freecpu - Clear the cpudl.free_cpus
  * @cp: the cpudl max-heap context
@@ -263,7 +265,6 @@ void cpudl_clear_freecpu(struct cpudl *cp, int cpu)
 {
 	cpumask_clear_cpu(cpu, cp->free_cpus);
 }
-#endif /* CL */
 
 /*
  * cpudl_init - initialize the cpudl structure

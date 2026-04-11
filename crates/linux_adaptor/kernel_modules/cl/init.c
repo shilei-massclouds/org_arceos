@@ -7,6 +7,7 @@
 #include <linux/cpu.h>
 #include <linux/memblock.h>
 #include <linux/pid_namespace.h>
+#include <linux/sched/init.h>
 #include <linux/sched/clock.h>
 #include <linux/sched/isolation.h>
 #include <linux/tick.h>
@@ -17,6 +18,7 @@
 #include <linux/binfmts.h>
 #include <linux/rmap.h>
 #include <linux/extable.h>
+#include <linux/padata.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -573,10 +575,16 @@ void init_smp(void)
 #endif
 
     smp_init();
+    sched_init_smp();
 }
 
 void init_page_alloc_later()
 {
+#if 0
+    workqueue_init_topology();
+    async_init();
+#endif
+    padata_init();
     page_alloc_init_late();
 }
 

@@ -52,6 +52,7 @@ static unsigned long nsec_low(unsigned long long nsec)
 
 	return do_div(nsec, 1000000);
 }
+#endif // CL
 
 #define SPLIT_NS(x) nsec_high(x), nsec_low(x)
 
@@ -77,7 +78,6 @@ static int sched_feat_show(struct seq_file *m, void *v)
 
 	return 0;
 }
-#endif /* CL */
 
 #ifdef CONFIG_JUMP_LABEL
 
@@ -107,7 +107,6 @@ static void sched_feat_disable(int i) { };
 static void sched_feat_enable(int i) { };
 #endif /* CONFIG_JUMP_LABEL */
 
-#if 0
 static int sched_feat_set(char *cmp)
 {
 	int i;
@@ -229,6 +228,7 @@ static const struct file_operations sched_scaling_fops = {
 
 #endif /* SMP */
 
+#if 0
 #ifdef CONFIG_PREEMPT_DYNAMIC
 
 static ssize_t sched_dynamic_write(struct file *filp, const char __user *ubuf,
@@ -291,11 +291,12 @@ static const struct file_operations sched_dynamic_fops = {
 
 #endif /* CONFIG_PREEMPT_DYNAMIC */
 
+#endif // CL
+
 __read_mostly bool sched_debug_verbose;
 
 #ifdef CONFIG_SMP
 static struct dentry           *sd_dentry;
-
 
 static ssize_t sched_verbose_write(struct file *filp, const char __user *ubuf,
 				  size_t cnt, loff_t *ppos)
@@ -660,6 +661,7 @@ void dirty_sched_domain_sysctl(int cpu)
 
 #endif /* CONFIG_SMP */
 
+#if 0
 #ifdef CONFIG_FAIR_GROUP_SCHED
 static void print_cfs_group_stats(struct seq_file *m, int cpu, struct task_group *tg)
 {

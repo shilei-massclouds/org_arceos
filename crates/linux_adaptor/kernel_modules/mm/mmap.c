@@ -58,6 +58,7 @@
 #include <trace/events/mmap.h>
 
 #include "internal.h"
+#include "adaptor.h"
 
 #ifndef arch_mmap_check
 #define arch_mmap_check(addr, len, flags)	(0)
@@ -507,7 +508,6 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
 	return addr;
 }
 
-#if 0
 unsigned long ksys_mmap_pgoff(unsigned long addr, unsigned long len,
 			      unsigned long prot, unsigned long flags,
 			      unsigned long fd, unsigned long pgoff)
@@ -545,8 +545,11 @@ unsigned long ksys_mmap_pgoff(unsigned long addr, unsigned long len,
 		if (IS_ERR(file))
 			return PTR_ERR(file);
 	}
+#if 0
 
 	retval = vm_mmap_pgoff(file, addr, len, prot, flags, pgoff);
+#endif
+    PANIC("");
 out_fput:
 	if (file)
 		fput(file);
@@ -560,6 +563,7 @@ SYSCALL_DEFINE6(mmap_pgoff, unsigned long, addr, unsigned long, len,
 	return ksys_mmap_pgoff(addr, len, prot, flags, fd, pgoff);
 }
 
+#if 0
 #ifdef __ARCH_WANT_SYS_OLD_MMAP
 struct mmap_arg_struct {
 	unsigned long addr;

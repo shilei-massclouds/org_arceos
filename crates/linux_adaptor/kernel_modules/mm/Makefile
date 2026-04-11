@@ -47,5 +47,6 @@ obj-y += swapfile.o
 obj-y += mprotect.o
 obj-y += mremap.o
 obj-y += memfd.o
+obj-y += hugetlb.o
 
 #obj-y += dmapool.o

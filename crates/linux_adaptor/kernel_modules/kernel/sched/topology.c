@@ -6,8 +6,10 @@
 #include <linux/bsearch.h>
 #include <linux/mutex.h>
 #include <linux/mmu_context.h>
+#include <linux/sched/isolation.h>
 
 #include "sched.h"
+#include "adaptor.h"
 
 DEFINE_MUTEX(sched_domains_mutex);
 
@@ -15,7 +17,6 @@ DEFINE_MUTEX(sched_domains_mutex);
 static cpumask_var_t sched_domains_tmpmask;
 static cpumask_var_t sched_domains_tmpmask2;
 
-#if 0
 #ifdef CONFIG_SCHED_DEBUG
 
 static int __init sched_debug_setup(char *str)
@@ -210,8 +211,6 @@ sd_parent_degenerate(struct sched_domain *sd, struct sched_domain *parent)
 
 	return 1;
 }
-
-#endif /* CL */
 
 #if defined(CONFIG_ENERGY_MODEL) && defined(CONFIG_CPU_FREQ_GOV_SCHEDUTIL)
 DEFINE_STATIC_KEY_FALSE(sched_energy_present);
@@ -605,7 +604,6 @@ void __init init_defrootdomain(void)
 	atomic_set(&def_root_domain.refcount, 1);
 }
 
-#if 0
 static struct root_domain *alloc_rootdomain(void)
 {
 	struct root_domain *rd;
@@ -673,8 +671,6 @@ static void destroy_sched_domains(struct sched_domain *sd)
 		call_rcu(&sd->rcu, destroy_sched_domains_rcu);
 }
 
-#endif /* CL */
-
 /*
  * Keep a special pointer to the highest sched_domain that has SD_SHARE_LLC set
  * (Last Level Cache Domain) for this allows us to avoid some pointer chasing
@@ -695,8 +691,6 @@ DEFINE_PER_CPU(struct sched_domain __rcu *, sd_asym_cpucapacity);
 
 DEFINE_STATIC_KEY_FALSE(sched_asym_cpucapacity);
 DEFINE_STATIC_KEY_FALSE(sched_cluster_active);
-
-#if 0
 
 static void update_top_cache_domain(int cpu)
 {
@@ -1144,7 +1138,6 @@ fail:
 
 	return -ENOMEM;
 }
-
 
 /*
  * Package topology (also see the load-balance blurb in fair.c)
@@ -1745,6 +1738,7 @@ void __init set_sched_topology(struct sched_domain_topology_level *tl)
 	sched_domain_topology_saved = NULL;
 }
 
+#if 0
 #ifdef CONFIG_NUMA
 
 static const struct cpumask *sd_numa_mask(int cpu)
@@ -2232,6 +2226,7 @@ const struct cpumask *sched_numa_hop_mask(unsigned int node, unsigned int hops)
 EXPORT_SYMBOL_GPL(sched_numa_hop_mask);
 
 #endif /* CONFIG_NUMA */
+#endif // CL
 
 static int __sdt_alloc(const struct cpumask *cpu_map)
 {
@@ -2602,6 +2597,7 @@ cpumask_var_t *alloc_sched_domains(unsigned int ndoms)
 	return doms;
 }
 
+#if 0
 void free_sched_domains(cpumask_var_t doms[], unsigned int ndoms)
 {
 	unsigned int i;
@@ -2609,6 +2605,7 @@ void free_sched_domains(cpumask_var_t doms[], unsigned int ndoms)
 		free_cpumask_var(doms[i]);
 	kfree(doms);
 }
+#endif // CL
 
 /*
  * Set up scheduler domains and groups.  For now this just excludes isolated
@@ -2630,10 +2627,10 @@ int __init sched_init_domains(const struct cpumask *cpu_map)
 		doms_cur = &fallback_doms;
 	cpumask_and(doms_cur[0], cpu_map, housekeeping_cpumask(HK_TYPE_DOMAIN));
 	err = build_sched_domains(doms_cur[0], NULL);
-
 	return err;
 }
 
+#if 0
 /*
  * Detach sched domains from a group of CPUs specified in cpu_map
  * These CPUs will now be attached to the NULL domain

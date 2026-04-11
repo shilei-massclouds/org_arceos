@@ -936,5 +936,22 @@ void uprobe_notify_resume(struct pt_regs *regs)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
+// kernel/audit.c
 u32     audit_enabled = AUDIT_OFF;
 
+// fs/hugetlbfs/inode.c
+int sysctl_hugetlb_shm_group;
+
+struct dentry *debugfs_create_file_unsafe(const char *name, umode_t mode,
+                   struct dentry *parent, void *data,
+                   const struct file_operations *fops)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return NULL;
+}
+
+void debugfs_create_u32(const char *name, umode_t mode, struct dentry *parent,
+            u32 *value)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
