@@ -1993,6 +1993,7 @@ void __audit_uring_exit(int success, long code)
 out:
 	audit_reset_context(ctx);
 }
+#endif // CL
 
 /**
  * __audit_syscall_entry - fill in an audit record at syscall entry
@@ -2047,7 +2048,6 @@ void __audit_syscall_entry(int major, unsigned long a1, unsigned long a2,
 	context->current_state  = state;
 	ktime_get_coarse_real_ts64(&context->ctime);
 }
-#endif // CL
 
 /**
  * __audit_syscall_exit - deallocate audit context after a system call

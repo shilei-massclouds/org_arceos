@@ -336,7 +336,6 @@ asmlinkage __visible __trap_section void do_trap_break(struct pt_regs *regs)
 	}
 }
 
-#if 0
 asmlinkage __visible __trap_section  __no_stack_protector
 void do_trap_ecall_u(struct pt_regs *regs)
 {
@@ -353,6 +352,8 @@ void do_trap_ecall_u(struct pt_regs *regs)
 
 		add_random_kstack_offset();
 
+        printk("%s: syscall(%u)\n", __func__, syscall);
+#if 0
 		if (syscall >= 0 && syscall < NR_syscalls)
 			syscall_handler(regs, syscall);
 
@@ -369,6 +370,8 @@ void do_trap_ecall_u(struct pt_regs *regs)
 		choose_random_kstack_offset(get_random_u16());
 
 		syscall_exit_to_user_mode(regs);
+#endif
+        PANIC("");
 	} else {
 		irqentry_state_t state = irqentry_nmi_enter(regs);
 
@@ -379,7 +382,6 @@ void do_trap_ecall_u(struct pt_regs *regs)
 	}
 
 }
-#endif /* CL */
 
 #ifdef CONFIG_MMU
 asmlinkage __visible noinstr void do_page_fault(struct pt_regs *regs)

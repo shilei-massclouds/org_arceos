@@ -297,7 +297,6 @@ void free_swap_cache(struct folio *folio)
 	}
 }
 
-#if 0
 /*
  * Perform a free_page(), also freeing any swap cache associated with
  * this page if it is the last user of the page.
@@ -310,7 +309,6 @@ void free_page_and_swap_cache(struct page *page)
 	if (!is_huge_zero_folio(folio))
 		folio_put(folio);
 }
-#endif // CL
 
 /*
  * Passed an array of pages, drop them all from swapcache and then release

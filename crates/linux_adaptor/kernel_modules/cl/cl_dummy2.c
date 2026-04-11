@@ -4,6 +4,7 @@
 #include <linux/user_namespace.h>
 #include <linux/proc_ns.h>
 #include <linux/suspend.h>
+#include <linux/audit.h>
 #include <uapi/linux/perf_event.h>
 
 #include <net/sock.h>
@@ -934,3 +935,6 @@ void uprobe_notify_resume(struct pt_regs *regs)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+u32     audit_enabled = AUDIT_OFF;
+
