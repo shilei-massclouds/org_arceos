@@ -510,7 +510,6 @@ gid_t from_kgid(struct user_namespace *targ, kgid_t kgid)
 }
 EXPORT_SYMBOL(from_kgid);
 
-#if 0
 /**
  *	from_kgid_munged - Create a gid from a kgid user-namespace pair.
  *	@targ: The user namespace we want a gid in.
@@ -538,7 +537,6 @@ gid_t from_kgid_munged(struct user_namespace *targ, kgid_t kgid)
 	return gid;
 }
 EXPORT_SYMBOL(from_kgid_munged);
-#endif // CL
 
 /**
  *	make_kprojid - Map a user-namespace projid pair into a kprojid.

@@ -911,15 +911,12 @@ unsigned long riscv_get_elf_hwcap(void)
 {
 	unsigned long hwcap;
 
-#if 0
 	hwcap = (elf_hwcap & ((1UL << RISCV_ISA_EXT_BASE) - 1));
 
 	if (!riscv_v_vstate_ctrl_user_allowed())
 		hwcap &= ~COMPAT_HWCAP_ISA_V;
 
 	return hwcap;
-#endif
-    PANIC("");
 }
 
 void riscv_user_isa_enable(void)

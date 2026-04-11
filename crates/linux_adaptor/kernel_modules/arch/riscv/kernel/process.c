@@ -139,6 +139,8 @@ static int __init compat_mode_detect(void)
 early_initcall(compat_mode_detect);
 #endif
 
+#endif // CL
+
 void start_thread(struct pt_regs *regs, unsigned long pc,
 	unsigned long sp)
 {
@@ -163,7 +165,6 @@ void start_thread(struct pt_regs *regs, unsigned long pc,
 		regs->status |= SR_UXL_64;
 #endif
 }
-#endif // CL
 
 void flush_thread(void)
 {

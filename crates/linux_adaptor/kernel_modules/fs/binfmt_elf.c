@@ -1271,7 +1271,6 @@ out_free_interp:
 		}
 	}
 
-    printk("%s: step1\n", __func__);
 	kfree(elf_phdata);
 
 	set_binfmt(&elf_format);
@@ -1287,7 +1286,6 @@ out_free_interp:
 	if (retval < 0)
 		goto out;
 
-#if 0
 	mm = current->mm;
 	mm->end_code = end_code;
 	mm->start_code = start_code;
@@ -1295,7 +1293,6 @@ out_free_interp:
 	mm->end_data = end_data;
 	mm->start_stack = bprm->p;
 
-    printk("%s: step2\n", __func__);
 	/**
 	 * DOC: "brk" handling
 	 *
@@ -1367,8 +1364,6 @@ out_free_interp:
 	finalize_exec(bprm);
 	START_THREAD(elf_ex, regs, elf_entry, bprm->p);
 	retval = 0;
-#endif
-    PANIC("");
 out:
 	return retval;
 

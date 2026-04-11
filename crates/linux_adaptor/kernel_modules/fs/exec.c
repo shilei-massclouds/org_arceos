@@ -1480,7 +1480,6 @@ void setup_new_exec(struct linux_binprm * bprm)
 }
 EXPORT_SYMBOL(setup_new_exec);
 
-#if 0
 /* Runs immediately before start_thread() takes over. */
 void finalize_exec(struct linux_binprm *bprm)
 {
@@ -1490,7 +1489,6 @@ void finalize_exec(struct linux_binprm *bprm)
 	task_unlock(current->group_leader);
 }
 EXPORT_SYMBOL(finalize_exec);
-#endif // CL
 
 /*
  * Prepare credentials and lock ->cred_guard_mutex.
@@ -1900,7 +1898,6 @@ static int bprm_execve(struct linux_binprm *bprm)
 	if (retval < 0)
 		goto out;
 
-#if 0
 	sched_mm_cid_after_execve(current);
 	/* execve succeeded */
 	current->in_execve = 0;
@@ -1908,8 +1905,6 @@ static int bprm_execve(struct linux_binprm *bprm)
 	user_events_execve(current);
 	acct_update_integrals(current);
 	task_numa_free(current, false);
-#endif
-    PANIC("");
 	return retval;
 
 out:
@@ -2071,6 +2066,7 @@ out_free:
 	free_bprm(bprm);
 out_ret:
 	putname(filename);
+    printk("%s: stepn \n", __func__);
 	return retval;
 }
 

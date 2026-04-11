@@ -966,6 +966,7 @@ static int __cpuhp_invoke_callback_range(bool bringup,
 	while (cpuhp_next_state(bringup, &state, st, target)) {
 		int err;
 
+        printk("%s: step1 cpu(%u) (%u -> %u)\n", __func__, cpu, state, target);
 		err = cpuhp_invoke_callback(cpu, state, bringup, NULL, NULL);
 		if (!err)
 			continue;
@@ -1021,9 +1022,7 @@ static int cpuhp_up_callbacks(unsigned int cpu, struct cpuhp_cpu_state *st,
 	enum cpuhp_state prev_state = st->state;
 	int ret = 0;
 
-    printk("%s: step1 (%u -> %u)\n", __func__, prev_state, target);
 	ret = cpuhp_invoke_callback_range(true, cpu, st, target);
-    printk("%s: step2\n", __func__);
 	if (ret) {
 		pr_debug("CPU UP failed (%d) CPU %u state %s (%d)\n",
 			 ret, cpu, cpuhp_get_step(st->state)->name,

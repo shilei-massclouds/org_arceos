@@ -50,6 +50,8 @@ obj-y += iov_iter.o
 obj-y += strncpy_from_user.o
 obj-y += extable.o
 obj-y += bust_spinlocks.o
+obj-y += usercopy.o
+obj-y += strnlen_user.o
 
 obj-y += math/
 obj-y += crypto/
