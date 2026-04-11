@@ -113,7 +113,6 @@ static int check_brk_limits(unsigned long addr, unsigned long len)
 		? 0 : -EAGAIN;
 }
 
-#if 0
 static int do_brk_flags(struct vma_iterator *vmi, struct vm_area_struct *brkvma,
 		unsigned long addr, unsigned long request, unsigned long flags);
 SYSCALL_DEFINE1(brk, unsigned long, brk)
@@ -218,7 +217,6 @@ out:
 	mmap_write_unlock(mm);
 	return origbrk;
 }
-#endif // CL
 
 /*
  * If a hint addr is less than mmap_min_addr change hint to be as

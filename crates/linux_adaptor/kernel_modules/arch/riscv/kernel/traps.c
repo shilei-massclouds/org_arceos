@@ -356,7 +356,6 @@ void do_trap_ecall_u(struct pt_regs *regs)
 		if (syscall >= 0 && syscall < NR_syscalls)
 			syscall_handler(regs, syscall);
 
-#if 0
 		/*
 		 * Ultimately, this value will get limited by KSTACK_OFFSET_MAX(),
 		 * so the maximum stack offset is 1k bytes (10 bits).
@@ -370,8 +369,6 @@ void do_trap_ecall_u(struct pt_regs *regs)
 		choose_random_kstack_offset(get_random_u16());
 
 		syscall_exit_to_user_mode(regs);
-#endif
-        PANIC("");
 	} else {
 		irqentry_state_t state = irqentry_nmi_enter(regs);
 
