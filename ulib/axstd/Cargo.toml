@@ -54,6 +54,7 @@ sched-cfs = ["axfeat/sched-cfs"]
 fs = ["arceos_api/fs", "axfeat/fs"]
 myfs = ["arceos_api/myfs", "axfeat/myfs"]
 linux-fs = ["fs", "axfeat/linux-fs"]
+userboot = ["axfeat/userboot"]
 
 # Networking
 net = ["arceos_api/net", "axfeat/net"]

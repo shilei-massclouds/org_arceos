@@ -22,6 +22,8 @@ sched-fifo = []
 sched-rr = []
 sched-cfs = []
 
+userboot = []
+
 test = []
 
 [dependencies]

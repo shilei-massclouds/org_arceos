@@ -42,7 +42,9 @@ where
     let boxed_closure = Box::from_raw(opaque as *mut F);
     (*boxed_closure)();
     if current().id().as_u64() == 1 {
-        // For main task(pid=1), shutdown the kernel.
+        // For Unikernel mode (no `userboot` feature):
+        // if current is the main-task(pid=1), shutdown the kernel.
+        #[cfg(not(feature = "userboot"))]
         axhal::power::system_off();
     } else {
         exit(0);
@@ -271,14 +273,12 @@ pub fn set_priority(nice: isize) -> bool {
 ///
 /// TODO: support set the affinity for other tasks.
 pub fn set_current_affinity(cpumask: AxCpuMask) -> bool {
-    //error!("...");
     let mut i = 0;
     let mut mask: [u8; 8] = [0; 8];
     for byte in cpumask.as_bytes() {
         mask[i] = *byte;
         i += 1;
     }
-    //error!("cpumask: {}", u64::from_le_bytes(mask));
     let pid = current().id().as_u64() as i32;
     unsafe {
         sched_setaffinity(pid, mask.as_ptr()) == 0
