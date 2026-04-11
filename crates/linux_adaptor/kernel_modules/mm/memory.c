@@ -5326,14 +5326,11 @@ static vm_fault_t do_read_fault(struct vm_fault *vmf)
 	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY)))
 		return ret;
 
-#if 0
 	ret |= finish_fault(vmf);
 	folio = page_folio(vmf->page);
 	folio_unlock(folio);
 	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY)))
 		folio_put(folio);
-#endif
-    PANIC("");
 	return ret;
 }
 

@@ -454,7 +454,6 @@ out_free_vma:
 	return err;
 }
 
-#if 0
 /*
  * Split a vma into two pieces at address 'addr', a new vma is allocated
  * either for the first part or the tail.
@@ -467,7 +466,6 @@ static int split_vma(struct vma_iterator *vmi, struct vm_area_struct *vma,
 
 	return __split_vma(vmi, vma, addr, new_below);
 }
-#endif // CL
 
 /*
  * vma has some anon_vma assigned, and is already inserted on that
@@ -640,7 +638,6 @@ static bool can_merge_remove_vma(struct vm_area_struct *vma)
 	return !vma->vm_ops || !vma->vm_ops->close;
 }
 
-#if 0
 /*
  * vma_merge_existing_range - Attempt to merge VMAs based on a VMA having its
  * attributes modified.
@@ -879,7 +876,6 @@ abort:
 		vmg->state = VMA_MERGE_ERROR_NOMEM;
 	return NULL;
 }
-#endif // CL
 
 /*
  * vma_merge_new_range - Attempt to merge a new VMA into address space
@@ -1425,7 +1421,6 @@ int do_vmi_munmap(struct vma_iterator *vmi, struct mm_struct *mm,
 	return do_vmi_align_munmap(vmi, vma, mm, start, end, uf, unlock);
 }
 
-#if 0
 /*
  * We are about to modify one or multiple of a VMA's flags, policy, userfaultfd
  * context and anonymous VMA name within the range [start, end).
@@ -1491,6 +1486,7 @@ struct vm_area_struct *vma_modify_flags(
 	return vma_modify(&vmg);
 }
 
+#if 0
 struct vm_area_struct
 *vma_modify_flags_name(struct vma_iterator *vmi,
 		       struct vm_area_struct *prev,

@@ -372,7 +372,6 @@ static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
 	return newsize;
 }
 
-#if 0
 /*
  *  Get the previous window size, ramp it up, and
  *  return it as the new window size.
@@ -388,7 +387,6 @@ static unsigned long get_next_ra_size(struct file_ra_state *ra,
 		return 2 * cur;
 	return max;
 }
-#endif // CL
 
 /*
  * On-demand readahead design.
@@ -610,7 +608,6 @@ readit:
 }
 EXPORT_SYMBOL_GPL(page_cache_sync_ra);
 
-#if 0
 void page_cache_async_ra(struct readahead_control *ractl,
 		struct folio *folio, unsigned long req_count)
 {
@@ -677,6 +674,7 @@ readit:
 }
 EXPORT_SYMBOL_GPL(page_cache_async_ra);
 
+#if 0
 ssize_t ksys_readahead(int fd, loff_t offset, size_t count)
 {
 	ssize_t ret;

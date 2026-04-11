@@ -545,11 +545,8 @@ unsigned long ksys_mmap_pgoff(unsigned long addr, unsigned long len,
 		if (IS_ERR(file))
 			return PTR_ERR(file);
 	}
-#if 0
 
 	retval = vm_mmap_pgoff(file, addr, len, prot, flags, pgoff);
-#endif
-    PANIC("");
 out_fput:
 	if (file)
 		fput(file);

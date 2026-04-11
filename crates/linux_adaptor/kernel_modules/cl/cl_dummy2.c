@@ -955,3 +955,10 @@ void debugfs_create_u32(const char *name, umode_t mode, struct dentry *parent,
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+int security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
+               unsigned long prot)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

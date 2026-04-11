@@ -992,6 +992,7 @@ SYSCALL_DEFINE0(getppid)
 
 	return pid;
 }
+#endif // CL
 
 SYSCALL_DEFINE0(getuid)
 {
@@ -999,6 +1000,7 @@ SYSCALL_DEFINE0(getuid)
 	return from_kuid_munged(current_user_ns(), current_uid());
 }
 
+#if 0
 SYSCALL_DEFINE0(geteuid)
 {
 	/* Only we change this so SMP safe */

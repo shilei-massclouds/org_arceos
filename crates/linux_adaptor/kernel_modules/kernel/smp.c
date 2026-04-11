@@ -690,7 +690,6 @@ int smp_call_function_single(int cpu, smp_call_func_t func, void *info,
 }
 EXPORT_SYMBOL(smp_call_function_single);
 
-#if 0
 /**
  * smp_call_function_single_async() - Run an asynchronous function on a
  * 			         specific CPU.
@@ -737,6 +736,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(smp_call_function_single_async);
 
+#if 0
 /*
  * smp_call_function_any - Run a function on any of the given cpus
  * @mask: The mask of cpus it can run on.

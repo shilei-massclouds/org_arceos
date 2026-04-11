@@ -1753,6 +1753,7 @@ vm_fault_t __folio_lock_or_retry(struct folio *folio, struct vm_fault *vmf)
 
 	return 0;
 }
+#endif // CL
 
 /**
  * page_cache_next_miss() - Find the next gap in the page cache.
@@ -1790,6 +1791,7 @@ pgoff_t page_cache_next_miss(struct address_space *mapping,
 }
 EXPORT_SYMBOL(page_cache_next_miss);
 
+#if 0
 /**
  * page_cache_prev_miss() - Find the previous gap in the page cache.
  * @mapping: Mapping.
