@@ -1206,6 +1206,7 @@ static int __init slab_proc_init(void)
 module_init(slab_proc_init);
 
 #endif /* CONFIG_SLUB_DEBUG */
+#endif // CL
 
 static __always_inline __realloc_size(2) void *
 __do_krealloc(const void *p, size_t new_size, gfp_t flags)
@@ -1290,7 +1291,6 @@ void *krealloc_noprof(const void *p, size_t new_size, gfp_t flags)
 	return ret;
 }
 EXPORT_SYMBOL(krealloc_noprof);
-#endif // CL
 
 /**
  * kfree_sensitive - Clear sensitive information in memory before freeing

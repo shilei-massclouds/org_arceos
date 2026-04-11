@@ -480,7 +480,6 @@ void abort_creds(struct cred *new)
 }
 EXPORT_SYMBOL(abort_creds);
 
-#if 0
 /**
  * override_creds - Override the current process's subjective credentials
  * @new: The credentials to be assigned
@@ -531,6 +530,7 @@ void revert_creds(const struct cred *old)
 }
 EXPORT_SYMBOL(revert_creds);
 
+#if 0
 /**
  * cred_fscmp - Compare two credentials with respect to filesystem access.
  * @a: The first credential

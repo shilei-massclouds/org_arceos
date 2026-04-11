@@ -6718,6 +6718,7 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(access_process_vm);
+#endif // CL
 
 /*
  * Print the name of a VMA.
@@ -6744,7 +6745,6 @@ void print_vma_addr(char *prefix, unsigned long ip)
 	}
 	mmap_read_unlock(mm);
 }
-#endif // CL
 
 #if defined(CONFIG_PROVE_LOCKING) || defined(CONFIG_DEBUG_ATOMIC_SLEEP)
 void __might_fault(const char *file, int line)

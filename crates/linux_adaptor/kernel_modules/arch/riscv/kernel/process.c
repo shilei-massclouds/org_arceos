@@ -59,6 +59,7 @@ int get_unalign_ctl(struct task_struct *tsk, unsigned long adr)
 
 	return put_user(tsk->thread.align_ctl, (unsigned long __user *)adr);
 }
+#endif // CL
 
 void __show_regs(struct pt_regs *regs)
 {
@@ -101,7 +102,6 @@ void show_regs(struct pt_regs *regs)
 	if (!user_mode(regs))
 		dump_backtrace(regs, NULL, KERN_DEFAULT);
 }
-#endif // CL
 
 unsigned long arch_align_stack(unsigned long sp)
 {

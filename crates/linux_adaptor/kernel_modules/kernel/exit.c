@@ -1073,6 +1073,7 @@ SYSCALL_DEFINE1(exit, int, error_code)
 {
 	do_exit((error_code&0xff)<<8);
 }
+#endif // CL
 
 /*
  * Take down every thread in the group.  This is called by fatal signals
@@ -1108,6 +1109,7 @@ do_group_exit(int exit_code)
 	/* NOTREACHED */
 }
 
+#if 0
 /*
  * this kills every thread in the thread group. Note that any externally
  * wait4()-ing process will get the correct exit code - even if this

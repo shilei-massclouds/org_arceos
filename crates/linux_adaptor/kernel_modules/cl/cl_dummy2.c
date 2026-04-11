@@ -962,3 +962,9 @@ int security_file_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+bool uprobe_deny_signal(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return false;
+}

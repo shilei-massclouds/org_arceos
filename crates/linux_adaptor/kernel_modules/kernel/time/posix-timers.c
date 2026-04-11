@@ -69,7 +69,6 @@ static struct k_itimer *__lock_timer(timer_t timer_id, unsigned long *flags);
 	__timr;								   \
 })
 
-#if 0
 static int hash(struct signal_struct *sig, unsigned int nr)
 {
 	return hash_32(hash32_ptr(sig) ^ nr, HASH_BITS(posix_timers_hashtable));
@@ -97,6 +96,7 @@ static struct k_itimer *posix_timer_by_id(timer_t id)
 	return __posix_timers_find(head, sig, id);
 }
 
+#if 0
 static int posix_timer_add(struct k_itimer *timer)
 {
 	struct signal_struct *sig = current->signal;
@@ -126,12 +126,14 @@ static int posix_timer_add(struct k_itimer *timer)
 	/* POSIX return code when no timer ID could be allocated */
 	return -EAGAIN;
 }
+#endif // CL
 
 static inline void unlock_timer(struct k_itimer *timr, unsigned long flags)
 {
 	spin_unlock_irqrestore(&timr->it_lock, flags);
 }
 
+#if 0
 static int posix_get_realtime_timespec(clockid_t which_clock, struct timespec64 *tp)
 {
 	ktime_get_real_ts64(tp);
@@ -226,8 +228,6 @@ static int posix_get_hrtimer_res(clockid_t which_clock, struct timespec64 *tp)
 	return 0;
 }
 
-#if 0
-
 static __init int init_posix_timers(void)
 {
 	posix_timers_cache = kmem_cache_create("posix_timers_cache",
@@ -247,7 +247,6 @@ static inline int timer_overrun_to_int(struct k_itimer *timr, int baseval)
 
 	return sum > (s64)INT_MAX ? INT_MAX : (int)sum;
 }
-#endif /* CL */
 
 static void common_hrtimer_rearm(struct k_itimer *timr)
 {
@@ -258,7 +257,6 @@ static void common_hrtimer_rearm(struct k_itimer *timr)
 	hrtimer_restart(timer);
 }
 
-#if 0
 /*
  * This function is called from the signal delivery code if
  * info->si_sys_private is not zero, which indicates that the timer has to
@@ -287,6 +285,7 @@ void posixtimer_rearm(struct kernel_siginfo *info)
 	unlock_timer(timr, flags);
 }
 
+#if 0
 int posix_timer_queue_signal(struct k_itimer *timr)
 {
 	int ret, si_private = 0;
@@ -577,6 +576,7 @@ COMPAT_SYSCALL_DEFINE3(timer_create, clockid_t, which_clock,
 	return do_timer_create(which_clock, NULL, created_timer_id);
 }
 #endif
+#endif // CL
 
 static struct k_itimer *__lock_timer(timer_t timer_id, unsigned long *flags)
 {
@@ -628,7 +628,6 @@ static struct k_itimer *__lock_timer(timer_t timer_id, unsigned long *flags)
 
 	return NULL;
 }
-#endif /* CL */
 
 static ktime_t common_hrtimer_remaining(struct k_itimer *timr, ktime_t now)
 {

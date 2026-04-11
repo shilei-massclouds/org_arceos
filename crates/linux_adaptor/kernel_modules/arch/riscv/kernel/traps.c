@@ -39,7 +39,6 @@ int show_unhandled_signals = 1;
 
 static DEFINE_RAW_SPINLOCK(die_lock);
 
-#if 0
 static int copy_code(struct pt_regs *regs, u16 *val, const u16 *insns)
 {
 	const void __user *uaddr = (__force const void __user *)insns;
@@ -74,7 +73,6 @@ static void dump_instr(const char *loglvl, struct pt_regs *regs)
 	}
 	printk("%sCode: %s\n", loglvl, str);
 }
-#endif /* CL */
 
 void die(struct pt_regs *regs, const char *str)
 {
@@ -122,7 +120,6 @@ void die(struct pt_regs *regs, const char *str)
     //PANIC("Linux kernel die.");
 }
 
-#if 0
 void do_trap(struct pt_regs *regs, int signo, int code, unsigned long addr)
 {
 	struct task_struct *tsk = current;
@@ -139,7 +136,6 @@ void do_trap(struct pt_regs *regs, int signo, int code, unsigned long addr)
 
 	force_sig_fault(signo, code, (void __user *)addr);
 }
-#endif /* CL */
 
 static void do_trap_error(struct pt_regs *regs, int signo, int code,
 	unsigned long addr, const char *str)
@@ -173,7 +169,6 @@ asmlinkage __visible __trap_section void name(struct pt_regs *regs)		\
 	}									\
 }
 
-#if 0
 DO_ERROR_INFO(do_trap_unknown,
 	SIGILL, ILL_ILLTRP, "unknown exception");
 DO_ERROR_INFO(do_trap_insn_misaligned,
@@ -209,6 +204,7 @@ asmlinkage __visible __trap_section void do_trap_insn_illegal(struct pt_regs *re
 	}
 }
 
+#if 0
 DO_ERROR_INFO(do_trap_load_fault,
 	SIGSEGV, SEGV_ACCERR, "load access fault");
 

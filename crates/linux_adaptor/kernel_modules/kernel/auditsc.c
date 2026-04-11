@@ -2951,6 +2951,7 @@ void __audit_log_nfcfg(const char *name, u8 af, unsigned int nentries,
 	audit_log_end(ab);
 }
 EXPORT_SYMBOL_GPL(__audit_log_nfcfg);
+#endif // CL
 
 static void audit_log_task(struct audit_buffer *ab)
 {
@@ -2999,6 +3000,7 @@ void audit_core_dumps(long signr)
 	audit_log_end(ab);
 }
 
+#if 0
 /**
  * audit_seccomp - record information about a seccomp action
  * @syscall: syscall number

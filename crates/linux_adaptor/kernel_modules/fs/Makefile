@@ -37,6 +37,7 @@ obj-y += readdir.o
 obj-y += signalfd.o
 obj-y += aio.o
 obj-y += binfmt_elf.o
+obj-y += coredump.o
 
 obj-y += iomap/
 obj-y += ramfs/

@@ -193,7 +193,6 @@ void calculate_sigpending(void)
 	spin_unlock_irq(&current->sighand->siglock);
 }
 
-#if 0
 /* Given the mask, find the first available signal that should be serviced. */
 
 #define SYNCHRONOUS_MASK \
@@ -245,7 +244,6 @@ int next_signal(struct sigpending *pending, sigset_t *mask)
 
 	return sig;
 }
-#endif // CL
 
 static inline void print_dropped_signal(int sig)
 {
@@ -345,7 +343,6 @@ void task_clear_jobctl_pending(struct task_struct *task, unsigned long mask)
 		task_clear_jobctl_trapping(task);
 }
 
-#if 0
 /**
  * task_participate_group_stop - participate in a group stop
  * @task: task participating in a group stop
@@ -388,6 +385,7 @@ static bool task_participate_group_stop(struct task_struct *task)
 	return false;
 }
 
+#if 0
 void task_join_group_stop(struct task_struct *task)
 {
 	unsigned long mask = current->jobctl & JOBCTL_STOP_SIGMASK;
@@ -554,7 +552,6 @@ flush_signal_handlers(struct task_struct *t, int force_default)
 	}
 }
 
-#if 0
 bool unhandled_signal(struct task_struct *tsk, int sig)
 {
 	void __user *handler = tsk->sighand->action[sig-1].sa.sa_handler;
@@ -753,7 +750,6 @@ still_pending:
 	__sigqueue_free(sync);
 	return info->si_signo;
 }
-#endif // CL
 
 /*
  * Tell a process that it has a new active signal..
@@ -1259,7 +1255,6 @@ int send_signal_locked(int sig, struct kernel_siginfo *info,
 	return __send_signal_locked(sig, info, t, type, force);
 }
 
-#if 0
 static void print_fatal_signal(int signr)
 {
 	struct pt_regs *regs = task_pt_regs(current);
@@ -1294,6 +1289,7 @@ static void print_fatal_signal(int signr)
 	preempt_enable();
 }
 
+#if 0
 static int __init setup_print_fatal_signals(char *str)
 {
 	get_option (&str, &print_fatal_signals);
@@ -1733,6 +1729,7 @@ void force_sigsegv(int sig)
 	else
 		force_sig(SIGSEGV);
 }
+#endif // CL
 
 int force_sig_fault_to_task(int sig, int code, void __user *addr,
 			    struct task_struct *t)
@@ -1752,6 +1749,7 @@ int force_sig_fault(int sig, int code, void __user *addr)
 	return force_sig_fault_to_task(sig, code, addr, current);
 }
 
+#if 0
 int send_sig_fault(int sig, int code, void __user *addr, struct task_struct *t)
 {
 	struct kernel_siginfo info;
@@ -2434,7 +2432,6 @@ int ptrace_notify(int exit_code, unsigned long message)
 	return signr;
 }
 
-#if 0
 /**
  * do_signal_stop - handle group stop for SIGSTOP and other stop signals
  * @signr: signr causing group stop if initiating
@@ -2684,6 +2681,7 @@ static int ptrace_signal(int signr, kernel_siginfo_t *info, enum pid_type type)
 	return signr;
 }
 
+#if 0
 static void hide_si_addr_tag_bits(struct ksignal *ksig)
 {
 	switch (siginfo_layout(ksig->sig, ksig->info.si_code)) {
@@ -2705,6 +2703,7 @@ static void hide_si_addr_tag_bits(struct ksignal *ksig)
 		break;
 	}
 }
+#endif // CL
 
 bool get_signal(struct ksignal *ksig)
 {
@@ -2944,16 +2943,20 @@ relock:
 		do_group_exit(signr);
 		/* NOTREACHED */
 	}
+#if 0
 	spin_unlock_irq(&sighand->siglock);
 
 	ksig->sig = signr;
 
 	if (signr && !(ksig->ka.sa.sa_flags & SA_EXPOSE_TAGBITS))
 		hide_si_addr_tag_bits(ksig);
+#endif
+    PANIC("");
 out:
 	return signr > 0;
 }
 
+#if 0
 /**
  * signal_delivered - called after signal delivery to update blocked signals
  * @ksig:		kernel signal struct

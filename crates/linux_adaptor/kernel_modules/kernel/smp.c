@@ -422,7 +422,6 @@ void __smp_call_single_queue(int cpu, struct llist_node *node)
  */
 static int generic_exec_single(int cpu, call_single_data_t *csd)
 {
-#if 0
 	if (cpu == smp_processor_id()) {
 		smp_call_func_t func = csd->func;
 		void *info = csd->info;
@@ -447,9 +446,6 @@ static int generic_exec_single(int cpu, call_single_data_t *csd)
 	}
 
 	__smp_call_single_queue(cpu, &csd->node.llist);
-#endif
-    PANIC("");
-
 	return 0;
 }
 
