@@ -171,8 +171,6 @@ EXPORT_SYMBOL(zero_pfn);
 
 unsigned long highest_memmap_pfn __read_mostly;
 
-#if 0
-
 /*
  * CONFIG_MMU architectures set up ZERO_PAGE in their paging_init()
  */
@@ -182,8 +180,6 @@ static int __init init_zero_pfn(void)
 	return 0;
 }
 early_initcall(init_zero_pfn);
-
-#endif
 
 void mm_trace_rss_stat(struct mm_struct *mm, int member)
 {
