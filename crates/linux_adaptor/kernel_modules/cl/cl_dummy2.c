@@ -968,3 +968,9 @@ bool uprobe_deny_signal(void)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return false;
 }
+
+int security_task_getscheduler(struct task_struct *p)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

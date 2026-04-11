@@ -1358,6 +1358,7 @@ SYSCALL_DEFINE3(sched_setaffinity, pid_t, pid, unsigned int, len,
 	free_cpumask_var(new_mask);
 	return retval;
 }
+#endif // CL
 
 long sched_getaffinity(pid_t pid, struct cpumask *mask)
 {
@@ -1379,6 +1380,7 @@ long sched_getaffinity(pid_t pid, struct cpumask *mask)
 	return 0;
 }
 
+#if 0
 /**
  * sys_sched_getaffinity - get the CPU affinity of a process
  * @pid: pid of the process

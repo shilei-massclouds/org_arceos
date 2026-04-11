@@ -2994,6 +2994,7 @@ void signal_setup_done(int failed, struct ksignal *ksig, int stepping)
 	else
 		signal_delivered(ksig, stepping);
 }
+#endif // CL
 
 /*
  * It could be that complete_signal() picked us to notify about the
@@ -3025,7 +3026,6 @@ static void retarget_shared_pending(struct task_struct *tsk, sigset_t *which)
 			break;
 	}
 }
-#endif /* CL */
 
 void exit_signals(struct task_struct *tsk)
 {
@@ -3100,6 +3100,7 @@ long do_no_restart_syscall(struct restart_block *param)
 {
 	return -EINTR;
 }
+#endif // CL
 
 static void __set_task_blocked(struct task_struct *tsk, const sigset_t *newset)
 {
@@ -3178,6 +3179,7 @@ int sigprocmask(int how, sigset_t *set, sigset_t *oldset)
 }
 EXPORT_SYMBOL(sigprocmask);
 
+#if 0
 /*
  * The api helps set app-provided sigmasks.
  *
@@ -3225,6 +3227,7 @@ int set_compat_user_sigmask(const compat_sigset_t __user *umask,
 	return 0;
 }
 #endif
+#endif // CL
 
 /**
  *  sys_rt_sigprocmask - change the list of currently blocked signals
@@ -3263,6 +3266,7 @@ SYSCALL_DEFINE4(rt_sigprocmask, int, how, sigset_t __user *, nset,
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_COMPAT
 COMPAT_SYSCALL_DEFINE4(rt_sigprocmask, int, how, compat_sigset_t __user *, nset,
 		compat_sigset_t __user *, oset, compat_size_t, sigsetsize)
@@ -4200,6 +4204,7 @@ void kernel_sigaction(int sig, __sighandler_t action)
 	spin_unlock_irq(&current->sighand->siglock);
 }
 EXPORT_SYMBOL(kernel_sigaction);
+#endif // CL
 
 void __weak sigaction_compat_abi(struct k_sigaction *act,
 		struct k_sigaction *oact)
@@ -4271,6 +4276,7 @@ int do_sigaction(int sig, struct k_sigaction *act, struct k_sigaction *oact)
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_DYNAMIC_SIGFRAME
 static inline void sigaltstack_lock(void)
 	__acquires(&current->sighand->siglock)
@@ -4521,6 +4527,8 @@ SYSCALL_DEFINE3(sigprocmask, int, how, old_sigset_t __user *, nset,
 }
 #endif /* __ARCH_WANT_SYS_SIGPROCMASK */
 
+#endif // CL
+
 #ifndef CONFIG_ODD_RT_SIGACTION
 /**
  *  sys_rt_sigaction - alter an action taken by a process
@@ -4585,7 +4593,7 @@ COMPAT_SYSCALL_DEFINE4(rt_sigaction, int, sig,
 
 	ret = do_sigaction(sig, act ? &new_ka : NULL, oact ? &old_ka : NULL);
 	if (!ret && oact) {
-		ret = put_user(ptr_to_compat(old_ka.sa.sa_handler), 
+		ret = put_user(ptr_to_compat(old_ka.sa.sa_handler),
 			       &oact->sa_handler);
 		ret |= put_compat_sigset(&oact->sa_mask, &old_ka.sa.sa_mask,
 					 sizeof(oact->sa_mask));
@@ -4600,6 +4608,7 @@ COMPAT_SYSCALL_DEFINE4(rt_sigaction, int, sig,
 #endif
 #endif /* !CONFIG_ODD_RT_SIGACTION */
 
+#if 0
 #ifdef CONFIG_OLD_SIGACTION
 SYSCALL_DEFINE3(sigaction, int, sig,
 		const struct old_sigaction __user *, act,

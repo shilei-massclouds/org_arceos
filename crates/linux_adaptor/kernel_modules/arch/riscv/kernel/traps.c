@@ -204,7 +204,6 @@ asmlinkage __visible __trap_section void do_trap_insn_illegal(struct pt_regs *re
 	}
 }
 
-#if 0
 DO_ERROR_INFO(do_trap_load_fault,
 	SIGSEGV, SEGV_ACCERR, "load access fault");
 
@@ -226,6 +225,7 @@ static const struct {
 	},
 };
 
+#if 0
 static void do_trap_misaligned(struct pt_regs *regs, enum misaligned_access_type type)
 {
 	irqentry_state_t state;

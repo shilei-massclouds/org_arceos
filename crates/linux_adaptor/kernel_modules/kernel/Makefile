@@ -33,6 +33,7 @@ obj-y += auditsc.o
 obj-y += async.o
 obj-y += sys_ni.o
 obj-y += padata.o
+obj-y += compat.o
 
 #obj-y += tracepoint.o
 obj-y += trace/

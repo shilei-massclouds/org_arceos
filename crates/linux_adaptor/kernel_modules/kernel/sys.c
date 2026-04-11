@@ -956,6 +956,8 @@ SYSCALL_DEFINE1(setfsgid, gid_t, gid)
 }
 #endif /* CONFIG_MULTIUSER */
 
+#endif // CL
+
 /**
  * sys_getpid - return the thread group id of the current process
  *
@@ -970,6 +972,7 @@ SYSCALL_DEFINE0(getpid)
 	return task_tgid_vnr(current);
 }
 
+#if 0
 /* Thread ID - the internal kernel "pid" */
 SYSCALL_DEFINE0(gettid)
 {
