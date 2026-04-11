@@ -1052,8 +1052,7 @@ asmlinkage void __init setup_vm(uintptr_t dtb_pa)
 	relocate_kernel();
 #endif
 
-    // FixMe
-	//apply_early_boot_alternatives();
+	apply_early_boot_alternatives();
 	pt_ops_set_early();
 
 	/* Setup early PGD for fixmap */

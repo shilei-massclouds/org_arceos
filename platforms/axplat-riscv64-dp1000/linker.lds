@@ -148,6 +148,14 @@ SECTIONS
     }
 
     __init_data_end = .;
+
+    . = ALIGN(8);
+    .alternative : {
+        __alt_start = .;
+        KEEP(*(.alternative))
+        __alt_end = .;
+    }
+
     __init_end = .;
 
     _srodata = .;

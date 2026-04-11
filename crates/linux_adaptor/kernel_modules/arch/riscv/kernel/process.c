@@ -35,6 +35,8 @@ unsigned long __stack_chk_guard __read_mostly;
 EXPORT_SYMBOL(__stack_chk_guard);
 #endif
 
+#include "adaptor.h"
+
 extern asmlinkage void ret_from_fork(void);
 
 void noinstr arch_cpu_idle(void)
@@ -194,7 +196,6 @@ void arch_release_task_struct(struct task_struct *tsk)
 		riscv_v_thread_free(tsk);
 }
 
-#if 0
 int arch_dup_task_struct(struct task_struct *dst, struct task_struct *src)
 {
 	fstate_save(src, task_pt_regs(src));
@@ -206,7 +207,6 @@ int arch_dup_task_struct(struct task_struct *dst, struct task_struct *src)
 
 	return 0;
 }
-#endif /* CL */
 
 int copy_thread(struct task_struct *p, const struct kernel_clone_args *args)
 {

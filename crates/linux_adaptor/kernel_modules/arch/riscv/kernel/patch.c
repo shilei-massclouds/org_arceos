@@ -239,7 +239,6 @@ int patch_insn_write(void *addr, const void *insn, size_t len)
 }
 NOKPROBE_SYMBOL(patch_insn_write);
 
-#if 0
 int patch_text_nosync(void *addr, const void *insns, size_t len)
 {
 	int ret;
@@ -252,6 +251,7 @@ int patch_text_nosync(void *addr, const void *insns, size_t len)
 }
 NOKPROBE_SYMBOL(patch_text_nosync);
 
+#if 0
 static int patch_text_cb(void *data)
 {
 	struct patch_insn *patch = data;

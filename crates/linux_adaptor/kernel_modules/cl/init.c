@@ -397,6 +397,18 @@ void cl_setup_arch_later(void)
     setup_smp();
     riscv_init_cbo_blocksizes();
     riscv_fill_hwcap();
+    apply_boot_alternatives();
+    // FixMe:
+#if 0
+    init_rt_signal_env();
+
+    if (IS_ENABLED(CONFIG_RISCV_ISA_ZICBOM) &&
+        riscv_isa_extension_available(NULL, ZICBOM))
+        riscv_noncoherent_supported();
+    riscv_set_dma_cache_alignment();
+
+    riscv_user_isa_enable();
+#endif
 
     setup_command_line(boot_command_line/* command_line */);
     setup_nr_cpu_ids();
