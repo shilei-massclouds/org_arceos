@@ -353,10 +353,10 @@ void do_trap_ecall_u(struct pt_regs *regs)
 		add_random_kstack_offset();
 
         printk("%s: syscall(%u)\n", __func__, syscall);
-#if 0
 		if (syscall >= 0 && syscall < NR_syscalls)
 			syscall_handler(regs, syscall);
 
+#if 0
 		/*
 		 * Ultimately, this value will get limited by KSTACK_OFFSET_MAX(),
 		 * so the maximum stack offset is 1k bytes (10 bits).

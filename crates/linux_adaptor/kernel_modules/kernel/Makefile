@@ -1,15 +1,5 @@
 # Makefile for `kernel`
 
-obj-y += printk/
-obj-y += sched/
-obj-y += locking/
-obj-y += dma/
-obj-y += entry/
-obj-y += irq/
-obj-y += rcu/
-obj-y += time/
-obj-y += futex/
-
 obj-y += panic.o
 obj-y += cpu.o
 obj-y += fork.o
@@ -41,7 +31,17 @@ obj-y += params.o
 obj-y += resource.o
 obj-y += auditsc.o
 obj-y += async.o
+obj-y += sys_ni.o
 
 #obj-y += tracepoint.o
-
 obj-y += trace/
+
+obj-y += printk/
+obj-y += sched/
+obj-y += locking/
+obj-y += dma/
+obj-y += entry/
+obj-y += irq/
+obj-y += rcu/
+obj-y += time/
+obj-y += futex/
