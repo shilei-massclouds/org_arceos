@@ -925,7 +925,6 @@ CL_MINE(__riscv_sys_vmsplice)
 CL_MINE(__riscv_sys_wait4)
 CL_MINE(__riscv_sys_waitid)
 CL_MINE(__riscv_sys_write)
-CL_MINE(__riscv_sys_writev)
 
 /* Missing compat syscall wrappers referenced by arch/riscv/kernel/compat_syscall_table.c. */
 CL_MINE(__riscv_compat_sys_execve)

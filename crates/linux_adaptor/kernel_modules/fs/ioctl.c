@@ -809,6 +809,34 @@ static int ioctl_get_fs_sysfs_path(struct file *file, void __user *argp)
  * The LSM mailing list should also be notified of any command additions or
  * changes, as specific LSMs may be affected.
  */
+static bool _need_to_handle(unsigned int cmd)
+{
+	switch (cmd) {
+	case FIOCLEX:
+	case FIONCLEX:
+	case FIONBIO:
+	case FIOASYNC:
+	case FIOQSIZE:
+	case FIFREEZE:
+	case FITHAW:
+	case FS_IOC_FIEMAP:
+	case FIGETBSZ:
+	case FICLONE:
+	case FICLONERANGE:
+	case FIDEDUPERANGE:
+	case FIONREAD:
+	case FS_IOC_GETFLAGS:
+	case FS_IOC_SETFLAGS:
+	case FS_IOC_FSGETXATTR:
+	case FS_IOC_FSSETXATTR:
+	case FS_IOC_GETFSUUID:
+	case FS_IOC_GETFSSYSFSPATH:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static int do_vfs_ioctl(struct file *filp, unsigned int fd,
 			unsigned int cmd, unsigned long arg)
 {
