@@ -39,6 +39,7 @@ obj-y += aio.o
 obj-y += binfmt_elf.o
 obj-y += coredump.o
 obj-y += ioctl.o
+obj-y += select.o
 
 obj-y += iomap/
 obj-y += ramfs/

@@ -986,3 +986,6 @@ int security_file_fcntl(struct file *file, unsigned int cmd, unsigned long arg)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+// net/socket.c
+unsigned int sysctl_net_busy_poll __read_mostly;
