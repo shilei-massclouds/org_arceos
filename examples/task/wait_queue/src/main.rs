@@ -21,7 +21,6 @@ fn test_wait() {
     static WQ1: WaitQueue = WaitQueue::new();
     static WQ2: WaitQueue = WaitQueue::new();
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
-    println!("wait_queue: test_wait()");
 
     for _ in 0..NUM_TASKS {
         thread::spawn(move || {
@@ -35,18 +34,14 @@ fn test_wait() {
     }
 
     WQ1.wait_until(|| COUNTER.load(Ordering::Acquire) == NUM_TASKS);
-    println!("wait_queue: all tasks entered phase1");
     assert_eq!(COUNTER.load(Ordering::Acquire), NUM_TASKS);
 
     while WQ2.len() < NUM_TASKS {
         thread::yield_now();
     }
-    println!("wait_queue: all tasks are waiting on WQ2");
     WQ2.notify_all(true); // WQ2.wait()
-    println!("wait_queue: WQ2 notify_all done");
 
     WQ1.wait_until(|| COUNTER.load(Ordering::Acquire) == 0);
-    println!("wait_queue: all tasks left phase2");
     assert_eq!(COUNTER.load(Ordering::Acquire), 0);
 
     println!("wait_queue: test_wait() OK!");
