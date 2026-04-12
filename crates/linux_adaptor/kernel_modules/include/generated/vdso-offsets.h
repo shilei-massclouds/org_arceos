@@ -1,7 +1,7 @@
-#define __vdso_clock_getres_offset	0x09a8
-#define __vdso_clock_gettime_offset	0x05ba
-#define __vdso_flush_icache_offset	0x0a30
-#define __vdso_getcpu_offset	0x0a24
-#define __vdso_gettimeofday_offset	0x0820
-#define __vdso_riscv_hwprobe_offset	0x0a3a
+#define __vdso_clock_getres_offset	0x09cc
+#define __vdso_clock_gettime_offset	0x05de
+#define __vdso_flush_icache_offset	0x05c8
+#define __vdso_getcpu_offset	0x05bc
+#define __vdso_gettimeofday_offset	0x0844
+#define __vdso_riscv_hwprobe_offset	0x0a46
 #define __vdso_rt_sigreturn_offset	0x05b0

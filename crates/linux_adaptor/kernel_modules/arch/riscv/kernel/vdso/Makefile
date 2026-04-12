@@ -4,8 +4,9 @@ vdso-asm-objs := rt_sigreturn getcpu flush_icache sys_hwprobe note
 vdso-c-objs := vgettimeofday hwprobe
 vdso-built-objs := $(vdso-asm-objs) $(vdso-c-objs)
 vdso-link-objs := $(vdso-built-objs)
-vdso-export-syms := __vdso_rt_sigreturn __vdso_vgettimeofday __vdso_getcpu \
-	__vdso_flush_icache __vdso_hwprobe __vdso_sys_hwprobe
+vdso-export-syms := __vdso_rt_sigreturn __vdso_gettimeofday \
+	__vdso_clock_gettime __vdso_clock_getres __vdso_getcpu \
+	__vdso_flush_icache __vdso_riscv_hwprobe
 
 obj-vdso = $(addprefix $(curdir),$(addsuffix .o,$(vdso-built-objs)))
 
@@ -43,6 +44,7 @@ vdso-asm-cflags = $(vdso-common-cppflags) $(vdso-common-include-flags) \
 	-march=rv64imafdcv_zicsr_zifencei $(vdso-noarch-attr)
 vdso-lds-cflags = $(vdso-common-cppflags) $(vdso-common-include-flags) \
 	$(vdso-common-kbuild-flags) -D__ASSEMBLY__
+vdso-lds-cflags += -DHAS_VGETTIMEOFDAY
 vdso-vgettimeofday-src-include := /home/cloud/gitStudy/linux-6.12.37/lib/vdso/gettimeofday.c
 vdso-c-common-cflags = $(vdso-common-cppflags) $(vdso-common-include-flags) \
 	-include ./include/linux/compiler_types.h $(vdso-common-kbuild-flags) \
@@ -87,8 +89,15 @@ $(vdso-so): $(vdso-so-dbg) FORCE
 # link rule for the .so file, .lds has to be first
 $(vdso-so-dbg): $(vdso-lds) $(obj-vdso) FORCE
 	$(vdso-ld) $(vdso-ldflags) -T $(vdso-lds) $(vdso-link-objs-full) -o $@.tmp && \
-	$(vdso-objcopy) $(vdso-export-flags) $@.tmp $@ && \
-	rm $@.tmp
+		$(vdso-objcopy) $(vdso-export-flags) $@.tmp $@ && \
+		rm $@.tmp
+
+gen-vdsosym := $(curdir)gen_vdso_offsets.sh
+quiet_cmd_vdsosym = VDSOSYM $@
+	cmd_vdsosym = $(NM) $< | $(gen-vdsosym) | LC_ALL=C sort > $@
+
+include/generated/vdso-offsets.h: $(vdso-so-dbg) FORCE
+	$(call if_changed,vdsosym)
 
 $(vdso-asm-objs-full): $(curdir)%.o: $(curdir)%.S
 	$(vdso-cc) -Wp,-MMD,$(curdir).$(@F).d $(vdso-asm-cflags) \
