@@ -11,10 +11,10 @@ unsafe extern "C" fn condition_fn_hook<F>(
     opaque: *mut c_void
 ) -> c_int
 where
-    F: FnOnce() -> bool,
+    F: Fn() -> bool,
 {
-    let boxed_closure = Box::from_raw(opaque as *mut F);
-    if (*boxed_closure)() {
+    let condition = &*(opaque as *const F);
+    if condition() {
         1
     } else {
         0
@@ -23,7 +23,7 @@ where
 
 fn get_condition_fn<F>() -> ConditionFn
 where
-    F: FnOnce() -> bool,
+    F: Fn() -> bool,
 {
     condition_fn_hook::<F>
 }
@@ -147,6 +147,7 @@ impl WaitQueue {
         let condition_fn = get_condition_fn::<F>();
         unsafe {
             swait_until(self, condition_fn, opaque);
+            drop(Box::from_raw(opaque as *mut F));
         }
     }
 
@@ -191,7 +192,9 @@ impl WaitQueue {
         let opaque = Box::into_raw(Box::new(condition)) as *mut c_void;
         let condition_fn = get_condition_fn::<F>();
         let timeout = unsafe {
-            swait_timeout_until(self, dur.as_millis() as i64, condition_fn, opaque)
+            let timeout = swait_timeout_until(self, dur.as_millis() as i64, condition_fn, opaque);
+            drop(Box::from_raw(opaque as *mut F));
+            timeout
         };
         /*
          * swait_timeout_until

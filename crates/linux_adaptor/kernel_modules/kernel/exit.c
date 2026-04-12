@@ -1896,7 +1896,7 @@ int linux_wait_for_exit(pid_t pid, int *stat)
 	struct wait_opts wo = {
 		.wo_type	= PIDTYPE_PID,
 		.wo_pid		= find_get_pid(pid),
-		.wo_flags	= __WALL,
+		.wo_flags	= __WALL | WEXITED,
 	};
 	int ret;
 
