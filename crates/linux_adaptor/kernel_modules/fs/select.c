@@ -91,7 +91,7 @@ u64 select_estimate_accuracy(struct timespec64 *tv)
 	return ret;
 }
 
-
+#endif // CL
 
 struct poll_table_page {
 	struct poll_table_page * next;
@@ -231,7 +231,6 @@ static void __pollwait(struct file *filp, wait_queue_head_t *wait_address,
 	entry->wait.private = pwq;
 	add_wait_queue(wait_address, &entry->wait);
 }
-#endif // CL
 
 static int poll_schedule_timeout(struct poll_wqueues *pwq, int state,
 			  ktime_t *expires, unsigned long slack)
@@ -259,7 +258,6 @@ static int poll_schedule_timeout(struct poll_wqueues *pwq, int state,
 	return rc;
 }
 
-#if 0
 /**
  * poll_select_set_timeout - helper function to setup the timeout value
  * @to:		pointer to timespec64 variable for the final timeout
@@ -287,7 +285,6 @@ int poll_select_set_timeout(struct timespec64 *to, time64_t sec, long nsec)
 	}
 	return 0;
 }
-#endif // CL
 
 enum poll_time_type {
 	PT_TIMEVAL = 0,

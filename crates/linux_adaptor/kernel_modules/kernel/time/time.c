@@ -841,6 +841,7 @@ unsigned long nsecs_to_jiffies(u64 n)
 	return (unsigned long)nsecs_to_jiffies64(n);
 }
 EXPORT_SYMBOL_GPL(nsecs_to_jiffies);
+#endif // CL
 
 /**
  * timespec64_add_safe - Add two timespec64 values and do a safety check
@@ -901,6 +902,7 @@ int get_timespec64(struct timespec64 *ts,
 }
 EXPORT_SYMBOL_GPL(get_timespec64);
 
+#if 0
 /**
  * put_timespec64 - convert timespec64 value to __kernel_timespec format and
  * 		    copy the latter to userspace

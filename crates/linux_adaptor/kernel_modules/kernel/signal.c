@@ -3179,7 +3179,6 @@ int sigprocmask(int how, sigset_t *set, sigset_t *oldset)
 }
 EXPORT_SYMBOL(sigprocmask);
 
-#if 0
 /*
  * The api helps set app-provided sigmasks.
  *
@@ -3207,6 +3206,7 @@ int set_user_sigmask(const sigset_t __user *umask, size_t sigsetsize)
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_COMPAT
 int set_compat_user_sigmask(const compat_sigset_t __user *umask,
 			    size_t sigsetsize)

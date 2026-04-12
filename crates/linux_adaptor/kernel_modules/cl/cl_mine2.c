@@ -921,7 +921,6 @@ CL_MINE(__riscv_sys_vhangup)
 CL_MINE(__riscv_sys_vmsplice)
 CL_MINE(__riscv_sys_wait4)
 CL_MINE(__riscv_sys_waitid)
-CL_MINE(__riscv_sys_write)
 
 /* Missing compat syscall wrappers referenced by arch/riscv/kernel/compat_syscall_table.c. */
 CL_MINE(__riscv_compat_sys_execve)
@@ -993,11 +992,6 @@ CL_MINE(audit_log_d_path_exe)
 CL_MINE(audit_log_end)
 
 /* Additional native functions referenced by fs/select.c and time helpers. */
-CL_MINE(poll_initwait)
 CL_MINE(select_estimate_accuracy)
-CL_MINE(poll_freewait)
-CL_MINE(get_timespec64)
-CL_MINE(poll_select_set_timeout)
-CL_MINE(set_user_sigmask)
 CL_MINE(ktime_get_ts64)
 CL_MINE(put_timespec64)
