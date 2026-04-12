@@ -846,7 +846,6 @@ void do_close_on_exec(struct files_struct *files)
 	spin_unlock(&files->file_lock);
 }
 
-#if 0
 static struct file *__get_file_rcu(struct file __rcu **f)
 {
 	struct file __rcu *file;
@@ -913,6 +912,7 @@ struct file *get_file_rcu(struct file __rcu **f)
 }
 EXPORT_SYMBOL_GPL(get_file_rcu);
 
+#if 0
 /**
  * get_file_active - try go get a reference to a file
  * @f: the file to get a reference on

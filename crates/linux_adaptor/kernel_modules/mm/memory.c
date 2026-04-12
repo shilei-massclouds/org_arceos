@@ -721,6 +721,7 @@ struct folio *vm_normal_folio_pmd(struct vm_area_struct *vma,
 	return NULL;
 }
 #endif
+#endif // CL
 
 static void restore_exclusive_pte(struct vm_area_struct *vma,
 				  struct page *page, unsigned long address,
@@ -1057,7 +1058,6 @@ copy_pte:
 	__copy_present_ptes(dst_vma, src_vma, dst_pte, src_pte, pte, addr, 1);
 	return 1;
 }
-#endif // CL
 
 static inline struct folio *folio_prealloc(struct mm_struct *src_mm,
 		struct vm_area_struct *vma, unsigned long addr, bool need_zero)
@@ -1082,7 +1082,6 @@ static inline struct folio *folio_prealloc(struct mm_struct *src_mm,
 	return new_folio;
 }
 
-#if 0
 static int
 copy_pte_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
 	       pmd_t *dst_pmd, pmd_t *src_pmd, unsigned long addr,
@@ -1429,7 +1428,6 @@ copy_page_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma)
 		untrack_pfn_copy(dst_vma, pfn);
 	return ret;
 }
-#endif // CL
 
 /* Whether we should zap all COWed (private) pages too */
 static inline bool should_zap_cows(struct zap_details *details)

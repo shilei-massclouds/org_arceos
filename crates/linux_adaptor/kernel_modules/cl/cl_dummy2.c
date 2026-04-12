@@ -989,3 +989,18 @@ int security_file_fcntl(struct file *file, unsigned int cmd, unsigned long arg)
 
 // net/socket.c
 unsigned int sysctl_net_busy_poll __read_mostly;
+
+void uprobe_start_dup_mmap(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void uprobe_end_dup_mmap(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void uprobe_dup_mmap(struct mm_struct *oldmm, struct mm_struct *newmm)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}

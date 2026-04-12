@@ -328,7 +328,6 @@ int anon_vma_clone(struct vm_area_struct *dst, struct vm_area_struct *src)
 	return -ENOMEM;
 }
 
-#if 0
 /*
  * Attach vma to its own anon_vma, as well as to the anon_vmas that
  * the corresponding VMA in the parent process is attached to.
@@ -395,7 +394,6 @@ int anon_vma_fork(struct vm_area_struct *vma, struct vm_area_struct *pvma)
 	unlink_anon_vmas(vma);
 	return -ENOMEM;
 }
-#endif // CL
 
 void unlink_anon_vmas(struct vm_area_struct *vma)
 {
@@ -1206,7 +1204,6 @@ static __always_inline unsigned int __folio_add_rmap(struct folio *folio,
 	return nr;
 }
 
-#if 0
 /**
  * folio_move_anon_rmap - move a folio to our anon_vma
  * @folio:	The folio to move to our anon_vma
@@ -1231,7 +1228,6 @@ void folio_move_anon_rmap(struct folio *folio, struct vm_area_struct *vma)
 	 */
 	WRITE_ONCE(folio->mapping, anon_vma);
 }
-#endif // CL
 
 /**
  * __folio_set_anon - set up a new anonymous rmap for a folio

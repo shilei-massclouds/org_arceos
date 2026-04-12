@@ -1504,6 +1504,7 @@ int replace_mm_exe_file(struct mm_struct *mm, struct file *new_exe_file)
 	}
 	return 0;
 }
+#endif // CL
 
 /**
  * get_mm_exe_file - acquire a reference to the mm's executable file
@@ -1522,6 +1523,7 @@ struct file *get_mm_exe_file(struct mm_struct *mm)
 	return exe_file;
 }
 
+#if 0
 /**
  * get_task_exe_file - acquire a reference to the task's executable file
  * @task: The task.
@@ -1702,7 +1704,6 @@ static struct mm_struct *dup_mm(struct task_struct *tsk,
 	struct mm_struct *mm;
 	int err;
 
-#if 0
 	mm = allocate_mm();
 	if (!mm)
 		goto fail_nomem;
@@ -1723,9 +1724,6 @@ static struct mm_struct *dup_mm(struct task_struct *tsk,
 
 	if (mm->binfmt && !try_module_get(mm->binfmt->module))
 		goto free_pt;
-
-#endif
-    PANIC("");
 
 	return mm;
 
@@ -2943,6 +2941,7 @@ SYSCALL_DEFINE0(vfork)
 	return kernel_clone(&args);
 }
 #endif
+#endif // CL
 
 #ifdef __ARCH_WANT_SYS_CLONE
 #ifdef CONFIG_CLONE_BACKWARDS
@@ -2982,6 +2981,7 @@ SYSCALL_DEFINE5(clone, unsigned long, clone_flags, unsigned long, newsp,
 }
 #endif
 
+#if 0
 noinline static int copy_clone_args_from_user(struct kernel_clone_args *kargs,
 					      struct clone_args __user *uargs,
 					      size_t usize)
