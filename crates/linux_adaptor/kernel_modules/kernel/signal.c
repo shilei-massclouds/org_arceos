@@ -1715,7 +1715,6 @@ void force_exit_sig(int sig)
 	force_sig_info_to_task(&info, current, HANDLER_EXIT);
 }
 
-#if 0
 /*
  * When things go south during signal handling, we
  * will force a SIGSEGV. And if the signal that caused
@@ -1729,7 +1728,6 @@ void force_sigsegv(int sig)
 	else
 		force_sig(SIGSEGV);
 }
-#endif // CL
 
 int force_sig_fault_to_task(int sig, int code, void __user *addr,
 			    struct task_struct *t)
@@ -2681,7 +2679,6 @@ static int ptrace_signal(int signr, kernel_siginfo_t *info, enum pid_type type)
 	return signr;
 }
 
-#if 0
 static void hide_si_addr_tag_bits(struct ksignal *ksig)
 {
 	switch (siginfo_layout(ksig->sig, ksig->info.si_code)) {
@@ -2703,7 +2700,6 @@ static void hide_si_addr_tag_bits(struct ksignal *ksig)
 		break;
 	}
 }
-#endif // CL
 
 bool get_signal(struct ksignal *ksig)
 {
@@ -2943,20 +2939,16 @@ relock:
 		do_group_exit(signr);
 		/* NOTREACHED */
 	}
-#if 0
 	spin_unlock_irq(&sighand->siglock);
 
 	ksig->sig = signr;
 
 	if (signr && !(ksig->ka.sa.sa_flags & SA_EXPOSE_TAGBITS))
 		hide_si_addr_tag_bits(ksig);
-#endif
-    PANIC("");
 out:
 	return signr > 0;
 }
 
-#if 0
 /**
  * signal_delivered - called after signal delivery to update blocked signals
  * @ksig:		kernel signal struct
@@ -2994,7 +2986,6 @@ void signal_setup_done(int failed, struct ksignal *ksig, int stepping)
 	else
 		signal_delivered(ksig, stepping);
 }
-#endif // CL
 
 /*
  * It could be that complete_signal() picked us to notify about the
@@ -3418,7 +3409,6 @@ enum siginfo_layout siginfo_layout(unsigned sig, int si_code)
 	return layout;
 }
 
-#if 0
 static inline char __user *si_expansion(const siginfo_t __user *info)
 {
 	return ((char __user *)info) + sizeof(struct kernel_siginfo);
@@ -3434,6 +3424,7 @@ int copy_siginfo_to_user(siginfo_t __user *to, const kernel_siginfo_t *from)
 	return 0;
 }
 
+#if 0
 static int post_copy_siginfo_from_user(kernel_siginfo_t *info,
 				       const siginfo_t __user *from)
 {
@@ -4376,6 +4367,7 @@ int restore_altstack(const stack_t __user *uss)
 	/* squash all but EFAULT for now */
 	return 0;
 }
+#endif // CL
 
 int __save_altstack(stack_t __user *uss, unsigned long sp)
 {
@@ -4386,6 +4378,7 @@ int __save_altstack(stack_t __user *uss, unsigned long sp)
 	return err;
 }
 
+#if 0
 #ifdef CONFIG_COMPAT
 static int do_compat_sigaltstack(const compat_stack_t __user *uss_ptr,
 				 compat_stack_t __user *uoss_ptr)

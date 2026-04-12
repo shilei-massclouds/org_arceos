@@ -300,6 +300,7 @@ static inline u64 account_other_time(u64 max)
 
 	return accounted;
 }
+#endif /* CL */
 
 #ifdef CONFIG_64BIT
 static inline u64 read_sum_exec_runtime(struct task_struct *t)
@@ -366,7 +367,6 @@ void thread_group_cputime(struct task_struct *tsk, struct task_cputime *times)
 	done_seqretry_irqrestore(&sig->stats_lock, seq, flags);
 	rcu_read_unlock();
 }
-#endif /* CL */
 
 #ifdef CONFIG_IRQ_TIME_ACCOUNTING
 /*
@@ -539,7 +539,6 @@ void account_idle_ticks(unsigned long ticks)
 	account_idle_time(cputime);
 }
 
-#if 0
 /*
  * Adjust tick based cputime random precision against scheduler runtime
  * accounting.
@@ -638,6 +637,7 @@ out:
 	raw_spin_unlock_irqrestore(&prev->lock, flags);
 }
 
+#if 0
 void task_cputime_adjusted(struct task_struct *p, u64 *ut, u64 *st)
 {
 	struct task_cputime cputime = {
@@ -649,6 +649,7 @@ void task_cputime_adjusted(struct task_struct *p, u64 *ut, u64 *st)
 	cputime_adjust(&cputime, &p->prev_cputime, ut, st);
 }
 EXPORT_SYMBOL_GPL(task_cputime_adjusted);
+#endif /* CL */
 
 void thread_group_cputime_adjusted(struct task_struct *p, u64 *ut, u64 *st)
 {
@@ -657,7 +658,6 @@ void thread_group_cputime_adjusted(struct task_struct *p, u64 *ut, u64 *st)
 	thread_group_cputime(p, &cputime);
 	cputime_adjust(&cputime, &p->signal->prev_cputime, ut, st);
 }
-#endif /* CL */
 #endif /* !CONFIG_VIRT_CPU_ACCOUNTING_NATIVE */
 
 #if 0

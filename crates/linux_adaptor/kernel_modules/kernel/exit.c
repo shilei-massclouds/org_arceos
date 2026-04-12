@@ -553,7 +553,6 @@ static void exit_mm(void)
 	exit_mm_release(current, mm);
 	if (!mm)
 		return;
-#if 0
 	mmap_read_lock(mm);
 	mmgrab_lazy_tlb(mm);
 	BUG_ON(mm != current->active_mm);
@@ -581,8 +580,6 @@ static void exit_mm(void)
 	mmput(mm);
 	if (test_thread_flag(TIF_MEMDIE))
 		exit_oom_victim();
-#endif
-    PANIC("");
 }
 
 static struct task_struct *find_alive_thread(struct task_struct *p)
@@ -1170,7 +1167,6 @@ static int wait_task_zombie(struct wait_opts *wo, struct task_struct *p)
 	if (!likely(wo->wo_flags & WEXITED))
 		return 0;
 
-#if 0
 	if (unlikely(wo->wo_flags & WNOWAIT)) {
 		status = (p->signal->flags & SIGNAL_GROUP_EXIT)
 			? p->signal->group_exit_code : p->exit_code;
@@ -1271,8 +1267,6 @@ static int wait_task_zombie(struct wait_opts *wo, struct task_struct *p)
 		release_task(p);
 
 out_info:
-#endif
-    PANIC("");
 	infop = wo->wo_info;
 	if (infop) {
 		if ((status & 0x7f) == 0) {
