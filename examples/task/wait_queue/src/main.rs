@@ -11,37 +11,32 @@ use std::time::Duration;
 
 #[cfg(feature = "axstd")]
 use std::os::arceos::api::task::{self as api, AxWaitQueueHandle};
-#[cfg(feature = "axstd")]
-use std::os::arceos::modules::axtask::WaitQueue;
 
 const NUM_TASKS: usize = 16;
 
 #[cfg(feature = "axstd")]
 fn test_wait() {
-    static WQ1: WaitQueue = WaitQueue::new();
-    static WQ2: WaitQueue = WaitQueue::new();
+    static WQ1: AxWaitQueueHandle = AxWaitQueueHandle::new();
+    static WQ2: AxWaitQueueHandle = AxWaitQueueHandle::new();
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
 
     for _ in 0..NUM_TASKS {
         thread::spawn(move || {
             COUNTER.fetch_add(1, Ordering::Release);
-            WQ1.notify_one(true); // WQ1.wait_until()
-            WQ2.wait();
+            api::ax_wait_queue_wake(&WQ1, 1); // WQ1.wait_until()
+            api::ax_wait_queue_wait(&WQ2, None);
 
             COUNTER.fetch_sub(1, Ordering::Release);
-            WQ1.notify_one(true); // WQ1.wait_until()
+            api::ax_wait_queue_wake(&WQ1, 1); // WQ1.wait_until()
         });
     }
 
-    WQ1.wait_until(|| COUNTER.load(Ordering::Acquire) == NUM_TASKS);
+    api::ax_wait_queue_wait_until(&WQ1, || COUNTER.load(Ordering::Acquire) == NUM_TASKS, None);
     assert_eq!(COUNTER.load(Ordering::Acquire), NUM_TASKS);
 
-    while WQ2.len() < NUM_TASKS {
-        thread::yield_now();
-    }
-    WQ2.notify_all(true); // WQ2.wait()
+    api::ax_wait_queue_wake(&WQ2, u32::MAX); // WQ2.wait()
 
-    WQ1.wait_until(|| COUNTER.load(Ordering::Acquire) == 0);
+    api::ax_wait_queue_wait_until(&WQ1, || COUNTER.load(Ordering::Acquire) == 0, None);
     assert_eq!(COUNTER.load(Ordering::Acquire), 0);
 
     println!("wait_queue: test_wait() OK!");
