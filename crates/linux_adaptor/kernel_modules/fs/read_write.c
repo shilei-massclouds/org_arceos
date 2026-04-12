@@ -403,12 +403,12 @@ off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence)
 	return retval;
 }
 
-#if 0
 SYSCALL_DEFINE3(lseek, unsigned int, fd, off_t, offset, unsigned int, whence)
 {
 	return ksys_lseek(fd, offset, whence);
 }
 
+#if 0
 #ifdef CONFIG_COMPAT
 COMPAT_SYSCALL_DEFINE3(lseek, unsigned int, fd, compat_off_t, offset, unsigned int, whence)
 {

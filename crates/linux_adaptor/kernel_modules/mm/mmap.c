@@ -1663,13 +1663,13 @@ int vm_munmap(unsigned long start, size_t len)
 }
 EXPORT_SYMBOL(vm_munmap);
 
-#if 0
 SYSCALL_DEFINE2(munmap, unsigned long, addr, size_t, len)
 {
 	addr = untagged_addr(addr);
 	return __vm_munmap(addr, len, true);
 }
 
+#if 0
 
 /*
  * Emulation of deprecated remap_file_pages() syscall.

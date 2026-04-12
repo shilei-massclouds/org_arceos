@@ -210,7 +210,6 @@ int vfs_getattr(const struct path *path, struct kstat *stat,
 }
 EXPORT_SYMBOL(vfs_getattr);
 
-#if 0
 /**
  * vfs_fstat - Get the basic attributes by file descriptor
  * @fd: The file descriptor referring to the file of interest
@@ -233,7 +232,6 @@ int vfs_fstat(int fd, struct kstat *stat)
 	fdput(f);
 	return error;
 }
-#endif // CL
 
 int getname_statx_lookup_flags(int flags)
 {
@@ -327,7 +325,6 @@ retry:
 	return error;
 }
 
-#if 0
 int vfs_fstatat(int dfd, const char __user *filename,
 			      struct kstat *stat, int flags)
 {
@@ -351,6 +348,7 @@ int vfs_fstatat(int dfd, const char __user *filename,
 	return ret;
 }
 
+#if 0
 #ifdef __ARCH_WANT_OLD_STAT
 
 /*
@@ -432,6 +430,7 @@ SYSCALL_DEFINE2(fstat, unsigned int, fd, struct __old_kernel_stat __user *, stat
 }
 
 #endif /* __ARCH_WANT_OLD_STAT */
+#endif // CL
 
 #ifdef __ARCH_WANT_NEW_STAT
 
@@ -528,6 +527,7 @@ SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
 }
 #endif
 
+#if 0
 static int do_readlinkat(int dfd, const char __user *pathname,
 			 char __user *buf, int bufsiz)
 {
@@ -804,6 +804,7 @@ SYSCALL_DEFINE5(statx,
 
 	return ret;
 }
+#endif // CL
 
 #if defined(CONFIG_COMPAT) && defined(__ARCH_WANT_COMPAT_STAT)
 static int cp_compat_stat(struct kstat *stat, struct compat_stat __user *ubuf)
@@ -891,7 +892,6 @@ COMPAT_SYSCALL_DEFINE2(newfstat, unsigned int, fd,
 	return error;
 }
 #endif
-#endif // CL
 
 /* Caller is here responsible for sufficient locking (ie. inode->i_lock) */
 void __inode_add_bytes(struct inode *inode, loff_t bytes)
