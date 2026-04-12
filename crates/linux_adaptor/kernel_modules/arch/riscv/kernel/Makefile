@@ -26,6 +26,7 @@ obj-y += compat_syscall_table.o
 obj-y += sys_riscv.o
 obj-y += alternative.o
 obj-y += fpu.o
+obj-y += traps_misaligned.o
 
 #obj-y += reset.o
 #obj-y += acpi.o

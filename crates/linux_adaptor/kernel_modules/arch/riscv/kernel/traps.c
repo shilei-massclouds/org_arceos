@@ -225,7 +225,6 @@ static const struct {
 	},
 };
 
-#if 0
 static void do_trap_misaligned(struct pt_regs *regs, enum misaligned_access_type type)
 {
 	irqentry_state_t state;
@@ -249,16 +248,17 @@ static void do_trap_misaligned(struct pt_regs *regs, enum misaligned_access_type
 	}
 }
 
+#if 0
 asmlinkage __visible __trap_section void do_trap_load_misaligned(struct pt_regs *regs)
 {
 	do_trap_misaligned(regs, MISALIGNED_LOAD);
 }
+#endif /* CL */
 
 asmlinkage __visible __trap_section void do_trap_store_misaligned(struct pt_regs *regs)
 {
 	do_trap_misaligned(regs, MISALIGNED_STORE);
 }
-#endif /* CL */
 
 DO_ERROR_INFO(do_trap_store_fault,
 	SIGSEGV, SEGV_ACCERR, "store (or AMO) access fault");

@@ -1008,7 +1008,6 @@ void __noreturn do_exit(long code)
 	do_task_dead();
 }
 
-#if 0
 void __noreturn make_task_dead(int signr)
 {
 	/*
@@ -1069,6 +1068,7 @@ void __noreturn make_task_dead(int signr)
 	do_exit(signr);
 }
 
+#if 0
 SYSCALL_DEFINE1(exit, int, error_code)
 {
 	do_exit((error_code&0xff)<<8);

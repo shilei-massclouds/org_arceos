@@ -978,6 +978,7 @@ SYSCALL_DEFINE0(gettid)
 {
 	return task_pid_vnr(current);
 }
+#endif // CL
 
 /*
  * Accessing ->real_parent is not SMP-safe, it could
@@ -995,7 +996,6 @@ SYSCALL_DEFINE0(getppid)
 
 	return pid;
 }
-#endif // CL
 
 SYSCALL_DEFINE0(getuid)
 {
@@ -1274,6 +1274,7 @@ SYSCALL_DEFINE0(setsid)
 {
 	return ksys_setsid();
 }
+#endif // CL
 
 DECLARE_RWSEM(uts_sem);
 
@@ -1335,6 +1336,7 @@ SYSCALL_DEFINE1(newuname, struct new_utsname __user *, name)
 	return 0;
 }
 
+#if 0
 #ifdef __ARCH_WANT_SYS_OLD_UNAME
 /*
  * Old cruft

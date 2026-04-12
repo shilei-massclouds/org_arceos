@@ -974,3 +974,9 @@ int security_task_getscheduler(struct task_struct *p)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int security_file_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
