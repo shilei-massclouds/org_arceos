@@ -1109,7 +1109,6 @@ do_group_exit(int exit_code)
 	/* NOTREACHED */
 }
 
-#if 0
 /*
  * this kills every thread in the thread group. Note that any externally
  * wait4()-ing process will get the correct exit code - even if this
@@ -1121,7 +1120,6 @@ SYSCALL_DEFINE1(exit_group, int, error_code)
 	/* NOTREACHED */
 	return 0;
 }
-#endif /* CL */
 
 static int eligible_pid(struct wait_opts *wo, struct task_struct *p)
 {

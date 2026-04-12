@@ -721,12 +721,10 @@ ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count)
 	return ret;
 }
 
-#if 0
 SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
 {
 	return ksys_read(fd, buf, count);
 }
-#endif // CL
 
 ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
 {

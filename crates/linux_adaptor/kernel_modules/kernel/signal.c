@@ -1372,7 +1372,6 @@ int force_sig_info(struct kernel_siginfo *info)
 	return force_sig_info_to_task(info, current, HANDLER_CURRENT);
 }
 
-#if 0
 /*
  * Nuke all other threads in the group.
  */
@@ -1397,6 +1396,7 @@ int zap_other_threads(struct task_struct *p)
 	return count;
 }
 
+#if 0
 struct sighand_struct *__lock_task_sighand(struct task_struct *tsk,
 					   unsigned long *flags)
 {
