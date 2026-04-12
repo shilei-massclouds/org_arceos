@@ -720,6 +720,7 @@ static void timekeeping_forward_now(struct timekeeper *tk)
 		delta -= incr;
 	}
 }
+#endif // CL
 
 /**
  * ktime_get_real_ts64 - Returns the time of day in a timespec64.
@@ -747,8 +748,6 @@ void ktime_get_real_ts64(struct timespec64 *ts)
 	timespec64_add_ns(ts, nsecs);
 }
 EXPORT_SYMBOL(ktime_get_real_ts64);
-
-#endif /* CL */
 
 ktime_t ktime_get(void)
 {

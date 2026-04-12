@@ -133,14 +133,11 @@ static inline void unlock_timer(struct k_itimer *timr, unsigned long flags)
 	spin_unlock_irqrestore(&timr->it_lock, flags);
 }
 
-#if 0
 static int posix_get_realtime_timespec(clockid_t which_clock, struct timespec64 *tp)
 {
 	ktime_get_real_ts64(tp);
 	return 0;
 }
-
-#endif /* CL */
 
 static ktime_t posix_get_realtime_ktime(clockid_t which_clock)
 {
@@ -1476,6 +1473,7 @@ SYSCALL_DEFINE4(clock_nanosleep_time32, clockid_t, which_clock, int, flags,
 }
 
 #endif
+#endif /* CL */
 
 static const struct k_clock clock_realtime = {
 	.clock_getres		= posix_get_hrtimer_res,
@@ -1512,7 +1510,6 @@ static const struct k_clock clock_monotonic = {
 	.timer_wait_running	= common_timer_wait_running,
 	.timer_arm		= common_hrtimer_arm,
 };
-#endif /* CL */
 
 static const struct k_clock clock_monotonic_raw = {
 	.clock_getres		= posix_get_hrtimer_res,
