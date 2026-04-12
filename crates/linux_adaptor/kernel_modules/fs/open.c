@@ -1446,6 +1446,7 @@ SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
 		flags |= O_LARGEFILE;
 	return do_sys_open(AT_FDCWD, filename, flags, mode);
 }
+#endif // CL
 
 SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
 		umode_t, mode)
@@ -1455,6 +1456,7 @@ SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
 	return do_sys_open(dfd, filename, flags, mode);
 }
 
+#if 0
 SYSCALL_DEFINE4(openat2, int, dfd, const char __user *, filename,
 		struct open_how __user *, how, size_t, usize)
 {

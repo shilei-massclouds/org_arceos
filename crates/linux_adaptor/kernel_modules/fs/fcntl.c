@@ -34,6 +34,7 @@
 #include <linux/uaccess.h>
 
 #include "internal.h"
+#include "adaptor.h"
 
 #define SETFL_MASK (O_APPEND | O_NONBLOCK | O_NDELAY | O_DIRECT | O_NOATIME)
 
@@ -443,6 +444,7 @@ static int f_owner_sig(struct file *filp, int signum, bool setsig)
 		ret = f_owner->signum;
 	return ret;
 }
+#endif // CL
 
 static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
 		struct file *filp)
@@ -453,25 +455,30 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
 	long err = -EINVAL;
 
 	switch (cmd) {
+#if 0
 	case F_CREATED_QUERY:
 		err = f_created_query(filp);
 		break;
 	case F_DUPFD:
 		err = f_dupfd(argi, filp, 0);
 		break;
+#endif
 	case F_DUPFD_CLOEXEC:
 		err = f_dupfd(argi, filp, O_CLOEXEC);
 		break;
+#if 0
 	case F_DUPFD_QUERY:
 		err = f_dupfd_query(argi, filp);
 		break;
 	case F_GETFD:
 		err = get_close_on_exec(fd) ? FD_CLOEXEC : 0;
 		break;
+#endif
 	case F_SETFD:
 		err = 0;
 		set_close_on_exec(fd, argi & FD_CLOEXEC);
 		break;
+#if 0
 	case F_GETFL:
 		err = filp->f_flags;
 		break;
@@ -553,7 +560,14 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
 	case F_SET_RW_HINT:
 		err = fcntl_set_rw_hint(filp, cmd, arg);
 		break;
+#endif
 	default:
+        {
+            // FixMe:
+            printk("[NOTE]%s: cmd(%u)\n", __func__, cmd);
+            PANIC("bad fcntl cmd!");
+        }
+
 		break;
 	}
 	return err;
@@ -597,6 +611,7 @@ out:
 	return err;
 }
 
+#if 0
 #if BITS_PER_LONG == 32
 SYSCALL_DEFINE3(fcntl64, unsigned int, fd, unsigned int, cmd,
 		unsigned long, arg)

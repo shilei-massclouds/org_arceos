@@ -9,6 +9,8 @@
 #include <linux/uaccess.h>
 
 #include <asm/sbi.h>
+#include <uapi/asm-generic/ioctls.h>
+#include <uapi/linux/termios.h>
 
 #define CL_CONSOLE_RW_CHUNK 64
 
@@ -76,12 +78,59 @@ static __poll_t cl_console_poll(struct file *file, poll_table *wait)
 	return EPOLLIN | EPOLLRDNORM | EPOLLOUT | EPOLLWRNORM;
 }
 
+static long cl_console_ioctl(struct file *file, unsigned int cmd,
+			     unsigned long arg)
+{
+	switch (cmd) {
+	case TIOCGWINSZ: {
+		struct winsize ws = {
+			.ws_row = 24,
+			.ws_col = 80,
+			.ws_xpixel = 0,
+			.ws_ypixel = 0,
+		};
+
+		if (copy_to_user((void __user *)arg, &ws, sizeof(ws)))
+			return -EFAULT;
+		return 0;
+	}
+	case TCGETS: {
+		struct termios tio = {
+			.c_iflag = ICRNL,
+			.c_oflag = OPOST | ONLCR,
+			.c_cflag = B115200 | CS8 | CREAD,
+			.c_lflag = ISIG | ICANON | ECHO | ECHOE | ECHOK,
+		};
+
+		tio.c_cc[VINTR] = 3;
+		tio.c_cc[VQUIT] = 28;
+		tio.c_cc[VERASE] = 127;
+		tio.c_cc[VKILL] = 21;
+		tio.c_cc[VEOF] = 4;
+		tio.c_cc[VMIN] = 1;
+		tio.c_cc[VTIME] = 0;
+		tio.c_cc[VSUSP] = 26;
+
+		if (copy_to_user((void __user *)arg, &tio, sizeof(tio)))
+			return -EFAULT;
+		return 0;
+	}
+	case TCSETS:
+	case TCSETSW:
+	case TCSETSF:
+		return 0;
+	default:
+		return -ENOIOCTLCMD;
+	}
+}
+
 static const struct file_operations cl_console_fops = {
 	.owner = THIS_MODULE,
 	.open = stream_open,
 	.read = cl_console_read,
 	.write = cl_console_write,
 	.poll = cl_console_poll,
+	.unlocked_ioctl = cl_console_ioctl,
 	.llseek = noop_llseek,
 };
 

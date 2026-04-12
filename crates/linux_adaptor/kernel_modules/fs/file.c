@@ -572,7 +572,6 @@ static void __put_unused_fd(struct files_struct *files, unsigned int fd)
 		files->next_fd = fd;
 }
 
-#if 0
 void put_unused_fd(unsigned int fd)
 {
 	struct files_struct *files = current->files;
@@ -581,6 +580,7 @@ void put_unused_fd(unsigned int fd)
 	spin_unlock(&files->file_lock);
 }
 
+#if 0
 EXPORT_SYMBOL(put_unused_fd);
 #endif // CL
 
@@ -1150,12 +1150,10 @@ struct fd fdget(unsigned int fd)
 }
 EXPORT_SYMBOL(fdget);
 
-#if 0
 struct fd fdget_raw(unsigned int fd)
 {
 	return __fget_light(fd, 0);
 }
-#endif // CL
 
 /*
  * Try to avoid f_pos locking. We only need it if the
@@ -1190,7 +1188,6 @@ void __f_unlock_pos(struct file *f)
 	mutex_unlock(&f->f_pos_lock);
 }
 
-#if 0
 /*
  * We only lock f_pos if we have threads or if the file might be
  * shared with another process. In both cases we'll have an elevated
@@ -1210,6 +1207,7 @@ void set_close_on_exec(unsigned int fd, int flag)
 	spin_unlock(&files->file_lock);
 }
 
+#if 0
 bool get_close_on_exec(unsigned int fd)
 {
 	bool res;
@@ -1414,6 +1412,7 @@ SYSCALL_DEFINE1(dup, unsigned int, fildes)
 	}
 	return ret;
 }
+#endif // CL
 
 int f_dupfd(unsigned int from, struct file *file, unsigned flags)
 {
@@ -1429,6 +1428,7 @@ int f_dupfd(unsigned int from, struct file *file, unsigned flags)
 	return err;
 }
 
+#if 0
 int iterate_fd(struct files_struct *files, unsigned n,
 		int (*f)(const void *, struct file *, unsigned),
 		const void *p)
