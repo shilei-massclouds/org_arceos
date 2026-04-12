@@ -2367,8 +2367,6 @@ bool slab_free_hook(struct kmem_cache *s, void *x, bool init,
 	return !kasan_slab_free(s, x, init, still_accessible);
 }
 
-#if 0
-
 static __fastpath_inline
 bool slab_free_freelist_hook(struct kmem_cache *s, void **head, void **tail,
 			     int *cnt)
@@ -2412,7 +2410,6 @@ bool slab_free_freelist_hook(struct kmem_cache *s, void **head, void **tail,
 
 	return *head != NULL;
 }
-#endif
 
 static void *setup_object(struct kmem_cache *s, void *object)
 {
@@ -4628,6 +4625,7 @@ void memcg_alloc_abort_single(struct kmem_cache *s, void *object)
 		do_slab_free(s, virt_to_slab(object), object, object, 1, _RET_IP_);
 }
 #endif
+#endif // CL
 
 static __fastpath_inline
 void slab_free_bulk(struct kmem_cache *s, struct slab *slab, void *head,
@@ -4643,6 +4641,7 @@ void slab_free_bulk(struct kmem_cache *s, struct slab *slab, void *head,
 		do_slab_free(s, slab, head, tail, cnt, addr);
 }
 
+#if 0
 #ifdef CONFIG_SLUB_RCU_DEBUG
 static void slab_free_after_rcu_debug(struct rcu_head *rcu_head)
 {
@@ -4872,7 +4871,6 @@ static void __kmem_cache_free_bulk(struct kmem_cache *s, size_t size, void **p)
 	} while (likely(size));
 }
 
-#if 0
 /* Note that interrupts must be enabled when calling this function. */
 void kmem_cache_free_bulk(struct kmem_cache *s, size_t size, void **p)
 {
@@ -4891,8 +4889,6 @@ void kmem_cache_free_bulk(struct kmem_cache *s, size_t size, void **p)
 	} while (likely(size));
 }
 EXPORT_SYMBOL(kmem_cache_free_bulk);
-
-#endif /* CL */
 
 #ifndef CONFIG_SLUB_TINY
 static inline

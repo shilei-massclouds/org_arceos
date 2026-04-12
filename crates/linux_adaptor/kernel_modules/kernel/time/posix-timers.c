@@ -1174,6 +1174,7 @@ SYSCALL_DEFINE2(clock_settime, const clockid_t, which_clock,
 	 */
 	return kc->clock_set(which_clock, &new_tp);
 }
+#endif // CL
 
 SYSCALL_DEFINE2(clock_gettime, const clockid_t, which_clock,
 		struct __kernel_timespec __user *, tp)
@@ -1193,6 +1194,7 @@ SYSCALL_DEFINE2(clock_gettime, const clockid_t, which_clock,
 	return error;
 }
 
+#if 0
 int do_clock_adjtime(const clockid_t which_clock, struct __kernel_timex * ktx)
 {
 	const struct k_clock *kc = clockid_to_kclock(which_clock);
@@ -1575,7 +1577,6 @@ static const struct k_clock * const posix_clocks[] = {
 	[CLOCK_TAI]			= &clock_tai,
 };
 
-#if 0
 static const struct k_clock *clockid_to_kclock(const clockid_t id)
 {
 	clockid_t idx = id;
@@ -1590,5 +1591,3 @@ static const struct k_clock *clockid_to_kclock(const clockid_t id)
 
 	return posix_clocks[array_index_nospec(idx, ARRAY_SIZE(posix_clocks))];
 }
-
-#endif /* CL */

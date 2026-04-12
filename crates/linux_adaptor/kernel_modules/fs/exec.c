@@ -410,7 +410,6 @@ err:
 	return err;
 }
 
-#if 0
 struct user_arg_ptr {
 #ifdef CONFIG_COMPAT
 	bool is_compat;
@@ -472,7 +471,6 @@ static int count(struct user_arg_ptr argv, int max)
 	}
 	return i;
 }
-#endif // CL
 
 static int count_strings_kernel(const char *const *argv)
 {
@@ -565,7 +563,6 @@ static int bprm_stack_limits(struct linux_binprm *bprm)
 	return bprm_set_stack_limit(bprm, limit);
 }
 
-#if 0
 /*
  * 'copy_strings()' copies argument/environment strings from the old
  * processes's memory to the new process's stack.  The call to get_user_pages()
@@ -660,7 +657,6 @@ out:
 	}
 	return ret;
 }
-#endif // CL
 
 /*
  * Copy and argument/environment string from the kernel to the processes stack.
@@ -1923,7 +1919,6 @@ out:
 	return retval;
 }
 
-#if 0
 static int do_execveat_common(int fd, struct filename *filename,
 			      struct user_arg_ptr argv,
 			      struct user_arg_ptr envp,
@@ -2008,7 +2003,6 @@ out_ret:
 	putname(filename);
 	return retval;
 }
-#endif // CL
 
 int kernel_execve(const char *kernel_filename,
 		  const char *const *argv, const char *const *envp)
@@ -2069,7 +2063,6 @@ out_ret:
 	return retval;
 }
 
-#if 0
 static int do_execve(struct filename *filename,
 	const char __user *const __user *__argv,
 	const char __user *const __user *__envp)
@@ -2079,6 +2072,7 @@ static int do_execve(struct filename *filename,
 	return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
 }
 
+#if 0
 static int do_execveat(int fd, struct filename *filename,
 		const char __user *const __user *__argv,
 		const char __user *const __user *__envp,
@@ -2149,7 +2143,6 @@ void set_dumpable(struct mm_struct *mm, int value)
 	set_mask_bits(&mm->flags, MMF_DUMPABLE_MASK, value);
 }
 
-#if 0
 SYSCALL_DEFINE3(execve,
 		const char __user *, filename,
 		const char __user *const __user *, argv,
@@ -2158,6 +2151,7 @@ SYSCALL_DEFINE3(execve,
 	return do_execve(getname(filename), argv, envp);
 }
 
+#if 0
 SYSCALL_DEFINE5(execveat,
 		int, fd, const char __user *, filename,
 		const char __user *const __user *, argv,

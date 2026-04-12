@@ -1546,7 +1546,6 @@ static int wait_consider_task(struct wait_opts *wo, int ptrace,
 	return wait_task_continued(wo, p);
 }
 
-#if 0
 /*
  * Do the work of do_wait() for one thread in the group, @tsk.
  *
@@ -1583,7 +1582,6 @@ static int ptrace_do_wait(struct wait_opts *wo, struct task_struct *tsk)
 
 	return 0;
 }
-#endif /* CL */
 
 bool pid_child_should_wake(struct wait_opts *wo, struct task_struct *p)
 {
@@ -1677,7 +1675,6 @@ long __do_wait(struct wait_opts *wo)
 		if (retval)
 			return retval;
 	} else {
-#if 0
 		struct task_struct *tsk = current;
 
 		do {
@@ -1692,8 +1689,6 @@ long __do_wait(struct wait_opts *wo)
 			if (wo->wo_flags & __WNOTHREAD)
 				break;
 		} while_each_thread(current, tsk);
-#endif
-        PANIC("");
 	}
 	read_unlock(&tasklist_lock);
 
@@ -1841,6 +1836,7 @@ Efault:
 	user_write_access_end();
 	return -EFAULT;
 }
+#endif /* CL */
 
 long kernel_wait4(pid_t upid, int __user *stat_addr, int options,
 		  struct rusage *ru)
@@ -1884,7 +1880,6 @@ long kernel_wait4(pid_t upid, int __user *stat_addr, int options,
 
 	return ret;
 }
-#endif /* CL */
 
 int kernel_wait(pid_t pid, int *stat)
 {
@@ -1918,7 +1913,6 @@ int linux_wait_for_exit(pid_t pid, int *stat)
 	return ret;
 }
 
-#if 0
 SYSCALL_DEFINE4(wait4, pid_t, upid, int __user *, stat_addr,
 		int, options, struct rusage __user *, ru)
 {
@@ -1932,6 +1926,7 @@ SYSCALL_DEFINE4(wait4, pid_t, upid, int __user *, stat_addr,
 	return err;
 }
 
+#if 0
 #ifdef __ARCH_WANT_SYS_WAITPID
 
 /*
