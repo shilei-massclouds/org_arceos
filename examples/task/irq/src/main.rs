@@ -26,11 +26,11 @@ fn test_yielding() {
                 assert_irq_enabled_and_disabled();
             }
 
-            let _ = YIELDING_FINISHED_TASKS.fetch_add(1, Ordering::Relaxed);
+            let _ = YIELDING_FINISHED_TASKS.fetch_add(1, Ordering::Release);
         });
     }
 
-    while YIELDING_FINISHED_TASKS.load(Ordering::Relaxed) < NUM_TASKS {
+    while YIELDING_FINISHED_TASKS.load(Ordering::Acquire) < NUM_TASKS {
         thread::yield_now();
         assert_irq_enabled_and_disabled();
     }
@@ -67,11 +67,11 @@ fn test_sleep() {
                 thread::sleep(Duration::from_secs(sec as _));
                 assert_irq_enabled_and_disabled();
             }
-            SLEEP_FINISHED_TASKS.fetch_add(1, Ordering::Relaxed);
+            SLEEP_FINISHED_TASKS.fetch_add(1, Ordering::Release);
         });
     }
 
-    while SLEEP_FINISHED_TASKS.load(Ordering::Relaxed) < NUM_TASKS {
+    while SLEEP_FINISHED_TASKS.load(Ordering::Acquire) < NUM_TASKS {
         thread::sleep(Duration::from_millis(10));
     }
     println!("IRQ state tests on task sleep run OK!");
@@ -98,31 +98,31 @@ fn test_wait_queue() {
             WQ3.wait_timeout_until(std::time::Duration::from_millis(100), || false);
             assert_irq_enabled_and_disabled();
 
-            COUNTER.fetch_add(1, Ordering::Relaxed);
+            COUNTER.fetch_add(1, Ordering::Release);
             WQ1.notify_one(true); // WQ1.wait_until()
             assert_irq_enabled();
             WQ2.wait();
 
             assert_irq_enabled_and_disabled();
 
-            COUNTER.fetch_sub(1, Ordering::Relaxed);
+            COUNTER.fetch_sub(1, Ordering::Release);
             WQ1.notify_one(true); // WQ1.wait_until()
         });
     }
     assert_irq_enabled();
 
-    WQ1.wait_until(|| COUNTER.load(Ordering::Relaxed) == NUM_TASKS);
+    WQ1.wait_until(|| COUNTER.load(Ordering::Acquire) == NUM_TASKS);
 
     assert_irq_enabled_and_disabled();
 
-    assert_eq!(COUNTER.load(Ordering::Relaxed), NUM_TASKS);
+    assert_eq!(COUNTER.load(Ordering::Acquire), NUM_TASKS);
     WQ3.wait_timeout_until(std::time::Duration::from_millis(100), || WQ2.len() == NUM_TASKS);
     WQ2.notify_all(true); // WQ2.wait()
 
     assert_irq_enabled();
-    WQ1.wait_until(|| COUNTER.load(Ordering::Relaxed) == 0);
+    WQ1.wait_until(|| COUNTER.load(Ordering::Acquire) == 0);
     assert_irq_enabled_and_disabled();
-    assert_eq!(COUNTER.load(Ordering::Relaxed), 0);
+    assert_eq!(COUNTER.load(Ordering::Acquire), 0);
 
     println!("IRQ state tests on task wait run OK!");
 }

@@ -56,11 +56,11 @@ fn main() {
                 assert_ne!(this_cpu_id(), cpu_id, "CPU affinity changes failed!");
                 thread::yield_now();
             }
-            let _ = FINISHED_TASKS.fetch_add(1, Ordering::Relaxed);
+            let _ = FINISHED_TASKS.fetch_add(1, Ordering::Release);
         });
     }
 
-    while FINISHED_TASKS.load(Ordering::Relaxed) < NUM_TASKS {
+    while FINISHED_TASKS.load(Ordering::Acquire) < NUM_TASKS {
         thread::yield_now();
     }
 
