@@ -6185,7 +6185,6 @@ static void pr_cont_pool_info(struct worker_pool *pool)
 		pr_cont(" nice=%d", pool->attrs->nice);
 }
 
-#if 0
 static void pr_cont_worker_id(struct worker *worker)
 {
 	struct worker_pool *pool = worker->pool;
@@ -6434,6 +6433,7 @@ void show_all_workqueues(void)
 	rcu_read_unlock();
 }
 
+#if 0
 /**
  * show_freezable_workqueues - dump freezable workqueue state
  *

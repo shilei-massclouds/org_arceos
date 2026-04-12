@@ -20,6 +20,8 @@ fn test_wait() {
     static WQ2: AxWaitQueueHandle = AxWaitQueueHandle::new();
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
 
+    println!("wait_queue: test_wait()");
+
     for _ in 0..NUM_TASKS {
         thread::spawn(move || {
             COUNTER.fetch_add(1, Ordering::Release);

@@ -701,7 +701,6 @@ CL_MINE(security_sb_delete)
 CL_MINE(queue_work_node)
 CL_MINE(workqueue_set_min_active)
 CL_MINE(try_wait_for_completion)
-CL_MINE(show_all_workqueues)
 
 CL_MINE(unmap_mapping_folio)
 
