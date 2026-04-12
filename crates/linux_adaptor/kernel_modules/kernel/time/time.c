@@ -902,7 +902,6 @@ int get_timespec64(struct timespec64 *ts,
 }
 EXPORT_SYMBOL_GPL(get_timespec64);
 
-#if 0
 /**
  * put_timespec64 - convert timespec64 value to __kernel_timespec format and
  * 		    copy the latter to userspace
@@ -923,6 +922,7 @@ int put_timespec64(const struct timespec64 *ts,
 }
 EXPORT_SYMBOL_GPL(put_timespec64);
 
+#if 0
 static int __get_old_timespec32(struct timespec64 *ts64,
 				   const struct old_timespec32 __user *cts)
 {

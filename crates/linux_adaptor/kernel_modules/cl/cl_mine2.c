@@ -979,7 +979,6 @@ CL_MINE(audit_log_end)
 /* Additional native functions referenced by fs/select.c and time helpers. */
 CL_MINE(select_estimate_accuracy)
 CL_MINE(ktime_get_ts64)
-CL_MINE(put_timespec64)
 CL_MINE(add_swap_count_continuation)
 CL_MINE(swap_duplicate)
 CL_MINE(hrtimer_nanosleep)
