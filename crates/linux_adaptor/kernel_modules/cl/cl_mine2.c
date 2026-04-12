@@ -8,7 +8,6 @@ CL_MINE(get_mm_exe_file)
 CL_MINE(file_open_root)
 CL_MINE(call_usermodehelper_setup)
 CL_MINE(call_usermodehelper_exec)
-CL_MINE(filp_open)
 CL_MINE(arch_vma_name)
 CL_MINE(__wake_up_sync)
 
@@ -580,10 +579,6 @@ CL_MINE(fsnotify)
 CL_MINE(device_pm_remove)
 CL_MINE(dpm_sysfs_remove)
 CL_MINE(reconfigure_single)
-
-CL_MINE(kobj_map)
-CL_MINE(kobj_unmap)
-CL_MINE(kobj_lookup)
 
 CL_MINE(__fsnotify_parent)
 CL_MINE(backing_file_user_path)

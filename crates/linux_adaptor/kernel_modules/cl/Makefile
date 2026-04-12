@@ -2,6 +2,7 @@
 
 obj-y += raw.o
 obj-y += adaptor.o
+obj-y += console.o
 obj-y += init.o
 obj-y += cl_mine2.o
 obj-y += cl_dummy2.o

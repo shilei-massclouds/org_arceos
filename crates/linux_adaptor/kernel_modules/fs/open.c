@@ -1345,7 +1345,6 @@ inline int build_open_flags(const struct open_how *how, struct open_flags *op)
 	return 0;
 }
 
-#if 0
 /**
  * file_open_name - open file and return file pointer
  *
@@ -1391,6 +1390,7 @@ struct file *filp_open(const char *filename, int flags, umode_t mode)
 }
 EXPORT_SYMBOL(filp_open);
 
+#if 0
 struct file *file_open_root(const struct path *root,
 			    const char *filename, int flags, umode_t mode)
 {

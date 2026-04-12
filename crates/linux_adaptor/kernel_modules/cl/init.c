@@ -14,7 +14,10 @@
 #include <linux/moduleparam.h>
 #include <linux/kfence.h>
 #include <linux/stackprotector.h>
+#include <linux/fs.h>
+#include <linux/file.h>
 #include <linux/init_syscalls.h>
+#include <linux/major.h>
 #include <linux/binfmts.h>
 #include <linux/rmap.h>
 #include <linux/extable.h>
@@ -805,6 +808,46 @@ static int try_to_run_init_process(const char *init_filename)
     }
 
     return ret;
+}
+
+int cl_prepare_console_node(void)
+{
+	int ret;
+
+	ret = init_mkdir("/dev", 0755);
+	if (ret && ret != -EEXIST)
+		return ret;
+
+	ret = init_mknod("/dev/console", S_IFCHR | 0600,
+			 new_encode_dev(MKDEV(TTYAUX_MAJOR, 1)));
+	if (ret && ret != -EEXIST)
+		return ret;
+
+	return 0;
+}
+
+int cl_prepare_stdio_from_console(void)
+{
+	struct file *file;
+	int ret;
+
+	file = filp_open("/dev/console", O_RDWR, 0);
+	if (IS_ERR(file))
+		return PTR_ERR(file);
+
+	ret = init_dup(file);
+	if (ret)
+		goto out;
+	ret = init_dup(file);
+	if (ret)
+		goto out;
+	ret = init_dup(file);
+	if (ret)
+		goto out;
+
+out:
+	fput(file);
+	return ret;
 }
 
 int cl_try_to_run_init_process(const char *init_filename)

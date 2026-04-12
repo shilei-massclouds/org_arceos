@@ -16,10 +16,11 @@ obj-y += driver.o
 obj-y += pinctrl.o
 obj-y += devres.o
 obj-y += devtmpfs.o
+obj-y += map.o
 obj-y += trace.o
 
 #obj-y += property.o syscore.o
-#obj-y += map.o firmware.o
+#obj-y += firmware.o
 
 obj-y += power/
 #obj-y += regmap/

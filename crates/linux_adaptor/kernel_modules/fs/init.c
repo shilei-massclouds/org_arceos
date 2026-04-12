@@ -261,6 +261,7 @@ int __init init_utimes(char *filename, struct timespec64 *ts)
 	path_put(&path);
 	return error;
 }
+#endif // CL
 
 int __init init_dup(struct file *file)
 {
@@ -272,5 +273,3 @@ int __init init_dup(struct file *file)
 	fd_install(fd, get_file(file));
 	return 0;
 }
-
-#endif // CL
