@@ -31,7 +31,6 @@ void posix_cputimers_group_init(struct posix_cputimers *pct, u64 cpu_limit)
 	}
 }
 
-#if 0
 /*
  * Called after updating RLIMIT_CPU to run cpu timer and update
  * tsk->signal->posix_cputimers.bases[clock].nextevt expiration cache if
@@ -149,7 +148,6 @@ static u64 bump_cpu_timer(struct k_itimer *timer, u64 now)
 	}
 	return timer->it.cpu.node.expires;
 }
-#endif /* CL */
 
 /* Check whether all cache entries contain U64_MAX, i.e. eternal expiry time */
 static inline bool expiry_cache_is_inactive(const struct posix_cputimers *pct)
@@ -159,7 +157,6 @@ static inline bool expiry_cache_is_inactive(const struct posix_cputimers *pct)
 		 ~pct->bases[CPUCLOCK_SCHED].nextevt);
 }
 
-#if 0
 static int
 posix_cpu_clock_getres(const clockid_t which_clock, struct timespec64 *tp)
 {
@@ -214,7 +211,6 @@ static u64 cpu_clock_sample(const clockid_t clkid, struct task_struct *p)
 	}
 	return 0;
 }
-#endif /* CL */
 
 static inline void store_samples(u64 *samples, u64 stime, u64 utime, u64 rtime)
 {
@@ -242,7 +238,6 @@ static void proc_sample_cputime_atomic(struct task_cputime_atomic *at,
 	store_samples(samples, stime, utime, rtime);
 }
 
-#if 0
 /*
  * Set cputime to sum_cputime if sum_cputime > cputime. Use cmpxchg
  * to avoid race conditions with concurrent updates to cputime.
@@ -265,6 +260,7 @@ static void update_gt_cputime(struct task_cputime_atomic *cputime_atomic,
 	__update_gt_cputime(&cputime_atomic->sum_exec_runtime, sum->sum_exec_runtime);
 }
 
+#if 0
 /**
  * thread_group_sample_cputime - Sample cputime for a given task
  * @tsk:	Task for which cputime needs to be started
@@ -285,6 +281,7 @@ void thread_group_sample_cputime(struct task_struct *tsk, u64 *samples)
 
 	proc_sample_cputime_atomic(&cputimer->cputime_atomic, samples);
 }
+#endif // CL
 
 /**
  * thread_group_start_cputime - Start cputime and return a sample
@@ -468,7 +465,6 @@ static void disarm_timer(struct k_itimer *timer, struct task_struct *p)
 		trigger_base_recalc_expires(timer, p);
 }
 
-
 /*
  * Clean up a CPU-clock timer that is about to be destroyed.
  * This is called from timer deletion with the timer already locked.
@@ -515,7 +511,6 @@ out:
 
 	return ret;
 }
-#endif // CL
 
 static void cleanup_timerqueue(struct timerqueue_head *head)
 {
@@ -557,7 +552,6 @@ void posix_cpu_timers_exit_group(struct task_struct *tsk)
 	cleanup_timers(&tsk->signal->posix_cputimers);
 }
 
-#if 0
 /*
  * Insert the timer on the appropriate list before any timers that
  * expire later.  This must be called with the sighand lock held.
@@ -798,6 +792,7 @@ static void posix_cpu_timer_get(struct k_itimer *timer, struct itimerspec64 *itp
 	rcu_read_unlock();
 }
 
+#if 0
 #define MAX_COLLECTED	20
 
 static u64 collect_timerqueue(struct timerqueue_head *head,
@@ -1438,7 +1433,6 @@ void run_posix_cpu_timers(void)
 	__run_posix_cpu_timers(tsk);
 }
 
-#if 0
 /*
  * Set one of the process-wide special case CPU timers or RLIMIT_CPU.
  * The tsk->sighand->siglock must be held by the caller.
@@ -1675,5 +1669,3 @@ const struct k_clock clock_thread = {
 	.clock_get_timespec	= thread_cpu_clock_get,
 	.timer_create		= thread_cpu_timer_create,
 };
-
-#endif /* CL */

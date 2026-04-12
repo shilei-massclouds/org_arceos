@@ -486,7 +486,6 @@ struct device *class_find_device(const struct class *class, const struct device 
 }
 EXPORT_SYMBOL_GPL(class_find_device);
 
-#if 0
 int class_interface_register(struct class_interface *class_intf)
 {
 	struct subsys_private *sp;
@@ -521,6 +520,7 @@ int class_interface_register(struct class_interface *class_intf)
 }
 EXPORT_SYMBOL_GPL(class_interface_register);
 
+#if 0
 void class_interface_unregister(struct class_interface *class_intf)
 {
 	struct subsys_private *sp;

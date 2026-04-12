@@ -18,3 +18,5 @@ obj-y += tick-oneshot.o
 obj-y += clocksource.o
 obj-y += clockevents.o
 obj-y += timer_migration.o
+obj-y += posix-clock.o
+obj-y += alarmtimer.o
