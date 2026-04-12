@@ -10,30 +10,37 @@
 
 #include <asm/sbi.h>
 
+#define CL_CONSOLE_RW_CHUNK 64
+
 static ssize_t cl_console_read(struct file *file, char __user *buf, size_t count,
 			       loff_t *ppos)
 {
 	size_t done = 0;
+	char kbuf[CL_CONSOLE_RW_CHUNK];
 
 	if (!count)
 		return 0;
 
 	while (done < count) {
-		int ch = sbi_console_getchar();
+		size_t want = min_t(size_t, count - done, sizeof(kbuf));
+		int ret = sbi_debug_console_read(kbuf, want);
+		int i;
 
-		if (ch == -1) {
+		if (ret == 0) {
 			if (done)
 				break;
 			continue;
 		}
-		if (ch < 0)
-			return done ? (ssize_t)done : ch;
+		if (ret < 0)
+			return done ? (ssize_t)done : ret;
 
-		if (ch == '\r')
-			ch = '\n';
-		if (put_user((char)ch, buf + done))
+		for (i = 0; i < ret; i++) {
+			if (kbuf[i] == '\r')
+				kbuf[i] = '\n';
+		}
+		if (copy_to_user(buf + done, kbuf, ret))
 			return done ? (ssize_t)done : -EFAULT;
-		done++;
+		done += ret;
 	}
 
 	return done;
@@ -43,14 +50,22 @@ static ssize_t cl_console_write(struct file *file, const char __user *buf,
 				size_t count, loff_t *ppos)
 {
 	size_t done = 0;
+	char kbuf[CL_CONSOLE_RW_CHUNK];
 
 	while (done < count) {
-		char ch;
+		size_t want = min_t(size_t, count - done, sizeof(kbuf));
+		int ret;
 
-		if (get_user(ch, buf + done))
+		if (copy_from_user(kbuf, buf + done, want))
 			return done ? (ssize_t)done : -EFAULT;
-		sbi_console_putchar(ch);
-		done++;
+
+		ret = sbi_debug_console_write(kbuf, want);
+		if (ret < 0)
+			return done ? (ssize_t)done : ret;
+		if (ret == 0)
+			break;
+
+		done += ret;
 	}
 
 	return done;
