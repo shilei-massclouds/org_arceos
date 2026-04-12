@@ -1089,7 +1089,6 @@ __mod_timer(struct timer_list *timer, unsigned long expires, unsigned int option
 	 * same array bucket then just return:
 	 */
 	if (!(options & MOD_TIMER_NOTPENDING) && timer_pending(timer)) {
-#if 0
 		/*
 		 * The downside of this optimization is that it can result in
 		 * larger granularity than you would get from adding a new
@@ -1141,8 +1140,6 @@ __mod_timer(struct timer_list *timer, unsigned long expires, unsigned int option
 			ret = 1;
 			goto out_unlock;
 		}
-#endif
-        PANIC("");
 	} else {
 		base = lock_timer_base(timer, &flags);
 		/*

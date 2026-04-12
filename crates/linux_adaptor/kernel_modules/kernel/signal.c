@@ -4267,7 +4267,6 @@ int do_sigaction(int sig, struct k_sigaction *act, struct k_sigaction *oact)
 	return 0;
 }
 
-#if 0
 #ifdef CONFIG_DYNAMIC_SIGFRAME
 static inline void sigaltstack_lock(void)
 	__acquires(&current->sighand->siglock)
@@ -4343,6 +4342,7 @@ do_sigaltstack (const stack_t *ss, stack_t *oss, unsigned long sp,
 	return ret;
 }
 
+#if 0
 SYSCALL_DEFINE2(sigaltstack,const stack_t __user *,uss, stack_t __user *,uoss)
 {
 	stack_t new, old;
@@ -4356,6 +4356,7 @@ SYSCALL_DEFINE2(sigaltstack,const stack_t __user *,uss, stack_t __user *,uoss)
 		err = -EFAULT;
 	return err;
 }
+#endif // CL
 
 int restore_altstack(const stack_t __user *uss)
 {
@@ -4367,7 +4368,6 @@ int restore_altstack(const stack_t __user *uss)
 	/* squash all but EFAULT for now */
 	return 0;
 }
-#endif // CL
 
 int __save_altstack(stack_t __user *uss, unsigned long sp)
 {

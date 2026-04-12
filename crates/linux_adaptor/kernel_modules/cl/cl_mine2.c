@@ -765,7 +765,6 @@ CL_MINE(vmf_insert_pfn)
 CL_MINE(futex_exit_recursive)
 
 CL_MINE(do_no_restart_syscall)
-CL_MINE(restore_altstack)
 CL_MINE(__rseq_handle_notify_resume)
 CL_MINE(compat_setup_rt_frame)
 CL_MINE(get_cpu_vector_context)
