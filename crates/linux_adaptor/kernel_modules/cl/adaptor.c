@@ -4,7 +4,6 @@
 #include <linux/memblock.h>
 #include <linux/vmalloc.h>
 #include <linux/kthread.h>
-
 #include "adaptor.h"
 
 unsigned long linux_virt_to_phys(unsigned long va)
@@ -25,6 +24,7 @@ void *linux_kmalloc_kernel(size_t size, unsigned int align)
 {
     void *ret = kmalloc(size, GFP_KERNEL);
     if (ret == NULL) {
+        bool irq_was_disabled = irqs_disabled();
         /* size is too large, use vmalloc. BUT it is WRONG. */
         /*
          * FixMe:
@@ -32,9 +32,11 @@ void *linux_kmalloc_kernel(size_t size, unsigned int align)
          * disables irqs and doesn't allow to sleep. But vmalloc MAY sleep.
          */
         printk("kmalloc.size: 0x%lx, it's too large, use vmalloc instead.\n", size);
-        local_irq_enable();     /* FixMe: This is just a temporary trick. */
+        if (irq_was_disabled)
+            local_irq_enable();     /* FixMe: This is just a temporary trick. */
         ret = vmalloc(size);
-        local_irq_disable();    /* FixMe: This is just a temporary trick. */
+        if (irq_was_disabled)
+            local_irq_disable();    /* FixMe: This is just a temporary trick. */
     }
     CL_ASSERT(IS_ALIGNED((unsigned long)ret, align),
               "kmalloc error: NOT aligned");
