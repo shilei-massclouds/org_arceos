@@ -1648,6 +1648,7 @@ int nonseekable_open(struct inode *inode, struct file *filp)
 }
 
 EXPORT_SYMBOL(nonseekable_open);
+#endif // CL
 
 /*
  * stream_open is used by subsystems that want stream-like file descriptors.
@@ -1667,4 +1668,3 @@ int stream_open(struct inode *inode, struct file *filp)
 }
 
 EXPORT_SYMBOL(stream_open);
-#endif // CL

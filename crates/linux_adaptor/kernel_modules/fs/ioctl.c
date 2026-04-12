@@ -896,7 +896,6 @@ static int do_vfs_ioctl(struct file *filp, unsigned int fd,
         {
             // FixMe: just for debug. Remove it in future.
             printk("[NOTE]: %s: cmd(%u)\n", __func__, cmd);
-            PANIC("");
         }
 
 		if (S_ISREG(inode->i_mode))

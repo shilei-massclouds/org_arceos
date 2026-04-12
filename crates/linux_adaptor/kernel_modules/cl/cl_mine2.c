@@ -301,7 +301,6 @@ CL_MINE(zap_pid_ns_processes)
 CL_MINE(getrusage)
 
 CL_MINE(alloc_file_clone)
-CL_MINE(stream_open)
 CL_MINE(send_sig)
 CL_MINE(__audit_fd_pair)
 CL_MINE(do_proc_douintvec)
