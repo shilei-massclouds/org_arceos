@@ -8395,15 +8395,9 @@ void __init sched_init_smp(void)
 	sched_init_domains(cpu_active_mask);
 	mutex_unlock(&sched_domains_mutex);
 
-	/*
-	 * Keep init on the boot CPU by default. In this environment it was
-	 * pinned early before SMP scheduler bringup, and broadening its affinity
-	 * here makes the main waiter thread migrate across CPUs, which is strongly
-	 * correlated with the flaky task timeouts under investigation.
-	 *
-	 * Still clear PF_NO_SETAFFINITY so later explicit affinity changes from
-	 * the running system remain possible.
-	 */
+	/* Move init over to a non-isolated CPU */
+	if (set_cpus_allowed_ptr(current, housekeeping_cpumask(HK_TYPE_DOMAIN)) < 0)
+		BUG();
 	current->flags &= ~PF_NO_SETAFFINITY;
 	sched_init_granularity();
 
