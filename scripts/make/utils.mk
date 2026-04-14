@@ -28,3 +28,24 @@ define make_disk_image
   $(if $(filter $(1),fat32), $(call make_disk_image_fat32,$(2)))
   $(if $(filter $(1),ext4), $(call make_disk_image_ext4,$(2)))
 endef
+
+define install_lk_init_script
+  @set -e; \
+  img="$(1)"; \
+  script="scripts/init/lk_init.sh"; \
+  mnt_dir=$$(mktemp -d /tmp/lk-rootfs.XXXXXX); \
+  cleanup() { \
+    if mountpoint -q "$$mnt_dir"; then \
+      sudo umount "$$mnt_dir"; \
+    fi; \
+    rm -rf "$$mnt_dir"; \
+  }; \
+  trap cleanup EXIT; \
+  printf "    $(GREEN_C)Updating$(END_C) rootfs image \"$$img\" with lk init script ...\n"; \
+  if [ ! -f "$$script" ]; then \
+    echo "lk init script not found: $$script" >&2; \
+    exit 1; \
+  fi; \
+  sudo mount -o loop "$$img" "$$mnt_dir"; \
+  sudo install -D -m 0755 "$$script" "$$mnt_dir/etc/lk_init.sh"
+endef

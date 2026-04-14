@@ -245,6 +245,7 @@ rootfs:
 		xz -d $(ROOTFS_IMG).xz; \
 	fi
 	@cp $(ROOTFS_IMG) $(DISK_IMG)
+	$(call install_lk_init_script,$(DISK_IMG))
 
 clean: clean_c
 	rm -rf $(APP)/*.bin $(APP)/*.elf $(OUT_CONFIG)
