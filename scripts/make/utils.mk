@@ -14,13 +14,13 @@ endef
 
 define make_disk_image_fat32
   @printf "    $(GREEN_C)Creating$(END_C) FAT32 disk image \"$(1)\" ...\n"
-  @dd if=/dev/zero of=$(1) bs=1M count=64
+  @truncate -s $(DISK_SIZE) $(1)
   @mkfs.fat -F 32 $(1)
 endef
 
 define make_disk_image_ext4
   @printf "    $(GREEN_C)Creating$(END_C) EXT4 disk image \"$(1)\" ...\n"
-  @dd if=/dev/zero of=$(1) bs=1M count=64
+  @truncate -s $(DISK_SIZE) $(1)
   @mkfs.ext4 $(1)
 endef
 
@@ -52,7 +52,7 @@ define make_rootfs_image_ext4_from_tarball
       echo "lk init script not found: $$script" >&2; \
       exit 1; \
     fi; \
-    dd if=/dev/zero of="$$img" bs=1M count=64; \
+    truncate -s "$(DISK_SIZE)" "$$img"; \
     mkfs.ext4 "$$img"; \
 	    sudo mount -o loop "$$img" "$$mnt_dir"; \
 	    printf "    $(GREEN_C)Populating$(END_C) rootfs image \"$$img\" from tarball \"$$tarball\" ...\n"; \

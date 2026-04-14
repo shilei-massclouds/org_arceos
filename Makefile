@@ -33,6 +33,7 @@
 #     - `NET_DEV`: QEMU netdev backend types: user, tap, bridge
 #     - `VFIO_PCI`: PCI device address in the format "bus:dev.func" to passthrough
 #     - `VHOST`: Enable vhost-net for tap backend (only for `NET_DEV=tap`)
+#     - `DISK_SIZE`: Size of generated disk images (default is 64M)
 # * Network options:
 #     - `IP`: ArceOS IPv4 address (default is 10.0.2.15 for QEMU user netdev)
 #     - `GW`: Gateway IPv4 address (default is 10.0.2.2 for QEMU user netdev)
@@ -72,6 +73,7 @@ QEMU_ARGS ?=
 
 FS_TYPE ?= fat32
 DISK_IMG ?= disk.img
+DISK_SIZE ?= 64M
 QEMU_LOG ?= n
 NET_DUMP ?= n
 NET_DEV ?= user
