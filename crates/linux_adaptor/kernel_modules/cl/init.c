@@ -796,6 +796,26 @@ static int run_init_process(const char *init_filename)
     return kernel_execve(init_filename, argv_init, envp_init);
 }
 
+static int run_init_process_with_args(const char *init_filename,
+                                      const char *const *argv,
+                                      const char *const *envp)
+{
+    const char *const *p;
+
+    pr_info("Run %s as init process\n", init_filename);
+    pr_debug("  with arguments:\n");
+    if (argv) {
+        for (p = argv; *p; p++)
+            pr_debug("    %s\n", *p);
+    }
+    pr_debug("  with environment:\n");
+    if (envp) {
+        for (p = envp; *p; p++)
+            pr_debug("    %s\n", *p);
+    }
+    return kernel_execve(init_filename, argv, envp);
+}
+
 static int try_to_run_init_process(const char *init_filename)
 {
     int ret;
@@ -853,4 +873,20 @@ out:
 int cl_try_to_run_init_process(const char *init_filename)
 {
     return try_to_run_init_process(init_filename);
+}
+
+int cl_run_init_process(const char *init_filename,
+                        const char *const *argv,
+                        const char *const *envp)
+{
+    int ret;
+
+    ret = run_init_process_with_args(init_filename, argv, envp);
+
+    if (ret && ret != -ENOENT) {
+        pr_err("Starting init: %s exists but couldn't execute it (error %d)\n",
+               init_filename, ret);
+    }
+
+    return ret;
 }
