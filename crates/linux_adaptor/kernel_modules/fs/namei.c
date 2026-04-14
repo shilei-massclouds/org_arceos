@@ -3024,6 +3024,8 @@ int path_pts(struct path *path)
 }
 #endif
 
+#endif // CL
+
 int user_path_at(int dfd, const char __user *name, unsigned flags,
 		 struct path *path)
 {
@@ -3034,7 +3036,6 @@ int user_path_at(int dfd, const char __user *name, unsigned flags,
 	return ret;
 }
 EXPORT_SYMBOL(user_path_at);
-#endif // CL
 
 int __check_sticky(struct mnt_idmap *idmap, struct inode *dir,
 		   struct inode *inode)

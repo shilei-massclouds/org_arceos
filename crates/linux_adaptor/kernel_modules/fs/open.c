@@ -552,6 +552,7 @@ SYSCALL_DEFINE2(access, const char __user *, filename, int, mode)
 {
 	return do_faccessat(AT_FDCWD, filename, mode, 0);
 }
+#endif // CL
 
 SYSCALL_DEFINE1(chdir, const char __user *, filename)
 {
@@ -579,6 +580,7 @@ out:
 	return error;
 }
 
+#if 0
 SYSCALL_DEFINE1(fchdir, unsigned int, fd)
 {
 	struct fd f = fdget_raw(fd);
