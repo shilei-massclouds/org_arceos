@@ -50,9 +50,10 @@ EXTRA_CONFIG ?=
 OUT_CONFIG ?= $(PWD)/.axconfig.toml
 UIMAGE ?= n
 
-# Extern rootfs disk source
+# Rootfs source
 ROOTFS_URL = $(shell cat rootfs.src)
 ROOTFS_IMG = rootfs-$(ARCH).img
+ROOTFS_TARBALL ?= $(notdir $(ROOTFS_URL))
 
 # App options
 A ?= examples/os/lk
@@ -239,13 +240,12 @@ rm_disk:
 	rm -f $(DISK_IMG) #$(ROOTFS_IMG)
 
 rootfs:
-	@if [ ! -f $(ROOTFS_IMG) ]; then \
-		echo "Image not found, downloading..."; \
-		curl -f -L $(ROOTFS_URL)/$(ROOTFS_IMG).xz -O; \
-		xz -d $(ROOTFS_IMG).xz; \
+	@if [ ! -f $(ROOTFS_TARBALL) ]; then \
+		printf "    $(GREEN_C)Downloading$(END_C) rootfs tarball \"$(ROOTFS_TARBALL)\" ...\n"; \
+		curl -f -L "$(ROOTFS_URL)" -o "$(ROOTFS_TARBALL)"; \
 	fi
+	$(call make_rootfs_image_ext4_from_tarball,$(ROOTFS_IMG),$(ROOTFS_TARBALL))
 	@cp $(ROOTFS_IMG) $(DISK_IMG)
-	$(call install_lk_init_script,$(DISK_IMG))
 
 clean: clean_c
 	rm -rf $(APP)/*.bin $(APP)/*.elf $(OUT_CONFIG)
