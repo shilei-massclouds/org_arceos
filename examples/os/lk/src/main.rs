@@ -19,7 +19,7 @@ fn main() {
     ax_prepare_console_node();
     ax_prepare_stdio_from_console();
 
-    let argv = ["init.sh"];
+    let argv = ["/etc/lk_init.sh"];
     let envp = ["HOME=/", "TERM=linux"];
     ax_run_init_process("/bin/sh", &argv, &envp);
 }
