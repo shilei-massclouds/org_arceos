@@ -34,6 +34,13 @@ static void riscv_intc_irq(struct pt_regs *regs)
 
 	if (generic_handle_domain_irq(intc_domain, cause))
 		pr_warn_ratelimited("Failed to handle interrupt (cause: %ld)\n", cause);
+
+	/*
+	 * Forward the decoded interrupt cause to the platform-side IRQ dispatch.
+	 * For S_SOFT, the platform handler must not clear SSIP again because the
+	 * Linux local interrupt path has already consumed the pending interrupt.
+	 */
+	ax_handle_irq(regs->cause);
 }
 
 static void riscv_intc_aia_irq(struct pt_regs *regs)
