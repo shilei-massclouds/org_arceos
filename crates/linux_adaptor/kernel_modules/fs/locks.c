@@ -235,7 +235,6 @@ locks_check_ctx_lists(struct inode *inode)
 	}
 }
 
-#if 0
 static void
 locks_check_ctx_file_list(struct file *filp, struct list_head *list, char *list_type)
 {
@@ -251,7 +250,6 @@ locks_check_ctx_file_list(struct file *filp, struct list_head *list, char *list_
 				flc->flc_owner, flc->flc_flags,
 				flc->flc_type, flc->flc_pid);
 }
-#endif // CL
 
 void
 locks_free_lock_context(struct inode *inode)
@@ -484,7 +482,6 @@ static void flock_make_lock(struct file *filp, struct file_lock *fl, int type)
 	fl->fl_end = OFFSET_MAX;
 }
 
-#if 0
 static int assign_type(struct file_lock_core *flc, int type)
 {
 	switch (type) {
@@ -499,6 +496,7 @@ static int assign_type(struct file_lock_core *flc, int type)
 	return 0;
 }
 
+#if 0
 static int flock64_to_posix_lock(struct file *filp, struct file_lock *fl,
 				 struct flock64 *l)
 {
@@ -1443,7 +1441,6 @@ static int posix_lock_inode_wait(struct inode *inode, struct file_lock *fl)
 	return error;
 }
 
-#if 0
 static void lease_clear_pending(struct file_lease *fl, int arg)
 {
 	switch (arg) {
@@ -1480,6 +1477,7 @@ int lease_modify(struct file_lease *fl, int arg, struct list_head *dispose)
 }
 EXPORT_SYMBOL(lease_modify);
 
+#if 0
 static bool past_time(unsigned long then)
 {
 	if (!then)
@@ -2665,7 +2663,6 @@ void locks_remove_posix(struct file *filp, fl_owner_t owner)
 }
 EXPORT_SYMBOL(locks_remove_posix);
 
-#if 0
 /* The i_flctx must be valid when calling into here */
 static void
 locks_remove_flock(struct file *filp, struct file_lock_context *flctx)
@@ -2708,7 +2705,6 @@ locks_remove_lease(struct file *filp, struct file_lock_context *ctx)
 
 	locks_dispose_list(&dispose);
 }
-#endif // CL
 
 /*
  * This function is called on the last close of an open file.
@@ -2721,7 +2717,6 @@ void locks_remove_file(struct file *filp)
 	if (!ctx)
 		return;
 
-#if 0
 	/* remove any OFD locks */
 	locks_remove_posix(filp, filp);
 
@@ -2736,8 +2731,6 @@ void locks_remove_file(struct file *filp)
 	locks_check_ctx_file_list(filp, &ctx->flc_flock, "FLOCK");
 	locks_check_ctx_file_list(filp, &ctx->flc_lease, "LEASE");
 	spin_unlock(&ctx->flc_lock);
-#endif
-    PANIC("");
 }
 
 #if 0

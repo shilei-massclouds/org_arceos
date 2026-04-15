@@ -305,13 +305,10 @@ extern int cl_vprintk(const char *, va_list);
 void __warn_printk(const char *fmt, ...)
 {
 	va_list args;
-	int r;
 
 	va_start(args, fmt);
-    r = cl_vprintk(fmt, args);
+    cl_vprintk(fmt, args);
 	va_end(args);
-
-	return r;
 }
 
 // kernel/watchdog.c

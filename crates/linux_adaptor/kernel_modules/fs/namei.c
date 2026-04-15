@@ -4597,7 +4597,6 @@ slashes:
 	goto exit3;
 }
 
-#if 0
 SYSCALL_DEFINE3(unlinkat, int, dfd, const char __user *, pathname, int, flag)
 {
 	if ((flag & ~AT_REMOVEDIR) != 0)
@@ -4608,6 +4607,7 @@ SYSCALL_DEFINE3(unlinkat, int, dfd, const char __user *, pathname, int, flag)
 	return do_unlinkat(dfd, getname(pathname));
 }
 
+#if 0
 SYSCALL_DEFINE1(unlink, const char __user *, pathname)
 {
 	return do_unlinkat(AT_FDCWD, getname(pathname));

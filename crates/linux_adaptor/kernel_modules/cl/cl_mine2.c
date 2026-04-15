@@ -889,12 +889,13 @@ CL_MINE(__riscv_sys_times)
 CL_MINE(__riscv_sys_tkill)
 CL_MINE(__riscv_sys_truncate)
 CL_MINE(__riscv_sys_umount)
-CL_MINE(__riscv_sys_unlinkat)
 CL_MINE(__riscv_sys_unshare)
 CL_MINE(__riscv_sys_utimensat)
 CL_MINE(__riscv_sys_vhangup)
 CL_MINE(__riscv_sys_vmsplice)
 CL_MINE(__riscv_sys_waitid)
+
+CL_MINE(f_delown)
 
 /* Missing compat syscall wrappers referenced by arch/riscv/kernel/compat_syscall_table.c. */
 CL_MINE(__riscv_compat_sys_execveat)
