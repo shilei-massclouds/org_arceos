@@ -1027,7 +1027,6 @@ static struct file *__fget_files(struct files_struct *files, unsigned int fd,
 	return file;
 }
 
-#if 0
 static inline struct file *__fget(unsigned int fd, fmode_t mask)
 {
 	return __fget_files(current->files, fd, mask);
@@ -1039,6 +1038,7 @@ struct file *fget(unsigned int fd)
 }
 EXPORT_SYMBOL(fget);
 
+#if 0
 struct file *fget_raw(unsigned int fd)
 {
 	return __fget(fd, 0);

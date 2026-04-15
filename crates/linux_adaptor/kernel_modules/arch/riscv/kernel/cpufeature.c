@@ -26,8 +26,6 @@
 #include <asm/vector.h>
 #include <asm/vendor_extensions.h>
 
-#include "adaptor.h"
-
 #define NUM_ALPHA_EXTS ('z' - 'a' + 1)
 
 unsigned long elf_hwcap __read_mostly;

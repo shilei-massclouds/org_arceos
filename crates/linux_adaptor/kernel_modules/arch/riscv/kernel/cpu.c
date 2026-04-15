@@ -168,6 +168,7 @@ unsigned long __init riscv_get_mvendorid(void)
 #endif
 	return ci->mvendorid;
 }
+#endif // CL
 
 DEFINE_PER_CPU(struct riscv_cpuinfo, riscv_cpuinfo);
 
@@ -234,6 +235,8 @@ static int __init riscv_cpuinfo_init(void)
 	return 0;
 }
 arch_initcall(riscv_cpuinfo_init);
+
+#if 0
 
 #ifdef CONFIG_PROC_FS
 
