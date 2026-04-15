@@ -1009,7 +1009,6 @@ SYSCALL_DEFINE0(geteuid)
 	return from_kuid_munged(current_user_ns(), current_euid());
 }
 
-#if 0
 SYSCALL_DEFINE0(getgid)
 {
 	/* Only we change this so SMP safe */
@@ -1022,6 +1021,7 @@ SYSCALL_DEFINE0(getegid)
 	return from_kgid_munged(current_user_ns(), current_egid());
 }
 
+#if 0
 static void do_sys_times(struct tms *tms)
 {
 	u64 tgutime, tgstime, cutime, cstime;

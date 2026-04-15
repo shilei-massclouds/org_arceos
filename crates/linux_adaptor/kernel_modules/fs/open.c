@@ -374,6 +374,8 @@ COMPAT_SYSCALL_DEFINE6(fallocate, int, fd, int, mode, compat_arg_u64_dual(offset
 }
 #endif
 
+#endif // CL
+
 /*
  * access() needs to use the real uid/gid, not the effective uid/gid.
  * We do this by temporarily clearing all FS-related capabilities and
@@ -542,6 +544,7 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
 	return do_faccessat(dfd, filename, mode, 0);
 }
 
+#if 0
 SYSCALL_DEFINE4(faccessat2, int, dfd, const char __user *, filename, int, mode,
 		int, flags)
 {
