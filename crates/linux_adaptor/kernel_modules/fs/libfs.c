@@ -84,7 +84,6 @@ struct dentry *simple_lookup(struct inode *dir, struct dentry *dentry, unsigned 
 }
 EXPORT_SYMBOL(simple_lookup);
 
-#if 0
 int dcache_dir_open(struct inode *inode, struct file *file)
 {
 	file->private_data = d_alloc_cursor(file->f_path.dentry);
@@ -223,11 +222,13 @@ int dcache_readdir(struct file *file, struct dir_context *ctx)
 }
 EXPORT_SYMBOL(dcache_readdir);
 
+#if 0
 ssize_t generic_read_dir(struct file *filp, char __user *buf, size_t siz, loff_t *ppos)
 {
 	return -EISDIR;
 }
 EXPORT_SYMBOL(generic_read_dir);
+#endif // CL
 
 const struct file_operations simple_dir_operations = {
 	.open		= dcache_dir_open,
@@ -238,7 +239,6 @@ const struct file_operations simple_dir_operations = {
 	.fsync		= noop_fsync,
 };
 EXPORT_SYMBOL(simple_dir_operations);
-#endif // CL
 
 const struct inode_operations simple_dir_inode_operations = {
 	.lookup		= simple_lookup,
@@ -430,6 +430,7 @@ void simple_offset_destroy(struct offset_ctx *octx)
 {
 	mtree_destroy(&octx->mt);
 }
+#endif // CL
 
 /**
  * offset_dir_llseek - Advance the read position of a directory descriptor
@@ -584,6 +585,7 @@ const struct file_operations simple_offset_dir_operations = {
 	.fsync		= noop_fsync,
 };
 
+#if 0
 static struct dentry *find_next_child(struct dentry *parent, struct dentry *prev)
 {
 	struct dentry *child = NULL, *d;

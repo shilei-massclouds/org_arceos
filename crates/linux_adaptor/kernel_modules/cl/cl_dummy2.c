@@ -1004,3 +1004,8 @@ void uprobe_dup_mmap(struct mm_struct *oldmm, struct mm_struct *newmm)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
+
+// kernel/sysctl.c
+/* shared constants to be used in various sysctls */
+const int sysctl_vals[] = { 0, 1, 2, 3, 4, 100, 200, 1000, 3000, INT_MAX, 65535, -1 };
+EXPORT_SYMBOL(sysctl_vals);

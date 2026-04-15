@@ -1106,6 +1106,7 @@ void wake_up_all_idle_cpus(void)
 	}
 }
 EXPORT_SYMBOL_GPL(wake_up_all_idle_cpus);
+#endif // CL
 
 /**
  * struct smp_call_on_cpu_struct - Call a function on a specific CPU
@@ -1164,4 +1165,3 @@ int smp_call_on_cpu(unsigned int cpu, int (*func)(void *), void *par, bool phys)
 	return sscs.ret;
 }
 EXPORT_SYMBOL_GPL(smp_call_on_cpu);
-#endif /* CL */

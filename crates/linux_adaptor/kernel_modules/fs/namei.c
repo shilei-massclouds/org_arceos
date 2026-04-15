@@ -5330,6 +5330,7 @@ const char *vfs_get_link(struct dentry *dentry, struct delayed_call *done)
 	return res;
 }
 EXPORT_SYMBOL(vfs_get_link);
+#endif // CL
 
 /* get the link contents into pagecache */
 static char *__page_get_link(struct dentry *dentry, struct inode *inode,
@@ -5356,12 +5357,14 @@ static char *__page_get_link(struct dentry *dentry, struct inode *inode,
 	return page_address(page);
 }
 
+#if 0
 const char *page_get_link_raw(struct dentry *dentry, struct inode *inode,
 			      struct delayed_call *callback)
 {
 	return __page_get_link(dentry, inode, callback);
 }
 EXPORT_SYMBOL_GPL(page_get_link_raw);
+#endif // CL
 
 const char *page_get_link(struct dentry *dentry, struct inode *inode,
 					struct delayed_call *callback)
@@ -5381,6 +5384,7 @@ void page_put_link(void *arg)
 }
 EXPORT_SYMBOL(page_put_link);
 
+#if 0
 int page_readlink(struct dentry *dentry, char __user *buffer, int buflen)
 {
 	DEFINE_DELAYED_CALL(done);
@@ -5426,10 +5430,9 @@ fail:
 	return err;
 }
 EXPORT_SYMBOL(page_symlink);
+#endif /* CL */
 
 const struct inode_operations page_symlink_inode_operations = {
 	.get_link	= page_get_link,
 };
 EXPORT_SYMBOL(page_symlink_inode_operations);
-
-#endif /* CL */

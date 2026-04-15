@@ -28,8 +28,10 @@ obj-y += alternative.o
 obj-y += fpu.o
 obj-y += traps_misaligned.o
 obj-y += sys_hwprobe.o
+obj-y += unaligned_access_speed.o
+obj-y += copy-unaligned.o
+obj-y += reset.o
 
-#obj-y += reset.o
 #obj-y += acpi.o
 
 obj-y += vdso.o

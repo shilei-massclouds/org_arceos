@@ -5796,7 +5796,6 @@ bool mnt_may_suid(struct vfsmount *mnt)
 	       current_in_userns(mnt->mnt_sb->s_user_ns);
 }
 
-#if 0
 static struct ns_common *mntns_get(struct task_struct *task)
 {
 	struct ns_common *ns = NULL;
@@ -5876,6 +5875,7 @@ const struct proc_ns_operations mntns_operations = {
 	.owner		= mntns_owner,
 };
 
+#if 0
 #ifdef CONFIG_SYSCTL
 static struct ctl_table fs_namespace_sysctls[] = {
 	{

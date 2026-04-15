@@ -4538,6 +4538,7 @@ bool enable_delayed_work(struct delayed_work *dwork)
 	return enable_work(&dwork->work);
 }
 EXPORT_SYMBOL_GPL(enable_delayed_work);
+#endif // CL
 
 /**
  * schedule_on_each_cpu - execute a function synchronously on each online CPU
@@ -4576,6 +4577,7 @@ int schedule_on_each_cpu(work_func_t func)
 	return 0;
 }
 
+#if 0
 /**
  * execute_in_process_context - reliably execute the routine with user context
  * @fn:		the function to execute
