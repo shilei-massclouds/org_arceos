@@ -193,7 +193,6 @@ CL_MINE(double_rq_lock)
 CL_MINE(plist_del)
 CL_MINE(plist_add)
 CL_MINE(sched_get_rd)
-CL_MINE(cpufreq_update_util_data)
 CL_MINE(sched_put_rd)
 
 CL_MINE(partition_sched_domains)

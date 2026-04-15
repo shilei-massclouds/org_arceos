@@ -83,11 +83,9 @@ struct task_struct init_task __aligned(L1_CACHE_BYTES) = {
 	.mm		= NULL,
 	.active_mm	= &init_mm,
 	.faults_disabled_mapping = NULL,
-    /*
 	.restart_block	= {
 		.fn = do_no_restart_syscall,
 	},
-    */
 	.se		= {
 		.group_node 	= LIST_HEAD_INIT(init_task.se.group_node),
 	},
@@ -100,7 +98,7 @@ struct task_struct init_task __aligned(L1_CACHE_BYTES) = {
 	.pushable_tasks	= PLIST_NODE_INIT(init_task.pushable_tasks, MAX_PRIO),
 #endif
 #ifdef CONFIG_CGROUP_SCHED
-	//.sched_task_group = &root_task_group,
+	.sched_task_group = &root_task_group,
 #endif
 #ifdef CONFIG_SCHED_CLASS_EXT
 	.scx		= {

@@ -8430,6 +8430,8 @@ int in_sched_functions(unsigned long addr)
 		&& addr < (unsigned long)__sched_text_end);
 }
 
+#endif /* CL */
+
 #ifdef CONFIG_CGROUP_SCHED
 /*
  * Default task group.
@@ -8441,8 +8443,6 @@ LIST_HEAD(task_groups);
 /* Cacheline aligned slab cache for task_group */
 static struct kmem_cache *task_group_cache __ro_after_init;
 #endif
-
-#endif /* CL */
 
 void __init sched_init(void)
 {
