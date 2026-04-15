@@ -459,7 +459,6 @@ static void locks_move_blocks(struct file_lock *new, struct file_lock *fl)
 	spin_unlock(&blocked_lock_lock);
 }
 
-#if 0
 static inline int flock_translate_cmd(int cmd) {
 	switch (cmd) {
 	case LOCK_SH:
@@ -485,6 +484,7 @@ static void flock_make_lock(struct file *filp, struct file_lock *fl, int type)
 	fl->fl_end = OFFSET_MAX;
 }
 
+#if 0
 static int assign_type(struct file_lock_core *flc, int type)
 {
 	switch (type) {
@@ -735,7 +735,6 @@ static void __locks_wake_up_blocks(struct file_lock_core *blocker)
 	}
 }
 
-#if 0
 static int __locks_delete_block(struct file_lock_core *waiter)
 {
 	int status = -ENOENT;
@@ -791,7 +790,6 @@ int locks_delete_block(struct file_lock *waiter)
 	return __locks_delete_block(&waiter->c);
 }
 EXPORT_SYMBOL(locks_delete_block);
-#endif // CL
 
 /* Insert waiter into blocker's block list.
  * We use a circular list so that processes can be easily woken up in
@@ -836,7 +834,6 @@ new_blocker:
 	__locks_wake_up_blocks(waiter);
 }
 
-#if 0
 /* Must be called with flc_lock held. */
 static void locks_insert_block(struct file_lock_core *blocker,
 			       struct file_lock_core *waiter,
@@ -847,7 +844,6 @@ static void locks_insert_block(struct file_lock_core *blocker,
 	__locks_insert_block(blocker, waiter, conflict);
 	spin_unlock(&blocked_lock_lock);
 }
-#endif // CL
 
 /*
  * Wake up processes blocked waiting for blocker.
@@ -949,6 +945,7 @@ static bool posix_test_locks_conflict(struct file_lock *caller_fl,
 	}
 	return posix_locks_conflict(caller, sys);
 }
+#endif // CL
 
 /* Determine if lock sys_fl blocks lock caller_fl. FLOCK specific
  * checking before calling the locks_conflict().
@@ -965,6 +962,7 @@ static bool flock_locks_conflict(struct file_lock_core *caller_flc,
 	return locks_conflict(caller_flc, sys_flc);
 }
 
+#if 0
 void
 posix_test_lock(struct file *filp, struct file_lock *fl)
 {
@@ -1082,7 +1080,6 @@ static bool posix_locks_deadlock(struct file_lock *caller_fl,
 	return false;
 }
 
-#if 0
 /* Try to create a FLOCK lock on filp. We always insert new FLOCK locks
  * after any leases, but before any posix locks.
  *
@@ -1161,7 +1158,6 @@ out:
 	trace_flock_lock_inode(inode, request, error);
 	return error;
 }
-#endif // CL
 
 static int posix_lock_inode(struct inode *inode, struct file_lock *request,
 			    struct file_lock *conflock)
@@ -1423,7 +1419,6 @@ int posix_lock_file(struct file *filp, struct file_lock *fl,
 }
 EXPORT_SYMBOL(posix_lock_file);
 
-#if 0
 /**
  * posix_lock_inode_wait - Apply a POSIX-style lock to a file
  * @inode: inode of file to which lock request should be applied
@@ -1448,6 +1443,7 @@ static int posix_lock_inode_wait(struct inode *inode, struct file_lock *fl)
 	return error;
 }
 
+#if 0
 static void lease_clear_pending(struct file_lease *fl, int arg)
 {
 	switch (arg) {
@@ -2091,6 +2087,7 @@ int fcntl_setlease(unsigned int fd, struct file *filp, int arg)
 		return vfs_setlease(filp, F_UNLCK, NULL, (void **)&filp);
 	return do_fcntl_add_lease(fd, filp, arg);
 }
+#endif // CL
 
 /**
  * flock_lock_inode_wait - Apply a FLOCK-style lock to a file
@@ -2210,6 +2207,7 @@ SYSCALL_DEFINE2(flock, unsigned int, fd, unsigned int, cmd)
 	return error;
 }
 
+#if 0
 /**
  * vfs_test_lock - test file byte range lock
  * @filp: The file to test lock for

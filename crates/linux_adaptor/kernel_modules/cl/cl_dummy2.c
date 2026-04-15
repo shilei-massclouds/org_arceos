@@ -1013,4 +1013,11 @@ EXPORT_SYMBOL(sysctl_vals);
 int security_sb_statfs(struct dentry *dentry)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_file_lock(struct file *file, unsigned int cmd)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
 }
