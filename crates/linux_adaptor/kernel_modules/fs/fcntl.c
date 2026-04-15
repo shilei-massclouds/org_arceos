@@ -478,10 +478,10 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
 		err = 0;
 		set_close_on_exec(fd, argi & FD_CLOEXEC);
 		break;
-#if 0
 	case F_GETFL:
 		err = filp->f_flags;
 		break;
+#if 0
 	case F_SETFL:
 		err = setfl(fd, filp, argi);
 		break;

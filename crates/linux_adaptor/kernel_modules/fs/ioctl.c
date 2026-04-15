@@ -58,7 +58,6 @@ long vfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 }
 EXPORT_SYMBOL(vfs_ioctl);
 
-#if 0
 static int ioctl_fibmap(struct file *filp, int __user *p)
 {
 	struct inode *inode = file_inode(filp);
@@ -97,6 +96,7 @@ static int ioctl_fibmap(struct file *filp, int __user *p)
 	return error;
 }
 
+#if 0
 /**
  * fiemap_fill_next_extent - Fiemap helper function
  * @fieinfo:	Fiemap context passed into ->fiemap
@@ -262,6 +262,7 @@ static long ioctl_file_clone_range(struct file *file,
 	return ioctl_file_clone(file, args.src_fd, args.src_offset,
 				args.src_length, args.dest_offset);
 }
+#endif // CL
 
 /*
  * This provides compatibility with legacy XFS pre-allocation ioctls
@@ -295,6 +296,7 @@ static int ioctl_preallocate(struct file *filp, int mode, void __user *argp)
 			sr.l_len);
 }
 
+#if 0
 /* on ia32 l_start is on a 32-bit boundary */
 #if defined CONFIG_COMPAT && defined(CONFIG_X86_64)
 /* just account for different alignment */
@@ -327,7 +329,6 @@ static int compat_ioctl_preallocate(struct file *file, int mode,
 
 static int file_ioctl(struct file *filp, unsigned int cmd, int __user *p)
 {
-#if 0
 	switch (cmd) {
 	case FIBMAP:
 		return ioctl_fibmap(filp, p);
@@ -340,9 +341,6 @@ static int file_ioctl(struct file *filp, unsigned int cmd, int __user *p)
 	case FS_IOC_ZERO_RANGE:
 		return ioctl_preallocate(filp, FALLOC_FL_ZERO_RANGE, p);
 	}
-#endif
-    PANIC("");
-
 	return -ENOIOCTLCMD;
 }
 
