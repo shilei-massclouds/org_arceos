@@ -5,6 +5,8 @@
 
 #include <asm/unistd.h>
 
+#include "cl_syscall_report.h"
+
 #ifdef CONFIG_ARCH_HAS_SYSCALL_WRAPPER
 /* Architectures may override COND_SYSCALL and COND_SYSCALL_COMPAT */
 #include <asm/syscall_wrapper.h>
@@ -19,6 +21,7 @@ asmlinkage long sys_ni_syscall(void);
  */
 asmlinkage long sys_ni_syscall(void)
 {
+	report_unimplemented_syscall();
 	return -ENOSYS;
 }
 
