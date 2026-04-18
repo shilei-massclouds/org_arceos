@@ -199,12 +199,6 @@ void tty_audit_fork(struct signal_struct *sig)
     sig->audit_tty = current->signal->audit_tty;
 }
 
-// net/core/net_namespace.c
-struct net init_net = {
-    .ns.count = 1,
-};
-EXPORT_SYMBOL(init_net);
-
 // kernel/seccomp.c
 void get_seccomp_filter(struct task_struct *tsk)
 {
