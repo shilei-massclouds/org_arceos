@@ -47,9 +47,12 @@ qemu_args-loongarch64 := \
 
 qemu_args-y := -m $(MEM) -smp $(SMP) $(qemu_args-$(ARCH))
 
-# App can require qemu to enable `BLK` by its features.txt
+# App can require qemu to enable `BLK`/`NET` by its features.txt
 ifneq ($(filter blk,$(QEMU_FEAT)),)
   override BLK = y
+endif
+ifneq ($(filter net,$(QEMU_FEAT)),)
+  override NET = y
 endif
 
 qemu_args-$(BLK) += \

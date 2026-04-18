@@ -1,3 +1,4 @@
 blk
+net
 bus-mmio
 boot-args
