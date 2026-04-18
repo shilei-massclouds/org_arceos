@@ -485,6 +485,7 @@ struct file *sock_alloc_file(struct socket *sock, int flags, const char *dname)
 	return file;
 }
 EXPORT_SYMBOL(sock_alloc_file);
+#endif // CL
 
 static int sock_map_fd(struct socket *sock, int flags)
 {
@@ -505,6 +506,7 @@ static int sock_map_fd(struct socket *sock, int flags)
 	return PTR_ERR(newfile);
 }
 
+#if 0
 /**
  *	sock_from_file - Return the &socket bounded to @file.
  *	@file: file
@@ -1491,6 +1493,7 @@ call_kill:
 	return 0;
 }
 EXPORT_SYMBOL(sock_wake_async);
+#endif // CL
 
 /**
  *	__sock_create - creates a socket
@@ -1638,6 +1641,7 @@ int sock_create(int family, int type, int protocol, struct socket **res)
 }
 EXPORT_SYMBOL(sock_create);
 
+#if 0
 /**
  *	sock_create_kern - creates a socket (kernel space)
  *	@net: net namespace
@@ -1655,6 +1659,7 @@ int sock_create_kern(struct net *net, int family, int type, int protocol, struct
 	return __sock_create(net, family, type, protocol, res, 1);
 }
 EXPORT_SYMBOL(sock_create_kern);
+#endif // CL
 
 static struct socket *__sys_socket_create(int family, int type, int protocol)
 {
@@ -1678,6 +1683,7 @@ static struct socket *__sys_socket_create(int family, int type, int protocol)
 	return sock;
 }
 
+#if 0
 struct file *__sys_socket_file(int family, int type, int protocol)
 {
 	struct socket *sock;
@@ -1693,6 +1699,7 @@ struct file *__sys_socket_file(int family, int type, int protocol)
 
 	return sock_alloc_file(sock, flags, NULL);
 }
+#endif // CL
 
 /*	A hook for bpf progs to attach to and update socket protocol.
  *
@@ -1735,6 +1742,7 @@ SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol)
 	return __sys_socket(family, type, protocol);
 }
 
+#if 0
 /*
  *	Create a pair of connected sockets.
  */

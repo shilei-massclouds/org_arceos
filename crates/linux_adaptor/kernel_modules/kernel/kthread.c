@@ -984,6 +984,7 @@ kthread_create_worker_on_cpu(int cpu, unsigned int flags,
 	return worker;
 }
 EXPORT_SYMBOL(kthread_create_worker_on_cpu);
+#endif // CL
 
 /*
  * Returns true when the work could not be queued at the moment.
@@ -1050,6 +1051,7 @@ bool kthread_queue_work(struct kthread_worker *worker,
 }
 EXPORT_SYMBOL_GPL(kthread_queue_work);
 
+#if 0
 /**
  * kthread_delayed_work_timer_fn - callback that queues the associated kthread
  *	delayed work when the timer expires.

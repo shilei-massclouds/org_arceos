@@ -22,6 +22,7 @@
 #include <linux/rmap.h>
 #include <linux/extable.h>
 #include <linux/padata.h>
+#include <net/net_namespace.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -533,8 +534,8 @@ void start_sched_earlier()
     key_init();
     security_init();
     dbg_late_init();
-    net_ns_init();
 #endif
+    net_ns_init();
     vfs_caches_init();
     pagecache_init();
     signals_init();

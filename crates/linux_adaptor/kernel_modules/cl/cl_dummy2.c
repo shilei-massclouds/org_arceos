@@ -7,9 +7,12 @@
 #include <linux/audit.h>
 #include <linux/in6.h>
 #include <linux/pipe_fs_i.h>
+#include <linux/rtnetlink.h>
 #include <uapi/linux/perf_event.h>
 
+#include <net/dst.h>
 #include <net/hotdata.h>
+#include <net/neighbour.h>
 #include <net/protocol.h>
 #include <net/sock.h>
 #include <net/netlink.h>
@@ -1023,5 +1026,67 @@ struct net_hotdata net_hotdata __cacheline_aligned = {
     .ptype_all = LIST_HEAD_INIT(net_hotdata.ptype_all),
 };
 
-// net/core/dev.c
-DEFINE_PER_CPU_ALIGNED(struct softnet_data, softnet_data);
+int security_socket_create(int family, int type, int protocol, int kern)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_post_create(struct socket *sock, int family,
+                int type, int protocol, int kern)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// net/core/dst.c
+const struct dst_metrics dst_default_metrics = {
+    /* This initializer is needed to force linker to place this variable
+     * into const section. Otherwise it might end into bss section.
+     * We really want to avoid false sharing on this variable, and catch
+     * any writes on it.
+     */
+    .refcnt = REFCOUNT_INIT(1),
+};
+EXPORT_SYMBOL(dst_default_metrics);
+
+// net/core/neighbour.c
+const struct nla_policy nda_policy[NDA_MAX+1] = {
+    [NDA_UNSPEC]        = { .strict_start_type = NDA_NH_ID },
+    [NDA_DST]       = { .type = NLA_BINARY, .len = MAX_ADDR_LEN },
+    [NDA_LLADDR]        = { .type = NLA_BINARY, .len = MAX_ADDR_LEN },
+    [NDA_CACHEINFO]     = { .len = sizeof(struct nda_cacheinfo) },
+    [NDA_PROBES]        = { .type = NLA_U32 },
+    [NDA_VLAN]      = { .type = NLA_U16 },
+    [NDA_PORT]      = { .type = NLA_U16 },
+    [NDA_VNI]       = { .type = NLA_U32 },
+    [NDA_IFINDEX]       = { .type = NLA_U32 },
+    [NDA_MASTER]        = { .type = NLA_U32 },
+    [NDA_PROTOCOL]      = { .type = NLA_U8 },
+    [NDA_NH_ID]     = { .type = NLA_U32 },
+    [NDA_FLAGS_EXT]     = NLA_POLICY_MASK(NLA_U32, NTF_EXT_MASK),
+    [NDA_FDB_EXT_ATTRS] = { .type = NLA_NESTED },
+};
+
+// net/core/filter.c
+DEFINE_STATIC_KEY_FALSE(bpf_master_redirect_enabled_key);
+EXPORT_SYMBOL_GPL(bpf_master_redirect_enabled_key);
+
+struct proc_dir_entry *_proc_mkdir(const char *name, umode_t mode,
+        struct proc_dir_entry *parent, void *data, bool force_lookup)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return NULL;
+}
+
+int __init dev_proc_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int __init netdev_kobject_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

@@ -343,7 +343,6 @@ void rcu_segcblist_enqueue(struct rcu_segcblist *rsclp,
 	WRITE_ONCE(rsclp->tails[RCU_NEXT_TAIL], &rhp->next);
 }
 
-#if 0
 /*
  * Entrain the specified callback onto the specified rcu_segcblist at
  * the end of the last non-empty segment.  If the entire rcu_segcblist
@@ -373,7 +372,6 @@ bool rcu_segcblist_entrain(struct rcu_segcblist *rsclp,
 		WRITE_ONCE(rsclp->tails[i], &rhp->next);
 	return true;
 }
-#endif /* CL */
 
 /*
  * Extract only those callbacks ready to be invoked from the specified

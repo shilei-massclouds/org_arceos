@@ -12,6 +12,7 @@ obj-y += pinctrl/
 obj-y += iommu/
 obj-y += pmdomain/
 obj-y += block/
+obj-y += net/
 obj-y += rtc/
 
 #obj-y += gpio/
