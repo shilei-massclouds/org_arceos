@@ -1145,3 +1145,9 @@ int security_inode_listsecurity(struct inode *inode,
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int security_sk_alloc(struct sock *sk, int family, gfp_t priority)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

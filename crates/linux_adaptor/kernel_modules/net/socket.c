@@ -1357,6 +1357,7 @@ static long sock_ioctl(struct file *file, unsigned cmd, unsigned long arg)
 		}
 	return err;
 }
+#endif // CL
 
 /**
  *	sock_create_lite - creates a socket
@@ -1401,6 +1402,7 @@ out_release:
 }
 EXPORT_SYMBOL(sock_create_lite);
 
+#if 0
 /* No kernel lock held - perfect */
 static __poll_t sock_poll(struct file *file, poll_table *wait)
 {
@@ -3232,6 +3234,8 @@ SYSCALL_DEFINE2(socketcall, int, call, unsigned long __user *, args)
 
 #endif				/* __ARCH_WANT_SYS_SOCKETCALL */
 
+#endif // CL
+
 /**
  *	sock_register - add a socket protocol handler
  *	@ops: description of protocol
@@ -3265,6 +3269,7 @@ int sock_register(const struct net_proto_family *ops)
 }
 EXPORT_SYMBOL(sock_register);
 
+#if 0
 /**
  *	sock_unregister - remove a protocol handler
  *	@family: protocol family to remove
