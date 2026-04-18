@@ -1645,7 +1645,7 @@ int sock_create(int family, int type, int protocol, struct socket **res)
 }
 EXPORT_SYMBOL(sock_create);
 
-#if 0
+#if 1
 /**
  *	sock_create_kern - creates a socket (kernel space)
  *	@net: net namespace

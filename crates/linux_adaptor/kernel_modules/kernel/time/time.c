@@ -394,7 +394,7 @@ unsigned int jiffies_to_msecs(const unsigned long j)
 }
 EXPORT_SYMBOL(jiffies_to_msecs);
 
-#if 0
+#if 1
 /**
  * jiffies_to_usecs - Convert jiffies to microseconds
  * @j: jiffies value

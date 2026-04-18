@@ -44,7 +44,7 @@ static int notifier_chain_register(struct notifier_block **nl,
 	return 0;
 }
 
-#if 0
+#if 1
 static int notifier_chain_unregister(struct notifier_block **nl,
 		struct notifier_block *n)
 {
@@ -161,7 +161,7 @@ int atomic_notifier_chain_register(struct atomic_notifier_head *nh,
 }
 EXPORT_SYMBOL_GPL(atomic_notifier_chain_register);
 
-#if 0
+#if 1
 /**
  *	atomic_notifier_chain_register_unique_prio - Add notifier to an atomic notifier chain
  *	@nh: Pointer to head of the atomic notifier chain

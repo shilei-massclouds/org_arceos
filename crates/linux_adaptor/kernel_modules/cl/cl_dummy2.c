@@ -24,6 +24,9 @@
 #include <net/ip.h>
 #include <net/ip_fib.h>
 #include <net/ip_tunnels.h>
+#include <net/fib_notifier.h>
+#include <net/l3mdev.h>
+#include <net/nexthop.h>
 #include <net/neighbour.h>
 #include <net/protocol.h>
 #include <net/ping.h>
@@ -1120,6 +1123,14 @@ struct proc_dir_entry *proc_create_net_data(const char *name, umode_t mode,
     return (struct proc_dir_entry *)1;
 }
 
+struct proc_dir_entry *proc_create_net_single(const char *name, umode_t mode,
+        struct proc_dir_entry *parent,
+        int (*show)(struct seq_file *, void *), void *data)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return (struct proc_dir_entry *)1;
+}
+
 int security_inode_listsecurity(struct inode *inode,
                 char *buffer, size_t buffer_size)
 {
@@ -1172,23 +1183,11 @@ const struct bpf_func_proto bpf_sk_setsockopt_proto;
 const struct bpf_func_proto bpf_sk_getsockopt_proto;
 u32 btf_sock_ids[32];
 
-// net/ipv4/tcp_cong.c
-struct tcp_congestion_ops tcp_reno;
-
-// net/ipv4/tcp.c
-atomic_long_t tcp_memory_allocated;
-DEFINE_PER_CPU(int, tcp_memory_per_cpu_fw_alloc);
-struct percpu_counter tcp_sockets_allocated;
-unsigned long tcp_memory_pressure;
-long sysctl_tcp_mem[3];
-DEFINE_PER_CPU(unsigned int, tcp_orphan_count);
-DEFINE_STATIC_KEY_FALSE(tcp_tx_delay_enabled);
+// net/ipv6/protocol.c
+const struct net_offload __rcu *inet6_offloads[MAX_INET_PROTOS];
 
 // net/ipv4/ip_sockglue.c
 DEFINE_STATIC_KEY_FALSE(ip4_min_ttl);
-
-// net/ipv4/fib_frontend.c
-const struct nla_policy rtm_ipv4_policy[RTA_MAX + 1];
 
 // net/ipv4/fib_semantics.c
 const struct fib_prop fib_props[RTN_MAX + 1];
@@ -1196,8 +1195,8 @@ const struct fib_prop fib_props[RTN_MAX + 1];
 // net/core/sysctl_net_core.c
 int sysctl_devconf_inherit_init_net;
 
-// net/ipv4/ip_tunnel_core.c
-const struct ip_tunnel_encap_ops __rcu *iptun_encaps[MAX_IPTUN_ENCAP_OPS];
+// net/ipv4/tcp_input.c
+int sysctl_tcp_max_orphans;
 
 // net/core/filter.c
 DEFINE_STATIC_KEY_FALSE(bpf_sk_lookup_enabled);
@@ -1249,6 +1248,100 @@ int proc_dointvec_ms_jiffies(const struct ctl_table *table, int write,
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
+}
+
+u32 l3mdev_fib_table_rcu(const struct net_device *dev)
+{
+    return 0;
+}
+
+struct nexthop *nexthop_find_by_id(struct net *net, u32 id)
+{
+    return NULL;
+}
+
+int fib_sync_down_dev(struct net_device *dev, unsigned long event, bool force)
+{
+    return 0;
+}
+
+int fib_sync_down_addr(struct net_device *dev, __be32 local)
+{
+    return 0;
+}
+
+int fib_sync_up(struct net_device *dev, unsigned char nh_flags)
+{
+    return 0;
+}
+
+void fib_sync_mtu(struct net_device *dev, u32 orig_mtu)
+{
+}
+
+void workqueue_softirq_action(bool highpri)
+{
+}
+
+void xfrm_init(void)
+{
+}
+
+void xfrm4_init(void)
+{
+}
+
+int call_fib_notifier(struct notifier_block *nb,
+        enum fib_event_type event_type, struct fib_notifier_info *info)
+{
+    return 0;
+}
+
+int call_fib_notifiers(struct net *net, enum fib_event_type event_type,
+        struct fib_notifier_info *info)
+{
+    return 0;
+}
+
+struct fib_notifier_ops *
+fib_notifier_ops_register(const struct fib_notifier_ops *tmpl, struct net *net)
+{
+    return (struct fib_notifier_ops *)1;
+}
+
+void fib_notifier_ops_unregister(struct fib_notifier_ops *ops)
+{
+}
+
+size_t fib_nlmsg_size(struct fib_info *fi)
+{
+    return 0;
+}
+
+struct fib_info *fib_create_info(struct fib_config *cfg,
+        struct netlink_ext_ack *extack)
+{
+    return NULL;
+}
+
+void fib_release_info(struct fib_info *fi)
+{
+}
+
+int fib_nh_match(struct net *net, struct fib_config *cfg, struct fib_info *fi,
+        struct netlink_ext_ack *extack)
+{
+    return 0;
+}
+
+bool fib_metrics_match(struct fib_config *cfg, struct fib_info *fi)
+{
+    return false;
+}
+
+void rtmsg_fib(int event, __be32 key, struct fib_alias *fa, int dst_len,
+        u32 tb_id, const struct nl_info *info, unsigned int nlm_flags)
+{
 }
 
 void *kmemdup_noprof(const void *src, size_t len, gfp_t gfp)

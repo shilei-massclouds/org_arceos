@@ -750,7 +750,7 @@ struct tasklet_head {
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_vec);
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_hi_vec);
 
-#if 0
+#if 1
 static void __tasklet_schedule_common(struct tasklet_struct *t,
 				      struct tasklet_head __percpu *headp,
 				      unsigned int softirq_nr)
@@ -801,7 +801,7 @@ static void tasklet_action_common(struct tasklet_head *tl_head,
 {
 	struct tasklet_struct *list;
 
-#if 0
+#if 1
 	local_irq_disable();
 	list = tl_head->head;
 	tl_head->head = NULL;
@@ -840,28 +840,25 @@ static void tasklet_action_common(struct tasklet_head *tl_head,
 		local_irq_enable();
 	}
 #endif
-    PANIC("");
 }
 
 static __latent_entropy void tasklet_action(void)
 {
-#if 0
+#if 1
 	workqueue_softirq_action(false);
 	tasklet_action_common(this_cpu_ptr(&tasklet_vec), TASKLET_SOFTIRQ);
 #endif
-    PANIC("");
 }
 
 static __latent_entropy void tasklet_hi_action(void)
 {
-#if 0
+#if 1
 	workqueue_softirq_action(true);
 	tasklet_action_common(this_cpu_ptr(&tasklet_hi_vec), HI_SOFTIRQ);
 #endif
-    PANIC("");
 }
 
-#if 0
+#if 1
 void tasklet_setup(struct tasklet_struct *t,
 		   void (*callback)(struct tasklet_struct *))
 {
