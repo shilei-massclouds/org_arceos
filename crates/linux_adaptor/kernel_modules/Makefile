@@ -4,7 +4,14 @@ include $(CURDIR)/scripts/Makefile.include
 
 TARGET = libclinux.a
 
-obj-y := cl/ init/ arch/ kernel/ mm/ fs/ crypto/ block/ lib/ libfdt/ drivers/ ipc/
+#
+# Building Order in Linux:
+#
+# init usr arch ARCH_CORE kernel certs mm fs ipc security crypto
+# block io_uring rust ARCH_LIB drivers sound samples net virt ARCH_DRIVERS
+#
+
+obj-y := cl/ init/ arch/ kernel/ mm/ fs/ ipc/ crypto/ block/ lib/ libfdt/ drivers/ net/
 
 OBJ_LIST := $(patsubst %/, %/obj_list.txt, $(obj-y))
 

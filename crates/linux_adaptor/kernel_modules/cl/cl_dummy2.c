@@ -5,8 +5,12 @@
 #include <linux/proc_ns.h>
 #include <linux/suspend.h>
 #include <linux/audit.h>
+#include <linux/in6.h>
+#include <linux/pipe_fs_i.h>
 #include <uapi/linux/perf_event.h>
 
+#include <net/hotdata.h>
+#include <net/protocol.h>
 #include <net/sock.h>
 #include <net/netlink.h>
 #include <net/net_namespace.h>
@@ -418,12 +422,6 @@ int dpm_sysfs_add(struct device *dev)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
-}
-
-// net/core/skbuff.c
-void consume_skb(struct sk_buff *skb)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
 int sysfs_create_link(struct kobject *kobj, struct kobject *target,
@@ -984,9 +982,6 @@ int security_file_fcntl(struct file *file, unsigned int cmd, unsigned long arg)
     return 0;
 }
 
-// net/socket.c
-unsigned int sysctl_net_busy_poll __read_mostly;
-
 void uprobe_start_dup_mmap(void)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -1018,3 +1013,21 @@ int security_file_lock(struct file *file, unsigned int cmd)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int net_sysctl_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+// net/ipv4/protocol.c
+struct net_protocol __rcu *inet_protos[MAX_INET_PROTOS] __read_mostly;
+
+// net/core/hotdata.c
+struct net_hotdata net_hotdata __cacheline_aligned = {
+    .offload_base = LIST_HEAD_INIT(net_hotdata.offload_base),
+    .ptype_all = LIST_HEAD_INIT(net_hotdata.ptype_all),
+};
+
+// net/core/dev.c
+DEFINE_PER_CPU_ALIGNED(struct softnet_data, softnet_data);

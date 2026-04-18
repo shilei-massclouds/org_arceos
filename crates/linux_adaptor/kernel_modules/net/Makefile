@@ -1,0 +1,6 @@
+# Makefile for `net`
+
+obj-y += socket.o
+
+obj-y += core/
+obj-y += ipv6/
