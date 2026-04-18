@@ -1174,6 +1174,13 @@ void dev_init_scheduler(struct net_device *dev)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
+int security_inode_listsecurity(struct inode *inode,
+                char *buffer, size_t buffer_size)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
 int nlmsg_notify(struct sock *sk, struct sk_buff *skb, u32 portid,
          unsigned int group, int report, gfp_t flags)
 {

@@ -573,6 +573,7 @@ static struct socket *sockfd_lookup_light(int fd, int *err, int *fput_needed)
 	}
 	return NULL;
 }
+#endif // CL
 
 static ssize_t sockfs_listxattr(struct dentry *dentry, char *buffer,
 				size_t size)
@@ -694,6 +695,7 @@ void sock_release(struct socket *sock)
 }
 EXPORT_SYMBOL(sock_release);
 
+#if 0
 void __sock_tx_timestamp(__u16 tsflags, __u8 *tx_flags)
 {
 	u8 flags = *tx_flags;
