@@ -30,6 +30,7 @@ pub enum AxStage {
     // [Task1]
     InitSMPPre,
     InitSMP,
+    InitSMPPost,
     SetupAllocLate,
     InitDriver,
     InitFS,
