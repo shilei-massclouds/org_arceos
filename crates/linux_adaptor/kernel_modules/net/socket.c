@@ -332,7 +332,6 @@ static void sock_free_inode(struct inode *inode)
 	kmem_cache_free(sock_inode_cachep, ei);
 }
 
-#if 0
 static void init_once(void *foo)
 {
 	struct socket_alloc *ei = (struct socket_alloc *)foo;
@@ -351,7 +350,6 @@ static void init_inodecache(void)
 					      init_once);
 	BUG_ON(sock_inode_cachep == NULL);
 }
-#endif // CL
 
 static const struct super_operations sockfs_ops = {
 	.alloc_inode	= sock_alloc_inode,
@@ -3305,7 +3303,6 @@ static int __init sock_init(void)
 	 */
 	skb_init();
 
-#if 0
 	/*
 	 *      Initialize the protocols module.
 	 */
@@ -3331,8 +3328,6 @@ static int __init sock_init(void)
 #endif
 
 	ptp_classifier_init();
-#endif
-    PANIC("");
 
 out:
 	return err;
