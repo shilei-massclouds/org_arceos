@@ -60,6 +60,8 @@ define make_rootfs_image_ext4_from_tarball
 	    printf "    $(GREEN_C)Populated!$(END_C)\n"; \
 	    printf "    $(GREEN_C)Updating$(END_C) rootfs image \"$$img\" with lk init script ...\n"; \
 	    sudo install -D -m 0755 "$$script" "$$mnt_dir/etc/lk_init.sh"; \
+	    printf "    $(GREEN_C)Updating$(END_C) rootfs image \"$$img\" with DNS config ...\n"; \
+	    printf "nameserver 10.0.2.3\n" | sudo tee "$$mnt_dir/etc/resolv.conf" >/dev/null; \
 	    printf "    $(GREEN_C)Updated!$(END_C)\n"; \
 	  fi
 endef

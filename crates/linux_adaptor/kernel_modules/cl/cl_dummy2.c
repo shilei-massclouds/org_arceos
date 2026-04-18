@@ -1151,3 +1151,7 @@ int security_sk_alloc(struct sock *sk, int family, gfp_t priority)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+// net/core/flow_dissector.c
+struct flow_dissector flow_keys_basic_dissector __read_mostly;
+EXPORT_SYMBOL(flow_keys_basic_dissector);
