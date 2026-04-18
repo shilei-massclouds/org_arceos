@@ -284,7 +284,6 @@ void irq_work_tick(void)
 		wake_irq_workd();
 }
 
-#if 0
 /*
  * Synchronize against the irq_work @entry, ensures the entry is not
  * currently in use.
@@ -306,6 +305,7 @@ void irq_work_sync(struct irq_work *work)
 }
 EXPORT_SYMBOL_GPL(irq_work_sync);
 
+#if 0
 static void run_irq_workd(unsigned int cpu)
 {
 	irq_work_run_list(this_cpu_ptr(&lazy_list));

@@ -5,12 +5,14 @@
 #include <linux/proc_ns.h>
 #include <linux/suspend.h>
 #include <linux/audit.h>
+#include <linux/ethtool.h>
 #include <linux/in6.h>
 #include <linux/pipe_fs_i.h>
 #include <linux/rtnetlink.h>
 #include <uapi/linux/perf_event.h>
 
 #include <net/dst.h>
+#include <net/genetlink.h>
 #include <net/hotdata.h>
 #include <net/neighbour.h>
 #include <net/protocol.h>
@@ -1088,5 +1090,106 @@ int __init dev_proc_init(void)
 int __init netdev_kobject_init(void)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int netdev_register_kobject(struct net_device *ndev)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void netdev_unregister_kobject(struct net_device *ndev)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int net_rx_queue_update_kobjects(struct net_device *dev, int old_num, int new_num)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int netdev_queue_update_kobjects(struct net_device *dev, int old_num, int new_num)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+struct nlmsghdr *
+__nlmsg_put(struct sk_buff *skb, u32 portid, u32 seq, int type, int len, int flags)
+{
+    struct nlmsghdr *nlh;
+    int size = nlmsg_msg_size(len);
+
+    nlh = skb_put(skb, NLMSG_ALIGN(size));
+    nlh->nlmsg_type = type;
+    nlh->nlmsg_len = size;
+    nlh->nlmsg_flags = flags;
+    nlh->nlmsg_pid = portid;
+    nlh->nlmsg_seq = seq;
+    if (!__builtin_constant_p(size) || NLMSG_ALIGN(size) - size != 0)
+        memset(nlmsg_data(nlh) + len, 0, NLMSG_ALIGN(size) - size);
+    return nlh;
+}
+
+void *genlmsg_put(struct sk_buff *skb, u32 portid, u32 seq,
+          const struct genl_family *family, int flags, u8 cmd)
+{
+    struct nlmsghdr *nlh;
+    struct genlmsghdr *hdr;
+
+    nlh = nlmsg_put(skb, portid, seq, family->id, GENL_HDRLEN + family->hdrsize, flags);
+    if (nlh == NULL)
+        return NULL;
+
+    hdr = nlmsg_data(nlh);
+    hdr->cmd = cmd;
+    hdr->version = family->version;
+    hdr->reserved = 0;
+
+    return (char *)hdr + GENL_HDRLEN;
+}
+
+struct proc_dir_entry *proc_create_net_data(const char *name, umode_t mode,
+        struct proc_dir_entry *parent, const struct seq_operations *ops,
+        unsigned int state_size, void *data)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return NULL;
+}
+
+void dev_activate(struct net_device *dev)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void dev_deactivate(struct net_device *dev)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void dev_init_scheduler(struct net_device *dev)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int nlmsg_notify(struct sock *sk, struct sk_buff *skb, u32 portid,
+         unsigned int group, int report, gfp_t flags)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    if (skb)
+        kfree_skb(skb);
+    return 0;
+}
+
+int ethtool_check_ops(const struct ethtool_ops *ops)
+{
+    if (!ops)
+        return 0;
+    if (WARN_ON(ops->set_coalesce && !ops->supported_coalesce_params))
+        return -EINVAL;
+    if (WARN_ON(ops->rxfh_max_num_contexts == 1))
+        return -EINVAL;
     return 0;
 }
