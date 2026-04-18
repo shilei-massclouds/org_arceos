@@ -666,6 +666,7 @@ static void __init do_initcall_level(int level, char *command_line)
     trace_initcall_level(initcall_level_names[level]);
     for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++) {
         printk("%s: --- level(%s) ---\n", __func__, initcall_level_names[level]);
+        printk("%s: fn=%px\n", __func__, initcall_from_entry(fn));
         do_one_initcall(initcall_from_entry(fn));
     }
 }

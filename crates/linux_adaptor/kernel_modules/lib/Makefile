@@ -35,6 +35,7 @@ obj-y += kobject_uevent.o
 obj-y += scatterlist.o
 obj-y += klist.o
 obj-y += logic_pio.o
+obj-y += checksum.o
 obj-y += cmdline.o
 obj-y += nlattr.o
 obj-y += devres.o

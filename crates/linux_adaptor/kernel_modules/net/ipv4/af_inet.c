@@ -1903,22 +1903,29 @@ static int __init inet_init(void)
 	struct list_head *r;
 	int rc;
 
+	pr_warn("inet_init: enter\n");
+
 	sock_skb_cb_check_size(sizeof(struct inet_skb_parm));
 
+	pr_warn("inet_init: raw_hashinfo_init\n");
 	raw_hashinfo_init(&raw_v4_hashinfo);
 
+	pr_warn("inet_init: proto_register tcp\n");
 	rc = proto_register(&tcp_prot, 1);
 	if (rc)
 		goto out;
 
+	pr_warn("inet_init: proto_register udp\n");
 	rc = proto_register(&udp_prot, 1);
 	if (rc)
 		goto out_unregister_tcp_proto;
 
+	pr_warn("inet_init: proto_register raw\n");
 	rc = proto_register(&raw_prot, 1);
 	if (rc)
 		goto out_unregister_udp_proto;
 
+	pr_warn("inet_init: proto_register ping\n");
 	rc = proto_register(&ping_prot, 1);
 	if (rc)
 		goto out_unregister_raw_proto;
@@ -1927,9 +1934,11 @@ static int __init inet_init(void)
 	 *	Tell SOCKET that we are alive...
 	 */
 
+	pr_warn("inet_init: sock_register inet_family_ops\n");
 	(void)sock_register(&inet_family_ops);
 
 #ifdef CONFIG_SYSCTL
+	pr_warn("inet_init: ip_static_sysctl_init\n");
 	ip_static_sysctl_init();
 #endif
 
@@ -1937,6 +1946,7 @@ static int __init inet_init(void)
 	 *	Add all the base protocols.
 	 */
 
+	pr_warn("inet_init: inet_add_protocol icmp\n");
 	if (inet_add_protocol(&icmp_protocol, IPPROTO_ICMP) < 0)
 		pr_crit("%s: Cannot add ICMP protocol\n", __func__);
 
@@ -1945,6 +1955,7 @@ static int __init inet_init(void)
 		.err_handler =	udp_err,
 		.no_policy =	1,
 	};
+	pr_warn("inet_init: inet_add_protocol udp\n");
 	if (inet_add_protocol(&net_hotdata.udp_protocol, IPPROTO_UDP) < 0)
 		pr_crit("%s: Cannot add UDP protocol\n", __func__);
 
@@ -1954,17 +1965,21 @@ static int __init inet_init(void)
 		.no_policy	=	1,
 		.icmp_strict_tag_validation = 1,
 	};
+	pr_warn("inet_init: inet_add_protocol tcp\n");
 	if (inet_add_protocol(&net_hotdata.tcp_protocol, IPPROTO_TCP) < 0)
 		pr_crit("%s: Cannot add TCP protocol\n", __func__);
 #ifdef CONFIG_IP_MULTICAST
+	pr_warn("inet_init: inet_add_protocol igmp\n");
 	if (inet_add_protocol(&igmp_protocol, IPPROTO_IGMP) < 0)
 		pr_crit("%s: Cannot add IGMP protocol\n", __func__);
 #endif
 
 	/* Register the socket-side information for inet_create. */
+	pr_warn("inet_init: init inetsw heads\n");
 	for (r = &inetsw[0]; r < &inetsw[SOCK_MAX]; ++r)
 		INIT_LIST_HEAD(r);
 
+	pr_warn("inet_init: inet_register_protosw loop\n");
 	for (q = inetsw_array; q < &inetsw_array[INETSW_ARRAY_LEN]; ++q)
 		inet_register_protosw(q);
 
@@ -1972,35 +1987,44 @@ static int __init inet_init(void)
 	 *	Set the ARP module up
 	 */
 
+	pr_warn("inet_init: arp_init\n");
 	arp_init();
 
 	/*
 	 *	Set the IP module up
 	 */
 
+	pr_warn("inet_init: ip_init\n");
 	ip_init();
 
 	/* Initialise per-cpu ipv4 mibs */
+	pr_warn("inet_init: init_ipv4_mibs\n");
 	if (init_ipv4_mibs())
 		panic("%s: Cannot init ipv4 mibs\n", __func__);
 
 	/* Setup TCP slab cache for open requests. */
+	pr_warn("inet_init: tcp_init\n");
 	tcp_init();
 
 	/* Setup UDP memory threshold */
+	pr_warn("inet_init: udp_init\n");
 	udp_init();
 
 	/* Add UDP-Lite (RFC 3828) */
+	pr_warn("inet_init: udplite4_register\n");
 	udplite4_register();
 
+	pr_warn("inet_init: raw_init\n");
 	raw_init();
 
+	pr_warn("inet_init: ping_init\n");
 	ping_init();
 
 	/*
 	 *	Set the ICMP layer up
 	 */
 
+	pr_warn("inet_init: icmp_init\n");
 	if (icmp_init() < 0)
 		panic("Failed to create the ICMP control socket.\n");
 
@@ -2012,17 +2036,23 @@ static int __init inet_init(void)
 		pr_crit("%s: Cannot init ipv4 mroute\n", __func__);
 #endif
 
+	pr_warn("inet_init: init_inet_pernet_ops\n");
 	if (init_inet_pernet_ops())
 		pr_crit("%s: Cannot init ipv4 inet pernet ops\n", __func__);
 
+	pr_warn("inet_init: ipv4_proc_init\n");
 	ipv4_proc_init();
 
+	pr_warn("inet_init: ipfrag_init\n");
 	ipfrag_init();
 
+	pr_warn("inet_init: dev_add_pack\n");
 	dev_add_pack(&ip_packet_type);
 
+	pr_warn("inet_init: ip_tunnel_core_init\n");
 	ip_tunnel_core_init();
 
+	pr_warn("inet_init: done\n");
 	rc = 0;
 out:
 	return rc;

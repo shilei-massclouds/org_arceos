@@ -2,6 +2,7 @@
 
 obj-y += dev.o
 obj-y += dev_addr_lists.o
+obj-y += neighbour.o
 obj-y += sock.o
 obj-y += skbuff.o
 obj-y += net_namespace.o

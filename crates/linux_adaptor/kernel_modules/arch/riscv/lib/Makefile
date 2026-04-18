@@ -1,6 +1,7 @@
 # Makefile for `arch/riscv/lib`
 
 obj-y += delay.o
+obj-y += csum.o
 obj-y += clear_page.o
 obj-y += memset.o
 obj-y += memcpy.o

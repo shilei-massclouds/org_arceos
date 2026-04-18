@@ -1,6 +1,9 @@
 #include <linux/cache.h>
 #include <linux/cpumask.h>
 #include <linux/crash_dump.h>
+#include <linux/percpu_counter.h>
+#include <linux/jump_label.h>
+#include <linux/btf_ids.h>
 #include <linux/user_namespace.h>
 #include <linux/proc_ns.h>
 #include <linux/suspend.h>
@@ -9,17 +12,30 @@
 #include <linux/in6.h>
 #include <linux/pipe_fs_i.h>
 #include <linux/rtnetlink.h>
+#include <linux/seq_file.h>
+#include <linux/bpf.h>
+#include <linux/slab.h>
+#include <linux/sysctl.h>
 #include <uapi/linux/perf_event.h>
 
 #include <net/dst.h>
 #include <net/genetlink.h>
 #include <net/hotdata.h>
+#include <net/ip.h>
+#include <net/ip_fib.h>
+#include <net/ip_tunnels.h>
 #include <net/neighbour.h>
 #include <net/protocol.h>
+#include <net/ping.h>
+#include <net/raw.h>
+#include <net/tcp.h>
+#include <net/udp.h>
 #include <net/sock.h>
 #include <net/netlink.h>
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
+
+#include "../net/ipv4/fib_lookup.h"
 
 #ifdef CL_SHOW_DUMMY
 #define pr_dummy(fmt, ...) \
@@ -457,7 +473,7 @@ struct proc_dir_entry *proc_create_seq_private(const char *name, umode_t mode,
         unsigned int state_size, void *data)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return NULL;
+    return (struct proc_dir_entry *)1;
 }
 
 struct proc_dir_entry *proc_create_single_data(const char *name, umode_t mode,
@@ -465,7 +481,7 @@ struct proc_dir_entry *proc_create_single_data(const char *name, umode_t mode,
         int (*show)(struct seq_file *, void *), void *data)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return NULL;
+    return (struct proc_dir_entry *)1;
 }
 
 int security_fs_context_parse_param(struct fs_context *fc,
@@ -1020,8 +1036,6 @@ int net_sysctl_init(void)
 }
 
 // net/ipv4/protocol.c
-struct net_protocol __rcu *inet_protos[MAX_INET_PROTOS] __read_mostly;
-
 // net/core/hotdata.c
 struct net_hotdata net_hotdata __cacheline_aligned = {
     .offload_base = LIST_HEAD_INIT(net_hotdata.offload_base),
@@ -1051,24 +1065,6 @@ const struct dst_metrics dst_default_metrics = {
     .refcnt = REFCOUNT_INIT(1),
 };
 EXPORT_SYMBOL(dst_default_metrics);
-
-// net/core/neighbour.c
-const struct nla_policy nda_policy[NDA_MAX+1] = {
-    [NDA_UNSPEC]        = { .strict_start_type = NDA_NH_ID },
-    [NDA_DST]       = { .type = NLA_BINARY, .len = MAX_ADDR_LEN },
-    [NDA_LLADDR]        = { .type = NLA_BINARY, .len = MAX_ADDR_LEN },
-    [NDA_CACHEINFO]     = { .len = sizeof(struct nda_cacheinfo) },
-    [NDA_PROBES]        = { .type = NLA_U32 },
-    [NDA_VLAN]      = { .type = NLA_U16 },
-    [NDA_PORT]      = { .type = NLA_U16 },
-    [NDA_VNI]       = { .type = NLA_U32 },
-    [NDA_IFINDEX]       = { .type = NLA_U32 },
-    [NDA_MASTER]        = { .type = NLA_U32 },
-    [NDA_PROTOCOL]      = { .type = NLA_U8 },
-    [NDA_NH_ID]     = { .type = NLA_U32 },
-    [NDA_FLAGS_EXT]     = NLA_POLICY_MASK(NLA_U32, NTF_EXT_MASK),
-    [NDA_FDB_EXT_ATTRS] = { .type = NLA_NESTED },
-};
 
 // net/core/filter.c
 DEFINE_STATIC_KEY_FALSE(bpf_master_redirect_enabled_key);
@@ -1121,7 +1117,7 @@ struct proc_dir_entry *proc_create_net_data(const char *name, umode_t mode,
         unsigned int state_size, void *data)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return NULL;
+    return (struct proc_dir_entry *)1;
 }
 
 int security_inode_listsecurity(struct inode *inode,
@@ -1137,6 +1133,138 @@ int security_sk_alloc(struct sock *sk, int family, gfp_t priority)
     return 0;
 }
 
+void security_sk_classify_flow(const struct sock *sk, struct flowi_common *flic)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void security_sock_graft(struct sock *sk, struct socket *parent)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_inet_conn_request(const struct sock *sk,
+        struct sk_buff *skb, struct request_sock *req)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_recvmsg(struct socket *sock, struct msghdr *msg,
+                int size, int flags)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_sendmsg(struct socket *sock, struct msghdr *msg, int size)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
 // net/core/flow_dissector.c
 struct flow_dissector flow_keys_basic_dissector __read_mostly;
 EXPORT_SYMBOL(flow_keys_basic_dissector);
+
+// net/core/filter.c
+const struct bpf_func_proto bpf_sk_setsockopt_proto;
+const struct bpf_func_proto bpf_sk_getsockopt_proto;
+u32 btf_sock_ids[32];
+
+// net/ipv4/tcp_cong.c
+struct tcp_congestion_ops tcp_reno;
+
+// net/ipv4/tcp.c
+atomic_long_t tcp_memory_allocated;
+DEFINE_PER_CPU(int, tcp_memory_per_cpu_fw_alloc);
+struct percpu_counter tcp_sockets_allocated;
+unsigned long tcp_memory_pressure;
+long sysctl_tcp_mem[3];
+DEFINE_PER_CPU(unsigned int, tcp_orphan_count);
+DEFINE_STATIC_KEY_FALSE(tcp_tx_delay_enabled);
+
+// net/ipv4/ip_sockglue.c
+DEFINE_STATIC_KEY_FALSE(ip4_min_ttl);
+
+// net/ipv4/fib_frontend.c
+const struct nla_policy rtm_ipv4_policy[RTA_MAX + 1];
+
+// net/ipv4/fib_semantics.c
+const struct fib_prop fib_props[RTN_MAX + 1];
+
+// net/core/sysctl_net_core.c
+int sysctl_devconf_inherit_init_net;
+
+// net/ipv4/ip_tunnel_core.c
+const struct ip_tunnel_encap_ops __rcu *iptun_encaps[MAX_IPTUN_ENCAP_OPS];
+
+// net/core/filter.c
+DEFINE_STATIC_KEY_FALSE(bpf_sk_lookup_enabled);
+
+int ip_misc_proc_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+
+// fs/seq_file.c
+void seq_pad(struct seq_file *m, char c)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+// net/core/netevent.c
+int call_netevent_notifiers(unsigned long val, void *v)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+struct ctl_table_header *register_net_sysctl_sz(struct net *net, const char *path,
+        struct ctl_table *table, size_t table_size)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return (struct ctl_table_header *)1;
+}
+
+// kernel/sysctl.c proc helpers
+int proc_dointvec_ms_jiffies_minmax(const struct ctl_table *table, int write,
+        void *buffer, size_t *lenp, loff_t *ppos)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int proc_dointvec_userhz_jiffies(const struct ctl_table *table, int write,
+        void *buffer, size_t *lenp, loff_t *ppos)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int proc_dointvec_ms_jiffies(const struct ctl_table *table, int write,
+        void *buffer, size_t *lenp, loff_t *ppos)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void *kmemdup_noprof(const void *src, size_t len, gfp_t gfp)
+{
+    void *p = kmalloc(len, gfp);
+    if (p)
+        memcpy(p, src, len);
+    return p;
+}
+
+char *strcat(char *dst, const char *src)
+{
+    char *ret = dst;
+    while (*dst)
+        dst++;
+    while ((*dst++ = *src++))
+        ;
+    return ret;
+}
