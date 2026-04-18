@@ -5055,6 +5055,7 @@ refill:
 	return nc->va + offset;
 }
 EXPORT_SYMBOL(__page_frag_alloc_align);
+#endif // CL
 
 /*
  * Frees a page fragment allocated out of either a compound or order 0 page.
@@ -5067,7 +5068,6 @@ void page_frag_free(void *addr)
 		free_unref_page(page, compound_order(page));
 }
 EXPORT_SYMBOL(page_frag_free);
-#endif /* CL */
 
 static void *make_alloc_exact(unsigned long addr, unsigned int order,
 		size_t size)

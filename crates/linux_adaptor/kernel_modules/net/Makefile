@@ -8,3 +8,4 @@ obj-y += ethernet/
 obj-y += ipv6/
 obj-y += netlink/
 obj-y += netfilter/
+obj-y += sched/

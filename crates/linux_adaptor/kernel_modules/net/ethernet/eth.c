@@ -340,7 +340,6 @@ const struct header_ops eth_header_ops ____cacheline_aligned = {
 	.parse_protocol	= eth_header_parse_protocol,
 };
 
-#if 0
 /**
  * ether_setup - setup Ethernet network device
  * @dev: network device
@@ -389,6 +388,7 @@ struct net_device *alloc_etherdev_mqs(int sizeof_priv, unsigned int txqs,
 }
 EXPORT_SYMBOL(alloc_etherdev_mqs);
 
+#if 0
 ssize_t sysfs_format_mac(char *buf, const unsigned char *addr, int len)
 {
 	return sysfs_emit(buf, "%*phC\n", len, addr);

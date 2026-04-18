@@ -1124,21 +1124,6 @@ struct proc_dir_entry *proc_create_net_data(const char *name, umode_t mode,
     return NULL;
 }
 
-void dev_activate(struct net_device *dev)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
-void dev_deactivate(struct net_device *dev)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
-void dev_init_scheduler(struct net_device *dev)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 int security_inode_listsecurity(struct inode *inode,
                 char *buffer, size_t buffer_size)
 {
