@@ -835,6 +835,11 @@ void bpf_task_storage_free(struct task_struct *task)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
+void bpf_sk_storage_free(struct sock *sk)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
 int security_inode_follow_link(struct dentry *dentry, struct inode *inode,
                    bool rcu)
 {
