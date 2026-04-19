@@ -16,3 +16,4 @@ obj-y += xdp.o
 obj-y += gro.o
 obj-y += gen_stats.o
 obj-y += dst.o
+obj-y += datagram.o

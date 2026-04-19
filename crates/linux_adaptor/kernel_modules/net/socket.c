@@ -110,8 +110,6 @@
 #include <linux/ptp_clock_kernel.h>
 #include <trace/events/sock.h>
 
-#include "adaptor.h"
-
 #ifdef CONFIG_NET_RX_BUSY_POLL
 unsigned int sysctl_net_busy_read __read_mostly;
 unsigned int sysctl_net_busy_poll __read_mostly;
@@ -134,42 +132,6 @@ static ssize_t sock_splice_read(struct file *file, loff_t *ppos,
 				struct pipe_inode_info *pipe, size_t len,
 				unsigned int flags);
 static void sock_splice_eof(struct file *file);
-
-#define CL_SOCKET_MISSING(retval) \
-	do { \
-		RAW_PANIC("No impl."); \
-		return (retval); \
-	} while (0)
-
-static __poll_t sock_poll(struct file *file, struct poll_table_struct *wait)
-{
-	CL_SOCKET_MISSING(0);
-}
-
-static int sock_mmap(struct file *file, struct vm_area_struct *vma)
-{
-	CL_SOCKET_MISSING(-EOPNOTSUPP);
-}
-
-static int sock_close(struct inode *inode, struct file *file)
-{
-	CL_SOCKET_MISSING(0);
-}
-
-#ifdef CONFIG_COMPAT
-static long compat_sock_ioctl(struct file *file, unsigned int cmd,
-			      unsigned long arg)
-{
-	CL_SOCKET_MISSING(-ENOIOCTLCMD);
-}
-#endif
-
-static int sock_fasync(int fd, struct file *filp, int on)
-{
-	CL_SOCKET_MISSING(-EOPNOTSUPP);
-}
-
-#undef CL_SOCKET_MISSING
 
 #ifdef CONFIG_PROC_FS
 static void sock_show_fdinfo(struct seq_file *m, struct file *f)
@@ -292,7 +254,6 @@ int move_addr_to_kernel(void __user *uaddr, int ulen, struct sockaddr_storage *k
 	return audit_sockaddr(ulen, kaddr);
 }
 
-#if 0
 /**
  *	move_addr_to_user	-	copy an address to user space
  *	@kaddr: kernel space address
@@ -336,7 +297,6 @@ static int move_addr_to_user(struct sockaddr_storage *kaddr, int klen,
 	 */
 	return __put_user(klen, ulen);
 }
-#endif // CL
 
 static struct kmem_cache *sock_inode_cachep __ro_after_init;
 
@@ -556,7 +516,6 @@ struct socket *sock_from_file(struct file *file)
 }
 EXPORT_SYMBOL(sock_from_file);
 
-#if 0
 /**
  *	sockfd_lookup - Go from a file number to its socket slot
  *	@fd: file handle
@@ -589,7 +548,6 @@ struct socket *sockfd_lookup(int fd, int *err)
 	return sock;
 }
 EXPORT_SYMBOL(sockfd_lookup);
-#endif // CL
 
 static struct socket *sockfd_lookup_light(int fd, int *err, int *fput_needed)
 {
@@ -729,7 +687,6 @@ void sock_release(struct socket *sock)
 }
 EXPORT_SYMBOL(sock_release);
 
-#if 1
 void __sock_tx_timestamp(__u16 tsflags, __u8 *tx_flags)
 {
 	u8 flags = *tx_flags;
@@ -1391,7 +1348,6 @@ static long sock_ioctl(struct file *file, unsigned cmd, unsigned long arg)
 		}
 	return err;
 }
-#endif // CL
 
 /**
  *	sock_create_lite - creates a socket
@@ -1436,7 +1392,6 @@ out_release:
 }
 EXPORT_SYMBOL(sock_create_lite);
 
-#if 0
 /* No kernel lock held - perfect */
 static __poll_t sock_poll(struct file *file, poll_table *wait)
 {
@@ -1531,7 +1486,6 @@ call_kill:
 	return 0;
 }
 EXPORT_SYMBOL(sock_wake_async);
-#endif // CL
 
 /**
  *	__sock_create - creates a socket
@@ -1679,7 +1633,6 @@ int sock_create(int family, int type, int protocol, struct socket **res)
 }
 EXPORT_SYMBOL(sock_create);
 
-#if 1
 /**
  *	sock_create_kern - creates a socket (kernel space)
  *	@net: net namespace
@@ -1697,7 +1650,6 @@ int sock_create_kern(struct net *net, int family, int type, int protocol, struct
 	return __sock_create(net, family, type, protocol, res, 1);
 }
 EXPORT_SYMBOL(sock_create_kern);
-#endif // CL
 
 static struct socket *__sys_socket_create(int family, int type, int protocol)
 {
@@ -1721,7 +1673,6 @@ static struct socket *__sys_socket_create(int family, int type, int protocol)
 	return sock;
 }
 
-#if 0
 struct file *__sys_socket_file(int family, int type, int protocol)
 {
 	struct socket *sock;
@@ -1737,7 +1688,6 @@ struct file *__sys_socket_file(int family, int type, int protocol)
 
 	return sock_alloc_file(sock, flags, NULL);
 }
-#endif // CL
 
 /*	A hook for bpf progs to attach to and update socket protocol.
  *
@@ -1780,7 +1730,6 @@ SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol)
 	return __sys_socket(family, type, protocol);
 }
 
-#if 0
 /*
  *	Create a pair of connected sockets.
  */
@@ -1882,7 +1831,6 @@ SYSCALL_DEFINE4(socketpair, int, family, int, type, int, protocol,
 {
 	return __sys_socketpair(family, type, protocol, usockvec);
 }
-#endif // CL
 
 int __sys_bind_socket(struct socket *sock, struct sockaddr_storage *address,
 		      int addrlen)
@@ -1927,7 +1875,6 @@ SYSCALL_DEFINE3(bind, int, fd, struct sockaddr __user *, umyaddr, int, addrlen)
 	return __sys_bind(fd, umyaddr, addrlen);
 }
 
-#if 0
 /*
  *	Perform a listen. Basically, we allow the protocol to do anything
  *	necessary for a listen, and if that works, we mark the socket as
@@ -3270,8 +3217,6 @@ SYSCALL_DEFINE2(socketcall, int, call, unsigned long __user *, args)
 
 #endif				/* __ARCH_WANT_SYS_SOCKETCALL */
 
-#endif // CL
-
 /**
  *	sock_register - add a socket protocol handler
  *	@ops: description of protocol
@@ -3305,7 +3250,6 @@ int sock_register(const struct net_proto_family *ops)
 }
 EXPORT_SYMBOL(sock_register);
 
-#if 0
 /**
  *	sock_unregister - remove a protocol handler
  *	@family: protocol family to remove
@@ -3337,7 +3281,6 @@ bool sock_is_registered(int family)
 {
 	return family < NPROTO && rcu_access_pointer(net_families[family]);
 }
-#endif // CL
 
 static int __init sock_init(void)
 {
@@ -3390,7 +3333,6 @@ out_mount:
 
 core_initcall(sock_init);	/* early initcall */
 
-#if 0
 #ifdef CONFIG_PROC_FS
 void socket_seq_show(struct seq_file *seq)
 {
@@ -3804,5 +3746,3 @@ u32 kernel_sock_ip_overhead(struct sock *sk)
 	}
 }
 EXPORT_SYMBOL(kernel_sock_ip_overhead);
-
-#endif // CL

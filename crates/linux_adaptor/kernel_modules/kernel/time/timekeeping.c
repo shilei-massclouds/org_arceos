@@ -876,6 +876,7 @@ ktime_t ktime_get_raw(void)
 	return ktime_add_ns(base, nsecs);
 }
 EXPORT_SYMBOL_GPL(ktime_get_raw);
+#endif // CL
 
 /**
  * ktime_get_ts64 - get the monotonic clock in timespec64 format
@@ -908,6 +909,7 @@ void ktime_get_ts64(struct timespec64 *ts)
 }
 EXPORT_SYMBOL_GPL(ktime_get_ts64);
 
+#if 0
 /**
  * ktime_get_seconds - Get the seconds portion of CLOCK_MONOTONIC
  *

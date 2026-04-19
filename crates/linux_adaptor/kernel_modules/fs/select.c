@@ -50,7 +50,6 @@
 
 #define MAX_SLACK	(100 * NSEC_PER_MSEC)
 
-#if 0
 static long __estimate_accuracy(struct timespec64 *tv)
 {
 	long slack;
@@ -90,8 +89,6 @@ u64 select_estimate_accuracy(struct timespec64 *tv)
 		return slack;
 	return ret;
 }
-
-#endif // CL
 
 struct poll_table_page {
 	struct poll_table_page * next;
