@@ -2707,6 +2707,7 @@ void __audit_fd_pair(int fd1, int fd2)
 	context->fds[0] = fd1;
 	context->fds[1] = fd2;
 }
+#endif // CL
 
 /**
  * __audit_sockaddr - record audit data for sys_bind, sys_connect, sys_sendto
@@ -2732,6 +2733,7 @@ int __audit_sockaddr(int len, void *a)
 	return 0;
 }
 
+#if 0
 void __audit_ptrace(struct task_struct *t)
 {
 	struct audit_context *context = audit_context();

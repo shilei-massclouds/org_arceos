@@ -117,6 +117,7 @@ char *kstrndup(const char *s, size_t max, gfp_t gfp)
 	return buf;
 }
 EXPORT_SYMBOL(kstrndup);
+#endif // CL
 
 /**
  * kmemdup - duplicate region of memory
@@ -139,6 +140,7 @@ void *kmemdup_noprof(const void *src, size_t len, gfp_t gfp)
 }
 EXPORT_SYMBOL(kmemdup_noprof);
 
+#if 0
 /**
  * kmemdup_array - duplicate a given array.
  *

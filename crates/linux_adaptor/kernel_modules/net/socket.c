@@ -135,6 +135,42 @@ static ssize_t sock_splice_read(struct file *file, loff_t *ppos,
 				unsigned int flags);
 static void sock_splice_eof(struct file *file);
 
+#define CL_SOCKET_MISSING(retval) \
+	do { \
+		RAW_PANIC("No impl."); \
+		return (retval); \
+	} while (0)
+
+static __poll_t sock_poll(struct file *file, struct poll_table_struct *wait)
+{
+	CL_SOCKET_MISSING(0);
+}
+
+static int sock_mmap(struct file *file, struct vm_area_struct *vma)
+{
+	CL_SOCKET_MISSING(-EOPNOTSUPP);
+}
+
+static int sock_close(struct inode *inode, struct file *file)
+{
+	CL_SOCKET_MISSING(0);
+}
+
+#ifdef CONFIG_COMPAT
+static long compat_sock_ioctl(struct file *file, unsigned int cmd,
+			      unsigned long arg)
+{
+	CL_SOCKET_MISSING(-ENOIOCTLCMD);
+}
+#endif
+
+static int sock_fasync(int fd, struct file *filp, int on)
+{
+	CL_SOCKET_MISSING(-EOPNOTSUPP);
+}
+
+#undef CL_SOCKET_MISSING
+
 #ifdef CONFIG_PROC_FS
 static void sock_show_fdinfo(struct seq_file *m, struct file *f)
 {
@@ -228,7 +264,6 @@ static const char * const pf_family_names[] = {
 static DEFINE_SPINLOCK(net_family_lock);
 static const struct net_proto_family __rcu *net_families[NPROTO] __read_mostly;
 
-#if 0
 /*
  * Support routines.
  * Move socket addresses back and forth across the kernel/user
@@ -257,6 +292,7 @@ int move_addr_to_kernel(void __user *uaddr, int ulen, struct sockaddr_storage *k
 	return audit_sockaddr(ulen, kaddr);
 }
 
+#if 0
 /**
  *	move_addr_to_user	-	copy an address to user space
  *	@kaddr: kernel space address
@@ -431,7 +467,6 @@ static struct file_system_type sock_fs_type = {
 	.kill_sb =	kill_anon_super,
 };
 
-#if 0
 /*
  *	Obtains the first available file descriptor and sets it up for use.
  *
@@ -485,7 +520,6 @@ struct file *sock_alloc_file(struct socket *sock, int flags, const char *dname)
 	return file;
 }
 EXPORT_SYMBOL(sock_alloc_file);
-#endif // CL
 
 static int sock_map_fd(struct socket *sock, int flags)
 {
@@ -506,7 +540,6 @@ static int sock_map_fd(struct socket *sock, int flags)
 	return PTR_ERR(newfile);
 }
 
-#if 0
 /**
  *	sock_from_file - Return the &socket bounded to @file.
  *	@file: file
@@ -523,6 +556,7 @@ struct socket *sock_from_file(struct file *file)
 }
 EXPORT_SYMBOL(sock_from_file);
 
+#if 0
 /**
  *	sockfd_lookup - Go from a file number to its socket slot
  *	@fd: file handle
@@ -555,6 +589,7 @@ struct socket *sockfd_lookup(int fd, int *err)
 	return sock;
 }
 EXPORT_SYMBOL(sockfd_lookup);
+#endif // CL
 
 static struct socket *sockfd_lookup_light(int fd, int *err, int *fput_needed)
 {
@@ -573,7 +608,6 @@ static struct socket *sockfd_lookup_light(int fd, int *err, int *fput_needed)
 	}
 	return NULL;
 }
-#endif // CL
 
 static ssize_t sockfs_listxattr(struct dentry *dentry, char *buffer,
 				size_t size)
@@ -1848,6 +1882,7 @@ SYSCALL_DEFINE4(socketpair, int, family, int, type, int, protocol,
 {
 	return __sys_socketpair(family, type, protocol, usockvec);
 }
+#endif // CL
 
 int __sys_bind_socket(struct socket *sock, struct sockaddr_storage *address,
 		      int addrlen)
@@ -1892,6 +1927,7 @@ SYSCALL_DEFINE3(bind, int, fd, struct sockaddr __user *, umyaddr, int, addrlen)
 	return __sys_bind(fd, umyaddr, addrlen);
 }
 
+#if 0
 /*
  *	Perform a listen. Basically, we allow the protocol to do anything
  *	necessary for a listen, and if that works, we mark the socket as

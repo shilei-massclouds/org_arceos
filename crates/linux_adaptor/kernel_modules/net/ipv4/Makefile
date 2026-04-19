@@ -27,3 +27,4 @@ obj-y += tcp_ipv4.o
 obj-y += udp.o
 obj-y += udp_offload.o
 obj-y += udplite.o
+obj-y += inet_connection_sock.o

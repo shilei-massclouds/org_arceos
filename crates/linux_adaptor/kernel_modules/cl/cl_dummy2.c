@@ -1058,17 +1058,6 @@ int security_socket_post_create(struct socket *sock, int family,
     return 0;
 }
 
-// net/core/dst.c
-const struct dst_metrics dst_default_metrics = {
-    /* This initializer is needed to force linker to place this variable
-     * into const section. Otherwise it might end into bss section.
-     * We really want to avoid false sharing on this variable, and catch
-     * any writes on it.
-     */
-    .refcnt = REFCOUNT_INIT(1),
-};
-EXPORT_SYMBOL(dst_default_metrics);
-
 // net/core/filter.c
 DEFINE_STATIC_KEY_FALSE(bpf_master_redirect_enabled_key);
 EXPORT_SYMBOL_GPL(bpf_master_redirect_enabled_key);
@@ -1250,11 +1239,6 @@ int proc_dointvec_ms_jiffies(const struct ctl_table *table, int write,
     return 0;
 }
 
-u32 l3mdev_fib_table_rcu(const struct net_device *dev)
-{
-    return 0;
-}
-
 struct nexthop *nexthop_find_by_id(struct net *net, u32 id)
 {
     return NULL;
@@ -1344,20 +1328,9 @@ void rtmsg_fib(int event, __be32 key, struct fib_alias *fa, int dst_len,
 {
 }
 
-void *kmemdup_noprof(const void *src, size_t len, gfp_t gfp)
+int security_socket_bind(struct socket *sock,
+             struct sockaddr *address, int addrlen)
 {
-    void *p = kmalloc(len, gfp);
-    if (p)
-        memcpy(p, src, len);
-    return p;
-}
-
-char *strcat(char *dst, const char *src)
-{
-    char *ret = dst;
-    while (*dst)
-        dst++;
-    while ((*dst++ = *src++))
-        ;
-    return ret;
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
 }

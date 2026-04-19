@@ -10,3 +10,4 @@ obj-y += ipv6/
 obj-y += netlink/
 obj-y += netfilter/
 obj-y += sched/
+obj-y += l3mdev/

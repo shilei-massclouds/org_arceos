@@ -318,7 +318,6 @@ static void file_init_path(struct file *file, const struct path *path,
 		i_readcount_inc(path->dentry->d_inode);
 }
 
-#if 0
 /**
  * alloc_file - allocate and initialize a 'struct file'
  *
@@ -336,7 +335,6 @@ static struct file *alloc_file(const struct path *path, int flags,
 		file_init_path(file, path, fop);
 	return file;
 }
-#endif // CL
 
 static inline int alloc_path_pseudo(const char *name, struct inode *inode,
 				    struct vfsmount *mnt, struct path *path)
@@ -349,7 +347,6 @@ static inline int alloc_path_pseudo(const char *name, struct inode *inode,
 	return 0;
 }
 
-#if 0
 struct file *alloc_file_pseudo(struct inode *inode, struct vfsmount *mnt,
 			       const char *name, int flags,
 			       const struct file_operations *fops)
@@ -370,7 +367,6 @@ struct file *alloc_file_pseudo(struct inode *inode, struct vfsmount *mnt,
 	return file;
 }
 EXPORT_SYMBOL(alloc_file_pseudo);
-#endif // CL
 
 struct file *alloc_file_pseudo_noaccount(struct inode *inode,
 					 struct vfsmount *mnt, const char *name,

@@ -11,6 +11,7 @@ echo -e "Use \e[1m\e[3mapk\e[0m to install packages."
 echo
 
 # Do your initialization here!
+apk update
 
 cd ~
 sh --login

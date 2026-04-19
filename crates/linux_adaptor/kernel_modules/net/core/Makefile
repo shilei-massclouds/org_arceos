@@ -15,3 +15,4 @@ obj-y += netdev-genl-gen.o
 obj-y += xdp.o
 obj-y += gro.o
 obj-y += gen_stats.o
+obj-y += dst.o
