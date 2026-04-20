@@ -29,3 +29,5 @@ obj-y += udp_offload.o
 obj-y += udplite.o
 obj-y += inet_connection_sock.o
 obj-y += datagram.o
+obj-y += fib_semantics.o
+obj-y += metrics.o

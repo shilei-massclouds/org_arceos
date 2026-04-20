@@ -585,7 +585,6 @@ unsigned long __msecs_to_jiffies(const unsigned int m)
 }
 EXPORT_SYMBOL(__msecs_to_jiffies);
 
-#if 0
 /**
  * __usecs_to_jiffies: - convert microseconds to jiffies
  * @u:	time in milliseconds
@@ -600,6 +599,7 @@ unsigned long __usecs_to_jiffies(const unsigned int u)
 }
 EXPORT_SYMBOL(__usecs_to_jiffies);
 
+#if 0
 /**
  * timespec64_to_jiffies - convert a timespec64 value to jiffies
  * @value: pointer to &struct timespec64

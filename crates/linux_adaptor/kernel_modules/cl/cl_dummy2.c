@@ -1188,9 +1188,6 @@ const struct net_offload __rcu *inet6_offloads[MAX_INET_PROTOS];
 // net/ipv4/ip_sockglue.c
 DEFINE_STATIC_KEY_FALSE(ip4_min_ttl);
 
-// net/ipv4/fib_semantics.c
-const struct fib_prop fib_props[RTN_MAX + 1];
-
 // net/core/sysctl_net_core.c
 int sysctl_devconf_inherit_init_net;
 
@@ -1254,25 +1251,6 @@ struct nexthop *nexthop_find_by_id(struct net *net, u32 id)
     return NULL;
 }
 
-int fib_sync_down_dev(struct net_device *dev, unsigned long event, bool force)
-{
-    return 0;
-}
-
-int fib_sync_down_addr(struct net_device *dev, __be32 local)
-{
-    return 0;
-}
-
-int fib_sync_up(struct net_device *dev, unsigned char nh_flags)
-{
-    return 0;
-}
-
-void fib_sync_mtu(struct net_device *dev, u32 orig_mtu)
-{
-}
-
 void workqueue_softirq_action(bool highpri)
 {
 }
@@ -1307,37 +1285,6 @@ void fib_notifier_ops_unregister(struct fib_notifier_ops *ops)
 {
 }
 
-size_t fib_nlmsg_size(struct fib_info *fi)
-{
-    return 0;
-}
-
-struct fib_info *fib_create_info(struct fib_config *cfg,
-        struct netlink_ext_ack *extack)
-{
-    return NULL;
-}
-
-void fib_release_info(struct fib_info *fi)
-{
-}
-
-int fib_nh_match(struct net *net, struct fib_config *cfg, struct fib_info *fi,
-        struct netlink_ext_ack *extack)
-{
-    return 0;
-}
-
-bool fib_metrics_match(struct fib_config *cfg, struct fib_info *fi)
-{
-    return false;
-}
-
-void rtmsg_fib(int event, __be32 key, struct fib_alias *fa, int dst_len,
-        u32 tb_id, const struct nl_info *info, unsigned int nlm_flags)
-{
-}
-
 int security_socket_bind(struct socket *sock,
              struct sockaddr *address, int addrlen)
 {
@@ -1356,4 +1303,3 @@ void proc_clear_tty(struct task_struct *p)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
-

@@ -390,7 +390,6 @@ static unsigned long round_jiffies_common(unsigned long j, int cpu,
 	return time_is_after_jiffies(j) ? j : original;
 }
 
-#if 0
 /**
  * __round_jiffies - function to round jiffies to a full second
  * @j: the time in (absolute) jiffies that should be rounded
@@ -417,6 +416,7 @@ unsigned long __round_jiffies(unsigned long j, int cpu)
 }
 EXPORT_SYMBOL_GPL(__round_jiffies);
 
+#if 0
 /**
  * __round_jiffies_relative - function to round jiffies to a full second
  * @j: the time in (relative) jiffies that should be rounded
@@ -445,6 +445,7 @@ unsigned long __round_jiffies_relative(unsigned long j, int cpu)
 	return round_jiffies_common(j + j0, cpu, false) - j0;
 }
 EXPORT_SYMBOL_GPL(__round_jiffies_relative);
+#endif // CL
 
 /**
  * round_jiffies - function to round jiffies to a full second
@@ -467,6 +468,7 @@ unsigned long round_jiffies(unsigned long j)
 }
 EXPORT_SYMBOL_GPL(round_jiffies);
 
+#if 0
 /**
  * round_jiffies_relative - function to round jiffies to a full second
  * @j: the time in (relative) jiffies that should be rounded

@@ -321,6 +321,7 @@ int eth_mac_addr(struct net_device *dev, void *p)
 	return 0;
 }
 EXPORT_SYMBOL(eth_mac_addr);
+#endif // CL
 
 int eth_validate_addr(struct net_device *dev)
 {
@@ -330,7 +331,6 @@ int eth_validate_addr(struct net_device *dev)
 	return 0;
 }
 EXPORT_SYMBOL(eth_validate_addr);
-#endif // CL
 
 const struct header_ops eth_header_ops ____cacheline_aligned = {
 	.create		= eth_header,
