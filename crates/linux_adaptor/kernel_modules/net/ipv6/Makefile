@@ -22,3 +22,6 @@ obj-y += xfrm6_state.o
 obj-y += xfrm6_protocol.o
 obj-y += anycast.o
 obj-y += addrconf.o
+obj-y += addrlabel.o
+obj-y += proc.o
+obj-y += ip6_output.o

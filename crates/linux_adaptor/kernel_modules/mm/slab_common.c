@@ -457,6 +457,7 @@ fail:
 	return NULL;
 }
 EXPORT_SYMBOL(kmem_buckets_create);
+#endif // CL
 
 /*
  * For a given kmem_cache, kmem_cache_destroy() should only be called
@@ -473,12 +474,14 @@ static void kmem_cache_release(struct kmem_cache *s)
 		slab_kmem_cache_release(s);
 }
 
+#if 0
 void slab_kmem_cache_release(struct kmem_cache *s)
 {
 	__kmem_cache_release(s);
 	kfree_const(s->name);
 	kmem_cache_free(kmem_cache, s);
 }
+#endif // CL
 
 void kmem_cache_destroy(struct kmem_cache *s)
 {
@@ -543,6 +546,7 @@ void kmem_cache_destroy(struct kmem_cache *s)
 }
 EXPORT_SYMBOL(kmem_cache_destroy);
 
+#if 0
 /**
  * kmem_cache_shrink - Shrink a cache.
  * @cachep: The cache to shrink.

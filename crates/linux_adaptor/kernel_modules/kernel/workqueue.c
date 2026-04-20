@@ -1802,7 +1802,6 @@ static bool pwq_activate_first_inactive(struct pool_workqueue *pwq, bool fill)
 	}
 }
 
-#if 0
 /**
  * unplug_oldest_pwq - unplug the oldest pool_workqueue
  * @wq: workqueue_struct where its oldest pwq is to be unplugged
@@ -1842,7 +1841,6 @@ static void unplug_oldest_pwq(struct workqueue_struct *wq)
 	}
 	raw_spin_unlock_irq(&pwq->pool->lock);
 }
-#endif /* CL */
 
 /**
  * node_activate_pending_pwq - Activate a pending pwq on a wq_node_nr_active
@@ -2599,7 +2597,6 @@ bool mod_delayed_work_on(int cpu, struct workqueue_struct *wq,
 }
 EXPORT_SYMBOL_GPL(mod_delayed_work_on);
 
-#if 0
 static void rcu_work_rcufn(struct rcu_head *rcu)
 {
 	struct rcu_work *rwork = container_of(rcu, struct rcu_work, rcu);
@@ -2638,7 +2635,6 @@ bool queue_rcu_work(struct workqueue_struct *wq, struct rcu_work *rwork)
 	return false;
 }
 EXPORT_SYMBOL(queue_rcu_work);
-#endif /* CL */
 
 static struct worker *alloc_worker(int node)
 {
@@ -3811,7 +3807,6 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
 	insert_work(pwq, &barr->work, head, work_flags);
 }
 
-#if 0
 /**
  * flush_workqueue_prep_pwqs - prepare pwqs for workqueue flushing
  * @wq: workqueue being flushed
@@ -3882,7 +3877,6 @@ static bool flush_workqueue_prep_pwqs(struct workqueue_struct *wq,
 
 	return wait;
 }
-#endif /* CL */
 
 static void touch_wq_lockdep_map(struct workqueue_struct *wq)
 {
@@ -3916,7 +3910,6 @@ static void touch_work_lockdep_map(struct work_struct *work,
 #endif
 }
 
-#if 0
 /**
  * __flush_workqueue - ensure that any scheduled work has run to completion.
  * @wq: workqueue to flush
@@ -4128,7 +4121,6 @@ reflush:
 	mutex_unlock(&wq->mutex);
 }
 EXPORT_SYMBOL_GPL(drain_workqueue);
-#endif /* CL */
 
 static bool start_flush_work(struct work_struct *work, struct wq_barrier *barr,
 			     bool from_cancel)
@@ -4279,6 +4271,7 @@ bool flush_delayed_work(struct delayed_work *dwork)
 	return flush_work(&dwork->work);
 }
 EXPORT_SYMBOL(flush_delayed_work);
+#endif // CL
 
 /**
  * flush_rcu_work - wait for a rwork to finish executing the last queueing
@@ -4299,7 +4292,6 @@ bool flush_rcu_work(struct rcu_work *rwork)
 	}
 }
 EXPORT_SYMBOL(flush_rcu_work);
-#endif /* CL */
 
 static void work_offqd_disable(struct work_offq_data *offqd)
 {
@@ -4891,7 +4883,6 @@ err_free:
 	return -ENOMEM;
 }
 
-#if 0
 static void rcu_free_wq(struct rcu_head *rcu)
 {
 	struct workqueue_struct *wq =
@@ -4905,7 +4896,6 @@ static void rcu_free_wq(struct rcu_head *rcu)
 	free_workqueue_attrs(wq->unbound_attrs);
 	kfree(wq);
 }
-#endif /* CL */
 
 static void rcu_free_pool(struct rcu_head *rcu)
 {
@@ -5072,7 +5062,6 @@ static void pwq_release_workfn(struct kthread_work *work)
 	struct worker_pool *pool = pwq->pool;
 	bool is_last = false;
 
-#if 0
 	/*
 	 * When @pwq is not linked, it doesn't hold any reference to the
 	 * @wq, and @wq is invalid to access.
@@ -5116,8 +5105,6 @@ static void pwq_release_workfn(struct kthread_work *work)
 		wq_unregister_lockdep(wq);
 		call_rcu(&wq->rcu, rcu_free_wq);
 	}
-#endif
-    PANIC("");
 }
 
 /* initialize newly allocated @pwq which is associated with @wq and @pool */
@@ -5827,6 +5814,7 @@ alloc_workqueue_lockdep_map(const char *fmt, unsigned int flags,
 }
 EXPORT_SYMBOL_GPL(alloc_workqueue_lockdep_map);
 #endif
+#endif // CL
 
 static bool pwq_busy(struct pool_workqueue *pwq)
 {
@@ -5931,6 +5919,7 @@ void destroy_workqueue(struct workqueue_struct *wq)
 }
 EXPORT_SYMBOL_GPL(destroy_workqueue);
 
+#if 0
 /**
  * workqueue_set_max_active - adjust max_active of a workqueue
  * @wq: target workqueue

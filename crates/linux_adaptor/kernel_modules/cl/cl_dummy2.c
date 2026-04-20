@@ -1307,8 +1307,7 @@ int proc_do_large_bitmap(const struct ctl_table *table, int write,
     return 0;
 }
 
-int __init ipv6_misc_proc_init(void)
+void remove_proc_entry(const char *name, struct proc_dir_entry *parent)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return 0;
 }

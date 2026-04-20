@@ -5462,7 +5462,6 @@ static int calculate_sizes(struct kmem_cache_args *args, struct kmem_cache *s)
 	return !!oo_objects(s->oo);
 }
 
-#if 0
 static void list_slab_objects(struct kmem_cache *s, struct slab *slab,
 			      const char *text)
 {
@@ -5515,6 +5514,7 @@ static void free_partial(struct kmem_cache *s, struct kmem_cache_node *n)
 		discard_slab(s, slab);
 }
 
+#if 0
 bool __kmem_cache_empty(struct kmem_cache *s)
 {
 	int node;
@@ -5525,6 +5525,7 @@ bool __kmem_cache_empty(struct kmem_cache *s)
 			return false;
 	return true;
 }
+#endif // CL
 
 /*
  * Release all resources used by a slab cache.
@@ -5544,6 +5545,7 @@ int __kmem_cache_shutdown(struct kmem_cache *s)
 	return 0;
 }
 
+#if 0
 #ifdef CONFIG_PRINTK
 void __kmem_obj_info(struct kmem_obj_info *kpp, void *object, struct slab *slab)
 {
@@ -6120,7 +6122,6 @@ static int count_total(struct slab *slab)
 }
 #endif
 
-#if 0
 #ifdef CONFIG_SLUB_DEBUG
 static void validate_slab(struct kmem_cache *s, struct slab *slab,
 			  unsigned long *obj_map)
@@ -6366,8 +6367,6 @@ static void process_slab(struct loc_track *t, struct kmem_cache *s,
 }
 #endif  /* CONFIG_DEBUG_FS   */
 #endif	/* CONFIG_SLUB_DEBUG */
-
-#endif /* CL */
 
 #ifdef SLAB_SUPPORTS_SYSFS
 enum slab_stat_type {
@@ -7453,12 +7452,12 @@ static void debugfs_slab_add(struct kmem_cache *s)
     PANIC("");
 }
 
-#if 0
 void debugfs_slab_release(struct kmem_cache *s)
 {
 	debugfs_lookup_and_remove(s->name, slab_debugfs_root);
 }
 
+#if 0
 static int __init slab_debugfs_init(void)
 {
 	struct kmem_cache *s;
