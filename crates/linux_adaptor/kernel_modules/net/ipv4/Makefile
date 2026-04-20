@@ -31,3 +31,4 @@ obj-y += inet_connection_sock.o
 obj-y += datagram.o
 obj-y += fib_semantics.o
 obj-y += metrics.o
+obj-y += ip_input.o

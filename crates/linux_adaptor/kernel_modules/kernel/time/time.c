@@ -655,6 +655,7 @@ jiffies_to_timespec64(const unsigned long jiffies, struct timespec64 *value)
 	value->tv_nsec = rem;
 }
 EXPORT_SYMBOL(jiffies_to_timespec64);
+#endif // CL
 
 /*
  * Convert jiffies/jiffies_64 to clock_t and back.
@@ -680,6 +681,7 @@ clock_t jiffies_to_clock_t(unsigned long x)
 }
 EXPORT_SYMBOL(jiffies_to_clock_t);
 
+#if 0
 /**
  * clock_t_to_jiffies - Convert clock_t to jiffies
  * @x: clock_t value

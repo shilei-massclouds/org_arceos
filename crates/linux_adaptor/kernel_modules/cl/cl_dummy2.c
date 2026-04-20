@@ -1068,10 +1068,6 @@ int security_socket_post_create(struct socket *sock, int family,
     return 0;
 }
 
-// net/core/filter.c
-DEFINE_STATIC_KEY_FALSE(bpf_master_redirect_enabled_key);
-EXPORT_SYMBOL_GPL(bpf_master_redirect_enabled_key);
-
 struct proc_dir_entry *_proc_mkdir(const char *name, umode_t mode,
         struct proc_dir_entry *parent, void *data, bool force_lookup)
 {
@@ -1173,15 +1169,6 @@ int security_socket_sendmsg(struct socket *sock, struct msghdr *msg, int size)
     return 0;
 }
 
-// net/core/flow_dissector.c
-struct flow_dissector flow_keys_basic_dissector __read_mostly;
-EXPORT_SYMBOL(flow_keys_basic_dissector);
-
-// net/core/filter.c
-const struct bpf_func_proto bpf_sk_setsockopt_proto;
-const struct bpf_func_proto bpf_sk_getsockopt_proto;
-u32 btf_sock_ids[32];
-
 // net/ipv6/protocol.c
 const struct net_offload __rcu *inet6_offloads[MAX_INET_PROTOS];
 
@@ -1193,9 +1180,6 @@ int sysctl_devconf_inherit_init_net;
 
 // net/ipv4/tcp_input.c
 int sysctl_tcp_max_orphans;
-
-// net/core/filter.c
-DEFINE_STATIC_KEY_FALSE(bpf_sk_lookup_enabled);
 
 int ip_misc_proc_init(void)
 {
@@ -1301,6 +1285,12 @@ void proc_clear_tty(struct task_struct *p)
 }
 
 int security_file_truncate(struct file *file)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int __net_init xfrm_sysctl_init(struct net *net)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;

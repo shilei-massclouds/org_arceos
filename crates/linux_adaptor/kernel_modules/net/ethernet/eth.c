@@ -143,6 +143,7 @@ u32 eth_get_headlen(const struct net_device *dev, const void *data, u32 len)
 	return min_t(u32, __skb_get_poff(NULL, data, &keys, len), len);
 }
 EXPORT_SYMBOL(eth_get_headlen);
+#endif // CL
 
 /**
  * eth_type_trans - determine the packet's protocol ID.
@@ -193,7 +194,6 @@ __be16 eth_type_trans(struct sk_buff *skb, struct net_device *dev)
 	return htons(ETH_P_802_2);
 }
 EXPORT_SYMBOL(eth_type_trans);
-#endif // CL
 
 /**
  * eth_header_parse - extract hardware address from packet

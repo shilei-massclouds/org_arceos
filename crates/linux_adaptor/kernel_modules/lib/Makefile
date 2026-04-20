@@ -56,9 +56,9 @@ obj-y += bust_spinlocks.o
 obj-y += usercopy.o
 obj-y += strnlen_user.o
 obj-y += rhashtable.o
+obj-y += siphash.o
 
 obj-y += math/
 obj-y += crypto/
 
 #obj-y += errname.o
-#obj-y += dec_and_lock.o

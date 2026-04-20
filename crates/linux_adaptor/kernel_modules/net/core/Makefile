@@ -18,3 +18,6 @@ obj-y += gen_stats.o
 obj-y += dst.o
 obj-y += datagram.o
 obj-y += dev_ioctl.o
+obj-y += flow_dissector.o
+obj-y += gro_cells.o
+obj-y += filter.o
