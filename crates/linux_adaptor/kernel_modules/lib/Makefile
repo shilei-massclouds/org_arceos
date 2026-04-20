@@ -8,6 +8,7 @@ obj-y += hexdump.o
 obj-y += crc32.o
 obj-y += ratelimit.o
 obj-y += dump_stack.o
+obj-y += once.o
 obj-y += sort.o
 obj-y += kstrtox.o
 obj-y += hweight.o

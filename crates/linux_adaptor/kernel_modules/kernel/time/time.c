@@ -681,7 +681,6 @@ clock_t jiffies_to_clock_t(unsigned long x)
 }
 EXPORT_SYMBOL(jiffies_to_clock_t);
 
-#if 0
 /**
  * clock_t_to_jiffies - Convert clock_t to jiffies
  * @x: clock_t value
@@ -732,8 +731,6 @@ u64 jiffies_64_to_clock_t(u64 x)
 	return x;
 }
 EXPORT_SYMBOL(jiffies_64_to_clock_t);
-
-#endif /* CL */
 
 /**
  * nsec_to_clock_t - Convert nsec value to clock_t

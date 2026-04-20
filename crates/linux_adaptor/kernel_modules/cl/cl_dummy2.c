@@ -1024,6 +1024,12 @@ int security_socket_post_create(struct socket *sock, int family,
     return 0;
 }
 
+int security_sock_rcv_skb(struct sock *sk, struct sk_buff *skb)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
 int __init dev_proc_init(void)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);

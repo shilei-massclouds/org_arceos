@@ -25,6 +25,7 @@ obj-y += addrconf.o
 obj-y += addrlabel.o
 obj-y += proc.o
 obj-y += ip6_output.o
+obj-y += ip6_input.o
 obj-y += exthdrs.o
 obj-y += reassembly.o
 obj-y += udp_offload.o

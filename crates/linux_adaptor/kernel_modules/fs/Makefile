@@ -42,6 +42,7 @@ obj-y += coredump.o
 obj-y += ioctl.o
 obj-y += select.o
 obj-y += splice.o
+obj-y += utimes.o
 
 obj-y += iomap/
 obj-y += ramfs/
