@@ -101,7 +101,7 @@ SECTIONS
         . = ALIGN(16);
         __setup_start = .;
         KEEP(*(.init.setup))
-        __setup_end = .; 
+        __setup_end = .;
 
         __initcall_start = .;
         KEEP(*(.initcallearly.init))
@@ -237,6 +237,11 @@ SECTIONS
         . = ALIGN(4K);
         *(.data .data.*)
         *(.ref.data)
+
+        . = ALIGN(32);
+        __start__bpf_raw_tp = .;
+        KEEP(*(__bpf_raw_tp_map))
+        __stop__bpf_raw_tp = .;
     }
 
     . = ALIGN(8);

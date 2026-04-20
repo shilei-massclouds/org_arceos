@@ -49,4 +49,4 @@ obj-y += ext4/
 obj-y += jbd2/
 obj-y += notify/
 
-#obj-y += proc/
+obj-y += proc/

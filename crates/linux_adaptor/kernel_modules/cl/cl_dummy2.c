@@ -171,29 +171,6 @@ void key_put(struct key *key)
 }
 
 // kernel/events/core.c
-struct static_key perf_swevent_enabled[PERF_COUNT_SW_MAX];
-
-int perf_event_init_task(struct task_struct *child, u64 clone_flags)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return 0;
-}
-void perf_event_fork(struct task_struct *task)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
-void perf_event_comm(struct task_struct *task, bool exec)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
-int perf_event_init_cpu(unsigned int cpu)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return 0;
-}
-
 // kernel/auditsc.c
 int audit_alloc(struct task_struct *tsk)
 {
@@ -240,33 +217,10 @@ void uprobe_copy_process(struct task_struct *t, unsigned long flags)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
-// kernel/events/core.c
-DEFINE_STATIC_KEY_FALSE(perf_sched_events);
-DEFINE_PER_CPU(struct pt_regs, __perf_regs[4]);
-void __perf_event_task_sched_out(struct task_struct *task,
-                 struct task_struct *next)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-void __perf_event_task_sched_in(struct task_struct *prev,
-                struct task_struct *task)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-void ___perf_sw_event(u32 event_id, u64 nr, struct pt_regs *regs, u64 addr)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 // init/calibrate.c
 unsigned long lpj_fine;
 
 // kernel/events/core.c
-void perf_event_task_tick(void)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 // kernel/profile.c
 void profile_tick(int type)
 {
@@ -281,12 +235,6 @@ void __io_uring_cancel(bool cancel_all)
 
 // drivers/tty/tty_audit.c
 void tty_audit_exit(void)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
-// kernel/events/core.c
-void perf_event_exit_task(struct task_struct *child)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
@@ -471,22 +419,6 @@ const struct bus_type pci_bus_type;
  */
 unsigned long __read_mostly sysctl_hung_task_timeout_secs = CONFIG_DEFAULT_HUNG_TASK_TIMEOUT;
 
-struct proc_dir_entry *proc_create_seq_private(const char *name, umode_t mode,
-        struct proc_dir_entry *parent, const struct seq_operations *ops,
-        unsigned int state_size, void *data)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return (struct proc_dir_entry *)1;
-}
-
-struct proc_dir_entry *proc_create_single_data(const char *name, umode_t mode,
-        struct proc_dir_entry *parent,
-        int (*show)(struct seq_file *, void *), void *data)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return (struct proc_dir_entry *)1;
-}
-
 int security_fs_context_parse_param(struct fs_context *fc,
                     struct fs_parameter *param)
 {
@@ -549,12 +481,6 @@ void security_free_mnt_opts(void **mnt_opts)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
-int proc_alloc_inum(unsigned int *inum)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return 0;
-}
-
 int security_file_alloc(struct file *file)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -581,13 +507,6 @@ int security_file_permission(struct file *file, int mask)
 }
 
 // fs/proc/generic.c
-struct proc_dir_entry *proc_mkdir(const char *name,
-        struct proc_dir_entry *parent)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return NULL;
-}
-
 // init/do_mounts_initrd.c
 bool __init initrd_load(char *root_device_name)
 {
@@ -805,11 +724,6 @@ void proc_flush_pid(struct pid *pid)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
-void perf_event_delayed_put(struct task_struct *task)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 void __io_uring_free(struct task_struct *tsk)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -830,15 +744,6 @@ void groups_free(struct group_info *group_info)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
-void bpf_task_storage_free(struct task_struct *task)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
-void bpf_sk_storage_free(struct sock *sk)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
 
 void security_sk_free(struct sock *sk)
 {
@@ -882,11 +787,6 @@ int security_bprm_creds_from_file(struct linux_binprm *bprm, const struct file *
     return 0;
 }
 
-void perf_event_exec(void)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 void security_bprm_committing_creds(const struct linux_binprm *bprm)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -912,11 +812,6 @@ void security_bprm_committed_creds(const struct linux_binprm *bprm)
 unsigned long mmap_min_addr;
 /* amount of vm to protect from userspace using CAP_SYS_RAWIO (DAC) */
 unsigned long dac_mmap_min_addr = CONFIG_DEFAULT_MMAP_MIN_ADDR;
-
-void perf_event_mmap(struct vm_area_struct *vma)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
 
 int security_mmap_file(struct file *file, unsigned long prot,
                unsigned long flags)
@@ -1066,13 +961,6 @@ int security_socket_post_create(struct socket *sock, int family,
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
-}
-
-struct proc_dir_entry *_proc_mkdir(const char *name, umode_t mode,
-        struct proc_dir_entry *parent, void *data, bool force_lookup)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return NULL;
 }
 
 int __init dev_proc_init(void)
@@ -1305,9 +1193,4 @@ int proc_do_large_bitmap(const struct ctl_table *table, int write,
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
-}
-
-void remove_proc_entry(const char *name, struct proc_dir_entry *parent)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
