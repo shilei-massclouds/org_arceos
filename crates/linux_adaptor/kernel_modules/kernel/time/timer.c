@@ -1537,7 +1537,6 @@ static int __try_to_del_timer_sync(struct timer_list *timer, bool shutdown)
 	return ret;
 }
 
-#if 0
 /**
  * try_to_del_timer_sync - Try to deactivate a timer
  * @timer:	Timer to deactivate
@@ -1559,8 +1558,6 @@ int try_to_del_timer_sync(struct timer_list *timer)
 	return __try_to_del_timer_sync(timer, false);
 }
 EXPORT_SYMBOL(try_to_del_timer_sync);
-
-#endif /* CL */
 
 #ifdef CONFIG_PREEMPT_RT
 static __init void timer_base_init_expiry_lock(struct timer_base *base)

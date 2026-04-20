@@ -21,6 +21,7 @@ obj-y += dev_ioctl.o
 obj-y += flow_dissector.o
 obj-y += gro_cells.o
 obj-y += filter.o
+obj-y += secure_seq.o
 obj-y += sock_reuseport.o
 obj-y += sock_map.o
 obj-y += bpf_sk_storage.o

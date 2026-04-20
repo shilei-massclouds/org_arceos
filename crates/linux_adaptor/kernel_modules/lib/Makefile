@@ -21,6 +21,7 @@ obj-y += kobject.o
 obj-y += seq_buf.o
 obj-y += rcuref.o
 obj-y += string_helpers.o
+obj-y += win_minmax.o
 obj-y += radix-tree.o
 obj-y += maple_tree.o
 obj-y += irq_regs.o

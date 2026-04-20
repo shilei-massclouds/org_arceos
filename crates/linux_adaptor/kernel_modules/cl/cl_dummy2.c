@@ -1024,10 +1024,69 @@ int security_socket_post_create(struct socket *sock, int family,
     return 0;
 }
 
+int security_socket_socketpair(struct socket *socka, struct socket *sockb)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_connect(struct socket *sock, struct sockaddr *address, int addrlen)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_listen(struct socket *sock, int backlog)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_accept(struct socket *sock, struct socket *newsock)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_getsockname(struct socket *sock)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_getpeername(struct socket *sock)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_getsockopt(struct socket *sock, int level, int optname)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_setsockopt(struct socket *sock, int level, int optname)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_socket_shutdown(struct socket *sock, int how)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
 int security_sock_rcv_skb(struct sock *sk, struct sk_buff *skb)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
+}
+
+void security_inet_conn_established(struct sock *sk, struct sk_buff *skb)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
 int __init dev_proc_init(void)
@@ -1125,13 +1184,11 @@ int security_socket_sendmsg(struct socket *sock, struct msghdr *msg, int size)
 }
 
 // net/ipv4/ip_sockglue.c
-DEFINE_STATIC_KEY_FALSE(ip4_min_ttl);
 
 // net/core/sysctl_net_core.c
 int sysctl_devconf_inherit_init_net;
 
 // net/ipv4/tcp_input.c
-int sysctl_tcp_max_orphans;
 
 int ip_misc_proc_init(void)
 {

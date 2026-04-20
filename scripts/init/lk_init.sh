@@ -5,7 +5,7 @@ MARKER=/run/lk_init.done
 
 if [ ! -e "$MARKER" ]; then
 	echo
-	echo -e "Welcome to \e[96m\e[1mStarry OS\e[0m!"
+	echo -e "Welcome to \e[96m\e[1mLK\e[0m!"
 	env
 	echo
 

@@ -5,6 +5,7 @@ obj-y += tcp_ipv6.o
 obj-y += af_inet6.o
 obj-y += ip6_flowlabel.o
 obj-y += ipv6_sockglue.o
+obj-y += datagram.o
 obj-y += mcast.o
 obj-y += raw.o
 obj-y += udp.o
