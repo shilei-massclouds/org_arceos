@@ -267,6 +267,7 @@ void *vmemdup_user(const void __user *src, size_t len)
 	return p;
 }
 EXPORT_SYMBOL(vmemdup_user);
+#endif // CL
 
 /**
  * strndup_user - duplicate an existing string from user space
@@ -299,6 +300,7 @@ char *strndup_user(const char __user *s, long n)
 }
 EXPORT_SYMBOL(strndup_user);
 
+#if 0
 /**
  * memdup_user_nul - duplicate memory region from user space and NUL-terminate
  *
