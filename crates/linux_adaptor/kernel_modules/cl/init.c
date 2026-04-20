@@ -16,6 +16,7 @@
 #include <linux/stackprotector.h>
 #include <linux/fs.h>
 #include <linux/file.h>
+#include <linux/proc_fs.h>
 #include <linux/init_syscalls.h>
 #include <linux/major.h>
 #include <linux/binfmts.h>
@@ -539,6 +540,7 @@ void start_sched_earlier()
     vfs_caches_init();
     pagecache_init();
     signals_init();
+    proc_root_init();
 }
 
 void pin_task_on_cpu(int pid, unsigned int cpu_id)

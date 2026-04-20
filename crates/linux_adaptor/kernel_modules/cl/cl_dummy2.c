@@ -38,6 +38,7 @@
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>
 
+#include "../fs/proc/internal.h"
 #include "../net/ipv4/fib_lookup.h"
 
 #ifdef CL_SHOW_DUMMY
@@ -418,6 +419,66 @@ const struct bus_type pci_bus_type;
  * Zero means infinite timeout - no checking done:
  */
 unsigned long __read_mostly sysctl_hung_task_timeout_secs = CONFIG_DEFAULT_HUNG_TASK_TIMEOUT;
+
+void set_proc_pid_nlink(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void proc_self_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void proc_thread_self_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void proc_tty_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int proc_sys_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int proc_net_init(void)
+{
+    struct proc_dir_entry *netd, *net_statd;
+
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+
+    if (init_net.proc_net)
+        return 0;
+
+    netd = kmem_cache_zalloc(proc_dir_entry_cache, GFP_KERNEL);
+    if (!netd)
+        return -ENOMEM;
+
+    netd->subdir = RB_ROOT;
+    netd->data = &init_net;
+    netd->nlink = 2;
+    netd->namelen = 3;
+    netd->parent = &proc_root;
+    netd->name = netd->inline_name;
+    memcpy(netd->name, "net", 4);
+    pde_force_lookup(netd);
+
+    net_statd = proc_net_mkdir(&init_net, "stat", netd);
+    if (!net_statd) {
+        pde_free(netd);
+        return -ENOMEM;
+    }
+
+    init_net.proc_net = netd;
+    init_net.proc_net_stat = net_statd;
+
+    return 0;
+}
 
 int security_fs_context_parse_param(struct fs_context *fc,
                     struct fs_parameter *param)

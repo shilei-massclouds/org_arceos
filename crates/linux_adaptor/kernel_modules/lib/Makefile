@@ -18,6 +18,7 @@ obj-y += rbtree.o
 obj-y += kasprintf.o
 obj-y += kobject.o
 obj-y += seq_buf.o
+obj-y += rcuref.o
 obj-y += string_helpers.o
 obj-y += radix-tree.o
 obj-y += maple_tree.o
