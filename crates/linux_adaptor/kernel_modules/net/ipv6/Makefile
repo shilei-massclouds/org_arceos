@@ -20,3 +20,5 @@ obj-y += fib6_notifier.o
 obj-y += xfrm6_policy.o
 obj-y += xfrm6_state.o
 obj-y += xfrm6_protocol.o
+obj-y += anycast.o
+obj-y += addrconf.o
