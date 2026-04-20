@@ -19,9 +19,10 @@ fn main() {
     ax_prepare_console_node();
     ax_prepare_stdio_from_console();
 
-    let argv = ["/etc/lk_init.sh"];
+    // Hand off the rest of userspace boot to Alpine's BusyBox init.
+    let argv: [&str; 0] = [];
     let envp = ["HOME=/", "TERM=linux"];
-    ax_run_init_process("/bin/sh", &argv, &envp);
+    ax_run_init_process("/sbin/init", &argv, &envp);
 }
 
 fn ax_prepare_console_node() {

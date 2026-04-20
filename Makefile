@@ -239,15 +239,18 @@ else
 endif
 
 rm_disk:
-	rm -f $(DISK_IMG) #$(ROOTFS_IMG)
+	rm -f $(DISK_IMG)
 
-rootfs:
-	@if [ ! -f $(ROOTFS_TARBALL) ]; then \
-		printf "    $(GREEN_C)Downloading$(END_C) rootfs tarball \"$(ROOTFS_TARBALL)\" ...\n"; \
-		curl -f -L "$(ROOTFS_URL)" -o "$(ROOTFS_TARBALL)"; \
-	fi
-	$(call make_rootfs_image_ext4_from_tarball,$(ROOTFS_IMG),$(ROOTFS_TARBALL))
-	@cp $(ROOTFS_IMG) $(DISK_IMG)
+$(ROOTFS_TARBALL):
+	@printf "    $(GREEN_C)Downloading$(END_C) rootfs tarball \"$(ROOTFS_TARBALL)\" ...\n"
+	@curl -f -L "$(ROOTFS_URL)" -o "$(ROOTFS_TARBALL)"
+
+$(ROOTFS_IMG): $(ROOTFS_TARBALL) scripts/init/lk_init.sh scripts/init/lk_inittab
+	$(call make_rootfs_image_ext4_from_tarball,$@,$<)
+
+rootfs: $(ROOTFS_IMG)
+	@printf "    $(GREEN_C)Copying$(END_C) rootfs image \"$(ROOTFS_IMG)\" to \"$(DISK_IMG)\" ...\n"
+	@cp "$(ROOTFS_IMG)" "$(DISK_IMG)"
 
 clean: clean_c
 	rm -rf $(APP)/*.bin $(APP)/*.elf $(OUT_CONFIG)

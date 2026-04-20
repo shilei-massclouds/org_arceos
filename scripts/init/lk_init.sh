@@ -1,17 +1,21 @@
 #!/bin/sh
 
 export HOME=/root
+MARKER=/run/lk_init.done
 
-echo
-echo -e "Welcome to \e[96m\e[1mStarry OS\e[0m!"
-env
-echo
+if [ ! -e "$MARKER" ]; then
+	echo
+	echo -e "Welcome to \e[96m\e[1mStarry OS\e[0m!"
+	env
+	echo
 
-echo -e "Use \e[1m\e[3mapk\e[0m to install packages."
-echo
+	echo -e "Use \e[1m\e[3mapk\e[0m to install packages."
+	echo
 
-# Do your initialization here!
-apk update
+	# Do your initialization here once per boot.
+	apk update
+	touch "$MARKER"
+fi
 
-cd ~
-sh --login
+cd "$HOME" || cd /
+exec /bin/sh --login

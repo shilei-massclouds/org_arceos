@@ -20,6 +20,7 @@ endef
 
 define make_disk_image_ext4
   @printf "    $(GREEN_C)Creating$(END_C) EXT4 disk image \"$(1)\" ...\n"
+  @rm -f $(1)
   @truncate -s $(DISK_SIZE) $(1)
   @mkfs.ext4 $(1)
 endef
@@ -30,11 +31,11 @@ define make_disk_image
 endef
 
 define make_rootfs_image_ext4_from_tarball
-  @if [ ! -f "$(1)" ]; then \
-    set -e; \
+  @set -e; \
     img="$(1)"; \
     tarball="$(2)"; \
     script="scripts/init/lk_init.sh"; \
+    inittab="scripts/init/lk_inittab"; \
     mnt_dir=$$(mktemp -d /tmp/lk-rootfs.XXXXXX); \
     cleanup() { \
       if mountpoint -q "$$mnt_dir"; then \
@@ -43,7 +44,6 @@ define make_rootfs_image_ext4_from_tarball
       rm -rf "$$mnt_dir"; \
     }; \
     trap cleanup EXIT; \
-    printf "    $(GREEN_C)Creating$(END_C) rootfs image \"$$img\" from tarball \"$$tarball\" ...\n"; \
     if [ ! -f "$$tarball" ]; then \
       echo "rootfs tarball not found: $$tarball" >&2; \
       exit 1; \
@@ -52,16 +52,21 @@ define make_rootfs_image_ext4_from_tarball
       echo "lk init script not found: $$script" >&2; \
       exit 1; \
     fi; \
+    if [ ! -f "$$inittab" ]; then \
+      echo "lk inittab not found: $$inittab" >&2; \
+      exit 1; \
+    fi; \
+    printf "    $(GREEN_C)Creating$(END_C) rootfs image \"$$img\" from tarball \"$$tarball\" ...\n"; \
+    rm -f "$$img"; \
     truncate -s "$(DISK_SIZE)" "$$img"; \
     mkfs.ext4 "$$img"; \
-	    sudo mount -o loop "$$img" "$$mnt_dir"; \
-	    printf "    $(GREEN_C)Populating$(END_C) rootfs image \"$$img\" from tarball \"$$tarball\" ...\n"; \
-	    sudo tar -xzf "$$tarball" -C "$$mnt_dir"; \
-	    printf "    $(GREEN_C)Populated!$(END_C)\n"; \
-	    printf "    $(GREEN_C)Updating$(END_C) rootfs image \"$$img\" with lk init script ...\n"; \
-	    sudo install -D -m 0755 "$$script" "$$mnt_dir/etc/lk_init.sh"; \
-	    printf "    $(GREEN_C)Updating$(END_C) rootfs image \"$$img\" with DNS config ...\n"; \
-	    printf "nameserver 10.0.2.3\n" | sudo tee "$$mnt_dir/etc/resolv.conf" >/dev/null; \
-	    printf "    $(GREEN_C)Updated!$(END_C)\n"; \
-	  fi
+    sudo mount -o loop "$$img" "$$mnt_dir"; \
+    printf "    $(GREEN_C)Populating$(END_C) rootfs image \"$$img\" from tarball \"$$tarball\" ...\n"; \
+    sudo tar -xzf "$$tarball" -C "$$mnt_dir"; \
+    printf "    $(GREEN_C)Populated!$(END_C)\n"; \
+    printf "    $(GREEN_C)Installing$(END_C) lk init files into \"$$img\" ...\n"; \
+    sudo install -D -m 0755 "$$script" "$$mnt_dir/etc/lk_init.sh"; \
+    sudo install -D -m 0644 "$$inittab" "$$mnt_dir/etc/inittab"; \
+    printf "nameserver 10.0.2.3\n" | sudo tee "$$mnt_dir/etc/resolv.conf" >/dev/null; \
+    printf "    $(GREEN_C)Updated!$(END_C)\n"
 endef
