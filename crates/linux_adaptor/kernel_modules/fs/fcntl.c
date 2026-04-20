@@ -838,6 +838,8 @@ COMPAT_SYSCALL_DEFINE3(fcntl, unsigned int, fd, unsigned int, cmd,
 }
 #endif
 
+#endif // CL
+
 /* Table to convert sigio signal codes into poll band bitmaps */
 
 static const __poll_t band_table[NSIGPOLL] = {
@@ -952,6 +954,7 @@ void send_sigio(struct fown_struct *fown, int fd, int band)
 	read_unlock_irqrestore(&fown->lock, flags);
 }
 
+#if 0
 static void send_sigurg_to_task(struct task_struct *p,
 				struct fown_struct *fown, enum pid_type type)
 {
@@ -1132,6 +1135,7 @@ int fasync_helper(int fd, struct file * filp, int on, struct fasync_struct **fap
 }
 
 EXPORT_SYMBOL(fasync_helper);
+#endif // CL
 
 /*
  * rcu_read_lock() is held
@@ -1176,8 +1180,6 @@ void kill_fasync(struct fasync_struct **fp, int sig, int band)
 	}
 }
 EXPORT_SYMBOL(kill_fasync);
-
-#endif // CL
 
 static int __init fcntl_init(void)
 {

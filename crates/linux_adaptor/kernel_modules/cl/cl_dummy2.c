@@ -998,6 +998,13 @@ int security_file_lock(struct file *file, unsigned int cmd)
     return 0;
 }
 
+int security_file_send_sigiotask(struct task_struct *tsk,
+                 struct fown_struct *fown, int sig)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
 int net_sysctl_init(void)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);

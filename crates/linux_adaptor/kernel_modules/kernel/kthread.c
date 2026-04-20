@@ -185,7 +185,6 @@ bool kthread_should_park(void)
 }
 EXPORT_SYMBOL_GPL(kthread_should_park);
 
-#if 0
 bool kthread_should_stop_or_park(void)
 {
 	struct kthread *kthread = __to_kthread(current);
@@ -196,6 +195,7 @@ bool kthread_should_stop_or_park(void)
 	return kthread->flags & (BIT(KTHREAD_SHOULD_STOP) | BIT(KTHREAD_SHOULD_PARK));
 }
 
+#if 0
 /**
  * kthread_freezable_should_stop - should this freezable kthread return now?
  * @was_frozen: optional out parameter, indicates whether %current was frozen

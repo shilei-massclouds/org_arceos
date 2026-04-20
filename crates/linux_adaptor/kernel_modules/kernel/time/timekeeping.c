@@ -909,7 +909,6 @@ void ktime_get_ts64(struct timespec64 *ts)
 }
 EXPORT_SYMBOL_GPL(ktime_get_ts64);
 
-#if 0
 /**
  * ktime_get_seconds - Get the seconds portion of CLOCK_MONOTONIC
  *
@@ -927,7 +926,6 @@ time64_t ktime_get_seconds(void)
 	return tk->ktime_sec;
 }
 EXPORT_SYMBOL_GPL(ktime_get_seconds);
-#endif // CL
 
 /**
  * ktime_get_real_seconds - Get the seconds portion of CLOCK_REALTIME
