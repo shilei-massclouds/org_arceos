@@ -20,3 +20,4 @@ obj-y += clockevents.o
 obj-y += timer_migration.o
 obj-y += posix-clock.o
 obj-y += alarmtimer.o
+obj-y += itimer.o

@@ -624,7 +624,6 @@ static struct task_struct *find_child_reaper(struct task_struct *father,
 	return father;
 }
 
-#if 0
 /*
  * When we die, we re-parent all our children, and try to:
  * 1. give them to another thread in our thread group, if such a member exists
@@ -690,7 +689,6 @@ static void reparent_leader(struct task_struct *father, struct task_struct *p,
 
 	kill_orphaned_pgrp(p, father);
 }
-#endif /* CL */
 
 /*
  * This does two things:
@@ -713,7 +711,6 @@ static void forget_original_parent(struct task_struct *father,
 	if (list_empty(&father->children))
 		return;
 
-#if 0
 	reaper = find_new_reaper(father, reaper);
 	list_for_each_entry(p, &father->children, sibling) {
 		for_each_thread(p, t) {
@@ -734,8 +731,6 @@ static void forget_original_parent(struct task_struct *father,
 			reparent_leader(father, p, dead);
 	}
 	list_splice_tail_init(&father->children, &reaper->children);
-#endif
-    PANIC("");
 }
 
 /*

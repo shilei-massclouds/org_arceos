@@ -1525,7 +1525,6 @@ int hrtimer_cancel(struct hrtimer *timer)
 }
 EXPORT_SYMBOL_GPL(hrtimer_cancel);
 
-#if 0
 /**
  * __hrtimer_get_remaining - get remaining time for the timer
  * @timer:	the timer to read
@@ -1547,6 +1546,7 @@ ktime_t __hrtimer_get_remaining(const struct hrtimer *timer, bool adjust)
 }
 EXPORT_SYMBOL_GPL(__hrtimer_get_remaining);
 
+#if 0
 #ifdef CONFIG_NO_HZ_COMMON
 /**
  * hrtimer_get_next_event - get the time until next expiry event

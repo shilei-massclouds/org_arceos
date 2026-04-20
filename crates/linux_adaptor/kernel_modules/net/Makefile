@@ -12,3 +12,4 @@ obj-y += netfilter/
 obj-y += sched/
 obj-y += l3mdev/
 obj-y += xfrm/
+obj-y += unix/

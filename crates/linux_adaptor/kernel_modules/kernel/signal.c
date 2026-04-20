@@ -808,7 +808,6 @@ static inline int is_si_special(const struct kernel_siginfo *info)
 	return info <= SEND_SIG_PRIV;
 }
 
-#if 0
 static inline bool si_fromuser(const struct kernel_siginfo *info)
 {
 	return info == SEND_SIG_NOINFO ||
@@ -869,7 +868,6 @@ static int check_kill_permission(int sig, struct kernel_siginfo *info,
 
 	return security_task_kill(t, info, sig, NULL);
 }
-#endif // CL
 
 /**
  * ptrace_trap_notify - schedule trap to notify ptracer
@@ -1298,6 +1296,7 @@ static int __init setup_print_fatal_signals(char *str)
 }
 
 __setup("print-fatal-signals=", setup_print_fatal_signals);
+#endif // CL
 
 int do_send_sig_info(int sig, struct kernel_siginfo *info, struct task_struct *p,
 			enum pid_type type)
@@ -1312,7 +1311,6 @@ int do_send_sig_info(int sig, struct kernel_siginfo *info, struct task_struct *p
 
 	return ret;
 }
-#endif // CL
 
 enum sig_handler {
 	HANDLER_CURRENT, /* If reachable use the current handler */
@@ -1396,7 +1394,6 @@ int zap_other_threads(struct task_struct *p)
 	return count;
 }
 
-#if 0
 struct sighand_struct *__lock_task_sighand(struct task_struct *tsk,
 					   unsigned long *flags)
 {
@@ -1429,6 +1426,7 @@ struct sighand_struct *__lock_task_sighand(struct task_struct *tsk,
 	return sighand;
 }
 
+#if 0
 #ifdef CONFIG_LOCKDEP
 void lockdep_assert_task_sighand_held(struct task_struct *task)
 {
@@ -1443,6 +1441,7 @@ void lockdep_assert_task_sighand_held(struct task_struct *task)
 	rcu_read_unlock();
 }
 #endif
+#endif // CL
 
 /*
  * send signal info to all the members of a thread group or to the
@@ -1463,6 +1462,7 @@ int group_send_sig_info(int sig, struct kernel_siginfo *info,
 	return ret;
 }
 
+#if 0
 /*
  * __kill_pgrp_info() sends a signal to a process group: this is what the tty
  * control characters do (^C, ^Z etc)
@@ -1487,6 +1487,7 @@ int __kill_pgrp_info(int sig, struct kernel_siginfo *info, struct pid *pgrp)
 
 	return ret;
 }
+#endif // CL
 
 static int kill_pid_info_type(int sig, struct kernel_siginfo *info,
 				struct pid *pid, enum pid_type type)
@@ -1515,6 +1516,7 @@ int kill_pid_info(int sig, struct kernel_siginfo *info, struct pid *pid)
 	return kill_pid_info_type(sig, info, pid, PIDTYPE_TGID);
 }
 
+#if 0
 static int kill_proc_info(int sig, struct kernel_siginfo *info, pid_t pid)
 {
 	int error;

@@ -446,40 +446,6 @@ int proc_sys_init(void)
     return 0;
 }
 
-int proc_net_init(void)
-{
-    struct proc_dir_entry *netd, *net_statd;
-
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-
-    if (init_net.proc_net)
-        return 0;
-
-    netd = kmem_cache_zalloc(proc_dir_entry_cache, GFP_KERNEL);
-    if (!netd)
-        return -ENOMEM;
-
-    netd->subdir = RB_ROOT;
-    netd->data = &init_net;
-    netd->nlink = 2;
-    netd->namelen = 3;
-    netd->parent = &proc_root;
-    netd->name = netd->inline_name;
-    memcpy(netd->name, "net", 4);
-    pde_force_lookup(netd);
-
-    net_statd = proc_net_mkdir(&init_net, "stat", netd);
-    if (!net_statd) {
-        pde_free(netd);
-        return -ENOMEM;
-    }
-
-    init_net.proc_net = netd;
-    init_net.proc_net_stat = net_statd;
-
-    return 0;
-}
-
 int security_fs_context_parse_param(struct fs_context *fc,
                     struct fs_parameter *param)
 {
@@ -1067,6 +1033,15 @@ int security_socket_getpeername(struct socket *sock)
     return 0;
 }
 
+int security_socket_getpeersec_dgram(struct socket *sock, struct sk_buff *skb,
+                 u32 *secid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    if (secid)
+        *secid = 0;
+    return 0;
+}
+
 int security_socket_getsockopt(struct socket *sock, int level, int optname)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -1096,7 +1071,14 @@ void security_inet_conn_established(struct sock *sk, struct sk_buff *skb)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
-int __init dev_proc_init(void)
+int security_unix_stream_connect(struct sock *sock, struct sock *other,
+                 struct sock *newsk)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_unix_may_send(struct socket *sock, struct socket *other)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
@@ -1131,24 +1113,16 @@ int netdev_queue_update_kobjects(struct net_device *dev, int old_num, int new_nu
     return 0;
 }
 
-struct proc_dir_entry *proc_create_net_data(const char *name, umode_t mode,
-        struct proc_dir_entry *parent, const struct seq_operations *ops,
-        unsigned int state_size, void *data)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return (struct proc_dir_entry *)1;
-}
-
-struct proc_dir_entry *proc_create_net_single(const char *name, umode_t mode,
-        struct proc_dir_entry *parent,
-        int (*show)(struct seq_file *, void *), void *data)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-    return (struct proc_dir_entry *)1;
-}
 
 int security_inode_listsecurity(struct inode *inode,
-                char *buffer, size_t buffer_size)
+        char *buffer, size_t buffer_size)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_task_kill(struct task_struct *p, struct kernel_siginfo *info,
+            int sig, const struct cred *cred)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;

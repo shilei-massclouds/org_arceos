@@ -3753,6 +3753,7 @@ static void shrink_submounts(struct mount *mnt)
 		}
 	}
 }
+#endif // CL
 
 static void *copy_mount_options(const void __user * data)
 {
@@ -3794,7 +3795,6 @@ static char *copy_mount_string(const void __user *data)
 {
 	return data ? strndup_user(data, PATH_MAX) : NULL;
 }
-#endif // CL
 
 /*
  * Flags is a 32-bit value that allows up to 31 non-fs dependent flags to
@@ -3889,7 +3889,6 @@ int path_mount(const char *dev_name, struct path *path,
 			    data_page);
 }
 
-#if 0
 long do_mount(const char *dev_name, const char __user *dir_name,
 		const char *type_page, unsigned long flags, void *data_page)
 {
@@ -3903,7 +3902,6 @@ long do_mount(const char *dev_name, const char __user *dir_name,
 	path_put(&path);
 	return ret;
 }
-#endif // CL
 
 static struct ucounts *inc_mnt_namespaces(struct user_namespace *ns)
 {
@@ -4087,6 +4085,7 @@ struct dentry *mount_subtree(struct vfsmount *m, const char *name)
 	return path.dentry;
 }
 EXPORT_SYMBOL(mount_subtree);
+#endif // CL
 
 SYSCALL_DEFINE5(mount, char __user *, dev_name, char __user *, dir_name,
 		char __user *, type, unsigned long, flags, void __user *, data)
@@ -4122,6 +4121,7 @@ out_type:
 	return ret;
 }
 
+#if 0
 #define FSMOUNT_VALID_FLAGS                                                    \
 	(MOUNT_ATTR_RDONLY | MOUNT_ATTR_NOSUID | MOUNT_ATTR_NODEV |            \
 	 MOUNT_ATTR_NOEXEC | MOUNT_ATTR__ATIME | MOUNT_ATTR_NODIRATIME |       \
