@@ -1255,10 +1255,6 @@ void workqueue_softirq_action(bool highpri)
 {
 }
 
-void xfrm_init(void)
-{
-}
-
 void xfrm4_init(void)
 {
 }
@@ -1302,4 +1298,10 @@ bool pr_flush(int timeout_ms, bool reset_on_progress)
 void proc_clear_tty(struct task_struct *p)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_file_truncate(struct file *file)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
 }

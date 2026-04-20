@@ -2561,6 +2561,7 @@ bool inode_owner_or_capable(struct mnt_idmap *idmap,
 	return false;
 }
 EXPORT_SYMBOL(inode_owner_or_capable);
+#endif // CL
 
 /*
  * Direct i/o helper functions
@@ -2587,6 +2588,7 @@ void inode_dio_wait(struct inode *inode)
 }
 EXPORT_SYMBOL(inode_dio_wait);
 
+#if 0
 void inode_dio_wait_interruptible(struct inode *inode)
 {
 	wait_var_event_interruptible(&inode->i_dio_count,
