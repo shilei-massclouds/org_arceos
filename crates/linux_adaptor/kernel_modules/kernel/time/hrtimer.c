@@ -2104,6 +2104,7 @@ int nanosleep_copyout(struct restart_block *restart, struct timespec64 *ts)
 	}
 	return -ERESTART_RESTARTBLOCK;
 }
+#endif // CL
 
 static int __sched do_nanosleep(struct hrtimer_sleeper *t, enum hrtimer_mode mode)
 {
@@ -2202,6 +2203,8 @@ SYSCALL_DEFINE2(nanosleep, struct __kernel_timespec __user *, rqtp,
 }
 
 #endif
+
+#if 0
 
 #ifdef CONFIG_COMPAT_32BIT_TIME
 

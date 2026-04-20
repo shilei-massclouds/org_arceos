@@ -3653,6 +3653,7 @@ int copy_siginfo_from_user32(struct kernel_siginfo *to,
 	return post_copy_siginfo_from_user32(to, &from);
 }
 #endif /* CONFIG_COMPAT */
+#endif // CL
 
 /**
  *  do_sigtimedwait - wait for queued signals specified in @which
@@ -3750,6 +3751,8 @@ SYSCALL_DEFINE4(rt_sigtimedwait, const sigset_t __user *, uthese,
 
 	return ret;
 }
+
+#if 0
 
 #ifdef CONFIG_COMPAT_32BIT_TIME
 SYSCALL_DEFINE4(rt_sigtimedwait_time32, const sigset_t __user *, uthese,

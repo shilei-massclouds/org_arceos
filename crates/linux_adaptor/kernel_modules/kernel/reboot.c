@@ -72,7 +72,6 @@ static bool poweroff_fallback_to_halt;
  */
 void __weak (*pm_power_off)(void);
 
-#if 0
 /**
  *	emergency_restart - reboot the system
  *
@@ -155,8 +154,6 @@ int devm_register_reboot_notifier(struct device *dev, struct notifier_block *nb)
 }
 EXPORT_SYMBOL(devm_register_reboot_notifier);
 
-#endif /* CL */
-
 /*
  *	Notifier list for kernel code which wants to be called
  *	to restart the system.
@@ -207,7 +204,6 @@ int register_restart_handler(struct notifier_block *nb)
 }
 EXPORT_SYMBOL(register_restart_handler);
 
-#if 0
 /**
  *	unregister_restart_handler - Unregister previously registered
  *				     restart handler
@@ -1336,5 +1332,3 @@ static int __init reboot_ksysfs_init(void)
 late_initcall(reboot_ksysfs_init);
 
 #endif
-
-#endif /* CL */

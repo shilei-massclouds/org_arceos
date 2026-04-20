@@ -301,6 +301,7 @@ static struct ctl_table pid_ns_ctl_table[] = {
 	},
 };
 #endif	/* CONFIG_CHECKPOINT_RESTORE */
+#endif /* CL */
 
 int reboot_pid_ns(struct pid_namespace *pid_ns, int cmd)
 {
@@ -330,8 +331,6 @@ int reboot_pid_ns(struct pid_namespace *pid_ns, int cmd)
 	/* Not reached */
 	return 0;
 }
-
-#endif /* CL */
 
 static inline struct pid_namespace *to_pid_ns(struct ns_common *ns)
 {

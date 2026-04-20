@@ -1225,6 +1225,7 @@ out:
 	rcu_read_unlock();
 	return retval;
 }
+#endif // CL
 
 static void set_special_pids(struct pid *pid)
 {
@@ -1274,7 +1275,6 @@ SYSCALL_DEFINE0(setsid)
 {
 	return ksys_setsid();
 }
-#endif // CL
 
 DECLARE_RWSEM(uts_sem);
 

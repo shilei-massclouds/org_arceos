@@ -270,7 +270,6 @@ int __sched wait_for_completion_killable(struct completion *x)
 }
 EXPORT_SYMBOL(wait_for_completion_killable);
 
-#if 0
 int __sched wait_for_completion_state(struct completion *x, unsigned int state)
 {
 	long t = wait_for_common(x, MAX_SCHEDULE_TIMEOUT, state);
@@ -281,6 +280,7 @@ int __sched wait_for_completion_state(struct completion *x, unsigned int state)
 }
 EXPORT_SYMBOL(wait_for_completion_state);
 
+#if 0
 /**
  * wait_for_completion_killable_timeout: - waits for completion of a task (w/(to,killable))
  * @x:  holds the state of this particular completion

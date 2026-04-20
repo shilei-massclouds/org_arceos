@@ -1613,7 +1613,6 @@ static int wait_for_vfork_done(struct task_struct *child,
 	unsigned int state = TASK_KILLABLE|TASK_FREEZABLE;
 	int killed;
 
-#if 0
 	cgroup_enter_frozen();
 	killed = wait_for_completion_state(vfork, state);
 	cgroup_leave_frozen(false);
@@ -1625,8 +1624,6 @@ static int wait_for_vfork_done(struct task_struct *child,
 	}
 
 	put_task_struct(child);
-#endif
-    PANIC("");
 	return killed;
 }
 

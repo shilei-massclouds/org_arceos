@@ -1344,3 +1344,16 @@ int security_socket_bind(struct socket *sock,
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+// kernel/printk/printk.c
+bool pr_flush(int timeout_ms, bool reset_on_progress)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return false;
+}
+
+void proc_clear_tty(struct task_struct *p)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
