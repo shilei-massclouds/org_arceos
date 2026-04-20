@@ -1169,9 +1169,6 @@ int security_socket_sendmsg(struct socket *sock, struct msghdr *msg, int size)
     return 0;
 }
 
-// net/ipv6/protocol.c
-const struct net_offload __rcu *inet6_offloads[MAX_INET_PROTOS];
-
 // net/ipv4/ip_sockglue.c
 DEFINE_STATIC_KEY_FALSE(ip4_min_ttl);
 
@@ -1312,6 +1309,18 @@ int proc_dou8vec_minmax(const struct ctl_table *table, int write,
 
 int proc_do_large_bitmap(const struct ctl_table *table, int write,
              void *buffer, size_t *lenp, loff_t *ppos)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int __init ipv6_misc_proc_init(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int __init if6_proc_init(void)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;

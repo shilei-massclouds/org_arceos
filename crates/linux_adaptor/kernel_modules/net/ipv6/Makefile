@@ -12,3 +12,6 @@ obj-y += udplite.o
 obj-y += ping.o
 obj-y += ndisc.o
 obj-y += icmp.o
+obj-y += protocol.o
+obj-y += netfilter.o
+obj-y += route.o
