@@ -268,12 +268,10 @@ static inline void __clear_open_fd(unsigned int fd, struct fdtable *fdt)
 	__clear_bit(fd / BITS_PER_LONG, fdt->full_fds_bits);
 }
 
-#if 0
 static inline bool fd_is_open(unsigned int fd, const struct fdtable *fdt)
 {
 	return test_bit(fd, fdt->open_fds);
 }
-#endif // CL
 
 /*
  * Note that a sane fdtable size always has to be a multiple of
@@ -1216,6 +1214,7 @@ bool get_close_on_exec(unsigned int fd)
 	rcu_read_unlock();
 	return res;
 }
+#endif // CL
 
 static int do_dup2(struct files_struct *files,
 	struct file *file, unsigned fd, unsigned flags)
@@ -1262,6 +1261,7 @@ Ebusy:
 	return -EBUSY;
 }
 
+#if 0
 int replace_fd(unsigned fd, struct file *file, unsigned flags)
 {
 	int err;
@@ -1339,6 +1339,7 @@ int receive_fd_replace(int new_fd, struct file *file, unsigned int o_flags)
 	__receive_sock(file);
 	return new_fd;
 }
+#endif // CL
 
 static int ksys_dup3(unsigned int oldfd, unsigned int newfd, int flags)
 {
@@ -1379,6 +1380,7 @@ SYSCALL_DEFINE3(dup3, unsigned int, oldfd, unsigned int, newfd, int, flags)
 	return ksys_dup3(oldfd, newfd, flags);
 }
 
+#if 0
 SYSCALL_DEFINE2(dup2, unsigned int, oldfd, unsigned int, newfd)
 {
 	if (unlikely(newfd == oldfd)) { /* corner case */

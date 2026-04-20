@@ -38,7 +38,6 @@
 
 #define SETFL_MASK (O_APPEND | O_NONBLOCK | O_NDELAY | O_DIRECT | O_NOATIME)
 
-#if 0
 static int setfl(int fd, struct file * filp, unsigned int arg)
 {
 	struct inode * inode = file_inode(filp);
@@ -91,6 +90,7 @@ static int setfl(int fd, struct file * filp, unsigned int arg)
 	return error;
 }
 
+#if 0
 /*
  * Allocate an file->f_owner struct if it doesn't exist, handling racing
  * allocations correctly.
@@ -481,10 +481,10 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
 	case F_GETFL:
 		err = filp->f_flags;
 		break;
-#if 0
 	case F_SETFL:
 		err = setfl(fd, filp, argi);
 		break;
+#if 0
 #if BITS_PER_LONG != 32
 	/* 32-bit arches must use fcntl64() */
 	case F_OFD_GETLK:
