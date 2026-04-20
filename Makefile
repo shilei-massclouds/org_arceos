@@ -245,7 +245,7 @@ $(ROOTFS_TARBALL):
 	@printf "    $(GREEN_C)Downloading$(END_C) rootfs tarball \"$(ROOTFS_TARBALL)\" ...\n"
 	@curl -f -L "$(ROOTFS_URL)" -o "$(ROOTFS_TARBALL)"
 
-$(ROOTFS_IMG): $(ROOTFS_TARBALL) scripts/init/lk_init.sh scripts/init/lk_inittab
+$(ROOTFS_IMG): $(ROOTFS_TARBALL) scripts/init/lk_sysinit.sh scripts/init/lk_init.sh scripts/init/lk_inittab
 	$(call make_rootfs_image_ext4_from_tarball,$@,$<)
 
 rootfs: $(ROOTFS_IMG)

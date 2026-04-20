@@ -34,6 +34,7 @@ define make_rootfs_image_ext4_from_tarball
   @set -e; \
     img="$(1)"; \
     tarball="$(2)"; \
+    sysinit="scripts/init/lk_sysinit.sh"; \
     script="scripts/init/lk_init.sh"; \
     inittab="scripts/init/lk_inittab"; \
     mnt_dir=$$(mktemp -d /tmp/lk-rootfs.XXXXXX); \
@@ -46,6 +47,10 @@ define make_rootfs_image_ext4_from_tarball
     trap cleanup EXIT; \
     if [ ! -f "$$tarball" ]; then \
       echo "rootfs tarball not found: $$tarball" >&2; \
+      exit 1; \
+    fi; \
+    if [ ! -f "$$sysinit" ]; then \
+      echo "lk sysinit script not found: $$sysinit" >&2; \
       exit 1; \
     fi; \
     if [ ! -f "$$script" ]; then \
@@ -65,8 +70,8 @@ define make_rootfs_image_ext4_from_tarball
     sudo tar -xzf "$$tarball" -C "$$mnt_dir"; \
     printf "    $(GREEN_C)Populated!$(END_C)\n"; \
     printf "    $(GREEN_C)Installing$(END_C) lk init files into \"$$img\" ...\n"; \
+    sudo install -D -m 0755 "$$sysinit" "$$mnt_dir/etc/lk_sysinit.sh"; \
     sudo install -D -m 0755 "$$script" "$$mnt_dir/etc/lk_init.sh"; \
     sudo install -D -m 0644 "$$inittab" "$$mnt_dir/etc/inittab"; \
-    printf "nameserver 10.0.2.3\n" | sudo tee "$$mnt_dir/etc/resolv.conf" >/dev/null; \
     printf "    $(GREEN_C)Updated!$(END_C)\n"
 endef
