@@ -1295,3 +1295,24 @@ int __net_init xfrm_sysctl_init(struct net *net)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+// net/ipv6/anycast.c
+int __net_init ac6_proc_init(struct net *net)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int proc_dou8vec_minmax(const struct ctl_table *table, int write,
+            void *buffer, size_t *lenp, loff_t *ppos)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int proc_do_large_bitmap(const struct ctl_table *table, int write,
+             void *buffer, size_t *lenp, loff_t *ppos)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
