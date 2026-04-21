@@ -212,6 +212,7 @@ static int audit_match_filetype(struct audit_context *ctx, int val)
 
 	return 0;
 }
+#endif // CL
 
 /*
  * We keep a linked list of fixed-sized (31 pointer) arrays of audit_chunk *;
@@ -298,6 +299,7 @@ static void unroll_tree_refs(struct audit_context *ctx,
 	ctx->trees = p;
 	ctx->tree_count = count;
 }
+#if 0
 
 static void free_tree_refs(struct audit_context *ctx)
 {
@@ -2117,6 +2119,7 @@ static inline void handle_one(const struct inode *inode)
 	}
 	put_tree_ref(context, chunk);
 }
+#endif // CL
 
 static void handle_path(const struct dentry *dentry)
 {
@@ -2175,7 +2178,6 @@ retry:
 	}
 	rcu_read_unlock();
 }
-#endif // CL
 
 static struct audit_names *audit_alloc_name(struct audit_context *context,
 						unsigned char type)
@@ -2252,7 +2254,6 @@ void __audit_getname(struct filename *name)
 	atomic_inc(&name->refcnt);
 }
 
-#if 0
 static inline int audit_copy_fcaps(struct audit_names *name,
 				   const struct dentry *dentry)
 {
@@ -2404,6 +2405,7 @@ void __audit_file(const struct file *file)
 	__audit_inode(NULL, file->f_path.dentry, 0);
 }
 
+#if 0
 /**
  * __audit_inode_child - collect inode info for created/removed objects
  * @parent: inode of dentry parent
@@ -2909,6 +2911,7 @@ void __audit_fanotify(u32 response, struct fanotify_response_info_audit_rule *fr
 			  friar->subj_trust, friar->obj_trust);
 	}
 }
+#endif // CL
 
 void __audit_tk_injoffset(struct timespec64 offset)
 {
@@ -2920,6 +2923,7 @@ void __audit_tk_injoffset(struct timespec64 offset)
 	memcpy(&context->time.tk_injoffset, &offset, sizeof(offset));
 }
 
+#if 0
 void __audit_ntp_log(const struct audit_ntp_data *ad)
 {
 	struct audit_context *context = audit_context();

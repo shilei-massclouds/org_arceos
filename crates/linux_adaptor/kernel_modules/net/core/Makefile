@@ -3,6 +3,7 @@
 obj-y += dev.o
 obj-y += dev_addr_lists.o
 obj-y += neighbour.o
+obj-y += hotdata.o
 obj-y += sock.o
 obj-y += scm.o
 obj-y += skbuff.o
@@ -16,6 +17,7 @@ obj-y += page_pool_user.o
 obj-y += netdev-genl-gen.o
 obj-y += xdp.o
 obj-y += gro.o
+obj-y += gso.o
 obj-y += gen_stats.o
 obj-y += dst.o
 obj-y += datagram.o

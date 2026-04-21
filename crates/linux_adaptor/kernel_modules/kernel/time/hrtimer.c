@@ -888,7 +888,6 @@ static void hrtimer_reprogram(struct hrtimer *timer, bool reprogram)
 	__hrtimer_reprogram(cpu_base, timer, expires);
 }
 
-#if 0
 static bool update_needs_ipi(struct hrtimer_cpu_base *cpu_base,
 			     unsigned int active)
 {
@@ -1003,6 +1002,7 @@ out_timerfd:
 	timerfd_clock_was_set();
 }
 
+#if 0
 static void clock_was_set_work(struct work_struct *work)
 {
 	clock_was_set(CLOCK_SET_WALL);

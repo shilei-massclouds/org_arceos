@@ -1139,6 +1139,8 @@ int tcp_sendmsg_locked(struct sock *sk, struct msghdr *msg, size_t size)
 
 restart:
 	mss_now = tcp_send_mss(sk, &size_goal, flags);
+	if (size_goal > mss_now)
+		size_goal = mss_now;
 
 	err = -EPIPE;
 	if (sk->sk_err || (sk->sk_shutdown & SEND_SHUTDOWN))
@@ -1168,7 +1170,6 @@ new_segment:
 						   first_skb);
 			if (!skb)
 				goto wait_for_space;
-
 			process_backlog++;
 
 #ifdef CONFIG_SKB_DECRYPTED
@@ -1194,8 +1195,9 @@ new_segment:
 			int i = skb_shinfo(skb)->nr_frags;
 			struct page_frag *pfrag = sk_page_frag(sk);
 
-			if (!sk_page_frag_refill(sk, pfrag))
+			if (!sk_page_frag_refill(sk, pfrag)) {
 				goto wait_for_space;
+			}
 
 			if (!skb_can_coalesce(skb, i, pfrag->page,
 					      pfrag->offset)) {
@@ -1215,8 +1217,9 @@ new_segment:
 			}
 
 			copy = tcp_wmem_schedule(sk, copy);
-			if (!copy)
+			if (!copy) {
 				goto wait_for_space;
+			}
 
 			err = skb_copy_to_page_nocache(sk, &msg->msg_iter, skb,
 						       pfrag->page,
@@ -1458,11 +1461,10 @@ static int tcp_peek_sndq(struct sock *sk, struct msghdr *msg, int len)
 void __tcp_cleanup_rbuf(struct sock *sk, int copied)
 {
 	struct tcp_sock *tp = tcp_sk(sk);
+	struct inet_connection_sock *icsk = inet_csk(sk);
 	bool time_to_ack = false;
 
 	if (inet_csk_ack_scheduled(sk)) {
-		const struct inet_connection_sock *icsk = inet_csk(sk);
-
 		if (/* Once-per-two-segments ACK was not sent by tcp_input.c */
 		    tp->rcv_nxt - tp->rcv_wup > icsk->icsk_ack.rcv_mss ||
 		    /*

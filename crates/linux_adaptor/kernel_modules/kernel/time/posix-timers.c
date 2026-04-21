@@ -1152,7 +1152,6 @@ void exit_itimers(struct task_struct *tsk)
 		itimer_delete(hlist_entry(timers.first, struct k_itimer, list));
 }
 
-#if 0
 SYSCALL_DEFINE2(clock_settime, const clockid_t, which_clock,
 		const struct __kernel_timespec __user *, tp)
 {
@@ -1171,7 +1170,6 @@ SYSCALL_DEFINE2(clock_settime, const clockid_t, which_clock,
 	 */
 	return kc->clock_set(which_clock, &new_tp);
 }
-#endif // CL
 
 SYSCALL_DEFINE2(clock_gettime, const clockid_t, which_clock,
 		struct __kernel_timespec __user *, tp)

@@ -94,7 +94,11 @@ ip_fragment(struct net *net, struct sock *sk, struct sk_buff *skb,
 void ip_send_check(struct iphdr *iph)
 {
 	iph->check = 0;
-	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
+	if (unlikely((unsigned long)iph & 3))
+		iph->check = csum_fold(csum_partial((unsigned char *)iph,
+						    iph->ihl * 4, 0));
+	else
+		iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 }
 EXPORT_SYMBOL(ip_send_check);
 

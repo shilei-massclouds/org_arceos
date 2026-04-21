@@ -34,8 +34,6 @@
 #include <linux/vmalloc.h>
 
 #include <linux/uaccess.h>
-
-
 /*
  * Estimate expected accuracy in ns from a timeval.
  *
@@ -378,7 +376,6 @@ typedef struct {
 #define FDS_LONGS(nr)	(((nr)+FDS_BITPERLONG-1)/FDS_BITPERLONG)
 #define FDS_BYTES(nr)	(FDS_LONGS(nr)*sizeof(long))
 
-#if 0
 /*
  * Use "unsigned long" accesses to let user-mode fd_set's be long-aligned.
  */
@@ -696,7 +693,6 @@ out:
 out_nofds:
 	return ret;
 }
-
 static int kern_select(int n, fd_set __user *inp, fd_set __user *outp,
 		       fd_set __user *exp, struct __kernel_old_timeval __user *tvp)
 {
@@ -834,8 +830,6 @@ SYSCALL_DEFINE1(old_select, struct sel_arg_struct __user *, arg)
 	return kern_select(a.n, a.inp, a.outp, a.exp, a.tvp);
 }
 #endif
-#endif // CL
-
 struct poll_list {
 	struct poll_list *next;
 	unsigned int len;

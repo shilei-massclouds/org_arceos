@@ -691,7 +691,6 @@ static void timekeeping_update(struct timekeeper *tk, unsigned int action)
 		       sizeof(tk_core.timekeeper));
 }
 
-#if 0
 /**
  * timekeeping_forward_now - update clock to the current time
  * @tk:		Pointer to the timekeeper to update
@@ -720,7 +719,6 @@ static void timekeeping_forward_now(struct timekeeper *tk)
 		delta -= incr;
 	}
 }
-#endif // CL
 
 /**
  * ktime_get_real_ts64 - Returns the time of day in a timespec64.
@@ -815,7 +813,6 @@ ktime_t ktime_get_with_offset(enum tk_offsets offs)
 }
 EXPORT_SYMBOL_GPL(ktime_get_with_offset);
 
-#if 0
 ktime_t ktime_get_coarse_with_offset(enum tk_offsets offs)
 {
 	struct timekeeper *tk = &tk_core.timekeeper;
@@ -876,8 +873,6 @@ ktime_t ktime_get_raw(void)
 	return ktime_add_ns(base, nsecs);
 }
 EXPORT_SYMBOL_GPL(ktime_get_raw);
-#endif // CL
-
 /**
  * ktime_get_ts64 - get the monotonic clock in timespec64 format
  * @ts:		pointer to timespec variable
@@ -956,7 +951,6 @@ time64_t ktime_get_real_seconds(void)
 }
 EXPORT_SYMBOL_GPL(ktime_get_real_seconds);
 
-#if 0
 /**
  * __ktime_get_real_seconds - The same as ktime_get_real_seconds
  * but without the sequence counter protect. This internal function
@@ -1478,7 +1472,6 @@ void timekeeping_warp_clock(void)
 		timekeeping_inject_offset(&adjust);
 	}
 }
-#endif /* CL */
 
 /*
  * __timekeeping_set_tai_offset - Sets the TAI offset from UTC and monotonic

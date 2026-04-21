@@ -133,12 +133,6 @@ void __init uprobes_init(void)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
-// kernel/time/vsyscall.c
-void update_vsyscall(struct timekeeper *tk)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 // kernel/power/main.c
 int register_pm_notifier(struct notifier_block *nb)
 {
@@ -160,6 +154,12 @@ int security_task_alloc(struct task_struct *task, unsigned long clone_flags)
 }
 
 int security_task_setscheduler(struct task_struct *p)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_settime64(const struct timespec64 *ts, const struct timezone *tz)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
@@ -980,13 +980,6 @@ int net_sysctl_init(void)
     return 0;
 }
 
-// net/ipv4/protocol.c
-// net/core/hotdata.c
-struct net_hotdata net_hotdata __cacheline_aligned = {
-    .offload_base = LIST_HEAD_INIT(net_hotdata.offload_base),
-    .ptype_all = LIST_HEAD_INIT(net_hotdata.ptype_all),
-};
-
 int security_socket_create(int family, int type, int protocol, int kern)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -1181,12 +1174,6 @@ int ip_misc_proc_init(void)
 }
 
 
-// fs/seq_file.c
-void seq_pad(struct seq_file *m, char c)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 // net/core/netevent.c
 int call_netevent_notifiers(unsigned long val, void *v)
 {
@@ -1310,4 +1297,72 @@ void set_proc_pid_nlink(void)
 void proc_flush_pid(struct pid *pid)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_path_chmod(const struct path *path, umode_t mode)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_path_chown(const struct path *path, kuid_t uid, kgid_t gid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void security_inode_getsecid(struct inode *inode, u32 *secid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    if (secid)
+        *secid = 0;
+}
+
+void security_audit_rule_free(void *lsmrule)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_audit_rule_init(u32 field, u32 op, char *rulestr, void **lsmrule,
+                 gfp_t gfp)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    if (lsmrule)
+        *lsmrule = NULL;
+    return 0;
+}
+
+void security_current_getsecid_subj(u32 *secid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    if (secid)
+        *secid = 0;
+}
+
+int security_audit_rule_match(u32 secid, u32 field, u32 op, void *lsmrule)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_audit_rule_known(struct audit_krule *krule)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
+              struct inode *new_dir, struct dentry *new_dentry,
+              unsigned int flags)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_path_rename(const struct path *old_dir, struct dentry *old_dentry,
+             const struct path *new_dir, struct dentry *new_dentry,
+             unsigned int flags)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
 }

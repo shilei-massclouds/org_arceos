@@ -8,6 +8,7 @@ obj-y += sched_clock.o
 obj-y += posix-cpu-timers.o
 obj-y += posix-timers.o
 obj-y += timekeeping.o
+obj-y += vsyscall.o
 obj-y += ntp.o
 obj-y += jiffies.o
 obj-y += namespace.o

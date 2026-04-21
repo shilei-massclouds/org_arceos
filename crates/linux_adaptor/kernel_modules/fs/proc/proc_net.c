@@ -267,6 +267,7 @@ EXPORT_SYMBOL_GPL(proc_create_net_single_write);
 
 static struct net *get_proc_task_net(struct inode *dir)
 {
+	struct proc_dir_entry *de;
 	struct task_struct *task;
 	struct nsproxy *ns;
 	struct net *net = NULL;
@@ -281,6 +282,13 @@ static struct net *get_proc_task_net(struct inode *dir)
 		task_unlock(task);
 	}
 	rcu_read_unlock();
+
+	if (net)
+		return net;
+
+	de = PDE(dir);
+	if (de && de->data)
+		return maybe_get_net((struct net *)de->data);
 
 	return net;
 }
@@ -412,7 +420,19 @@ static struct pernet_operations __net_initdata proc_net_ns_ops = {
 
 int __init proc_net_init(void)
 {
-	proc_symlink("net", NULL, "self/net");
+	struct proc_dir_entry *root_net;
+	int ret;
 
-	return register_pernet_subsys(&proc_net_ns_ops);
+	ret = register_pernet_subsys(&proc_net_ns_ops);
+	if (ret)
+		return ret;
+
+	root_net = proc_mkdir_data("net-root", S_IRUGO | S_IXUGO, NULL, &init_net);
+	if (root_net) {
+		root_net->proc_iops = &proc_net_inode_operations;
+		root_net->proc_dir_ops = &proc_net_operations;
+	}
+
+	proc_symlink("net", NULL, "net-root");
+	return 0;
 }

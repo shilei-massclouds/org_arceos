@@ -1606,7 +1606,6 @@ int generic_check_addressable(unsigned blocksize_bits, u64 num_blocks)
 }
 EXPORT_SYMBOL(generic_check_addressable);
 
-#if 0
 /*
  * No-op implementation of ->fsync for in-memory filesystems.
  */
@@ -1634,7 +1633,7 @@ void kfree_link(void *p)
 	kfree(p);
 }
 EXPORT_SYMBOL(kfree_link);
-
+#if 0
 struct inode *alloc_anon_inode(struct super_block *s)
 {
 	static const struct address_space_operations anon_aops = {

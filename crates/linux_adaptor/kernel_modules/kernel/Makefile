@@ -29,6 +29,7 @@ obj-y += sys.o
 obj-y += stop_machine.o
 obj-y += params.o
 obj-y += resource.o
+obj-y += auditfilter.o
 obj-y += auditsc.o
 obj-y += async.o
 obj-y += sys_ni.o

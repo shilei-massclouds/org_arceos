@@ -313,7 +313,6 @@ long prepare_to_wait_event(struct wait_queue_head *wq_head, struct wait_queue_en
 }
 EXPORT_SYMBOL(prepare_to_wait_event);
 
-#if 0
 /*
  * Note! These two wait functions are entered with the
  * wait-queue lock held (and interrupts off in the _irq
@@ -354,7 +353,6 @@ int do_wait_intr_irq(wait_queue_head_t *wq, wait_queue_entry_t *wait)
 	return 0;
 }
 EXPORT_SYMBOL(do_wait_intr_irq);
-#endif // CL
 
 /**
  * finish_wait - clean up after waiting in a queue

@@ -154,6 +154,8 @@ COMPAT_SYSCALL_DEFINE2(truncate, const char __user *, path, compat_off_t, length
 }
 #endif
 
+#endif // CL
+
 long do_ftruncate(struct file *file, loff_t length, int small)
 {
 	struct inode *inode;
@@ -208,6 +210,7 @@ SYSCALL_DEFINE2(ftruncate, unsigned int, fd, off_t, length)
 	return do_sys_ftruncate(fd, length, 1);
 }
 
+#if 0
 #ifdef CONFIG_COMPAT
 COMPAT_SYSCALL_DEFINE2(ftruncate, unsigned int, fd, compat_off_t, length)
 {
@@ -638,6 +641,7 @@ dput_and_out:
 out:
 	return error;
 }
+#endif // CL
 
 int chmod_common(const struct path *path, umode_t mode)
 {
@@ -687,6 +691,19 @@ SYSCALL_DEFINE2(fchmod, unsigned int, fd, umode_t, mode)
 	return err;
 }
 
+#if 0
+asmlinkage __visible __used long __riscv_sys_fchmod(const struct pt_regs *regs)
+{
+	struct fd f = fdget((unsigned int)regs->orig_a0);
+	int err = -EBADF;
+
+	if (fd_file(f)) {
+		err = vfs_fchmod(fd_file(f), (umode_t)regs->a1);
+		fdput(f);
+	}
+	return err;
+}
+
 static int do_fchmodat(int dfd, const char __user *filename, umode_t mode,
 		       unsigned int flags)
 {
@@ -730,6 +747,7 @@ SYSCALL_DEFINE2(chmod, const char __user *, filename, umode_t, mode)
 {
 	return do_fchmodat(AT_FDCWD, filename, mode, 0);
 }
+#endif // CL
 
 /*
  * Check whether @kuid is valid and if so generate and set vfsuid_t in
@@ -807,6 +825,7 @@ retry_deleg:
 	return error;
 }
 
+#if 0
 int do_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group,
 		int flag)
 {
@@ -855,6 +874,7 @@ SYSCALL_DEFINE3(lchown, const char __user *, filename, uid_t, user, gid_t, group
 	return do_fchownat(AT_FDCWD, filename, user, group,
 			   AT_SYMLINK_NOFOLLOW);
 }
+#endif // CL
 
 int vfs_fchown(struct file *file, uid_t user, gid_t group)
 {
@@ -885,7 +905,6 @@ SYSCALL_DEFINE3(fchown, unsigned int, fd, uid_t, user, gid_t, group)
 {
 	return ksys_fchown(fd, user, group);
 }
-#endif // CL
 
 static inline int file_get_write_access(struct file *f)
 {

@@ -638,6 +638,7 @@ struct inode *proc_get_inode(struct super_block *sb, struct proc_dir_entry *de)
 	inode->i_private = de->data;
 	inode->i_ino = de->low_ino;
 	simple_inode_init_ts(inode);
+	inode->i_flags |= S_NOATIME;
 	PROC_I(inode)->pde = de;
 	if (is_empty_pde(de)) {
 		make_empty_dir_inode(inode);

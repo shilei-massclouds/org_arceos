@@ -3136,7 +3136,6 @@ static inline int may_create(struct mnt_idmap *idmap,
 	return inode_permission(idmap, dir, MAY_WRITE | MAY_EXEC);
 }
 
-#if 0
 // p1 != p2, both are on the same filesystem, ->s_vfs_rename_mutex is held
 static struct dentry *lock_two_directories(struct dentry *p1, struct dentry *p2)
 {
@@ -3185,6 +3184,7 @@ struct dentry *lock_rename(struct dentry *p1, struct dentry *p2)
 }
 EXPORT_SYMBOL(lock_rename);
 
+#if 0
 /*
  * c1 and p2 should be on the same fs.
  */
@@ -3226,6 +3226,7 @@ struct dentry *lock_rename_child(struct dentry *c1, struct dentry *p2)
 	return NULL;
 }
 EXPORT_SYMBOL(lock_rename_child);
+#endif // CL
 
 void unlock_rename(struct dentry *p1, struct dentry *p2)
 {
@@ -3236,7 +3237,6 @@ void unlock_rename(struct dentry *p1, struct dentry *p2)
 	}
 }
 EXPORT_SYMBOL(unlock_rename);
-#endif // CL
 
 /**
  * vfs_prepare_mode - prepare the mode to be used for a new inode
@@ -4874,6 +4874,7 @@ SYSCALL_DEFINE2(link, const char __user *, oldname, const char __user *, newname
 {
 	return do_linkat(AT_FDCWD, getname(oldname), AT_FDCWD, getname(newname), 0);
 }
+#endif // CL
 
 /**
  * vfs_rename - rename a filesystem object
@@ -5237,6 +5238,7 @@ SYSCALL_DEFINE5(renameat2, int, olddfd, const char __user *, oldname,
 				flags);
 }
 
+#if 0
 SYSCALL_DEFINE4(renameat, int, olddfd, const char __user *, oldname,
 		int, newdfd, const char __user *, newname)
 {

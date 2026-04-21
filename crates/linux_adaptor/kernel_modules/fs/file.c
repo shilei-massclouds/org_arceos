@@ -1036,7 +1036,6 @@ struct file *fget(unsigned int fd)
 }
 EXPORT_SYMBOL(fget);
 
-#if 0
 struct file *fget_raw(unsigned int fd)
 {
 	return __fget(fd, 0);
@@ -1098,8 +1097,6 @@ struct file *task_lookup_next_fdget_rcu(struct task_struct *task, unsigned int *
 	return file;
 }
 EXPORT_SYMBOL(task_lookup_next_fdget_rcu);
-#endif // CL
-
 /*
  * Lightweight file lookup - no refcnt increment if fd table isn't shared.
  *
@@ -1380,7 +1377,6 @@ SYSCALL_DEFINE3(dup3, unsigned int, oldfd, unsigned int, newfd, int, flags)
 	return ksys_dup3(oldfd, newfd, flags);
 }
 
-#if 0
 SYSCALL_DEFINE2(dup2, unsigned int, oldfd, unsigned int, newfd)
 {
 	if (unlikely(newfd == oldfd)) { /* corner case */
@@ -1414,7 +1410,6 @@ SYSCALL_DEFINE1(dup, unsigned int, fildes)
 	}
 	return ret;
 }
-#endif // CL
 
 int f_dupfd(unsigned int from, struct file *file, unsigned flags)
 {

@@ -728,7 +728,6 @@ int kthread_stop(struct task_struct *k)
 }
 EXPORT_SYMBOL(kthread_stop);
 
-#if 0
 /**
  * kthread_stop_put - stop a thread and put its task struct
  * @k: thread created by kthread_create().
@@ -746,7 +745,6 @@ int kthread_stop_put(struct task_struct *k)
 	return ret;
 }
 EXPORT_SYMBOL(kthread_stop_put);
-#endif /* CL */
 
 int kthreadd(void *unused)
 {

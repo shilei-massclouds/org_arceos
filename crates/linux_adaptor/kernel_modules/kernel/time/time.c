@@ -43,7 +43,6 @@
 #include <generated/timeconst.h>
 #include "timekeeping.h"
 
-#if 0
 /*
  * The timezone where the local system is located.  Used as a default by some
  * programs who obtain this value by using gettimeofday.
@@ -165,6 +164,8 @@ SYSCALL_DEFINE2(gettimeofday, struct __kernel_old_timeval __user *, tv,
  * timezones. This should be done at boot time in the /etc/rc script,
  * as soon as possible, so that the clock can be set right. Otherwise,
  * various programs will get confused when the clock gets warped.
+ *
+ * Shared helper for the legacy settimeofday and POSIX clock_settime paths.
  */
 
 int do_sys_settimeofday64(const struct timespec64 *tv, const struct timezone *tz)
@@ -365,8 +366,6 @@ SYSCALL_DEFINE1(adjtimex_time32, struct old_timex32 __user *, utp)
 	return ret;
 }
 #endif
-
-#endif /* CL */
 
 /**
  * jiffies_to_msecs - Convert jiffies to milliseconds
@@ -921,7 +920,6 @@ int put_timespec64(const struct timespec64 *ts,
 }
 EXPORT_SYMBOL_GPL(put_timespec64);
 
-#if 0
 static int __get_old_timespec32(struct timespec64 *ts64,
 				   const struct old_timespec32 __user *cts)
 {
@@ -1065,5 +1063,3 @@ int put_old_itimerspec32(const struct itimerspec64 *its,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(put_old_itimerspec32);
-
-#endif /* CL */

@@ -972,7 +972,6 @@ long prune_icache_sb(struct super_block *sb, struct shrink_control *sc)
 #endif /* CL */
 
 static void __wait_on_freeing_inode(struct inode *inode, bool is_inode_hash_locked);
-#if 0
 /*
  * Called with the inode lock held.
  */
@@ -1013,7 +1012,6 @@ repeat:
 	rcu_read_unlock();
 	return NULL;
 }
-#endif // CL
 
 /*
  * find_inode_fast is the fast path version of find_inode, see the comment at
@@ -1183,7 +1181,6 @@ void unlock_new_inode(struct inode *inode)
 }
 EXPORT_SYMBOL(unlock_new_inode);
 
-#if 0
 void discard_new_inode(struct inode *inode)
 {
 	lockdep_annotate_inode_mutex_key(inode);
@@ -1396,7 +1393,6 @@ again:
 	return inode;
 }
 EXPORT_SYMBOL_GPL(iget5_locked_rcu);
-#endif // CL
 
 /**
  * iget_locked - obtain an inode from a mounted file system
@@ -1836,12 +1832,13 @@ int insert_inode_locked4(struct inode *inode, unsigned long hashval,
 EXPORT_SYMBOL(insert_inode_locked4);
 
 
+#endif /* CL */
+
 int generic_delete_inode(struct inode *inode)
 {
 	return 1;
 }
 EXPORT_SYMBOL(generic_delete_inode);
-#endif /* CL */
 
 /*
  * Called when we're dropping the last reference

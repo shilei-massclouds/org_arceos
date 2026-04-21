@@ -40,7 +40,6 @@
 #include "internal.h"
 #include "adaptor.h"
 
-#if 0
 /*
  * Splice doesn't support FMODE_NOWAIT. Since pipes may set this flag to
  * indicate they support non-blocking reads or writes, we must clear it
@@ -402,8 +401,6 @@ ssize_t copy_splice_read(struct file *in, loff_t *ppos,
 	return ret;
 }
 EXPORT_SYMBOL(copy_splice_read);
-#endif // CL
-
 const struct pipe_buf_operations default_pipe_buf_ops = {
 	.release	= generic_pipe_buf_release,
 	.try_steal	= generic_pipe_buf_try_steal,
@@ -417,7 +414,6 @@ const struct pipe_buf_operations nosteal_pipe_buf_ops = {
 };
 EXPORT_SYMBOL(nosteal_pipe_buf_ops);
 
-#if 0
 static void wakeup_pipe_writers(struct pipe_inode_info *pipe)
 {
 	smp_mb();
@@ -2031,4 +2027,3 @@ SYSCALL_DEFINE4(tee, int, fdin, int, fdout, size_t, len, unsigned int, flags)
 
 	return error;
 }
-#endif // CL

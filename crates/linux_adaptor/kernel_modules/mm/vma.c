@@ -1486,7 +1486,6 @@ struct vm_area_struct *vma_modify_flags(
 	return vma_modify(&vmg);
 }
 
-#if 0
 struct vm_area_struct
 *vma_modify_flags_name(struct vma_iterator *vmi,
 		       struct vm_area_struct *prev,
@@ -1552,7 +1551,6 @@ struct vm_area_struct *vma_merge_extend(struct vma_iterator *vmi,
 
 	return vma_merge_new_range(&vmg);
 }
-#endif // CL
 
 void unlink_file_vma_batch_init(struct unlink_vma_file_batch *vb)
 {
@@ -1595,7 +1593,6 @@ void unlink_file_vma_batch_final(struct unlink_vma_file_batch *vb)
 		unlink_file_vma_batch_process(vb);
 }
 
-#if 0
 /*
  * Unlink a file-based vm structure from its interval tree, to hide
  * vma from rmap and vmtruncate before freeing its page tables.
@@ -1612,7 +1609,6 @@ void unlink_file_vma(struct vm_area_struct *vma)
 		i_mmap_unlock_write(mapping);
 	}
 }
-#endif // CL
 
 void vma_link_file(struct vm_area_struct *vma)
 {
@@ -1643,7 +1639,6 @@ int vma_link(struct mm_struct *mm, struct vm_area_struct *vma)
 	return 0;
 }
 
-#if 0
 /*
  * Copy the vma structure to a new location in the same mm,
  * prior to moving page table entries, to effect an mremap move.
@@ -1733,7 +1728,6 @@ out_free_vma:
 out:
 	return NULL;
 }
-#endif // CL
 
 /*
  * Rough compatibility check to quickly see if it's even worth looking

@@ -2880,7 +2880,6 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
 }
 EXPORT_SYMBOL(generic_file_read_iter);
 
-#if 0
 /*
  * Splice subpages from a folio into a pipe.
  */
@@ -3130,8 +3129,6 @@ unlock:
 		return end;
 	return start;
 }
-#endif // CL
-
 #ifdef CONFIG_MMU
 #define MMAP_LOTSAMISS  (100)
 /*

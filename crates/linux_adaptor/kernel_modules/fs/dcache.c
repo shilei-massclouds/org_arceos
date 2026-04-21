@@ -319,7 +319,6 @@ static inline int dname_external(const struct dentry *dentry)
 	return dentry->d_name.name != dentry->d_iname;
 }
 
-#if 0
 void take_dentry_name_snapshot(struct name_snapshot *name, struct dentry *dentry)
 {
 	spin_lock(&dentry->d_lock);
@@ -345,7 +344,6 @@ void release_dentry_name_snapshot(struct name_snapshot *name)
 	}
 }
 EXPORT_SYMBOL(release_dentry_name_snapshot);
-#endif // CL
 
 static inline void __d_set_inode_and_type(struct dentry *dentry,
 					  struct inode *inode,
@@ -2627,7 +2625,6 @@ static wait_queue_head_t *__d_lookup_unhash(struct dentry *dentry)
 	return d_wait;
 }
 
-#if 0
 void __d_lookup_unhash_wake(struct dentry *dentry)
 {
 	spin_lock(&dentry->d_lock);
@@ -2635,7 +2632,6 @@ void __d_lookup_unhash_wake(struct dentry *dentry)
 	spin_unlock(&dentry->d_lock);
 }
 EXPORT_SYMBOL(__d_lookup_unhash_wake);
-#endif // CL
 
 /* inode->i_lock held if inode is non-NULL */
 
@@ -2890,7 +2886,6 @@ static void __d_move(struct dentry *dentry, struct dentry *target,
 	spin_unlock(&dentry->d_lock);
 }
 
-#if 0
 /*
  * d_move - move a dentry
  * @dentry: entry to move
@@ -2926,7 +2921,6 @@ void d_exchange(struct dentry *dentry1, struct dentry *dentry2)
 
 	write_sequnlock(&rename_lock);
 }
-#endif // CL
 
 /**
  * d_ancestor - search for an ancestor
@@ -3058,7 +3052,6 @@ out:
 }
 EXPORT_SYMBOL(d_splice_alias);
 
-#if 0
 /*
  * Test whether new_dentry is a subdirectory of old_dentry.
  *
@@ -3144,7 +3137,6 @@ void d_tmpfile(struct file *file, struct inode *inode)
 	d_instantiate(dentry, inode);
 }
 EXPORT_SYMBOL(d_tmpfile);
-#endif // CL
 
 /*
  * Obtain inode number of the parent dentry.

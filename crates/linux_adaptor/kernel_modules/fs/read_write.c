@@ -878,7 +878,6 @@ static ssize_t do_loop_readv_writev(struct file *filp, struct iov_iter *iter,
 	return ret;
 }
 
-#if 0
 ssize_t vfs_iocb_iter_read(struct file *file, struct kiocb *iocb,
 			   struct iov_iter *iter)
 {
@@ -1038,7 +1037,6 @@ out:
 	kfree(iov);
 	return ret;
 }
-#endif // CL
 
 static ssize_t vfs_writev(struct file *file, const struct iovec __user *vec,
 			  unsigned long vlen, loff_t *pos, rwf_t flags)
@@ -1080,7 +1078,6 @@ out:
 	return ret;
 }
 
-#if 0
 static ssize_t do_readv(unsigned long fd, const struct iovec __user *vec,
 			unsigned long vlen, rwf_t flags)
 {
@@ -1104,7 +1101,6 @@ static ssize_t do_readv(unsigned long fd, const struct iovec __user *vec,
 	inc_syscr(current);
 	return ret;
 }
-#endif // CL
 
 static ssize_t do_writev(unsigned long fd, const struct iovec __user *vec,
 			 unsigned long vlen, rwf_t flags)
@@ -1130,7 +1126,6 @@ static ssize_t do_writev(unsigned long fd, const struct iovec __user *vec,
 	return ret;
 }
 
-#if 0
 static inline loff_t pos_from_hilo(unsigned long high, unsigned long low)
 {
 #define HALF_LONG_BITS (BITS_PER_LONG / 2)
@@ -1188,7 +1183,6 @@ SYSCALL_DEFINE3(readv, unsigned long, fd, const struct iovec __user *, vec,
 {
 	return do_readv(fd, vec, vlen, 0);
 }
-#endif // CL
 
 SYSCALL_DEFINE3(writev, unsigned long, fd, const struct iovec __user *, vec,
 		unsigned long, vlen)
