@@ -1793,7 +1793,6 @@ struct dentry *d_alloc_pseudo(struct super_block *sb, const struct qstr *name)
 	return dentry;
 }
 
-#if 0
 struct dentry *d_alloc_name(struct dentry *parent, const char *name)
 {
 	struct qstr q;
@@ -1803,7 +1802,6 @@ struct dentry *d_alloc_name(struct dentry *parent, const char *name)
 	return d_alloc(parent, &q);
 }
 EXPORT_SYMBOL(d_alloc_name);
-#endif // CL
 
 void d_set_d_op(struct dentry *dentry, const struct dentry_operations *op)
 {

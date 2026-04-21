@@ -420,29 +420,37 @@ const struct bus_type pci_bus_type;
  */
 unsigned long __read_mostly sysctl_hung_task_timeout_secs = CONFIG_DEFAULT_HUNG_TASK_TIMEOUT;
 
-void set_proc_pid_nlink(void)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
-void proc_self_init(void)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
-void proc_thread_self_init(void)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 void proc_tty_init(void)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
+struct dentry *proc_pid_lookup(struct dentry *dentry, unsigned int flags)
+{
+    pr_dummy("--> NOTE: %s: fake no-pid lookup for %pd2.\n", __func__, dentry);
+    return ERR_PTR(-ENOENT);
+}
+
+int proc_pid_readdir(struct file *file, struct dir_context *ctx)
+{
+    pr_dummy("--> NOTE: %s: fake empty pid readdir.\n", __func__);
+    return 0;
+}
+
+void proc_pid_evict_inode(struct proc_inode *ei)
+{
+    pr_dummy("--> NOTE: %s: fake no-op.\n", __func__);
+}
+
 int proc_sys_init(void)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int nr_processes(void)
+{
+    pr_dummy("--> NOTE: %s: fake 0.\n", __func__);
     return 0;
 }
 
@@ -746,11 +754,6 @@ void tty_kref_put(struct tty_struct *tty)
 }
 
 // fs/proc/base.c
-void proc_flush_pid(struct pid *pid)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 void __io_uring_free(struct task_struct *tsk)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -1298,4 +1301,13 @@ int proc_do_large_bitmap(const struct ctl_table *table, int write,
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
+}
+void set_proc_pid_nlink(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void proc_flush_pid(struct pid *pid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }

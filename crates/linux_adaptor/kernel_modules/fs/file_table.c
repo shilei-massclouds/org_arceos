@@ -392,7 +392,6 @@ struct file *alloc_file_pseudo_noaccount(struct inode *inode,
 }
 EXPORT_SYMBOL_GPL(alloc_file_pseudo_noaccount);
 
-#if 0
 struct file *alloc_file_clone(struct file *base, int flags,
 				const struct file_operations *fops)
 {
@@ -405,7 +404,6 @@ struct file *alloc_file_clone(struct file *base, int flags,
 	}
 	return f;
 }
-#endif // CL
 
 /* the real guts of fput() - releasing the last reference to file
  */

@@ -205,7 +205,6 @@ char *kmemdup_nul(const char *s, size_t len, gfp_t gfp)
 }
 EXPORT_SYMBOL(kmemdup_nul);
 
-#if 0
 static kmem_buckets *user_buckets __ro_after_init;
 
 static int __init init_user_buckets(void)
@@ -267,7 +266,6 @@ void *vmemdup_user(const void __user *src, size_t len)
 	return p;
 }
 EXPORT_SYMBOL(vmemdup_user);
-#endif // CL
 
 /**
  * strndup_user - duplicate an existing string from user space
@@ -300,7 +298,6 @@ char *strndup_user(const char __user *s, long n)
 }
 EXPORT_SYMBOL(strndup_user);
 
-#if 0
 /**
  * memdup_user_nul - duplicate memory region from user space and NUL-terminate
  *
@@ -351,7 +348,6 @@ void vma_set_file(struct vm_area_struct *vma, struct file *file)
 	fput(file);
 }
 EXPORT_SYMBOL(vma_set_file);
-#endif // CL
 
 #ifndef STACK_RND_MASK
 #define STACK_RND_MASK (0x7ff >> (PAGE_SHIFT - 12))     /* 8MB of VA */

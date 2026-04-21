@@ -358,7 +358,6 @@ EXPORT_SYMBOL(__kmem_cache_create_args);
 
 static struct kmem_cache *kmem_buckets_cache __ro_after_init;
 
-#if 0
 /**
  * kmem_buckets_create - Create a set of caches that handle dynamic sized
  *			 allocations via kmem_buckets_alloc()
@@ -457,7 +456,6 @@ fail:
 	return NULL;
 }
 EXPORT_SYMBOL(kmem_buckets_create);
-#endif // CL
 
 /*
  * For a given kmem_cache, kmem_cache_destroy() should only be called
