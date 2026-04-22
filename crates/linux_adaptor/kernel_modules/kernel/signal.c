@@ -4185,6 +4185,7 @@ COMPAT_SYSCALL_DEFINE4(rt_tgsigqueueinfo,
 }
 #endif
 
+#endif // CL
 /*
  * For kthreads only, must not be used if cloned with CLONE_SIGHAND
  */
@@ -4205,7 +4206,6 @@ void kernel_sigaction(int sig, __sighandler_t action)
 	spin_unlock_irq(&current->sighand->siglock);
 }
 EXPORT_SYMBOL(kernel_sigaction);
-#endif // CL
 
 void __weak sigaction_compat_abi(struct k_sigaction *act,
 		struct k_sigaction *oact)

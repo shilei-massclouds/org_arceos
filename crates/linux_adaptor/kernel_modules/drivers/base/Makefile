@@ -3,6 +3,7 @@
 CFLAGS_trace.o := -I$(curdir)
 
 obj-y += core.o
+obj-y += syscore.o
 obj-y += property.o
 obj-y += swnode.o
 obj-y += cpu.o

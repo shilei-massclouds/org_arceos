@@ -616,7 +616,6 @@ void __init cred_init(void)
 			      SLAB_HWCACHE_ALIGN | SLAB_PANIC | SLAB_ACCOUNT);
 }
 
-#if 0
 /**
  * prepare_kernel_cred - Prepare a set of credentials for a kernel service
  * @daemon: A userspace daemon to be used as a reference
@@ -683,6 +682,8 @@ error:
 	return NULL;
 }
 EXPORT_SYMBOL(prepare_kernel_cred);
+
+#if 0
 
 /**
  * set_security_override - Set the security ID in a set of credentials

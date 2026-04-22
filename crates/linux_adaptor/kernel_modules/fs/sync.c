@@ -22,7 +22,6 @@
 #define VALID_FLAGS (SYNC_FILE_RANGE_WAIT_BEFORE|SYNC_FILE_RANGE_WRITE| \
 			SYNC_FILE_RANGE_WAIT_AFTER)
 
-#if 0
 /*
  * Write out and wait upon all dirty data associated with this
  * superblock.  Filesystem data as well as the underlying block
@@ -166,7 +165,6 @@ SYSCALL_DEFINE1(syncfs, int, fd)
 	fdput(f);
 	return ret ? ret : ret2;
 }
-#endif // CL
 
 /**
  * vfs_fsync_range - helper to sync a range of data & metadata to disk
@@ -191,7 +189,6 @@ int vfs_fsync_range(struct file *file, loff_t start, loff_t end, int datasync)
 }
 EXPORT_SYMBOL(vfs_fsync_range);
 
-#if 0
 /**
  * vfs_fsync - perform a fsync or fdatasync on a file
  * @file:		file to sync
@@ -227,7 +224,6 @@ SYSCALL_DEFINE1(fdatasync, unsigned int, fd)
 {
 	return do_fsync(fd, 1);
 }
-#endif // CL
 
 int sync_file_range(struct file *file, loff_t offset, loff_t nbytes,
 		    unsigned int flags)
@@ -306,7 +302,6 @@ out:
 	return ret;
 }
 
-#if 0
 /*
  * ksys_sync_file_range() permits finely controlled syncing over a segment of
  * a file in the range offset .. (offset+nbytes-1) inclusive.  If nbytes is
@@ -394,5 +389,3 @@ SYSCALL_DEFINE4(sync_file_range2, int, fd, unsigned int, flags,
 {
 	return ksys_sync_file_range(fd, offset, nbytes, flags);
 }
-
-#endif // CL

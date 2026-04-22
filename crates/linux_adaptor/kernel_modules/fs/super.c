@@ -806,7 +806,6 @@ share_extant_sb:
 }
 EXPORT_SYMBOL(sget_fc);
 
-#if 0
 /**
  *	sget	-	find or create a superblock
  *	@type:	  filesystem type superblock should belong to
@@ -1188,7 +1187,6 @@ void emergency_thaw_all(void)
 		schedule_work(work);
 	}
 }
-#endif // CL
 
 static DEFINE_IDA(unnamed_dev_ida);
 

@@ -200,7 +200,6 @@ static void wb_queue_work(struct bdi_writeback *wb,
 	spin_unlock_irq(&wb->work_lock);
 }
 
-#if 0
 /**
  * wb_wait_for_completion - wait for completion of bdi_writeback_works
  * @done: target wb_completion
@@ -216,7 +215,6 @@ void wb_wait_for_completion(struct wb_completion *done)
 	atomic_dec(&done->cnt);		/* put down the initial count */
 	wait_event(*done->waitq, !atomic_read(&done->cnt));
 }
-#endif // CL
 
 #ifdef CONFIG_CGROUP_WRITEBACK
 
@@ -1239,7 +1237,6 @@ static unsigned long get_nr_dirty_pages(void)
 		get_nr_dirty_inodes();
 }
 
-#if 0
 static void wb_start_writeback(struct bdi_writeback *wb, enum wb_reason reason)
 {
 	if (!wb_has_dirty_io(wb))
@@ -1280,7 +1277,6 @@ void wb_start_background_writeback(struct bdi_writeback *wb)
 	trace_writeback_wake_background(wb);
 	wb_wakeup(wb);
 }
-#endif // CL
 
 /*
  * Remove the inode from the writeback list it is on.
@@ -2339,7 +2335,6 @@ void wb_workfn(struct work_struct *work)
 		wb_wakeup_delayed(wb);
 }
 
-#if 0
 /*
  * Start writeback of all dirty pages on this bdi.
  */
@@ -2380,6 +2375,7 @@ void wakeup_flusher_threads(enum wb_reason reason)
 		__wakeup_flusher_threads_bdi(bdi, reason);
 	rcu_read_unlock();
 }
+#if 0
 
 /*
  * Wake up bdi's periodically to make sure dirtytime inodes gets
@@ -2600,7 +2596,6 @@ out_unlock:
 }
 EXPORT_SYMBOL(__mark_inode_dirty);
 
-#if 0
 /*
  * The @s_sync_lock is used to serialise concurrent sync operations
  * to avoid lock contention problems with concurrent wait_sb_inodes() calls.
@@ -2803,10 +2798,9 @@ void sync_inodes_sb(struct super_block *sb)
 	wb_wait_for_completion(&done);
 	bdi_up_write_wb_switch_rwsem(bdi);
 
-	wait_sb_inodes(sb);
+wait_sb_inodes(sb);
 }
 EXPORT_SYMBOL(sync_inodes_sb);
-#endif // CL
 
 /**
  * write_inode_now	-	write an inode to disk

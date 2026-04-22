@@ -1,6 +1,7 @@
 #include <linux/cache.h>
 #include <linux/cpumask.h>
 #include <linux/crash_dump.h>
+#include <linux/kmsg_dump.h>
 #include <linux/percpu_counter.h>
 #include <linux/jump_label.h>
 #include <linux/btf_ids.h>
@@ -306,10 +307,6 @@ struct ctl_table_header *register_sysctl_sz(const char *path, struct ctl_table *
 }
 
 // drivers/base/syscore.c
-void register_syscore_ops(struct syscore_ops *ops)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
 
 // fs/debugfs/inode.c
 struct dentry *debugfs_create_dir(const char *name, struct dentry *parent)
@@ -577,10 +574,6 @@ int security_path_mkdir(const struct path *dir, struct dentry *dentry,
 }
 
 // kernel/umh.c
-void __usermodehelper_set_disable_depth(enum umh_disable_depth depth)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
 
 int security_inode_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
 {
@@ -1429,4 +1422,20 @@ int security_inode_readlink(struct dentry *dentry)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
+}
+
+int security_sb_remount(struct super_block *sb, void *mnt_opts)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void cpufreq_suspend(void)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+void kmsg_dump_desc(enum kmsg_dump_reason reason, const char *desc)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }

@@ -34,6 +34,7 @@ obj-y += audit.o
 obj-y += auditfilter.o
 obj-y += auditsc.o
 obj-y += async.o
+obj-y += umh.o
 obj-y += sys_ni.o
 obj-y += padata.o
 obj-y += compat.o

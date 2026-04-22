@@ -196,7 +196,6 @@ void driver_deferred_probe_trigger(void)
 	queue_work(system_unbound_wq, &deferred_probe_work);
 }
 
-#if 0
 /**
  * device_block_probing() - Block/defer device's probes
  *
@@ -220,7 +219,6 @@ void device_unblock_probing(void)
 	defer_all_probes = false;
 	driver_deferred_probe_trigger();
 }
-#endif /* CL */
 
 /**
  * device_set_deferred_probe_reason() - Set defer probe reason message for device

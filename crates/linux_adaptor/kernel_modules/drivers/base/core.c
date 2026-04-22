@@ -4872,6 +4872,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(device_change_owner);
 
+#endif /* CL */
 /**
  * device_shutdown - call ->shutdown() on each device to shutdown.
  */
@@ -4943,6 +4944,7 @@ void device_shutdown(void)
 	}
 	spin_unlock(&devices_kset->list_lock);
 }
+#if 0
 #endif /* CL */
 
 /*
