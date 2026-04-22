@@ -181,7 +181,6 @@ generic_file_llseek_size(struct file *file, loff_t offset, int whence,
 }
 EXPORT_SYMBOL(generic_file_llseek_size);
 
-#if 0
 /**
  * generic_llseek_cookie - versioned llseek implementation
  * @file:	file structure to seek on
@@ -227,6 +226,7 @@ loff_t generic_llseek_cookie(struct file *file, loff_t offset, int whence,
 }
 EXPORT_SYMBOL(generic_llseek_cookie);
 
+#if 0
 /**
  * generic_file_llseek - generic llseek implementation for regular files
  * @file:	file structure to seek on

@@ -365,7 +365,6 @@ int filemap_check_errors(struct address_space *mapping)
 }
 EXPORT_SYMBOL(filemap_check_errors);
 
-#if 0
 static int filemap_check_and_keep_errors(struct address_space *mapping)
 {
 	/* Check for outstanding write errors */
@@ -375,7 +374,6 @@ static int filemap_check_and_keep_errors(struct address_space *mapping)
 		return -ENOSPC;
 	return 0;
 }
-#endif // CL
 
 /**
  * filemap_fdatawrite_wbc - start writeback on mapping dirty pages in range
@@ -567,7 +565,6 @@ int filemap_fdatawait_range(struct address_space *mapping, loff_t start_byte,
 }
 EXPORT_SYMBOL(filemap_fdatawait_range);
 
-#if 0
 /**
  * filemap_fdatawait_range_keep_errors - wait for writeback to complete
  * @mapping:		address space structure to wait for
@@ -589,7 +586,6 @@ int filemap_fdatawait_range_keep_errors(struct address_space *mapping,
 	return filemap_check_and_keep_errors(mapping);
 }
 EXPORT_SYMBOL(filemap_fdatawait_range_keep_errors);
-#endif // CL
 
 /**
  * file_fdatawait_range - wait for writeback to complete

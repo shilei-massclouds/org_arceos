@@ -895,7 +895,6 @@ void dput_to_list(struct dentry *dentry, struct list_head *list)
 	spin_unlock(&dentry->d_lock);
 }
 
-#if 0
 struct dentry *dget_parent(struct dentry *dentry)
 {
 	int gotref;
@@ -937,7 +936,6 @@ repeat:
 	return ret;
 }
 EXPORT_SYMBOL(dget_parent);
-#endif // CL
 
 static struct dentry * __d_find_any_alias(struct inode *inode)
 {

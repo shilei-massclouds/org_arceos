@@ -998,7 +998,6 @@ static int nd_jump_root(struct nameidata *nd)
 	return 0;
 }
 
-#if 0
 /*
  * Helper to directly jump to a known parsed path from ->get_link,
  * caller must have taken a reference to path beforehand.
@@ -1030,7 +1029,6 @@ err:
 	path_put(path);
 	return error;
 }
-#endif // CL
 
 static inline void put_link(struct nameidata *nd)
 {
@@ -1140,7 +1138,6 @@ static inline int may_follow_link(struct nameidata *nd, const struct inode *inod
 	return -EACCES;
 }
 
-#if 0
 /**
  * safe_hardlink_source - Check for safe hardlink conditions
  * @idmap: idmap of the mount the inode was found from
@@ -1219,7 +1216,6 @@ int may_linkat(struct mnt_idmap *idmap, const struct path *link)
 	audit_log_path_denied(AUDIT_ANOM_LINK, "linkat");
 	return -EPERM;
 }
-#endif // CL
 
 /**
  * may_create_in_sticky - Check whether an O_CREAT open in a sticky directory
@@ -3806,7 +3802,6 @@ static int do_open(struct nameidata *nd,
 	return error;
 }
 
-#if 0
 /**
  * vfs_tmpfile - create tmpfile
  * @idmap:	idmap of the mount the inode was found from
@@ -3896,7 +3891,6 @@ struct file *kernel_tmpfile_open(struct mnt_idmap *idmap,
 	return file;
 }
 EXPORT_SYMBOL(kernel_tmpfile_open);
-#endif // CL
 
 static int do_tmpfile(struct nameidata *nd, unsigned flags,
 		const struct open_flags *op,
@@ -4612,6 +4606,7 @@ SYSCALL_DEFINE1(unlink, const char __user *, pathname)
 {
 	return do_unlinkat(AT_FDCWD, getname(pathname));
 }
+#endif // CL
 
 /**
  * vfs_symlink - create symlink
@@ -4874,7 +4869,6 @@ SYSCALL_DEFINE2(link, const char __user *, oldname, const char __user *, newname
 {
 	return do_linkat(AT_FDCWD, getname(oldname), AT_FDCWD, getname(newname), 0);
 }
-#endif // CL
 
 /**
  * vfs_rename - rename a filesystem object

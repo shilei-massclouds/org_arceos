@@ -1745,7 +1745,6 @@ int timer_delete_sync(struct timer_list *timer)
 }
 EXPORT_SYMBOL(timer_delete_sync);
 
-#if 0
 /**
  * timer_shutdown_sync - Shutdown a timer and prevent rearming
  * @timer: The timer to be shutdown
@@ -1787,7 +1786,6 @@ int timer_shutdown_sync(struct timer_list *timer)
 	return __timer_delete_sync(timer, true);
 }
 EXPORT_SYMBOL_GPL(timer_shutdown_sync);
-#endif /* CL */
 
 static void call_timer_fn(struct timer_list *timer,
 			  void (*fn)(struct timer_list *),

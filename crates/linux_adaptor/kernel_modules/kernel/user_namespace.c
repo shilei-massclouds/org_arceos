@@ -577,7 +577,6 @@ projid_t from_kprojid(struct user_namespace *targ, kprojid_t kprojid)
 }
 EXPORT_SYMBOL(from_kprojid);
 
-#if 0
 /**
  *	from_kprojid_munged - Create a projiid from a kprojid user-namespace pair.
  *	@targ: The user namespace we want a projid in.
@@ -740,6 +739,7 @@ const struct seq_operations proc_projid_seq_operations = {
 	.show = projid_m_show,
 };
 
+#if 0
 static bool mappings_overlap(struct uid_gid_map *new_map,
 			     struct uid_gid_extent *extent)
 {
@@ -1209,6 +1209,7 @@ static bool new_idmap_permitted(const struct file *file,
 
 	return false;
 }
+#endif // CL
 
 int proc_setgroups_show(struct seq_file *seq, void *v)
 {
@@ -1221,6 +1222,7 @@ int proc_setgroups_show(struct seq_file *seq, void *v)
 	return 0;
 }
 
+#if 0
 ssize_t proc_setgroups_write(struct file *file, const char __user *buf,
 			     size_t count, loff_t *ppos)
 {

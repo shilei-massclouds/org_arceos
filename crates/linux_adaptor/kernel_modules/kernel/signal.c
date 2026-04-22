@@ -1516,7 +1516,6 @@ int kill_pid_info(int sig, struct kernel_siginfo *info, struct pid *pid)
 	return kill_pid_info_type(sig, info, pid, PIDTYPE_TGID);
 }
 
-#if 0
 static int kill_proc_info(int sig, struct kernel_siginfo *info, pid_t pid)
 {
 	int error;
@@ -1526,6 +1525,7 @@ static int kill_proc_info(int sig, struct kernel_siginfo *info, pid_t pid)
 	return error;
 }
 
+#if 0
 static inline bool kill_as_cred_perm(const struct cred *cred,
 				     struct task_struct *target)
 {
@@ -1605,6 +1605,7 @@ out_unlock:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(kill_pid_usb_asyncio);
+#endif // CL
 
 /*
  * kill_something_info() interprets pid in interesting ways just like kill(2).
@@ -1649,6 +1650,7 @@ static int kill_something_info(int sig, struct kernel_siginfo *info, pid_t pid)
 	return ret;
 }
 
+#if 0
 /*
  * These are for backward compatibility with the rest of the kernel source.
  */
@@ -3853,6 +3855,8 @@ COMPAT_SYSCALL_DEFINE4(rt_sigtimedwait_time32, compat_sigset_t __user *, uthese,
 #endif
 #endif
 
+#endif // CL
+
 static void prepare_kill_siginfo(int sig, struct kernel_siginfo *info,
 				 enum pid_type type)
 {
@@ -3878,6 +3882,7 @@ SYSCALL_DEFINE2(kill, pid_t, pid, int, sig)
 	return kill_something_info(sig, &info, pid);
 }
 
+#if 0
 /*
  * Verify that the signaler and signalee either are in the same pid namespace
  * or that the signaler's pid namespace is an ancestor of the signalee's pid

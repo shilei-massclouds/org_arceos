@@ -40,6 +40,7 @@ int proc_setup_self(struct super_block *s)
 	struct dentry *self;
 	int ret = -ENOMEM;
 
+	pr_err("LK_PROC: proc_setup_self enter\n");
 	inode_lock(root_inode);
 	self = d_alloc_name(s->s_root, "self");
 	if (self) {

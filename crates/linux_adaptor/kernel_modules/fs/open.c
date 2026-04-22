@@ -825,7 +825,6 @@ retry_deleg:
 	return error;
 }
 
-#if 0
 int do_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group,
 		int flag)
 {
@@ -864,6 +863,7 @@ SYSCALL_DEFINE5(fchownat, int, dfd, const char __user *, filename, uid_t, user,
 	return do_fchownat(dfd, filename, user, group, flag);
 }
 
+#if 0
 SYSCALL_DEFINE3(chown, const char __user *, filename, uid_t, user, gid_t, group)
 {
 	return do_fchownat(AT_FDCWD, filename, user, group, 0);
@@ -1047,7 +1047,6 @@ cleanup_file:
 	return error;
 }
 
-#if 0
 /**
  * finish_open - finish opening a file
  * @file: file pointer
@@ -1101,7 +1100,6 @@ char *file_path(struct file *filp, char *buf, int buflen)
 	return d_path(&filp->f_path, buf, buflen);
 }
 EXPORT_SYMBOL(file_path);
-#endif // CL
 
 /**
  * vfs_open - open the file at the given path

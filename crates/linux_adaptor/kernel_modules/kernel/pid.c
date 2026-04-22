@@ -441,7 +441,6 @@ struct task_struct *find_task_by_vpid(pid_t vnr)
 	return find_task_by_pid_ns(vnr, task_active_pid_ns(current));
 }
 
-#if 0
 struct task_struct *find_get_task_by_vpid(pid_t nr)
 {
 	struct task_struct *task;
@@ -454,7 +453,6 @@ struct task_struct *find_get_task_by_vpid(pid_t nr)
 
 	return task;
 }
-#endif /* CL */
 
 struct pid *get_task_pid(struct task_struct *task, enum pid_type type)
 {
@@ -466,7 +464,6 @@ struct pid *get_task_pid(struct task_struct *task, enum pid_type type)
 }
 EXPORT_SYMBOL_GPL(get_task_pid);
 
-#if 0
 struct task_struct *get_pid_task(struct pid *pid, enum pid_type type)
 {
 	struct task_struct *result;
@@ -478,7 +475,6 @@ struct task_struct *get_pid_task(struct pid *pid, enum pid_type type)
 	return result;
 }
 EXPORT_SYMBOL_GPL(get_pid_task);
-#endif /* CL */
 
 struct pid *find_get_pid(pid_t nr)
 {

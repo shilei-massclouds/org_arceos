@@ -2735,7 +2735,6 @@ int __audit_sockaddr(int len, void *a)
 	return 0;
 }
 
-#if 0
 void __audit_ptrace(struct task_struct *t)
 {
 	struct audit_context *context = audit_context();
@@ -2911,7 +2910,6 @@ void __audit_fanotify(u32 response, struct fanotify_response_info_audit_rule *fr
 			  friar->subj_trust, friar->obj_trust);
 	}
 }
-#endif // CL
 
 void __audit_tk_injoffset(struct timespec64 offset)
 {

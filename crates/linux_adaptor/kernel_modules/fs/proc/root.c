@@ -163,6 +163,7 @@ static int proc_fill_super(struct super_block *s, struct fs_context *fc)
 	struct proc_fs_info *fs_info;
 	int ret;
 
+	pr_err("LK_PROC: proc_fill_super enter\n");
 	fs_info = kzalloc(sizeof(*fs_info), GFP_KERNEL);
 	if (!fs_info)
 		return -ENOMEM;
@@ -191,22 +192,26 @@ static int proc_fill_super(struct super_block *s, struct fs_context *fc)
 	s->s_shrink->seeks = 0;
 
 	pde_get(&proc_root);
+	pr_err("LK_PROC: proc_fill_super before proc_get_inode\n");
 	root_inode = proc_get_inode(s, &proc_root);
 	if (!root_inode) {
 		pr_err("proc_fill_super: get root inode failed\n");
 		return -ENOMEM;
 	}
 
+	pr_err("LK_PROC: proc_fill_super before d_make_root\n");
 	s->s_root = d_make_root(root_inode);
 	if (!s->s_root) {
 		pr_err("proc_fill_super: allocate dentry failed\n");
 		return -ENOMEM;
 	}
 
+	pr_err("LK_PROC: proc_fill_super before proc_setup_self\n");
 	ret = proc_setup_self(s);
 	if (ret) {
 		return ret;
 	}
+	pr_err("LK_PROC: proc_fill_super before proc_setup_thread_self\n");
 	return proc_setup_thread_self(s);
 }
 
@@ -223,6 +228,7 @@ static int proc_reconfigure(struct fs_context *fc)
 
 static int proc_get_tree(struct fs_context *fc)
 {
+	pr_err("LK_PROC: proc_get_tree\n");
 	return get_tree_nodev(fc, proc_fill_super);
 }
 
@@ -245,6 +251,7 @@ static int proc_init_fs_context(struct fs_context *fc)
 {
 	struct proc_fs_context *ctx;
 
+	pr_err("LK_PROC: proc_init_fs_context\n");
 	ctx = kzalloc(sizeof(struct proc_fs_context), GFP_KERNEL);
 	if (!ctx)
 		return -ENOMEM;

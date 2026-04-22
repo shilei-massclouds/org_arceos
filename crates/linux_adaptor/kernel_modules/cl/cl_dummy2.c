@@ -425,23 +425,6 @@ void proc_tty_init(void)
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
 }
 
-struct dentry *proc_pid_lookup(struct dentry *dentry, unsigned int flags)
-{
-    pr_dummy("--> NOTE: %s: fake no-pid lookup for %pd2.\n", __func__, dentry);
-    return ERR_PTR(-ENOENT);
-}
-
-int proc_pid_readdir(struct file *file, struct dir_context *ctx)
-{
-    pr_dummy("--> NOTE: %s: fake empty pid readdir.\n", __func__);
-    return 0;
-}
-
-void proc_pid_evict_inode(struct proc_inode *ei)
-{
-    pr_dummy("--> NOTE: %s: fake no-op.\n", __func__);
-}
-
 int proc_sys_init(void)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -491,6 +474,11 @@ int security_inode_alloc(struct inode *inode, gfp_t gfp)
     return 0;
 }
 
+void security_inode_post_create_tmpfile(struct mnt_idmap *idmap, struct inode *inode)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
 void security_d_instantiate(struct dentry *dentry, struct inode *inode)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -514,6 +502,20 @@ int __init sysfs_init(void)
 void security_free_mnt_opts(void **mnt_opts)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_sb_eat_lsm_opts(char *options, void **mnt_opts)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    if (mnt_opts)
+        *mnt_opts = NULL;
+    return 0;
+}
+
+int security_sb_show_options(struct seq_file *m, struct super_block *sb)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
 }
 
 int security_file_alloc(struct file *file)
@@ -885,7 +887,6 @@ void uprobe_notify_resume(struct pt_regs *regs)
 }
 
 // kernel/audit.c
-u32     audit_enabled = AUDIT_OFF;
 
 // fs/hugetlbfs/inode.c
 int sysctl_hugetlb_shm_group;
@@ -1289,16 +1290,6 @@ int proc_do_large_bitmap(const struct ctl_table *table, int write,
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
-void set_proc_pid_nlink(void)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
-void proc_flush_pid(struct pid *pid)
-{
-    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
-}
-
 int security_path_chmod(const struct path *path, umode_t mode)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -1339,6 +1330,45 @@ void security_current_getsecid_subj(u32 *secid)
         *secid = 0;
 }
 
+void security_task_getsecid_obj(struct task_struct *p, u32 *secid)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    if (secid)
+        *secid = 0;
+}
+
+int security_getprocattr(struct task_struct *p, int lsmid, const char *name,
+             char **value)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    if (value)
+        *value = NULL;
+    return -EINVAL;
+}
+
+int security_setprocattr(int lsmid, const char *name, void *value, size_t size)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+void security_task_to_inode(struct task_struct *p, struct inode *inode)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+}
+
+int security_ptrace_access_check(struct task_struct *child, unsigned int mode)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_ptrace_traceme(struct task_struct *parent)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
 int security_audit_rule_match(u32 secid, u32 field, u32 op, void *lsmrule)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
@@ -1359,9 +1389,37 @@ int security_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
     return 0;
 }
 
+int security_inode_link(struct dentry *old_dentry, struct inode *dir,
+            struct dentry *new_dentry)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
 int security_path_rename(const struct path *old_dir, struct dentry *old_dentry,
              const struct path *new_dir, struct dentry *new_dentry,
              unsigned int flags)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_path_link(struct dentry *old_dentry, const struct path *new_dir,
+           struct dentry *new_dentry)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_path_symlink(const struct path *dir, struct dentry *dentry,
+              const char *old_name)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}
+
+int security_inode_symlink(struct inode *dir, struct dentry *dentry,
+               const char *old_name)
 {
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;

@@ -267,6 +267,7 @@ void zap_pid_ns_processes(struct pid_namespace *pid_ns)
 	acct_exit_ns(pid_ns);
 	return;
 }
+#endif /* CL */
 
 #ifdef CONFIG_CHECKPOINT_RESTORE
 static int pid_ns_ctl_handler(const struct ctl_table *table, int write,
@@ -301,7 +302,6 @@ static struct ctl_table pid_ns_ctl_table[] = {
 	},
 };
 #endif	/* CONFIG_CHECKPOINT_RESTORE */
-#endif /* CL */
 
 int reboot_pid_ns(struct pid_namespace *pid_ns, int cmd)
 {
@@ -350,8 +350,6 @@ static struct ns_common *pidns_get(struct task_struct *task)
 	return ns ? &ns->ns : NULL;
 }
 
-#if 0
-
 static struct ns_common *pidns_for_children_get(struct task_struct *task)
 {
 	struct pid_namespace *ns = NULL;
@@ -374,8 +372,6 @@ static struct ns_common *pidns_for_children_get(struct task_struct *task)
 
 	return ns ? &ns->ns : NULL;
 }
-
-#endif /* CL */
 
 static void pidns_put(struct ns_common *ns)
 {
@@ -447,8 +443,6 @@ const struct proc_ns_operations pidns_operations = {
 	.get_parent	= pidns_get_parent,
 };
 
-#if 0
-
 const struct proc_ns_operations pidns_for_children_operations = {
 	.name		= "pid_for_children",
 	.real_ns_name	= "pid",
@@ -473,5 +467,3 @@ static __init int pid_namespaces_init(void)
 }
 
 __initcall(pid_namespaces_init);
-
-#endif /* CL */

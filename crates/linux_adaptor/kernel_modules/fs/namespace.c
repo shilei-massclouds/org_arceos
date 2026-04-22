@@ -1546,6 +1546,7 @@ struct vfsmount *mnt_clone_internal(const struct path *path)
 	p->mnt.mnt_flags |= MNT_INTERNAL;
 	return &p->mnt;
 }
+#endif // CL
 
 /*
  * Returns the mount which either has the specified mnt_id, or has the next
@@ -1571,6 +1572,7 @@ static struct mount *mnt_find_id_at(struct mnt_namespace *ns, u64 mnt_id)
 	return ret;
 }
 
+#if 0
 /*
  * Returns the mount which either has the specified mnt_id, or has the next
  * greater id before the specified one.
@@ -1594,6 +1596,7 @@ static struct mount *mnt_find_id_at_reverse(struct mnt_namespace *ns, u64 mnt_id
 	}
 	return ret;
 }
+#endif // CL
 
 #ifdef CONFIG_PROC_FS
 
@@ -1641,6 +1644,7 @@ const struct seq_operations mounts_op = {
 
 #endif  /* CONFIG_PROC_FS */
 
+#if 0
 /**
  * may_umount_tree - check if a mount tree is busy
  * @m: root of mount tree
@@ -4911,6 +4915,7 @@ SYSCALL_DEFINE5(mount_setattr, int, dfd, const char __user *, path,
 	finish_mount_kattr(&kattr);
 	return err;
 }
+#endif // CL
 
 int show_path(struct seq_file *m, struct dentry *root)
 {
@@ -4921,6 +4926,7 @@ int show_path(struct seq_file *m, struct dentry *root)
 	return 0;
 }
 
+#if 0
 static struct vfsmount *lookup_mnt_in_ns(u64 id, struct mnt_namespace *ns)
 {
 	struct mount *mnt = mnt_find_id_at(ns, id);

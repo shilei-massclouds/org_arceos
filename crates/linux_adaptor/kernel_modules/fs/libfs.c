@@ -1097,6 +1097,7 @@ void simple_release_fs(struct vfsmount **mount, int *count)
 	mntput(mnt);
 }
 EXPORT_SYMBOL(simple_release_fs);
+#endif // CL
 
 /**
  * simple_read_from_buffer - copy data from the buffer to user space
@@ -1133,6 +1134,7 @@ ssize_t simple_read_from_buffer(void __user *to, size_t count, loff_t *ppos,
 }
 EXPORT_SYMBOL(simple_read_from_buffer);
 
+#if 0
 /**
  * simple_write_to_buffer - copy data from user space to the buffer
  * @to: the buffer to write to
