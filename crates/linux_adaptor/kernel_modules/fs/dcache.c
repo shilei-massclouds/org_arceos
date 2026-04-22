@@ -948,7 +948,6 @@ static struct dentry * __d_find_any_alias(struct inode *inode)
 	return alias;
 }
 
-#if 0
 /**
  * d_find_any_alias - find any alias for a given inode
  * @inode: inode to find an alias for
@@ -1058,7 +1057,6 @@ void d_prune_aliases(struct inode *inode)
 	shrink_dentry_list(&dispose);
 }
 EXPORT_SYMBOL(d_prune_aliases);
-#endif // CL
 
 static inline void shrink_kill(struct dentry *victim)
 {
@@ -1345,7 +1343,6 @@ struct check_mount {
 	unsigned int mounted;
 };
 
-#if 0
 static enum d_walk_ret path_check_mount(void *data, struct dentry *dentry)
 {
 	struct check_mount *info = data;
@@ -1379,7 +1376,6 @@ int path_has_submounts(const struct path *parent)
 	return data.mounted;
 }
 EXPORT_SYMBOL(path_has_submounts);
-#endif // CL
 
 /*
  * Called by mount code to set a mountpoint and check if the mountpoint is
@@ -1534,7 +1530,6 @@ void shrink_dcache_parent(struct dentry *parent)
 }
 EXPORT_SYMBOL(shrink_dcache_parent);
 
-#if 0
 static enum d_walk_ret umount_check(void *_data, struct dentry *dentry)
 {
 	/* it has busy descendents; complain about those instead */
@@ -1628,7 +1623,6 @@ void d_invalidate(struct dentry *dentry)
 	}
 }
 EXPORT_SYMBOL(d_invalidate);
-#endif // CL
 
 /**
  * __d_alloc	-	allocate a dcache entry

@@ -40,7 +40,6 @@ int proc_setup_thread_self(struct super_block *s)
 	struct dentry *thread_self;
 	int ret = -ENOMEM;
 
-	pr_err("LK_PROC: proc_setup_thread_self enter\n");
 	inode_lock(root_inode);
 	thread_self = d_alloc_name(s->s_root, "thread-self");
 	if (thread_self) {

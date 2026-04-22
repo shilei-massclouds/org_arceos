@@ -3,6 +3,7 @@
 
 #include <asm/setup.h>
 #include <linux/buildid.h>
+#include <linux/backing-dev.h>
 #include <linux/cgroup.h>
 #include <linux/cpu.h>
 #include <linux/memblock.h>
@@ -645,6 +646,7 @@ int __init_or_module do_one_initcall(initcall_t fn)
 
 void cl_driver_init()
 {
+    bdi_init(&noop_backing_dev_info);
     devices_init();
     buses_init();
     classes_init();

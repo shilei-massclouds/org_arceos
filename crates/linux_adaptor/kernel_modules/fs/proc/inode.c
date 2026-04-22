@@ -630,7 +630,6 @@ struct inode *proc_get_inode(struct super_block *sb, struct proc_dir_entry *de)
 {
 	struct inode *inode = new_inode(sb);
 
-	pr_err("LK_PROC: proc_get_inode de=%px mode=%o\n", de, de ? de->mode : 0);
 	if (!inode) {
 		pde_put(de);
 		return NULL;

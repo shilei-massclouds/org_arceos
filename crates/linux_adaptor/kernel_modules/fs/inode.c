@@ -1524,6 +1524,7 @@ ino_t iunique(struct super_block *sb, ino_t max_reserved)
 	return res;
 }
 EXPORT_SYMBOL(iunique);
+#endif // CL
 
 struct inode *igrab(struct inode *inode)
 {
@@ -1544,6 +1545,7 @@ struct inode *igrab(struct inode *inode)
 }
 EXPORT_SYMBOL(igrab);
 
+#if 0
 /**
  * ilookup5_nowait - search for an inode in the inode cache
  * @sb:		super block of file system to search
