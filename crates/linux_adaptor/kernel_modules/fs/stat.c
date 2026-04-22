@@ -527,7 +527,6 @@ SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
 }
 #endif
 
-#if 0
 static int do_readlinkat(int dfd, const char __user *pathname,
 			 char __user *buf, int bufsiz)
 {
@@ -581,6 +580,7 @@ SYSCALL_DEFINE3(readlink, const char __user *, path, char __user *, buf,
 	return do_readlinkat(AT_FDCWD, path, buf, bufsiz);
 }
 
+#if 0
 
 /* ---------- LFS-64 ----------- */
 #if defined(__ARCH_WANT_STAT64) || defined(__ARCH_WANT_COMPAT_STAT64)

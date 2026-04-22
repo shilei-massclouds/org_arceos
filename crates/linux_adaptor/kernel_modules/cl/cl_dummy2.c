@@ -1424,3 +1424,9 @@ int security_inode_symlink(struct inode *dir, struct dentry *dentry,
     pr_dummy("--> NOTE: %s: No impl.\n", __func__);
     return 0;
 }
+
+int security_inode_readlink(struct dentry *dentry)
+{
+    pr_dummy("--> NOTE: %s: No impl.\n", __func__);
+    return 0;
+}

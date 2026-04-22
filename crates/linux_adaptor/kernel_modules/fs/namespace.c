@@ -2234,7 +2234,6 @@ struct vfsmount *collect_mounts(const struct path *path)
 static void free_mnt_ns(struct mnt_namespace *);
 static struct mnt_namespace *alloc_mnt_ns(struct user_namespace *, bool);
 
-#if 0
 void dissolve_on_fput(struct vfsmount *mnt)
 {
 	struct mnt_namespace *ns;
@@ -2332,7 +2331,6 @@ int iterate_mounts(int (*f)(struct vfsmount *, void *), void *arg,
 	}
 	return 0;
 }
-#endif // CL
 
 static void lock_mnt_tree(struct mount *mnt)
 {
@@ -5623,7 +5621,6 @@ void __init mnt_init(void)
 	init_mount_tree();
 }
 
-#if 0
 void put_mnt_ns(struct mnt_namespace *ns)
 {
 	if (!refcount_dec_and_test(&ns->ns.count))
@@ -5631,7 +5628,6 @@ void put_mnt_ns(struct mnt_namespace *ns)
 	drop_collected_mounts(&ns->root->mnt);
 	free_mnt_ns(ns);
 }
-#endif /* CL */
 
 struct vfsmount *kern_mount(struct file_system_type *type)
 {

@@ -5260,6 +5260,7 @@ int readlink_copy(char __user *buffer, int buflen, const char *link)
 out:
 	return len;
 }
+#endif // CL
 
 /**
  * vfs_readlink - copy symlink body into userspace buffer
@@ -5302,6 +5303,7 @@ int vfs_readlink(struct dentry *dentry, char __user *buffer, int buflen)
 }
 EXPORT_SYMBOL(vfs_readlink);
 
+#if 0
 /**
  * vfs_get_link - get symlink body
  * @dentry: dentry on which to get symbolic link
